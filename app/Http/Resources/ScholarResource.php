@@ -18,7 +18,7 @@ class ScholarResource extends JsonResource
             'id' => $this->id,
             'applicant_id' => $this->applicant_id,
             'course_id' => $this->course_id,
-            'course_name' => $this->course->name,
+            // 'course_name' => $this->course->name,
             'course' => $this->course ? [
                 'id' => $this->course->id,
                 'name' => $this->course->name,
@@ -39,7 +39,7 @@ class ScholarResource extends JsonResource
                 'status' => $this->scholarshipStatus->status,
                 'status_id' => $this->scholarshipStatus->status_id,
             ] : null,
-            'program_name' => $this->program_name,
+            // 'program_name' => $this->program_name,
             'academic_status' => $this->academic_status,
             'scholarship_program' => $this->scholarshipProgram ? [
                 'id' => $this->scholarshipProgram->id,
@@ -54,9 +54,10 @@ class ScholarResource extends JsonResource
                 'name' => $this->updatedBy->name,
             ] : null,
             'is_active' => $this->is_active,
-            'is_ongoing' => $this->is_ongoing,
+            // 'is_ongoing' => $this->is_ongoing,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'date_filed' => $this->date_filed,
         ];
     }
 }

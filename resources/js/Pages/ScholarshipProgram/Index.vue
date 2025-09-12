@@ -2,17 +2,22 @@
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import { onMounted, ref } from "vue";
+import moment from "moment";
 import Table from "@/Components/Table.vue";
 import TableRow from "@/Components/TableRow.vue";
 import TableHeaderCell from "@/Components/TableHeaderCell.vue";
 import TableDataCell from "@/Components/TableDataCell.vue";
-import CreateModal from '@/Pages/ScholarshipProgram/Modal/CreateModal.vue';
+import CreateModal from '@/Pages/ScholarshipProgram/Modal/ProgramModal.vue';
 import { TrashIcon, PencilSquareIcon, IdentificationIcon, SquaresPlusIcon } from "@heroicons/vue/20/solid";
 import { useStorage } from '@vueuse/core';
+import ProgramModal from "@/Pages/ScholarshipProgram/Modal/ProgramModal.vue";
+import RequirementModal from "./Modal/RequirementModal.vue";
 
 const props = defineProps({
     action: String,
     scholarshipPrograms: Object,
+    program: Object,
+    requirements: Array
 });
 
 const gridview = useStorage('gridview', false);
@@ -54,31 +59,64 @@ onMounted(() => {
 
 
 
-                <Table class="border-collapse border border-slate-400 bg-[#eeeeee]" v-if="!gridview">
+                <Table class="border-collapse border border-slate-100 bg-[#f8f8f8]" v-if="!gridview">
                     <template #header>
                         <TableRow class="border-b">
-                            <TableHeaderCell class="-indent-1 w-[2%]">#</TableHeaderCell>
-                            <TableHeaderCell class="-indent-2 w-[35%]">Program</TableHeaderCell>
-                            <TableHeaderCell class="-indent-2 w-[35%]">Description</TableHeaderCell>
-                            <TableHeaderCell class="-indent-2">Date Effectivity</TableHeaderCell>
+                            <TableHeaderCell class="px-3">#</TableHeaderCell>
+                            <TableHeaderCell>Program</TableHeaderCell>
+                            <TableHeaderCell>From</TableHeaderCell>
+                            <TableHeaderCell>To</TableHeaderCell>
+                            <TableHeaderCell>Remarks</TableHeaderCell>
+                            <TableHeaderCell>Status</TableHeaderCell>
                             <!-- <TableHeaderCell class="-indent-2">Status</TableHeaderCell> -->
-                            <TableHeaderCell class="-indent-2 w-[10%]">Action</TableHeaderCell>
+                            <TableHeaderCell>Action</TableHeaderCell>
                         </TableRow>
                     </template>
                     <template #default>
                         <TableRow v-for="(program, index) in scholarshipPrograms" :key="program.id">
-                            <TableDataCell class="px-6 w-[10px] border-collapse border-t border-slate-400 -indent-1">{{
+                            <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-400">{{
                                 index + 1 }}</TableDataCell>
-                            <TableDataCell class="border-collapse border-t border-l border-slate-400 px-4">{{
-                                program.name }}</TableDataCell>
-                            <TableDataCell class="border-collapse border-t border-l border-slate-400 px-4">{{
-                                program.description }}</TableDataCell>
-                            <TableDataCell class="border-collapse border-t border-l border-slate-400 px-4">{{
-                                program.start_date }} to {{ program.end_date }}</TableDataCell>
+                            <TableDataCell
+                                class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600">
+                                <span class="font-medium"> {{ program.name }}</span>
+                                <span class="font-bold"> [{{ program.shortname }}]</span>
+                            </TableDataCell>
+                            <!-- <TableDataCell
+                                class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700">
+                                <span v-if="program.start_date && program.end_date">
+                                    {{ program.start_date }} to {{ program.end_date }}
+                                </span>
+                            </TableDataCell> -->
+                            <TableDataCell
+                                class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600"><span
+                                    class="text-gray-600">{{
+                                        program.start_date ? moment(program.start_date).format('MMM DD, YYYY') : ''
+                                    }}</span>
+                            </TableDataCell>
+                            <TableDataCell
+                                class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600"><span
+                                    class="text-gray-600">{{
+                                        program.start_date ? moment(program.end_date).format('MMM DD, YYYY') : ''
+                                    }}</span>
+                            </TableDataCell>
+                            <TableDataCell
+                                class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600">{{
+                                    program.remarks }}
+                            </TableDataCell>
+                            <TableDataCell
+                                class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600">
+                                {{ program.is_active ? 'active' : 'inactive' }}
+                            </TableDataCell>
                             <TableDataCell class="space-x-6 border-collapse border-t border-l border-slate-400 px-4">
-                                <Link :href="route('scholarshipprograms.edit', program.id)"
-                                    class="text-green-500 hover:text-green-600">
-                                Edit</Link>
+                                <Link :href="route('scholarshipprograms.index', {
+                                    id: program.id,
+                                    action: 'edit'
+                                })" class="text-purple-500 hover:text-purple-600 underline font-medium">Edit</Link>
+
+                                <Link :href="route('scholarshipprograms.index', {
+                                    id: program.id,
+                                    action: 'update-requirement'
+                                })" class="text-blue-500 hover:text-blue-600 underline  font-medium">Requirement</Link>
 
                                 <!-- <button class="text-red-500 hover:text-red-600" @click="
                                     confirmDeleteProgram(
@@ -95,7 +133,7 @@ onMounted(() => {
                 </Table>
 
                 <ul role="list" class="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-2" v-else>
-                    <li class="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow border border-gray-300 transition hover:-translate-y-2 duration-150 hover:shadow-lg"
+                    <li class="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow-sm border border-gray-300 transition hover:-translate-y-2 duration-150 hover:shadow-lg"
                         v-for="(program, index) in scholarshipPrograms" :key="'program_list_' + program.id">
                         <div class="flex w-full items-start justify-between space-x-6 px-2 py-2.5 min-h-40">
                             <p class="text-gray-400 text-xs absolute mt-1">#{{ index + 1 }}</p>
@@ -126,7 +164,7 @@ onMounted(() => {
                                     </button>
                                 </div>
                                 <div class="flex w-0 flex-1 text-blue-400 hover:text-blue-600">
-                                    <Link :href="route('scholars.index')"
+                                    <Link :href="route('scholarship_records.index')"
                                         class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-1 rounded-bl-lg border border-transparent py-4 text-xs font-semibold"
                                         preserve-state preserve-scroll>
                                     <PencilSquareIcon class="h-5 w-5" />
@@ -135,7 +173,7 @@ onMounted(() => {
                                 </div>
 
                                 <div class="-ml-px flex w-0 flex-1 text-purple-500 hover:text-purple-600">
-                                    <Link :href="route('scholars.index')"
+                                    <Link :href="route('scholarship_records.index')"
                                         class="relative inline-flex w-0 flex-1 items-center justify-center gap-x-1 rounded-br-lg border border-transparent py-4 text-xs font-semibold">
                                     <IdentificationIcon class="h-5 w-5" />
                                     Courses Offered
@@ -149,6 +187,12 @@ onMounted(() => {
         </div>
 
         <!-- CREATE SCHOLARSHIP PROGRAM MODAL -->
-        <CreateModal v-if="props.action == 'create'" :action="props.action" />
+        <ProgramModal v-if="props.action == 'create' || props.action == 'edit'" :action="props.action"
+            :program="props.program" />
+
+        <RequirementModal v-if="props.action == 'update-requirement'" :action="props.action" :program="props.program"
+            :requirements="props.requirements" />
+
+
     </AdminLayout>
 </template>

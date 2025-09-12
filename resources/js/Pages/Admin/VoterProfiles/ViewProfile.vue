@@ -227,7 +227,7 @@ const addDownline = () => {
                 </div>
                 <div class="w-1/2 pt-12">
                     <div v-if="props.profile.position.toLowerCase() !== 'member'"
-                        class="px-12 py-8 text-gray-900 border rounded mx-auto shadow mt-16 md:mt-0">
+                        class="px-12 py-8 text-gray-900 border rounded-sm mx-auto shadow-sm mt-16 md:mt-0">
                         <form @submit.prevent="addDownline">
                             <div class="flex items-center rounded-lg py-2 gap-2">
                                 <!-- <VueMultiselect
@@ -247,7 +247,7 @@ const addDownline = () => {
                                 }" :disabled="!newDownline || newDownlineform.processing ||
                                     props.profile.members.length >= 7
                                     "
-                                    class="py-2 px-8 bg-[#5dbea3] hover:bg-[#4bb798] hover:shadow rounded text text-white flex gap-2 items-center">
+                                    class="py-2 px-8 bg-[#5dbea3] hover:bg-[#4bb798] hover:shadow-sm rounded-sm text text-white flex gap-2 items-center">
                                     ADD
                                     <UserPlusIcon class="h-8 w-8" />
                                 </button>
@@ -273,12 +273,12 @@ const addDownline = () => {
                         </div>
 
                         <div class="flex gap-4 mt-12">
-                            <button class="py-1 px-4 bg-[#80669d] hover:bg-[#7b5aa0] hover:shadow rounded text-white"
+                            <button class="py-1 px-4 bg-[#80669d] hover:bg-[#7b5aa0] hover:shadow-sm rounded-sm text-white"
                                 @click.prevent="updateHeirarchy">
                                 Transfer Leadership
                             </button>
 
-                            <button class="py-2 px-4 bg-[#dd7973] hover:bg-[#d76d67] hover:shadow text-white rounded"
+                            <button class="py-2 px-4 bg-[#dd7973] hover:bg-[#d76d67] hover:shadow-sm text-white rounded-sm"
                                 :class="{
                                     'opacity-25': !selectedMembers.length,
                                 }" :disabled="!selectedMembers.length

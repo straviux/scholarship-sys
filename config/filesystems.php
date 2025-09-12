@@ -56,6 +56,16 @@ return [
             'throw' => false,
         ],
 
+        'google' => [
+            'driver' => 'google',
+            'clientId' => '17192544146-0trb4dr2ifsst8v916u1ni5pucbe7v21.apps.googleusercontent.com',
+            'clientSecret' => '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',
+            'refreshToken' => '1//04cMobceKgcSlCgYIARAAGAQSNwF-L9Ir_-M0-u5VaopTFaGPd4Sl19ZM3OnL79_gCdimI_PtuyBei_IQeIC6ta3PILPwi-qu3AA',
+            'folder' => 'WEB_UPLOADS', // without folder is root of drive or team drive
+            //'teamDriveId' => env('GOOGLE_DRIVE_TEAM_DRIVE_ID'),
+            //'sharedFolderId' => env('GOOGLE_DRIVE_SHARED_FOLDER_ID'),
+        ],
+
     ],
 
     /*

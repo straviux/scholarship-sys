@@ -13,18 +13,12 @@ return new class extends Migration
     {
         Schema::create('requirements', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(App\Models\Scholar::class, 'scholar_id');
             $table->string('name');
-            $table->string('file_path')->nullable();
-            $table->string('file_name')->nullable();
-            $table->string('file_type')->nullable();
-            $table->boolean('is_submitted')->default(false);
-            $table->date('submitted_at')->nullable();
+            $table->string('description')->nullable();
             $table->string('remarks')->nullable();
-            $table->boolean('is_active');
+            $table->boolean('is_active')->default(true);
             $table->foreignIdFor(App\Models\User::class, 'created_by')->nullable();
             $table->foreignIdFor(App\Models\User::class, 'updated_by')->nullable();
-            $table->timestamps();
         });
     }
 

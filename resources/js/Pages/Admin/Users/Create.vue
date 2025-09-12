@@ -38,7 +38,7 @@ const submit = () => {
                     Create New User
                 </h1>
                 <Link :href="route('users.index')"
-                    class="text-slate-500 underline font-bold px-3 py-2 bg-none rounded flex items-center justify-center gap-1">
+                    class="text-slate-500 underline font-bold px-3 py-2 bg-none rounded-sm flex items-center justify-center gap-1">
                 <ArrowUturnLeftIcon class="h-4 w-4" />
                 <span>Back</span></Link>
             </div>

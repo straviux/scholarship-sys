@@ -17,12 +17,13 @@ class ScholarshipProgram extends Model
         'end_date',
         'created_by',
         'updated_by',
+        'scholarship_status_id'
     ];
 
 
     public function courses()
     {
-        return $this->hasMany(Course::class, 'scholarship_program_id');
+        return $this->hasMany(Course::class, 'scholarship_program_id')->select(['id', 'name', 'shortname']);
     }
     public function createdBy()
     {
@@ -33,10 +34,16 @@ class ScholarshipProgram extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function getIsActiveAttribute($value)
+    public function requirements()
     {
-        return $value ? 'Active' : 'Inactive';
+        return $this->belongsToMany(Requirement::class, 'program_requirements', 'program_id', 'requirement_id')->select('*');
     }
+
+    public function scholarshipRecords()
+    {
+        return $this->hasManyThrough(ScholarshipRecord::class, Course::class);
+    }
+
 
     public static function boot()
     {

@@ -36,7 +36,7 @@ const localip = computed(() => page.props.localip)
 
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-x-6 mx-auto">
                         <Link :href="route('dashboard')"
-                            class="flex flex-col md:flex-row gap-y-2 items-center py-4 md:py-8 rounded-lg bg-white shadow border border-gray-300 transition hover:-translate-y-2 duration-150 hover:shadow-lg  mt-6 px-0 md:px-6 md:w-auto xl:mt-0">
+                            class="flex flex-col md:flex-row gap-y-2 items-center py-4 md:py-8 rounded-lg bg-white shadow-sm border border-gray-300 transition hover:-translate-y-2 duration-150 hover:shadow-lg  mt-6 px-0 md:px-6 md:w-auto xl:mt-0">
 
 
                         <!-- <Squares2X2Icon class="h-8 w-8 text-slate-600" /> -->
@@ -50,8 +50,8 @@ const localip = computed(() => page.props.localip)
 
                         </Link>
 
-                        <Link :href="route('scholars.index')"
-                            class="flex flex-col md:flex-row gap-y-2 items-center py-4 md:py-8 rounded-lg bg-white shadow border border-gray-300 transition hover:-translate-y-2 duration-150 hover:shadow-lg  mt-6 px-0 md:px-6 md:w-auto xl:mt-0">
+                        <Link :href="route('scholarship_records.index')"
+                            class="flex flex-col md:flex-row gap-y-2 items-center py-4 md:py-8 rounded-lg bg-white shadow-sm border border-gray-300 transition hover:-translate-y-2 duration-150 hover:shadow-lg  mt-6 px-0 md:px-6 md:w-auto xl:mt-0">
 
 
                         <DynamicHeroicon name="userGroup" class="text-slate-600" :size="9" />
@@ -73,7 +73,7 @@ const localip = computed(() => page.props.localip)
                     </div>
 
                     <div class="w-full px-0 md:px-6 sm:w-1/2 xl:w-1/3">
-                        <div class="flex items-center px-5 py-6 shadow-sm rounded-md bg-slate-100">
+                        <div class="flex items-center px-5 py-6 shadow-xs rounded-md bg-slate-100">
                             <div class="p-3 rounded-full bg-indigo-600 bg-opacity-75">
                                 <UserGroupIcon class="h-8 w-8 text-white" />
                             </div>
@@ -86,7 +86,7 @@ const localip = computed(() => page.props.localip)
                     </div>
 
                     <div class="w-full mt-6 px-0 md:px-6 sm:w-1/2 xl:w-1/3 sm:mt-0">
-                        <div class="flex items-center px-5 py-6 shadow-sm rounded-md bg-slate-100">
+                        <div class="flex items-center px-5 py-6 shadow-xs rounded-md bg-slate-100">
                             <div class="p-3 rounded-full bg-orange-600 bg-opacity-75">
 
                                 <IdentificationIcon class="h-8 w-8 text-white" />
@@ -100,7 +100,7 @@ const localip = computed(() => page.props.localip)
                     </div>
 
                     <div class="w-full mt-6 px-0 md:px-6 sm:w-1/2 xl:w-1/3 xl:mt-0">
-                        <div class="flex items-center px-5 py-6 shadow-sm rounded-md bg-slate-100">
+                        <div class="flex items-center px-5 py-6 shadow-xs rounded-md bg-slate-100">
                             <div class="p-3 rounded-full bg-pink-600 bg-opacity-75">
                                 <UserPlusIcon class="h-8 w-8 text-white" />
                             </div>

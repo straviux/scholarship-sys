@@ -36,10 +36,11 @@ class Course extends Model
         return $this->belongsTo(ScholarshipProgram::class, 'scholarship_program_id')->select(['id', 'name']);
     }
 
-    public function getIsActiveAttribute($value)
+    public function scholars()
     {
-        return $value ? 'Active' : 'Inactive';
+        return $this->hasMany(ScholarshipRecord::class);
     }
+
 
     public static function boot()
     {

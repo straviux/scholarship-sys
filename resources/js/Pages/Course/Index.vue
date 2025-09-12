@@ -6,13 +6,14 @@ import Table from "@/Components/Table.vue";
 import TableRow from "@/Components/TableRow.vue";
 import TableHeaderCell from "@/Components/TableHeaderCell.vue";
 import TableDataCell from "@/Components/TableDataCell.vue";
-import CreateModal from '@/Pages/Course/Modal/CreateModal.vue';
-import { TrashIcon, PencilSquareIcon, IdentificationIcon, SquaresPlusIcon } from "@heroicons/vue/20/solid";
+import { ChevronUpDownIcon, SquaresPlusIcon } from "@heroicons/vue/20/solid";
 import { useStorage } from '@vueuse/core';
+import CourseModal from "@/Pages/Course/Modal/CourseModal.vue";
 
 const props = defineProps({
     action: String,
     courses: Object,
+    course: Object,
     scholarshipPrograms: Object,
 });
 
@@ -49,41 +50,58 @@ onMounted(() => {
             </div>
 
             <div class="mt-6">
-                <Table class="border-collapse border border-slate-400 bg-[#eeeeee]">
+                <Table class="border-collapse border border-slate-100 bg-[#f8f8f8]">
                     <template #header>
-                        <TableRow class="border-b">
-                            <TableHeaderCell class="-indent-1 w-[2%]">#</TableHeaderCell>
-                            <TableHeaderCell class="-indent-2 w-[35%]">Course</TableHeaderCell>
-                            <TableHeaderCell class="-indent-2 w-[35%]">Program</TableHeaderCell>
-                            <TableHeaderCell class="-indent-2">Date Effectivity</TableHeaderCell>
-                            <TableHeaderCell class="-indent-2 w-[10%]">Action</TableHeaderCell>
+                        <TableRow>
+                            <TableHeaderCell class="px-3">#</TableHeaderCell>
+                            <TableHeaderCell @click="sortBy('name')" class="cursor-pointer">
+                                <div class="flex items-center gap-2">
+                                    <h4>Course</h4>
+                                    <ChevronUpDownIcon class="h-4 w-4" />
+                                </div>
+                            </TableHeaderCell>
+
+                            <TableHeaderCell>Program</TableHeaderCell>
+                            <TableHeaderCell>Remarks</TableHeaderCell>
+                            <TableHeaderCell>Status</TableHeaderCell>
+                            <TableHeaderCell class="w-[160px]">Action</TableHeaderCell>
                         </TableRow>
                     </template>
                     <template #default>
-                        <TableRow v-for="(course, index) in courses" :key="course.id">
-                            <TableDataCell class="px-6 w-[10px] border-collapse border-t border-slate-400 -indent-1">{{
-                                index + 1 }}</TableDataCell>
-                            <TableDataCell class="border-collapse border-t border-l border-slate-400 px-4">{{
-                                course.name }}</TableDataCell>
-                            <TableDataCell class="border-collapse border-t border-l border-slate-400 px-4">{{
-                                course.program }}</TableDataCell>
-                            <TableDataCell class="border-collapse border-t border-l border-slate-400 px-4">{{
-                                course.start_date }} to {{ course.end_date }}</TableDataCell>
-                            <TableDataCell class="space-x-6 border-collapse border-t border-l border-slate-400 px-4">
-                                <Link :href="route('courses.edit', course.id)"
-                                    class="text-green-500 hover:text-green-600">
-                                Edit</Link>
-
-                                <!-- <button class="text-red-500 hover:text-red-600" @click="
-                                    confirmDeleteProgram(
-                                        user.id,
-                                        user.name,
-                                        user.username
-                                    )
-                                    ">
-                                    Delete
-                                </button> -->
+                        <TableRow class="hover:bg-gray-200" v-for="(c, index) in courses" :key="'r_' + c.id"
+                            v-if="courses?.length">
+                            <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-400">{{ index + 1
+                            }}
                             </TableDataCell>
+                            <TableDataCell
+                                class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600">
+                                <span class="font-medium"> {{ c.name }}</span>
+                                <span class="font-bold"> [{{ c.shortname }}]</span>
+                            </TableDataCell>
+                            <TableDataCell
+                                class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600 font-medium">
+                                {{ c.program }}
+                            </TableDataCell>
+                            <TableDataCell
+                                class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600">
+                                {{ c.remarks }}
+                            </TableDataCell>
+                            <TableDataCell
+                                class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600">
+                                {{ c.is_active ? 'active' : 'inactive' }}
+                            </TableDataCell>
+                            <TableDataCell
+                                class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600">
+                                <Link :href="route('courses.index', {
+                                    id: c.id,
+                                    action: 'edit'
+                                })" class="text-purple-500 hover:text-purple-600 underline font-medium">Edit</Link>
+                            </TableDataCell>
+                        </TableRow>
+                        <TableRow v-else>
+                            <TableDataCell
+                                class="px-6 py-8 w-[10px] border-collapse border-t border-slate-400 text-center"
+                                colspan="6">No data to be displayed</TableDataCell>
                         </TableRow>
                     </template>
                 </Table>
@@ -91,7 +109,7 @@ onMounted(() => {
         </div>
 
         <!-- CREATE SCHOLARSHIP PROGRAM MODAL -->
-        <CreateModal v-if="props.action == 'create'" :action="props.action"
-            :scholarshipProgramsOptions="scholarshipProgramsOptions" />
+        <CourseModal v-if="props.action == 'create' || props.action == 'edit'" :action="props.action"
+            :course="props.course" :scholarshipProgramsOptions="scholarshipProgramsOptions" />
     </AdminLayout>
 </template>

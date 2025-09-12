@@ -114,7 +114,7 @@ onMounted(() => {
                 </h1>
                 <button
                     onclick="window.history.back()"
-                    class="text-slate-500 underline font-bold px-3 py-2 bg-none rounded flex items-center justify-center gap-1"
+                    class="text-slate-500 underline font-bold px-3 py-2 bg-none rounded-sm flex items-center justify-center gap-1"
                 >
                     <ArrowUturnLeftIcon class="h-5 w-5" /> Back
                 </button>

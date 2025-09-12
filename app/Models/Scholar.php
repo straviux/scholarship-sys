@@ -12,11 +12,9 @@ class Scholar extends Model
     use HasFactory;
 
     protected $fillable = [
-        'applicant_id',
+        'profile_id',
         'course_id',
-        'course_name',
         'scholarship_program_id',
-        'program_name',
         'term',
         'year_level',
         'academic_year',
@@ -27,7 +25,6 @@ class Scholar extends Model
         'remarks',
         'academic_status',
         'is_active',
-        'is_ongoing',
         'created_by',
         'updated_by',
         'scholarship_status_id',
@@ -46,6 +43,12 @@ class Scholar extends Model
     public function scholarshipStatus()
     {
         return $this->belongsTo(ScholarshipStatus::class, 'scholarship_status_id')->select(['id', 'status', 'remarks', 'status_id']);
+    }
+
+    public function updateScholarshipStatus($status_id)
+    {
+        $this->scholarship_status_id = $status_id;
+        return $this->save();
     }
 
     public static function boot()

@@ -14,7 +14,7 @@ const props = defineProps({
 
 const classes = computed(() =>
     props.active
-        ? "relative px-4 py-3 flex rounded-xl text-white bg-gradient-to-r from-[#2b5876] to-[#4e4376]"
+        ? "relative px-4 py-3 flex rounded-xl text-white bg-linear-to-r from-[#2b5876] to-[#4e4376]"
         : "px-4 py-3 flex rounded-md text-gray-300 hover:text-gray-50 group"
 );
 </script>

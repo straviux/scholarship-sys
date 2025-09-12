@@ -126,7 +126,7 @@ const submit = () => {
                     Create New Voter Profile
                 </h1>
                 <Link :href="route('votersprofile.index')"
-                    class="text-slate-500 underline font-bold px-3 py-2 bg-none rounded flex items-center justify-center gap-1">
+                    class="text-slate-500 underline font-bold px-3 py-2 bg-none rounded-sm flex items-center justify-center gap-1">
                 <ArrowUturnLeftIcon class="h-5 w-5" /> Back</Link>
             </div>
             <div class="mt-6 max-w-5xl mx-auto bg-gray-100 shadow-lg rounded-lg p-6">

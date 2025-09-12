@@ -1,0 +1,114 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class CreateScholarshipRecordRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        // $id = $this->route('id');
+        $id = $this->route('courses') ?? null;
+        return [
+            "school_name" => [
+                'nullable',
+                'string',
+                'max:500'
+            ],
+            "company_name" => [
+                'nullable',
+                'string',
+                'max:500'
+            ],
+
+            "year_level" => [
+                'required',
+                'string',
+                'max:20'
+            ],
+            "academic_year" => [
+                'required',
+                'string',
+                'max:20'
+            ],
+            "academic_status" => [
+                'nullable',
+                'string',
+                'max:20'
+            ],
+            "scholarship_status" => [
+                'integer'
+            ],
+            "scholarship_status_date" => [
+                'nullable',
+                'date',
+            ],
+            "scholarship_status_remarks" => [
+                'nullable',
+                'string',
+                'max:500'
+            ],
+            "term" => [
+                'required',
+                'string',
+                'max:50'
+            ],
+            "remarks" => [
+                'nullable',
+                'string',
+                'max:500'
+            ],
+            "start_date" => [
+                'nullable',
+                'date',
+            ],
+            "end_date" => [
+                'nullable',
+                'date',
+            ],
+            "date_filed" => [
+                'nullable',
+                'date',
+            ],
+            "is_active" => [
+                'boolean'
+            ],
+            "profile_id" => [
+                'required',
+                'exists:scholarship_profiles,profile_id'
+            ],
+            "course_id" => [
+                'required',
+                'exists:courses,id'
+            ],
+            "program_id" => [
+                'required',
+                'exists:scholarship_programs,id'
+            ],
+
+        ];
+    }
+
+
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'created_by' => $this->user() ? $this->user()->id : null,
+        ]);
+    }
+}

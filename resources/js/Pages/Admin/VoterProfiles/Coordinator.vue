@@ -97,14 +97,14 @@ const deleteRole = (voterProfileID) => {
                             name="leadingIcon"
                             id="leadingIcon"
                             placeholder="Search voter"
-                            class="w-full pl-14 pr-4 py-2.5 rounded-xl text-sm text-gray-600 outline-none border border-gray-300 focus:border-cyan-300 transition"
+                            class="w-full pl-14 pr-4 py-2.5 rounded-xl text-sm text-gray-600 outline-hidden border border-gray-300 focus:border-cyan-300 transition"
                         />
                     </div>
                 </div>
                 <!--/search bar -->
                 <Link
                     :href="route('votersprofile.create')"
-                    class="text-white font-semibold px-3 py-2 bg-sky-600 hover:bg-sky-700 rounded"
+                    class="text-white font-semibold px-3 py-2 bg-sky-600 hover:bg-sky-700 rounded-sm"
                     >New Profile</Link
                 >
             </div>

@@ -1,65 +1,35 @@
 <script setup>
 import { ref } from "vue";
-import ApplicationLogo from "@/Components/ApplicationLogo.vue";
-import Dropdown from "@/Components/Dropdown.vue";
-import DropdownLink from "@/Components/DropdownLink.vue";
-import NavLink from "@/Components/NavLink.vue";
 import SidebarLink from "@/Components/SidebarLink.vue";
-import ResponsiveNavLink from "@/Components/ResponsiveNavLink.vue";
 import { Link } from "@inertiajs/vue3";
 import { usePermission } from "@/composable/permissions";
 import { DynamicHeroicon } from 'vue-dynamic-heroicons';
-// import ToastList from "@/Components/ToastList.vue";
-import axios from "axios";
-const showingNavigationDropdown = ref(false);
 
 const { hasRole, hasPermission } = usePermission();
 import {
-    UsersIcon,
     Squares2X2Icon,
-    UserGroupIcon,
-    CogIcon,
-    FingerPrintIcon,
     ShieldExclamationIcon,
     ArrowRightStartOnRectangleIcon,
-    DocumentChartBarIcon,
-    HomeModernIcon,
-    HeartIcon
 } from "@heroicons/vue/20/solid";
-// import {  } from "@heroicons/vue/20/solid";
-// import { UserGroupIcon } from "@heroicons/vue/20/solid";
-// import { CogIcon } from "@heroicons/vue/20/solid";
-// import { FingerPrintIcon } from "@heroicons/vue/20/solid";
-// import { ArrowRightStartOnRectangleIcon } from "@heroicons/vue```/20/solid";
 const toggleMenu = ref(false);
-const pendingApplicantCount = ref(0);
-axios.get(route('applicants-api.getpendingcount')).then(response => {
-    // console.log(response.data.pending_count);
-    pendingApplicantCount.value = response.data.pending_count;
-}).catch(error => {
-    console.error("Error fetching pending count:", error);
-});
 
 </script>
 
 <template>
-    <div class="w-full h-full">
+    <div class="w-full h-full flex">
         <!-- component -->
-
         <aside
-            class="hidden fixed z-10 top-0 pb-3 w-full md:flex flex-col justify-between h-screen bg-[#222831] transition duration-300 md:max-w-[250px]"
-            :class="{ '!flex': toggleMenu }">
-
-            <div class="block px-4">
+            class="hidden fixed z-10 top-0 left-0 md:flex flex-col bg-[#222831] transition duration-300 md:w-[250px] h-screen min-w-0"
+            :class="{ 'flex!': toggleMenu }">
+            <div class="flex-1 flex flex-col min-h-0 min-w-0">
                 <div class="flex items-center justify-center pt-4 pb-2 text-center">
                     <a href="#" title="home" class="text-2xl font-bold font-mono text-gray-200">
                         <img src="/images/pgp-logo.png" class="w-36" alt="logo" />
                         <p class="text-sm mt-4">Scholarship Program</p>
                     </a>
                 </div>
-
                 <ul
-                    className="menu space-y-6 md:space-y-4 tracking-wide mt-8 text-normal md:text-sm w-full max-w-xs  text-gray-300 hover:text-gray-50 ">
+                    class="menu space-y-6 md:space-y-4 mt-8 text-normal md:text-sm w-full text-gray-300 hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block h-[calc(100vh-160px)]">
                     <li>
                         <SidebarLink :href="route('dashboard')" :active="route().current('dashboard')">
                             <Squares2X2Icon class=" h-5 w-5" />
@@ -75,23 +45,38 @@ axios.get(route('applicants-api.getpendingcount')).then(response => {
                             </summary>
                             <ul class="space-y-1 mt-2">
                                 <li>
-                                    <SidebarLink :href="route('applicants.index')"
-                                        :active="route().current('applicants.index')">
+                                    <SidebarLink :href="route('profile.waitinglist')" :active="route().current('profile.waitinglist') ||
+                                        route().current('profile.waitinglist')">
+                                        <span class="-mr-1 font-medium indent-3">Waiting List</span>
+                                    </SidebarLink>
+                                </li>
+                                <li>
+                                    <SidebarLink :href="route('profile.index')"
+                                        :active="route().current('profile.index')">
                                         <span class="-mr-1 font-medium indent-3">Profiles</span>
                                         <div class="indicator ml-6">
-                                            <span class="indicator-item text-xs indicator-middle badge badge-secondary"
+                                            <!-- <span class="indicator-item text-xs indicator-middle badge badge-secondary"
                                                 v-if="pendingApplicantCount > 0">{{
-                                                    pendingApplicantCount }}</span>
+                                                    pendingApplicantCount }}</span> -->
                                         </div>
                                     </SidebarLink>
                                 </li>
                                 <li>
-                                    <SidebarLink :href="route('scholars.index')" :active="route().current('scholars.index') ||
-                                        route().current('scholars.showbyprogram')">
-                                        <span class="-mr-1 font-medium indent-3">Scholars</span>
+                                    <SidebarLink :href="route('scholarship_records.index')" :active="route().current('scholarship_records.index') ||
+                                        route().current('scholarship_records.showbyprogram')">
+                                        <span class="-mr-1 font-medium indent-3">Grant Records</span>
                                     </SidebarLink>
                                 </li>
-
+                            </ul>
+                        </details>
+                    </li>
+                    <li v-if="hasRole('administrator') || hasRole('moderator')">
+                        <details open>
+                            <summary>
+                                <DynamicHeroicon name="table" :size="6" />
+                                <span class="-mr-1 font-medium">Library</span>
+                            </summary>
+                            <ul class="space-y-1 mt-2">
                                 <li v-if="hasPermission('manage-scholarship-programs')">
                                     <SidebarLink :href="route('scholarshipprograms.index')"
                                         :active="route().current('scholarshipprograms.index')">
@@ -106,11 +91,23 @@ axios.get(route('applicants-api.getpendingcount')).then(response => {
                                     </SidebarLink>
                                 </li>
 
+                                <li>
+                                    <SidebarLink :href="route('program_requirements.index')"
+                                        :active="route().current('program_requirements.index')">
+                                        <span class="-mr-1 font-medium indent-3">Requirements</span>
+                                    </SidebarLink>
+                                </li>
+
+                                <li>
+                                    <SidebarLink :href="route('school.index')"
+                                        :active="route().current('school.index')">
+                                        <span class="-mr-1 font-medium indent-3">Schools</span>
+                                    </SidebarLink>
+                                </li>
                             </ul>
                         </details>
                     </li>
-
-                    <li v-if="hasRole('admin')">
+                    <li v-if="hasRole('administrator')">
                         <details open>
                             <summary>
                                 <ShieldExclamationIcon class="h-5 w-5" />
@@ -118,36 +115,33 @@ axios.get(route('applicants-api.getpendingcount')).then(response => {
                             </summary>
                             <ul class="space-y-1 mt-2">
                                 <li>
-                                    <SidebarLink v-if="hasRole('admin')" :href="route('users.index')"
+                                    <SidebarLink v-if="hasRole('administrator')" :href="route('users.index')"
                                         :active="route().current('users.index')">
                                         <!-- <UsersIcon class="h-5 w-5" /> -->
                                         <span class="-mr-1 font-medium indent-3">Users</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
-                                    <SidebarLink v-if="hasRole('admin')" :href="route('roles.index')" :active="route().current('roles.index') ||
-                                        route().current('roles.create')
-                                        ">
+                                    <SidebarLink v-if="hasRole('administrator')" :href="route('roles.index')" :active="route().current('roles.index') ||
+                                        route().current('roles.create')">
                                         <!-- <CogIcon class="h-5 w-5" /> -->
                                         <span class="-mr-1 font-medium indent-3">Roles</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
-                                    <SidebarLink v-if="hasRole('admin')" :href="route('permissions.index')" :active="route().current('permissions.index') ||
-                                        route().current('permissions.create')
-                                        ">
+                                    <SidebarLink v-if="hasRole('administrator')" :href="route('permissions.index')"
+                                        :active="route().current('permissions.index') ||
+                                            route().current('permissions.create')">
                                         <!-- <ShieldExclamationIcon class="h-5 w-5" /> -->
                                         <span class="-mr-1 font-medium indent-3">Permissions</span>
                                     </SidebarLink>
                                 </li>
-
                             </ul>
                         </details>
                     </li>
 
                 </ul>
             </div>
-
             <div class="px-6 pt-4 flex justify-between items-center border-t">
                 <Link class="px-4 py-3 flex items-center space-x-4 rounded-md text-gray-300 hover:text-gray-50 group "
                     :href="route('logout')" method="post" as="button">
@@ -157,7 +151,7 @@ axios.get(route('applicants-api.getpendingcount')).then(response => {
             </div>
         </aside>
 
-        <div class="ml-auto mb-6 w-full md:w-[calc(100%-250px)]">
+        <div class="ml-auto mb-6 w-full md:w-[calc(100%-250px)] min-w-0 flex flex-col">
             <div class="sticky z-10 top-0 h-16 border-b bg-[#222831] lg:py-2.5">
                 <div class="px-6 flex items-center justify-between space-x-4">
                     <h5 class="text-xl md:text-2xl text-gray-300 hover:text-gray-50 font-medium lg:block">
@@ -185,7 +179,7 @@ axios.get(route('applicants-api.getpendingcount')).then(response => {
                             <div tabindex="0" role="button" class="btn btn-ghost rounded-btn text-white">Welcome, {{
                                 $page.props.auth.user.name }}</div>
                             <ul tabindex="0"
-                                class="menu dropdown-content bg-base-100 rounded-box z-[1] mt-4 w-52 p-2 shadow">
+                                class="menu dropdown-content bg-base-100 rounded-box z-1 mt-4 w-52 p-2 shadow-sm">
                                 <li>
                                     <Link class="px-2 py-3 flex items-center space-x-2 group" :href="route('logout')"
                                         method="post" as="button">
@@ -208,6 +202,11 @@ axios.get(route('applicants-api.getpendingcount')).then(response => {
     </div>
 </template>
 <style>
+.menu,
+aside {
+    box-sizing: border-box;
+}
+
 .v-enter-active,
 .v-leave-active {
     transition: opacity 0.1s ease;

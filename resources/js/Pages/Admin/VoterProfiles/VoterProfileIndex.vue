@@ -241,7 +241,7 @@ onMounted(() => {
 							</span>
 							<input type="search" name="leadingIcon" v-model="searchNameQuery" id="searchName"
 								placeholder="Search Name"
-								class="w-full pl-14 pr-4 rounded text-sm text-gray-600 outline-none border border-gray-300 focus:border-blue-300 transition" />
+								class="w-full pl-14 pr-4 rounded-sm text-sm text-gray-600 outline-hidden border border-gray-300 focus:border-blue-300 transition" />
 						</div>
 					</div>
 
@@ -279,7 +279,7 @@ onMounted(() => {
 					<div class="flex flex-row">
 						<div class="w-[170px] space-x-2">
 							<label class="text-sm text-gray-500">Show results</label>
-							<select class="py-0 rounded-sm text-gray-500 border-gray-400" v-model="showResultCount">
+							<select class="py-0 rounded-xs text-gray-500 border-gray-400" v-model="showResultCount">
 								<option value="5">5</option>
 								<option value="10">10</option>
 								<option value="20">20</option>
@@ -307,7 +307,7 @@ onMounted(() => {
 				</div>
 				<ul v-if="gridview && currentVoterPosition !== 'all'" role="list"
 					class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-					<li class="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow border border-gray-300 transition hover:-translate-y-2 duration-150 hover:shadow-lg"
+					<li class="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow-sm border border-gray-300 transition hover:-translate-y-2 duration-150 hover:shadow-lg"
 						v-for="(profile, index) in voterprofiles.data" :key="'profile_' + profile.id">
 						<div class="flex w-full items-start justify-between space-x-6 px-2 py-2.5">
 							<p class="text-gray-400 text-xs absolute mt-1">#{{ index + 1 }}</p>
@@ -323,7 +323,7 @@ onMounted(() => {
 								</p>
 							</div>
 							<!-- <img
-                                class="h-10 w-10 flex-shrink-0 rounded-full bg-gray-300"
+                                class="h-10 w-10 shrink-0 rounded-full bg-gray-300"
                                 src="https://qph.cf2.quoracdn.net/main-thumb-554097988-200-xietklpojlcioqxaqgcyykzfxblvoqrb.jpeg"
                                 alt=""
                             /> -->
@@ -494,7 +494,7 @@ onMounted(() => {
 					<div class="flex">
 						<div class="w-[170px] space-x-2">
 							<label class="text-sm text-gray-500">Show results</label>
-							<select class="py-0 rounded-sm text-gray-500 border-gray-400" v-model="showResultCount">
+							<select class="py-0 rounded-xs text-gray-500 border-gray-400" v-model="showResultCount">
 								<option value="5">5</option>
 								<option value="10">10</option>
 								<option value="20">20</option>
@@ -575,7 +575,7 @@ onMounted(() => {
 			</div>
 
 			<!-- POSITION SELECTION/SEARCH NAME -->
-			<div class="join flex  shadow border">
+			<div class="join flex  shadow-sm border">
 
 
 				<button class="btn join-item bg-purple-500 text-white border-0" @click="
@@ -583,14 +583,14 @@ onMounted(() => {
 					">
 					<DynamicHeroicon name="filter" :outline="true" :size="6" />
 				</button>
-				<input class="input join-item w-full focus:outline-none" placeholder="Search name"
+				<input class="input join-item w-full focus:outline-hidden" placeholder="Search name"
 					v-model="searchNameQuery" />
-				<!-- <select class="select text-xs select-bordered focus:outline-none join-item w-1/4">
+				<!-- <select class="select text-xs select-bordered focus:outline-hidden join-item w-1/4">
 					<option disabled selected>Bgy</option>
 					<option v-for="bgy in barangays">{{ bgy }}</option>
 
 				</select>
-				<select class="select text-xs select-bordered focus:outline-none join-item w-1/3">
+				<select class="select text-xs select-bordered focus:outline-hidden join-item w-1/3">
 					<option disabled selected>Precinct</option>
 					<option v-for="bgy in barangays">{{ bgy }}</option>
 
@@ -631,7 +631,7 @@ onMounted(() => {
 				<div class="mt-6 flex justify-between">
 					<div class="flex items-center gap-1">
 						<label class="text-xs text-gray-500">Show Results</label>
-						<select class="py-0 rounded-sm text-gray-500 text-sm border-gray-400" v-model="showResultCount">
+						<select class="py-0 rounded-xs text-gray-500 text-sm border-gray-400" v-model="showResultCount">
 							<option value="5">5</option>
 							<option value="10">10</option>
 							<option value="20">20</option>
@@ -643,7 +643,7 @@ onMounted(() => {
 
 					<!-- <div class="flex gap-1 items-center">
 						<label class="text-xs text-gray-5">Voters List</label>
-						<select class="py-0 rounded-sm text-gray-500 text-sm border-gray-400" v-model="list_year">
+						<select class="py-0 rounded-xs text-gray-500 text-sm border-gray-400" v-model="list_year">
 							<option value="2024">2024</option>
 							<option selected value="2025">2025</option>
 						</select>

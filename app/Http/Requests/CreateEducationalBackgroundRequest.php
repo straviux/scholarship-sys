@@ -56,9 +56,14 @@ class CreateEducationalBackgroundRequest extends FormRequest
                 'date_format:Y',
                 'after_or_equal:start_date',
             ],
-            "applicant_id" => [
+            "remarks" => [
+                'nullable',
+                'string',
+                'max:255'
+            ],
+            "profile_id" => [
                 'required',
-                'exists:applicants,id'
+                'exists:scholarship_profiles,profile_id'
             ],
         ];
     }
@@ -70,12 +75,4 @@ class CreateEducationalBackgroundRequest extends FormRequest
     //         'name.required' => 'Course name cannot be blank'
     //     ];
     // }
-
-    protected function prepareForValidation()
-    {
-        // Merge the 'created_by' field into the request data
-        $this->merge([
-            'created_by' => $this->user() ? $this->user()->id : null,
-        ]);
-    }
 }
