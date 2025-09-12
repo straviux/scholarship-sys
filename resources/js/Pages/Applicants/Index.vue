@@ -229,7 +229,7 @@ const cancelDelete = () => {
                         </select>
                     </div>
 
-                    <div class="flex shadow-xs">
+                    <!-- <div class="flex shadow-xs">
                         <div class="bg-gray-700 rounded-l-lg text-white p-4">Filter</div>
                         <div class="px-4 border  bg-gray-50 flex flex-1 items-center gap-2">
                             <div class="w-1/3">
@@ -259,7 +259,7 @@ const cancelDelete = () => {
                                 Clear
                             </button>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
                 <div class="flex justify-end gap-4">
 
@@ -343,7 +343,7 @@ const cancelDelete = () => {
                     <!-- filter row -->
                     <TableRow>
                         <TableDataCell class="px-3"></TableDataCell>
-                        <TableDataCell>
+                        <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
                                 <IconField>
                                     <InputIcon class="pi pi-search" />
@@ -352,34 +352,42 @@ const cancelDelete = () => {
                             </div>
                         </TableDataCell>
 
-                        <TableDataCell>
+                        <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
                                 <MunicipalitySelect v-model="filter.municipality" custom-placeholder="---" />
                             </div>
                         </TableDataCell>
 
-                        <TableDataCell>
+                        <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
                                 <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="---" />
                             </div>
                         </TableDataCell>
-                        <TableDataCell>
+                        <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
                                 <CourseSelect v-model="filter.course" :scholarship-program-id="filter.program?.id"
                                     custom-placeholder="---" label="shortname" />
                             </div>
                         </TableDataCell>
-                        <TableDataCell>
+                        <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
                                 <YearLevelSelect v-model="filter.year_level" label="shortname"
                                     custom-placeholder="---" />
                             </div>
                         </TableDataCell>
-                        <TableDataCell></TableDataCell>
-                        <TableDataCell></TableDataCell>
-                        <TableDataCell></TableDataCell>
-                        <!-- <TableDataCell></TableDataCell> -->
-                        <TableDataCell></TableDataCell>
+                        <TableDataCell class="border-l border-collapse border-slate-400"></TableDataCell>
+                        <TableDataCell class="border-l border-collapse border-slate-400"></TableDataCell>
+                        <TableDataCell class="border-l border-collapse border-slate-400"></TableDataCell>
+                        <TableDataCell class="border-l border-collapse border-slate-400">
+                            <div class="px-2">
+                                <div class="bg-gray-600 text-gray-200 p-2 rounded-lg border flex items-center cursor-pointer justify-center"
+                                    @click="clearFilter" as="button">
+                                    <button class="cursor-pointer">
+                                        Clear Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </TableDataCell>
                     </TableRow>
 
                     <TableRow class="hover:bg-gray-200" v-for="(profile, index) in profiles.data"
