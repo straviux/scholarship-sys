@@ -381,13 +381,14 @@ const cancelDelete = () => {
                                 moment(profile.created_at).format('MMM DD, YYYY') }}
                         </TableDataCell>
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700">
+                            {{ profile.remarks }}
+                        </TableDataCell>
+                        <TableDataCell class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700">
                             <span :class="{ 'text-red-400': profile.application_status == 2 }">{{
                                 profile.application_status == 0 ? 'Pending' : profile.application_status == 2 ?
                                     'Declined' : '' }}</span>
                         </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700">
-                            {{ profile.remarks }}
-                        </TableDataCell>
+
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
                             <div class="flex space-x-6 justify-center">
                                 <button class="text-gray-400 hover:text-blue-600 flex cursor-pointer"
