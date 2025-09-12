@@ -17,7 +17,11 @@ const props = defineProps({
     label: {
         type: String,
         default: 'name'
-    }
+    },
+    customPlaceholder: {
+        type: String,
+        default: 'Select Course'
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -74,7 +78,7 @@ watchEffect(() => {
 
 <template>
     <Select v-model="localValue" :options="courses" filter autoFilterFocus showClear optionLabel="name"
-        placeholder="Select Course" class="w-full">
+        :placeholder="customPlaceholder" class="w-full">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.shortname }}</div>

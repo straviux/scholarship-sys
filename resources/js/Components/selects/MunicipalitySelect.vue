@@ -12,6 +12,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    customPlaceholder: {
+        type: String,
+        default: 'Select Municipality'
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -53,7 +57,7 @@ watch(
     <!-- <Multiselect v-model="localValue" :options="municipalities" :multiple="props.multiple" label="name" track-by="id"
         :show-labels="false" placeholder="Select municipality" /> -->
     <Select v-model="localValue" :options="municipalities" filter autoFilterFocus showClear optionLabel="name"
-        placeholder="Select Municipality" class="w-full">
+        :placeholder="customPlaceholder" class="w-full">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.name }}</div>

@@ -22,7 +22,8 @@ import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import Pagination from '@/Components/Pagination.vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
-
+import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
+import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 
 const { hasPermission } = usePermission();
 
@@ -298,15 +299,14 @@ const cancelDelete = () => {
                 <template #header>
                     <TableRow>
                         <TableHeaderCell class="px-3">#</TableHeaderCell>
-                        <TableHeaderCell @click="sortBy('name')" class="cursor-pointer">
+                        <TableHeaderCell @click="sortBy('name')" class="cursor-pointer w-80">
                             <div class="flex items-center gap-2">
                                 <h4>Name</h4>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
+                        <TableHeaderCell class="w-42">Address</TableHeaderCell>
 
-                        <TableHeaderCell>Address</TableHeaderCell>
-                        <TableHeaderCell>Contact #</TableHeaderCell>
                         <TableHeaderCell @click="sortBy('applied_school')" class="cursor-pointer">
                             <div class="flex items-center gap-2">
                                 <h4>School</h4>
@@ -325,25 +325,70 @@ const cancelDelete = () => {
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell @click="sortBy('date_filed')" class="cursor-pointer">
+                        <TableHeaderCell>Contact #</TableHeaderCell>
+                        <TableHeaderCell @click="sortBy('date_filed')" class="cursor-pointer w-[110px]">
                             <div class="flex items-center gap-2">
                                 <h4>Date Filed</h4>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
                         <TableHeaderCell>Remarks</TableHeaderCell>
-                        <TableHeaderCell class="w-[160px]">Status</TableHeaderCell>
+                        <!-- <TableHeaderCell class="w-[160px]">Status</TableHeaderCell> -->
                         <TableHeaderCell class="w-[160px]">Action</TableHeaderCell>
                     </TableRow>
+
+
                 </template>
                 <template #default>
+                    <!-- filter row -->
+                    <TableRow>
+                        <TableDataCell class="px-3"></TableDataCell>
+                        <TableDataCell>
+                            <div class="px-2">
+                                <IconField>
+                                    <InputIcon class="pi pi-search" />
+                                    <InputText v-model="filter.name" placeholder="Search name" class="w-full" />
+                                </IconField>
+                            </div>
+                        </TableDataCell>
+
+                        <TableDataCell>
+                            <div class="px-2">
+                                <MunicipalitySelect v-model="filter.municipality" custom-placeholder="---" />
+                            </div>
+                        </TableDataCell>
+
+                        <TableDataCell>
+                            <div class="px-2">
+                                <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="---" />
+                            </div>
+                        </TableDataCell>
+                        <TableDataCell>
+                            <div class="px-2">
+                                <CourseSelect v-model="filter.course" :scholarship-program-id="filter.program?.id"
+                                    custom-placeholder="---" label="shortname" />
+                            </div>
+                        </TableDataCell>
+                        <TableDataCell>
+                            <div class="px-2">
+                                <YearLevelSelect v-model="filter.year_level" label="shortname"
+                                    custom-placeholder="---" />
+                            </div>
+                        </TableDataCell>
+                        <TableDataCell></TableDataCell>
+                        <TableDataCell></TableDataCell>
+                        <TableDataCell></TableDataCell>
+                        <!-- <TableDataCell></TableDataCell> -->
+                        <TableDataCell></TableDataCell>
+                    </TableRow>
+
                     <TableRow class="hover:bg-gray-200" v-for="(profile, index) in profiles.data"
                         :key="'profile_' + profile.id" v-if="profiles.data && profiles.data.length">
                         <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-400">{{ index + 1 }}
                         </TableDataCell>
                         <TableDataCell
-                            class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700 uppercase">
-                            <div class="flex items-center gap-2">
+                            class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
+                            <div class="flex items-center gap-2 px-2">
                                 <figure>
                                     <img v-if="profile.gender == 'M'" src="/images/male-avatar.png" alt="avatar"
                                         class="rounded-xl w-[28px]" />
@@ -358,36 +403,45 @@ const cancelDelete = () => {
                             </div>
                         </TableDataCell>
                         <TableDataCell
-                            class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700 uppercase">
-                            {{ profile.municipality }} {{ profile.barangay ? `, ${profile.barangay}` : '' }}
+                            class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
+                            <div class="px-2"> {{ profile.municipality }} {{ profile.barangay ? `, ${profile.barangay}`
+                                : '' }}</div>
                         </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700">
-                            {{ profile.contact_no }}
+
+                        <TableDataCell
+                            class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
+                            <div class="px-2">
+                                {{ profile.scholarship_grant[0]?.school?.shortname }}
+                            </div>
                         </TableDataCell>
                         <TableDataCell
                             class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700 uppercase">
-                            {{ profile.scholarship_grant[0]?.school?.shortname }}
+                            <div class="px-2">
+                                {{ profile.scholarship_grant[0]?.course?.shortname }}
+                            </div>
+                        </TableDataCell>
+                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
+                            <div class="px-2">{{ profile.scholarship_grant[0]?.year_level }}</div>
+                        </TableDataCell>
+                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
+                            <div class="px-2">{{ profile.contact_no }}</div>
                         </TableDataCell>
                         <TableDataCell
-                            class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700 uppercase">
-                            {{ profile.scholarship_grant[0]?.course?.shortname }}
+                            class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
+                            <div class="px-2"> {{ profile.date_filed ? moment(profile.date_filed).format('MMM DD, YYYY')
+                                :
+                                moment(profile.created_at).format('MMM DD, YYYY') }}</div>
                         </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700">
-                            {{ profile.scholarship_grant[0]?.year_level }}
+                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
+                            <div class="px-2">
+                                {{ profile.remarks }}
+                            </div>
                         </TableDataCell>
-                        <TableDataCell
-                            class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700 uppercase">
-                            {{ profile.date_filed ? moment(profile.date_filed).format('MMM DD, YYYY') :
-                                moment(profile.created_at).format('MMM DD, YYYY') }}
-                        </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700">
-                            {{ profile.remarks }}
-                        </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700">
-                            <span :class="{ 'text-red-400': profile.application_status == 2 }">{{
+                        <!-- <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
+                            <div class="px-2"><span :class="{ 'text-red-400': profile.application_status == 2 }">{{
                                 profile.application_status == 0 ? 'Pending' : profile.application_status == 2 ?
-                                    'Declined' : '' }}</span>
-                        </TableDataCell>
+                                    'Declined' : '' }}</span></div>
+                        </TableDataCell> -->
 
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
                             <div class="flex space-x-6 justify-center">

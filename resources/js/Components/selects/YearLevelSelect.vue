@@ -9,7 +9,11 @@ const props = defineProps({
     label: {
         type: String,
         default: 'name'
-    }
+    },
+    customPlaceholder: {
+        type: String,
+        default: 'Select Year Level'
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -71,7 +75,7 @@ watch(
 
 <template>
     <Select v-model="localValue" :options="year_levels" filter autoFilterFocus showClear optionLabel="label"
-        placeholder="Select Year Level" class="w-full">
+        :placeholder="customPlaceholder" class="w-full">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.label }}</div>
