@@ -203,23 +203,23 @@ class UpdateScholarshipProfileRequest extends FormRequest
         ]);
     }
 
-    public function withValidator($validator)
-    {
-        $validator->after(function ($validator) {
-            $last = $this->input('last_name');
-            $first = $this->input('first_name');
-            $middle = $this->input('middle_name');
-            $profileId = $this->route('profile') ? (is_object($this->route('profile')) ? $this->route('profile')->profile_id : $this->route('profile')) : null;
-            $exists = \App\Models\ScholarshipProfile::where('last_name', $last)
-                ->where('first_name', $first)
-                ->where('middle_name', $middle)
-                ->when($profileId, function ($query, $profileId) {
-                    $query->where('profile_id', '!=', $profileId);
-                })
-                ->exists();
-            if ($exists) {
-                $validator->errors()->add('last_name', 'A profile with the same last name, first name, and middle name already exists.');
-            }
-        });
-    }
+    // public function withValidator($validator)
+    // {
+    //     $validator->after(function ($validator) {
+    //         $last = $this->input('last_name');
+    //         $first = $this->input('first_name');
+    //         $middle = $this->input('middle_name');
+    //         $profileId = $this->route('profile') ? (is_object($this->route('profile')) ? $this->route('profile')->profile_id : $this->route('profile')) : null;
+    //         $exists = \App\Models\ScholarshipProfile::where('last_name', $last)
+    //             ->where('first_name', $first)
+    //             ->where('middle_name', $middle)
+    //             ->when($profileId, function ($query, $profileId) {
+    //                 $query->where('profile_id', '!=', $profileId);
+    //             })
+    //             ->exists();
+    //         if ($exists) {
+    //             $validator->errors()->add('last_name', 'A profile with the same last name, first name, and middle name already exists.');
+    //         }
+    //     });
+    // }
 }
