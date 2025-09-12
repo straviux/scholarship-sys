@@ -331,6 +331,7 @@ const cancelDelete = () => {
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
+                        <TableHeaderCell>Remarks</TableHeaderCell>
                         <TableHeaderCell class="w-[160px]">Status</TableHeaderCell>
                         <TableHeaderCell class="w-[160px]">Action</TableHeaderCell>
                     </TableRow>
@@ -383,6 +384,9 @@ const cancelDelete = () => {
                             <span :class="{ 'text-red-400': profile.application_status == 2 }">{{
                                 profile.application_status == 0 ? 'Pending' : profile.application_status == 2 ?
                                     'Declined' : '' }}</span>
+                        </TableDataCell>
+                        <TableDataCell class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700">
+                            {{ profile.remarks }}
                         </TableDataCell>
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
                             <div class="flex space-x-6 justify-center">
