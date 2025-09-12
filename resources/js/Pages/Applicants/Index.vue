@@ -31,6 +31,7 @@ const { hasPermission } = usePermission();
 const props = defineProps({
     profile: Object,
     profiles: Object,
+    profiles_total: [String, Number],
     action: String,
     per_page: Number,
     filter: Object,
@@ -218,8 +219,8 @@ const cancelDelete = () => {
                 <!-- {{ props.action }} -->
                 <div class="flex gap-2 flex-1">
                     <div class="flex shadow-xs">
-                        <div class="bg-gray-700 rounded-l-lg text-white p-4">Show</div>
-                        <select v-model="form.per_page" class="w-[60px] border rounded-r-lg cursor-pointer text-center">
+                        <div class="bg-gray-700 rounded-l-lg text-white p-2">Show</div>
+                        <select v-model="form.per_page" class="w-[60px] rounded-r-lg border cursor-pointer text-center">
                             <option value="200">200</option>
                             <option value="100">100</option>
                             <option value="50">50</option>
@@ -228,6 +229,7 @@ const cancelDelete = () => {
                             <option value="5">5</option>
                         </select>
                     </div>
+                    <div class="text-gray-500 p-2">of {{ profiles_total }} result(s)</div>
 
                     <!-- <div class="flex shadow-xs">
                         <div class="bg-gray-700 rounded-l-lg text-white p-4">Filter</div>

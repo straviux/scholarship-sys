@@ -128,6 +128,7 @@ class ScholarshipProfileController extends Controller
             [
                 'action' => fn() => $action,
                 'profiles' => ScholarshipProfileResource::collection($profiles),
+                'profiles_total' => $profiles->total(),
                 'message' => $msg,
             ]
         );
@@ -217,6 +218,7 @@ class ScholarshipProfileController extends Controller
                     'sort' => ['last_name' => $request->sort['last_name'] ?? ""],
                     'profile' => $profile,
                     'profiles' => ScholarshipProfileResource::collection($profiles),
+                    'profiles_total' => $profiles->total(),
                 ]
             );
         }
@@ -228,6 +230,7 @@ class ScholarshipProfileController extends Controller
                 'filter' => ['applied_course' => $request->applied_course ?? '', 'municipality' => $request->municipality ?? '', 'name' => $request->name ?? ''],
                 'sort' => ['last_name' => $request->sort['last_name'] ?? ""],
                 'profiles' => ScholarshipProfileResource::collection($profiles),
+                'profiles_total' => $profiles->total(),
             ]
         );
     }
