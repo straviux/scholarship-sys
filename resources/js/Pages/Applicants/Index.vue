@@ -137,8 +137,19 @@ const handleKeydown = (e) => {
 }
 
 
-onMounted(() => {
+const userEncodedCount = ref({ total: 0, today: 0 });
+
+onMounted(async () => {
     window.addEventListener('keydown', handleKeydown);
+    // Fetch user encoded records count
+    try {
+        const res = await fetch(route('profile.getuserencodedrecords'));
+        if (res.ok) {
+            userEncodedCount.value = await res.json();
+        }
+    } catch (e) {
+        userEncodedCount.value = { total: 0, today: 0 };
+    }
     console.log(props.profiles.data)
 });
 
@@ -266,6 +277,22 @@ const cancelDelete = () => {
                 </div>
             </div>
 
+
+            <div class="flex gap-4 justify-end items-end mb-2">
+                <div class="text-normal text-gray-500 flex gap-2">Encoder: <p
+                        class="font-bold font-mono text-emerald-600">{{
+                            userEncodedCount.name
+                        }}</p>
+                </div>-
+                <div class="text-normal text-gray-500 flex gap-2">Today: <p class="font-bold font-mono text-purple-600">
+                        {{
+                            userEncodedCount.today }}</p>
+                </div>-
+                <div class="text-normal text-gray-500 flex gap-2">Total: <p class="font-bold font-mono text-purple-600">
+                        {{
+                            userEncodedCount.total }}</p>
+                </div>
+            </div>
 
             <Table class="border-collapse border border-slate-100 bg-[#f8f8f8]" :loading="form.processing">
                 <template #header>

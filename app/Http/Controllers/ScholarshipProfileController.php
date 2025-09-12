@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
 
 class ScholarshipProfileController extends Controller
 {
@@ -474,5 +475,23 @@ class ScholarshipProfileController extends Controller
             return response()->json(['message' => 'Profile deleted successfully.']);
         }
         return redirect()->route('profile.waitinglist')->with('message', 'Profile deleted successfully.');
+    }
+
+    /**
+     * Return the total and today's count of ScholarshipProfile records created by the current logged-in user
+     */
+    public function countByCurrentUser()
+    {
+        $userId = Auth::id();
+        $userName = Auth::user()->name ?? '';
+        $total = ScholarshipProfile::where('created_by', $userId)->count();
+        $today = ScholarshipProfile::where('created_by', $userId)
+            ->whereDate('created_at', now()->toDateString())
+            ->count();
+        return response()->json([
+            'name' => $userName,
+            'total' => $total,
+            'today' => $today
+        ]);
     }
 }
