@@ -39,33 +39,43 @@ const props = defineProps({
     sort: {
         date_filed: { type: String },
         last_name: { type: String },
-        applied_course: { type: String },
+        course: { type: String },
         applied_year_level: { type: String },
     },
 
 });
 
 const form = useForm({
-    applied_course: props.filter.applied_course || "",
+    course: props.filter.course || "",
     municipality: props.filter.municipality || "",
     name: props.filter.name || "",
     per_page: props.per_page || 10,
     sort: {
         date_filed: props.sort.date_filed || "",
         last_name: props.sort.last_name || "",
-        applied_school: props.sort.applied_school || "",
-        applied_course: props.sort.applied_course || "",
-        applied_year_level: props.sort.applied_year_level || "",
+        school: props.sort.school || "",
+        course: props.sort.course || "",
+        year_level: props.sort.year_level || "",
     },
 
 });
+
+const toDate = (val) => val ? new Date(val) : null;
 const filter = useForm({
     name: props.filter.name || "",
     program: props.filter.program || "",
+    school: props.filter.school || "",
     course: props.filter.course || "",
     municipality: props.filter.municipality || "",
-
+    year_level: props.filter.year_level || "",
+    date_range: (props.filter.date_range && Array.isArray(props.filter.date_range))
+        ? props.filter.date_range.map(toDate)
+        : (props.filter.date_from && props.filter.date_to)
+            ? [toDate(props.filter.date_from), toDate(props.filter.date_to)]
+            : [],
 })
+
+// console.log(props.filter)
 
 const searchInput = ref(null);
 const selectedProfile = ref({});
@@ -84,25 +94,33 @@ const viewProfile = (profile) => {
 const filterList = () => {
     // Prepare filter values
     const program = filter.program?.id || "";
-    const applied_course = filter.course?.shortname || "";
-    const municipality = filter.municipality?.name || "";
-    const name = filter.name || "";
+    const course = filter.course?.shortname?.toLowerCase() || "";
+    const municipality = filter.municipality?.name?.toLowerCase() || "";
+    const name = filter.name.toLowerCase() || "";
+    const school = filter.school?.shortname?.toLowerCase() || "";
+    const year_level = filter.year_level?.value?.toLowerCase() || "";
     const per_page = form.per_page;
     const sort = form.sort;
 
-    // Send request to waiting list API
-    // You can add per_page or other params as needed
+    // Split date_range into date_from and date_to, format with moment
+    let date_from = "";
+    let date_to = "";
+    if (Array.isArray(filter.date_range) && filter.date_range.length === 2) {
+        date_from = filter.date_range[0] ? moment(filter.date_range[0]).format('YYYY-MM-DD') : "";
+        date_to = filter.date_range[1] ? moment(filter.date_range[1]).format('YYYY-MM-DD') : "";
+    }
+
     const params = {
         program,
-        // course,
-        applied_course,
+        course,
         municipality,
         name,
+        school,
+        year_level,
+        date_from,
+        date_to,
         per_page, sort
     };
-    // Use Inertia visit to update the page with filtered results
-    // The route name should match your web.php
-    // This will update the profiles prop with paginated results
     router.get(route('profile.waitinglist'), params, {
         preserveState: true,
         preserveScroll: true,
@@ -110,7 +128,12 @@ const filterList = () => {
 }
 
 const clearFilter = () => {
-    filter.reset();
+    filter.reset('name');
+    filter.reset('program');
+    filter.reset('school');
+    filter.reset('course');
+    filter.reset('municipality');
+    filter.reset('year_level');
 }
 const sortBy = (column) => {
     if (column == 'name') {
@@ -119,16 +142,15 @@ const sortBy = (column) => {
     if (column == 'date_filed') {
         form.sort.date_filed = form.sort.date_filed == 'desc' ? 'asc' : 'desc';
     }
-    if (column == 'applied_school') {
-        form.sort.applied_school = form.sort.applied_school == 'desc' ? 'asc' : 'desc';
+    if (column == 'school') {
+        form.sort.school = form.sort.school == 'desc' ? 'asc' : 'desc';
     }
-    if (column == 'applied_course') {
-        form.sort.applied_course = form.sort.applied_course == 'desc' ? 'asc' : 'desc';
+    if (column == 'course') {
+        form.sort.course = form.sort.course == 'desc' ? 'asc' : 'desc';
     }
-    if (column == 'applied_year_level') {
-        form.sort.applied_year_level = form.sort.applied_year_level == 'desc' ? 'asc' : 'desc';
+    if (column == 'year_level') {
+        form.sort.year_level = form.sort.year_level == 'desc' ? 'asc' : 'desc';
     }
-
 }
 
 const handleKeydown = (e) => {
@@ -217,7 +239,7 @@ const cancelDelete = () => {
                 <!-- <h1>Welcome {{ $page.props.auth.user.name }}</h1> -->
                 <!-- <h3>{{ props }}</h3> -->
                 <!-- {{ props.action }} -->
-                <div class="flex gap-2 flex-1">
+                <div class="flex gap-2 flex-1 items-center">
                     <div class="flex shadow-xs">
                         <div class="bg-gray-700 rounded-l-lg text-white p-2">Show</div>
                         <select v-model="form.per_page" class="w-[60px] rounded-r-lg border cursor-pointer text-center">
@@ -230,7 +252,19 @@ const cancelDelete = () => {
                         </select>
                     </div>
                     <div class="text-gray-500 p-2">of {{ profiles_total }} result(s)</div>
-
+                    <Divider layout="vertical" />
+                    <div class="flex gap-4">
+                        <div class="flex shadow-xs items-center gap-2">
+                            <p>Program</p>
+                            <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="------" />
+                        </div>
+                        <div class="flex shadow-xs items-center gap-2">
+                            <p>Date Range</p>
+                            <DatePicker v-model="filter.date_range" placeholder="Select date range"
+                                selectionMode="range" :manualInput="true" showButtonBar
+                                @clear-click="filter.date_range = null" />
+                        </div>
+                    </div>
                     <!-- <div class="flex shadow-xs">
                         <div class="bg-gray-700 rounded-l-lg text-white p-4">Filter</div>
                         <div class="px-4 border  bg-gray-50 flex flex-1 items-center gap-2">
@@ -262,16 +296,20 @@ const cancelDelete = () => {
                             </button>
                         </div>
                     </div> -->
+
+                </div>
+                <div class="flex"><Button as="a" label="Generate Report" icon="pi pi-print" severity="info"
+                        v-if="hasPermission('create-scholar-profile')" raised size="small" />
                 </div>
                 <div class="flex justify-end gap-4">
 
-                    <Button as="a" label="Existing" icon="pi pi-user" v-if="hasPermission('create-scholar-profile')"
+                    <Button as="a" label="Add Existing" icon="pi pi-user" v-if="hasPermission('create-scholar-profile')"
                         :href="route('profile.waitinglist', {
                             action: 'add-existing'
                         })" raised size="small" />
 
-                    <Button as="a" label="New" icon="pi pi-user-plus" v-if="hasPermission('create-scholar-profile')"
-                        :href="route('profile.waitinglist', {
+                    <Button as="a" label="Add New" icon="pi pi-user-plus" v-if="hasPermission('create-scholar-profile')"
+                        severity="success" :href="route('profile.waitinglist', {
                             action: 'create'
                         })" raised size="small" />
 
@@ -283,7 +321,7 @@ const cancelDelete = () => {
 
             <div class="flex gap-4 justify-end items-end mb-2">
                 <div class="text-normal text-gray-500 flex gap-2">Encoder: <p
-                        class="font-bold font-mono text-emerald-600">{{
+                        class="font-bold font-mono text-emerald-600 capitalize">{{
                             userEncodedCount.name
                         }}</p>
                 </div>-
@@ -309,21 +347,21 @@ const cancelDelete = () => {
                         </TableHeaderCell>
                         <TableHeaderCell class="w-42">Address</TableHeaderCell>
 
-                        <TableHeaderCell @click="sortBy('applied_school')" class="cursor-pointer">
+                        <TableHeaderCell @click="sortBy('school')" class="cursor-pointer">
                             <div class="flex items-center gap-2">
                                 <h4>School</h4>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell @click="sortBy('applied_course')" class="cursor-pointer">
+                        <TableHeaderCell @click="sortBy('course')" class="cursor-pointer">
                             <div class="flex items-center gap-2">
                                 <h4>Course</h4>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell @click="sortBy('applied_year_level')" class="cursor-pointer">
+                        <TableHeaderCell @click="sortBy('year_level')" class="cursor-pointer">
                             <div class="flex items-center gap-2">
-                                <h4>Year Level</h4>
+                                <h4>Level</h4>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>

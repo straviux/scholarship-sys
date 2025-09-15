@@ -45,10 +45,10 @@ watch(localValue, (val) => {
     if (localValue.value) {
         if (props.multiple && Array.isArray(localValue.value)) {
             localValue.value = year_levels.filter(m =>
-                localValue.value.some(val => val === m.value || val === m)
+                localValue.value.some(val => val === m.value?.toLowerCase() || val === m)
             );
         } else {
-            const selected = year_levels.find(m => m.value === localValue.value);
+            const selected = year_levels.find(m => m.value?.toLowerCase() === localValue.value);
             if (selected) localValue.value = selected;
         }
     }
@@ -60,12 +60,14 @@ watch(
         if (localValue.value && newOptions.length) {
             if (props.multiple && Array.isArray(localValue.value)) {
                 localValue.value = newOptions.filter(m =>
-                    localValue.value.some(val => val === m.value || val === m)
+                    localValue.value.some(val => val === m.value?.toLowerCase() || val === m)
                 );
             } else {
-                const selected = newOptions.find(m => m.value === localValue.value);
+                const selected = newOptions.find(m => m.value?.toLowerCase() === localValue.value);
                 if (selected) localValue.value = selected;
             }
+        } else {
+            localValue.value = "";
         }
     },
     { immediate: true }

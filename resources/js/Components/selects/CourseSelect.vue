@@ -67,7 +67,7 @@ watch(
 watchEffect(() => {
     // console.log('courses', localValue.value);
     if (localValue.value && courses.value.length) {
-        const selected = courses.value.find(course => course.shortname == localValue.value || course.name == localValue.value);
+        const selected = courses.value.find(course => course.shortname?.toLowerCase() === localValue.value || course.name?.toLowerCase() === localValue.value);
         if (selected) localValue.value = selected;
     }
 

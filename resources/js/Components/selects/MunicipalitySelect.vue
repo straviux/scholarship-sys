@@ -38,15 +38,18 @@ const municipalities = municipalitiesData.municipalities;
 watch(
     () => municipalities,
     (newOptions) => {
+        console.log(localValue.value)
         if (localValue.value && newOptions.length) {
             if (props.multiple && Array.isArray(localValue.value)) {
                 localValue.value = newOptions.filter(m =>
-                    localValue.value.some(val => val === m.name)
+                    localValue.value.some(val => val === m.name?.toLowerCase())
                 );
             } else {
-                const selected = newOptions.find(m => m.name === localValue.value);
+                const selected = newOptions.find(m => m.name?.toLowerCase() === localValue.value);
                 if (selected) localValue.value = selected;
             }
+        } else {
+            localValue.value = "";
         }
     },
     { immediate: true }

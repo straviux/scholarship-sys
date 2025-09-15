@@ -51,10 +51,10 @@ watch(
         if (localValue.value && schools.value.length) {
             if (props.multiple && Array.isArray(localValue.value)) {
                 localValue.value = schools.value.filter(school =>
-                    localValue.value.some(val => val == school.shortname || val == school.name || val == school)
+                    localValue.value.some(val => val == school.shortname?.toLowerCase() || val == school.name?.toLowerCase() || val == school)
                 );
             } else {
-                const selected = schools.value.find(school => school.shortname == localValue.value || school.name == localValue.value);
+                const selected = schools.value.find(school => school.shortname?.toLowerCase() == localValue.value || school.name?.toLowerCase() == localValue.value);
                 if (selected) localValue.value = selected;
             }
         }
