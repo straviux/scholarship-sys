@@ -7,11 +7,11 @@ use App\Http\Requests\CreateEducationalBackgroundRequest;
 use App\Http\Requests\UpdateScholarshipProfileRequest;
 use App\Http\Resources\ScholarshipProfileResource;
 use App\Models\EducationalBackground;
-use App\Models\Scholar;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipProgram;
 use App\Models\ScholarshipRecord;
 use App\Models\Course;
+use App\Models\Scholar;
 use App\Models\School;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -204,6 +204,7 @@ class ScholarshipProfileController extends Controller
         }
 
 
+
         // Filter by school under scholarshipGrant relation
         if ($request->filled('school')) {
             $query->whereHas('scholarshipGrant.school', function ($q) use ($request) {
@@ -223,6 +224,11 @@ class ScholarshipProfileController extends Controller
             $query->whereHas('scholarshipGrant.course', function ($q) use ($request) {
                 $q->where('shortname', 'like', '%' . $request->course . '%')->orWhere('name', 'like', '%' . $request->course . '%');
             });
+        }
+
+        // Filter by municipality
+        if ($request->filled('remarks')) {
+            $query->where('remarks', 'like', '%' . $request->remarks . '%');
         }
 
 
@@ -312,6 +318,7 @@ class ScholarshipProfileController extends Controller
             'year_level' => $request->get('year_level', ''),
             'date_from' => $request->get('date_from', ''),
             'date_to' => $request->get('date_to', ''),
+            'remarks' => $request->get('remarks', ''),
         ];
         // Update sort keys to use simple form
         $sort = [
@@ -594,5 +601,118 @@ class ScholarshipProfileController extends Controller
             'total' => $total,
             'today' => $today
         ]);
+    }
+
+    /**
+     * Generate a report based on filters (date range, program, school, course, municipality).
+     */
+    public function generateReport(Request $request)
+    {
+
+        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) {
+            $q->where('scholarship_status', 0)->latest('created_at'); // return scholarship grant with pending status
+        }])->where('is_on_waiting_list', '=', 1);
+
+        if ($request->filled('program')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('program_id', $request->program);
+            });
+        }
+        if ($request->filled('municipality')) {
+            $query->where('municipality', 'like', '%' . $request->municipality . '%');
+        }
+
+        // Filter by school under scholarshipGrant relation
+        if ($request->filled('school')) {
+            $query->whereHas('scholarshipGrant.school', function ($q) use ($request) {
+                $q->where('shortname', 'like', '%' . $request->school . '%')->orWhere('name', 'like', '%' . $request->school . '%');
+            });
+        }
+        if ($request->filled('course')) {
+            $query->whereHas('scholarshipGrant.course', function ($cq) use ($request) {
+                $cq->where('shortname', 'like', '%' . $request->course . '%')
+                    ->orWhere('name', 'like', '%' . $request->course . '%');
+            });
+        }
+        if ($request->filled('year_level')) {
+            $query->whereHas('scholarshipGrant.course', function ($cq) use ($request) {
+                $cq->where('shortname', 'like', '%' . $request->year_level . '%')
+                    ->orWhere('name', 'like', '%' . $request->year_level . '%');
+            });
+        }
+
+        // Filter by date range (date_filed) from scholarshipGrant relation
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->whereBetween('date_filed', [$request->date_from, $request->date_to]);
+            });
+        } elseif ($request->filled('date_from')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->whereDate('date_filed', '>=', $request->date_from);
+            });
+        } elseif ($request->filled('date_to')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->whereDate('date_filed', '<=', $request->date_to);
+            });
+        }
+
+        $profiles = $query->get();
+
+        $reportType = $request->input('report_type', 'list');
+        $filters = [
+            'name' => $request->get('name', ''),
+            'program' => ScholarshipProgram::find($request->program)->name ?? '',
+            'school' =>  School::find($request->school)->name ?? '',
+            'course' => Course::find($request->course)->name ?? '',
+            'municipality' => $request->get('municipality', ''),
+            'year_level' => $request->get('year_level', ''),
+            'date_from' => $request->get('date_from', ''),
+            'date_to' => $request->get('date_to', ''),
+        ];
+
+        if ($reportType === 'summary') {
+            // Only generate summary for parameters not filtered by the request
+            $summary = [
+                'total' => $profiles->count(),
+            ];
+            if (!$request->filled('program')) {
+                $summary['by_program'] = $profiles->groupBy(function ($p) {
+                    $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
+                    return ($grant && $grant->program) ? $grant->program->name : 'no_program';
+                })->map(fn($group) => $group->count());
+            }
+            if (!$request->filled('school')) {
+                $summary['by_school'] = $profiles->groupBy(function ($p) {
+                    $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
+                    return ($grant && $grant->school) ? $grant->school->name : 'no_school';
+                })->map(fn($group) => $group->count());
+            }
+            if (!$request->filled('course')) {
+                $summary['by_course'] = $profiles->groupBy(function ($p) {
+                    $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
+                    return ($grant && $grant->course) ? $grant->course->name : 'no_course';
+                })->map(fn($group) => $group->count());
+            }
+            if (!$request->filled('year_level')) {
+                $summary['by_year_level'] = $profiles->groupBy(function ($p) {
+                    $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
+                    return ($grant && $grant->year_level) ? $grant->year_level : 'no_year_level';
+                })->map(fn($group) => $group->count());
+            }
+            return response()->json([
+                'success' => true,
+                'type' => 'summary',
+                'summary' => $summary,
+                'parameters' => $filters,
+            ]);
+        } else {
+            return response()->json([
+                'success' => true,
+                'type' => 'list',
+                'count' => $profiles->count(),
+                'data' => $profiles,
+                'parameters' => $filters,
+            ]);
+        }
     }
 }

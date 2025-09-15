@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "masbug/flysystem-google-drive-ext": "^2.4",
+        "spatie/browsershot": "^5.0",
         "spatie/laravel-permission": "^6.9",
         "tightenco/ziggy": "^2.0",
         "vish4395/laravel-file-viewer": "^1.0"

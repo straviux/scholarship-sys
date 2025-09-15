@@ -14,8 +14,10 @@ import {
     UserPlusIcon,
 } from '@heroicons/vue/20/solid';
 import ApplicantProfileModal from '@/Pages/Applicants/Modal/ApplicantProfileModal.vue';
-
 import ViewProfileModal from './Modal/ViewProfileModal.vue';
+import GenerateReportModal from './GenerateReportModal.vue';
+const showReportModal = ref(false);
+const openReportModal = () => { showReportModal.value = true; };
 // COURSE MULTISELECT COMPONENT
 // How to use: 1. import component, 2. define model, 3. define scholarshipProgramId (set to null if fetching all course)
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
@@ -73,6 +75,7 @@ const filter = useForm({
         : (props.filter.date_from && props.filter.date_to)
             ? [toDate(props.filter.date_from), toDate(props.filter.date_to)]
             : [],
+    remarks: props.filter.remarks || "",
 })
 
 // console.log(props.filter)
@@ -99,6 +102,7 @@ const filterList = () => {
     const name = filter.name.toLowerCase() || "";
     const school = filter.school?.shortname?.toLowerCase() || "";
     const year_level = filter.year_level?.value?.toLowerCase() || "";
+    const remarks = filter.remarks.toLowerCase() || "";
     const per_page = form.per_page;
     const sort = form.sort;
 
@@ -119,6 +123,7 @@ const filterList = () => {
         year_level,
         date_from,
         date_to,
+        remarks,
         per_page, sort
     };
     router.get(route('profile.waitinglist'), params, {
@@ -134,6 +139,7 @@ const clearFilter = () => {
     filter.reset('course');
     filter.reset('municipality');
     filter.reset('year_level');
+    filter.reset('remarks');
 }
 const sortBy = (column) => {
     if (column == 'name') {
@@ -298,9 +304,11 @@ const cancelDelete = () => {
                     </div> -->
 
                 </div>
-                <div class="flex"><Button as="a" label="Generate Report" icon="pi pi-print" severity="info"
-                        v-if="hasPermission('create-scholar-profile')" raised size="small" />
+                <div class="flex">
+                    <Button label="Generate Report" icon="pi pi-print" severity="info"
+                        v-if="hasPermission('create-scholar-profile')" raised size="small" @click="openReportModal" />
                 </div>
+                <GenerateReportModal v-model:show="showReportModal" />
                 <div class="flex justify-end gap-4">
 
                     <Button as="a" label="Add Existing" icon="pi pi-user" v-if="hasPermission('create-scholar-profile')"
@@ -385,10 +393,7 @@ const cancelDelete = () => {
                         <TableDataCell class="px-3"></TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
-                                <IconField>
-                                    <InputIcon class="pi pi-search" />
-                                    <InputText v-model="filter.name" placeholder="Search name" class="w-full" />
-                                </IconField>
+                                <InputText v-model="filter.name" placeholder="Search name" class="w-full" />
                             </div>
                         </TableDataCell>
 
@@ -417,7 +422,13 @@ const cancelDelete = () => {
                         </TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400"></TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400"></TableDataCell>
-                        <TableDataCell class="border-l border-collapse border-slate-400"></TableDataCell>
+                        <TableDataCell class="border-l border-collapse border-slate-400">
+                            <div class="px-2">
+
+                                <InputText v-model="filter.remarks" placeholder="Search for remarks" class="w-full" />
+
+                            </div>
+                        </TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
                                 <div class="bg-gray-600 text-gray-200 p-2 rounded-lg border flex items-center cursor-pointer justify-center"

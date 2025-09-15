@@ -58,7 +58,7 @@
                                 <div class="badge badge-neutral badge-outline badge-sm">{{ record.term }}
                                 </div>
                                 <div class="badge badge-neutral badge-outline badge-sm">{{ record.year_level
-                                    }}
+                                }}
                                 </div>
                             </div>
                         </div>
@@ -85,7 +85,7 @@
                             <span class="text-blue-500" v-if="record.scholarship_status == 2">Completed</span>
                             <span class="text-red-500" v-if="record.scholarship_status == 3">Suspended</span>
                             <span class="text-red-500" v-if="record.scholarship_status == 4">Cancelled</span>
-                            <div class="flex items-stretch" v-if="hasRole('admin')">
+                            <div class="flex items-stretch" v-if="hasRole('administrator')">
                                 <div class="dropdown dropdown-end ml-4">
                                     <div tabindex="0" role="button"
                                         class="btn btn-xs bg-slate-700 text-xs px-4 text-white uppercase">

@@ -32,6 +32,7 @@ Route::middleware(['auth', 'role:administrator'])->group(function () {
 
 
 Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->group(function () {
+    Route::get('/profiles/generate-report', 'generateReport')->name('profile.generateReport');
     // Route::get('/profiles-api/find/{$query?}', 'searchProfileApi')->name('profile-api.findprofile');
     Route::get('/profiles/{action?}/{id?}/{scholarship_record_id?}', 'index')->name('profile.index');
     Route::post('/profiles/store', 'store')->name('profile.store');
@@ -112,5 +113,7 @@ Route::middleware(['auth'])->controller(App\Http\Controllers\SchoolController::c
     Route::put('/schools/{school}', 'update')->name('school.update');
     Route::delete('/schools/{school}', 'destroy')->name('school.destroy');
 });
+
+// Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ScholarshipProfileController::class, 'generateReportPdf']);
 
 require __DIR__ . '/auth.php';

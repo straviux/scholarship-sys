@@ -18,6 +18,10 @@ const props = defineProps({
         type: String,
         default: 'Select Program'
     },
+    customPlaceholderClass: {
+        type: String,
+        default: ''
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -81,7 +85,8 @@ onMounted(fetchData);
                 <div>{{ slotProps.value.shortname }}</div>
             </div>
             <span v-else>
-                <div class="flex items-center justify-center w-full text-center">{{ slotProps.placeholder }}</div>
+                <div class="flex w-full" :class="customPlaceholderClass">{{
+                    slotProps.placeholder }}</div>
             </span>
         </template>
         <template #option="slotProps">
