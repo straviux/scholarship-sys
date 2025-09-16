@@ -139,6 +139,6 @@ class ReportController extends Controller
 
         return response($pdf)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="scholarship_report.pdf"');
+            ->header('Content-Disposition', 'attachment; filename="scholarship_report.pdf"');
     }
 }
