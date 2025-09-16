@@ -187,7 +187,7 @@
     <table>
         <thead>
             <tr>
-                <th style="width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">#</th>
+                <th style="min-width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">#</th>
                 <th style="width:30px;padding-left:0.05cm;padding-right:0.05cm;">Seq</th>
                 <th>Name</th>
                 @if(empty($filters['municipality']))
@@ -228,7 +228,7 @@
             }
             @endphp
             <tr>
-                <td style="width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">{{ $overallIndex }}</td>
+                <td style="min-width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">{{ $overallIndex }}</td>
                 <td style="padding-left:0.05cm;padding-right:0.05cm;">{{ $dateIndex }}</td>
                 <td>{{ $profile->last_name }}, {{ $profile->first_name }}</td>
                 @if(empty($filters['municipality']))
