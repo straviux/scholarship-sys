@@ -1,4 +1,5 @@
 
+
 <?php
 
 use App\Http\Controllers\DashboardController;
@@ -115,5 +116,7 @@ Route::middleware(['auth'])->controller(App\Http\Controllers\SchoolController::c
 });
 
 // Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ScholarshipProfileController::class, 'generateReportPdf']);
+// Report PDF generation route
+Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ReportController::class, 'generateWaitinglist'])->name('report.generatePdf');
 
 require __DIR__ . '/auth.php';

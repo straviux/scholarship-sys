@@ -70,11 +70,8 @@ const filter = useForm({
     course: props.filter.course || "",
     municipality: props.filter.municipality || "",
     year_level: props.filter.year_level || "",
-    date_range: (props.filter.date_range && Array.isArray(props.filter.date_range))
-        ? props.filter.date_range.map(toDate)
-        : (props.filter.date_from && props.filter.date_to)
-            ? [toDate(props.filter.date_from), toDate(props.filter.date_to)]
-            : [],
+    date_from: props.filter.date_from ? toDate(props.filter.date_from) : null,
+    date_to: props.filter.date_to ? toDate(props.filter.date_to) : null,
     remarks: props.filter.remarks || "",
 })
 
@@ -106,13 +103,9 @@ const filterList = () => {
     const per_page = form.per_page;
     const sort = form.sort;
 
-    // Split date_range into date_from and date_to, format with moment
-    let date_from = "";
-    let date_to = "";
-    if (Array.isArray(filter.date_range) && filter.date_range.length === 2) {
-        date_from = filter.date_range[0] ? moment(filter.date_range[0]).format('YYYY-MM-DD') : "";
-        date_to = filter.date_range[1] ? moment(filter.date_range[1]).format('YYYY-MM-DD') : "";
-    }
+    // Use date_from and date_to directly
+    let date_from = filter.date_from ? moment(filter.date_from).format('YYYY-MM-DD') : "";
+    let date_to = filter.date_to ? moment(filter.date_to).format('YYYY-MM-DD') : "";
 
     const params = {
         program,
@@ -265,10 +258,14 @@ const cancelDelete = () => {
                             <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="------" />
                         </div>
                         <div class="flex shadow-xs items-center gap-2">
-                            <p>Date Range</p>
-                            <DatePicker v-model="filter.date_range" placeholder="Select date range"
-                                selectionMode="range" :manualInput="true" showButtonBar
-                                @clear-click="filter.date_range = null" />
+                            <p>Date From</p>
+                            <DatePicker v-model="filter.date_from" placeholder="Date from" :manualInput="true"
+                                showButtonBar @clear-click="filter.date_from = null" />
+                        </div>
+                        <div class="flex shadow-xs items-center gap-2">
+                            <p>Date To</p>
+                            <DatePicker v-model="filter.date_to" placeholder="Date to" :manualInput="true" showButtonBar
+                                @clear-click="filter.date_to = null" />
                         </div>
                     </div>
                     <!-- <div class="flex shadow-xs">

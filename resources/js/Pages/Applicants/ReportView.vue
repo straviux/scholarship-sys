@@ -2,8 +2,21 @@
     <div class="px-12 mx-auto py-8">
         <h1 class="text-2xl font-bold mb-6">Generated Report</h1>
         <div class="mb-4 flex gap-2">
-            <Button label="Back" @click="goBack" />
-            <Button label="Regenerate" @click="regenerate" severity="info" />
+            <div class="flex gap-2 items-center">
+                <Button label="Back" @click="goBack" />
+                <Button label="Regenerate" @click="regenerate" severity="info" />
+                <label class="text-sm">Paper Size:</label>
+                <select v-model="paperSize" class="border rounded px-1 py-0.5 text-sm">
+                    <option value="A4">A4</option>
+                    <option value="Letter">Letter</option>
+                    <option value="8.5x13">PH Long (8.5x13 in)</option>
+                </select>
+                <label class="text-sm ml-2">Orientation:</label>
+                <select v-model="orientation" class="border rounded px-1 py-0.5 text-sm">
+                    <option value="portrait">Portrait</option>
+                    <option value="landscape">Landscape</option>
+                </select>
+            </div>
             <Button label="Save as PDF" @click="saveAsPdf" severity="secondary" />
         </div>
         <div v-if="loading" class="text-center py-8">
@@ -46,7 +59,7 @@
                             <thead>
                                 <tr>
                                     <th class="border px-2 py-1">{{ group.label }}</th>
-                                    <th class="border px-2 py-1">Count</th>
+                                    <th class="border px-2 py-1">#</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -69,10 +82,7 @@
 </template>
 
 <script setup>
-function saveAsPdf() {
-    const query = new URLSearchParams(params).toString();
-    window.open(`/profiles/report/pdf?${query}`, '_blank');
-}
+
 
 import { ref, onMounted, toRefs } from 'vue';
 import axios from 'axios';
@@ -86,6 +96,12 @@ const loading = ref(true);
 const report = ref({});
 const reportType = ref(props.params.report_type || 'list');
 const params = { ...props.params };
+const paperSize = ref('A4');
+const orientation = ref('portrait');
+
+onMounted(() => {
+    fetchReport();
+});
 
 const summaryGroups = [
     { key: 'by_program', label: 'Program', data: [] },
@@ -126,7 +142,14 @@ function fetchReport() {
         .finally(() => loading.value = false);
 }
 
-onMounted(fetchReport);
+
+
+function saveAsPdf() {
+    // const query = new URLSearchParams(params).toString();
+    const queryObj = { ...params, paper_size: paperSize.value, orientation: orientation.value };
+    const query = new URLSearchParams(queryObj).toString();
+    window.open(`/api/report/pdf?${query}`, '_blank');
+}
 </script>
 
 <style scoped>
