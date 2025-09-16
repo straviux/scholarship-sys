@@ -11,7 +11,6 @@ const props = defineProps({
         type: Boolean,
     },
 });
-
 const classes = computed(() =>
     props.active
         ? "relative px-4 py-3 flex rounded-xl text-white bg-linear-to-r from-[#2b5876] to-[#4e4376]"

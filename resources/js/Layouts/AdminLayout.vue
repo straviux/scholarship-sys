@@ -8,10 +8,21 @@ import { DynamicHeroicon } from 'vue-dynamic-heroicons';
 const { hasRole, hasPermission } = usePermission();
 import {
     Squares2X2Icon,
-    ShieldExclamationIcon,
-    ArrowRightStartOnRectangleIcon,
+    AcademicCapIcon,
+    ClipboardDocumentCheckIcon,
+    IdentificationIcon,
+    DocumentDuplicateIcon,
+    BookOpenIcon,
+    ClipboardIcon,
+    BuildingOfficeIcon,
+    UserGroupIcon,
+    AdjustmentsHorizontalIcon,
+    LockClosedIcon,
+    TableCellsIcon,
+    ShieldExclamationIcon
 } from "@heroicons/vue/20/solid";
 const toggleMenu = ref(false);
+const sidebarMinimized = ref(false);
 
 </script>
 
@@ -19,51 +30,54 @@ const toggleMenu = ref(false);
     <div class="w-full h-full flex">
         <!-- component -->
         <aside
-            class="hidden fixed z-10 top-0 left-0 md:flex flex-col bg-[#222831] transition duration-300 md:w-[250px] h-screen min-w-0"
-            :class="{ 'flex!': toggleMenu }">
+            class="hidden fixed z-10 top-0 left-0 md:flex flex-col bg-[#222831] transition-all duration-300 h-screen min-w-0"
+            :class="[sidebarMinimized ? 'md:w-[110px] w-[110px]' : 'md:w-[250px] w-[250px]', toggleMenu ? 'flex!' : '']">
+
             <div class="flex-1 flex flex-col min-h-0 min-w-0">
+
                 <div class="flex items-center justify-center pt-4 pb-2 text-center">
                     <a href="#" title="home" class="text-2xl font-bold font-mono text-gray-200">
-                        <img src="/images/pgp-logo.png" class="w-36" alt="logo" />
-                        <p class="text-sm mt-4">Scholarship Program</p>
+                        <img src="/images/pgp-logo.png" :class="sidebarMinimized ? 'w-10' : 'w-36'" alt="logo" />
+                        <p v-if="!sidebarMinimized" class="text-sm mt-4">Scholarship Program</p>
                     </a>
+
                 </div>
-                <ul
+                <ul v-if="!sidebarMinimized"
                     class="menu space-y-6 md:space-y-4 mt-8 text-normal md:text-sm w-full text-gray-300 hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block h-[calc(100vh-160px)]">
                     <li>
                         <SidebarLink :href="route('dashboard')" :active="route().current('dashboard')">
-                            <Squares2X2Icon class=" h-5 w-5" />
-
-                            <p class="ml-1 font-medium">Dashboard</p>
+                            <Squares2X2Icon class="h-5 w-5 mr-2" />
+                            <span class="font-medium">Dashboard</span>
                         </SidebarLink>
                     </li>
                     <li>
                         <details open>
                             <summary>
-                                <DynamicHeroicon name="academicCap" :size="6" />
+                                <AcademicCapIcon class="h-5 w-5 mr-2" />
                                 <span class="-mr-1 font-medium">Scholarship</span>
                             </summary>
                             <ul class="space-y-1 mt-2">
                                 <li>
-                                    <SidebarLink :href="route('profile.waitinglist')" :active="route().current('profile.waitinglist') ||
-                                        route().current('profile.waitinglist')">
+                                    <SidebarLink :href="route('profile.waitinglist')"
+                                        :active="route().current('profile.waitinglist')">
+                                        <ClipboardDocumentCheckIcon class="h-5 w-5 mr-2" />
                                         <span class="-mr-1 font-medium indent-3">Waiting List</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
                                     <SidebarLink :href="route('profile.index')"
                                         :active="route().current('profile.index')">
+                                        <IdentificationIcon class="h-5 w-5 mr-2" />
                                         <span class="-mr-1 font-medium indent-3">Profiles</span>
                                         <div class="indicator ml-6">
-                                            <!-- <span class="indicator-item text-xs indicator-middle badge badge-secondary"
-                                                v-if="pendingApplicantCount > 0">{{
-                                                    pendingApplicantCount }}</span> -->
+                                            <!-- <span class="indicator-item text-xs indicator-middle badge badge-secondary" v-if="pendingApplicantCount > 0">{{ pendingApplicantCount }}</span> -->
                                         </div>
                                     </SidebarLink>
                                 </li>
                                 <li>
-                                    <SidebarLink :href="route('scholarship_records.index')" :active="route().current('scholarship_records.index') ||
-                                        route().current('scholarship_records.showbyprogram')">
+                                    <SidebarLink :href="route('scholarship_records.index')"
+                                        :active="route().current('scholarship_records.index') || route().current('scholarship_records.showbyprogram')">
+                                        <DocumentDuplicateIcon class="h-5 w-5 mr-2" />
                                         <span class="-mr-1 font-medium indent-3">Grant Records</span>
                                     </SidebarLink>
                                 </li>
@@ -73,34 +87,35 @@ const toggleMenu = ref(false);
                     <li v-if="hasRole('administrator') || hasRole('moderator')">
                         <details open>
                             <summary>
-                                <DynamicHeroicon name="table" :size="6" />
+                                <TableCellsIcon class="h-5 w-5 mr-2" />
                                 <span class="-mr-1 font-medium">Library</span>
                             </summary>
                             <ul class="space-y-1 mt-2">
                                 <li v-if="hasPermission('manage-scholarship-programs')">
                                     <SidebarLink :href="route('scholarshipprograms.index')"
                                         :active="route().current('scholarshipprograms.index')">
+                                        <BookOpenIcon class="h-5 w-5 mr-2" />
                                         <span class="-mr-1 font-medium indent-3">Programs</span>
                                     </SidebarLink>
                                 </li>
-
                                 <li v-if="hasPermission('manage-program-courses')">
                                     <SidebarLink :href="route('courses.index')"
                                         :active="route().current('courses.index')">
+                                        <AcademicCapIcon class="h-5 w-5 mr-2" />
                                         <span class="-mr-1 font-medium indent-3">Courses</span>
                                     </SidebarLink>
                                 </li>
-
                                 <li>
                                     <SidebarLink :href="route('program_requirements.index')"
                                         :active="route().current('program_requirements.index')">
+                                        <ClipboardIcon class="h-5 w-5 mr-2" />
                                         <span class="-mr-1 font-medium indent-3">Requirements</span>
                                     </SidebarLink>
                                 </li>
-
                                 <li>
                                     <SidebarLink :href="route('school.index')"
                                         :active="route().current('school.index')">
+                                        <BuildingOfficeIcon class="h-5 w-5 mr-2" />
                                         <span class="-mr-1 font-medium indent-3">Schools</span>
                                     </SidebarLink>
                                 </li>
@@ -110,48 +125,154 @@ const toggleMenu = ref(false);
                     <li v-if="hasRole('administrator')">
                         <details open>
                             <summary>
-                                <ShieldExclamationIcon class="h-5 w-5" />
+                                <ShieldExclamationIcon class="h-5 w-5 mr-2" />
                                 <span class="-mr-1 font-medium">Administrator</span>
                             </summary>
                             <ul class="space-y-1 mt-2">
                                 <li>
                                     <SidebarLink v-if="hasRole('administrator')" :href="route('users.index')"
                                         :active="route().current('users.index')">
-                                        <!-- <UsersIcon class="h-5 w-5" /> -->
+                                        <UserGroupIcon class="h-5 w-5 mr-2" />
                                         <span class="-mr-1 font-medium indent-3">Users</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
-                                    <SidebarLink v-if="hasRole('administrator')" :href="route('roles.index')" :active="route().current('roles.index') ||
-                                        route().current('roles.create')">
-                                        <!-- <CogIcon class="h-5 w-5" /> -->
+                                    <SidebarLink v-if="hasRole('administrator')" :href="route('roles.index')"
+                                        :active="route().current('roles.index') || route().current('roles.create')">
+                                        <AdjustmentsHorizontalIcon class="h-5 w-5 mr-2" />
                                         <span class="-mr-1 font-medium indent-3">Roles</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
                                     <SidebarLink v-if="hasRole('administrator')" :href="route('permissions.index')"
-                                        :active="route().current('permissions.index') ||
-                                            route().current('permissions.create')">
-                                        <!-- <ShieldExclamationIcon class="h-5 w-5" /> -->
+                                        :active="route().current('permissions.index') || route().current('permissions.create')">
+                                        <LockClosedIcon class="h-5 w-5 mr-2" />
                                         <span class="-mr-1 font-medium indent-3">Permissions</span>
                                     </SidebarLink>
                                 </li>
                             </ul>
                         </details>
                     </li>
+                </ul>
+                <ul v-else
+                    class="menu space-y-4 mt-8 w-full text-gray-300 hover:text-gray-50 items-center min-h-0 min-w-0 block h-[calc(100vh-160px)]">
+                    <li>
+                        <SidebarLink :href="route('dashboard')" :active="route().current('dashboard')"
+                            class="flex flex-col justify-center text-center">
 
+                            <Squares2X2Icon class="h-6 w-6" />
+                            <span class="text-xs">dashboard</span>
+
+                        </SidebarLink>
+                    </li>
+                    <li>
+                        <SidebarLink :href="route('profile.waitinglist')"
+                            :active="route().current('profile.waitinglist')"
+                            class="flex flex-col justify-center text-center">
+
+                            <ClipboardDocumentCheckIcon class="h-6 w-6" />
+                            <span class="text-xs">waiting list</span>
+                        </SidebarLink>
+                    </li>
+                    <li>
+                        <SidebarLink :href="route('profile.index')" :active="route().current('profile.index')"
+                            class="flex flex-col justify-center text-center">
+
+                            <IdentificationIcon class="h-6 w-6" />
+                            <span class="text-xs">profiles</span>
+                        </SidebarLink>
+                    </li>
+                    <li>
+                        <SidebarLink :href="route('scholarship_records.index')"
+                            :active="route().current('scholarship_records.index') || route().current('scholarship_records.showbyprogram')"
+                            class="flex flex-col justify-center text-center">
+
+                            <DocumentDuplicateIcon class="h-6 w-6" />
+                            <span class="text-xs">scholarship records</span>
+
+                        </SidebarLink>
+                    </li>
+                    <li v-if="hasPermission('manage-scholarship-programs')">
+                        <SidebarLink :href="route('scholarshipprograms.index')"
+                            :active="route().current('scholarshipprograms.index')"
+                            class="flex flex-col justify-center text-center">
+
+                            <BookOpenIcon class="h-6 w-6" />
+                            <span class="text-xs">scholarship programs</span>
+
+                        </SidebarLink>
+                    </li>
+                    <li v-if="hasPermission('manage-program-courses')">
+                        <SidebarLink :href="route('courses.index')" :active="route().current('courses.index')"
+                            class="flex flex-col justify-center text-center">
+
+                            <AcademicCapIcon class="h-6 w-6" />
+                            <span class="text-xs">courses</span>
+
+                        </SidebarLink>
+                    </li>
+                    <li>
+                        <SidebarLink :href="route('program_requirements.index')"
+                            :active="route().current('program_requirements.index')"
+                            class="flex flex-col justify-center text-center">
+
+                            <ClipboardIcon class="h-6 w-6" />
+                            <span class="text-xs">requirements</span>
+
+                        </SidebarLink>
+                    </li>
+                    <li>
+                        <SidebarLink :href="route('school.index')" :active="route().current('school.index')"
+                            class="flex flex-col justify-center text-center">
+
+                            <BuildingOfficeIcon class="h-6 w-6" />
+                            <span class="text-xs">schools</span>
+
+                        </SidebarLink>
+                    </li>
+                    <li v-if="hasRole('administrator')">
+                        <SidebarLink :href="route('users.index')" :active="route().current('users.index')"
+                            class="flex flex-col justify-center text-center">
+
+                            <UserGroupIcon class="h-6 w-6" />
+                            <span class="text-xs">users</span>
+
+                        </SidebarLink>
+                    </li>
+                    <li v-if="hasRole('administrator')">
+                        <SidebarLink :href="route('roles.index')"
+                            :active="route().current('roles.index') || route().current('roles.create')"
+                            class="flex flex-col justify-center text-center">
+
+                            <AdjustmentsHorizontalIcon class="h-6 w-6" />
+                            <span class="text-xs">roles</span>
+
+                        </SidebarLink>
+                    </li>
+                    <li v-if="hasRole('administrator')">
+                        <SidebarLink :href="route('permissions.index')"
+                            :active="route().current('permissions.index') || route().current('permissions.create')"
+                            class="flex flex-col justify-center text-center">
+
+                            <LockClosedIcon class="h-6 w-6" />
+                            <span class="text-xs">permissions</span>
+
+                        </SidebarLink>
+                    </li>
                 </ul>
             </div>
-            <div class="px-6 pt-4 flex justify-between items-center border-t">
-                <Link class="px-4 py-3 flex items-center space-x-4 rounded-md text-gray-300 hover:text-gray-50 group "
-                    :href="route('logout')" method="post" as="button">
-                <ArrowRightStartOnRectangleIcon class="h-5 w-5" />
-                <span>Logout</span>
-                </Link>
+            <div class="px-2 flex justify-end items-center border-t">
+                <button @click="sidebarMinimized = !sidebarMinimized"
+                    class="ml-2 p-2 rounded hover:bg-gray-700 focus:outline-none"
+                    :aria-label="sidebarMinimized ? 'Expand sidebar' : 'Minimize sidebar'">
+                    <DynamicHeroicon :name="sidebarMinimized ? 'arrow-sm-right' : 'arrow-sm-left'" class="text-gray-300"
+                        :size="6" />
+                </button>
             </div>
         </aside>
 
-        <div class="ml-auto mb-6 w-full md:w-[calc(100%-250px)] min-w-0 flex flex-col">
+        <div
+            :class="['ml-auto mb-6 w-full min-w-0 flex flex-col', sidebarMinimized ? 'md:w-[calc(100%-110px)] w-[calc(100%-110px)]' : 'md:w-[calc(100%-250px)] w-[calc(100%-250px)]']">
             <div class="sticky z-10 top-0 h-16 border-b bg-[#222831] lg:py-2.5">
                 <div class="px-6 flex items-center justify-between space-x-4">
                     <h5 class="text-xl md:text-2xl text-gray-300 hover:text-gray-50 font-medium lg:block">
@@ -202,6 +323,19 @@ const toggleMenu = ref(false);
     </div>
 </template>
 <style>
+/* Hide text visually but keep for screen readers */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .menu,
 aside {
     box-sizing: border-box;

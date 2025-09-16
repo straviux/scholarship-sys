@@ -190,13 +190,21 @@
                 <th style="width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">#</th>
                 <th style="width:30px;padding-left:0.05cm;padding-right:0.05cm;">Seq</th>
                 <th>Name</th>
+                @if(empty($filters['municipality']))
                 <th>Municipality</th>
+                @endif
                 @if(empty($filters['program']))
                 <th>Program</th>
                 @endif
+                @if(empty($filters['school']))
                 <th>School</th>
+                @endif
+                @if(empty($filters['course']))
                 <th>Course</th>
+                @endif
+                @if(empty($filters['year_level']))
                 <th style="min-width:40px">Level</th>
+                @endif
                 <th>Date Filed</th>
             </tr>
         </thead>
@@ -223,13 +231,21 @@
                 <td style="width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">{{ $overallIndex }}</td>
                 <td style="padding-left:0.05cm;padding-right:0.05cm;">{{ $dateIndex }}</td>
                 <td>{{ $profile->last_name }}, {{ $profile->first_name }}</td>
+                @if(empty($filters['municipality']))
                 <td>{{ $profile->municipality }}</td>
+                @endif
                 @if(empty($filters['program']))
                 <td>{{ optional(optional($profile->scholarshipGrant->first())->program)->shortname ?? '-' }}</td>
                 @endif
+                @if(empty($filters['school']))
                 <td>{{ optional($profile->scholarshipGrant->first())->school->shortname ?? '-' }}</td>
+                @endif
+                @if(empty($filters['course']))
                 <td>{{ optional($profile->scholarshipGrant->first())->course->shortname ?? '-' }}</td>
+                @endif
+                @if(empty($filters['year_level']))
                 <td>{{ optional($profile->scholarshipGrant->first())->year_level ?? '-' }}</td>
+                @endif
                 <td>
                     {{ $dateFiled ? \Carbon\Carbon::parse($dateFiled)->format('M d, Y') : '-' }}
                 </td>

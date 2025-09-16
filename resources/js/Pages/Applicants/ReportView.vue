@@ -29,6 +29,7 @@
                     <thead>
                         <tr>
                             <th class="border px-2 py-1">Name</th>
+                            <th class="border px-2 py-1">Address</th>
                             <th class="border px-2 py-1">Program</th>
                             <th class="border px-2 py-1">School</th>
                             <th class="border px-2 py-1">Course</th>
@@ -38,13 +39,27 @@
                     </thead>
                     <tbody>
                         <tr v-for="item in report.data" :key="item.id">
-                            <td class="border px-2 py-1">{{ item.first_name }} {{ item.last_name }}</td>
-                            <td class="border px-2 py-1">{{ item.scholarship_grant[0]?.program?.name || '-' }}</td>
-                            <td class="border px-2 py-1">{{ item.scholarship_grant[0]?.school?.name || '-' }}</td>
-                            <td class="border px-2 py-1">{{ item.scholarship_grant[0]?.course?.name || '-' }}</td>
-                            <td class="border px-2 py-1">{{ item.scholarship_grant[0]?.year_level || '-' }}</td>
+                            <td class="border px-2 py-1">{{ (item.first_name + ' ' + item.last_name).toUpperCase() }}
+                            </td>
+                            <td class="border px-2 py-1">
+                                <template v-if="item.municipality">{{ item.municipality.toUpperCase() }}</template>
+                                <template v-if="item.barangay"><span v-if="item.municipality">, </span>{{
+                                    item.barangay.toUpperCase() }}</template>
+                                <template v-if="item.address"><span v-if="item.municipality || item.barangay">,
+                                    </span>{{ item.address.toUpperCase() }}</template>
+                                <template v-if="!item.address && !item.barangay && !item.municipality">-</template>
+                            </td>
+                            <td class="border px-2 py-1">{{ item.scholarship_grant[0]?.program?.shortname ?
+                                item.scholarship_grant[0].program.shortname.toUpperCase() : '-' }}</td>
+                            <td class="border px-2 py-1">{{ item.scholarship_grant[0]?.school?.shortname ?
+                                item.scholarship_grant[0].school.shortname.toUpperCase() : '-' }}</td>
+                            <td class="border px-2 py-1">{{ item.scholarship_grant[0]?.course?.shortname ?
+                                item.scholarship_grant[0].course.shortname.toUpperCase() : '-' }}</td>
+                            <td class="border px-2 py-1">{{ item.scholarship_grant[0]?.year_level ?
+                                item.scholarship_grant[0].year_level.toString().toUpperCase() : '-' }}</td>
                             <td class="border px-2 py-1">{{ item.scholarship_grant[0]?.date_filed ?
-                                moment(item.scholarship_grant[0]?.date_filed).format('YYYY-MM-DD') : '-' }}</td>
+                                moment(item.scholarship_grant[0]?.date_filed).format('YYYY-MM-DD').toUpperCase() : '-'
+                                }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -96,7 +111,7 @@ const loading = ref(true);
 const report = ref({});
 const reportType = ref(props.params.report_type || 'list');
 const params = { ...props.params };
-const paperSize = ref('A4');
+const paperSize = ref('8.5x13');
 const orientation = ref('portrait');
 
 onMounted(() => {
@@ -153,6 +168,11 @@ function saveAsPdf() {
 </script>
 
 <style scoped>
+th,
+td {
+    text-transform: uppercase;
+}
+
 .container {
     max-width: 900px;
 }
