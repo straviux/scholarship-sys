@@ -31,6 +31,7 @@ const localValue = ref(props.modelValue);
 // Sync localValue with parent prop
 watch(() => props.modelValue, (val) => {
     localValue.value = val;
+
 });
 
 // Sync localValue with parent prop
@@ -47,15 +48,31 @@ watch(
     () => data.value,
     (newData) => {
         schools.value = newData || [];
-        // If localValue is set, find and set the matching program object
+        // If localValue is set, find and set the matching school object(s)
         if (localValue.value && schools.value.length) {
             if (props.multiple && Array.isArray(localValue.value)) {
-                localValue.value = schools.value.filter(school =>
-                    localValue.value.some(val => val == school.shortname?.toLowerCase() || val == school.name?.toLowerCase() || val == school)
-                );
+                // Map each value in localValue to the corresponding school object
+                localValue.value = localValue.value.map(val => {
+                    if (typeof val === 'object' && val !== null && val.shortname) {
+                        return schools.value.find(school => school.shortname === val.shortname) || val;
+                    }
+                    return schools.value.find(school =>
+                        school.shortname?.toLowerCase() === String(val).toLowerCase() ||
+                        school.name?.toLowerCase() === String(val).toLowerCase()
+                    ) || val;
+                });
             } else {
-                const selected = schools.value.find(school => school.shortname?.toLowerCase() == localValue.value || school.name?.toLowerCase() == localValue.value);
-                if (selected) localValue.value = selected;
+                // Single value: find the matching school object
+                let val = localValue.value;
+                if (typeof val === 'object' && val !== null && val.shortname) {
+                    localValue.value = schools.value.find(school => school.shortname === val.shortname) || val;
+                } else {
+                    const selected = schools.value.find(school =>
+                        school.shortname?.toLowerCase() === String(val).toLowerCase() ||
+                        school.name?.toLowerCase() === String(val).toLowerCase()
+                    );
+                    if (selected) localValue.value = selected;
+                }
             }
         }
     },

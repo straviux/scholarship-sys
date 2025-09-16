@@ -26,337 +26,338 @@
                                 <Stepper :value="activeStep" linear>
                                     <StepList>
                                         <Step value="1">Personal Information</Step>
-                                        <Step value="2">Academic Information</Step>
-                                        <Step value="3">Remarks</Step>
+                                        <Step value="2">Family Information</Step>
+                                        <Step value="3">Academic Information</Step>
                                     </StepList>
                                     <StepPanels>
                                         <StepPanel v-slot="{ activateCallback }" value="1">
-                                            <div class="flex flex-col min-h-48">
-                                                <div
-                                                    class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 p-8 font-medium">
-                                                    <div v-if="action == 'add-existing'">
-                                                        <div class="w-full mb-2">
-                                                            <InputLabel for="profile" value="Search Profile"
-                                                                class="mb-1" />
-                                                            <ProfileSelect v-model="form.selectedProfile" />
-                                                            <div v-if="errorMessage" class="text-red-500 text-sm mt-2">
-                                                                {{ errorMessage }}</div>
-                                                        </div>
-                                                        ``
+                                            <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
+                                                <h2
+                                                    class="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                                    <span
+                                                        class="inline-block w-2 h-5 bg-blue-500 rounded mr-2"></span>Personal
+                                                    Information
+                                                </h2>
+                                                <div class="flex gap-3 mb-2 items-end">
+                                                    <div class="flex-1">
+                                                        <InputLabel class="mb-1" for="lastname" value="Last Name" />
+                                                        <TextInput autofocus id="lastname" type="text"
+                                                            class="w-full block uppercase" v-model="form.last_name"
+                                                            :required="true" />
+                                                        <InputError class="mt-1" :message="form.errors.last_name" />
                                                     </div>
-                                                    <div v-if="action === 'create' || action === 'update'">
-                                                        <div class="mt-4 flex justify-between gap-4">
-
-                                                            <div class="w-1/3">
-                                                                <InputLabel class="mb-1" for="lastname"
-                                                                    value="Last Name" />
-
-                                                                <TextInput autofocus id="lastname" type="text"
-                                                                    class="w-full block" custom-class="uppercase"
-                                                                    v-model="form.last_name" :required="true" />
-
-                                                                <InputError class="mt-2"
-                                                                    :message="form.errors.last_name" />
-                                                            </div>
-                                                            <div class="w-1/3">
-                                                                <InputLabel class="mb-1" for="firstname"
-                                                                    value="First Name" />
-
-                                                                <TextInput id="firstname" type="text"
-                                                                    class="w-full block" custom-class="uppercase"
-                                                                    v-model="form.first_name" :required="true" />
-
-                                                                <InputError class="mt-2"
-                                                                    :message="form.errors.first_name" />
-                                                            </div>
-                                                            <div class="w-1/3">
-                                                                <InputLabel class="mb-1" for="middlename"
-                                                                    value="Middle Name" />
-
-                                                                <TextInput id="middlename" type="text"
-                                                                    class="w-full block" custom-class="uppercase"
-                                                                    v-model="form.middle_name" />
-
-                                                                <InputError class="mt-2"
-                                                                    :message="form.errors.middle_name" />
-                                                            </div>
-                                                            <div class="w-1/18">
-                                                                <InputLabel class="mb-1" for="extension"
-                                                                    value="Extension" />
-
-                                                                <TextInput id="extension" type="text"
-                                                                    class="w-full block" custom-class="uppercase"
-                                                                    v-model="form.extension_name" />
-
-                                                                <InputError class="mt-2"
-                                                                    :message="form.errors.extension_name" />
-                                                            </div>
+                                                    <div class="flex-1">
+                                                        <InputLabel class="mb-1" for="firstname" value="First Name" />
+                                                        <TextInput id="firstname" type="text"
+                                                            class="w-full block uppercase" v-model="form.first_name"
+                                                            :required="true" />
+                                                        <InputError class="mt-1" :message="form.errors.first_name" />
+                                                    </div>
+                                                    <div class="flex-1">
+                                                        <InputLabel class="mb-1" for="middlename" value="Middle Name" />
+                                                        <TextInput id="middlename" type="text"
+                                                            class="w-full block uppercase" v-model="form.middle_name" />
+                                                        <InputError class="mt-1" :message="form.errors.middle_name" />
+                                                    </div>
+                                                    <div style="max-width: 110px;">
+                                                        <InputLabel class="mb-1" for="extension" value="Extension" />
+                                                        <TextInput id="extension" type="text"
+                                                            class="w-full block uppercase"
+                                                            v-model="form.extension_name" />
+                                                        <InputError class="mt-1"
+                                                            :message="form.errors.extension_name" />
+                                                    </div>
+                                                </div>
+                                                <div class="flex gap-3 mb-2 items-end">
+                                                    <div class="flex-1">
+                                                        <InputLabel class="mb-1" for="contact" value="Contact No." />
+                                                        <TextInput id="contact" type="text"
+                                                            class="w-full block uppercase" v-model="form.contact_no" />
+                                                        <InputError class="mt-1" :message="form.errors.contact_no" />
+                                                    </div>
+                                                    <div class="flex-1">
+                                                        <InputLabel class="mb-1" for="contact_no_2"
+                                                            value="Contact No. 2" />
+                                                        <TextInput id="contact_no_2" type="text"
+                                                            class="w-full block uppercase"
+                                                            v-model="form.contact_no_2" />
+                                                        <InputError class="mt-1" :message="form.errors.contact_no_2" />
+                                                    </div>
+                                                    <div class="flex-1">
+                                                        <InputLabel class="mb-1" for="email" value="Email" />
+                                                        <TextInput id="email" type="email" class="w-full block"
+                                                            v-model="form.email" />
+                                                        <InputError class="mt-1" :message="form.errors.email" />
+                                                    </div>
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-3 mb-8 mt-8">
+                                                    <div>
+                                                        <InputLabel class="mb-1" for="gender" value="Gender" />
+                                                        <div class="flex gap-2 mt-1">
+                                                            <label class="flex items-center cursor-pointer">
+                                                                <input v-model="form.gender" type="radio" name="gender"
+                                                                    value="M"
+                                                                    class="h-4 w-4 border-gray-300 focus:ring-2 focus:ring-blue-300" />
+                                                                <span class="ml-2">Male</span>
+                                                            </label>
+                                                            <label class="flex items-center cursor-pointer">
+                                                                <input v-model="form.gender" type="radio" name="gender"
+                                                                    value="F"
+                                                                    class="h-4 w-4 border-gray-300 focus:ring-2 focus:ring-blue-300" />
+                                                                <span class="ml-2">Female</span>
+                                                            </label>
                                                         </div>
-                                                        <div class="mt-4 flex justify-start gap-4">
-                                                            <div class="w-1/3">
-                                                                <InputLabel class="mb-1" for="contact"
-                                                                    value="Contact No." />
-                                                                <TextInput id="contact" type="text" class="w-full block"
-                                                                    custom-class="uppercase"
-                                                                    v-model="form.contact_no" />
+                                                        <InputError class="mt-1" :message="form.errors.gender" />
+                                                    </div>
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-3 mb-2">
 
-                                                                <InputError class="mt-2"
-                                                                    :message="form.errors.contact_no" />
-                                                            </div>
-                                                            <div class="w-1/3">
-                                                                <InputLabel class="mb-1" for="email" value="Email" />
-                                                                <TextInput id="email" type="email" class="w-full block"
-                                                                    v-model="form.email" />
-
-                                                                <InputError class="mt-2" :message="form.errors.email" />
-                                                            </div>
-                                                            <div class="w-1/6">
-                                                                <InputLabel class="mb-1" for="gender" value="Gender" />
-
-                                                                <div class="flex gap-4 mt-4 ml-4">
-                                                                    <div class="flex items-center mb-4 cursor-pointer"
-                                                                        @click="selectGender('M')">
-                                                                        <input v-model="form.gender" type="radio"
-                                                                            name="gender" value="M"
-                                                                            class="h-4 w-4 border-gray-300 focus:ring-2 focus:ring-blue-300 cursor-pointer"
-                                                                            aria-labelledby="country-option-1"
-                                                                            aria-describedby="country-option-1" />
-                                                                        <label for="country-option-1"
-                                                                            class="text-sm font-medium text-gray-900 ml-2 block cursor-pointer">
-                                                                            Male
-                                                                        </label>
-                                                                    </div>
-
-                                                                    <div class="flex items-center mb-4"
-                                                                        @click="selectGender('F')">
-                                                                        <input v-model="form.gender" type="radio"
-                                                                            name="gender" value="F"
-                                                                            class="h-4 w-4 border-gray-300 focus:ring-2 focus:ring-blue-300 cursor-pointer"
-                                                                            aria-labelledby="country-option-2"
-                                                                            aria-describedby="country-option-2" />
-                                                                        <label for="country-option-2"
-                                                                            class="text-sm font-medium text-gray-900 ml-2 block cursor-pointer">
-                                                                            Female
-                                                                        </label>
-                                                                    </div>
-                                                                </div>
-                                                                <InputError class="mt-2"
-                                                                    :message="form.errors.gender" />
-                                                            </div>
-
-                                                        </div>
-                                                        <hr class="mt-8 mb-4" />
-                                                        <div class="flex justify-between gap-4 mt-8">
-                                                            <div class="w-1/3">
-                                                                <InputLabel class="mb-1" for="street"
-                                                                    value="Purok/Street/Landmark" />
-                                                                <TextInput id="street" type="text" class="w-full block"
-                                                                    custom-class="uppercase" v-model="form.address" />
-                                                                <InputError class="mt-2" :message="form.errors.address"
-                                                                    v-if="!form.barangay" />
-                                                            </div>
-                                                            <div class="w-1/3">
-                                                                <InputLabel class="mb-1" for="municipality"
-                                                                    value="Municipality" />
-                                                                <VueMultiselect v-model="form.selected_municipality"
-                                                                    :options="municipalitiesOptions"
-                                                                    :close-on-select="true" :show-labels="false"
-                                                                    placeholder="Select Municipality" label="name"
-                                                                    @select="resetBarangay" track-by="name"
-                                                                    class="mt-1" />
-                                                                <InputError class="mt-2"
-                                                                    :message="form.errors.municipality"
-                                                                    v-if="!form.municipality" />
-                                                            </div>
-
-                                                            <div class="w-1/3">
-                                                                <InputLabel class="mb-1" for="barangay"
-                                                                    value="Barangay" />
-                                                                <VueMultiselect v-model="form.selected_barangay"
-                                                                    :options="barangayOptions" :close-on-select="true"
-                                                                    :show-labels="false" placeholder="Select Barangay"
-                                                                    label="name" track-by="name" class="mt-1" />
-                                                                <InputError class="mt-2" :message="form.errors.barangay"
-                                                                    v-if="!form.barangay" />
-                                                            </div>
-
-                                                        </div>
-                                                        <hr class="mt-8 mb-4" />
-                                                        <div class="w-full mt-4">
-                                                            <h3 class="text-gray-600">Parent's Information</h3>
-
-                                                            <div class="mt-4 flex gap-4">
-
-                                                                <div class="w-1/3">
-                                                                    <InputLabel class="mb-1" for="father_name"
-                                                                        value="Father" />
-
-                                                                    <TextInput id="father_name" type="text"
-                                                                        class="w-full block" custom-class="uppercase"
-                                                                        v-model="form.father_name" />
-
-                                                                    <InputError class="mt-2"
-                                                                        :message="form.errors.father_name" />
-                                                                </div>
-
-                                                                <div class="w-1/3">
-                                                                    <InputLabel class="mb-1" for="father_contact_no"
-                                                                        value="Contact #" />
-
-                                                                    <TextInput id="father_contact_no" type="text"
-                                                                        class="w-full block" custom-class="uppercase"
-                                                                        v-model="form.father_contact_no" />
-
-                                                                    <InputError class="mt-2"
-                                                                        :message="form.errors.father_contact_no" />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="w-full mt-4">
-                                                            <div class="mt-2 flex gap-4">
-
-                                                                <div class="w-1/3">
-                                                                    <InputLabel class="mb-1" for="mother_name"
-                                                                        value="Mother" />
-
-                                                                    <TextInput id="mother_name" type="text"
-                                                                        class="w-full block" custom-class="uppercase"
-                                                                        v-model="form.mother_name" />
-
-                                                                    <InputError class="mt-2"
-                                                                        :message="form.errors.mother_name" />
-                                                                </div>
-
-                                                                <div class="w-1/3">
-                                                                    <InputLabel class="mb-1" for="mother_contact_no"
-                                                                        value="Contact #" />
-
-                                                                    <TextInput id="mother_contact_no" type="text"
-                                                                        class="w-full block" custom-class="uppercase"
-                                                                        v-model="form.mother_contact_no" />
-
-                                                                    <InputError class="mt-2"
-                                                                        :message="form.errors.mother_contact_no" />
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                    <div>
+                                                        <InputLabel class="mb-1" for="municipality"
+                                                            value="Municipality" />
+                                                        <VueMultiselect v-model="form.selected_municipality"
+                                                            :options="municipalitiesOptions" :close-on-select="true"
+                                                            :show-labels="false" placeholder="Select Municipality"
+                                                            label="name" @select="resetBarangay" track-by="name"
+                                                            class="mt-1" />
+                                                        <InputError class="mt-1" :message="form.errors.municipality" />
+                                                    </div>
+                                                    <div>
+                                                        <InputLabel class="mb-1" for="barangay" value="Barangay" />
+                                                        <VueMultiselect v-model="form.selected_barangay"
+                                                            :options="barangayOptions" :close-on-select="true"
+                                                            :show-labels="false" placeholder="Select Barangay"
+                                                            label="name" track-by="name" class="mt-1" />
+                                                        <InputError class="mt-1" :message="form.errors.barangay" />
+                                                    </div>
+                                                    <div>
+                                                        <InputLabel class="mb-1" for="street"
+                                                            value="Purok/Street/Landmark" />
+                                                        <TextInput id="street" type="text"
+                                                            class="w-full block uppercase" v-model="form.address" />
+                                                        <InputError class="mt-1" :message="form.errors.address" />
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="flex pt-6 justify-between">
-                                                <Button label="Quick Save" icon="pi pi-save" iconPos="right"
-                                                    v-if="props.action == 'update'" @click.prevent="submit(true)"
-                                                    severity="info" />
-                                                <Button label="Next" severity="secondary" icon="pi pi-arrow-right"
+                                            <div class="flex pt-4 justify-between gap-8">
+                                                <Button label="Skip to Academic Info" severity="secondary"
+                                                    @click="activeStep = '3'" :disabled="hasPendingOrOngoing" /><Button
+                                                    label="Next" severity="secondary" icon="pi pi-arrow-right"
                                                     @click="activeStep = '2'" :disabled="hasPendingOrOngoing" />
                                             </div>
                                         </StepPanel>
 
                                         <StepPanel v-slot="{ activateCallback }" value="2">
-                                            <div class="flex flex-col min-h-48">
-                                                <div
-                                                    class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 p-8 font-medium">
-                                                    <div class="w-full mt-2">
-
-                                                        <div class="flex flex-col mx-auto gap-4 mt-2 w-1/2">
-                                                            <div class="w-full">
-                                                                <InputLabel class="mb-1" for="school" value="School" />
-                                                                <!-- <TextInput id="school" type="text" class="w-full block"
-                                                                    custom-class="uppercase"
-                                                                    v-model="form.applied_school" /> -->
-                                                                <SchoolSelect v-model="form.applied_school"
-                                                                    label="name" />
-                                                                <InputError class="mt-2"
-                                                                    :message="form.errors.applied_school"
-                                                                    v-if="!form.applied_school" />
-                                                            </div>
-
-                                                            <div class="w-full">
-                                                                <InputLabel class="mb-1" for="course" value="Course" />
-
-                                                                <CourseSelect v-model="form.applied_course"
-                                                                    :scholarship-program-id="''" label="shortname" />
-                                                                <InputError class="mt-2"
-                                                                    :message="form.errors.applied_course"
-                                                                    v-if="!form.applied_course" />
-                                                            </div>
-                                                            <div class="w-full">
-                                                                <InputLabel for="yearlevel" class="mb-1"
-                                                                    value="Year/Grade Level" />
-
-                                                                <YearLevelSelect v-model="form.applied_year_level"
-                                                                    label="label" />
-
-                                                                <InputError class="mt-2"
-                                                                    :message="form.errors.applied_year_level" />
-                                                            </div>
-                                                            <div class="w-full">
-                                                                <InputLabel for="term" class="mb-1" value="Term" />
-
-                                                                <TermSelect v-model="form.term" label="label" />
-
-                                                                <InputError class="mt-2" :message="form.errors.term" />
-                                                            </div>
-                                                            <div class="w-full">
-                                                                <InputLabel for="acadedmic_year" class="mb-1"
-                                                                    value="Academic Year" />
-
-                                                                <AcademicYearSelect v-model="form.academic_year"
-                                                                    label="label" />
-
-                                                                <InputError class="mt-2"
-                                                                    :message="form.errors.academic_year" />
-                                                            </div>
-                                                        </div>
+                                            <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
+                                                <h2
+                                                    class="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                                    <span
+                                                        class="inline-block w-2 h-5 bg-green-500 rounded mr-2"></span>Parent's
+                                                    Information
+                                                </h2>
+                                                <div class="grid grid-cols-3 gap-3 mb-2">
+                                                    <div>
+                                                        <InputLabel class="mb-1" for="father_name" value="Father" />
+                                                        <TextInput id="father_name" type="text"
+                                                            class="w-full block uppercase" v-model="form.father_name" />
+                                                        <InputError class="mt-1" :message="form.errors.father_name" />
+                                                    </div>
+                                                    <div>
+                                                        <InputLabel class="mb-1" for="father_occupation"
+                                                            value="Occupation" />
+                                                        <TextInput id="father_occupation" type="text"
+                                                            class="w-full block uppercase"
+                                                            v-model="form.father_occupation" />
+                                                        <InputError class="mt-1"
+                                                            :message="form.errors.father_occupation" />
+                                                    </div>
+                                                    <div>
+                                                        <InputLabel class="mb-1" for="father_contact_no"
+                                                            value="Contact #" />
+                                                        <TextInput id="father_contact_no" type="text"
+                                                            class="w-full block uppercase"
+                                                            v-model="form.father_contact_no" />
+                                                        <InputError class="mt-1"
+                                                            :message="form.errors.father_contact_no" />
+                                                    </div>
+                                                </div>
+                                                <div class="grid grid-cols-3 gap-3 mb-2">
+                                                    <div>
+                                                        <InputLabel class="mb-1" for="mother_name" value="Mother" />
+                                                        <TextInput id="mother_name" type="text"
+                                                            class="w-full block uppercase" v-model="form.mother_name" />
+                                                        <InputError class="mt-1" :message="form.errors.mother_name" />
+                                                    </div>
+                                                    <div>
+                                                        <InputLabel class="mb-1" for="mother_occupation"
+                                                            value="Occupation" />
+                                                        <TextInput id="mother_occupation" type="text"
+                                                            class="w-full block uppercase"
+                                                            v-model="form.mother_occupation" />
+                                                        <InputError class="mt-1"
+                                                            :message="form.errors.mother_occupation" />
+                                                    </div>
+                                                    <div>
+                                                        <InputLabel class="mb-1" for="mother_contact_no"
+                                                            value="Contact #" />
+                                                        <TextInput id="mother_contact_no" type="text"
+                                                            class="w-full block uppercase"
+                                                            v-model="form.mother_contact_no" />
+                                                        <InputError class="mt-1"
+                                                            :message="form.errors.mother_contact_no" />
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="flex pt-6 justify-between">
+                                            <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
+                                                <h2
+                                                    class="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                                    <span
+                                                        class="inline-block w-2 h-5 bg-purple-500 rounded mr-2"></span>Guardian
+                                                    Information
+                                                </h2>
+                                                <div class="grid grid-cols-2 gap-3 mb-2">
+                                                    <div>
+                                                        <InputLabel class="mb-1" for="guardian_name"
+                                                            value="Guardian Name" />
+                                                        <TextInput id="guardian_name" type="text"
+                                                            class="w-full block uppercase"
+                                                            v-model="form.guardian_name" />
+                                                        <InputError class="mt-1" :message="form.errors.guardian_name" />
+                                                    </div>
+                                                    <div>
+                                                        <InputLabel class="mb-1" for="guardian_relationship"
+                                                            value="Relationship" />
+                                                        <TextInput id="guardian_relationship" type="text"
+                                                            class="w-full block uppercase"
+                                                            v-model="form.guardian_relationship" />
+                                                        <InputError class="mt-1"
+                                                            :message="form.errors.guardian_relationship" />
+                                                    </div>
+                                                    <div>
+                                                        <InputLabel class="mb-1" for="guardian_contact_no"
+                                                            value="Contact #" />
+                                                        <TextInput id="guardian_contact_no" type="text"
+                                                            class="w-full block uppercase"
+                                                            v-model="form.guardian_contact_no" />
+                                                        <InputError class="mt-1"
+                                                            :message="form.errors.guardian_contact_no" />
+                                                    </div>
+                                                    <div>
+                                                        <InputLabel class="mb-1" for="guardian_occupation"
+                                                            value="Guardian Occupation" />
+                                                        <TextInput id="guardian_occupation" type="text"
+                                                            class="w-full block uppercase"
+                                                            v-model="form.guardian_occupation" />
+                                                        <InputError class="mt-1"
+                                                            :message="form.errors.guardian_occupation" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
+                                                <h2
+                                                    class="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                                    <span
+                                                        class="inline-block w-2 h-5 bg-yellow-500 rounded mr-2"></span>Parents/Guardian
+                                                    Gross Monthly Income
+                                                </h2>
+                                                <div class="grid grid-cols-1 gap-3">
+                                                    <div>
+                                                        <InputLabel class="mb-1"
+                                                            for="parents_guardian_gross_monthly_income"
+                                                            value="Gross Monthly Income" />
+                                                        <TextInput id="parents_guardian_gross_monthly_income"
+                                                            type="number" class="w-1/3 block"
+                                                            v-model="form.parents_guardian_gross_monthly_income" />
+                                                        <InputError class="mt-1"
+                                                            :message="form.errors.parents_guardian_gross_monthly_income" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex pt-4 justify-between">
                                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                                     @click="activeStep = '1'" />
-                                                <Button label="Quick Save" icon="pi pi-save" iconPos="right"
-                                                    v-if="props.action == 'update'" @click.prevent="submit(true)"
-                                                    severity="info" />
                                                 <Button label="Next" severity="secondary" icon="pi pi-arrow-right"
-                                                    iconPos="right" @click="activeStep = '3'"
-                                                    :disabled="hasPendingOrOngoing" />
+                                                    @click="activeStep = '3'" :disabled="hasPendingOrOngoing" />
                                             </div>
                                         </StepPanel>
                                         <StepPanel v-slot="{ activateCallback }" value="3">
-                                            <div class="flex flex-col min-h-48">
-                                                <div
-                                                    class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 flex flex-col font-medium p-8">
+                                            <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
+                                                <h2
+                                                    class="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                                    <span
+                                                        class="inline-block w-2 h-5 bg-indigo-500 rounded mr-2"></span>Academic
+                                                    Information
+                                                </h2>
+                                                <div class="grid grid-cols-2 gap-3 mb-2">
 
-                                                    <div class="flex gap-4">
-                                                        <div class="w-3/4">
-                                                            <InputLabel class="mb-1" for="street" value="Remarks" />
-                                                            <TextInput id="street" type="text" class="w-full block"
-                                                                custom-class="uppercase" v-model="form.remarks" />
-
-                                                            <InputError class="mt-2" :message="form.errors.remarks"
-                                                                v-if="!form.remarks" />
-                                                        </div>
-                                                        <div class="w-1/4">
-                                                            <InputLabel for="end_date" value="Date Filed" />
-
-                                                            <TextInput id="date_filed" type="date"
-                                                                class="mt-1 block w-full" v-model="form.date_filed"
-                                                                autocomplete="date_filed" />
-
-                                                            <InputError class="mt-2"
-                                                                :message="form.errors.date_filed" />
-                                                        </div>
+                                                    <div class="w-full">
+                                                        <InputLabel class="mb-1" for="school" value="School" />
+                                                        <!-- <TextInput id="school" type="text" class="w-full block"
+                                                            custom-class="uppercase"
+                                                            v-model="form.applied_school" /> -->
+                                                        <SchoolSelect v-model="form.school" label="name" />
+                                                        <InputError class="mt-2" :message="form.errors.school"
+                                                            v-if="!form.applied_school" />
                                                     </div>
 
+                                                    <div class="w-full">
+                                                        <InputLabel class="mb-1" for="course" value="Course" />
+
+                                                        <CourseSelect v-model="form.course" :scholarship-program-id="''"
+                                                            label="shortname" />
+                                                        <InputError class="mt-2" :message="form.errors.course"
+                                                            v-if="!form.course" />
+                                                    </div>
+                                                    <div class="w-full">
+                                                        <InputLabel for="yearlevel" class="mb-1"
+                                                            value="Year/Grade Level" />
+
+                                                        <YearLevelSelect v-model="form.year_level" label="label" />
+
+                                                        <InputError class="mt-2" :message="form.errors.year_level" />
+                                                    </div>
+                                                    <div class="w-full">
+                                                        <InputLabel for="term" class="mb-1" value="Term" />
+
+                                                        <TermSelect v-model="form.term" label="label" />
+
+                                                        <InputError class="mt-2" :message="form.errors.term" />
+                                                    </div>
+                                                    <div class="w-full">
+                                                        <InputLabel for="acadedmic_year" class="mb-1"
+                                                            value="Academic Year" />
+
+                                                        <AcademicYearSelect v-model="form.academic_year"
+                                                            label="label" />
+
+                                                        <InputError class="mt-2" :message="form.errors.academic_year" />
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="pt-6 flex justify-between">
+                                            <div class="flex items-end gap-3 mt-4">
+                                                <div class="flex-1">
+                                                    <InputLabel class="mb-1" for="remarks" value="Remarks" />
+                                                    <TextInput id="remarks" type="text" class="w-full block uppercase"
+                                                        v-model="form.remarks" />
+                                                    <InputError class="mt-1" :message="form.errors.remarks" />
+                                                </div>
+                                                <div style="min-width:110px;max-width:140px;">
+                                                    <InputLabel for="date_filed" value="Date Filed" />
+
+                                                    <TextInput id="date_filed" type="date" class="mt-1 block w-full"
+                                                        v-model="form.date_filed" autocomplete="date_filed" />
+
+                                                    <InputError class="mt-1" :message="form.errors.date_filed" />
+                                                </div>
+                                            </div>
+                                            <div class="mt-12 flex justify-between">
                                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                                    @click="activateCallback('2')" />
+                                                    @click="activeStep = '2'" />
                                                 <Button label="Save" icon="pi pi-save" iconPos="right"
                                                     @click.prevent="submit" severity="success" />
                                             </div>
                                         </StepPanel>
+
                                     </StepPanels>
                                 </Stepper>
                             </div>
@@ -418,12 +419,12 @@ const barangayOptions = ref([]);
 const isOpen = computed(() => props.action == 'create' || props.action == 'update' || props.action == 'add-existing');
 
 
-// console.log(props.profile?.scholarship_grant[0]);
+console.log(props.profile?.scholarship_grant[0].year_level);
 const form = useForm({
     scholarship_grant_id: props.profile?.scholarship_grant[0]?.id || null,
-    applied_school: props.profile?.applied_school || "",
-    applied_course: props.profile?.applied_course || props.profile?.scholarship_grant[0]?.course?.name || "",
-    applied_year_level: props.profile?.applied_year_level || "",
+    school: props.profile?.scholarship_grant[0]?.school?.name || "",
+    course: props.profile?.scholarship_grant[0]?.course?.name || "",
+    year_level: props.profile?.scholarship_grant[0]?.year_level || "",
     term: props.profile?.scholarship_grant[0]?.term || "",
     academic_year: props.profile?.scholarship_grant[0]?.academic_year || "",
     first_name: props.profile?.first_name || "",
@@ -431,8 +432,10 @@ const form = useForm({
     middle_name: props.profile?.middle_name || "",
     extension_name: props.profile?.extension_name || "",
     father_name: props.profile?.father_name || "",
+    father_occupation: props.profile?.father_occupation || "",
     father_contact_no: props.profile?.father_contact_no || "",
     mother_name: props.profile?.mother_name || "",
+    mother_occupation: props.profile?.mother_occupation || "",
     mother_contact_no: props.profile?.mother_contact_no || "",
     selected_municipality: { name: props.profile?.municipality || "" } || "",
     municipality: props.profile?.municipality || "",
@@ -445,7 +448,13 @@ const form = useForm({
     remarks: props.profile?.remarks || "",
     is_on_waiting_list: true,
     date_filed: props.profile?.date_filed || "",
-    selectedProfile: ""
+    selectedProfile: "",
+    contact_no_2: props.profile?.contact_no_2 || "",
+    guardian_name: props.profile?.guardian_name || "",
+    guardian_relationship: props.profile?.guardian_relationship || "",
+    guardian_contact_no: props.profile?.guardian_contact_no || "",
+    guardian_occupation: props.profile?.guardian_occupation || "",
+    parents_guardian_gross_monthly_income: props.profile?.parents_guardian_gross_monthly_income || "",
 });
 
 
@@ -484,9 +493,9 @@ watch(() => form.selectedProfile, (profile) => {
     }
 
     if (profile && profile.profile && !hasPendingOrOngoing.value) {
-        form.applied_school = profile.profile.applied_school || '';
-        form.applied_course = profile.profile.applied_course || '';
-        form.applied_year_level = profile.profile.applied_year_level || '';
+        form.school = profile.profile?.scholarship_grant[0]?.school.name || '';
+        form.course = profile.profile?.scholarship_grant[0]?.course.name || '';
+        form.year_level = profile.profile?.scholarship_grant[0]?.year_level.name || '';
         form.first_name = profile.profile.first_name || '';
         form.last_name = profile.profile.last_name || '';
         form.middle_name = profile.profile.middle_name || '';
@@ -534,11 +543,11 @@ const submit = (closeAfter = false) => {
     form.barangay = form.selected_barangay?.name ? form.selected_barangay?.name.toUpperCase() : '';
     form.father_name = form.father_name.toUpperCase();
     form.mother_name = form.mother_name.toUpperCase();
-    form.applied_year_level = form.applied_year_level.value;
-    form.applied_school = form.applied_school.name;
+    form.year_level = form.year_level.value;
+    form.school = form.school.name;
     form.academic_year = form.academic_year.value;
     form.term = form.term.value;
-    form.applied_course = form.applied_course.shortname;
+    form.course = form.course.shortname;
 
     if (props.action == 'create') {
         form.is_on_waiting_list = 1;
@@ -586,7 +595,7 @@ const errorFieldToStep = {
     // Step 1 fields
     last_name: '1', first_name: '1', middle_name: '1', extension_name: '1', contact_no: '1', email: '1', gender: '1', address: '1', municipality: '1', barangay: '1', father_name: '1', father_contact_no: '1', mother_name: '1', mother_contact_no: '1',
     // Step 2 fields
-    applied_school: '2', applied_course: '2', applied_year_level: '2', term: '2', academic_year: '2',
+    school: '2', course: '2', year_level: '2', term: '2', academic_year: '2',
     // Step 3 fields
     remarks: '3', date_filed: '3',
 };

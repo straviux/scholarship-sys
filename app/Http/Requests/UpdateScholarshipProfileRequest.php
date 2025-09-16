@@ -122,6 +122,11 @@ class UpdateScholarshipProfileRequest extends FormRequest
                 'string',
                 'max:50'
             ],
+            "contact_no_2" => [
+                'nullable',
+                'string',
+                'max:50'
+            ],
             "email" => [
                 'nullable',
                 'string',
@@ -169,21 +174,46 @@ class UpdateScholarshipProfileRequest extends FormRequest
                 'string',
                 'max:100'
             ],
-            "applied_year_level" => [
-                'nullable',
-                'string',
-                'max:10'
-            ],
-            "applied_course" => [
+            "guardian_name" => [
                 'nullable',
                 'string',
                 'max:100'
             ],
-            "applied_school" => [
+            "guardian_relationship" => [
+                'nullable',
+                'string',
+                'max:50'
+            ],
+            "guardian_contact_no" => [
+                'nullable',
+                'string',
+                'max:50'
+            ],
+            "guardian_occupation" => [
                 'nullable',
                 'string',
                 'max:100'
             ],
+            "parents_guardian_gross_monthly_income" => [
+                'nullable',
+                'numeric',
+                'min:0'
+            ],
+            // "applied_year_level" => [
+            //     'nullable',
+            //     'string',
+            //     'max:10'
+            // ],
+            // "applied_course" => [
+            //     'nullable',
+            //     'string',
+            //     'max:100'
+            // ],
+            // "applied_school" => [
+            //     'nullable',
+            //     'string',
+            //     'max:100'
+            // ],
         ];
     }
 

@@ -6,13 +6,13 @@
                 <Button label="Back" @click="goBack" />
                 <Button label="Regenerate" @click="regenerate" severity="info" />
                 <label class="text-sm">Paper Size:</label>
-                <select v-model="paperSize" class="border rounded px-1 py-0.5 text-sm">
+                <select v-model="paperSize" class="border rounded px-1 py-0.5 text-sm cursor-pointer">
                     <option value="A4">A4</option>
                     <option value="Letter">Letter</option>
                     <option value="8.5x13">PH Long (8.5x13 in)</option>
                 </select>
                 <label class="text-sm ml-2">Orientation:</label>
-                <select v-model="orientation" class="border rounded px-1 py-0.5 text-sm">
+                <select v-model="orientation" class="border rounded px-1 py-0.5 text-sm cursor-pointer">
                     <option value="portrait">Portrait</option>
                     <option value="landscape">Landscape</option>
                 </select>
@@ -59,7 +59,7 @@
                                 item.scholarship_grant[0].year_level.toString().toUpperCase() : '-' }}</td>
                             <td class="border px-2 py-1">{{ item.scholarship_grant[0]?.date_filed ?
                                 moment(item.scholarship_grant[0]?.date_filed).format('YYYY-MM-DD').toUpperCase() : '-'
-                                }}</td>
+                            }}</td>
                         </tr>
                     </tbody>
                 </table>

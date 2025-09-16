@@ -14,7 +14,6 @@ class ScholarshipProfile extends Model
     protected $primaryKey = 'profile_id';
     use HasFactory, Notifiable, HasUuids;
     protected $fillable = [
-
         'first_name',
         'last_name',
         'middle_name',
@@ -27,6 +26,10 @@ class ScholarshipProfile extends Model
         'mother_occupation',
         'mother_birthdate',
         'mother_contact_no',
+        'guardian_name',
+        'guardian_relationship',
+        'guardian_contact_no',
+        'guardian_occupation',
         'municipality',
         'barangay',
         'address',
@@ -35,12 +38,10 @@ class ScholarshipProfile extends Model
         'temporary_address',
         'birthdate',
         'contact_no',
+        'contact_no_2',
         'email',
         'gender',
         'civil_status',
-        'applied_year_level',
-        'applied_course',
-        'applied_school',
         'religion',
         'remarks',
         'date_filed',
@@ -51,6 +52,7 @@ class ScholarshipProfile extends Model
         'application_status',
         'application_status_remarks',
         'application_status_date',
+        'parents_guardian_gross_monthly_income',
     ];
 
     public function educationalBackgrounds()

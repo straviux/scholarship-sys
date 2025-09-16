@@ -373,15 +373,15 @@ class ScholarshipProfileController extends Controller
                 ->exists();
             if (!$hasActive) {
                 // Get course and its program_id
-                $course = Course::where('name', $request->applied_course)->orWhere('shortname', $request->applied_course)->first();
-                $school = School::where('name', $request->applied_school)->orWhere('shortname', $request->applied_school)->first();
+                $course = Course::where('name', $request->course)->orWhere('shortname', $request->course)->first();
+                $school = School::where('name', $request->school)->orWhere('shortname', $request->school)->first();
                 $program_id = $course ? $course->scholarship_program_id : null;
                 ScholarshipRecord::create([
                     'profile_id' => $new_profile->profile_id,
                     'course_id' => $course->id ?? null, // or map as needed
                     'term' => $request->term, // or map as needed
                     'academic_year' => $request->academic_year, // or map as needed
-                    'year_level' => $request->applied_year_level, // or map as needed
+                    'year_level' => $request->year_level, // or map as needed
                     'program_id' => $program_id ?? null,
                     'school_id' => $school->id ?? null,
                     'scholarship_status' => 0, // Pending by default
@@ -408,8 +408,8 @@ class ScholarshipProfileController extends Controller
     public function updateApplicant(UpdateScholarshipProfileRequest $request, $id)
     {
         $profile = ScholarshipProfile::findOrFail($id);
-        $course = Course::where('name', $request->applied_course)->orWhere('shortname', $request->applied_course)->first();
-        $school = School::where('name', $request->applied_school)->orWhere('shortname', $request->applied_school)->first();
+        $course = Course::where('name', $request->course)->orWhere('shortname', $request->course)->first();
+        $school = School::where('name', $request->school)->orWhere('shortname', $request->school)->first();
         $program_id = $course ? $course->scholarship_program_id : null;
         // Check for ongoing or pending scholarship record
         $hasActive = ScholarshipRecord::where('profile_id', $profile->profile_id)
@@ -423,7 +423,7 @@ class ScholarshipProfileController extends Controller
                 'course_id' => $course->id ?? null, // or map as needed
                 'term' => $request->term, // or map as needed
                 'academic_year' => $request->academic_year, // or map as needed
-                'year_level' => $request->applied_year_level, // or map as needed
+                'year_level' => $request->year_level, // or map as needed
                 'program_id' => $program_id,
                 'school_id' => $school->id ?? null,
                 'scholarship_status' => 0, // Pending by default
@@ -437,7 +437,7 @@ class ScholarshipProfileController extends Controller
             $record->course_id = $course->id ?? null; // or map as needed
             $record->term = $request->term;
             $record->academic_year = $request->academic_year;
-            $record->year_level = $request->applied_year_level;
+            $record->year_level = $request->year_level;
             $record->program_id = $program_id ?? null;
             $record->school_id = $school->id ?? null;
             $record->scholarship_status = 0; // Pending by default
@@ -542,7 +542,7 @@ class ScholarshipProfileController extends Controller
     public function addAppliedCourseToRecord(Request $request)
     {
         $profile_id = $request->input('profile_id');
-        $applied_course = $request->input('applied_course');
+        $course = $request->input('course');
 
         // Check for ongoing or pending records
         $hasActive = ScholarshipRecord::where('profile_id', $profile_id)
@@ -556,7 +556,7 @@ class ScholarshipProfileController extends Controller
         // Create new record with applied_course
         $record = ScholarshipRecord::create([
             'profile_id' => $profile_id,
-            'course_id' => $applied_course, // or set to correct field if needed
+            'course_id' => $course, // or set to correct field if needed
             'scholarship_status' => 0, // Pending by default
             'is_active' => 1,
             'date_filed' => now(),
