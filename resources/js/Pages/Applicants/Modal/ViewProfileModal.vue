@@ -25,106 +25,223 @@
 
                                 <div class="rounded-lg border border-gray-200 p-4 mb-4 bg-white shadow-sm">
                                     <div
-                                        class="text-base font-bold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1">
+                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1">
                                         Applicant Information</div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-                                        <div>
+                                    <div class="flex flex-row flex-wrap gap-4 mb-2 items-start">
+                                        <div class="flex flex-col min-w-[220px] justify-start">
                                             <div class="text-[10px] text-gray-500 uppercase">Name</div>
-                                            <div class="font-bold text-gray-800 text-xs uppercase">
-                                                {{ profile.last_name ? profile.last_name : 'No data provided' }},
-                                                {{ profile.first_name ? profile.first_name : 'No data provided' }}
-                                                {{ profile.middle_name ? profile.middle_name : '' }}
-                                                {{ profile.extension_name ? profile.extension_name : '' }}
+                                            <div class="font-semibold text-gray-800 text-xs uppercase">
+                                                <span v-if="profile.last_name">{{ profile.last_name }}, </span>
+                                                <span v-if="profile.first_name">{{ profile.first_name }} </span>
+                                                <span v-if="profile.middle_name">{{ profile.middle_name }} </span>
+                                                <span v-if="profile.extension_name">{{ profile.extension_name }}</span>
                                             </div>
                                         </div>
-                                        <div>
+                                        <div class="flex flex-col min-w-[180px] justify-start">
                                             <div class="text-[10px] text-gray-500 uppercase">Date Filed</div>
-                                            <div class="font-bold text-gray-800 text-xs uppercase">
-                                                {{ profile.date_filed ? moment(profile.date_filed)
-                                                    .format('MMMM DD,YYYY') : 'No data provided' }}
+                                            <div class="font-semibold text-gray-800 text-xs uppercase">
+                                                <span v-if="!profile.date_filed"
+                                                    class="text-gray-400 font-normal italic">No data
+                                                    provided</span>
+                                                <span v-else>{{ moment(profile.date_filed).format('MMMM DD,YYYY')
+                                                    }}</span>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
-                                        <div>
+                                        <div class="flex flex-row gap-4 min-w-[540px] items-start">
+                                            <div class="flex flex-col min-w-[160px] justify-start">
+                                                <div class="text-[10px] text-gray-500 uppercase">Contact #</div>
+                                                <div class="font-semibold text-gray-800 text-xs">
+                                                    <span v-if="!profile.contact_no"
+                                                        class="text-gray-400 font-normal italic">No
+                                                        data
+                                                        provided</span>
+                                                    <span v-else>{{ profile.contact_no }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col min-w-[160px] justify-start">
+                                                <div class="text-[10px] text-gray-500 uppercase">Contact No. 2</div>
+                                                <div class="font-semibold text-gray-800 text-xs">
+                                                    <span v-if="!profile.contact_no_2"
+                                                        class="text-gray-400 font-normal italic">No
+                                                        data
+                                                        provided</span>
+                                                    <span v-else>{{ profile.contact_no_2 }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col min-w-[160px] justify-start">
+                                                <div class="text-[10px] text-gray-500 uppercase">Email Address</div>
+                                                <div class="font-semibold text-gray-800 text-xs">
+                                                    <span v-if="!profile.email"
+                                                        class="text-gray-400 font-normal italic">No data
+                                                        provided</span>
+                                                    <span v-else>{{ profile.email }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col min-w-[220px] justify-start">
                                             <div class="text-[10px] text-gray-500 uppercase">Address</div>
-                                            <div class="font-bold text-gray-800 text-xs uppercase">
-                                                {{ profile.municipality ? profile.municipality : '' }}
-                                                {{ profile.barangay ? ', ' + profile.barangay : '' }}
-                                                {{ profile.address ? ', ' + profile.address : '' }}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div class="text-[10px] text-gray-500 uppercase">Contact #</div>
-                                            <div class="font-bold text-gray-800 text-xs">
-                                                {{ profile.contact_no ? profile.contact_no : 'No data provided' }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
-                                        <div>
-                                            <div class="text-[10px] text-gray-500 uppercase">Email Address</div>
-                                            <div class="font-bold text-gray-800 text-xs">
-                                                {{ profile.email ? profile.email : 'No data provided' }}
+                                            <div class="font-semibold text-gray-800 text-xs uppercase">
+                                                <span
+                                                    v-if="!profile.municipality && !profile.barangay && !profile.address"
+                                                    class="text-gray-400 font-normal italic">No data provided</span>
+                                                <span v-else>{{ profile.municipality }}{{ profile.barangay ? ', ' +
+                                                    profile.barangay : '' }}{{ profile.address ? ', ' + profile.address
+                                                        : '' }}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-1">
-                                        <div>
+                                </div>
+
+                                <div class="rounded-lg border border-gray-200 p-4 mb-4 bg-white shadow-sm">
+                                    <div
+                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1">
+                                        Academic Information</div>
+                                    <div class="flex flex-row flex-wrap gap-4 mb-2 items-start">
+                                        <div class="flex flex-col min-w-[180px] justify-start">
+                                            <div class="text-[10px] text-gray-500 uppercase">Program</div>
+                                            <div class="font-semibold text-gray-800 text-xs uppercase">
+                                                <span
+                                                    v-if="!profile.scholarship_grant || !profile.scholarship_grant.length || !profile.scholarship_grant[0].program"
+                                                    class="text-gray-400 font-normal italic">No data provided</span>
+                                                <span v-else>{{ profile.scholarship_grant[0].program.name }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col min-w-[180px] justify-start">
                                             <div class="text-[10px] text-gray-500 uppercase">School</div>
-                                            <div class="font-bold text-gray-800 text-xs uppercase">
-                                                {{ profile.applied_school ? profile.applied_school : 'No data provided'
-                                                }}
+                                            <div class="font-semibold text-gray-800 text-xs uppercase">
+                                                <span
+                                                    v-if="!profile.scholarship_grant || !profile.scholarship_grant.length || !profile.scholarship_grant[0].school || !profile.scholarship_grant[0].school.name"
+                                                    class="text-gray-400 font-normal italic">No data provided</span>
+                                                <span v-else>{{ profile.scholarship_grant[0].school.name }}</span>
                                             </div>
                                         </div>
-                                        <div>
+                                        <div class="flex flex-col min-w-[180px] justify-start">
                                             <div class="text-[10px] text-gray-500 uppercase">Course</div>
-                                            <div class="font-bold text-gray-800 text-xs uppercase">
-                                                {{ profile.applied_course ? profile.applied_course : 'No data provided'
-                                                }}
+                                            <div class="font-semibold text-gray-800 text-xs uppercase">
+                                                <span
+                                                    v-if="!profile.scholarship_grant || !profile.scholarship_grant.length || !profile.scholarship_grant[0].course || !profile.scholarship_grant[0].course.name"
+                                                    class="text-gray-400 font-normal italic">No data provided</span>
+                                                <span v-else>{{ profile.scholarship_grant[0].course.name }}</span>
                                             </div>
                                         </div>
-                                        <div>
+                                        <div class="flex flex-col min-w-[120px] justify-start">
                                             <div class="text-[10px] text-gray-500 uppercase">Year Level</div>
-                                            <div class="font-bold text-gray-800 text-xs uppercase">
-                                                {{ profile.applied_year_level ? profile.applied_year_level :
-                                                    'No data provided' }}
+                                            <div class="font-semibold text-gray-800 text-xs uppercase">
+                                                <span
+                                                    v-if="!profile.scholarship_grant || !profile.scholarship_grant.length || !profile.scholarship_grant[0].year_level"
+                                                    class="text-gray-400 font-normal italic">No data provided</span>
+                                                <span v-else>{{ profile.scholarship_grant[0].year_level }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col min-w-[120px] justify-start">
+                                            <div class="text-[10px] text-gray-500 uppercase">Academic Year</div>
+                                            <div class="font-semibold text-gray-800 text-xs uppercase">
+                                                <span
+                                                    v-if="!profile.scholarship_grant || !profile.scholarship_grant.length || !profile.scholarship_grant[0].academic_year"
+                                                    class="text-gray-400 font-normal italic">No data provided</span>
+                                                <span v-else>{{ profile.scholarship_grant[0].academic_year }}</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="rounded-lg border border-gray-200 p-4 mb-4 bg-white shadow-sm">
+                                <div class="rounded-lg border border-gray-200 p-4 mb-4 bg-gray-50 shadow-sm">
                                     <div
-                                        class="text-base font-bold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1">
-                                        Parent's Information</div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-                                        <div>
+                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1">
+                                        Parent & Guardian Information</div>
+                                    <div class="flex flex-row flex-wrap gap-2 mb-2 items-start">
+                                        <div class="flex flex-col min-w-[220px] justify-start">
                                             <div class="text-[10px] text-gray-500 uppercase">Father's Name</div>
-                                            <div class="font-bold text-gray-800 text-xs">
-                                                {{ profile.father_name ? profile.father_name : 'No data provided' }}
+                                            <div class="font-semibold text-gray-800 text-xs">
+                                                <span v-if="!profile.father_name"
+                                                    class="text-gray-400 font-normal italic">No data
+                                                    provided</span>
+                                                <span v-else>{{ profile.father_name }}</span>
+                                            </div>
+                                            <div class="text-[10px] text-gray-500 uppercase mt-2">Father's Occupation
+                                            </div>
+                                            <div class="font-semibold text-gray-800 text-xs">
+                                                <span v-if="!profile.father_occupation"
+                                                    class="text-gray-400 font-normal italic">No
+                                                    data provided</span>
+                                                <span v-else>{{ profile.father_occupation }}</span>
+                                            </div>
+                                            <div class="text-[10px] text-gray-500 uppercase mt-2">Father's Contact #
+                                            </div>
+                                            <div class="font-semibold text-gray-800 text-xs">
+                                                <span v-if="!profile.father_contact_no"
+                                                    class="text-gray-400 font-normal italic">No
+                                                    data provided</span>
+                                                <span v-else>{{ profile.father_contact_no }}</span>
                                             </div>
                                         </div>
-                                        <div>
-                                            <div class="text-[10px] text-gray-500 uppercase">Contact #</div>
-                                            <div class="font-bold text-gray-800 text-xs">
-                                                {{ profile.father_contact_no ? profile.father_contact_no :
-                                                    'No data provided' }}
+                                        <div class="flex flex-col min-w-[220px] justify-start">
+                                            <div class="text-[10px] text-gray-500 uppercase">Mother's Name</div>
+                                            <div class="font-semibold text-gray-800 text-xs">
+                                                <span v-if="!profile.mother_name"
+                                                    class="text-gray-400 font-normal italic">No data
+                                                    provided</span>
+                                                <span v-else>{{ profile.mother_name }}</span>
+                                            </div>
+                                            <div class="text-[10px] text-gray-500 uppercase mt-2">Mother's Occupation
+                                            </div>
+                                            <div class="font-semibold text-gray-800 text-xs">
+                                                <span v-if="!profile.mother_occupation"
+                                                    class="text-gray-400 font-normal italic">No
+                                                    data provided</span>
+                                                <span v-else>{{ profile.mother_occupation }}</span>
+                                            </div>
+                                            <div class="text-[10px] text-gray-500 uppercase mt-2">Mother's Contact #
+                                            </div>
+                                            <div class="font-semibold text-gray-800 text-xs">
+                                                <span v-if="!profile.mother_contact_no"
+                                                    class="text-gray-400 font-normal italic">No data
+                                                    provided</span>
+                                                <span v-else>{{ profile.mother_contact_no }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col min-w-[220px] justify-start">
+                                            <div class="text-[10px] text-gray-500 uppercase">Guardian Name</div>
+                                            <div class="font-semibold text-gray-800 text-xs">
+                                                <span v-if="!profile.guardian_name"
+                                                    class="text-gray-400 font-normal italic">No data
+                                                    provided</span>
+                                                <span v-else>{{ profile.guardian_name }}</span>
+                                            </div>
+                                            <div class="text-[10px] text-gray-500 uppercase mt-2">Relationship</div>
+                                            <div class="font-semibold text-gray-800 text-xs">
+                                                <span v-if="!profile.guardian_relationship"
+                                                    class="text-gray-400 font-normal italic">No data
+                                                    provided</span>
+                                                <span v-else>{{ profile.guardian_relationship }}</span>
+                                            </div>
+                                            <div class="text-[10px] text-gray-500 uppercase mt-2">Guardian Occupation
+                                            </div>
+                                            <div class="font-semibold text-gray-800 text-xs">
+                                                <span v-if="!profile.guardian_occupation"
+                                                    class="text-gray-400 font-normal italic">No data
+                                                    provided</span>
+                                                <span v-else>{{ profile.guardian_occupation }}</span>
+                                            </div>
+                                            <div class="text-[10px] text-gray-500 uppercase mt-2">Guardian Contact #
+                                            </div>
+                                            <div class="font-semibold text-gray-800 text-xs">
+                                                <span v-if="!profile.guardian_contact_no"
+                                                    class="text-gray-400 font-normal italic">No data
+                                                    provided</span>
+                                                <span v-else>{{ profile.guardian_contact_no }}</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
-                                        <div>
-                                            <div class="text-[10px] text-gray-500 uppercase">Mother's Name</div>
-                                            <div class="font-bold text-gray-800 text-xs">
-                                                {{ profile.mother_name ? profile.mother_name : 'No data provided' }}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div class="text-[10px] text-gray-500 uppercase">Contact #</div>
-                                            <div class="font-bold text-gray-800 text-xs">
-                                                {{ profile.mother_contact_no ? profile.mother_contact_no :
-                                                    'No data provided' }}
+                                    <div class="flex flex-row gap-6 items-start mt-2">
+                                        <div class="flex flex-col min-w-[220px] justify-start">
+                                            <div class="text-[10px] text-gray-500 uppercase">Estimated Gross Monthly
+                                                Income</div>
+                                            <div class="font-semibold text-gray-800 text-xs">
+                                                <span v-if="!profile.parents_guardian_gross_monthly_income"
+                                                    class="text-gray-400 font-normal italic">No data provided</span>
+                                                <span v-else>{{ profile.parents_guardian_gross_monthly_income }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -132,7 +249,7 @@
 
                                 <div class="rounded-lg border border-gray-200 p-4 mb-4 bg-white shadow-sm">
                                     <div
-                                        class="text-base font-bold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1">
+                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1">
                                         Remarks</div>
                                     <div class="p-2 rounded bg-gray-100 font-medium text-gray-700 text-sm">
                                         {{ profile.remarks ? profile.remarks : 'No remarks provided' }}
@@ -144,13 +261,16 @@
                             <div class="w-full bg-white px-4 py-2 flex gap-2 items-center"
                                 v-if="profile.application_status != 2">
                                 <div class="flex gap-2">
-                                    <button class="btn btn-sm bg-red-400 text-white shadow"
+                                    <button
+                                        class="btn btn-sm bg-red-500 text-white shadow font-semibold px-4 py-2 rounded"
                                         @click="declineApplication">Decline</button>
-                                    <button class="btn btn-sm bg-slate-700 text-white shadow"
+                                    <button
+                                        class="btn btn-sm bg-green-600 text-white shadow font-semibold px-4 py-2 rounded"
                                         @click="approveApplication">Approve</button>
                                 </div>
                                 <div class="flex-1"></div>
-                                <button class="btn btn-sm bg-gray-300 text-gray-700 shadow ml-auto"
+                                <button
+                                    class="btn btn-sm bg-gray-300 text-gray-700 shadow ml-auto font-semibold px-4 py-2 rounded"
                                     @click="handleCloseModal">Cancel</button>
                             </div>
 
@@ -214,7 +334,7 @@ const props = defineProps({
     isOpen: Boolean
 });
 
-// console.log(props.profile)
+console.log(props.profile)
 const form = useForm({
     first_name: props.profile.first_name,
     last_name: props.profile.last_name,
