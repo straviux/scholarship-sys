@@ -113,6 +113,8 @@ class ReportController extends Controller
         $orientation = $request->get('orientation', 'portrait');
         try {
             $browsershot = Browsershot::html($html)
+                // Make sure to set the correct path to your Chrome or Chromium executable
+                ->setChromePath('C:\Users\Administrator\.cache\puppeteer\chrome-headless-shell\win64-140.0.7339.82\chrome-headless-shell-win64\chrome-headless-shell.exe')
                 ->showBackground()
                 ->showBrowserHeaderAndFooter()
                 ->footerHtml('<div class="report-footer" style="font-size: 10px; color: #444;position:fixed;right:0.3cm;bottom:0.3cm;">
@@ -139,6 +141,6 @@ class ReportController extends Controller
 
         return response($pdf)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="scholarship_report.pdf"');
+            ->header('Content-Disposition', 'inline; filename="scholarship_report.pdf"');
     }
 }
