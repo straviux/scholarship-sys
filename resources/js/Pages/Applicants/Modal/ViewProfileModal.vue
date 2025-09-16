@@ -15,152 +15,147 @@
                             class="w-full max-w-3xl transform overflow-hidden rounded-sm  text-left align-middle shadow-xl transition-all">
                             <DialogTitle as="h3"
                                 class="text-normal font-medium leading-6 bg-[#222831] text-white flex items-center justify-between px-4 py-2">
-                                <span v-if="action == 'view'">View Application</span>
+                                <span>View Application</span>
 
-                                <Link class="-mr-2 " :href="route('profile.waitinglist')">
-                                <XMarkIcon class="h-8 w-8 text-red-500" />
-                                </Link>
+                                <button class="-mr-2 cursor-pointer " @click="handleCloseModal">
+                                    <XMarkIcon class="h-8 w-8 text-red-500" />
+                                </button>
                             </DialogTitle>
                             <div class="p-4 bg-white">
 
-                                <div class="flex justify-between items-center rounded-lg">
-
-                                    <table class="table table-sm shadow-lg">
-                                        <!-- head -->
-
-                                        <tbody>
-                                            <tr>
-                                                <th class="font-normal bg-slate-500 text-white rounded-t" colspan="3">
-                                                    Name
-                                                </th>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="3"><span
-                                                        class="text-normal font-medium text-gray-700 mb-4">
-                                                        {{ profile.last_name + ', ' + profile.first_name + ' ' +
-                                                            (profile.middle_name || '') +
-                                                            ' ' +
-                                                            (profile.extension_name || '') }}
-                                                    </span></td>
-                                            </tr>
-
-                                            <tr>
-                                                <th class="font-normal bg-slate-500 text-white" colspan="2">Address</th>
-                                                <th class="font-normal bg-slate-500 text-white" colspan="1">Date Filed
-                                                </th>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="2"><span
-                                                        class="text-normal font-medium text-gray-700  mb-4 uppercase">{{
-                                                            profile.municipality }}, {{
-                                                            profile.barangay }} {{ profile.address ? ', ' +
-                                                            profile.address : '' }}
-                                                    </span></td>
-                                                <td colspan="1"><span
-                                                        class="text-normal font-medium text-gray-700  mb-4 uppercase">{{
-                                                            moment(profile.date_filed).format('MMMM DD, YYYY') }}
-                                                    </span></td>
-                                            </tr>
-                                            <tr>
-                                                <th class="font-normal bg-slate-500 text-white" colspan="1">Contact #
-                                                </th>
-                                                <th class="font-normal bg-slate-500 text-white" colspan="2">Email
-                                                    Address
-                                                </th>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="1"><span
-                                                        class="text-normal font-medium text-gray-700  mb-4">{{
-                                                            profile.contact_no }}
-                                                    </span></td>
-                                                <td colspan="2"><span
-                                                        class="text-normal font-medium text-gray-700  mb-4">{{
-                                                            profile.email }}
-                                                    </span></td>
-                                            </tr>
-                                            <!-- row 2 -->
-                                            <tr>
-                                                <th class="font-normal bg-slate-500 text-white" colspan="1">School
-                                                </th>
-                                                <th class="font-normal bg-slate-500 text-white" colspan="1">Course
-                                                </th>
-                                                <th class="font-normal bg-slate-500 text-white" colspan="1">Year Level
-                                                </th>
-                                            </tr>
-
-                                            <tr>
-                                                <td colspan="1"><span
-                                                        class="text-normal font-medium text-gray-700  mb-4 uppercase">{{
-                                                            profile.applied_school }}
-                                                    </span></td>
-                                                <td colspan="1"><span
-                                                        class="text-normal font-medium text-gray-700  mb-4 uppercase">{{
-                                                            profile.applied_course }}
-                                                    </span></td>
-                                                <td colspan="1"><span
-                                                        class="text-normal font-medium text-gray-700  mb-4 uppercase">{{
-                                                            profile.applied_year_level }}
-                                                    </span></td>
-                                            </tr>
-
-
-                                        </tbody>
-                                    </table>
+                                <div class="rounded-lg border border-gray-200 p-4 mb-4 bg-white shadow-sm">
+                                    <div
+                                        class="text-base font-bold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1">
+                                        Applicant Information</div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                                        <div>
+                                            <div class="text-[10px] text-gray-500 uppercase">Name</div>
+                                            <div class="font-bold text-gray-800 text-xs uppercase">
+                                                {{ profile.last_name ? profile.last_name : 'No data provided' }},
+                                                {{ profile.first_name ? profile.first_name : 'No data provided' }}
+                                                {{ profile.middle_name ? profile.middle_name : '' }}
+                                                {{ profile.extension_name ? profile.extension_name : '' }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="text-[10px] text-gray-500 uppercase">Date Filed</div>
+                                            <div class="font-bold text-gray-800 text-xs uppercase">
+                                                {{ profile.date_filed ? moment(profile.date_filed)
+                                                    .format('MMMM DD,YYYY') : 'No data provided' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
+                                        <div>
+                                            <div class="text-[10px] text-gray-500 uppercase">Address</div>
+                                            <div class="font-bold text-gray-800 text-xs uppercase">
+                                                {{ profile.municipality ? profile.municipality : '' }}
+                                                {{ profile.barangay ? ', ' + profile.barangay : '' }}
+                                                {{ profile.address ? ', ' + profile.address : '' }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="text-[10px] text-gray-500 uppercase">Contact #</div>
+                                            <div class="font-bold text-gray-800 text-xs">
+                                                {{ profile.contact_no ? profile.contact_no : 'No data provided' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
+                                        <div>
+                                            <div class="text-[10px] text-gray-500 uppercase">Email Address</div>
+                                            <div class="font-bold text-gray-800 text-xs">
+                                                {{ profile.email ? profile.email : 'No data provided' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-1">
+                                        <div>
+                                            <div class="text-[10px] text-gray-500 uppercase">School</div>
+                                            <div class="font-bold text-gray-800 text-xs uppercase">
+                                                {{ profile.applied_school ? profile.applied_school : 'No data provided'
+                                                }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="text-[10px] text-gray-500 uppercase">Course</div>
+                                            <div class="font-bold text-gray-800 text-xs uppercase">
+                                                {{ profile.applied_course ? profile.applied_course : 'No data provided'
+                                                }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="text-[10px] text-gray-500 uppercase">Year Level</div>
+                                            <div class="font-bold text-gray-800 text-xs uppercase">
+                                                {{ profile.applied_year_level ? profile.applied_year_level :
+                                                    'No data provided' }}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <hr>
-                                <div class="text-gray-600 mt-6 mb-2">Parent's Information:</div>
-                                <table class="table table-sm">
-                                    <!-- head -->
-
-                                    <tbody>
-
-
-                                        <tr>
-                                            <th class="font-normal text-gray-500" colspan="1">Father's Name</th>
-                                            <td colspan="1"><span class="text-normal font-medium text-gray-700  mb-4">{{
-                                                profile.father_name }}
-                                                </span></td>
-                                            <th class="font-normal text-gray-500" colspan="1">Contact #:</th>
-                                            <td colspan="3"><span class="text-normal font-medium text-gray-700  mb-4">{{
-                                                profile.father_contact_no }}
-                                                </span></td>
-                                        </tr>
-
-                                        <tr>
-                                            <th class="font-normal text-gray-500" colspan="1">Mother's Name</th>
-                                            <td colspan="1"><span class="text-normal font-medium text-gray-700  mb-4">{{
-                                                profile.mother_name }}
-                                                </span></td>
-                                            <th class="font-normal text-gray-500" colspan="1">Contact #:</th>
-                                            <td colspan="3"><span class="text-normal font-medium text-gray-700  mb-4">{{
-                                                profile.mother_contact_no }}
-                                                </span></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-
-                                <div class="mt-4">
-                                    <div class="text-gray-700">
-                                        Remarks:
+                                <div class="rounded-lg border border-gray-200 p-4 mb-4 bg-white shadow-sm">
+                                    <div
+                                        class="text-base font-bold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1">
+                                        Parent's Information</div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                                        <div>
+                                            <div class="text-[10px] text-gray-500 uppercase">Father's Name</div>
+                                            <div class="font-bold text-gray-800 text-xs">
+                                                {{ profile.father_name ? profile.father_name : 'No data provided' }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="text-[10px] text-gray-500 uppercase">Contact #</div>
+                                            <div class="font-bold text-gray-800 text-xs">
+                                                {{ profile.father_contact_no ? profile.father_contact_no :
+                                                    'No data provided' }}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="p-4 rounded bg-gray-100 font-medium text-gray-700">
-                                        {{ profile.remarks }}
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
+                                        <div>
+                                            <div class="text-[10px] text-gray-500 uppercase">Mother's Name</div>
+                                            <div class="font-bold text-gray-800 text-xs">
+                                                {{ profile.mother_name ? profile.mother_name : 'No data provided' }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="text-[10px] text-gray-500 uppercase">Contact #</div>
+                                            <div class="font-bold text-gray-800 text-xs">
+                                                {{ profile.mother_contact_no ? profile.mother_contact_no :
+                                                    'No data provided' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rounded-lg border border-gray-200 p-4 mb-4 bg-white shadow-sm">
+                                    <div
+                                        class="text-base font-bold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1">
+                                        Remarks</div>
+                                    <div class="p-2 rounded bg-gray-100 font-medium text-gray-700 text-sm">
+                                        {{ profile.remarks ? profile.remarks : 'No remarks provided' }}
                                     </div>
                                 </div>
 
 
                             </div>
-                            <div class="w-full bg-white px-4 py-2 flex justify-end gap-2"
+                            <div class="w-full bg-white px-4 py-2 flex gap-2 items-center"
                                 v-if="profile.application_status != 2">
-                                <button class="btn btn-sm bg-red-400 text-white shadow"
-                                    @click="declineApplication">Decline</button>
-                                <button class="btn btn-sm bg-slate-700 text-white shadow"
-                                    @click="approveApplication">Approve</button>
+                                <div class="flex gap-2">
+                                    <button class="btn btn-sm bg-red-400 text-white shadow"
+                                        @click="declineApplication">Decline</button>
+                                    <button class="btn btn-sm bg-slate-700 text-white shadow"
+                                        @click="approveApplication">Approve</button>
+                                </div>
+                                <div class="flex-1"></div>
+                                <button class="btn btn-sm bg-gray-300 text-gray-700 shadow ml-auto"
+                                    @click="handleCloseModal">Cancel</button>
                             </div>
 
 
-                            <Modal marginTop="md" maxWidth="lg" :show="showModal" @close="closeModal">
+                            <Modal marginTop="md" maxWidth="lg" :show="showModal" @close="handleCloseModal">
                                 <div class="p-2 bg-slate-700 text-left text-white">Decline Application</div>
                                 <div class="p-4">
                                     <div class="mt-4 bg-slate-100 p-4 text-center text-red-700 font-semibold">
@@ -175,7 +170,7 @@
                                     <div class="mt-6 flex justify-end space-x-4">
                                         <DangerButton @click="confirmDecline">
                                             Submit</DangerButton>
-                                        <SecondaryButton @click="closeModal">Cancel</SecondaryButton>
+                                        <SecondaryButton @click="handleCloseModal">Cancel</SecondaryButton>
                                     </div>
                                 </div>
                             </Modal>
@@ -215,7 +210,8 @@ const props = defineProps({
     profile: Object,
     action: String,
     msg: String,
-    errors: Object
+    errors: Object,
+    isOpen: Boolean
 });
 
 // console.log(props.profile)
@@ -228,13 +224,15 @@ const form = useForm({
     application_status_date: '',
 })
 
-const isOpen = computed(() => props.action == 'view');
+// Use isOpen from props for modal visibility
 const showModal = ref(false);
 const declineApplication = () => {
     showModal.value = true;
 }
-const closeModal = () => {
+const emit = defineEmits(['close']);
+const handleCloseModal = () => {
     showModal.value = false;
+    emit('close');
 };
 
 

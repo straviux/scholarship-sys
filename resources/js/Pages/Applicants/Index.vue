@@ -79,10 +79,13 @@ const filter = useForm({
 
 const searchInput = ref(null);
 const selectedProfile = ref({});
-const toggleViewModal = ref(false);
+const isViewProfileOpen = ref(false);
 const viewProfile = (profile) => {
-    toggleViewModal.value = !toggleViewModal.value;
     selectedProfile.value = profile;
+    isViewProfileOpen.value = true;
+}
+const closeViewProfile = () => {
+    isViewProfileOpen.value = false;
 }
 
 // const editProfile = (profile) => {
@@ -535,7 +538,8 @@ const cancelDelete = () => {
             :action="props.action" :errors="props.errors" :profile="props.profile" />
 
         <!-- VIEW PROFILE MODAL -->
-        <ViewProfileModal v-if="toggleViewModal" :action="'view'" :errors="props.errors" :profile="selectedProfile" />
+        <ViewProfileModal :isOpen="isViewProfileOpen" :errors="props.errors" :profile="selectedProfile"
+            @close="closeViewProfile" />
 
         <!-- Delete Confirmation Dialog -->
         <div v-if="showDeleteConfirm" class="fixed inset-0 flex items-center justify-center z-50">

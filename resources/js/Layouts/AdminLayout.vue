@@ -18,6 +18,7 @@ import {
     UserGroupIcon,
     AdjustmentsHorizontalIcon,
     LockClosedIcon,
+    ArrowRightStartOnRectangleIcon,
     TableCellsIcon,
     ShieldExclamationIcon
 } from "@heroicons/vue/20/solid";
