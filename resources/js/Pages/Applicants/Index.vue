@@ -301,24 +301,19 @@ const cancelDelete = () => {
                     </div> -->
 
                 </div>
-                <div class="flex">
-                    <Button label="Generate Report" icon="pi pi-print" severity="info"
-                        v-if="hasPermission('create-scholar-profile')" raised size="small" @click="openReportModal" />
-                </div>
                 <GenerateReportModal v-model:show="showReportModal" />
                 <div class="flex justify-end gap-4">
-
+                    <Button as="a" label="Add New" icon="pi pi-user-plus" v-if="hasPermission('create-scholar-profile')"
+                        severity="success" :href="route('profile.waitinglist', {
+                            action: 'create'
+                        })" raised size="small" />
                     <Button as="a" label="Add Existing" icon="pi pi-user" v-if="hasPermission('create-scholar-profile')"
                         :href="route('profile.waitinglist', {
                             action: 'add-existing'
                         })" raised size="small" />
 
-                    <Button as="a" label="Add New" icon="pi pi-user-plus" v-if="hasPermission('create-scholar-profile')"
-                        severity="success" :href="route('profile.waitinglist', {
-                            action: 'create'
-                        })" raised size="small" />
-
-
+                    <Button label="Generate Report" icon="pi pi-print" severity="info"
+                        v-if="hasPermission('create-scholar-profile')" raised size="small" @click="openReportModal" />
 
                 </div>
             </div>

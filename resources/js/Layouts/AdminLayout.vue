@@ -22,8 +22,12 @@ import {
     ShieldExclamationIcon
 } from "@heroicons/vue/20/solid";
 const toggleMenu = ref(false);
-const sidebarMinimized = ref(false);
+const sidebarMinimized = ref(localStorage.getItem('sidebarMinimized') === 'true');
 
+function toggleSidebarMinimized() {
+    sidebarMinimized.value = !sidebarMinimized.value;
+    localStorage.setItem('sidebarMinimized', sidebarMinimized.value ? 'true' : 'false');
+}
 </script>
 
 <template>
@@ -262,11 +266,10 @@ const sidebarMinimized = ref(false);
                 </ul>
             </div>
             <div class="px-2 flex justify-end items-center border-t">
-                <button @click="sidebarMinimized = !sidebarMinimized"
-                    class="ml-2 p-2 rounded hover:bg-gray-700 focus:outline-none"
+                <button @click="toggleSidebarMinimized" class="ml-2 p-2 rounded hover:bg-gray-700 focus:outline-none"
                     :aria-label="sidebarMinimized ? 'Expand sidebar' : 'Minimize sidebar'">
-                    <DynamicHeroicon :name="sidebarMinimized ? 'arrow-sm-right' : 'arrow-sm-left'" class="text-gray-300"
-                        :size="6" />
+                    <DynamicHeroicon :name="sidebarMinimized ? 'chevron-double-right' : 'chevron-double-left'"
+                        class="text-gray-300" :size="6" />
                 </button>
             </div>
         </aside>
