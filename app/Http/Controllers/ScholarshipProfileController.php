@@ -207,10 +207,10 @@ class ScholarshipProfileController extends Controller
 
         $programId = $request->get('program');
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])
-            ->orWhereHas('scholarshipGrant', function ($q) use ($programId) {
+            ->whereHas('scholarshipGrant', function ($q) use ($programId) {
                 $q->where('scholarship_status', 0)
-                    ->orderBy('date_filed', 'desc')
-                    ->orderBy('created_at', 'desc');
+                    ->orderBy('date_filed', 'asc')
+                    ->orderBy('created_at', 'asc');
                 if ($programId) {
                     $q->where('program_id', $programId);
                 }
@@ -415,7 +415,7 @@ class ScholarshipProfileController extends Controller
                     'scholarship_status' => 0, // Pending by default
                     'is_active' => 1,
                     'date_filed' =>  $request->date_filed ?? now(),
-                    'date_approved' => $request->date_approved ?? null,
+                    // 'date_approved' => $request->date_approved ?? null,
                     // Add other required fields as needed
                 ]);
             }
@@ -458,7 +458,7 @@ class ScholarshipProfileController extends Controller
                 'scholarship_status' => 0, // Pending by default
                 'is_active' => 1,
                 'date_filed' =>  $request->date_filed ?? now(),
-                'date_approved' => $request->date_approved ?? null,
+                // 'date_approved' => $request->date_approved ?? null,
                 // Add other required fields as needed
             ]);
         } else {
@@ -474,7 +474,7 @@ class ScholarshipProfileController extends Controller
             $record->is_active = 1;
             $record->scholarship_status_remarks = "Pending";
             $record->date_filed =  $request->date_filed ?? now();
-            $record->date_approved = $request->date_approved ?? $record->date_approved;
+            // $record->date_approved = $request->date_approved ?? $record->date_approved;
             // Add other required fields as needed
             $record->save();
         }
