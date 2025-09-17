@@ -86,7 +86,7 @@ onMounted(fetchData);
 
 <template>
     <Select v-model="localValue" :options="schools" filter autoFilterFocus showClear optionLabel="name"
-        :placeholder="customPlaceholder" class="w-full">
+        :placeholder="customPlaceholder" class="w-full" :filterFields="['name', 'shortname']">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.shortname }}</div>

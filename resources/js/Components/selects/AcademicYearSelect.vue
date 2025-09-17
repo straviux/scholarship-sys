@@ -28,7 +28,13 @@ const acad_year = computed(() => {
     return years;
 });
 // Local value for v-model
-const localValue = ref(props.modelValue);
+const defaultYearValue = `${currentYear}-${currentYear + 1}`;
+const defaultYearObj = computed(() => acad_year.value.find(y => y.value === defaultYearValue));
+const localValue = ref(
+    props.modelValue
+        ? acad_year.value.find(y => y.value === props.modelValue || y === props.modelValue) || props.modelValue
+        : defaultYearObj.value
+);
 
 // Sync localValue with parent prop
 watch(() => props.modelValue, (val) => {
@@ -37,7 +43,8 @@ watch(() => props.modelValue, (val) => {
         const selected = acad_year.value.find(y => y.value === val || y === val);
         localValue.value = selected || val;
     } else {
-        localValue.value = null;
+        // Default to current academic year if not set
+        localValue.value = defaultYearObj.value;
     }
 });
 

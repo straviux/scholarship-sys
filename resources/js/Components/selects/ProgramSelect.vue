@@ -78,8 +78,8 @@ onMounted(fetchData);
 </script>
 
 <template>
-    <Select v-model="localValue" :options="programs" filter autoFilterFocus showClear optionLabel="name"
-        :placeholder="customPlaceholder" class="w-full">
+    <Select v-model="localValue" :options="programs" filter :filterFields="['name', 'shortname']" autoFilterFocus
+        showClear optionLabel="name" :placeholder="customPlaceholder" class="w-full">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.shortname }}</div>

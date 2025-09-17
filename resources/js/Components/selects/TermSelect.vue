@@ -66,8 +66,8 @@ watch(
 </script>
 
 <template>
-    <Select v-model="localValue" :options="terms" filter autoFilterFocus showClear optionLabel="label"
-        placeholder="Select Term" class="w-full">
+    <Select v-model="localValue" :options="terms" filter :filterFields="['label', 'value']" autoFilterFocus showClear
+        optionLabel="label" placeholder="Select Term" class="w-full">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.label }}</div>

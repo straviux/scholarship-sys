@@ -21,13 +21,15 @@
                                     <XMarkIcon class="h-8 w-8 text-red-500" />
                                 </button>
                             </DialogTitle>
-                            <div class="p-4 bg-white">
+                            <div class="px-4 py-2 bg-white">
 
-                                <div class="rounded-lg border border-gray-200 p-4 mb-4 bg-white shadow-sm">
+                                <div class="rounded-lg border border-gray-200 px-4 py-2 mb-2 bg-white shadow-sm">
                                     <div
-                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1">
-                                        Applicant Information</div>
-                                    <div class="flex flex-row flex-wrap gap-4 mb-2 items-start">
+                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1 flex items-center">
+                                        <span class="inline-block w-2 h-5 bg-slate-600 rounded mr-2"></span> Applicant
+                                        Information
+                                    </div>
+                                    <div class="flex flex-row flex-wrap gap-3 mb-2 items-start">
                                         <div class="flex flex-col min-w-[220px] justify-start">
                                             <div class="text-[10px] text-gray-500 uppercase">Name</div>
                                             <div class="font-semibold text-gray-800 text-xs uppercase">
@@ -44,7 +46,7 @@
                                                     class="text-gray-400 font-normal italic">No data
                                                     provided</span>
                                                 <span v-else>{{ moment(profile.date_filed).format('MMMM DD,YYYY')
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="flex flex-row gap-4 min-w-[540px] items-start">
@@ -93,18 +95,22 @@
                                     </div>
                                 </div>
 
-                                <div class="rounded-lg border border-gray-200 p-4 mb-4 bg-white shadow-sm">
+                                <div class="rounded-lg border border-gray-200 px-4 py-2 mb-2 bg-white shadow-sm">
                                     <div
-                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1">
-                                        Academic Information</div>
-                                    <div class="flex flex-row flex-wrap gap-4 mb-2 items-start">
+                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1 flex items-center">
+                                        <span class="inline-block w-2 h-5 bg-slate-600 rounded mr-2"></span> Academic
+                                        Information
+                                    </div>
+                                    <div class="flex flex-row flex-wrap gap-3 mb-2 items-start">
                                         <div class="flex flex-col min-w-[180px] justify-start">
                                             <div class="text-[10px] text-gray-500 uppercase">Program</div>
                                             <div class="font-semibold text-gray-800 text-xs uppercase">
                                                 <span
                                                     v-if="!profile.scholarship_grant || !profile.scholarship_grant.length || !profile.scholarship_grant[0].program"
                                                     class="text-gray-400 font-normal italic">No data provided</span>
-                                                <span v-else>{{ profile.scholarship_grant[0].program.name }}</span>
+                                                <span v-else
+                                                    v-tooltip.top="profile.scholarship_grant[0].program.name">{{
+                                                        profile.scholarship_grant[0].program.shortname }}</span>
                                             </div>
                                         </div>
                                         <div class="flex flex-col min-w-[180px] justify-start">
@@ -113,7 +119,8 @@
                                                 <span
                                                     v-if="!profile.scholarship_grant || !profile.scholarship_grant.length || !profile.scholarship_grant[0].school || !profile.scholarship_grant[0].school.name"
                                                     class="text-gray-400 font-normal italic">No data provided</span>
-                                                <span v-else>{{ profile.scholarship_grant[0].school.name }}</span>
+                                                <span v-else v-tooltip.top="profile.scholarship_grant[0].school.name">{{
+                                                    profile.scholarship_grant[0].school.shortname }}</span>
                                             </div>
                                         </div>
                                         <div class="flex flex-col min-w-[180px] justify-start">
@@ -122,7 +129,8 @@
                                                 <span
                                                     v-if="!profile.scholarship_grant || !profile.scholarship_grant.length || !profile.scholarship_grant[0].course || !profile.scholarship_grant[0].course.name"
                                                     class="text-gray-400 font-normal italic">No data provided</span>
-                                                <span v-else>{{ profile.scholarship_grant[0].course.name }}</span>
+                                                <span v-else v-tooltip.top="profile.scholarship_grant[0].course.name">{{
+                                                    profile.scholarship_grant[0].course.shortname }}</span>
                                             </div>
                                         </div>
                                         <div class="flex flex-col min-w-[120px] justify-start">
@@ -146,10 +154,12 @@
                                     </div>
                                 </div>
 
-                                <div class="rounded-lg border border-gray-200 p-4 mb-4 bg-gray-50 shadow-sm">
+                                <div class="rounded-lg border border-gray-200 px-4 py-2 mb-2 bg-gray-50 shadow-sm">
                                     <div
-                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1">
-                                        Parent & Guardian Information</div>
+                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1 flex items-center">
+                                        <span class="inline-block w-2 h-5 bg-slate-600 rounded mr-2"></span>Parent &
+                                        Guardian Information
+                                    </div>
                                     <div class="flex flex-row flex-wrap gap-2 mb-2 items-start">
                                         <div class="flex flex-col min-w-[220px] justify-start">
                                             <div class="text-[10px] text-gray-500 uppercase">Father's Name</div>
@@ -247,10 +257,11 @@
                                     </div>
                                 </div>
 
-                                <div class="rounded-lg border border-gray-200 p-4 mb-4 bg-white shadow-sm">
+                                <div class="rounded-lg border border-gray-200 px-4 py-2 mb-2 bg-white shadow-sm">
                                     <div
-                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1">
-                                        Remarks</div>
+                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1 flex items-center">
+                                        <span class="inline-block w-2 h-5 bg-slate-600 rounded mr-2"></span>Remarks
+                                    </div>
                                     <div class="p-2 rounded bg-gray-100 font-medium text-gray-700 text-sm">
                                         {{ profile.remarks ? profile.remarks : 'No remarks provided' }}
                                     </div>
