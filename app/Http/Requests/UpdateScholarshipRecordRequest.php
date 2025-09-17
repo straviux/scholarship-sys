@@ -82,6 +82,10 @@ class UpdateScholarshipRecordRequest extends FormRequest
                 'nullable',
                 'date',
             ],
+            "date_approved" => [
+                'nullable',
+                'date',
+            ],
             "is_active" => [
                 'boolean'
             ],

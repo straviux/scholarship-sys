@@ -256,18 +256,18 @@ const cancelDelete = () => {
                     <div class="text-gray-500 p-2">of {{ profiles_total }} result(s)</div>
                     <Divider layout="vertical" />
                     <div class="flex gap-4">
-                        <div class="flex shadow-xs items-center gap-2">
+                        <div class="flex items-center gap-2">
                             <p>Program</p>
                             <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="------" />
                         </div>
-                        <div class="flex shadow-xs items-center gap-2">
-                            <p>Date From</p>
-                            <DatePicker v-model="filter.date_from" placeholder="Date from" :manualInput="true"
-                                showButtonBar @clear-click="filter.date_from = null" />
+                        <div class="flex items-center gap-2">
+                            <p>Date Filed</p>
+                            <DatePicker v-model="filter.date_from" :manualInput="true" showButtonBar
+                                @clear-click="filter.date_from = null" />
                         </div>
-                        <div class="flex shadow-xs items-center gap-2">
-                            <p>Date To</p>
-                            <DatePicker v-model="filter.date_to" placeholder="Date to" :manualInput="true" showButtonBar
+                        <div class="flex items-center gap-2">
+                            <p>To</p>
+                            <DatePicker v-model="filter.date_to" :manualInput="true" showButtonBar
                                 @clear-click="filter.date_to = null" />
                         </div>
                     </div>

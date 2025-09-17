@@ -15,9 +15,18 @@ class ReportController extends Controller
     public function generateWaitinglist(Request $request)
     {
         // Build query based on filters
-        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) {
-            $q->where('scholarship_status', 0)->latest('created_at');
-        }])->where('is_on_waiting_list', '=', 1);
+        // $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) {
+        //     $q->where('scholarship_status', 0)->latest('created_at');
+        // }])->where('is_on_waiting_list', '=', 1);
+        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])
+            ->whereHas('scholarshipGrant', function ($q) {
+                $q->where('scholarship_status', 0)
+                    ->orderBy('date_filed', 'desc')
+                    ->orderBy('created_at', 'desc');
+            });
+        // Optionally, you can add date_approved filters/output here if needed
+
+
 
         if ($request->filled('program')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {

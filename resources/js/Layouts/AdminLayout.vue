@@ -73,7 +73,7 @@ function toggleSidebarMinimized() {
                                     <SidebarLink :href="route('profile.index')"
                                         :active="route().current('profile.index')">
                                         <IdentificationIcon class="h-5 w-5 mr-2" />
-                                        <span class="-mr-1 font-medium indent-3">Profiles</span>
+                                        <span class="-mr-1 font-medium indent-3">Existing</span>
                                         <div class="indicator ml-6">
                                             <!-- <span class="indicator-item text-xs indicator-middle badge badge-secondary" v-if="pendingApplicantCount > 0">{{ pendingApplicantCount }}</span> -->
                                         </div>
@@ -184,7 +184,7 @@ function toggleSidebarMinimized() {
                             class="flex flex-col justify-center text-center">
 
                             <IdentificationIcon class="h-6 w-6" />
-                            <span class="text-xs">profiles</span>
+                            <span class="text-xs">existing</span>
                         </SidebarLink>
                     </li>
                     <li>

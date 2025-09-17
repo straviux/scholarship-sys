@@ -66,6 +66,7 @@ Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->gro
     Route::put('/scholarship_records/{id}', 'update')->name('scholarship_records.update');
 
     // API's
+    Route::post('/scholarship-records/{id}/approve', 'approveScholarshipRecord')->name('scholarship-record.approve');
     Route::put('/scholarship_records.update-status/{scholarship_records}', 'updateScholarshipStatusApi')->name('scholarship_records-api.updatestatus');
     Route::put('/scholarship_records.update-remarks/{scholarship_records}', 'updateRemarks')->name('scholarship_records-api.updateremarks');
     Route::post('/scholarship_records/{record}/requirements/upload', 'uploadRequirement')->name('scholarship.requirements.upload');

@@ -27,86 +27,69 @@ class ScholarshipProfileController extends Controller
      */
     public function index(Request $request, $action = null, $id = null, $scholarship_record_id = null): Response
     {
-        // ...existing code...
-        // default actiont Index 
-        $programId = $request->get('scholarship_program_id');
-        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) use ($programId) {
-            if ($programId) {
-                $q->where('program_id', $programId);
-            }
-        }]);
-        if ($programId) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($programId) {
-                $q->where('program_id', $programId);
-            });
-        }
-
-        // Filter by date range (date_filed) from scholarshipGrant relation
-        if ($request->filled('date_from') && $request->filled('date_to')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->whereBetween('date_filed', [$request->date_from, $request->date_to]);
-            });
-        } elseif ($request->filled('date_from')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->whereDate('date_filed', '>=', $request->date_from);
-            });
-        } elseif ($request->filled('date_to')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->whereDate('date_filed', '<=', $request->date_to);
-            });
-        }
-        $msg = ['error' => false, 'message' => ''];
-        $scholarshipPrograms = ScholarshipProgram::with('createdBy')
-            ->where('is_active', '=', 1)->get()->map(function ($program) {
-                return [
-                    'id' => $program->id,
-                    'name' => $program->name,
-                    'shortname' => $program->shortname,
-                ];
-            });
-
-        // START VIEW ACTION LOGIC
-        if ($action === 'view' && $id) {
-            // Fetch the profile by ID
-            $profile = ScholarshipProfile::with(['createdBy', 'ongoingScholarshipGrant', 'pendingScholarshipGrant', 'educationalBackgrounds', 'scholarshipGrant'])->find($id);
-            if (!$profile) {
-                $msg = ['error' => true, 'message' => 'Profile not found'];
-                return Inertia::render('ScholarshipProfile/Index', [
-                    'message' => $msg,
-                ]);
-            }
-
-            $record = [];
-            if ($scholarship_record_id) {
-                $record = ScholarshipRecord::with(['requirements', 'program'])->find($scholarship_record_id);
-            }
-            return Inertia::render('ScholarshipProfile/View', [
-                'record' => fn() => $record,
-                'profile' => $profile,
-                'scholarshipPrograms' => $scholarshipPrograms,
-            ]);
-        }
-        // END VIEW ACTION
-
-        // if create action is called, check gate if ability is allowed
         if (!Gate::allows('create-scholar-profile') && $action === 'create') {
             $action = null;
             $msg = ['error' => true, 'message' => 'You are not allowed to perform this action'];
             abort(403, 'Unauthorized action.');
         }
 
-        // default actiont Index 
-        $programId = $request->get('scholarship_program_id');
-        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) use ($programId) {
-            if ($programId) {
-                $q->where('program_id', $programId);
-            }
-        }]);
-        if ($programId) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($programId) {
-                $q->where('program_id', $programId);
+        $programId = $request->get('program');
+        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])
+            ->whereHas('scholarshipGrant', function ($q) use ($programId) {
+                $q->whereNot('scholarship_status', 0)
+                    ->orderBy('date_filed', 'asc')
+                    ->orderBy('created_at', 'asc');
+                if ($programId) {
+                    $q->where('program_id', $programId);
+                }
+            });
+
+
+
+        // Filter by date range (date_filed) from scholarshipGrant relation
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->whereBetween('date_approved', [$request->date_from, $request->date_to]);
+            });
+        } elseif ($request->filled('date_from')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->whereDate('date_approved', '>=', $request->date_from);
+            });
+        } elseif ($request->filled('date_to')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->whereDate('date_approved', '<=', $request->date_to);
             });
         }
+
+
+
+        // Filter by school under scholarshipGrant relation
+        if ($request->filled('school')) {
+            $query->whereHas('scholarshipGrant.school', function ($q) use ($request) {
+                $q->where('shortname', 'like', '%' . $request->school . '%')->orWhere('name', 'like', '%' . $request->school . '%');
+            });
+        }
+
+        // Filter by year_level under scholarshipGrant relation
+        if ($request->filled('year_level')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('year_level', 'like', '%' . $request->year_level . '%');
+            });
+        }
+
+        // Filter by course under scholarshipGrant relation
+        if ($request->filled('course')) {
+            $query->whereHas('scholarshipGrant.course', function ($q) use ($request) {
+                $q->where('shortname', 'like', '%' . $request->course . '%')->orWhere('name', 'like', '%' . $request->course . '%');
+            });
+        }
+
+        // Filter by municipality
+        if ($request->filled('remarks')) {
+            $query->where('remarks', 'like', '%' . $request->remarks . '%');
+        }
+
+
         // Filter by municipality
         if ($request->filled('municipality')) {
             $query->where('municipality', 'like', '%' . $request->municipality . '%');
@@ -122,12 +105,11 @@ class ScholarshipProfileController extends Controller
             });
         }
 
-        // ...existing code...
-
+        // $query->orderBy('date_filed', $request->sort['date_filed'] ?? 'asc')->orderBy('created_at', 'asc');
         if ($request->filled('sort')) {
-            if (isset($request->sort['date_filed'])) {
-                $query->orderBy('date_filed', $request->sort['date_filed']);
-            }
+            // if (isset($request->sort['date_filed'])) {
+            //     $query->orderBy('date_filed', $request->sort['date_filed'])->orderBy('created_at', 'asc');
+            // }
             if (isset($request->sort['last_name'])) {
                 $query->orderBy('last_name', $request->sort['last_name']);
             }
@@ -142,9 +124,45 @@ class ScholarshipProfileController extends Controller
             }
         }
 
+
+
+
+
         $perPage = $request->get('per_page', 10);
         /** @disregard UndefinedMethod withQueryString */
         $profiles = $query->paginate($perPage)->withQueryString();
+
+        if ($action == 'update' && $id) {
+            $profile = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])->find($id);
+            // Remove applied_course from filter
+            $filters = [
+                'name' => $request->get('name', ''),
+                'program' => $request->get('program', ''),
+                'school' => $request->get('school', ''),
+                'course' => $request->get('course', ''),
+                'municipality' => $request->get('municipality', ''),
+                'year_level' => $request->get('year_level', ''),
+            ];
+            // Update sort keys to use simple form
+            $sort = [
+                'last_name' => $request->sort['last_name'] ?? '',
+                'school' => $request->sort['school'] ?? '',
+                'course' => $request->sort['course'] ?? '',
+                'year_level' => $request->sort['year_level'] ?? '',
+                // 'date_filed' => $request->sort['date_filed'] ?? '',
+            ];
+            return Inertia::render(
+                'ScholarshipProfile/Index',
+                [
+                    'action' => fn() => $action,
+                    'filter' => $filters,
+                    'sort' => $sort,
+                    'profile' => $profile,
+                    'profiles' => ScholarshipProfileResource::collection($profiles),
+                    'profiles_total' => $profiles->total(),
+                ]
+            );
+        }
 
         // Collect all filter values from the request (remove applied_*)
         $filters = [
@@ -156,15 +174,24 @@ class ScholarshipProfileController extends Controller
             'year_level' => $request->get('year_level', ''),
             'date_from' => $request->get('date_from', ''),
             'date_to' => $request->get('date_to', ''),
+            'remarks' => $request->get('remarks', ''),
+        ];
+        // Update sort keys to use simple form
+        $sort = [
+            'last_name' => $request->sort['last_name'] ?? '',
+            'school' => $request->sort['school'] ?? '',
+            'course' => $request->sort['course'] ?? '',
+            'year_level' => $request->sort['year_level'] ?? '',
+            // 'date_filed' => $request->sort['date_filed'] ?? '',
         ];
         return Inertia::render(
             'ScholarshipProfile/Index',
             [
                 'action' => fn() => $action,
+                'filter' => $filters,
+                'sort' => $sort,
                 'profiles' => ScholarshipProfileResource::collection($profiles),
                 'profiles_total' => $profiles->total(),
-                'message' => $msg,
-                'filter' => $filters,
             ]
         );
     }
@@ -179,14 +206,17 @@ class ScholarshipProfileController extends Controller
         }
 
         $programId = $request->get('program');
-        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) {
-            $q->where('scholarship_status', 0)->latest('created_at'); // return scholarship grant with pending status
-        }])->where('is_on_waiting_list', '=', 1);
-        if ($programId) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($programId) {
-                $q->where('program_id', $programId);
+        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])
+            ->whereHas('scholarshipGrant', function ($q) use ($programId) {
+                $q->where('scholarship_status', 0)
+                    ->orderBy('date_filed', 'desc')
+                    ->orderBy('created_at', 'desc');
+                if ($programId) {
+                    $q->where('program_id', $programId);
+                }
             });
-        }
+
+
 
         // Filter by date range (date_filed) from scholarshipGrant relation
         if ($request->filled('date_from') && $request->filled('date_to')) {
@@ -275,9 +305,7 @@ class ScholarshipProfileController extends Controller
         $profiles = $query->paginate($perPage)->withQueryString();
 
         if ($action == 'update' && $id) {
-            $profile = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) {
-                $q->where('scholarship_status', 0)->latest('date_filed');
-            }])->where('is_on_waiting_list', '=', 1)->find($id);
+            $profile = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])->where('is_on_waiting_list', '=', 1)->find($id);
             // Remove applied_course from filter
             $filters = [
                 'name' => $request->get('name', ''),
@@ -387,6 +415,7 @@ class ScholarshipProfileController extends Controller
                     'scholarship_status' => 0, // Pending by default
                     'is_active' => 1,
                     'date_filed' =>  $request->date_filed ?? now(),
+                    'date_approved' => $request->date_approved ?? null,
                     // Add other required fields as needed
                 ]);
             }
@@ -429,6 +458,7 @@ class ScholarshipProfileController extends Controller
                 'scholarship_status' => 0, // Pending by default
                 'is_active' => 1,
                 'date_filed' =>  $request->date_filed ?? now(),
+                'date_approved' => $request->date_approved ?? null,
                 // Add other required fields as needed
             ]);
         } else {
@@ -444,6 +474,7 @@ class ScholarshipProfileController extends Controller
             $record->is_active = 1;
             $record->scholarship_status_remarks = "Pending";
             $record->date_filed =  $request->date_filed ?? now();
+            $record->date_approved = $request->date_approved ?? $record->date_approved;
             // Add other required fields as needed
             $record->save();
         }
@@ -602,6 +633,7 @@ class ScholarshipProfileController extends Controller
             'today' => $today
         ]);
     }
+
 
     /**
      * Generate a report based on filters (date range, program, school, course, municipality).

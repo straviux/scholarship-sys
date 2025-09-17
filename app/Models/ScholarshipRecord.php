@@ -31,7 +31,8 @@ class ScholarshipRecord extends Model
         'is_active',
         'created_by',
         'updated_by',
-        'date_filed'
+        'date_filed',
+        'date_approved'
     ];
 
 

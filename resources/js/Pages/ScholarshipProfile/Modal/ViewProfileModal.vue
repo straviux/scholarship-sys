@@ -15,7 +15,7 @@
                             class="w-full max-w-3xl transform overflow-hidden rounded-sm  text-left align-middle shadow-xl transition-all">
                             <DialogTitle as="h3"
                                 class="text-normal font-medium leading-6 bg-[#222831] text-white flex items-center justify-between px-4 py-2">
-                                <span>View Application</span>
+                                <span>View Profile</span>
 
                                 <button class="-mr-2 cursor-pointer " @click="handleCloseModal">
                                     <XMarkIcon class="h-8 w-8 text-red-500" />
@@ -46,7 +46,7 @@
                                                     class="text-gray-400 font-normal italic">No data
                                                     provided</span>
                                                 <span v-else>{{ moment(profile.date_filed).format('MMMM DD, YYYY')
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="flex flex-row gap-4 min-w-[540px] items-start">
@@ -272,12 +272,12 @@
                             <div class="w-full bg-white px-4 py-2 flex gap-2 items-center"
                                 v-if="profile.application_status != 2">
                                 <div class="flex gap-2">
-                                    <button
+                                    <!-- <button
                                         class="btn btn-sm bg-red-500 text-white shadow font-semibold px-4 py-2 rounded"
                                         @click="declineApplication">Decline</button>
                                     <button
                                         class="btn btn-sm bg-green-600 text-white shadow font-semibold px-4 py-2 rounded"
-                                        @click="showApproveModal = true">Approve</button>
+                                        @click="showApproveModal = true">Approve</button> -->
                                 </div>
                                 <Modal marginTop="md" maxWidth="lg" :show="showApproveModal"
                                     @close="handleCloseApproveModal">

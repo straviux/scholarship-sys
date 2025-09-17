@@ -4,11 +4,11 @@
         <form @submit.prevent="generateReport">
             <div class="flex gap-2">
                 <div class="mb-4">
-                    <label class="block mb-1 font-semibold">Date From</label>
+                    <label class="block mb-1 font-semibold">Date Filed</label>
                     <DatePicker v-model="dateFrom" placeholder="From" showButtonBar />
                 </div>
                 <div class="mb-4">
-                    <label class="block mb-1 font-semibold">Date To</label>
+                    <label class="block mb-1 font-semibold">&nbsp;</label>
                     <DatePicker v-model="dateTo" placeholder="To" showButtonBar />
                     <div v-if="dateTo && dateFrom && isDateToInvalid" class="text-red-500 text-xs mt-1">
                         Date To must be equal to or after Date From.

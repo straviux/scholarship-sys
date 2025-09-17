@@ -159,9 +159,10 @@ class ScholarshipRecordController extends Controller
     {
         // Validate and create the scholar profile
         $validatedData = $request->validated();
+        // $validatedData['date_approved'] = $request->date_approved ?? null;
         $validatedData['created_by'] = $request->user() ? $request->user()->id : null;
         $validatedData['scholarship_status_date'] = Carbon::now();
-        $validatedData['scholarship_status_remarks'] = 'Scholarship application pending approval';
+        $validatedData['scholarship_status_remarks'] = $validatedData['scholarship_status'] == 0 ? 'Scholarship application pending approval' : ($validatedData['scholarship_status'] == 1 ? 'Scholarship application approved' : 'Scholarship application status unknown');
 
         $newScholar = ScholarshipRecord::create($validatedData);
         if ($newScholar) {
@@ -180,6 +181,7 @@ class ScholarshipRecordController extends Controller
     {
         $record = ScholarshipRecord::findOrFail($id);
         $validated = $request->validated();
+        $validated['date_approved'] = $request->date_approved ?? $record->date_approved;
         $record->update($validated);
         return redirect()->back()->with('message', 'Scholarship record updated successfully.');
     }
@@ -245,5 +247,18 @@ class ScholarshipRecordController extends Controller
         );
 
         return back()->with('success', 'Requirement uploaded successfully.');
+    }
+
+    /**
+     * Approve a scholarship record by ID.
+     */
+    public function approveScholarshipRecord(Request $request, $id)
+    {
+        $record = ScholarshipRecord::findOrFail($id);
+        // Status 1 means 'approved and ongoing' per ScholarshipRecord model
+        $record->updateScholarshipStatus(1);
+        $record->date_approved = $request->date_approved ?? null;
+        $record->save();
+        return redirect()->back()->with('success', 'Scholarship record approved.');
     }
 }

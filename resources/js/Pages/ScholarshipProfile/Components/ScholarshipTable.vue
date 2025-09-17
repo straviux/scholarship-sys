@@ -75,6 +75,12 @@
                             {{ profile.remarks }}
                         </span></td>
                 </tr>
+                <tr>
+                    <th class="text-xs font-normal text-gray-500">Date Approved</th>
+                    <td colspan="5"><span class="text-xs font-medium text-gray-900 mb-4 uppercase">
+                            {{ profile.date_approved }}
+                        </span></td>
+                </tr>
             </tbody>
         </table>
     </div>
