@@ -33,9 +33,9 @@
                                         <div class="flex flex-col min-w-[220px] justify-start">
                                             <div class="text-[10px] text-gray-500 uppercase">Name</div>
                                             <div class="font-semibold text-gray-800 text-xs uppercase">
-                                                <span v-if="profile.last_name">{{ profile.last_name }}, </span>
-                                                <span v-if="profile.first_name">{{ profile.first_name }} </span>
-                                                <span v-if="profile.middle_name">{{ profile.middle_name }} </span>
+                                                <span v-if="profile.last_name">{{ `${profile.last_name}, ` }}</span>
+                                                <span v-if="profile.first_name">{{ `${profile.first_name} ` }}</span>
+                                                <span v-if="profile.middle_name">{{ `${profile.middle_name} ` }}</span>
                                                 <span v-if="profile.extension_name">{{ profile.extension_name }}</span>
                                             </div>
                                         </div>
@@ -45,7 +45,7 @@
                                                 <span v-if="!profile.date_filed"
                                                     class="text-gray-400 font-normal italic">No data
                                                     provided</span>
-                                                <span v-else>{{ moment(profile.date_filed).format('MMMM DD,YYYY')
+                                                <span v-else>{{ moment(profile.date_filed).format('MMMM DD, YYYY')
                                                 }}</span>
                                             </div>
                                         </div>
