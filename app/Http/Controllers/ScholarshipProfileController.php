@@ -613,7 +613,7 @@ class ScholarshipProfileController extends Controller
         if (request()->wantsJson()) {
             return response()->json(['message' => 'Profile deleted successfully.']);
         }
-        return redirect()->route('profile.waitinglist')->with('message', 'Profile deleted successfully.');
+        return redirect()->back()->with('message', 'Profile deleted successfully.');
     }
 
     /**
