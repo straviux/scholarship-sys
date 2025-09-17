@@ -24,10 +24,10 @@ class UpdateScholarshipProfileUniqueIds extends Command
                 $third = strtoupper(substr($profile->first_name, 1, 1));
             }
             $initials = $last . $first . $third;
+            $created = strtotime($profile->created_at);
             do {
-                $created = strtotime($profile->created_at);
                 $timePart = substr((string)$created, -3);
-                $uniqueId = $year . $initials . $timePart;
+                $uniqueId = $initials . $year . $timePart;
                 $created++;
             } while (ScholarshipProfile::where('unique_id', $uniqueId)->where('profile_id', '!=', $profile->profile_id)->exists());
             $profile->unique_id = $uniqueId;

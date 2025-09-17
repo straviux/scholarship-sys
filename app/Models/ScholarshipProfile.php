@@ -113,7 +113,7 @@ class ScholarshipProfile extends Model
             $initials = $last . $first . $third;
             do {
                 $timePart = substr((string)time(), -3);
-                $uniqueId = $year . $initials . $timePart;
+                $uniqueId = $initials . $year . $timePart;
             } while (self::where('unique_id', $uniqueId)->exists());
             $model->unique_id = $uniqueId;
         });
