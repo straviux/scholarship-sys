@@ -207,7 +207,7 @@ class ScholarshipProfileController extends Controller
 
         $programId = $request->get('program');
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])
-            ->whereHas('scholarshipGrant', function ($q) use ($programId) {
+            ->orWhereHas('scholarshipGrant', function ($q) use ($programId) {
                 $q->where('scholarship_status', 0)
                     ->orderBy('date_filed', 'desc')
                     ->orderBy('created_at', 'desc');
