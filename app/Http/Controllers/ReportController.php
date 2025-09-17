@@ -107,8 +107,11 @@ class ReportController extends Controller
             'course' => $request->get('course', ''),
             'municipality' => $request->get('municipality', ''),
             'year_level' => $request->get('year_level', ''),
-            'date_from' => $request->get('date_from', ''),
-            'date_to' => $request->get('date_to', ''),
+            // 'date_from' => $request->get('date_from', ''),
+            // 'date_to' => $request->get('date_to', ''),
+            'date_filed' => ($request->get('date_from') ? \Carbon\Carbon::parse($request->get('date_from'))->translatedFormat('F d, Y') : '')
+                . ($request->get('date_from') && $request->get('date_to') ? ' to ' : '')
+                . ($request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to'))->translatedFormat('F d, Y') : '')
         ];
 
         $html = View::make('waiting_list_report', [
@@ -126,7 +129,7 @@ class ReportController extends Controller
                 ->setChromePath('C:\Users\Administrator\.cache\puppeteer\chrome-headless-shell\win64-140.0.7339.82\chrome-headless-shell-win64\chrome-headless-shell.exe')
                 ->showBackground()
                 ->showBrowserHeaderAndFooter()
-                ->footerHtml('<div class="report-footer" style="font-size: 9px; color: #444;position:fixed;right:0.2cm;bottom:0.1cm;">
+                ->footerHtml('<div class="report-footer" style="font-size: 9px; color: #444;position:fixed;right:0.5cm;bottom:0.1cm;">
                     <span>Generated on <span class="date "></span></span>
                     <span> - Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
                 </div>')

@@ -15,7 +15,7 @@ import {
 } from '@heroicons/vue/20/solid';
 import ApplicantProfileModal from '@/Pages/Applicants/Modal/ApplicantProfileModal.vue';
 import ViewProfileModal from './Modal/ViewProfileModal.vue';
-import GenerateReportModal from './GenerateReportModal.vue';
+import GenerateReportModal from './Modal/GenerateReportModal.vue';
 const showReportModal = ref(false);
 const openReportModal = () => { showReportModal.value = true; };
 // COURSE MULTISELECT COMPONENT

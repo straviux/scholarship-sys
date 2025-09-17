@@ -49,7 +49,7 @@
 
         th,
         td {
-            border: 1px solid #e5e7eb;
+            border: 1px solid #bbbbbb;
             padding: 0.06rem 0.09rem 0.06rem 0.22rem;
             text-align: left;
             white-space: normal;
@@ -124,21 +124,24 @@
     $yakapLogoBase64 = base64_encode($yakapLogoSvg);
     ?>
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-        <img src="data:image/svg+xml;base64,<?php echo $pgpLogoBase64; ?>" alt="PGP Logo" style="height: 60px; width: auto; margin-right: 0.5rem;">
+        <img src="data:image/svg+xml;base64,<?php echo $pgpLogoBase64; ?>" alt="PGP Logo" style="height: 72px; width: auto; margin-left: 0.5rem;">
         <div style="flex: 1; text-align: center;">
-            <h1 style="margin:0; font-size:1.5rem; font-weight:700; color:#333;">Provincial Government of Palawan</h1>
-            <h1 style="margin:0; font-size:1.5rem; font-weight:700; color:#333;">Scholarhip Program</h1>
+            <h1 style="margin:0; font-size:14px; font-weight:500; color:#333;">Republic of the Philippines</h1>
+            <h1 style="margin:0; font-size:14px; font-weight:500; color:#333;">Provincial Government of Palawan</h1>
+            <h1 style="margin:0; font-size:14px; font-weight:600; color:#333;">Akbay sa Mag-Aaral at Yaman ng Kinabukasan</h1>
+            <h1 style="margin:0; font-size:14px; font-weight:600; color:#333;">(Programang Pang-Edukasyon para sa Palawenyo)</h1>
         </div>
-        <img src="data:image/svg+xml;base64,<?php echo $yakapLogoBase64; ?>" alt="Yakap Logo" style="height: 60px; width: auto; margin-left: 0.5rem;">
+        <img src="data:image/svg+xml;base64,<?php echo $yakapLogoBase64; ?>" alt="Yakap Logo" style="height: 72px; width: auto; margin-right: 0.5rem;">
     </div>
-    <div class="filters">
-        <span class="badge">Report Type: {{ ucfirst($reportType) }}</span>
+    <div class="filters" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: flex-start; margin-bottom: 1rem; background: #f1f5f9;">
+        <span class="badge" style="color:#444;">Report type: {{ ucfirst($reportType) }}</span>
         @foreach($filters as $key => $value)
         @if($value)
+        <span style="font-size:1.5em;color:#c2c2c2;vertical-align:middle;margin:0 0.2em;">|</span>
         @if($key === 'program' && isset($profiles) && count($profiles) && optional($profiles->first()->scholarshipGrant->first())->program)
-        <span class="badge">Program: {{ optional($profiles->first()->scholarshipGrant->first())->program->name }}</span>
+        <span class="badge" style="color:#444;">Program: {{ optional($profiles->first()->scholarshipGrant->first())->program->name }}</span>
         @else
-        <span class="badge">{{ ucfirst(str_replace('_', ' ', $key)) }}: {{ $value }}</span>
+        <span class="badge" style="color:#444;">{{ ucfirst(str_replace('_', ' ', $key)) }}: {{ $value }}</span>
         @endif
         @endif
         @endforeach
@@ -235,6 +238,7 @@
                 <th style="min-width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">#</th>
                 <th style="width:30px;padding-left:0.05cm;padding-right:0.05cm;">Seq</th>
                 <th>Name</th>
+                <th>Contact No(s).</th>
                 @if(empty($filters['municipality']))
                 <th>Municipality</th>
                 @endif
@@ -276,6 +280,15 @@
                 <td style="min-width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">{{ $overallIndex }}</td>
                 <td style="padding-left:0.05cm;padding-right:0.05cm;">{{ $dateIndex }}</td>
                 <td>{{ $profile->last_name }}, {{ $profile->first_name }}</td>
+                <td>
+                    @php
+                    $contacts = array_filter([
+                    $profile->contact_no ?? null,
+                    $profile->contact_no_2 ?? null
+                    ]);
+                    @endphp
+                    {{ count($contacts) ? implode(' / ', $contacts) : '-' }}
+                </td>
                 @if(empty($filters['municipality']))
                 <td>{{ $profile->municipality ?? '-' }}</td>
                 @endif
