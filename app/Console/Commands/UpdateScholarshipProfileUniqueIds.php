@@ -15,6 +15,7 @@ class UpdateScholarshipProfileUniqueIds extends Command
         $profiles = ScholarshipProfile::all();
         $updated = 0;
         foreach ($profiles as $profile) {
+            $year = date('y', strtotime($profile->created_at));
             $last = strtoupper(substr($profile->last_name, 0, 1));
             $first = strtoupper(substr($profile->first_name, 0, 1));
             if (!empty($profile->middle_name)) {
@@ -23,9 +24,13 @@ class UpdateScholarshipProfileUniqueIds extends Command
                 $third = strtoupper(substr($profile->first_name, 1, 1));
             }
             $initials = $last . $first . $third;
-            $created = strtotime($profile->created_at);
-            $timePart = substr((string)$created, -5);
-            $profile->unique_id = $initials . $timePart;
+            do {
+                $created = strtotime($profile->created_at);
+                $timePart = substr((string)$created, -3);
+                $uniqueId = $year . $initials . $timePart;
+                $created++;
+            } while (ScholarshipProfile::where('unique_id', $uniqueId)->where('profile_id', '!=', $profile->profile_id)->exists());
+            $profile->unique_id = $uniqueId;
             $profile->save();
             $updated++;
         }

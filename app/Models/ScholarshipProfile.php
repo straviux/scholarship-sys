@@ -102,6 +102,7 @@ class ScholarshipProfile extends Model
             $model->created_by = $user->id;
             $model->updated_by = $user->id;
             // Generate 8-char unique_id: initials + last 5 digits of timestamp
+            $year = date('y');
             $last = strtoupper(substr($model->last_name, 0, 1));
             $first = strtoupper(substr($model->first_name, 0, 1));
             if (!empty($model->middle_name)) {
@@ -110,12 +111,15 @@ class ScholarshipProfile extends Model
                 $third = strtoupper(substr($model->first_name, 1, 1));
             }
             $initials = $last . $first . $third;
-            $timePart = substr((string)time(), -5);
-            $model->unique_id = $initials . $timePart;
+            do {
+                $timePart = substr((string)time(), -3);
+                $uniqueId = $year . $initials . $timePart;
+            } while (self::where('unique_id', $uniqueId)->exists());
+            $model->unique_id = $uniqueId;
         });
         static::updating(function ($model) {
             $user = Auth::user();
-            $model->updated_by = $user->id;
+            // $model->updated_by = $user->id;
         });
     }
 }
