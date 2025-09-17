@@ -27,7 +27,7 @@
             font-size: 1rem;
             font-weight: 600;
             margin-bottom: 0.15rem;
-            color: #1e293b;
+            color: #333;
         }
 
         h3 {
@@ -117,7 +117,20 @@
 </head>
 
 <body>
-    <!-- <h1>Report</h1> -->
+    <?php
+    $pgpLogoSvg = file_get_contents(public_path('images/pgp-logo.svg'));
+    $yakapLogoSvg = file_get_contents(public_path('images/yakap-logo.svg'));
+    $pgpLogoBase64 = base64_encode($pgpLogoSvg);
+    $yakapLogoBase64 = base64_encode($yakapLogoSvg);
+    ?>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+        <img src="data:image/svg+xml;base64,<?php echo $pgpLogoBase64; ?>" alt="PGP Logo" style="height: 60px; width: auto; margin-right: 0.5rem;">
+        <div style="flex: 1; text-align: center;">
+            <h1 style="margin:0; font-size:1.5rem; font-weight:700; color:#333;">Provincial Government of Palawan</h1>
+            <h1 style="margin:0; font-size:1.5rem; font-weight:700; color:#333;">Scholarhip Program</h1>
+        </div>
+        <img src="data:image/svg+xml;base64,<?php echo $yakapLogoBase64; ?>" alt="Yakap Logo" style="height: 60px; width: auto; margin-left: 0.5rem;">
+    </div>
     <div class="filters">
         <span class="badge">Report Type: {{ ucfirst($reportType) }}</span>
         @foreach($filters as $key => $value)
@@ -142,44 +155,76 @@
             <th colspan="2">By Program</th>
         </tr>
         @foreach($summary['by_program'] as $name => $count)
+        @if($name !== 'no_program')
         <tr>
             <td>{{ $name }}</td>
             <td>{{ $count }}</td>
         </tr>
+        @endif
         @endforeach
+        @if(isset($summary['by_program']['no_program']))
+        <tr>
+            <td><em>No Program</em></td>
+            <td>{{ $summary['by_program']['no_program'] }}</td>
+        </tr>
+        @endif
         @endif
         @if(isset($summary['by_school']))
         <tr>
             <th colspan="2">By School</th>
         </tr>
         @foreach($summary['by_school'] as $name => $count)
+        @if($name !== 'no_school')
         <tr>
             <td>{{ $name }}</td>
             <td>{{ $count }}</td>
         </tr>
+        @endif
         @endforeach
+        @if(isset($summary['by_school']['no_school']))
+        <tr>
+            <td><em>No School</em></td>
+            <td>{{ $summary['by_school']['no_school'] }}</td>
+        </tr>
+        @endif
         @endif
         @if(isset($summary['by_course']))
         <tr>
             <th colspan="2">By Course</th>
         </tr>
         @foreach($summary['by_course'] as $name => $count)
+        @if($name !== 'no_course')
         <tr>
             <td>{{ $name }}</td>
             <td>{{ $count }}</td>
         </tr>
+        @endif
         @endforeach
+        @if(isset($summary['by_course']['no_course']))
+        <tr>
+            <td><em>No Course</em></td>
+            <td>{{ $summary['by_course']['no_course'] }}</td>
+        </tr>
+        @endif
         @endif
         @if(isset($summary['by_year_level']))
         <tr>
             <th colspan="2">By Year Level</th>
         </tr>
         @foreach($summary['by_year_level'] as $name => $count)
+        @if($name !== 'no_year_level')
         <tr>
             <td>{{ $name }}</td>
             <td>{{ $count }}</td>
         </tr>
+        @endif
         @endforeach
+        @if(isset($summary['by_year_level']['no_year_level']))
+        <tr>
+            <td><em>No Year Level</em></td>
+            <td>{{ $summary['by_year_level']['no_year_level'] }}</td>
+        </tr>
+        @endif
         @endif
     </table>
     @else
@@ -232,7 +277,7 @@
                 <td style="padding-left:0.05cm;padding-right:0.05cm;">{{ $dateIndex }}</td>
                 <td>{{ $profile->last_name }}, {{ $profile->first_name }}</td>
                 @if(empty($filters['municipality']))
-                <td>{{ $profile->municipality }}</td>
+                <td>{{ $profile->municipality ?? '-' }}</td>
                 @endif
                 @if(empty($filters['program']))
                 <td>{{ optional(optional($profile->scholarshipGrant->first())->program)->shortname ?? '-' }}</td>

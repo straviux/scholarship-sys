@@ -117,19 +117,21 @@ class ReportController extends Controller
                 ->setChromePath('C:\Users\Administrator\.cache\puppeteer\chrome-headless-shell\win64-140.0.7339.82\chrome-headless-shell-win64\chrome-headless-shell.exe')
                 ->showBackground()
                 ->showBrowserHeaderAndFooter()
-                ->footerHtml('<div class="report-footer" style="font-size: 10px; color: #444;position:fixed;right:0.3cm;bottom:0.3cm;">
+                ->footerHtml('<div class="report-footer" style="font-size: 9px; color: #444;position:fixed;right:0.2cm;bottom:0.1cm;">
                     <span>Generated on <span class="date "></span></span>
                     <span> - Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
                 </div>')
-                ->margins(5, 4, 5, 4);
+                ->margins(4, 4, 4, 4);
+
+
 
             if ($orientation === 'landscape') {
                 $browsershot->landscape();
+                // Handle PH Long custom size
             }
-
             // Handle PH Long custom size
-            if ($paperSize === '8.5x13') {
-                $browsershot->setPaperSize(8.5, 13);
+            if ($paperSize === 'Long') {
+                $browsershot->setPaperSize(215.9, 330.2);
             } else {
                 $browsershot->format($paperSize);
             }

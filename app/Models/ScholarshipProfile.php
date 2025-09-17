@@ -101,6 +101,17 @@ class ScholarshipProfile extends Model
             $user = Auth::user();
             $model->created_by = $user->id;
             $model->updated_by = $user->id;
+            // Generate 8-char unique_id: initials + last 5 digits of timestamp
+            $last = strtoupper(substr($model->last_name, 0, 1));
+            $first = strtoupper(substr($model->first_name, 0, 1));
+            if (!empty($model->middle_name)) {
+                $third = strtoupper(substr($model->middle_name, 0, 1));
+            } else {
+                $third = strtoupper(substr($model->first_name, 1, 1));
+            }
+            $initials = $last . $first . $third;
+            $timePart = substr((string)time(), -5);
+            $model->unique_id = $initials . $timePart;
         });
         static::updating(function ($model) {
             $user = Auth::user();

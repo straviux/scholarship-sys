@@ -9,7 +9,8 @@
                 <select v-model="paperSize" class="border rounded px-1 py-0.5 text-sm cursor-pointer">
                     <option value="A4">A4</option>
                     <option value="Letter">Letter</option>
-                    <option value="8.5x13">PH Long (8.5x13 in)</option>
+                    <option value="Legal">Long</option>
+                    <!-- <option value="Long">PH Long (8.5x13 in)</option> -->
                 </select>
                 <label class="text-sm ml-2">Orientation:</label>
                 <select v-model="orientation" class="border rounded px-1 py-0.5 text-sm cursor-pointer">
@@ -111,8 +112,8 @@ const loading = ref(true);
 const report = ref({});
 const reportType = ref(props.params.report_type || 'list');
 const params = { ...props.params };
-const paperSize = ref('8.5x13');
-const orientation = ref('portrait');
+const paperSize = ref('A4');
+const orientation = ref('landscape');
 
 onMounted(() => {
     fetchReport();
