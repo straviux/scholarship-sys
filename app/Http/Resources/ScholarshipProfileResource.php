@@ -46,6 +46,8 @@ class ScholarshipProfileResource extends JsonResource
             // 'applied_course' => $this->applied_course,
             // 'applied_school' => $this->applied_school,
             'is_active' => $this->is_active,
+            'is_jpm_member' => $this->is_jpm_member,
+            'is_jpm_leader' => $this->is_jpm_leader,
             'is_on_waiting_list' => $this->is_on_waiting_list,
             'date_filed' => $this->date_filed,
             'created_by' => $this->createdBy ? [

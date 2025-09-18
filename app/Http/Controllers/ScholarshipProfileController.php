@@ -11,7 +11,6 @@ use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipProgram;
 use App\Models\ScholarshipRecord;
 use App\Models\Course;
-use App\Models\Scholar;
 use App\Models\School;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -746,5 +745,17 @@ class ScholarshipProfileController extends Controller
                 'parameters' => $filters,
             ]);
         }
+    }
+
+    /**
+     * Update JPM membership/leadership for an applicant.
+     */
+    public function updateJpmStatus($id)
+    {
+        $profile = ScholarshipProfile::findOrFail($id);
+        $profile->is_jpm_member = request('is_jpm_member', false);
+        $profile->is_jpm_leader = request('is_jpm_leader', false);
+        $profile->save();
+        return back()->with('message', 'JPM status updated successfully.');
     }
 }

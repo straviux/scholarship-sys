@@ -53,6 +53,8 @@ class ScholarshipProfile extends Model
         'application_status_remarks',
         'application_status_date',
         'parents_guardian_gross_monthly_income',
+        'is_jpm_member',
+        'is_jpm_leader',
     ];
 
     public function educationalBackgrounds()

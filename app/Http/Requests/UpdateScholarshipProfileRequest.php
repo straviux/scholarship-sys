@@ -214,6 +214,12 @@ class UpdateScholarshipProfileRequest extends FormRequest
             //     'string',
             //     'max:100'
             // ],
+            "is_jpm_member" => [
+                'boolean',
+            ],
+            "is_jpm_leader" => [
+                'boolean',
+            ],
         ];
     }
 

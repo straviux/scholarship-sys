@@ -227,6 +227,20 @@ const cancelDelete = () => {
     profileToDelete.value = null;
 };
 
+// Inline JPM status update
+const updateJpmStatus = (profileId, isMember, isLeader) => {
+    // Call your API to update the JPM status here
+    // Example:
+    router.post(route('applicants.updateJpmStatus', {
+        id: profileId,
+        is_jpm_member: isMember,
+        is_jpm_leader: isLeader,
+    }), {
+        preserveState: true,
+        preserveScroll: true,
+    });
+};
+
 </script>
 <template>
 
@@ -376,6 +390,7 @@ const cancelDelete = () => {
                             </div>
                         </TableHeaderCell>
                         <TableHeaderCell>Remarks</TableHeaderCell>
+                        <TableHeaderCell>JPM</TableHeaderCell>
                         <!-- <TableHeaderCell class="w-[160px]">Status</TableHeaderCell> -->
                         <TableHeaderCell class="w-[160px]">Action</TableHeaderCell>
                     </TableRow>
@@ -424,9 +439,10 @@ const cancelDelete = () => {
 
                             </div>
                         </TableDataCell>
+                        <TableDataCell class="border-l border-collapse border-slate-400"></TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
-                                <div class="bg-gray-600 text-gray-200 p-2 rounded-lg border flex items-center cursor-pointer justify-center"
+                                <div class="bg-gray-600 text-gray-200 p-2 rounded-lg border flex items-center cursor-pointer"
                                     @click="clearFilter" as="button">
                                     <button class="cursor-pointer">
                                         Clear Filter
@@ -483,12 +499,29 @@ const cancelDelete = () => {
                         <TableDataCell
                             class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
                             <div class="px-2"> {{ profile.date_filed ? moment(profile.date_filed).format('MMM DD, YYYY')
-                                :
-                                moment(profile.created_at).format('MMM DD, YYYY') }}</div>
+                                : '-' }}</div>
                         </TableDataCell>
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
                             <div class="px-2">
                                 {{ profile.remarks }}
+                            </div>
+                        </TableDataCell>
+                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
+                            <div class="px-2 flex flex-col gap-2">
+                                <div class="flex items-center gap-2">
+
+
+                                    <label class="label">
+                                        <input type="checkbox" :checked="profile.is_jpm_member" class="checkbox"
+                                            @change="updateJpmStatus(profile.profile_id, $event.target.checked, profile.is_jpm_leader)" />
+                                        <span>{{ profile.is_jpm_member ? 'Yes' : 'No' }}</span>
+                                    </label>
+                                </div>
+                                <!-- <div class="flex items-center gap-2">
+                                    <Checkbox v-model="pizza" inputId="ingredient2" name="pizza" value="Mushroom" />
+                                    <label for="ingredient2"> JPM Leader </label>
+                                </div> -->
+
                             </div>
                         </TableDataCell>
                         <!-- <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
