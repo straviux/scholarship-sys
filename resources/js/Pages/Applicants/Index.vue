@@ -565,10 +565,10 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                         <TableDataCell
                             class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700 uppercase">
                             <div class="px-2 text-[10px] font-bold">
-                                {{ profile.scholarship_grant[0]?.course?.shortname }}
-                                <span v-if="profile.scholarship_grant[0]?.program"
+                                <div>{{ profile.scholarship_grant[0]?.course?.shortname }}</div>
+                                <div v-if="profile.scholarship_grant[0]?.program"
                                     class="text-[10px] font-medium text-slate-600">[{{
-                                        profile.scholarship_grant[0]?.program.shortname }}]</span>
+                                        profile.scholarship_grant[0]?.program.shortname }}]</div>
                             </div>
                         </TableDataCell>
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
