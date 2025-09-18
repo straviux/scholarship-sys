@@ -142,10 +142,11 @@
                                             <div class="flex pt-4 justify-between gap-8">
                                                 <Button label="Skip to Academic Info" severity="secondary"
                                                     @click="activeStep = '3'" :disabled="hasPendingOrOngoing" />
-                                                <Button label="Save" icon="pi pi-save" iconPos="right"
-                                                    @click.prevent="submit" severity="success" />
+                                                <Button label="Save and Close" icon="pi pi-save" iconPos="right"
+                                                    @click.prevent="submit" severity="success" size="small" />
                                                 <Button label="Next" severity="secondary" icon="pi pi-arrow-right"
                                                     @click="activeStep = '2'" :disabled="hasPendingOrOngoing" />
+
                                             </div>
                                         </StepPanel>
 
@@ -278,10 +279,11 @@
                                             <div class="flex pt-4 justify-between">
                                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                                     @click="activeStep = '1'" />
-                                                <Button label="Save" icon="pi pi-save" iconPos="right"
-                                                    @click.prevent="submit" severity="success" />
+                                                <Button label="Save and Close" icon="pi pi-save" iconPos="right"
+                                                    @click.prevent="submit" severity="success" size="small" />
                                                 <Button label="Next" severity="secondary" icon="pi pi-arrow-right"
                                                     @click="activeStep = '3'" :disabled="hasPendingOrOngoing" />
+
                                             </div>
                                         </StepPanel>
                                         <StepPanel v-slot="{ activateCallback }" value="3">
@@ -357,8 +359,9 @@
                                             <div class="mt-12 flex justify-between">
                                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                                     @click="activeStep = '2'" />
-                                                <Button label="Save" icon="pi pi-save" iconPos="right"
-                                                    @click.prevent="submit" severity="success" />
+                                                <Button label="Save and Close" icon="pi pi-save" iconPos="right"
+                                                    @click.prevent="submit" severity="success" size="small" />
+                                                <div class="hidden"></div>
                                             </div>
                                         </StepPanel>
 
