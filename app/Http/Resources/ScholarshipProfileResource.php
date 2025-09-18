@@ -16,6 +16,7 @@ class ScholarshipProfileResource extends JsonResource
     {
         return [
             'profile_id' => $this->profile_id,
+            'unique_id' => $this->unique_id,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'middle_name' => $this->middle_name,
@@ -48,6 +49,9 @@ class ScholarshipProfileResource extends JsonResource
             'is_active' => $this->is_active,
             'is_jpm_member' => $this->is_jpm_member,
             'is_jpm_leader' => $this->is_jpm_leader,
+            'is_father_jpm' => $this->is_father_jpm,
+            'is_mother_jpm' => $this->is_mother_jpm,
+            'is_guardian_jpm' => $this->is_guardian_jpm,
             'is_on_waiting_list' => $this->is_on_waiting_list,
             'date_filed' => $this->date_filed,
             'created_by' => $this->createdBy ? [

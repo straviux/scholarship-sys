@@ -220,6 +220,15 @@ class UpdateScholarshipProfileRequest extends FormRequest
             "is_jpm_leader" => [
                 'boolean',
             ],
+            "is_father_jpm" => [
+                'boolean',
+            ],
+            "is_mother_jpm" => [
+                'boolean',
+            ],
+            "is_guardian_jpm" => [
+                'boolean',
+            ],
         ];
     }
 

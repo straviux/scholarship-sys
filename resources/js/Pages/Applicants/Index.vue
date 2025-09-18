@@ -232,16 +232,21 @@ const cancelDelete = () => {
 };
 
 // Inline JPM status update
-const updateJpmStatus = (profileId, isMember, isLeader) => {
-    // Call your API to update the JPM status here
-    // Example:
-    router.post(route('applicants.updateJpmStatus', {
-        id: profileId,
-        is_jpm_member: isMember,
-        is_jpm_leader: isLeader,
-    }), {
-        preserveState: true,
-        preserveScroll: true,
+const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null, is_mother_jpm = null, is_guardian_jpm = null }) => {
+    // Only send fields that are not null
+    const payload = {};
+    if (is_jpm_member !== null) payload.is_jpm_member = is_jpm_member;
+    if (is_father_jpm !== null) payload.is_father_jpm = is_father_jpm;
+    if (is_mother_jpm !== null) payload.is_mother_jpm = is_mother_jpm;
+    if (is_guardian_jpm !== null) payload.is_guardian_jpm = is_guardian_jpm;
+    // router.put(route('applicants.updateJpmStatus', payload), {
+    //     preserveState: true,
+    //     preserveScroll: true,
+    //     replace: false,
+    //     onSuccess: page => { console.log(page) },
+    // });
+    router.put(route('applicants.updateJpmStatus', id), payload, {
+        onSuccess: () => { toast.success('status updated successfully'); },
     });
 };
 
@@ -539,21 +544,36 @@ const updateJpmStatus = (profileId, isMember, isLeader) => {
                         </TableDataCell>
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
                             <div class="px-2 flex flex-col gap-2">
-                                <div class="flex items-center gap-2">
-
-
-                                    <label class="label">
+                                <div class="flex gap-2">
+                                    <label class="label hover:text-gray-800">
                                         <input type="checkbox" :checked="profile.is_jpm_member"
-                                            class="checkbox  checkbox-sm"
-                                            @change="updateJpmStatus(profile.profile_id, $event.target.checked, profile.is_jpm_leader)" />
-                                        <span>{{ profile.is_jpm_member ? 'Yes' : 'No' }}</span>
+                                            class="checkbox  checkbox-sm "
+                                            @change="updateJpmStatus({ id: profile.profile_id, is_jpm_member: $event.target.checked })" />
+                                        <span>applicant</span>
                                     </label>
-                                </div>
-                                <!-- <div class="flex items-center gap-2">
-                                    <Checkbox v-model="pizza" inputId="ingredient2" name="pizza" value="Mushroom" />
-                                    <label for="ingredient2"> JPM Leader </label>
-                                </div> -->
+                                    <label class="label hover:text-gray-800">
+                                        <input type="checkbox" :checked="profile.is_father_jpm"
+                                            class="checkbox  checkbox-sm"
+                                            @change="updateJpmStatus({ id: profile.profile_id, is_father_jpm: $event.target.checked })" />
+                                        <span>father</span>
+                                    </label>
 
+                                </div>
+                                <div class="flex gap-2">
+                                    <label class="label hover:text-gray-800">
+                                        <input type="checkbox" :checked="profile.is_guardian_jpm"
+                                            class="checkbox  checkbox-sm"
+                                            @change="updateJpmStatus({ id: profile.profile_id, is_guardian_jpm: $event.target.checked })" />
+                                        <span>guardian</span>
+                                    </label>
+                                    <label class="label ml-1 hover:text-gray-800">
+                                        <input type="checkbox" :checked="profile.is_mother_jpm"
+                                            class="checkbox  checkbox-sm"
+                                            @change="updateJpmStatus({ id: profile.profile_id, is_mother_jpm: $event.target.checked })" />
+                                        <span>mother</span>
+                                    </label>
+
+                                </div>
                             </div>
                         </TableDataCell>
                         <!-- <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">

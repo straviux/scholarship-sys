@@ -49,7 +49,7 @@ Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->gr
     Route::get('/applicants/{action?}/{id?}', 'showWaitingList')->name('profile.waitinglist'); // Accepts filter values via query string: ?applied_course=...&municipality=...&name=...&per_page=...
     Route::post('/applicants', 'storeApplicant')->name('profile.storeapplicant');
     Route::put('/applicants/{id}', 'updateApplicant')->name('profile.updateapplicant');
-    Route::post('/applicants/{id}/jpm-status', 'updateJpmStatus')->name('applicants.updateJpmStatus');
+    Route::put('/applicants/{id}/jpm-status', 'updateJpmStatus')->name('applicants.updateJpmStatus');
 
     Route::get('/get-user-encoded-records', 'countByCurrentUser')->name('profile.getuserencodedrecords');
 });

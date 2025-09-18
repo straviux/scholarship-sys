@@ -750,12 +750,22 @@ class ScholarshipProfileController extends Controller
     /**
      * Update JPM membership/leadership for an applicant.
      */
-    public function updateJpmStatus($id)
+    public function updateJpmStatus($id, Request $request)
     {
         $profile = ScholarshipProfile::findOrFail($id);
-        $profile->is_jpm_member = request('is_jpm_member', false);
-        $profile->is_jpm_leader = request('is_jpm_leader', false);
+        $fields = [
+            'is_jpm_member',
+            'is_mother_jpm',
+            'is_father_jpm',
+            'is_guardian_jpm',
+        ];
+        foreach ($fields as $field) {
+            if ($request->has($field)) {
+                $profile->{$field} = $request->input($field);
+            }
+        }
         $profile->save();
-        return redirect()->back()->with('message', 'JPM status updated successfully.');
+        // Return a valid Inertia response to avoid error
+        return redirect()->back()->with('success', 'JPM status updated successfully.');
     }
 }
