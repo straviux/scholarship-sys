@@ -431,8 +431,9 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                             </div>
                         </TableHeaderCell>
                         <TableHeaderCell class="w-[200px]">Remarks</TableHeaderCell>
-                        <TableHeaderCell>is JPM</TableHeaderCell>
-                        <TableHeaderCell class="w-[200px]">JPM Remarks</TableHeaderCell>
+                        <TableHeaderCell v-if="hasPermission('can-view-jpm')">is JPM</TableHeaderCell>
+                        <TableHeaderCell v-if="hasPermission('can-view-jpm')" class="w-[200px]">JPM Remarks
+                        </TableHeaderCell>
                         <!-- <TableHeaderCell class="w-[160px]">Status</TableHeaderCell> -->
                         <TableHeaderCell class="w-[160px]">Action</TableHeaderCell>
                     </TableRow>
@@ -489,8 +490,10 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
 
                             </div>
                         </TableDataCell>
-                        <TableDataCell class="border-l border-collapse border-slate-400"></TableDataCell>
-                        <TableDataCell class="border-l border-collapse border-slate-400"></TableDataCell>
+                        <TableDataCell class="border-l border-collapse border-slate-400"
+                            v-if="hasPermission('can-view-jpm')"></TableDataCell>
+                        <TableDataCell class="border-l border-collapse border-slate-400"
+                            v-if="hasPermission('can-view-jpm')"></TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
                                 <div class="bg-gray-600 text-gray-200 p-2 rounded-lg border flex items-center cursor-pointer"
@@ -583,7 +586,8 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                                 {{ profile.remarks }}
                             </div>
                         </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
+                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700"
+                            v-if="hasPermission('can-view-jpm')">
                             <div class="px-2 flex flex-col gap-2">
                                 <div class="flex gap-2">
                                     <label class="label hover:text-gray-800">
@@ -617,14 +621,15 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                                 </div>
                             </div>
                         </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
+                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700"
+                            v-if="hasPermission('can-view-jpm')">
                             <div class="px-2 text-xs">{{ profile.jpm_remarks }}</div>
                         </TableDataCell>
 
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
                             <div class="flex gap-4 justify-center">
                                 <button class="text-emerald-500 hover:text-emerald-400 flex cursor-pointer"
-                                    @click="addRemarks(profile)">
+                                    @click="addRemarks(profile)" v-if="hasPermission('can-view-jpm')">
                                     <!-- <IdentificationIcon class="h-5 w-5 text-blue-400" /> -->
                                     <i class="pi pi-heart-fill"></i></button>
 
