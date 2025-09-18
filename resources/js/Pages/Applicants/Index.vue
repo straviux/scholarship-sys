@@ -246,6 +246,8 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
     //     onSuccess: page => { console.log(page) },
     // });
     router.put(route('applicants.updateJpmStatus', id), payload, {
+        preserveScroll: true,
+        preserveState: true,
         onSuccess: () => { toast.success('status updated successfully'); },
     });
 };
