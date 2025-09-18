@@ -430,7 +430,7 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell class="w-[200px]">Remarks</TableHeaderCell>
+                        <TableHeaderCell class="w-[220px]">Remarks</TableHeaderCell>
                         <TableHeaderCell v-if="hasPermission('can-view-jpm')">is JPM</TableHeaderCell>
                         <TableHeaderCell v-if="hasPermission('can-view-jpm')" class="w-[200px]">JPM Remarks
                         </TableHeaderCell>
@@ -564,8 +564,11 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                         </TableDataCell>
                         <TableDataCell
                             class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700 uppercase">
-                            <div class="px-2 text-[11px] font-semibold">
+                            <div class="px-2 text-[10px] font-bold">
                                 {{ profile.scholarship_grant[0]?.course?.shortname }}
+                                <span v-if="profile.scholarship_grant[0]?.program"
+                                    class="text-[10px] font-medium text-slate-600">[{{
+                                        profile.scholarship_grant[0]?.program.shortname }}]</span>
                             </div>
                         </TableDataCell>
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
@@ -582,7 +585,7 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                                     : '-' }}</div>
                         </TableDataCell>
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
-                            <div class="px-2 text-[11px]">
+                            <div class="px-2 text-[10px]">
                                 {{ profile.remarks }}
                             </div>
                         </TableDataCell>
