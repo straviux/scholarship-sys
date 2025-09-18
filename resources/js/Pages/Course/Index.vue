@@ -9,6 +9,7 @@ import TableDataCell from "@/Components/TableDataCell.vue";
 import { ChevronUpDownIcon, SquaresPlusIcon } from "@heroicons/vue/20/solid";
 import { useStorage } from '@vueuse/core';
 import CourseModal from "@/Pages/Course/Modal/CourseModal.vue";
+import { router } from '@inertiajs/vue3';
 
 const props = defineProps({
     action: String,
@@ -27,6 +28,15 @@ onMounted(() => {
     }));
     console.log(props.courses);
 });
+
+const deleteCourse = (courseId) => {
+    if (confirm('Are you sure you want to delete this course?')) {
+        router.delete(route('courses.destroy', courseId), {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }
+};
 
 </script>
 
@@ -96,6 +106,9 @@ onMounted(() => {
                                     id: c.id,
                                     action: 'edit'
                                 })" class="text-purple-500 hover:text-purple-600 underline font-medium">Edit</Link>
+                                <button
+                                    class="ml-2 text-red-500 hover:text-red-700 underline font-medium cursor-pointer"
+                                    @click="deleteCourse(c.id)">Delete</button>
                             </TableDataCell>
                         </TableRow>
                         <TableRow v-else>

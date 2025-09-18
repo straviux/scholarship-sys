@@ -24,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
                     return 'empty'; // used in javascript to disable back button behavior
                 }
             },
+
         ]);
     }
 

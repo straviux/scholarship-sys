@@ -26,9 +26,12 @@ import Pagination from '@/Components/Pagination.vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
+import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
 
 const { hasPermission } = usePermission();
-
+// import { usePage } from '@inertiajs/vue3'
+const page = usePage()
 // console.log(route)
 const props = defineProps({
     profile: Object,
@@ -195,6 +198,7 @@ watch(filter, debounce(
         filterList(),
     500
 ));
+
 
 
 const showDeleteConfirm = ref(false);
@@ -512,7 +516,8 @@ const updateJpmStatus = (profileId, isMember, isLeader) => {
 
 
                                     <label class="label">
-                                        <input type="checkbox" :checked="profile.is_jpm_member" class="checkbox"
+                                        <input type="checkbox" :checked="profile.is_jpm_member"
+                                            class="checkbox  checkbox-sm"
                                             @change="updateJpmStatus(profile.profile_id, $event.target.checked, profile.is_jpm_leader)" />
                                         <span>{{ profile.is_jpm_member ? 'Yes' : 'No' }}</span>
                                     </label>

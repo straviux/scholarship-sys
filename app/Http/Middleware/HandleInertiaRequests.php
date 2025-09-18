@@ -35,7 +35,11 @@ class HandleInertiaRequests extends Middleware
             'auth.user' => fn() => $request->user()
                 ? new UserSharedResource($request->user())
                 : null,
-            'localip' => getHostByName(getHostName())
+            'localip' => getHostByName(getHostName()),
+            'flash' => [
+                'success' => fn() => $request->session()->get('success'),
+                'error'   => fn() => $request->session()->get('error'),
+            ],
 
         ];
     }

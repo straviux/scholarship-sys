@@ -126,7 +126,8 @@ class CourseController extends Controller
      */
     public function destroy(Course $course)
     {
-        //
+        $course->delete();
+        return back();
     }
 
     public function findCourseByProgramApi(Request $request)

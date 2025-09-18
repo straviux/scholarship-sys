@@ -756,6 +756,6 @@ class ScholarshipProfileController extends Controller
         $profile->is_jpm_member = request('is_jpm_member', false);
         $profile->is_jpm_leader = request('is_jpm_leader', false);
         $profile->save();
-        return back()->with('message', 'JPM status updated successfully.');
+        return redirect()->back()->with('message', 'JPM status updated successfully.');
     }
 }

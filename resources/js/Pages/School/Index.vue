@@ -11,6 +11,7 @@ import TableDataCell from "@/Components/TableDataCell.vue";
 import { TrashIcon, PencilSquareIcon, IdentificationIcon, SquaresPlusIcon } from "@heroicons/vue/20/solid";
 import { useStorage } from '@vueuse/core';
 import SchoolModal from "@/Pages/School/Modal/SchoolModal.vue";
+import { router } from '@inertiajs/vue3';
 
 const props = defineProps({
     action: String,
@@ -21,6 +22,15 @@ const props = defineProps({
 onMounted(() => {
     console.log(props.schools);
 });
+
+const deleteSchool = (schoolId) => {
+    if (confirm('Are you sure you want to delete this school?')) {
+        router.delete(route('school.destroy', schoolId), {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }
+};
 
 </script>
 
@@ -99,6 +109,9 @@ onMounted(() => {
                                     id: school.id,
                                     action: 'edit'
                                 })" class="text-purple-500 hover:text-purple-600 underline font-medium">Edit</Link>
+                                <button
+                                    class="ml-2 text-red-500 hover:text-red-700 underline font-medium cursor-pointer"
+                                    @click="deleteSchool(school.id)">Delete</button>
                             </TableDataCell>
                         </TableRow>
                     </template>
