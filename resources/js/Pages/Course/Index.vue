@@ -81,12 +81,18 @@ const deleteCourse = (courseId) => {
                         <TableRow class="hover:bg-gray-200" v-for="(c, index) in courses" :key="'r_' + c.id"
                             v-if="courses?.length">
                             <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-400">{{ index + 1
-                            }}
+                                }}
                             </TableDataCell>
                             <TableDataCell
                                 class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600">
                                 <span class="font-medium"> {{ c.name }}</span>
                                 <span class="font-bold"> [{{ c.shortname }}]</span>
+                                <span v-if="c.father_name || c.mother_name || c.guardian_name"
+                                    class="block text-xs text-gray-500 mt-1">
+                                    <template v-if="c.father_name">Father: {{ c.father_name }}</template>
+                                    <template v-if="c.mother_name"> | Mother: {{ c.mother_name }}</template>
+                                    <template v-if="c.guardian_name"> | Guardian: {{ c.guardian_name }}</template>
+                                </span>
                             </TableDataCell>
                             <TableDataCell
                                 class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600 font-medium">
