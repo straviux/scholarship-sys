@@ -202,34 +202,63 @@ watch(filter, debounce(
 
 
 const showDeleteConfirm = ref(false);
-const profileToDelete = ref(null);
+const showAddRemarksConfirm = ref(false);
 
 const deleteProfile = (profile) => {
-    profileToDelete.value = profile;
+    selectedProfile.value = profile;
     showDeleteConfirm.value = true;
 };
 
+const addRemarks = (profile) => {
+    selectedProfile.value = profile;
+    showAddRemarksConfirm.value = true;
+};
+
 const confirmDelete = () => {
-    if (!profileToDelete.value) return;
-    router.delete(route('profile.destroy', profileToDelete.value.profile_id), {
+    if (!selectedProfile.value) return;
+    router.delete(route('profile.destroy', selectedProfile.value.profile_id), {
         preserveState: true,
         preserveScroll: true,
         onSuccess: () => {
             showDeleteConfirm.value = false;
-            profileToDelete.value = null;
+            selectedProfile.value = null;
             // Optionally show a toast here
         },
         onError: () => {
             showDeleteConfirm.value = false;
-            profileToDelete.value = null;
+            selectedProfile.value = null;
+        }
+    });
+};
+
+const confirmAddRemarks = () => {
+    if (!selectedProfile.value) return;
+    router.put(route('applicants.updateJpmRemarks', selectedProfile.value.profile_id), { jpm_remarks: selectedProfile.value.jpm_remarks }, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            showAddRemarksConfirm.value = false;
+            selectedProfile.value = null;
+            toast.success('JPM remarks updated successfully');
+            // Optionally show a toast here
+        },
+        onError: () => {
+            showAddRemarksConfirm.value = false;
+            selectedProfile.value = null;
         }
     });
 };
 
 const cancelDelete = () => {
     showDeleteConfirm.value = false;
-    profileToDelete.value = null;
+    selectedProfile.value = null;
 };
+
+const cancelAddRemarks = () => {
+    showAddRemarksConfirm.value = false;
+    selectedProfile.value = null;
+};
+
 
 // Inline JPM status update
 const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null, is_mother_jpm = null, is_guardian_jpm = null }) => {
@@ -373,8 +402,8 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell class="w-42">Parent/Guardian</TableHeaderCell>
-                        <TableHeaderCell class="w-42">Address</TableHeaderCell>
+                        <TableHeaderCell class="w-[200px]">Parent/Guardian</TableHeaderCell>
+                        <TableHeaderCell class="w-[200px]">Address</TableHeaderCell>
 
                         <TableHeaderCell @click="sortBy('school')" class="cursor-pointer">
                             <div class="flex items-center gap-2">
@@ -388,7 +417,7 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell @click="sortBy('year_level')" class="cursor-pointer">
+                        <TableHeaderCell @click="sortBy('year_level')" class="cursor-pointer w-[30px]">
                             <div class="flex items-center gap-2">
                                 <h4>Level</h4>
                                 <ChevronUpDownIcon class="h-4 w-4" />
@@ -401,8 +430,9 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell>Remarks</TableHeaderCell>
-                        <TableHeaderCell>JPM</TableHeaderCell>
+                        <TableHeaderCell class="w-[200px]">Remarks</TableHeaderCell>
+                        <TableHeaderCell>is JPM</TableHeaderCell>
+                        <TableHeaderCell class="w-[200px]">JPM Remarks</TableHeaderCell>
                         <!-- <TableHeaderCell class="w-[160px]">Status</TableHeaderCell> -->
                         <TableHeaderCell class="w-[160px]">Action</TableHeaderCell>
                     </TableRow>
@@ -415,7 +445,8 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                         <TableDataCell class="px-3"></TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
-                                <InputText v-model="filter.name" placeholder="Search name" class="w-full" />
+                                <InputText v-model="filter.name" placeholder="Search name" class="w-full"
+                                    size="small" />
                             </div>
                         </TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
@@ -425,25 +456,27 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                         </TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
-                                <MunicipalitySelect v-model="filter.municipality" custom-placeholder="---" />
+                                <MunicipalitySelect v-model="filter.municipality" custom-placeholder="---"
+                                    size="small" />
                             </div>
                         </TableDataCell>
 
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
-                                <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="---" />
+                                <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="---"
+                                    size="small" />
                             </div>
                         </TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
                                 <CourseSelect v-model="filter.course" :scholarship-program-id="filter.program?.id"
-                                    custom-placeholder="---" label="shortname" />
+                                    custom-placeholder="---" label="shortname" size="small" />
                             </div>
                         </TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
-                                <YearLevelSelect v-model="filter.year_level" label="shortname"
-                                    custom-placeholder="---" />
+                                <YearLevelSelect v-model="filter.year_level" label="shortname" custom-placeholder="---"
+                                    size="small" />
                             </div>
                         </TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400"></TableDataCell>
@@ -451,10 +484,12 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
 
-                                <InputText v-model="filter.remarks" placeholder="Search for remarks" class="w-full" />
+                                <InputText v-model="filter.remarks" placeholder="Search remarks" class="w-full"
+                                    size="small" />
 
                             </div>
                         </TableDataCell>
+                        <TableDataCell class="border-l border-collapse border-slate-400"></TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400"></TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
@@ -482,7 +517,7 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                                     <img v-if="profile.gender == 'F'" src="/images/female-avatar.png" alt="avatar"
                                         class="rounded-xl w-[28px]" />
                                 </figure>
-                                <div>
+                                <div class="text-[11px] font-semibold">
                                     {{ profile.last_name + ', ' + profile.first_name + ' ' + (profile.middle_name ||
                                         '') + ' ' + (profile.extension_name || '') }}
                                 </div>
@@ -512,35 +547,39 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                         </TableDataCell>
                         <TableDataCell
                             class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
-                            <div class="px-2"> {{ profile.municipality }} {{ profile.barangay ? `, ${profile.barangay}`
-                                : '' }}</div>
+                            <div class="px-2 text-[11px] font-semibold">
+                                {{ profile.municipality }} {{ profile.barangay
+                                    ? `, ${profile.barangay}`
+                                    : '' }}</div>
                         </TableDataCell>
 
                         <TableDataCell
                             class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
-                            <div class="px-2">
+                            <div class="px-2 text-[11px] font-semibold">
                                 {{ profile.scholarship_grant[0]?.school?.shortname }}
                             </div>
                         </TableDataCell>
                         <TableDataCell
                             class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700 uppercase">
-                            <div class="px-2">
+                            <div class="px-2 text-[11px] font-semibold">
                                 {{ profile.scholarship_grant[0]?.course?.shortname }}
                             </div>
                         </TableDataCell>
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
-                            <div class="px-2">{{ profile.scholarship_grant[0]?.year_level }}</div>
+                            <div class="px-2 text-[11px] font-semibold">{{ profile.scholarship_grant[0]?.year_level }}
+                            </div>
                         </TableDataCell>
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
-                            <div class="px-2">{{ profile.contact_no }}</div>
+                            <div class="px-2 text-[11px] font-semibold">{{ profile.contact_no }}</div>
                         </TableDataCell>
                         <TableDataCell
                             class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
-                            <div class="px-2"> {{ profile.date_filed ? moment(profile.date_filed).format('MMM DD, YYYY')
-                                : '-' }}</div>
+                            <div class="px-2 text-[11px] font-semibold">
+                                {{ profile.date_filed ? moment(profile.date_filed).format('MMM DD, YYYY')
+                                    : '-' }}</div>
                         </TableDataCell>
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
-                            <div class="px-2">
+                            <div class="px-2 text-[11px]">
                                 {{ profile.remarks }}
                             </div>
                         </TableDataCell>
@@ -578,18 +617,16 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                                 </div>
                             </div>
                         </TableDataCell>
-                        <!-- <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
-                            <div class="px-2"><span :class="{ 'text-red-400': profile.application_status == 2 }">{{
-                                profile.application_status == 0 ? 'Pending' : profile.application_status == 2 ?
-                                    'Declined' : '' }}</span></div>
-                        </TableDataCell> -->
+                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
+                            <div class="px-2 text-xs">{{ profile.jpm_remarks }}</div>
+                        </TableDataCell>
 
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
-                            <div class="flex space-x-6 justify-center">
-                                <button class="text-gray-400 hover:text-blue-600 flex cursor-pointer"
-                                    @click="viewProfile(profile)">
+                            <div class="flex gap-4 justify-center">
+                                <button class="text-emerald-500 hover:text-emerald-400 flex cursor-pointer"
+                                    @click="addRemarks(profile)">
                                     <!-- <IdentificationIcon class="h-5 w-5 text-blue-400" /> -->
-                                    <i class="pi pi-search"></i></button>
+                                    <i class="pi pi-heart-fill"></i></button>
 
 
                                 <!-- <button class="text-purple-500 hover:text-blue-600 flex cursor-pointer"
@@ -601,6 +638,11 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                                 })" preserve-state preserve-scroll
                                     class="text-purple-500 hover:text-purple-600 underline font-medium">
                                 <i class="pi pi-pen-to-square"></i></Link>
+
+                                <button class="text-gray-400 hover:text-blue-600 flex cursor-pointer"
+                                    @click="viewProfile(profile)">
+                                    <!-- <IdentificationIcon class="h-5 w-5 text-blue-400" /> -->
+                                    <i class="pi pi-search"></i></button>
                                 <button class="text-red-500 hover:text-red-700 flex cursor-pointer"
                                     v-if="hasPermission('delete-scholar-profile')" @click="deleteProfile(profile)">
                                     <i class="pi pi-trash"></i>
@@ -636,13 +678,40 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                 <h2 class="text-lg font-bold mb-4">Confirm Delete</h2>
                 <p>Are you sure you want to delete this profile?</p>
                 <div class="font-semibold font-mono text-gray-800 p-2 rounded bg-gray-100 text-xl mt-2">{{
-                    `${profileToDelete.last_name},
-                    ${profileToDelete.first_name}` }}
+                    `${selectedProfile.last_name},
+                    ${selectedProfile.first_name}` }}
                 </div>
                 <div class="flex justify-end gap-4 mt-6">
                     <button class="px-4 py-2 bg-gray-200 rounded cursor-pointer" @click="cancelDelete">Cancel</button>
                     <button class="px-4 py-2 bg-red-500 text-white rounded cursor-pointer"
                         @click="confirmDelete">Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add JPM remarks Dialog -->
+        <div v-if="showAddRemarksConfirm" class="fixed inset-0 flex items-center justify-center z-50">
+            <div class="bg-white rounded shadow-xl border p-8 w-full max-w-md">
+                <h2 class="text-lg font-bold mb-4">Add JPM Remarks</h2>
+                <p>Currently adding remarks for:</p>
+                <div class="font-semibold font-mono text-gray-700 p-1 rounded bg-gray-100 mt-1">{{
+                    `${selectedProfile.last_name},
+                    ${selectedProfile.first_name}` }}
+                </div>
+                <div class="mt-4">
+
+                    <!-- <InputText fluid type="text" :value="selectedProfile.jpm_remarks" /> -->
+                    <IftaLabel class="w-full">
+                        <InputText fluid id="jpm_remarks" v-model="selectedProfile.jpm_remarks" />
+                        <label for="jpm_remarks">JPM remarks</label>
+                    </IftaLabel>
+                </div>
+                <div class="flex justify-end gap-4 mt-6">
+                    <button class="px-4 py-2 bg-gray-200 rounded cursor-pointer"
+                        @click="cancelAddRemarks">Cancel</button>
+                    <button class="px-4 py-2 bg-emerald-500 text-white rounded cursor-pointer"
+                        @click="confirmAddRemarks">Add
+                        Remarks</button>
                 </div>
             </div>
         </div>

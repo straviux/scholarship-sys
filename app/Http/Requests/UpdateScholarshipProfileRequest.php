@@ -229,6 +229,11 @@ class UpdateScholarshipProfileRequest extends FormRequest
             "is_guardian_jpm" => [
                 'boolean',
             ],
+            "jpm_remarks" => [
+                'nullable',
+                'string',
+                'max:255'
+            ],
         ];
     }
 

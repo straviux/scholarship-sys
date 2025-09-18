@@ -768,4 +768,18 @@ class ScholarshipProfileController extends Controller
         // Return a valid Inertia response to avoid error
         return redirect()->back()->with('success', 'JPM status updated successfully.');
     }
+
+    /**
+     * Update JPM membership/leadership for an applicant.
+     */
+    public function updateJpmRemarks($id, Request $request)
+    {
+        $profile = ScholarshipProfile::findOrFail($id);
+        if ($request->has('jpm_remarks')) {
+            $profile->jpm_remarks = $request->input('jpm_remarks');
+        }
+        $profile->save();
+        // Return a valid Inertia response to avoid error
+        return redirect()->back()->with('success', 'JPM remarks updated successfully.');
+    }
 }

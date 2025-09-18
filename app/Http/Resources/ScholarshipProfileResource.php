@@ -53,6 +53,7 @@ class ScholarshipProfileResource extends JsonResource
             'is_mother_jpm' => $this->is_mother_jpm,
             'is_guardian_jpm' => $this->is_guardian_jpm,
             'is_on_waiting_list' => $this->is_on_waiting_list,
+            'jpm_remarks' => $this->jpm_remarks,
             'date_filed' => $this->date_filed,
             'created_by' => $this->createdBy ? [
                 'id' => $this->createdBy->id,

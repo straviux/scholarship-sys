@@ -57,6 +57,7 @@ class ScholarshipProfile extends Model
         'is_father_jpm',
         'is_mother_jpm',
         'is_guardian_jpm',
+        'jpm_remarks',
         'unique_id'
     ];
 

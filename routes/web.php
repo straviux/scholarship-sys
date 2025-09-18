@@ -50,6 +50,7 @@ Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->gr
     Route::post('/applicants', 'storeApplicant')->name('profile.storeapplicant');
     Route::put('/applicants/{id}', 'updateApplicant')->name('profile.updateapplicant');
     Route::put('/applicants/{id}/jpm-status', 'updateJpmStatus')->name('applicants.updateJpmStatus');
+    Route::put('/applicants/{id}/jpm-remarks', 'updateJpmRemarks')->name('applicants.updateJpmRemarks');
 
     Route::get('/get-user-encoded-records', 'countByCurrentUser')->name('profile.getuserencodedrecords');
 });
