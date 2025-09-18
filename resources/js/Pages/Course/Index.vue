@@ -87,12 +87,7 @@ const deleteCourse = (courseId) => {
                                 class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600">
                                 <span class="font-medium"> {{ c.name }}</span>
                                 <span class="font-bold"> [{{ c.shortname }}]</span>
-                                <span v-if="c.father_name || c.mother_name || c.guardian_name"
-                                    class="block text-xs text-gray-500 mt-1">
-                                    <template v-if="c.father_name">Father: {{ c.father_name }}</template>
-                                    <template v-if="c.mother_name"> | Mother: {{ c.mother_name }}</template>
-                                    <template v-if="c.guardian_name"> | Guardian: {{ c.guardian_name }}</template>
-                                </span>
+
                             </TableDataCell>
                             <TableDataCell
                                 class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600 font-medium">

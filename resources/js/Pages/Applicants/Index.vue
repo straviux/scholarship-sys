@@ -366,6 +366,7 @@ const updateJpmStatus = (profileId, isMember, isLeader) => {
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
+                        <TableHeaderCell class="w-42">Parent/Guardian</TableHeaderCell>
                         <TableHeaderCell class="w-42">Address</TableHeaderCell>
 
                         <TableHeaderCell @click="sortBy('school')" class="cursor-pointer">
@@ -410,7 +411,11 @@ const updateJpmStatus = (profileId, isMember, isLeader) => {
                                 <InputText v-model="filter.name" placeholder="Search name" class="w-full" />
                             </div>
                         </TableDataCell>
-
+                        <TableDataCell class="border-l border-collapse border-slate-400">
+                            <div class="px-2">
+                                <!-- <InputText v-model="filter.name" placeholder="Search name" class="w-full" /> -->
+                            </div>
+                        </TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
                                 <MunicipalitySelect v-model="filter.municipality" custom-placeholder="---" />
@@ -474,6 +479,28 @@ const updateJpmStatus = (profileId, isMember, isLeader) => {
                                     {{ profile.last_name + ', ' + profile.first_name + ' ' + (profile.middle_name ||
                                         '') + ' ' + (profile.extension_name || '') }}
                                 </div>
+                            </div>
+                        </TableDataCell>
+                        <TableDataCell
+                            class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase w-[200px]">
+                            <div class="px-2"
+                                v-if="profile.father_name || profile.mother_name || profile.guardian_name">
+                                <div v-if="profile.father_name"><span class="font-semibold  text-[11px]">{{
+                                    profile.father_name }}</span><span
+                                        class="text-gray-700 italic text-[11px] lowercase">
+                                        (father)</span>
+                                </div>
+                                <div v-if="profile.mother_name"><span class="font-semibold  text-[11px]">{{
+                                    profile.mother_name }}</span><span
+                                        class="text-gray-700 italic text-[11px] lowercase">
+                                        (mother)</span>
+                                </div>
+                                <div v-if="profile.guardian_name"><span class="font-semibold  text-[11px]">{{
+                                    profile.guardian_name }}</span><span
+                                        class="text-gray-700 italic text-[11px] lowercase">
+                                        (guardian)</span>
+                                </div>
+
                             </div>
                         </TableDataCell>
                         <TableDataCell
@@ -561,7 +588,9 @@ const updateJpmStatus = (profileId, isMember, isLeader) => {
                     </TableRow>
                     <TableRow v-else>
                         <TableDataCell class="px-6 py-8 w-[10px] border-collapse border-t border-slate-400 text-center"
-                            colspan="9">No data to be displayed</TableDataCell>
+                            colspan="9">
+                            No data
+                            to be displayed</TableDataCell>
                     </TableRow>
 
                 </template>
