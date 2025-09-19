@@ -478,14 +478,7 @@ class ScholarshipProfileController extends Controller
             $record->save();
         }
         $profile->update($request->validated());
-        return Inertia::render(
-            'Applicants/Index',
-            [
-                'action' => fn() => 'update',
-                'profile' => $profile,
-                'profiles' => ScholarshipProfile::with(['createdBy'])->get(),
-            ]
-        );
+        return redirect()->back()->with('success', 'Profile status updated successfully.');
     }
 
     /**
@@ -496,7 +489,7 @@ class ScholarshipProfileController extends Controller
         $profile = ScholarshipProfile::findOrFail($profile->profile_id);
         $validated = $request->validated();
         $profile->update($validated);
-        return back();
+        return redirect()->back()->with('success', 'Profile updated successfully.');
     }
 
 
