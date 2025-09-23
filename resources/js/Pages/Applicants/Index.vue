@@ -78,7 +78,7 @@ const filter = useForm({
     remarks: props.filter.remarks || "",
 })
 
-// console.log(props.filter)
+console.log(props.filter)
 
 const searchInput = ref(null);
 const selectedProfile = ref({});
@@ -94,7 +94,7 @@ const closeViewProfile = () => {
 
 const filterList = () => {
     // Prepare filter values
-    const program = filter.program?.shortname.toLowerCase() || "";
+    const program = filter.program?.shortname?.toLowerCase() || "";
     const parent_name = filter.parent_name.toLowerCase() || "";
     const course = filter.course?.shortname?.toLowerCase() || "";
     const municipality = filter.municipality?.name?.toLowerCase() || "";
@@ -129,14 +129,14 @@ const filterList = () => {
 }
 
 const clearFilter = () => {
-    filter.reset('name');
-    filter.reset('parent_name');
-    filter.reset('program');
-    filter.reset('school');
-    filter.reset('course');
-    filter.reset('municipality');
-    filter.reset('year_level');
-    filter.reset('remarks');
+    filter.name = null;
+    filter.parent_name = null;
+    filter.program = null;
+    filter.school = null;
+    filter.course = null;
+    filter.municipality = null;
+    filter.year_level = null;
+    filter.remarks = null;
 }
 const sortBy = (column) => {
     if (column == 'name') {

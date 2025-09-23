@@ -70,22 +70,22 @@ watch(
         if (localValue.value && newCourses.length) {
             if (props.multiple && Array.isArray(localValue.value)) {
                 localValue.value = localValue.value.map(val => {
-                    if (typeof val === 'object' && val !== null && val.shortname) {
-                        return newCourses.find(course => course.shortname === val.shortname) || val;
+                    if (typeof val == 'object' && val != null && val.shortname) {
+                        return newCourses.find(course => course.shortname == val.shortname) || val;
                     }
                     return newCourses.find(course =>
-                        course.shortname?.toLowerCase() === String(val).toLowerCase() ||
-                        course.name?.toLowerCase() === String(val).toLowerCase()
+                        course.shortname?.toLowerCase() == String(val).toLowerCase() ||
+                        course.name?.toLowerCase() == String(val).toLowerCase()
                     ) || val;
                 });
             } else {
                 let val = localValue.value;
-                if (typeof val === 'object' && val !== null && val.shortname) {
-                    localValue.value = newCourses.find(course => course.shortname === val.shortname) || val;
+                if (typeof val == 'object' && val !== null && val.shortname) {
+                    localValue.value = newCourses.find(course => course.shortname == val.shortname) || val;
                 } else {
                     const selected = newCourses.find(course =>
-                        course.shortname?.toLowerCase() === String(val).toLowerCase() ||
-                        course.name?.toLowerCase() === String(val).toLowerCase()
+                        course.shortname?.toLowerCase() == String(val).toLowerCase() ||
+                        course.name?.toLowerCase() == String(val).toLowerCase()
                     );
                     if (selected) localValue.value = selected;
                 }

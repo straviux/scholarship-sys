@@ -53,23 +53,23 @@ watch(
             if (props.multiple && Array.isArray(localValue.value)) {
                 // Map each value in localValue to the corresponding school object
                 localValue.value = localValue.value.map(val => {
-                    if (typeof val === 'object' && val !== null && val.shortname) {
-                        return schools.value.find(school => school.shortname === val.shortname) || val;
+                    if (typeof val == 'object' && val != null && val.shortname) {
+                        return schools.value.find(school => school.shortname == val.shortname) || val;
                     }
                     return schools.value.find(school =>
-                        school.shortname?.toLowerCase() === String(val).toLowerCase() ||
-                        school.name?.toLowerCase() === String(val).toLowerCase()
+                        school.shortname?.toLowerCase() == String(val).toLowerCase() ||
+                        school.name?.toLowerCase() == String(val).toLowerCase()
                     ) || val;
                 });
             } else {
                 // Single value: find the matching school object
                 let val = localValue.value;
-                if (typeof val === 'object' && val !== null && val.shortname) {
-                    localValue.value = schools.value.find(school => school.shortname === val.shortname) || val;
+                if (typeof val == 'object' && val != null && val.shortname) {
+                    localValue.value = schools.value.find(school => school.shortname == val.shortname) || val;
                 } else {
                     const selected = schools.value.find(school =>
-                        school.shortname?.toLowerCase() === String(val).toLowerCase() ||
-                        school.name?.toLowerCase() === String(val).toLowerCase()
+                        school.shortname?.toLowerCase() == String(val).toLowerCase() ||
+                        school.name?.toLowerCase() == String(val).toLowerCase()
                     );
                     if (selected) localValue.value = selected;
                 }

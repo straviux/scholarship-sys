@@ -54,12 +54,28 @@ watch(
         // If localValue is set, find and set the matching program object
         if (localValue.value && programs.value.length) {
             if (props.multiple && Array.isArray(localValue.value)) {
-                localValue.value = programs.value.filter(program =>
-                    localValue.value.some(val => val === program.shortname || val === program.name || val === program)
-                );
+                // Map each value in localValue to the corresponding school object
+                localValue.value = localValue.value.map(val => {
+                    if (typeof val == 'object' && val != null && val.shortname) {
+                        return programs.value.find(program => program.shortname == val.shortname) || val;
+                    }
+                    return programs.value.find(program =>
+                        program.shortname?.toLowerCase() == String(val).toLowerCase() ||
+                        program.name?.toLowerCase() == String(val).toLowerCase()
+                    ) || val;
+                });
             } else {
-                const selected = programs.value.find(program => program.shortname === localValue.value || program.name === localValue.value);
-                if (selected) localValue.value = selected;
+                // Single value: find the matching program object
+                let val = localValue.value;
+                if (typeof val == 'object' && val != null && val.shortname) {
+                    localValue.value = programs.value.find(program => program.shortname == val.shortname) || val;
+                } else {
+                    const selected = programs.value.find(program =>
+                        program.shortname?.toLowerCase() == String(val).toLowerCase() ||
+                        program.name?.toLowerCase() == String(val).toLowerCase()
+                    );
+                    if (selected) localValue.value = selected;
+                }
             }
         }
     },
