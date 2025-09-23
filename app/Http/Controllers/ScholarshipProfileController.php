@@ -207,7 +207,7 @@ class ScholarshipProfileController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $programId = $request->get('program');
+        $programId = ScholarshipProgram::where('shortname', $request->get('program'))->first()?->id;
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])
             ->whereHas('scholarshipGrant', function ($q) use ($programId) {
                 $q->where('scholarship_status', 0)
@@ -461,6 +461,7 @@ class ScholarshipProfileController extends Controller
                     'program_id' => $program_id ?? null,
                     'school_id' => $school->id ?? null,
                     'scholarship_status' => 0, // Pending by default
+                    'scholarship_status_remarks' => 'Pending', // Pending by default
                     'is_active' => 1,
                     'date_filed' =>  $request->date_filed ?? now(),
                     // 'date_approved' => $request->date_approved ?? null,
@@ -518,11 +519,11 @@ class ScholarshipProfileController extends Controller
             $record->year_level = $request->year_level;
             $record->program_id = $program_id ?? null;
             $record->school_id = $school->id ?? null;
-            $record->scholarship_status = 0; // Pending by default
-            $record->is_active = 1;
-            $record->scholarship_status_remarks = "Pending";
-            $record->date_filed =  $request->date_filed ?? now();
-            // $record->date_approved = $request->date_approved ?? $record->date_approved;
+            // $record->scholarship_status = 0; // Pending by default
+            // $record->is_active = 1;
+            // $record->scholarship_status_remarks = $request->scholarship_status_remarks ?? $record->scholarship_status_remarks;
+            $record->date_filed =  $request->date_filed ?? $record->date_filed;
+            $record->date_approved = $request->date_approved ?? $record->date_approved;
             // Add other required fields as needed
             $record->save();
         }
@@ -594,6 +595,46 @@ class ScholarshipProfileController extends Controller
                     ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ["%$query%"]);
             })
             ->where('is_on_waiting_list', 0)
+            ->limit(20)
+            ->get();
+
+        // Format as [{ id, name }]
+        $results = $profiles->map(function ($profile) {
+            return [
+                'profile_id' => $profile->profile_id,
+                'name' => $profile->last_name . ', ' . $profile->first_name . " " . $profile->middle_name . " " . $profile->extension_name,
+                'profile' => $profile
+            ];
+        });
+        return response()->json($results);
+    }
+
+
+    /**
+     * API: Search for profiles with scholarship records that are NOT pending, ongoing, or suspended
+     * Pending = 0, Ongoing = 1, Suspended = 3
+     * Returns JSON response
+     */
+    public function searchExistingProfile(Request $request)
+    {
+        $query = trim(preg_replace('/\s+/', ' ', $request->get('q', '')));
+        $excludedStatuses = [0, 1, 3];
+        $profiles = ScholarshipProfile::where(function ($q) use ($query) {
+            $q->where('first_name', 'LIKE', "%$query%")
+                ->orWhere('last_name', 'LIKE', "%$query%")
+                ->orWhere('middle_name', 'LIKE', "%$query%")
+                ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%$query%"])
+                ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ["%$query%"])
+                ->orWhereRaw("CONCAT(first_name, ' ', middle_name, ' ', last_name) LIKE ?", ["%$query%"])
+                ->orWhereRaw("CONCAT(last_name, ', ', first_name, ' ', middle_name) LIKE ?", ["%$query%"])
+                ->orWhereRaw("CONCAT(first_name, ' ', middle_name) LIKE ?", ["%$query%"]);
+        })
+            ->where(function ($q) use ($excludedStatuses) {
+                $q->whereDoesntHave('scholarshipGrant')
+                    ->orWhereHas('scholarshipGrant', function ($subQ) use ($excludedStatuses) {
+                        $subQ->whereNotIn('scholarship_status', $excludedStatuses);
+                    });
+            })
             ->limit(20)
             ->get();
 

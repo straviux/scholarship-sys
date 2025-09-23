@@ -57,6 +57,7 @@ Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->gr
 
 // API route for searching profiles by name
 Route::middleware(['auth'])->get('/api/profiles', [ScholarshipProfileController::class, 'apiSearch'])->name('api.profiles.search');
+Route::middleware(['auth'])->get('/api/existing', [ScholarshipProfileController::class, 'searchExistingProfile'])->name('api.profiles.existing');
 
 Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->group(function () {
     // Route::get('/scholarship_records/{id?}', 'getScholarshipRecordsApi')->name('scholarship_records_api.getlist');
@@ -64,9 +65,11 @@ Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->gro
     // Route::get('/scholarship_records/{scholarship_program}/{action?}/{id?}', 'showByProgram')->name('scholarship_records.showbyprogram');
     Route::post('/scholarship_records', 'store')->name('scholarship_records.store');
     Route::put('/scholarship_records/{id}', 'update')->name('scholarship_records.update');
+    Route::delete('/scholarship_records/{scholarship_record}', 'destroy')->name('scholarship_records.destroy');
 
     // API's
     Route::post('/scholarship-records/{id}/approve', 'approveScholarshipRecord')->name('scholarship-record.approve');
+    Route::post('/scholarship-records/{id}/decline', 'declineScholarshipRecord')->name('scholarship-record.decline');
     Route::put('/scholarship_records.update-status/{scholarship_records}', 'updateScholarshipStatusApi')->name('scholarship_records-api.updatestatus');
     Route::put('/scholarship_records.update-remarks/{scholarship_records}', 'updateRemarks')->name('scholarship_records-api.updateremarks');
     Route::post('/scholarship_records/{record}/requirements/upload', 'uploadRequirement')->name('scholarship.requirements.upload');

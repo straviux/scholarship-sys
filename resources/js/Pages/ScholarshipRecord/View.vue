@@ -58,7 +58,7 @@
                                 <div class="badge badge-neutral badge-outline badge-sm">{{ record.term }}
                                 </div>
                                 <div class="badge badge-neutral badge-outline badge-sm">{{ record.year_level
-                                }}
+                                    }}
                                 </div>
                             </div>
                         </div>
@@ -70,12 +70,15 @@
 
                         <div class="flex flex-col md:flex-row md:items-center  gap-2 mt-4">
                             <div class="w-full lg:w-[12%] text-gray-800">Program:</div>
-                            <span class="uppercase">{{ record.program.name }} ({{ record.program.shortname }})</span>
+                            <span class="uppercase">{{ record.program?.name || '-' }} ({{ record.program?.shortname ||
+                                '-'
+                                }})</span>
                         </div>
 
                         <div class="flex flex-col md:flex-row md:items-center  gap-2 mt-4">
                             <div class="w-full lg:w-[12%] text-gray-800">Course:</div>
-                            <span class="uppercase">{{ record.course.name }} ({{ record.course.shortname }})</span>
+                            <span class="uppercase">{{ record.course?.name || '-' }} ({{ record.course?.shortname || '-'
+                                }})</span>
                         </div>
 
                         <div class="flex flex-col md:flex-row md:items-center  gap-2 mt-4">

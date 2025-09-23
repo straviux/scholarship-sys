@@ -46,7 +46,7 @@
                                                     class="text-gray-400 font-normal italic">No data
                                                     provided</span>
                                                 <span v-else>{{ moment(profile.date_filed).format('MMMM DD, YYYY')
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div class="flex flex-row gap-4 min-w-[540px] items-start">
@@ -269,52 +269,41 @@
 
 
                             </div>
-                            <div class="w-full bg-white px-4 py-2 flex gap-2 items-center"
+                            <div class="w-full bg-white px-4 py-2 flex gap-2 items-center -mt-4 justify-between"
                                 v-if="profile.application_status != 2">
-                                <div class="flex gap-2">
-                                    <button
+
+                                <!-- <button
                                         class="btn btn-sm bg-red-500 text-white shadow font-semibold px-4 py-2 rounded"
-                                        @click="declineApplication">Decline</button>
-                                    <button
-                                        class="btn btn-sm bg-green-600 text-white shadow font-semibold px-4 py-2 rounded"
-                                        @click="showApproveModal = true">Approve</button>
-                                </div>
-                                <Modal marginTop="md" maxWidth="lg" :show="showApproveModal"
-                                    @close="handleCloseApproveModal">
-                                    <div class="p-2 bg-slate-800 text-left text-white">Approve Application</div>
-                                    <div class="p-4">
-                                        <div class="mt-4 bg-gray-100 p-4 text-center text-green-700 font-semibold">
-                                            <div class="w-full text-left">
-                                                <InputLabel class="mb-1" for="date_approved" value="Date Approved" />
-                                                <TextInput id="date_approved" type="date"
-                                                    class="w-full block text-gray-700" v-model="form.date_approved" />
-                                            </div>
-                                        </div>
-                                        <div class="mt-6 flex justify-end space-x-4">
-                                            <button
-                                                class="btn btn-sm bg-green-600 text-white shadow font-semibold px-4 py-2 rounded"
-                                                @click="confirmApprove">Confirm</button>
-                                            <button
-                                                class="btn btn-sm bg-gray-50 text-gray-700 shadow font-semibold px-4 py-2 rounded"
-                                                @click="handleCloseApproveModal">Cancel</button>
-                                        </div>
-                                    </div>
-                                </Modal>
-                                <div class="flex-1"></div>
-                                <button
+                                        @click="declineApplication">Decline</button> -->
+
+                                <Fieldset class="w-1/3">
+                                    <template #legend><span class="text-xs font-bold">APPLICATION
+                                            STATUS</span></template>
+                                    <Button label="Decline" variant="text" @click="declineApplication" severity="danger"
+                                        icon="pi pi-times" size="small" />
+                                    <!-- <button class="" @click="showApproveModal = true"><i class="pi pi-times"
+                                            style="color: green"></i> Approve</button> -->
+                                    <Button label="Approve" variant="text" @click="showApproveModal = true"
+                                        severity="success" icon="pi pi-check" size="small" />
+                                </Fieldset>
+
+                                <!-- <button
                                     class="btn btn-sm bg-gray-300 text-gray-700 shadow ml-auto font-semibold px-4 py-2 rounded"
-                                    @click="handleCloseModal">Cancel</button>
+                                    @click="handleCloseModal">Cancel</button> -->
+
+                                <Button @click="handleCloseModal" label="Close" variant="text" severity="secondary"
+                                    raised class="mt-12" />
                             </div>
 
 
-                            <Modal marginTop="md" maxWidth="lg" :show="showModal" @close="handleCloseModal">
+                            <Modal marginTop="md" maxWidth="lg" :show="showDeclineModal" @close="handleCloseModal">
                                 <div class="p-2 bg-slate-700 text-left text-white">Decline Application</div>
                                 <div class="p-4">
                                     <div class="mt-4 bg-slate-100 p-4 text-center text-red-700 font-semibold">
                                         <div class="w-full text-left">
                                             <InputLabel class="mb-1" for="remarks" value="Reason/Remarks" />
                                             <TextInput id="remarks" type="text" class="w-full block text-gray-700"
-                                                v-model="form.application_status_remarks" />
+                                                v-model="form.remarks" />
                                             <!-- <InputError class="mt-2" :message="form.errors.applied_school" v-if="!form.applied_school" /> -->
                                         </div>
 
@@ -323,6 +312,29 @@
                                         <DangerButton @click="confirmDecline">
                                             Submit</DangerButton>
                                         <SecondaryButton @click="handleCloseModal">Cancel</SecondaryButton>
+                                    </div>
+                                </div>
+                            </Modal>
+
+                            <Modal marginTop="md" maxWidth="lg" :show="showApproveModal"
+                                @close="handleCloseApproveModal">
+                                <div class="p-2 bg-slate-800 text-left text-white">Approve Application</div>
+                                <div class="p-4">
+                                    <div class="mt-4 bg-gray-100 p-4 text-center text-green-700 font-semibold">
+                                        <div class="w-full text-left">
+                                            <InputLabel class="mb-1" for="date_approved" value="Date Approved" />
+                                            <TextInput id="date_approved" type="date" class="w-full block text-gray-700"
+                                                v-model="form.date_approved" />
+                                        </div>
+                                    </div>
+                                    <div class="mt-6 flex justify-end space-x-4">
+                                        <button
+                                            class="btn btn-sm bg-green-600 text-white shadow font-semibold px-4 py-2 rounded"
+                                            @click="confirmApprove"><i class="pi pi-times"
+                                                style="color: green"></i>Confirm</button>
+                                        <button
+                                            class="btn btn-sm bg-gray-50 text-gray-700 shadow font-semibold px-4 py-2 rounded"
+                                            @click="handleCloseApproveModal">Cancel</button>
                                     </div>
                                 </div>
                             </Modal>
@@ -369,39 +381,46 @@ const props = defineProps({
 
 console.log(props.profile);
 const form = useForm({
-    date_approved: ''
+    date_approved: '',
+    remarks: ''
 })
 
 // Use isOpen from props for modal visibility
-const showModal = ref(false);
+const showDeclineModal = ref(false);
 const declineApplication = () => {
-    showModal.value = true;
+    showDeclineModal.value = true;
 }
 const emit = defineEmits(['close']);
 const handleCloseModal = () => {
-    showModal.value = false;
+    showDeclineModal.value = false;
     emit('close');
 };
 
 
 const confirmDecline = () => {
-    form.application_status = 2;
-    form.application_status_date = moment().format('YYYY-MM-DD');
-    form.is_on_waiting_list = 1;
-    form.put(route("profile.update", props.profile.profile_id), {
-        onSuccess: (response) => {
-            toast.success("Profile has been updated", {
-                position: toast.POSITION.TOP_RIGHT,
-            });
-            router.visit(route('profile.waitinglist'))
-            // show_next_form.value = true;
-            // console.log(response);
-        },
-        onError: (err) => {
-            form.errors = err;
-            console.log(err)
-        }
-    });
+    const recordId = props.profile.scholarship_grant && Array.isArray(props.profile.scholarship_grant) && props.profile.scholarship_grant.length > 0
+        ? props.profile.scholarship_grant[0].id
+        : null;
+    if (recordId) {
+        form.post(route("scholarship-record.decline", recordId), {
+            onSuccess: (response) => {
+                toast.success("Application has been declined", {
+                    position: toast.POSITION.TOP_RIGHT,
+                });
+                // showDeclineModal.value = false;
+                router.visit(route('profile.waitinglist'))
+            },
+            onError: (err) => {
+                form.errors = err;
+                console.log(err)
+            }
+        });
+    } else {
+        toast.error("No scholarship record found to decline.", {
+            position: toast.POSITION.TOP_RIGHT,
+        });
+    }
+    showDeclineModal.value = false;
 }
 const showApproveModal = ref(false);
 

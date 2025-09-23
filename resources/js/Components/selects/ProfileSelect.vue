@@ -40,7 +40,7 @@ const emit = defineEmits(['update:modelValue']);
 const localValue = ref(props.modelValue);
 const profiles = ref([]);
 
-const { data, loading, error, fetchData } = useApi(route('api.profiles.search'));
+const { data, loading, error, fetchData } = useApi(route('api.profiles.existing'));
 
 const onFilter = async (event) => {
     const query = event.value;

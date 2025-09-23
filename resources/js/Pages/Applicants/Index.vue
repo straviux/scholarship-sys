@@ -94,7 +94,7 @@ const closeViewProfile = () => {
 
 const filterList = () => {
     // Prepare filter values
-    const program = filter.program?.id || "";
+    const program = filter.program?.shortname.toLowerCase() || "";
     const parent_name = filter.parent_name.toLowerCase() || "";
     const course = filter.course?.shortname?.toLowerCase() || "";
     const municipality = filter.municipality?.name?.toLowerCase() || "";
@@ -324,38 +324,6 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                                 @clear-click="filter.date_to = null" />
                         </div>
                     </div>
-                    <!-- <div class="flex shadow-xs">
-                        <div class="bg-gray-700 rounded-l-lg text-white p-4">Filter</div>
-                        <div class="px-4 border  bg-gray-50 flex flex-1 items-center gap-2">
-                            <div class="w-1/3">
-                                <ProgramSelect v-model="filter.program" label="shortname" />
-                            </div>
-                            <div class="w-1/3">
-                                <CourseSelect v-model="filter.course" :scholarship-program-id="filter.program?.id"
-                                    label="shortname" />
-                            </div>
-                            <div class="w-1/3">
-                                <MunicipalitySelect v-model="filter.municipality" class="w-1/3" />
-                            </div>
-                            <div class="w-1/3">
-                                <label
-                                    class="input focus-within:outline-none focus-within:border-indigo-400 focus-within:ring-1 focus-within:ring-indigo-400 flex items-center gap-2">
-
-                                    <input type="search" class="grow uppercase" placeholder="Search name"
-                                        v-model="filter.name" ref="searchInput" />
-                                    <kbd class="kbd kbd-sm">ctrl</kbd>
-                                    <kbd class="kbd kbd-sm">K</kbd>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="bg-gray-50 p-4 rounded-r-lg border flex items-center cursor-pointer"
-                            @click="clearFilter" as="button">
-                            <button class="cursor-pointer">
-                                Clear
-                            </button>
-                        </div>
-                    </div> -->
-
                 </div>
                 <GenerateReportModal v-model:show="showReportModal" />
                 <div class="flex justify-end gap-4">
@@ -658,7 +626,7 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                                 <button class="text-emerald-500 hover:text-emerald-400 flex cursor-pointer"
                                     @click="addRemarks(profile)" v-if="hasPermission('can-view-jpm')">
                                     <!-- <IdentificationIcon class="h-5 w-5 text-blue-400" /> -->
-                                    <i class="pi pi-heart-fill"></i></button>
+                                    <i class="pi pi-heart"></i></button>
 
 
                                 <!-- <button class="text-purple-500 hover:text-blue-600 flex cursor-pointer"

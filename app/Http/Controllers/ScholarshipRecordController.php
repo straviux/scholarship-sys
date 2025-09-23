@@ -57,13 +57,16 @@ class ScholarshipRecordController extends Controller
 
 
         // default actiont Index 
-        $query = ScholarshipRecord::with(['course', 'program', 'profile'])
+        $query = ScholarshipRecord::with(['course', 'program', 'profile', 'school'])
             ->whereHas('profile', function ($q) {
-                $q->where(function ($subQ) {
-                    $subQ->whereNull('is_on_waiting_list')
-                        ->orWhere('is_on_waiting_list', 0);
-                });
+                $q->where('is_active', '=', 1);
             });
+
+        // By default, do not show pending records (scholarship_status == 0)
+        $showAll = $request->boolean('show_all_status', false);
+        if (!$showAll) {
+            $query->where('scholarship_status', '!=', 0);
+        }
         // Filter by course
         if ($request->filled('course')) {
             $query->whereRelation('course', 'name', '=', $request->course);
@@ -258,7 +261,36 @@ class ScholarshipRecordController extends Controller
         // Status 1 means 'approved and ongoing' per ScholarshipRecord model
         $record->updateScholarshipStatus(1);
         $record->date_approved = $request->date_approved ?? null;
+        $record->scholarship_status_remarks = 'Application approved';
         $record->save();
         return redirect()->back()->with('success', 'Scholarship record approved.');
+    }
+
+    /**
+     * Approve a scholarship record by ID.
+     */
+    public function declineScholarshipRecord(Request $request, $id)
+    {
+        $record = ScholarshipRecord::findOrFail($id);
+        // Status 2 means 'declined' per ScholarshipRecord model
+        $record->updateScholarshipStatus(5);
+        $record->remarks = $request->remarks ?? $record->remarks;
+        $record->scholarship_status_remarks = 'Application declined';
+        // $record->date_declined = $request->date_declined ?? null;
+        $record->save();
+        return redirect()->back()->with('success', 'Scholarship record declined.');
+    }
+
+    /**
+     * Remove the specified scholarship record from storage.
+     */
+    public function destroy($id)
+    {
+        $record = ScholarshipRecord::findOrFail($id);
+        $record->delete();
+        if (request()->wantsJson()) {
+            return response()->json(['message' => 'Scholarship record deleted successfully.']);
+        }
+        return redirect()->back()->with('message', 'Scholarship record deleted successfully.');
     }
 }

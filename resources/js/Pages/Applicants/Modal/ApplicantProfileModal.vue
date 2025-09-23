@@ -38,7 +38,8 @@
                                                         class="inline-block w-2 h-5 bg-blue-500 rounded mr-2"></span>Personal
                                                     Information
                                                 </h2>
-                                                <div class="flex gap-3 mb-2 items-end">
+                                                <div class="flex gap-3 mb-2 items-end"
+                                                    v-if="action == 'create' || action == 'update'">
                                                     <div class="flex-1">
                                                         <InputLabel class="mb-1" for="lastname" value="Last Name" />
                                                         <TextInput autofocus id="lastname" type="text"
@@ -67,6 +68,9 @@
                                                         <InputError class="mt-1"
                                                             :message="form.errors.extension_name" />
                                                     </div>
+                                                </div>
+                                                <div class="flex gap-3 mb-2 items-end" v-else>
+                                                    <ProfileSelect v-model="form.selectedProfile" />
                                                 </div>
                                                 <div class="flex gap-3 mb-2 items-end">
                                                     <div class="flex-1">
@@ -378,9 +382,8 @@
 
 <script setup>
 
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch } from "vue";
 import { Link, useForm, router, usePage } from "@inertiajs/vue3";
-import { debounce } from "lodash";
 import {
     TransitionRoot,
     TransitionChild,
@@ -395,7 +398,6 @@ import VueMultiselect from "vue-multiselect";
 import { XMarkIcon } from "@heroicons/vue/20/solid";
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
-
 import municipalities from '@/Data/municipalities.json';
 
 // COURSE MULTISELECT COMPONENT
@@ -424,9 +426,9 @@ const municipalitiesOptions = ref(mncplt.value.map(m => ({
 const barangayOptions = ref([]);
 
 const isOpen = computed(() => props.action == 'create' || props.action == 'update' || props.action == 'add-existing');
+// console.log(props.profile?.scholarship_grant[0].year_level);
 
-
-console.log(props.profile?.scholarship_grant[0].year_level);
+// const selectedProfile = ref(null);
 const form = useForm({
     scholarship_grant_id: props.profile?.scholarship_grant[0]?.id || null,
     school: props.profile?.scholarship_grant[0]?.school?.name || "",
@@ -492,25 +494,26 @@ const hasPendingOrOngoing = computed(() => {
 const errorMessage = ref("");
 
 watch(() => form.selectedProfile, (profile) => {
-    if (hasPendingOrOngoing.value) {
-        // console.log('has pending or ongoing scholarship application');
-        errorMessage.value = "This profile has a pending or ongoing scholarship application.";
-    } else {
-        errorMessage.value = "";
-    }
 
-    if (profile && profile.profile && !hasPendingOrOngoing.value) {
-        form.school = profile.profile?.scholarship_grant[0]?.school.name || '';
-        form.course = profile.profile?.scholarship_grant[0]?.course.name || '';
-        form.year_level = profile.profile?.scholarship_grant[0]?.year_level.name || '';
+    if (profile && profile.profile && props.action == 'add-existing') {
+        // form.school = profile.profile?.scholarship_grant[0]?.school.name || '';
+        // form.course = profile.profile?.scholarship_grant[0]?.course.name || '';
+        // form.year_level = profile.profile?.scholarship_grant[0]?.year_level.name || '';
         form.first_name = profile.profile.first_name || '';
         form.last_name = profile.profile.last_name || '';
         form.middle_name = profile.profile.middle_name || '';
         form.extension_name = profile.profile.extension_name || '';
         form.father_name = profile.profile.father_name || '';
         form.father_contact_no = profile.profile.father_contact_no || '';
+        form.father_occupation = profile.profile.father_occupation || '';
         form.mother_name = profile.profile.mother_name || '';
         form.mother_contact_no = profile.profile.mother_contact_no || '';
+        form.mother_occupation = profile.profile.mother_occupation || '';
+        form.parents_guardian_gross_monthly_income = profile.profile.parents_guardian_gross_monthly_income || '';
+        form.guardian_occupation = profile.profile.guardian_occupation || '';
+        form.guardian_relationship = profile.profile.guardian_relationship || '';
+        form.guardian_name = profile.profile.guardian_name || '';
+        form.guardian_contact_no = profile.profile.guardian_contact_no || '';
         form.municipality = profile.profile.municipality || '';
         form.selected_municipality = { name: profile.profile.municipality || '' };
         form.barangay = profile.profile.barangay || '';
@@ -520,28 +523,18 @@ watch(() => form.selectedProfile, (profile) => {
         form.email = profile.profile.email || '';
         form.gender = profile.profile.gender || '';
         form.remarks = profile.profile.remarks || '';
-        form.date_filed = profile.profile.date_filed || '';
+        // form.date_filed = profile.profile.date_filed || '';
     }
 });
 
-
-const selectGender = (gender) => {
-    form.gender = gender;
-};
-
 const resetBarangay = () => {
     form.selected_barangay = "";
-};
-const resetTempBarangay = () => {
-    form.selected_temporary_barangay = "";
 };
 
 const page = usePage();
 const prevPage = ref(page.props.urlPrev);
 
 const submit = (closeAfter = false) => {
-    // console.log(form.applied_school);
-    // return;
     form.last_name = form.last_name.toUpperCase();
     form.first_name = form.first_name.toUpperCase();
     form.middle_name = form.middle_name.toUpperCase();
@@ -596,7 +589,6 @@ const submit = (closeAfter = false) => {
 // set default step to 1
 const activeStep = ref('1');
 
-
 // Map error fields to step panels
 const errorFieldToStep = {
     // Step 1 fields
@@ -613,12 +605,6 @@ watch(() => form.errors, (errors) => {
         const firstErrorField = Object.keys(errors)[0];
         const step = errorFieldToStep[firstErrorField] || '1';
         activeStep.value = step;
-    }
-}, { deep: true });
-
-// Show toast for form errors
-watch(() => form.errors, (errors) => {
-    if (errors && Object.keys(errors).length > 0) {
         Object.values(errors).forEach(msg => {
             if (msg) toast.error(msg, { position: toast.POSITION.TOP_RIGHT });
         });
@@ -631,4 +617,5 @@ watch(() => errorMessage, (msg) => {
         toast.error(msg, { position: toast.POSITION.TOP_RIGHT });
     }
 });
+
 </script>
