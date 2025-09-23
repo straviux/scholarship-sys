@@ -16,6 +16,8 @@ class ScholarshipProfileResource extends JsonResource
     {
         return [
             'profile_id' => $this->profile_id,
+            'sequence_number' => $this->sequence_number ?? null,
+            'daily_sequence_number' => $this->daily_sequence_number ?? null,
             'unique_id' => $this->unique_id,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,

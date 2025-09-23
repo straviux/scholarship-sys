@@ -160,7 +160,7 @@ function toggleSidebarMinimized() {
                     </li>
                 </ul>
                 <ul v-else
-                    class="menu space-y-4 mt-8 w-full text-gray-300 hover:text-gray-50 items-center min-h-0 min-w-0 block h-[calc(100vh-160px)]">
+                    class="menu space-y-4 mt-8 w-full text-gray-300 hover:text-gray-50 items-center min-h-0 min-w-0 block h-[calc(100vh-160px)] overflow-y-auto overflow-x-hidden">
                     <li>
                         <SidebarLink :href="route('dashboard')" :active="route().current('dashboard')"
                             class="flex flex-col justify-center text-center">

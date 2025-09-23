@@ -10,8 +10,7 @@ import TableRow from '@/Components/TableRow.vue';
 import TableHeaderCell from '@/Components/TableHeaderCell.vue';
 import TableDataCell from '@/Components/TableDataCell.vue';
 import {
-    ChevronUpDownIcon,
-    UserPlusIcon,
+    ChevronUpDownIcon
 } from '@heroicons/vue/20/solid';
 import ApplicantProfileModal from '@/Pages/Applicants/Modal/ApplicantProfileModal.vue';
 import ViewProfileModal from './Modal/ViewProfileModal.vue';
@@ -31,14 +30,14 @@ import 'vue3-toastify/dist/index.css';
 
 const { hasPermission } = usePermission();
 // import { usePage } from '@inertiajs/vue3'
-const page = usePage()
+// const page = usePage()
 // console.log(route)
 const props = defineProps({
     profile: Object,
     profiles: Object,
     profiles_total: [String, Number],
     action: String,
-    per_page: Number,
+    records: Number,
     filter: Object,
     message: Object,
     sort: {
@@ -54,7 +53,7 @@ const form = useForm({
     course: props.filter.course || "",
     municipality: props.filter.municipality || "",
     name: props.filter.name || "",
-    per_page: props.per_page || 10,
+    records: props.records || 10,
     sort: {
         date_filed: props.sort.date_filed || "",
         last_name: props.sort.last_name || "",
@@ -68,6 +67,7 @@ const form = useForm({
 const toDate = (val) => val ? new Date(val) : null;
 const filter = useForm({
     name: props.filter.name || "",
+    parent_name: props.filter.parent_name || "",
     program: props.filter.program || "",
     school: props.filter.school || "",
     course: props.filter.course || "",
@@ -91,40 +91,37 @@ const closeViewProfile = () => {
     isViewProfileOpen.value = false;
 }
 
-// const editProfile = (profile) => {
-
-//     // console.log(toggleViewModal.value);
-//     selectedProfile.value = profile;
-// }
 
 const filterList = () => {
     // Prepare filter values
     const program = filter.program?.id || "";
+    const parent_name = filter.parent_name.toLowerCase() || "";
     const course = filter.course?.shortname?.toLowerCase() || "";
     const municipality = filter.municipality?.name?.toLowerCase() || "";
     const name = filter.name.toLowerCase() || "";
     const school = filter.school?.shortname?.toLowerCase() || "";
     const year_level = filter.year_level?.value?.toLowerCase() || "";
     const remarks = filter.remarks.toLowerCase() || "";
-    const per_page = form.per_page;
+    const records = form.records;
     const sort = form.sort;
 
     // Use date_from and date_to directly
     let date_from = filter.date_from ? moment(filter.date_from).format('YYYY-MM-DD') : "";
     let date_to = filter.date_to ? moment(filter.date_to).format('YYYY-MM-DD') : "";
 
-    const params = {
-        program,
-        course,
-        municipality,
-        name,
-        school,
-        year_level,
-        date_from,
-        date_to,
-        remarks,
-        per_page, sort
-    };
+    const params = {};
+    if (program) params.program = program;
+    if (course) params.course = course;
+    if (municipality) params.municipality = municipality;
+    if (name) params.name = name;
+    if (parent_name) params.parent_name = parent_name;
+    if (school) params.school = school;
+    if (year_level) params.year_level = year_level;
+    if (date_from) params.date_from = date_from;
+    if (date_to) params.date_to = date_to;
+    if (remarks) params.remarks = remarks;
+    if (records) params.records = records;
+    if (sort && Object.values(sort).some(v => v)) params.sort = sort;
     router.get(route('profile.waitinglist'), params, {
         preserveState: true,
         preserveScroll: true,
@@ -133,6 +130,7 @@ const filterList = () => {
 
 const clearFilter = () => {
     filter.reset('name');
+    filter.reset('parent_name');
     filter.reset('program');
     filter.reset('school');
     filter.reset('course');
@@ -298,7 +296,8 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                 <div class="flex gap-2 flex-1 items-center">
                     <div class="flex shadow-xs">
                         <div class="bg-gray-700 rounded-l-lg text-white p-2">Show</div>
-                        <select v-model="form.per_page" class="w-[60px] rounded-r-lg border cursor-pointer text-center">
+                        <select v-model="form.records" class="w-[60px] rounded-r-lg border cursor-pointer text-center">
+                            <option value="500">500</option>
                             <option value="200">200</option>
                             <option value="100">100</option>
                             <option value="50">50</option>
@@ -395,47 +394,62 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
             <Table class="border-collapse border border-slate-100 bg-[#f8f8f8]" :loading="form.processing">
                 <template #header>
                     <TableRow>
-                        <TableHeaderCell class="px-3">#</TableHeaderCell>
+                        <TableHeaderCell class="px-3 text-center" colspan="2">
+                            <p class="text-[10px] text-white">Sequence</p>
+                        </TableHeaderCell>
                         <TableHeaderCell @click="sortBy('name')" class="cursor-pointer w-80">
-                            <div class="flex items-center gap-2">
-                                <h4>Name</h4>
+                            <div class="flex items-center justify-between">
+                                <p class="text-[10px] text-white">Applicant Name</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell class="w-[200px]">Parent/Guardian</TableHeaderCell>
-                        <TableHeaderCell class="w-[200px]">Address</TableHeaderCell>
+                        <TableHeaderCell class="w-[200px]">
+                            <p class="text-[10px] text-white">Parent/Guardian</p>
+                        </TableHeaderCell>
+                        <TableHeaderCell class="w-[200px]">
+                            <p class="text-[10px] text-white">Address</p>
+                        </TableHeaderCell>
 
                         <TableHeaderCell @click="sortBy('school')" class="cursor-pointer">
-                            <div class="flex items-center gap-2">
-                                <h4>School</h4>
+                            <div class="flex items-center justify-between">
+                                <p class="text-[10px] text-white">School</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
                         <TableHeaderCell @click="sortBy('course')" class="cursor-pointer">
-                            <div class="flex items-center gap-2">
-                                <h4>Course</h4>
+                            <div class="flex items-center justify-between">
+                                <p class="text-[10px] text-white">Course</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
                         <TableHeaderCell @click="sortBy('year_level')" class="cursor-pointer w-[30px]">
-                            <div class="flex items-center gap-2">
-                                <h4>Level</h4>
+                            <div class="flex items-center justify-between">
+                                <p class="text-[10px] text-white">Year Level</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell>Contact #</TableHeaderCell>
+                        <TableHeaderCell>
+                            <p class="text-[10px] text-white">Contact #</p>
+                        </TableHeaderCell>
                         <TableHeaderCell @click="sortBy('date_filed')" class="cursor-pointer w-[110px]">
-                            <div class="flex items-center gap-2">
-                                <h4>Date Filed</h4>
+                            <div class="flex items-center justify-between">
+                                <p class="text-[10px] text-white">Date Filed</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell class="w-[220px]">Remarks</TableHeaderCell>
-                        <TableHeaderCell v-if="hasPermission('can-view-jpm')">is JPM</TableHeaderCell>
-                        <TableHeaderCell v-if="hasPermission('can-view-jpm')" class="w-[200px]">JPM Remarks
+                        <TableHeaderCell class="w-[220px]">
+                            <p class="text-[10px] text-white">Remarks</p>
+                        </TableHeaderCell>
+                        <TableHeaderCell v-if="hasPermission('can-view-jpm')">
+                            <p class="text-[10px] text-white">JPM MEMBER</p>
+                        </TableHeaderCell>
+                        <TableHeaderCell v-if="hasPermission('can-view-jpm')" class="w-[200px]">
+                            <p class="text-[10px] text-white">JPM Remarks</p>
                         </TableHeaderCell>
                         <!-- <TableHeaderCell class="w-[160px]">Status</TableHeaderCell> -->
-                        <TableHeaderCell class="w-[160px]">Action</TableHeaderCell>
+                        <TableHeaderCell class="w-[160px]">
+                            <p class="text-[10px] text-white">Action</p>
+                        </TableHeaderCell>
                     </TableRow>
 
 
@@ -443,7 +457,10 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                 <template #default>
                     <!-- filter row -->
                     <TableRow>
-                        <TableDataCell class="px-3"></TableDataCell>
+                        <TableDataCell class="px-3"><span class="text-[10px] text-gray-500">Overall</span>
+                        </TableDataCell>
+                        <TableDataCell class="px-3 border-l border-collapse border-slate-400"><span
+                                class="text-[10px] text-gray-500">By Date</span></TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
                                 <InputText v-model="filter.name" placeholder="Search name" class="w-full"
@@ -453,6 +470,8 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
                                 <!-- <InputText v-model="filter.name" placeholder="Search name" class="w-full" /> -->
+                                <InputText v-model="filter.parent_name" placeholder="Search name" class="w-full"
+                                    size="small" />
                             </div>
                         </TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
@@ -508,7 +527,12 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
 
                     <TableRow class="hover:bg-gray-200" v-for="(profile, index) in profiles.data"
                         :key="'profile_' + profile.id" v-if="profiles.data && profiles.data.length">
-                        <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-400">{{ index + 1 }}
+                        <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-400 text-gray-500">{{
+                            profile.sequence_number }}
+                        </TableDataCell>
+                        <TableDataCell
+                            class="px-3 w-[10px] border-collapse border-t border-l border-slate-400 text-gray-500">{{
+                                profile.daily_sequence_number }}
                         </TableDataCell>
                         <TableDataCell
                             class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
@@ -660,7 +684,7 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                     </TableRow>
                     <TableRow v-else>
                         <TableDataCell class="px-6 py-8 w-[10px] border-collapse border-t border-slate-400 text-center"
-                            colspan="9">
+                            colspan="14">
                             No data
                             to be displayed</TableDataCell>
                     </TableRow>
@@ -723,7 +747,6 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                 </div>
             </div>
         </div>
-
     </AdminLayout>
 
 </template>

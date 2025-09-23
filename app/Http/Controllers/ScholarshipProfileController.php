@@ -100,7 +100,8 @@ class ScholarshipProfileController extends Controller
                 $q->where('first_name', 'like', '%' . $request->name . '%')
                     ->orWhere('last_name', 'like', '%' . $request->name . '%')
                     ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $request->name . '%'])
-                    ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ['%' . $request->name . '%']);
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ['%' . $request->name . '%'])
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name, ' ', middle_name) LIKE ?", ['%' . $request->name . '%']);
             });
         }
 
@@ -130,6 +131,8 @@ class ScholarshipProfileController extends Controller
         $perPage = $request->get('per_page', 10);
         /** @disregard UndefinedMethod withQueryString */
         $profiles = $query->paginate($perPage)->withQueryString();
+        // Add sequence_number to each profile
+
 
         if ($action == 'update' && $id) {
             $profile = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])->find($id);
@@ -272,7 +275,17 @@ class ScholarshipProfileController extends Controller
                 $q->where('first_name', 'like', '%' . $request->name . '%')
                     ->orWhere('last_name', 'like', '%' . $request->name . '%')
                     ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $request->name . '%'])
-                    ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ['%' . $request->name . '%']);
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ['%' . $request->name . '%'])
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name, ' ', middle_name) LIKE ?", ['%' . $request->name . '%']);
+            });
+        }
+
+        // Filter by parent_name
+        if ($request->filled('parent_name')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('father_name', 'like', '%' . $request->parent_name . '%')
+                    ->orWhere('mother_name', 'like', '%' . $request->parent_name . '%')
+                    ->orWhere('guardian_name', 'like', '%' . $request->parent_name . '%');
             });
         }
 
@@ -299,9 +312,45 @@ class ScholarshipProfileController extends Controller
 
 
 
-        $perPage = $request->get('per_page', 10);
+        $records = $request->get('records', 10);
         /** @disregard UndefinedMethod withQueryString */
-        $profiles = $query->paginate($perPage)->withQueryString();
+        $profiles = $query->paginate($records)->withQueryString();
+        // Get all profile IDs in global sorted order
+        $allIds = ScholarshipProfile::with(['scholarshipGrant'])
+            ->whereHas('scholarshipGrant', function ($q) use ($programId) {
+                $q->where('scholarship_status', 0);
+                if ($programId) {
+                    $q->where('program_id', $programId);
+                }
+            })
+            ->orderBy('date_filed', 'asc')
+            ->orderBy('created_at', 'asc')
+            ->pluck('profile_id')->toArray();
+        // Assign absolute row index and daily row index to each profile in the current page
+        $profiles->getCollection()->transform(function ($profile) use ($allIds) {
+            $rowIndex = array_search($profile->profile_id, $allIds);
+            $profile->sequence_number = $rowIndex !== false ? $rowIndex + 1 : null;
+
+            // Calculate daily sequence number using the first scholarshipGrant record's date_filed
+            $dateFiled = null;
+            if ($profile->scholarshipGrant && count($profile->scholarshipGrant) > 0) {
+                $dateFiled = $profile->scholarshipGrant[0]->date_filed;
+            }
+            if ($dateFiled) {
+                $dailyIds = ScholarshipProfile::with(['scholarshipGrant'])
+                    ->whereHas('scholarshipGrant', function ($q) use ($dateFiled) {
+                        $q->whereDate('date_filed', $dateFiled);
+                    })
+                    ->orderBy('date_filed', 'asc')
+                    ->orderBy('created_at', 'asc')
+                    ->pluck('profile_id')->toArray();
+                $dailyIndex = array_search($profile->profile_id, $dailyIds);
+                $profile->daily_sequence_number = $dailyIndex !== false ? $dailyIndex + 1 : null;
+            } else {
+                $profile->daily_sequence_number = null;
+            }
+            return $profile;
+        });
 
         if ($action == 'update' && $id) {
             $profile = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])->where('is_on_waiting_list', '=', 1)->find($id);
