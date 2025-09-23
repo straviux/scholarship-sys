@@ -46,7 +46,7 @@
                                                     class="text-gray-400 font-normal italic">No data
                                                     provided</span>
                                                 <span v-else>{{ moment(profile.date_filed).format('MMMM DD, YYYY')
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="flex flex-row gap-4 min-w-[540px] items-start">
@@ -379,7 +379,7 @@ const props = defineProps({
     isOpen: Boolean
 });
 
-console.log(props.profile);
+// console.log(props.profile);
 const form = useForm({
     date_approved: '',
     remarks: ''

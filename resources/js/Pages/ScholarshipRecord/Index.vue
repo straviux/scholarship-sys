@@ -30,7 +30,7 @@ const props = defineProps({
     },
 });
 
-console.log(props.records)
+// console.log(props.records)
 const filter = useForm({
     course: props.filter?.course || "",
     municipality: props.filter?.municipality || "",

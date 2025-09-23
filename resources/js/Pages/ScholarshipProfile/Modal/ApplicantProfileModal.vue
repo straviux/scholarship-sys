@@ -419,7 +419,7 @@ const barangayOptions = ref([]);
 const isOpen = computed(() => props.action == 'create' || props.action == 'update' || props.action == 'add-existing');
 
 
-console.log(props.profile?.scholarship_grant[0].year_level);
+// console.log(props.profile?.scholarship_grant[0].year_level);
 const form = useForm({
     scholarship_grant_id: props.profile?.scholarship_grant[0]?.id || null,
     school: props.profile?.scholarship_grant[0]?.school?.name || "",

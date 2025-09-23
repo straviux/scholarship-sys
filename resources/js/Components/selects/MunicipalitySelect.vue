@@ -38,7 +38,7 @@ const municipalities = municipalitiesData.municipalities;
 watch(
     () => municipalities,
     (newOptions) => {
-        console.log(localValue.value)
+        // console.log(localValue.value)
         if (localValue.value && newOptions.length) {
             if (props.multiple && Array.isArray(localValue.value)) {
                 localValue.value = newOptions.filter(m =>

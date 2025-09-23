@@ -78,7 +78,7 @@ const filter = useForm({
     remarks: props.filter.remarks || "",
 })
 
-console.log(props.filter)
+// console.log(props.filter)
 
 const searchInput = ref(null);
 const selectedProfile = ref({});
@@ -109,6 +109,9 @@ const filterList = () => {
     let date_from = filter.date_from ? moment(filter.date_from).format('YYYY-MM-DD') : "";
     let date_to = filter.date_to ? moment(filter.date_to).format('YYYY-MM-DD') : "";
 
+    // Preserve current page if available
+    let currentPage = (props.profiles && props.profiles.meta && props.profiles.meta.current_page) ? props.profiles.meta.current_page : 1;
+
     const params = {};
     if (program) params.program = program;
     if (course) params.course = course;
@@ -122,6 +125,7 @@ const filterList = () => {
     if (remarks) params.remarks = remarks;
     if (records) params.records = records;
     if (sort && Object.values(sort).some(v => v)) params.sort = sort;
+    params.page = currentPage;
     router.get(route('profile.waitinglist'), params, {
         preserveState: true,
         preserveScroll: true,
@@ -177,7 +181,7 @@ onMounted(async () => {
     } catch (e) {
         userEncodedCount.value = { total: 0, today: 0 };
     }
-    console.log(props.profiles.data)
+    // console.log(props.profiles.data)
 });
 
 
@@ -186,16 +190,15 @@ onBeforeUnmount(() => {
 });
 
 
-watch(form, debounce(
-    () =>
-        filterList(),
-    500
-));
-watch(filter, debounce(
-    () =>
-        filterList(),
-    500
-));
+// Only trigger filterList from filter changes, not both form and filter
+let filterListTimeout = null;
+watch(filter, () => {
+    if (filterListTimeout) clearTimeout(filterListTimeout);
+    filterListTimeout = setTimeout(() => {
+        filterList();
+        filterListTimeout = null;
+    }, 500);
+});
 
 
 
