@@ -66,6 +66,7 @@ const form = useForm({
 
 const toDate = (val) => val ? new Date(val) : null;
 const filter = useForm({
+    records: props.records || 10,
     name: props.filter.name || "",
     parent_name: props.filter.parent_name || "",
     program: props.filter.program || "",
@@ -102,7 +103,7 @@ const filterList = () => {
     const school = filter.school?.shortname?.toLowerCase() || "";
     const year_level = filter.year_level?.value?.toLowerCase() || "";
     const remarks = filter.remarks.toLowerCase() || "";
-    const records = form.records;
+    const records = filter.records;
     const sort = form.sort;
 
     // Use date_from and date_to directly
@@ -299,7 +300,8 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                 <div class="flex gap-2 flex-1 items-center">
                     <div class="flex shadow-xs">
                         <div class="bg-gray-700 rounded-l-lg text-white p-2">Show</div>
-                        <select v-model="form.records" class="w-[60px] rounded-r-lg border cursor-pointer text-center">
+                        <select v-model="filter.records"
+                            class="w-[60px] rounded-r-lg border cursor-pointer text-center">
                             <option value="500">500</option>
                             <option value="200">200</option>
                             <option value="100">100</option>
