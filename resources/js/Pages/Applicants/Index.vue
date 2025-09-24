@@ -373,63 +373,72 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                 </div>
             </div>
 
-            <Table class="border-collapse border border-slate-100 bg-[#f8f8f8]" :loading="form.processing">
+            <Table
+                class="border-collapse border border-slate-100 bg-[#18181b] dark:bg-[#18181b] text-gray-200 dark:text-gray-200"
+                :loading="form.processing">
                 <template #header>
                     <TableRow>
-                        <TableHeaderCell class="px-3 text-center" colspan="2">
+                        <TableHeaderCell class="px-3 text-center dark:bg-[#27272a] dark:text-gray-200" colspan="2">
                             <p class="text-[10px] text-white">Sequence</p>
                         </TableHeaderCell>
-                        <TableHeaderCell @click="sortBy('name')" class="cursor-pointer w-80">
+                        <TableHeaderCell @click="sortBy('name')"
+                            class="cursor-pointer w-80 dark:bg-[#27272a] dark:text-gray-200">
                             <div class="flex items-center justify-between">
                                 <p class="text-[10px] text-white">Applicant Name</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell class="w-[200px]">
+                        <TableHeaderCell class="w-[200px] dark:bg-[#27272a] dark:text-gray-200">
                             <p class="text-[10px] text-white">Parent/Guardian</p>
                         </TableHeaderCell>
-                        <TableHeaderCell class="w-[200px]">
+                        <TableHeaderCell class="w-[200px] dark:bg-[#27272a] dark:text-gray-200">
                             <p class="text-[10px] text-white">Address</p>
                         </TableHeaderCell>
 
-                        <TableHeaderCell @click="sortBy('school')" class="cursor-pointer">
+                        <TableHeaderCell @click="sortBy('school')"
+                            class="cursor-pointer dark:bg-[#27272a] dark:text-gray-200">
                             <div class="flex items-center justify-between">
                                 <p class="text-[10px] text-white">School</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell @click="sortBy('course')" class="cursor-pointer">
+                        <TableHeaderCell @click="sortBy('course')"
+                            class="cursor-pointer dark:bg-[#27272a] dark:text-gray-200">
                             <div class="flex items-center justify-between">
                                 <p class="text-[10px] text-white">Course</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell @click="sortBy('year_level')" class="cursor-pointer w-[30px]">
+                        <TableHeaderCell @click="sortBy('year_level')"
+                            class="cursor-pointer w-[30px] dark:bg-[#27272a] dark:text-gray-200">
                             <div class="flex items-center justify-between">
                                 <p class="text-[10px] text-white">Year Level</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell>
+                        <TableHeaderCell class="dark:bg-[#27272a] dark:text-gray-200">
                             <p class="text-[10px] text-white">Contact #</p>
                         </TableHeaderCell>
-                        <TableHeaderCell @click="sortBy('date_filed')" class="cursor-pointer w-[110px]">
+                        <TableHeaderCell @click="sortBy('date_filed')"
+                            class="cursor-pointer w-[110px] dark:bg-[#27272a] dark:text-gray-200">
                             <div class="flex items-center justify-between">
                                 <p class="text-[10px] text-white">Date Filed</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell class="w-[220px]">
+                        <TableHeaderCell class="w-[220px] dark:bg-[#27272a] dark:text-gray-200">
                             <p class="text-[10px] text-white">Remarks</p>
                         </TableHeaderCell>
-                        <TableHeaderCell v-if="hasPermission('can-view-jpm')">
+                        <TableHeaderCell v-if="hasPermission('can-view-jpm')"
+                            class="dark:bg-[#27272a] dark:text-gray-200">
                             <p class="text-[10px] text-white">JPM MEMBER</p>
                         </TableHeaderCell>
-                        <TableHeaderCell v-if="hasPermission('can-view-jpm')" class="w-[200px]">
+                        <TableHeaderCell v-if="hasPermission('can-view-jpm')"
+                            class="w-[200px] dark:bg-[#27272a] dark:text-gray-200">
                             <p class="text-[10px] text-white">JPM Remarks</p>
                         </TableHeaderCell>
                         <!-- <TableHeaderCell class="w-[160px]">Status</TableHeaderCell> -->
-                        <TableHeaderCell class="w-[160px]">
+                        <TableHeaderCell class="w-[160px] dark:bg-[#27272a] dark:text-gray-200">
                             <p class="text-[10px] text-white">Action</p>
                         </TableHeaderCell>
                     </TableRow>
