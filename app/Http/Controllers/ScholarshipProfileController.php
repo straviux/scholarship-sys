@@ -339,7 +339,7 @@ class ScholarshipProfileController extends Controller
             if ($dateFiled) {
                 $dailyIds = ScholarshipProfile::with(['scholarshipGrant'])
                     ->whereHas('scholarshipGrant', function ($q) use ($dateFiled) {
-                        $q->whereDate('date_filed', $dateFiled);
+                        $q->whereDate('date_filed', $dateFiled)->where('scholarship_status', 0);
                     })
                     ->orderBy('date_filed', 'asc')
                     ->orderBy('created_at', 'asc')

@@ -1,4 +1,5 @@
 <script setup>
+// Force dark mode
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { debounce } from 'lodash';
 import moment from 'moment'
@@ -281,6 +282,14 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
         preserveState: true,
         onSuccess: () => { toast.success('status updated successfully'); },
     });
+
+
+    onMounted(() => {
+        document.documentElement.classList.add('dark');
+    });
+    onBeforeUnmount(() => {
+        document.documentElement.classList.remove('dark');
+    });
 };
 
 </script>
@@ -430,7 +439,7 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                 <template #default>
                     <!-- filter row -->
                     <TableRow>
-                        <TableDataCell class="px-3"><span class="text-[10px] text-gray-500">Overall</span>
+                        <TableDataCell class="px-3"><span class="text-[10px] text-gray-500">#</span>
                         </TableDataCell>
                         <TableDataCell class="px-3 border-l border-collapse border-slate-400"><span
                                 class="text-[10px] text-gray-500">By Date</span></TableDataCell>
