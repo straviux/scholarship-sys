@@ -315,20 +315,24 @@ class ScholarshipProfileController extends Controller
         $records = $request->get('records', 10);
         /** @disregard UndefinedMethod withQueryString */
         $profiles = $query->paginate($records)->withQueryString();
-        // Get all profile IDs in global sorted order
-        $allIds = ScholarshipProfile::with(['scholarshipGrant'])
-            ->whereHas('scholarshipGrant', function ($q) use ($programId) {
-                $q->where('scholarship_status', 0);
-                if ($programId) {
-                    $q->where('program_id', $programId);
-                }
-            })
-            ->orderBy('date_filed', 'asc')
-            ->orderBy('created_at', 'asc')
-            ->pluck('profile_id')->toArray();
-        // Assign absolute row index and daily row index to each profile in the current page
-        $profiles->getCollection()->transform(function ($profile) use ($allIds) {
-            $rowIndex = array_search($profile->profile_id, $allIds);
+        // Assign sequence_number per program
+        $profiles->getCollection()->transform(function ($profile) use ($programId) {
+            $program_id = $programId;
+            if (!$program_id && $profile->scholarshipGrant && count($profile->scholarshipGrant) > 0) {
+                $program_id = $profile->scholarshipGrant[0]->program_id ?? null;
+            }
+            // Get all profile IDs for this program
+            $programIds = ScholarshipProfile::with(['scholarshipGrant'])
+                ->whereHas('scholarshipGrant', function ($q) use ($program_id) {
+                    $q->where('scholarship_status', 0);
+                    if ($program_id) {
+                        $q->where('program_id', $program_id);
+                    }
+                })
+                ->orderBy('date_filed', 'asc')
+                ->orderBy('created_at', 'asc')
+                ->pluck('profile_id')->toArray();
+            $rowIndex = array_search($profile->profile_id, $programIds);
             $profile->sequence_number = $rowIndex !== false ? $rowIndex + 1 : null;
 
             // Calculate daily sequence number using the first scholarshipGrant record's date_filed
@@ -338,8 +342,11 @@ class ScholarshipProfileController extends Controller
             }
             if ($dateFiled) {
                 $dailyIds = ScholarshipProfile::with(['scholarshipGrant'])
-                    ->whereHas('scholarshipGrant', function ($q) use ($dateFiled) {
+                    ->whereHas('scholarshipGrant', function ($q) use ($dateFiled, $program_id) {
                         $q->whereDate('date_filed', $dateFiled)->where('scholarship_status', 0);
+                        if ($program_id) {
+                            $q->where('program_id', $program_id);
+                        }
                     })
                     ->orderBy('date_filed', 'asc')
                     ->orderBy('created_at', 'asc')
