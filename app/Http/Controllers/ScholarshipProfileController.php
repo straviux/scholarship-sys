@@ -260,7 +260,9 @@ class ScholarshipProfileController extends Controller
 
         // Filter by municipality
         if ($request->filled('remarks')) {
-            $query->where('remarks', 'like', '%' . $request->remarks . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('remarks', 'like', '%' . $request->remarks . '%');
+            });
         }
 
 

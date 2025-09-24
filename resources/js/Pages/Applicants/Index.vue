@@ -560,18 +560,20 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                                 </div>
 
                             </div>
+                            <div v-else class="text-center">-</div>
                         </TableDataCell>
                         <TableDataCell
                             class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
-                            <div class="px-2 text-[11px] font-semibold">
+                            <div class="px-2 text-[11px] font-semibold" v-if="profile.municipality">
                                 {{ profile.municipality }} {{ profile.barangay
                                     ? `, ${profile.barangay}`
                                     : '' }}</div>
+                            <div class="text-center" v-else>-</div>
                         </TableDataCell>
 
                         <TableDataCell
                             class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
-                            <div class="px-2 text-[11px] font-semibold">
+                            <div class="px-2 text-[11px] font-semibold" v-if="profile.scholarship_grant[0]?.school">
                                 {{ profile.scholarship_grant[0]?.school?.shortname }}
                             </div>
                         </TableDataCell>
