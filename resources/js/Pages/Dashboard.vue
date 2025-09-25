@@ -72,7 +72,7 @@ const localip = computed(() => page.props.localip)
                         <p class="text-xl text-gray-600 font-semibold">Stats</p>
                     </div>
 
-                    <div class="w-full px-0 md:px-6 sm:w-1/2 xl:w-1/3">
+                    <!-- <div class="w-full px-0 md:px-6 sm:w-1/2 xl:w-1/3">
                         <div class="flex items-center px-5 py-6 shadow-xs rounded-md bg-slate-100">
                             <div class="p-3 rounded-full bg-indigo-600 bg-opacity-75">
                                 <UserGroupIcon class="h-8 w-8 text-white" />
@@ -110,7 +110,7 @@ const localip = computed(() => page.props.localip)
                                 <div class="text-gray-500">Total Disbursement</div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>

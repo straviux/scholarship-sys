@@ -219,10 +219,10 @@ function toggleSidebarMinimized() {
                     <li>
                         <SidebarLink :href="route('program_requirements.index')"
                             :active="route().current('program_requirements.index')"
-                            class="flex flex-col justify-center text-center">
+                            class="flex flex-col items-center justify-center text-center">
 
                             <ClipboardIcon class="h-6 w-6" />
-                            <span class="text-xs">requirements</span>
+                            <span class="text-xs">reqs</span>
 
                         </SidebarLink>
                     </li>
