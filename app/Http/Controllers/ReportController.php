@@ -68,6 +68,7 @@ class ReportController extends Controller
         }
 
         $profiles = $query->get();
+
         $reportType = $request->input('report_type', 'list');
         $summary = null;
         if ($reportType === 'summary') {

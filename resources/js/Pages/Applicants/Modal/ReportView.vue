@@ -1,6 +1,5 @@
 <template>
-    <div class="px-12 mx-auto py-8">
-        <h1 class="text-2xl font-bold mb-6">Generated Report</h1>
+    <div class="px-12 mx-auto pb-8">
         <div class="mb-4 flex gap-2">
             <div class="flex gap-2 items-center">
                 <Button label="Back" @click="goBack" />
@@ -60,7 +59,7 @@
                                 item.scholarship_grant[0].year_level.toString().toUpperCase() : '-' }}</td>
                             <td class="border px-2 py-1">{{ item.scholarship_grant[0]?.date_filed ?
                                 moment(item.scholarship_grant[0]?.date_filed).format('YYYY-MM-DD').toUpperCase() : '-'
-                            }}</td>
+                                }}</td>
                         </tr>
                     </tbody>
                 </table>

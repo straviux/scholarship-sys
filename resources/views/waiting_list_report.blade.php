@@ -235,7 +235,7 @@
     <table>
         <thead>
             <tr>
-                <th style="min-width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">#</th>
+                <th style="min-width:30px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">#</th>
                 <th style="width:30px;padding-left:0.05cm;padding-right:0.05cm;">Seq</th>
                 <th>Name</th>
                 <th>Contact No(s).</th>

@@ -18,6 +18,7 @@ import ViewProfileModal from './Modal/ViewProfileModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
 const showReportModal = ref(false);
 const openReportModal = () => { showReportModal.value = true; };
+
 // COURSE MULTISELECT COMPONENT
 // How to use: 1. import component, 2. define model, 3. define scholarshipProgramId (set to null if fetching all course)
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
@@ -191,7 +192,6 @@ onBeforeUnmount(() => {
     window.removeEventListener('keydown', handleKeydown);
 });
 
-
 // Only trigger filterList from filter changes, not both form and filter
 let filterListTimeout = null;
 watch(filter, () => {
@@ -201,8 +201,6 @@ watch(filter, () => {
         filterListTimeout = null;
     }, 500);
 });
-
-
 
 const showDeleteConfirm = ref(false);
 const showAddRemarksConfirm = ref(false);
@@ -285,6 +283,9 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
 
 };
 
+// New reactive variable to control visibility of JPM columns
+const showJpmColumns = ref(false); // Hide JPM columns by default
+
 </script>
 <template>
 
@@ -299,6 +300,7 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                 <!-- <h1>Welcome {{ $page.props.auth.user.name }}</h1> -->
                 <!-- <h3>{{ props }}</h3> -->
                 <!-- {{ props.action }} -->
+
                 <div class="flex gap-2 flex-1 items-center">
                     <div class="flex shadow-xs">
                         <div class="bg-gray-700 rounded-l-lg text-white p-2">Show</div>
@@ -332,20 +334,30 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                         </div>
                     </div>
                 </div>
-                <GenerateReportModal v-model:show="showReportModal" />
+
                 <div class="flex justify-end gap-4">
-                    <Button as="a" label="Add New" icon="pi pi-user-plus" v-if="hasPermission('create-scholar-profile')"
-                        severity="success" :href="route('profile.waitinglist', {
-                            action: 'create'
-                        })" raised size="small" />
-                    <Button as="a" label="Add Existing" icon="pi pi-user" v-if="hasPermission('create-scholar-profile')"
-                        :href="route('profile.waitinglist', {
-                            action: 'add-existing'
-                        })" raised size="small" />
+                    <Toolbar>
+                        <template #start>
+                            <!-- <InputText ref="searchInput" v-model="filter.name" placeholder="Search keyword" class="w-48"
+                                size="small" /> -->
+                        </template>
+                        <template #end>
+                            <div class="space-x-2">
+                                <Button as="a" label="New" icon="pi pi-user-plus"
+                                    v-if="hasPermission('create-scholar-profile')" severity="success" :href="route('profile.waitinglist', {
+                                        action: 'create'
+                                    })" raised size="small" />
+                                <Button as="a" label="Existing" icon="pi pi-user"
+                                    v-if="hasPermission('create-scholar-profile')" :href="route('profile.waitinglist', {
+                                        action: 'add-existing'
+                                    })" size="small" severity="secondary" />
 
-                    <Button label="Generate Report" icon="pi pi-print" severity="info"
-                        v-if="hasPermission('create-scholar-profile')" raised size="small" @click="openReportModal" />
-
+                                <Button label="Export" icon="pi pi-upload" severity="secondary"
+                                    v-if="hasPermission('create-scholar-profile')" size="small"
+                                    @click="openReportModal" />
+                            </div>
+                        </template>
+                    </Toolbar>
                 </div>
             </div>
 
@@ -366,78 +378,85 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                 </div>
             </div>
 
-            <Table class="border-collapse border border-slate-100 bg-[#f8f8f8]" :loading="form.processing">
+            <div class="flex justify-end mb-2" v-if="hasPermission('can-view-jpm')">
+                <button class="px-3 py-1 rounded bg-gray-700 text-white text-xs cursor-pointer"
+                    @click="showJpmColumns = !showJpmColumns">
+                    {{ showJpmColumns ? 'Hide JPM' : 'Show JPM' }}
+                </button>
+            </div>
+
+            <Table class="border-collapse border border-slate-100 bg-[#f1f1f1]" :loading="form.processing">
                 <template #header>
-                    <TableRow class="bg-[#3b3b4f] dark:bg-[#3b3b4f] text-gray-100 dark:text-gray-100">
+                    <TableRow>
                         <TableHeaderCell
-                            class="px-3 text-center bg-[#27272a] dark:bg-[#27272a] text-gray-200 dark:text-gray-200"
+                            class="px-3 text-center bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600"
                             colspan="2">
-                            <p class="text-[10px]">Sequence</p>
+                            <p class="text-[11px]">Sequence</p>
                         </TableHeaderCell>
                         <TableHeaderCell @click="sortBy('name')"
-                            class="cursor-pointer w-80 bg-[#27272a] dark:bg-[#27272a] text-gray-200 dark:text-gray-200">
+                            class="cursor-pointer w-80 bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
                             <div class="flex items-center justify-between">
-                                <p class="text-[10px]">Applicant Name</p>
+                                <p class="text-[11px]">Applicant Name</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
                         <TableHeaderCell
-                            class="w-[200px] bg-[#27272a] dark:bg-[#27272a] text-gray-200 dark:text-gray-200">
-                            <p class="text-[10px]">Parent/Guardian</p>
+                            class="w-[200px] bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
+                            <p class="text-[11px]">Parent/Guardian</p>
                         </TableHeaderCell>
                         <TableHeaderCell
-                            class="w-[200px] bg-[#27272a] dark:bg-[#27272a] text-gray-200 dark:text-gray-200">
-                            <p class="text-[10px]">Address</p>
+                            class="w-[200px] bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
+                            <p class="text-[11px]">Address</p>
                         </TableHeaderCell>
 
                         <TableHeaderCell @click="sortBy('school')"
-                            class="cursor-pointer bg-[#27272a] dark:bg-[#27272a] text-gray-200 dark:text-gray-200">
+                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
                             <div class="flex items-center justify-between">
-                                <p class="text-[10px]">School</p>
+                                <p class="text-[11px]">School</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
                         <TableHeaderCell @click="sortBy('course')"
-                            class="cursor-pointer bg-[#27272a] dark:bg-[#27272a] text-gray-200 dark:text-gray-200">
+                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
                             <div class="flex items-center justify-between">
-                                <p class="text-[10px] text-white">Course</p>
+                                <p class="text-[11px]">Course</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
                         <TableHeaderCell @click="sortBy('year_level')"
-                            class="cursor-pointer bg-[#27272a] dark:bg-[#27272a] text-gray-200 dark:text-gray-200 w-[30px]">
+                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600 w-[30px]">
                             <div class="flex items-center justify-between">
-                                <p class="text-[10px] text-white">Year Level</p>
+                                <p class="text-[11px]">Year Level</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
                         <TableHeaderCell
-                            class="cursor-pointer bg-[#27272a] dark:bg-[#27272a] text-gray-200 dark:text-gray-200">
-                            <p class="text-[10px] text-white">Contact #</p>
+                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
+                            <p class="text-[11px]">Contact #</p>
                         </TableHeaderCell>
                         <TableHeaderCell @click="sortBy('date_filed')"
-                            class="cursor-pointer bg-[#27272a] dark:bg-[#27272a] text-gray-200 dark:text-gray-200 w-[110px]">
+                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600 w-[110px]">
                             <div class="flex items-center justify-between">
-                                <p class="text-[10px] text-white">Date Filed</p>
+                                <p class="text-[11px]">Date Filed</p>
                                 <ChevronUpDownIcon class="h-4 w-4" />
                             </div>
                         </TableHeaderCell>
                         <TableHeaderCell
-                            class="cursor-pointer bg-[#27272a] dark:bg-[#27272a] text-gray-200 dark:text-gray-200 w-[200px]">
-                            <p class="text-[10px] text-white">Remarks</p>
+                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600 w-[200px]">
+                            <p class="text-[11px]">Remarks</p>
                         </TableHeaderCell>
-                        <TableHeaderCell v-if="hasPermission('can-view-jpm')"
-                            class="cursor-pointer bg-[#27272a] dark:bg-[#27272a] text-gray-200 dark:text-gray-200">
-                            <p class="text-[10px] text-white">JPM MEMBER</p>
+                        <TableHeaderCell v-if="hasPermission('can-view-jpm') && showJpmColumns"
+                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
+                            <p class="text-[11px]">JPM MEMBER</p>
                         </TableHeaderCell>
-                        <TableHeaderCell v-if="hasPermission('can-view-jpm')"
-                            class="cursor-pointer bg-[#27272a] dark:bg-[#27272a] text-gray-200 dark:text-gray-200 w-[200px]">
-                            <p class="text-[10px] text-white">JPM Remarks</p>
+                        <TableHeaderCell v-if="hasPermission('can-view-jpm') && showJpmColumns"
+                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600 w-[200px]">
+                            <p class="text-[11px]">JPM Remarks</p>
                         </TableHeaderCell>
                         <!-- <TableHeaderCell class="w-[160px]">Status</TableHeaderCell> -->
                         <TableHeaderCell
-                            class="cursor-pointer bg-[#27272a] dark:bg-[#27272a] text-gray-200 dark:text-gray-200 w-[160px]">
-                            <p class="text-[10px] text-white">Action</p>
+                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600 w-[160px]">
+                            <p class="text-[11px]">Action</p>
                         </TableHeaderCell>
                     </TableRow>
 
@@ -445,52 +464,52 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                 </template>
                 <template #default>
                     <!-- filter row -->
-                    <TableRow>
+                    <TableRow class="bg-white">
                         <TableDataCell class="px-3"><span class="text-[10px] text-gray-500">#</span>
                         </TableDataCell>
-                        <TableDataCell class="px-3 border-l border-collapse border-slate-400"><span
+                        <TableDataCell class="px-3 border-collapse border-slate-400"><span
                                 class="text-[10px] text-gray-500">By Date</span></TableDataCell>
-                        <TableDataCell class="border-l border-collapse border-slate-400">
+                        <TableDataCell class="border-collapse border-slate-400">
                             <div class="px-2">
                                 <InputText v-model="filter.name" placeholder="Search name" class="w-full"
                                     size="small" />
                             </div>
                         </TableDataCell>
-                        <TableDataCell class="border-l border-collapse border-slate-400">
+                        <TableDataCell class="border-collapse border-slate-400">
                             <div class="px-2">
                                 <!-- <InputText v-model="filter.name" placeholder="Search name" class="w-full" /> -->
                                 <InputText v-model="filter.parent_name" placeholder="Search name" class="w-full"
                                     size="small" />
                             </div>
                         </TableDataCell>
-                        <TableDataCell class="border-l border-collapse border-slate-400">
+                        <TableDataCell class="border-collapse border-slate-400">
                             <div class="px-2">
                                 <MunicipalitySelect v-model="filter.municipality" custom-placeholder="---"
                                     size="small" />
                             </div>
                         </TableDataCell>
 
-                        <TableDataCell class="border-l border-collapse border-slate-400">
+                        <TableDataCell class="border-collapse border-slate-400">
                             <div class="px-2">
                                 <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="---"
                                     size="small" />
                             </div>
                         </TableDataCell>
-                        <TableDataCell class="border-l border-collapse border-slate-400">
+                        <TableDataCell class="border-collapse border-slate-400">
                             <div class="px-2">
                                 <CourseSelect v-model="filter.course" :scholarship-program-id="filter.program?.id"
                                     custom-placeholder="---" label="shortname" size="small" />
                             </div>
                         </TableDataCell>
-                        <TableDataCell class="border-l border-collapse border-slate-400">
+                        <TableDataCell class="border-collapse border-slate-400">
                             <div class="px-2">
                                 <YearLevelSelect v-model="filter.year_level" label="shortname" custom-placeholder="---"
                                     size="small" />
                             </div>
                         </TableDataCell>
-                        <TableDataCell class="border-l border-collapse border-slate-400"></TableDataCell>
-                        <TableDataCell class="border-l border-collapse border-slate-400"></TableDataCell>
-                        <TableDataCell class="border-l border-collapse border-slate-400">
+                        <TableDataCell class="border-collapse border-slate-400"></TableDataCell>
+                        <TableDataCell class="border-collapse border-slate-400"></TableDataCell>
+                        <TableDataCell class="border-collapse border-slate-400">
                             <div class="px-2">
 
                                 <InputText v-model="filter.remarks" placeholder="Search remarks" class="w-full"
@@ -498,33 +517,34 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
 
                             </div>
                         </TableDataCell>
-                        <TableDataCell class="border-l border-collapse border-slate-400"
-                            v-if="hasPermission('can-view-jpm')"></TableDataCell>
-                        <TableDataCell class="border-l border-collapse border-slate-400"
-                            v-if="hasPermission('can-view-jpm')"></TableDataCell>
-                        <TableDataCell class="border-l border-collapse border-slate-400">
-                            <div class="px-2">
-                                <div class="bg-gray-600 text-gray-200 p-2 rounded-lg border flex items-center cursor-pointer"
+                        <TableDataCell class="border-collapse border-slate-400"
+                            v-if="hasPermission('can-view-jpm') && showJpmColumns">
+                        </TableDataCell>
+                        <TableDataCell class="border-collapse border-slate-400"
+                            v-if="hasPermission('can-view-jpm') && showJpmColumns">
+                        </TableDataCell>
+                        <TableDataCell class="border-collapse border-slate-400">
+                            <div class="px-2 flex justify-end">
+                                <!-- <div class="bg-gray-600 text-gray-200 p-2 rounded-lg border flex items-center cursor-pointer"
                                     @click="clearFilter" as="button">
                                     <button class="cursor-pointer">
                                         Clear Filter
                                     </button>
-                                </div>
+                                </div> -->
+                                <Button label="Clear" icon="pi pi-refresh" @click="clearFilter" size="small" />
                             </div>
                         </TableDataCell>
                     </TableRow>
 
-                    <TableRow class="hover:bg-gray-200" v-for="(profile, index) in profiles.data"
+                    <TableRow class="hover:bg-gray-200 bg-white" v-for="(profile, index) in profiles.data"
                         :key="'profile_' + profile.id" v-if="profiles.data && profiles.data.length">
-                        <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-400 text-gray-500">{{
+                        <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-500">{{
                             profile.sequence_number }}
                         </TableDataCell>
-                        <TableDataCell
-                            class="px-3 w-[10px] border-collapse border-t border-l border-slate-400 text-gray-500">{{
-                                profile.daily_sequence_number }}
+                        <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-500">{{
+                            profile.daily_sequence_number }}
                         </TableDataCell>
-                        <TableDataCell
-                            class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
+                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700 uppercase">
                             <div class="flex items-center gap-2 px-2">
                                 <figure>
                                     <img v-if="profile.gender == 'M'" src="/images/male-avatar.png" alt="avatar"
@@ -540,7 +560,7 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                             </div>
                         </TableDataCell>
                         <TableDataCell
-                            class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase w-[200px]">
+                            class="border-collapse border-t border-slate-100 text-gray-700 uppercase w-[200px]">
                             <div class="px-2"
                                 v-if="profile.father_name || profile.mother_name || profile.guardian_name">
                                 <div v-if="profile.father_name"><span class="font-semibold  text-[11px]">{{
@@ -562,8 +582,7 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                             </div>
                             <div v-else class="text-center">-</div>
                         </TableDataCell>
-                        <TableDataCell
-                            class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
+                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700 uppercase">
                             <div class="px-2 text-[11px] font-semibold" v-if="profile.municipality">
                                 {{ profile.municipality }} {{ profile.barangay
                                     ? `, ${profile.barangay}`
@@ -571,41 +590,42 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                             <div class="text-center" v-else>-</div>
                         </TableDataCell>
 
-                        <TableDataCell
-                            class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
+                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700 uppercase">
                             <div class="px-2 text-[11px] font-semibold" v-if="profile.scholarship_grant[0]?.school">
                                 {{ profile.scholarship_grant[0]?.school?.shortname }}
                             </div>
+                            <div class="px-2" v-else>-</div>
                         </TableDataCell>
-                        <TableDataCell
-                            class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700 uppercase">
-                            <div class="px-2 text-[10px] font-bold">
+                        <TableDataCell class="border-collapse border-t border-slate-100 pl-2 text-gray-700 uppercase">
+                            <div class="px-2 text-[10px] font-bold" v-if="profile.scholarship_grant[0]?.course">
                                 <div>{{ profile.scholarship_grant[0]?.course?.shortname }}</div>
                                 <div v-if="profile.scholarship_grant[0]?.program"
                                     class="text-[10px] font-medium text-slate-600">[{{
                                         profile.scholarship_grant[0]?.program.shortname }}]</div>
                             </div>
+                            <div class="px-2" v-else>-</div>
                         </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
-                            <div class="px-2 text-[11px] font-semibold">{{ profile.scholarship_grant[0]?.year_level }}
+                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
+                            <div class="px-2 text-[11px] font-semibold">{{ profile.scholarship_grant[0]?.year_level ||
+                                '-'
+                                }}
                             </div>
                         </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
-                            <div class="px-2 text-[11px] font-semibold">{{ profile.contact_no }}</div>
+                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
+                            <div class="px-2 text-[11px] font-semibold">{{ profile.contact_no || '-' }}</div>
                         </TableDataCell>
-                        <TableDataCell
-                            class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
+                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700 uppercase">
                             <div class="px-2 text-[11px] font-semibold">
                                 {{ profile.date_filed ? moment(profile.date_filed).format('MMM DD, YYYY')
                                     : '-' }}</div>
                         </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
+                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
                             <div class="px-2 text-[10px]">
-                                {{ profile.remarks }}
+                                {{ profile.remarks || '-' }}
                             </div>
                         </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700"
-                            v-if="hasPermission('can-view-jpm')">
+                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700"
+                            v-if="hasPermission('can-view-jpm') && showJpmColumns">
                             <div class="px-2 flex flex-col gap-2">
                                 <div class="flex gap-2">
                                     <label class="label hover:text-gray-800">
@@ -639,12 +659,12 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                                 </div>
                             </div>
                         </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700"
-                            v-if="hasPermission('can-view-jpm')">
-                            <div class="px-2 text-xs">{{ profile.jpm_remarks }}</div>
+                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700"
+                            v-if="hasPermission('can-view-jpm') && showJpmColumns">
+                            <div class="px-2 text-xs">{{ profile.jpm_remarks || '-' }}</div>
                         </TableDataCell>
 
-                        <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
+                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
                             <div class="flex gap-4 justify-center">
                                 <button class="text-emerald-500 hover:text-emerald-400 flex cursor-pointer"
                                     @click="addRemarks(profile)" v-if="hasPermission('can-view-jpm')">
@@ -674,7 +694,7 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                         </TableDataCell>
                     </TableRow>
                     <TableRow v-else>
-                        <TableDataCell class="px-6 py-8 w-[10px] border-collapse border-t border-slate-400 text-center"
+                        <TableDataCell class="px-6 py-8 w-[10px] border-collapse border-t border-slate-100 text-center"
                             colspan="14">
                             No data
                             to be displayed</TableDataCell>
@@ -694,6 +714,9 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
         <!-- VIEW PROFILE MODAL -->
         <ViewProfileModal :isOpen="isViewProfileOpen" :errors="props.errors" :profile="selectedProfile"
             @close="closeViewProfile" />
+
+        <!-- Generate Report Modal -->
+        <GenerateReportModal v-model:show="showReportModal" />
 
         <!-- Delete Confirmation Dialog -->
         <div v-if="showDeleteConfirm" class="fixed inset-0 flex items-center justify-center z-50">

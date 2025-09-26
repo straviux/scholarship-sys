@@ -1,5 +1,5 @@
 <template>
-    <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal header="Generate Report"
+    <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal header="Export Data"
         :closable="true" :style="{ width: '400px' }">
         <form @submit.prevent="generateReport">
             <div class="flex gap-2">
