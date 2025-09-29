@@ -122,5 +122,7 @@ Route::middleware(['auth'])->controller(App\Http\Controllers\SchoolController::c
 // Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ScholarshipProfileController::class, 'generateReportPdf']);
 // Report PDF generation route
 Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ReportController::class, 'generateWaitinglist'])->name('report.generatePdf');
+// Report Excel generation route
+Route::middleware(['auth'])->get('/api/report/excel', [App\Http\Controllers\ReportController::class, 'generateExcelWaitingList'])->name('report.generateExcelWaitingList');
 
 require __DIR__ . '/auth.php';

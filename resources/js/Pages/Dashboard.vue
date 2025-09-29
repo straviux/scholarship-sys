@@ -21,7 +21,7 @@ const localip = computed(() => page.props.localip)
 
                 <h1>Welcome {{ $page.props.auth.user.name }}</h1>
                 <div>You can access this site on your local network thru
-                    <span class="underline font-semibold font-mono">{{ localip }}:9000</span>
+                    <span class="underline font-semibold font-mono">{{ localip }}:9001</span>
                 </div>
 
 

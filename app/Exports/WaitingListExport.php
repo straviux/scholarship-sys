@@ -2,74 +2,68 @@
 
 namespace App\Exports;
 
-use App\Models\ScholarshipProfile;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use Illuminate\Contracts\View\View;
+use Maatwebsite\Excel\Concerns\FromView;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
-class WaitingListExport implements FromCollection, WithHeadings
+class WaitingListExport implements FromView, ShouldAutoSize, WithEvents
 {
     protected $profiles;
+    protected $filters;
+    protected $summary;
+    protected $reportType;
 
-    public function __construct($profiles)
+    public function __construct($profiles, $summary, $filters, $reportType)
     {
         $this->profiles = $profiles;
+        $this->filters = $filters;
+        $this->summary = $summary;
+        $this->reportType = $reportType;
     }
 
-    public function collection()
+    public function view(): View
     {
-        // Sort profiles as in Blade template
-        $sortedProfiles = collect($this->profiles)->sortBy(function ($profile) {
-            $dateFiled = optional($profile->scholarshipGrant->first())->date_filed;
-            return [$dateFiled, $profile->created_at];
-        });
-
-        $rows = [];
-        $lastDate = null;
-        $dateIndex = 1;
-        $overallIndex = 1;
-        foreach ($sortedProfiles as $profile) {
-            $dateFiled = optional($profile->scholarshipGrant->first())->date_filed;
-            $dateKey = $dateFiled ? \Carbon\Carbon::parse($dateFiled)->format('Y-m-d') : '';
-            if ($dateKey !== $lastDate) {
-                $dateIndex = 1;
-                $lastDate = $dateKey;
-            }
-            $contacts = array_filter([
-                $profile->contact_no ?? null,
-                $profile->contact_no_2 ?? null
-            ]);
-            $row = [
-                '#' => $overallIndex,
-                'Seq' => $dateIndex,
-                'Name' => $profile->last_name . ', ' . $profile->first_name,
-                'Contact Nos.' => count($contacts) ? implode(' / ', $contacts) : '-',
-                'Municipality' => $profile->municipality ?? '-',
-                'Program' => optional(optional($profile->scholarshipGrant->first())->program)->shortname ?? '-',
-                'School' => optional($profile->scholarshipGrant->first())->school->shortname ?? '-',
-                'Course' => optional($profile->scholarshipGrant->first())->course->shortname ?? '-',
-                'Year Level' => optional($profile->scholarshipGrant->first())->year_level ?? '-',
-                'Date Filed' => $dateFiled ? \Carbon\Carbon::parse($dateFiled)->format('M d, Y') : '-',
-            ];
-            $rows[] = $row;
-            $dateIndex++;
-            $overallIndex++;
-        }
-        return collect($rows);
+        return view('exports.waiting_list', [
+            'profiles' => $this->profiles,
+            'summary' => $this->summary,
+            'reportType' => $this->reportType,
+            'filters' => $this->filters,
+        ]);
     }
 
-    public function headings(): array
+    public function registerEvents(): array
     {
         return [
-            '#',
-            'Seq',
-            'Name',
-            'Contact Nos.',
-            'Municipality',
-            'Program',
-            'School',
-            'Course',
-            'Year Level',
-            'Date Filed',
+            AfterSheet::class => function (AfterSheet $event) {
+                // Style the entire data range (A1 to the last cell)
+                $highestRow = $event->sheet->getHighestRow();
+                $highestColumn = $event->sheet->getHighestColumn();
+                $cellRange = 'A1:' . $highestColumn . $highestRow;
+
+                $event->sheet->getStyle($cellRange)->applyFromArray([
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color' => ['argb' => '000000'],
+                        ],
+                    ],
+                ]);
+
+                // Example: Style the header row with a bold font and a background color
+                $event->sheet->getStyle('A1:' . $highestColumn . '1')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'color' => ['rgb' => 'E0E0E0'],
+                    ],
+                ]);
+            },
         ];
     }
 }

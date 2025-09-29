@@ -18,6 +18,7 @@
                 </select>
             </div>
             <Button label="Save as PDF" @click="saveAsPdf" severity="secondary" />
+            <Button label="Save as Excel" @click="saveAsExcel" severity="secondary" />
         </div>
         <div v-if="loading" class="text-center py-8">
             <span>Loading report...</span>
@@ -59,7 +60,7 @@
                                 item.scholarship_grant[0].year_level.toString().toUpperCase() : '-' }}</td>
                             <td class="border px-2 py-1">{{ item.scholarship_grant[0]?.date_filed ?
                                 moment(item.scholarship_grant[0]?.date_filed).format('YYYY-MM-DD').toUpperCase() : '-'
-                                }}</td>
+                            }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -164,6 +165,13 @@ function saveAsPdf() {
     const queryObj = { ...params, paper_size: paperSize.value, orientation: orientation.value };
     const query = new URLSearchParams(queryObj).toString();
     window.open(`/api/report/pdf?${query}`, '_blank');
+}
+
+function saveAsExcel() {
+    // const query = new URLSearchParams(params).toString();
+    const queryObj = { ...params, paper_size: paperSize.value, orientation: orientation.value };
+    const query = new URLSearchParams(queryObj).toString();
+    window.open(`/api/report/excel?${query}`, '_blank');
 }
 </script>
 
