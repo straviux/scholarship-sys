@@ -74,7 +74,7 @@ const submit = () => {
     if (props.action == 'edit') {
         form.put(route("courses.update", props.course.id), {
             onSuccess: (response) => {
-                console.log(response);
+                // console.log(response);
                 toast.success("data has been updated", {
                     position: toast.POSITION.TOP_RIGHT,
                 });

@@ -60,7 +60,7 @@
                                 item.scholarship_grant[0].year_level.toString().toUpperCase() : '-' }}</td>
                             <td class="border px-2 py-1">{{ item.scholarship_grant[0]?.date_filed ?
                                 moment(item.scholarship_grant[0]?.date_filed).format('YYYY-MM-DD').toUpperCase() : '-'
-                            }}</td>
+                                }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -139,7 +139,7 @@ function fetchReport() {
     loading.value = true;
     axios.get('/profiles/generate-report', { params })
         .then(res => {
-            console.log(res.data);
+            // console.log(res.data);
             report.value = res.data;
             if (reportType.value === 'summary' && res.data.summary) {
                 summaryGroups.forEach(group => {

@@ -29,7 +29,7 @@ const editProgram = (programId) => {
     }))
 };
 onMounted(() => {
-    console.log(props);
+    // console.log(props);
 });
 
 </script>

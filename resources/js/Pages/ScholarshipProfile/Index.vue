@@ -81,7 +81,7 @@ const searchInput = ref(null);
 const selectedProfile = ref({});
 const isViewProfileOpen = ref(false);
 const viewProfile = (profile) => {
-    console.log(profile);
+    // console.log(profile);
     selectedProfile.value = profile;
     isViewProfileOpen.value = true;
 }

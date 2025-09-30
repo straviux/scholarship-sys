@@ -120,7 +120,7 @@ const props = defineProps({
     errors: Object
 });
 
-console.log(props.scholarship_record)
+// console.log(props.scholarship_record)
 const forms = ref({})
 const fileInputs = ref({})
 // Initialize form objects per requirement

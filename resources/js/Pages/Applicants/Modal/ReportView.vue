@@ -139,7 +139,7 @@ function fetchReport() {
     loading.value = true;
     axios.get('/profiles/generate-report', { params })
         .then(res => {
-            console.log(res.data);
+            // console.log(res.data);
             report.value = res.data;
             if (reportType.value === 'summary' && res.data.summary) {
                 summaryGroups.forEach(group => {

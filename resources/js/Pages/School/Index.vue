@@ -20,7 +20,7 @@ const props = defineProps({
 });
 
 onMounted(() => {
-    console.log(props.schools);
+    // console.log(props.schools);
 });
 
 const editSchool = (schoolId) => {

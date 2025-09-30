@@ -56,7 +56,7 @@ const submit = () => {
     } if (props.action == 'edit') {
         form.put(route("program_requirements.update", props.requirement.id), {
             onSuccess: (response) => {
-                console.log(response);
+                // console.log(response);
                 toast.success("data has been updated", {
                     position: toast.POSITION.TOP_RIGHT,
                 });

@@ -128,7 +128,7 @@ const props = defineProps({
 });
 
 
-console.log(props.education)
+// console.log(props.education)
 const isOpen = computed(() => props.action == 'add' || 'edit' ? true : false);
 
 const academic_levels = [
@@ -149,7 +149,7 @@ const form = useForm({
     academic_honors: props.education?.academic_honors || "",
 });
 
-console.log(form.profile_id)
+// console.log(form.profile_id)
 const checkLevel = () => {
 
     if (form.level === 'ELEMENTARY' || form.level === 'SECONDARY') {

@@ -402,7 +402,7 @@ const props = defineProps({
     message: Object
 });
 
-console.log(props.profile)
+// console.log(props.profile)
 
 const toggleApplyScholarshipModal = ref(false);
 const toggleEducationalBackgroundpModal = ref(false);

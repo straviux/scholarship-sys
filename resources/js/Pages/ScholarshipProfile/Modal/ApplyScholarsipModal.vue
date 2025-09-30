@@ -192,7 +192,7 @@ const props = defineProps({
     msg: String
 });
 
-console.log(props.profile_id);
+// console.log(props.profile_id);
 
 // console.log(form.municipality)
 const isOpen = computed(() => props.action == 'open');
@@ -273,7 +273,7 @@ const resetCourse = () => {
 
 // const emit = defineEmits(['refreshParentData']);
 const submit = () => {
-    console.log(form);
+    // console.log(form);
     form.course_id = form.course.id;
     form.program_id = form.program.id;
     form.program_name = form.program.name;
@@ -315,7 +315,7 @@ const onProfileFilter = async (query) => {
 watchEffect(() => {
     if (form.profile_id) {
         axios.get(route('scholarshipprograms.getactivelist')).then(response => {
-            console.log(response.data);
+            // console.log(response.data);
             scholarshipProgramsOptions.value = response.data;
         });
     }

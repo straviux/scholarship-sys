@@ -618,7 +618,7 @@ watch(showJpmColumns, (val) => {
                         <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
                             <div class="px-2 text-[11px] font-semibold">{{ profile.scholarship_grant[0]?.year_level ||
                                 '-'
-                            }}
+                                }}
                             </div>
                         </TableDataCell>
                         <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">

@@ -26,7 +26,7 @@ onMounted(() => {
         value: program.id,
         label: program.name
     }));
-    console.log(props.courses);
+    // console.log(props.courses);
 });
 
 const editCourse = (courseId) => {

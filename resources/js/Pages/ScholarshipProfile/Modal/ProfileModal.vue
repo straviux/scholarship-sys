@@ -810,7 +810,7 @@ const submit = () => {
                     position: toast.POSITION.TOP_RIGHT,
                 });
                 show_next_form.value = true;
-                console.log(response);
+                // console.log(response);
             },
             onError: (err) => {
                 form.errors = err;

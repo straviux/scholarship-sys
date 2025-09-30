@@ -58,7 +58,7 @@
                                 <div class="badge badge-neutral badge-outline badge-sm">{{ record.term }}
                                 </div>
                                 <div class="badge badge-neutral badge-outline badge-sm">{{ record.year_level
-                                    }}
+                                }}
                                 </div>
                             </div>
                         </div>
@@ -72,13 +72,13 @@
                             <div class="w-full lg:w-[12%] text-gray-800">Program:</div>
                             <span class="uppercase">{{ record.program?.name || '-' }} ({{ record.program?.shortname ||
                                 '-'
-                                }})</span>
+                            }})</span>
                         </div>
 
                         <div class="flex flex-col md:flex-row md:items-center  gap-2 mt-4">
                             <div class="w-full lg:w-[12%] text-gray-800">Course:</div>
                             <span class="uppercase">{{ record.course?.name || '-' }} ({{ record.course?.shortname || '-'
-                                }})</span>
+                            }})</span>
                         </div>
 
                         <div class="flex flex-col md:flex-row md:items-center  gap-2 mt-4">
@@ -277,8 +277,8 @@ function submitForm(reqId) {
             },
             onError: (err) => {
                 console.log(err)
-                console.log(props.record)
-                console.log(forms)
+                // console.log(props.record)
+                // console.log(forms)
             }
         }
     )
@@ -291,7 +291,7 @@ const updatescholarshipstatus = (status_id) => {
         status_id: status_id // Assuming 1 is the ID for 'Active' status
     })
         .then((res) => {
-            console.log(res);
+            // console.log(res);
             toast.success("Scholarship status has been updated!");
             router.reload({ only: ['record'] })
         })

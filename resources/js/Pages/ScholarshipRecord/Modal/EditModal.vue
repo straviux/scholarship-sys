@@ -249,7 +249,7 @@ const props = defineProps({
 });
 
 const mncplt = ref(municipalities.municipalities);
-console.log(mncplt.value)
+// console.log(mncplt.value)
 const municipalitiesOptions = ref(mncplt.value.map(m => ({
     label: m.name,
     value: m.name
