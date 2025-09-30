@@ -1,6 +1,6 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import { Head, Link, useForm } from "@inertiajs/vue3";
+import { Head, Link, useForm, router } from "@inertiajs/vue3";
 import { ref } from "vue";
 import Table from "@/Components/Table.vue";
 import TableRow from "@/Components/TableRow.vue";
@@ -30,6 +30,11 @@ const handlePasswordChangeSuccess = () => {
 };
 
 const form = useForm({});
+
+const editUser = (userId) => {
+    // Navigate to the edit user page
+    router.get(route("users.edit", userId));
+};
 
 const showConfirmDeleteUserModal = ref(false);
 const modalUserData = ref({ id: null, username: null, name: null });
