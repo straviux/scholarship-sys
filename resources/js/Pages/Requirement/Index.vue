@@ -1,6 +1,6 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import { Head, Link } from "@inertiajs/vue3";
+import { Head, Link, router } from "@inertiajs/vue3";
 import Table from "@/Components/Table.vue";
 import TableRow from "@/Components/TableRow.vue";
 import TableHeaderCell from "@/Components/TableHeaderCell.vue";
@@ -14,7 +14,13 @@ const props = defineProps({
     requirement: Object,
     requirements: Object
 });
-
+const editRequirement = (requirementId) => {
+    // Navigate to the edit requirement page
+    router.get(route("program_requirements.index", {
+        id: requirementId,
+        action: 'edit'
+    }))
+};
 </script>
 
 <template>
@@ -79,10 +85,13 @@ const props = defineProps({
                             <TableDataCell
                                 class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-700">
 
-                                <Link :href="route('program_requirements.index', {
+                                <!-- <Link :href="route('program_requirements.index', {
                                     id: r.id,
                                     action: 'edit'
-                                })" class="text-purple-500 hover:text-purple-600 underline font-medium">Edit</Link>
+                                })" class="text-purple-500 hover:text-purple-600 underline font-medium">Edit</Link> -->
+
+                                <Button icon="pi pi-pen-to-square" severity="info" variant="text" rounded
+                                    aria-label="Edit" @click="editRequirement(r.id)" />
                             </TableDataCell>
                         </TableRow>
                         <TableRow v-else>

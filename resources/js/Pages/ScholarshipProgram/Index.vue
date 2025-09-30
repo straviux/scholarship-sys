@@ -1,6 +1,6 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import { Head, Link, useForm } from "@inertiajs/vue3";
+import { Head, Link, useForm, router } from "@inertiajs/vue3";
 import { onMounted, ref } from "vue";
 import moment from "moment";
 import Table from "@/Components/Table.vue";
@@ -21,6 +21,13 @@ const props = defineProps({
 });
 
 const gridview = useStorage('gridview', false);
+const editProgram = (programId) => {
+    // Navigate to the edit program page
+    router.get(route("scholarshipprograms.index", {
+        id: programId,
+        action: 'edit'
+    }))
+};
 onMounted(() => {
     console.log(props);
 });
@@ -108,11 +115,14 @@ onMounted(() => {
                                 {{ program.is_active ? 'active' : 'inactive' }}
                             </TableDataCell>
                             <TableDataCell class="space-x-6 border-collapse border-t border-l border-slate-400 px-4">
-                                <Link :href="route('scholarshipprograms.index', {
+                                <!-- <Link :href="route('scholarshipprograms.index', {
                                     id: program.id,
                                     action: 'edit'
-                                })" class="text-purple-500 hover:text-purple-600 underline font-medium">Edit</Link>
+                                })" class="text-purple-500 hover:text-purple-600 underline font-medium">Edit</Link> -->
 
+
+                                <Button icon="pi pi-pen-to-square" severity="info" variant="text" rounded
+                                    aria-label="Edit" @click="editProgram(program.id)" />
                                 <Link :href="route('scholarshipprograms.index', {
                                     id: program.id,
                                     action: 'update-requirement'

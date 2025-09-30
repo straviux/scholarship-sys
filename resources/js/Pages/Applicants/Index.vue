@@ -283,8 +283,18 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
 
 };
 
-// New reactive variable to control visibility of JPM columns
-const showJpmColumns = ref(false); // Hide JPM columns by default
+
+// Persist showJpmColumns state in localStorage
+const showJpmColumns = ref(false);
+onMounted(() => {
+    const stored = localStorage.getItem('showJpmColumns');
+    if (stored !== null) {
+        showJpmColumns.value = stored === 'true';
+    }
+});
+watch(showJpmColumns, (val) => {
+    localStorage.setItem('showJpmColumns', val ? 'true' : 'false');
+});
 
 </script>
 <template>
@@ -608,7 +618,7 @@ const showJpmColumns = ref(false); // Hide JPM columns by default
                         <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
                             <div class="px-2 text-[11px] font-semibold">{{ profile.scholarship_grant[0]?.year_level ||
                                 '-'
-                                }}
+                            }}
                             </div>
                         </TableDataCell>
                         <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">

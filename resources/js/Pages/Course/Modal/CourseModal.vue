@@ -27,7 +27,7 @@ const props = defineProps({
 
 
 
-console.log(props.course)
+// console.log(props.course)
 const isOpen = computed(() => props.action == 'create' || props.action == 'edit');
 
 

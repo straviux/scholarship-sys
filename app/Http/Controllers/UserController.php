@@ -15,9 +15,12 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class UserController extends Controller
 {
+
     /**
      * Display a listing of the resource.
      */
@@ -107,7 +110,26 @@ class UserController extends Controller
      */
     public function destroy(User $user): RedirectResponse
     {
-        $user->delete();
-        return to_route('users.index');
+        try {
+            $user->delete();
+            return to_route('users.index')->with('success', 'User deleted successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() == 23000) {
+                // Integrity constraint violation
+                return back()->withErrors(['delete' => 'This user is referenced in other records. You must remove or reassign those records before deleting.']);
+            }
+            throw $e;
+        }
+    }
+
+
+    /**
+     * Change the password for a user.
+     */
+    public function changePassword(\App\Http\Requests\ChangeUserPasswordRequest $request, User $user): \Illuminate\Http\RedirectResponse
+    {
+        $user->password = Hash::make($request->password);
+        $user->save();
+        return back()->with('success', 'Password updated successfully.');
     }
 }

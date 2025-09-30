@@ -29,6 +29,13 @@ onMounted(() => {
     console.log(props.courses);
 });
 
+const editCourse = (courseId) => {
+    // Navigate to the edit course page
+    router.get(route("courses.index", {
+        id: courseId,
+        action: 'edit'
+    }))
+};
 const deleteCourse = (courseId) => {
     if (confirm('Are you sure you want to delete this course?')) {
         router.delete(route('courses.destroy', courseId), {
@@ -102,14 +109,19 @@ const deleteCourse = (courseId) => {
                                 {{ c.is_active ? 'active' : 'inactive' }}
                             </TableDataCell>
                             <TableDataCell
-                                class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600">
-                                <Link :href="route('courses.index', {
+                                class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600 space-x-2">
+                                <!-- <Link :href="route('courses.index', {
                                     id: c.id,
                                     action: 'edit'
-                                })" class="text-purple-500 hover:text-purple-600 underline font-medium">Edit</Link>
-                                <button
+                                })" class="text-purple-500 hover:text-purple-600 underline font-medium">Edit</Link> -->
+
+                                <Button icon="pi pi-pen-to-square" severity="info" variant="text" rounded
+                                    aria-label="Edit" @click="editCourse(c.id)" />
+                                <Button icon="pi pi-trash" severity="danger" variant="text" rounded aria-label="Delete"
+                                    @click="deleteCourse(c.id)" />
+                                <!-- <button
                                     class="ml-2 text-red-500 hover:text-red-700 underline font-medium cursor-pointer"
-                                    @click="deleteCourse(c.id)">Delete</button>
+                                    @click="deleteCourse(c.id)">Delete</button> -->
                             </TableDataCell>
                         </TableRow>
                         <TableRow v-else>

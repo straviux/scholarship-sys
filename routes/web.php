@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'role:administrator'])->group(function () {
     Route::resource('/users', UserController::class);
+    Route::post('/users/{user}/change-password', [UserController::class, 'changePassword'])->name('users.changePassword');
     Route::resource('/roles', RoleController::class);
     Route::resource('/permissions', PermissionController::class);
 

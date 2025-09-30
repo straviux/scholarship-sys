@@ -1,6 +1,6 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import { Head, Link, useForm } from "@inertiajs/vue3";
+import { Head, Link, useForm, router } from "@inertiajs/vue3";
 import { ref } from "vue";
 import Table from "@/Components/Table.vue";
 import TableRow from "@/Components/TableRow.vue";
@@ -16,6 +16,11 @@ const form = useForm({});
 
 const showConfirmDeleteRoleModal = ref(false);
 const modalRoleData = ref({ id: null, name: null });
+
+const editRole = (roleID) => {
+    // Navigate to the edit role page
+    router.get(route("roles.edit", roleID));
+};
 
 const confirmDeleteRole = (roleID, roleName) => {
     showConfirmDeleteRoleModal.value = true;
@@ -49,22 +54,24 @@ const deleteRole = (roleID) => {
                 <Table class="border-collapse border border-slate-400">
                     <template #header>
                         <TableRow class="border-b">
-                            <TableHeaderCell class="-indent-1">#</TableHeaderCell>
-                            <TableHeaderCell class="-indent-2 w-[70%]">Role</TableHeaderCell>
-                            <TableHeaderCell class="-indent-2 w-[25%]">Action</TableHeaderCell>
+                            <TableHeaderCell class="px-1 w-[30px]">#</TableHeaderCell>
+                            <TableHeaderCell class="px-1 w-[70%]">Role</TableHeaderCell>
+                            <TableHeaderCell class="px-1 w-[25%]">Action</TableHeaderCell>
                         </TableRow>
                     </template>
                     <template #default>
                         <TableRow v-for="(role, index) in roles" :key="role.id">
-                            <TableDataCell class="px-6 w-[10px] border-collapse border-t border-slate-400 -indent-1">{{
+                            <TableDataCell class="border-collapse border-t border-slate-400 px-2">{{
                                 index + 1 }}</TableDataCell>
-                            <TableDataCell class="border-collapse border-t border-l border-slate-400 indent-4">{{
+                            <TableDataCell class="border-collapse border-t border-l border-slate-400 px-2">{{
                                 role.name }}</TableDataCell>
 
-                            <TableDataCell
-                                class="space-x-6 border-collapse border-t border-l border-slate-400 indent-4">
-                                <Link :href="route('roles.edit', role.id)" class="text-green-500 hover:text-green-600">
-                                Edit</Link>
+                            <TableDataCell class="border-collapse border-t border-l border-slate-400 px-2">
+                                <!-- <Link :href="route('roles.edit', role.id)" class="text-green-500 hover:text-green-600">
+                                Edit</Link> -->
+
+                                <Button icon="pi pi-pen-to-square" severity="info" variant="text" rounded
+                                    aria-label="Edit" @click="editRole(role.id)" />
 
                                 <!-- <Link
                                     :href="route('roles.destroy', role.id)"
@@ -73,11 +80,13 @@ const deleteRole = (roleID) => {
                                     as="button"
                                     >Delete</Link
                                 > -->
-                                <button class="text-red-500 hover:text-red-600  cursor-pointer" @click="
+                                <Button icon="pi pi-trash" severity="danger" variant="text" rounded aria-label="Edit"
+                                    @click="confirmDeleteRole(role.id, role.name)" />
+                                <!-- <button class="text-red-500 hover:text-red-600  cursor-pointer" @click="
                                     confirmDeleteRole(role.id, role.name)
                                     ">
                                     Delete
-                                </button>
+                                </button> -->
                             </TableDataCell>
                         </TableRow>
                     </template>
@@ -93,10 +102,13 @@ const deleteRole = (roleID) => {
                     "{{ modalRoleData.name }}"
                 </p>
 
-                <div class="mt-6 flex space-x-4">
-                    <DangerButton @click="deleteRole(modalRoleData.id)">
-                        Delete</DangerButton>
-                    <SecondaryButton @click="closeModal">Cancel</SecondaryButton>
+                <div class="mt-6 flex justify-end gap-3">
+                    <!-- <DangerButton @click="deleteRole(modalRoleData.id)">
+                        Delete</DangerButton> -->
+                    <Button label="Delete" severity="danger" raised @click="deleteRole(modalRoleData.id)"
+                        size="small" />
+                    <Button label="Cancel" severity="secondary" @click="closeModal" size="small" />
+                    <!-- <SecondaryButton @click="closeModal">Cancel</SecondaryButton> -->
                 </div>
             </div>
         </Modal>

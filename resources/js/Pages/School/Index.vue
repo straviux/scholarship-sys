@@ -1,6 +1,6 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import { Head, Link, useForm } from "@inertiajs/vue3";
+import { Head, Link, useForm, router } from "@inertiajs/vue3";
 import { onMounted, ref } from "vue";
 import moment from "moment";
 import Table from "@/Components/Table.vue";
@@ -11,7 +11,7 @@ import TableDataCell from "@/Components/TableDataCell.vue";
 import { TrashIcon, PencilSquareIcon, IdentificationIcon, SquaresPlusIcon } from "@heroicons/vue/20/solid";
 import { useStorage } from '@vueuse/core';
 import SchoolModal from "@/Pages/School/Modal/SchoolModal.vue";
-import { router } from '@inertiajs/vue3';
+// import { router } from '@inertiajs/vue3';
 
 const props = defineProps({
     action: String,
@@ -22,6 +22,14 @@ const props = defineProps({
 onMounted(() => {
     console.log(props.schools);
 });
+
+const editSchool = (schoolId) => {
+    // Navigate to the edit school page
+    router.get(route("school.index", {
+        id: schoolId,
+        action: 'edit'
+    }))
+};
 
 const deleteSchool = (schoolId) => {
     if (confirm('Are you sure you want to delete this school?')) {
@@ -104,14 +112,12 @@ const deleteSchool = (schoolId) => {
                                 class="border-collapse border-t border-l border-slate-400 pl-2 text-gray-600">
                                 {{ school.is_active ? 'active' : 'inactive' }}
                             </TableDataCell>
-                            <TableDataCell class="space-x-6 border-collapse border-t border-l border-slate-400 px-4">
-                                <Link :href="route('school.index', {
-                                    id: school.id,
-                                    action: 'edit'
-                                })" class="text-purple-500 hover:text-purple-600 underline font-medium">Edit</Link>
-                                <button
-                                    class="ml-2 text-red-500 hover:text-red-700 underline font-medium cursor-pointer"
-                                    @click="deleteSchool(school.id)">Delete</button>
+                            <TableDataCell class="space-x-2 border-collapse border-t border-l border-slate-400 px-4">
+                                <Button icon="pi pi-pen-to-square" severity="info" variant="text" rounded
+                                    aria-label="Edit" @click="editSchool(school.id)" />
+
+                                <Button icon="pi pi-trash" severity="danger" variant="text" rounded aria-label="Delete"
+                                    @click="deleteSchool(school.id)" />
                             </TableDataCell>
                         </TableRow>
                     </template>
@@ -119,9 +125,10 @@ const deleteSchool = (schoolId) => {
             </div>
         </div>
 
-        <!-- CREATE SCHOOL MODAL -->
+
+        <!-- CREATE/EDIT SCHOOL MODAL -->
         <SchoolModal v-if="props.action == 'create' || props.action == 'edit'" :action="props.action"
-            :program="props.program" />
+            :program="props.action === 'edit' ? props.school : null" />
 
 
 

@@ -7,10 +7,27 @@ import TableRow from "@/Components/TableRow.vue";
 import TableHeaderCell from "@/Components/TableHeaderCell.vue";
 import TableDataCell from "@/Components/TableDataCell.vue";
 import Modal from "@/Components/Modal.vue";
-import DangerButton from "@/Components/DangerButton.vue";
-import SecondaryButton from "@/Components/SecondaryButton.vue";
+import ChangePasswordModal from "@/Pages/Admin/Users/ChangePasswordModal.vue";
 import { UserPlusIcon } from "@heroicons/vue/20/solid";
+import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
+
 defineProps(["users"]);
+
+const showChangePasswordModal = ref(false);
+const selectedUser = ref(null);
+const openChangePasswordModal = (user) => {
+    selectedUser.value = user;
+    showChangePasswordModal.value = true;
+};
+const closeChangePasswordModal = () => {
+    showChangePasswordModal.value = false;
+    selectedUser.value = null;
+};
+const handlePasswordChangeSuccess = () => {
+    toast.success('Password changed successfully!');
+    closeChangePasswordModal();
+};
 
 const form = useForm({});
 
@@ -29,6 +46,13 @@ const closeModal = () => {
 const deleteUser = (userID) => {
     form.delete(route("users.destroy", userID), {
         onSuccess: () => closeModal(),
+        onError: (errors) => {
+            if (errors.delete) {
+                toast.error(errors.delete);
+            } else {
+                toast.error('Unable to delete user. This user may be referenced in other records.');
+            }
+        },
     });
 };
 </script>
@@ -67,20 +91,28 @@ const deleteUser = (userID) => {
                             <TableDataCell class="border-collapse border-t border-l border-slate-400 indent-4">{{
                                 user.username }}</TableDataCell>
                             <TableDataCell
-                                class="space-x-6 border-collapse border-t border-l border-slate-400 indent-4">
-                                <Link :href="route('users.edit', user.id)" class="text-green-500 hover:text-green-600">
-                                Edit</Link>
+                                class="space-x-2 border-collapse border-t border-l border-slate-400 indent-4">
 
-                                <button class="text-red-500 hover:text-red-600  cursor-pointer" @click="
-                                    confirmDeleteUser(
-                                        user.id,
-                                        user.name,
-                                        user.username
-                                    )
-                                    ">
-                                    Delete
-                                </button>
+
+
+
+                                <Button icon="pi pi-pen-to-square" severity="info" variant="text" rounded
+                                    aria-label="Edit" @click="editUser(user.id)" />
+
+                                <Button icon="pi pi-shield" severity="warn" variant="text" rounded
+                                    aria-label="Change Password" @click="openChangePasswordModal(user)" />
+
+
+                                <Button icon="pi pi-trash" severity="danger" variant="text" rounded aria-label="Delete"
+                                    @click="
+                                        confirmDeleteUser(
+                                            user.id,
+                                            user.name,
+                                            user.username
+                                        )
+                                        " />
                             </TableDataCell>
+
                         </TableRow>
                     </template>
                 </Table>
@@ -95,12 +127,18 @@ const deleteUser = (userID) => {
                 <p class="mt-4 bg-slate-100 p-2 text-center text-red-700 font-semibold">
                     "{{ modalUserData.name }} / {{ modalUserData.username }}"
                 </p>
-                <div class="mt-6 flex space-x-4">
-                    <DangerButton @click="deleteUser(modalUserData.id)">
-                        Delete</DangerButton>
-                    <SecondaryButton @click="closeModal">Cancel</SecondaryButton>
+                <div class="mt-6 flex justify-end gap-3">
+                    <!-- <DangerButton @click="deleteRole(modalRoleData.id)">
+                        Delete</DangerButton> -->
+                    <Button label="Delete" severity="danger" raised @click="deleteUser(modalUserData.id)"
+                        size="small" />
+                    <Button label="Cancel" severity="secondary" @click="closeModal" size="small" />
+                    <!-- <SecondaryButton @click="closeModal">Cancel</SecondaryButton> -->
                 </div>
             </div>
         </Modal>
+
+        <ChangePasswordModal :show="showChangePasswordModal" :user="selectedUser" @close="closeChangePasswordModal"
+            @success="handlePasswordChangeSuccess" />
     </AdminLayout>
 </template>
