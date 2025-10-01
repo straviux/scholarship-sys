@@ -144,6 +144,14 @@ const clearFilter = () => {
     filter.municipality = null;
     filter.year_level = null;
     filter.remarks = null;
+    filter.date_from = null;
+    filter.date_to = null;
+    filter.records = 10;
+    // Clear URL params by reloading the page with no query params
+    router.get(route('profile.waitinglist'), {}, {
+        replace: true,
+        preserveScroll: true,
+    });
 }
 const sortBy = (column) => {
     if (column == 'name') {
