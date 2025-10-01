@@ -89,10 +89,10 @@ onMounted(fetchData);
         :placeholder="customPlaceholder" class="w-full" :filterFields="['name', 'shortname']">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
-                <div>{{ slotProps.value }}</div>
+                <div>{{ slotProps.value.shortname }}</div>
             </div>
             <span v-else>
-                <div class="flex itesm-start">{{ slotProps.placeholder }}</div>
+                <div class="flex items-start">{{ slotProps.placeholder }}</div>
             </span>
         </template>
         <template #option="slotProps">
