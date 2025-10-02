@@ -333,22 +333,31 @@ watch(showJpmColumns, (val) => {
                             <option value="5">5</option>
                         </select>
                     </div>
-                    <div class="text-gray-500 p-2">of {{ profiles_total }} result(s)</div>
+
                     <Divider layout="vertical" />
-                    <div class="flex gap-4">
+                    <div class="flex gap-4 items-center">
                         <div class="flex items-center gap-2">
                             <p>Program</p>
-                            <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="------" />
+                            <ProgramSelect v-model="filter.program" label="shortname"
+                                custom-placeholder="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                                size="small" />
                         </div>
-                        <div class="flex items-center gap-2">
-                            <p>Date Filed</p>
-                            <DatePicker v-model="filter.date_from" :manualInput="true" showButtonBar
-                                @clear-click="filter.date_from = null" />
+                        <p>Date Filed</p>
+
+                        <div class="flex items-center gap-2 w-32">
+
+                            <FloatLabel variant="on">
+                                <DatePicker v-model="filter.date_from" :manualInput="true" showButtonBar
+                                    @clear-click="filter.date_from = null" id="filter_from_date" size="small" />
+                                <label for="filter_from_date">From</label>
+                            </FloatLabel>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <p>To</p>
-                            <DatePicker v-model="filter.date_to" :manualInput="true" showButtonBar
-                                @clear-click="filter.date_to = null" />
+                        <div class="flex items-center gap-2 w-32">
+                            <FloatLabel variant="on">
+                                <DatePicker v-model="filter.date_to" :manualInput="true" showButtonBar
+                                    @clear-click="filter.date_to = null" id="filter_to_date" size="small" />
+                                <label for="filter_to_date">To</label>
+                            </FloatLabel>
                         </div>
                     </div>
                 </div>
@@ -380,19 +389,24 @@ watch(showJpmColumns, (val) => {
             </div>
 
 
-            <div class="flex gap-4 justify-end items-end mb-2">
-                <div class="text-normal text-gray-500 flex gap-2">Encoder: <p
-                        class="font-bold font-mono text-emerald-600 capitalize">{{
-                            userEncodedCount.name
-                        }}</p>
-                </div>-
-                <div class="text-normal text-gray-500 flex gap-2">Today: <p class="font-bold font-mono text-purple-600">
-                        {{
-                            userEncodedCount.today }}</p>
-                </div>-
-                <div class="text-normal text-gray-500 flex gap-2">Total: <p class="font-bold font-mono text-purple-600">
-                        {{
-                            userEncodedCount.total }}</p>
+            <div class="flex gap-4 justify-between items-center mb-2 bg-gray-100 p-2 rounded">
+                <div class="text-gray-500 p-2 font-semibold">{{ profiles_total }} record(s) found</div>
+                <div class="flex gap-4 text-sm">
+                    <div class="text-normal text-gray-500 flex gap-2">Encoder: <p
+                            class="font-bold font-mono text-emerald-600 capitalize">{{
+                                userEncodedCount.name
+                            }}</p>
+                    </div>-
+                    <div class="text-normal text-gray-500 flex gap-2">Today: <p
+                            class="font-bold font-mono text-purple-600">
+                            {{
+                                userEncodedCount.today }}</p>
+                    </div>-
+                    <div class="text-normal text-gray-500 flex gap-2">Total: <p
+                            class="font-bold font-mono text-purple-600">
+                            {{
+                                userEncodedCount.total }}</p>
+                    </div>
                 </div>
             </div>
 
