@@ -422,7 +422,7 @@ watch(showJpmColumns, (val) => {
                     <TableRow>
                         <TableHeaderCell
                             class="px-3 text-center bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600"
-                            colspan="2">
+                            colspan="3">
                             <p class="text-[11px]">Sequence</p>
                         </TableHeaderCell>
                         <TableHeaderCell @click="sortBy('name')"
@@ -497,10 +497,13 @@ watch(showJpmColumns, (val) => {
                 <template #default>
                     <!-- filter row -->
                     <TableRow class="bg-white">
-                        <TableDataCell class="px-3"><span class="text-[10px] text-gray-500">#</span>
+                        <TableDataCell class="px-3"><span class="text-[10px] text-gray-500">Prog</span>
                         </TableDataCell>
                         <TableDataCell class="px-3 border-collapse border-slate-400"><span
-                                class="text-[10px] text-gray-500">By Date</span></TableDataCell>
+                                class="text-[10px] text-gray-500">Cour</span></TableDataCell>
+                        <TableDataCell class="px-3 border-collapse border-slate-400"><span
+                                class="text-[10px] text-gray-500">Date</span></TableDataCell>
+
                         <TableDataCell class="border-collapse border-slate-400">
                             <div class="px-2">
                                 <InputText v-model="filter.name" placeholder="Search name" class="w-full"
@@ -574,8 +577,12 @@ watch(showJpmColumns, (val) => {
                             profile.sequence_number }}
                         </TableDataCell>
                         <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-500">{{
+                            profile.sequence_number_by_course || '-' }}
+                        </TableDataCell>
+                        <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-500">{{
                             profile.daily_sequence_number }}
                         </TableDataCell>
+
                         <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700 uppercase">
                             <div class="flex items-center gap-2 px-2">
                                 <figure>

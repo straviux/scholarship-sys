@@ -339,6 +339,7 @@ const cancelDelete = () => {
                 <template #header>
                     <TableRow>
                         <TableHeaderCell class="px-3">#</TableHeaderCell>
+                        <TableHeaderCell class="px-3 w-16">Seq# Course</TableHeaderCell>
                         <TableHeaderCell @click="sortBy('name')" class="cursor-pointer w-80">
                             <div class="flex items-center gap-2">
                                 <h4>Name</h4>
@@ -382,6 +383,7 @@ const cancelDelete = () => {
                 <template #default>
                     <!-- filter row -->
                     <TableRow>
+                        <TableDataCell class="px-3"></TableDataCell>
                         <TableDataCell class="px-3"></TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
                             <div class="px-2">
@@ -436,6 +438,10 @@ const cancelDelete = () => {
                     <TableRow class="hover:bg-gray-200" v-for="(profile, index) in profiles.data"
                         :key="'profile_' + profile.id" v-if="profiles.data && profiles.data.length">
                         <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-400">{{ index + 1 }}
+                        </TableDataCell>
+                        <TableDataCell
+                            class="px-3 w-16 border-collapse border-t border-slate-400 text-center font-bold text-blue-600">
+                            {{ profile.sequence_number_by_course || '-' }}
                         </TableDataCell>
                         <TableDataCell
                             class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
