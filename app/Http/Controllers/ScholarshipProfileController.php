@@ -134,10 +134,12 @@ class ScholarshipProfileController extends Controller
 
         // Add sequence_number to each profile by course
         $profiles->getCollection()->transform(function ($profile) use ($programId) {
-            // Get the course ID from the profile's scholarship grant
+            // Get the course ID and school ID from the profile's scholarship grant
             $courseId = null;
+            $schoolId = null;
             if ($profile->scholarshipGrant && count($profile->scholarshipGrant) > 0) {
                 $courseId = $profile->scholarshipGrant[0]->course_id ?? null;
+                $schoolId = $profile->scholarshipGrant[0]->school_id ?? null;
             }
 
             if ($courseId) {
@@ -160,6 +162,30 @@ class ScholarshipProfileController extends Controller
                 $profile->sequence_number_by_course = $rowIndex !== false ? $rowIndex + 1 : null;
             } else {
                 $profile->sequence_number_by_course = null;
+            }
+
+            // Add sequence number by school within course
+            if ($courseId && $schoolId) {
+                // Get all profile IDs for this course and school combination (and program if filtered)
+                $courseSchoolProfiles = ScholarshipProfile::with(['scholarshipGrant'])
+                    ->whereHas('scholarshipGrant', function ($q) use ($courseId, $schoolId, $programId) {
+                        $q->where('course_id', $courseId)
+                            ->where('school_id', $schoolId)
+                            ->whereNot('scholarship_status', 0)
+                            ->orderBy('date_filed', 'asc')
+                            ->orderBy('created_at', 'asc');
+                        if ($programId) {
+                            $q->where('program_id', $programId);
+                        }
+                    })
+                    ->orderBy('date_filed', 'asc')
+                    ->orderBy('created_at', 'asc')
+                    ->pluck('profile_id')->toArray();
+
+                $schoolIndex = array_search($profile->profile_id, $courseSchoolProfiles);
+                $profile->sequence_number_by_school_course = $schoolIndex !== false ? $schoolIndex + 1 : null;
+            } else {
+                $profile->sequence_number_by_school_course = null;
             }
 
             return $profile;
@@ -392,8 +418,10 @@ class ScholarshipProfileController extends Controller
 
             // Add sequence number by course
             $courseId = null;
+            $schoolId = null;
             if ($profile->scholarshipGrant && count($profile->scholarshipGrant) > 0) {
                 $courseId = $profile->scholarshipGrant[0]->course_id ?? null;
+                $schoolId = $profile->scholarshipGrant[0]->school_id ?? null;
             }
 
             if ($courseId) {
@@ -416,6 +444,30 @@ class ScholarshipProfileController extends Controller
                 $profile->sequence_number_by_course = $courseIndex !== false ? $courseIndex + 1 : null;
             } else {
                 $profile->sequence_number_by_course = null;
+            }
+
+            // Add sequence number by school within course
+            if ($courseId && $schoolId) {
+                // Get all profile IDs for this course and school combination (with scholarship_status = 0 for waiting list)
+                $courseSchoolProfiles = ScholarshipProfile::with(['scholarshipGrant'])
+                    ->whereHas('scholarshipGrant', function ($q) use ($courseId, $schoolId, $program_id) {
+                        $q->where('course_id', $courseId)
+                            ->where('school_id', $schoolId)
+                            ->where('scholarship_status', 0)
+                            ->orderBy('date_filed', 'asc')
+                            ->orderBy('created_at', 'asc');
+                        if ($program_id) {
+                            $q->where('program_id', $program_id);
+                        }
+                    })
+                    ->orderBy('date_filed', 'asc')
+                    ->orderBy('created_at', 'asc')
+                    ->pluck('profile_id')->toArray();
+
+                $schoolIndex = array_search($profile->profile_id, $courseSchoolProfiles);
+                $profile->sequence_number_by_school_course = $schoolIndex !== false ? $schoolIndex + 1 : null;
+            } else {
+                $profile->sequence_number_by_school_course = null;
             }
 
             return $profile;

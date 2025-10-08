@@ -80,6 +80,7 @@ const filter = useForm({
 const searchInput = ref(null);
 const selectedProfile = ref({});
 const isViewProfileOpen = ref(false);
+const isViewSequenceOpen = ref(false);
 const viewProfile = (profile) => {
     // console.log(profile);
     selectedProfile.value = profile;
@@ -87,6 +88,14 @@ const viewProfile = (profile) => {
 }
 const closeViewProfile = () => {
     isViewProfileOpen.value = false;
+}
+
+const viewSequence = (profile) => {
+    selectedProfile.value = profile;
+    isViewSequenceOpen.value = true;
+}
+const closeViewSequence = () => {
+    isViewSequenceOpen.value = false;
 }
 
 // const editProfile = (profile) => {
@@ -351,6 +360,7 @@ const cancelDelete = () => {
                     <TableRow>
                         <TableHeaderCell class="px-3">#</TableHeaderCell>
                         <TableHeaderCell class="px-3 w-16">Seq# Course</TableHeaderCell>
+                        <TableHeaderCell class="px-3 w-16">Seq# Sch+Cour</TableHeaderCell>
                         <TableHeaderCell @click="sortBy('name')" class="cursor-pointer w-80">
                             <div class="flex items-center gap-2">
                                 <h4>Name</h4>
@@ -394,6 +404,7 @@ const cancelDelete = () => {
                 <template #default>
                     <!-- filter row -->
                     <TableRow>
+                        <TableDataCell class="px-3"></TableDataCell>
                         <TableDataCell class="px-3"></TableDataCell>
                         <TableDataCell class="px-3"></TableDataCell>
                         <TableDataCell class="border-l border-collapse border-slate-400">
@@ -453,6 +464,10 @@ const cancelDelete = () => {
                         <TableDataCell
                             class="px-3 w-16 border-collapse border-t border-slate-400 text-center font-bold text-blue-600">
                             {{ profile.sequence_number_by_course || '-' }}
+                        </TableDataCell>
+                        <TableDataCell
+                            class="px-3 w-16 border-collapse border-t border-slate-400 text-center font-bold text-green-600">
+                            {{ profile.sequence_number_by_school_course || '-' }}
                         </TableDataCell>
                         <TableDataCell
                             class="border-collapse border-t border-l border-slate-400 text-gray-700 uppercase">
@@ -515,6 +530,10 @@ const cancelDelete = () => {
 
                         <TableDataCell class="border-collapse border-t border-l border-slate-400 text-gray-700">
                             <div class="flex space-x-6 justify-center">
+                                <button class="text-emerald-500 hover:text-emerald-400 flex cursor-pointer"
+                                    @click="viewSequence(profile)">
+                                    <i class="pi pi-sort-numeric-down"></i></button>
+
                                 <button class="text-gray-400 hover:text-blue-600 flex cursor-pointer"
                                     @click="viewProfile(profile)">
                                     <!-- <IdentificationIcon class="h-5 w-5 text-blue-400" /> -->
@@ -552,6 +571,94 @@ const cancelDelete = () => {
         <!-- VIEW PROFILE MODAL -->
         <ViewProfileModal :isOpen="isViewProfileOpen" :errors="props.errors" :profile="selectedProfile"
             @close="closeViewProfile" />
+
+        <!-- VIEW SEQUENCE MODAL -->
+        <div v-if="isViewSequenceOpen"
+            class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div class="bg-white rounded shadow-xl border p-8 w-full max-w-lg">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Profile Sequences</h2>
+                    <button @click="closeViewSequence" class="text-gray-500 hover:text-gray-700">
+                        <i class="pi pi-times text-lg"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Profile Info -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-gray-800 mb-2">Applicant Information</h3>
+                        <div class="text-sm">
+                            <div class="font-mono text-lg text-gray-900">
+                                {{ `${selectedProfile.last_name}, ${selectedProfile.first_name}
+                                ${selectedProfile.middle_name ||
+                                ''}` }}
+                            </div>
+                            <div class="text-gray-600 mt-1">
+                                {{ selectedProfile.scholarship_grant?.[0]?.course?.shortname }} •
+                                {{ selectedProfile.scholarship_grant?.[0]?.school?.shortname }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sequence Numbers -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-blue-600">
+                                {{ selectedProfile.sequence_number || '-' }}
+                            </div>
+                            <div class="text-sm text-blue-800 font-medium">Program Sequence</div>
+                            <div class="text-xs text-blue-600 mt-1">Overall sequence in program</div>
+                        </div>
+
+                        <div class="bg-purple-50 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-purple-600">
+                                {{ selectedProfile.sequence_number_by_course || '-' }}
+                            </div>
+                            <div class="text-sm text-purple-800 font-medium">Course Sequence</div>
+                            <div class="text-xs text-purple-600 mt-1">Sequence within course</div>
+                        </div>
+
+                        <div class="bg-orange-50 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-orange-600">
+                                {{ selectedProfile.daily_sequence_number || '-' }}
+                            </div>
+                            <div class="text-sm text-orange-800 font-medium">Daily Sequence</div>
+                            <div class="text-xs text-orange-600 mt-1">Sequence by date filed</div>
+                        </div>
+
+                        <div class="bg-green-50 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-green-600">
+                                {{ selectedProfile.sequence_number_by_school_course || '-' }}
+                            </div>
+                            <div class="text-sm text-green-800 font-medium">School+Course Sequence</div>
+                            <div class="text-xs text-green-600 mt-1">Sequence within school & course</div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Info -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-gray-700 mb-2">Filing Details</h4>
+                        <div class="text-sm text-gray-600 space-y-1">
+                            <div><span class="font-medium">Date Filed:</span> {{
+                                selectedProfile.scholarship_grant?.[0]?.date_filed ?
+                                    moment(selectedProfile.scholarship_grant[0].date_filed).format('MMMM DD, YYYY') : '-' }}
+                            </div>
+                            <div><span class="font-medium">Program:</span> {{
+                                selectedProfile.scholarship_grant?.[0]?.program?.shortname || '-' }}</div>
+                            <div><span class="font-medium">Year Level:</span> {{
+                                selectedProfile.scholarship_grant?.[0]?.year_level || '-' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end mt-6">
+                    <button @click="closeViewSequence"
+                        class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <!-- Delete Confirmation Dialog -->
         <div v-if="showDeleteConfirm" class="fixed inset-0 flex items-center justify-center z-50">

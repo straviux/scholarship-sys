@@ -29,6 +29,7 @@ import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
+import QuickViewModal from './Modal/QuickViewModal.vue';
 
 const { hasPermission } = usePermission();
 // import { usePage } from '@inertiajs/vue3'
@@ -86,12 +87,21 @@ const filter = useForm({
 const searchInput = ref(null);
 const selectedProfile = ref({});
 const isViewProfileOpen = ref(false);
+const isViewSequenceOpen = ref(false);
 const viewProfile = (profile) => {
     selectedProfile.value = profile;
     isViewProfileOpen.value = true;
 }
 const closeViewProfile = () => {
     isViewProfileOpen.value = false;
+}
+
+const viewSequence = (profile) => {
+    selectedProfile.value = profile;
+    isViewSequenceOpen.value = true;
+}
+const closeViewSequence = () => {
+    isViewSequenceOpen.value = false;
 }
 
 
@@ -415,11 +425,13 @@ watch(showJpmColumns, (val) => {
                 </div>
             </div>
 
-            <div class="flex justify-end mb-2" v-if="hasPermission('can-view-jpm')">
+            <div class="flex justify-end mb-2">
                 <button class="px-3 py-1 rounded bg-gray-700 text-white text-xs cursor-pointer"
-                    @click="showJpmColumns = !showJpmColumns">
+                    v-if="hasPermission('can-view-jpm')" @click="showJpmColumns = !showJpmColumns">
                     {{ showJpmColumns ? 'Hide JPM' : 'Show JPM' }}
                 </button>
+
+
             </div>
 
             <Table class="border-collapse border border-slate-100 bg-[#f1f1f1]" :loading="form.processing">
@@ -427,7 +439,7 @@ watch(showJpmColumns, (val) => {
                     <TableRow>
                         <TableHeaderCell
                             class="px-3 text-center bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600"
-                            colspan="3">
+                            colspan="1">
                             <p class="text-[11px]">Sequence</p>
                         </TableHeaderCell>
                         <TableHeaderCell @click="sortBy('name')"
@@ -502,12 +514,11 @@ watch(showJpmColumns, (val) => {
                 <template #default>
                     <!-- filter row -->
                     <TableRow class="bg-white">
-                        <TableDataCell class="px-3"><span class="text-[10px] text-gray-500">Prog</span>
-                        </TableDataCell>
+                        <!-- <TableDataCell class="px-3"></TableDataCell>
+                        <TableDataCell class="px-3 border-collapse border-slate-400"></TableDataCell>
+                        <TableDataCell class="px-3 border-collapse border-slate-400"></TableDataCell> -->
                         <TableDataCell class="px-3 border-collapse border-slate-400"><span
-                                class="text-[10px] text-gray-500">Cour</span></TableDataCell>
-                        <TableDataCell class="px-3 border-collapse border-slate-400"><span
-                                class="text-[10px] text-gray-500">Date</span></TableDataCell>
+                                class="text-[10px] text-gray-500">Sch/Cour</span></TableDataCell>
 
                         <TableDataCell class="border-collapse border-slate-400">
                             <div class="px-2">
@@ -578,7 +589,7 @@ watch(showJpmColumns, (val) => {
 
                     <TableRow class="hover:bg-gray-200 bg-white" v-for="(profile, index) in profiles.data"
                         :key="'profile_' + profile.id" v-if="profiles.data && profiles.data.length">
-                        <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-500">{{
+                        <!-- <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-500">{{
                             profile.sequence_number }}
                         </TableDataCell>
                         <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-500">{{
@@ -586,6 +597,10 @@ watch(showJpmColumns, (val) => {
                         </TableDataCell>
                         <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-500">{{
                             profile.daily_sequence_number }}
+                        </TableDataCell> -->
+                        <TableDataCell
+                            class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-400 font-bold">#{{
+                                profile.sequence_number_by_school_course || '-' }}
                         </TableDataCell>
 
                         <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700 uppercase">
@@ -710,6 +725,11 @@ watch(showJpmColumns, (val) => {
 
                         <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
                             <div class="flex gap-4 justify-center">
+                                <button class="text-indigo-500 hover:text-indigo-400 flex cursor-pointer"
+                                    @click="viewSequence(profile)">
+                                    <!-- <IdentificationIcon class="h-5 w-5 text-blue-400" /> -->
+                                    <i class="pi pi-hashtag"></i></button>
+
                                 <button class="text-emerald-500 hover:text-emerald-400 flex cursor-pointer"
                                     @click="addRemarks(profile)" v-if="hasPermission('can-view-jpm')">
                                     <!-- <IdentificationIcon class="h-5 w-5 text-blue-400" /> -->
@@ -726,10 +746,10 @@ watch(showJpmColumns, (val) => {
                                     class="text-purple-500 hover:text-purple-600 underline font-medium">
                                 <i class="pi pi-pen-to-square"></i></Link>
 
-                                <button class="text-gray-400 hover:text-blue-600 flex cursor-pointer"
+                                <button class="text-blue-400 hover:text-blue-600 flex cursor-pointer"
                                     @click="viewProfile(profile)">
                                     <!-- <IdentificationIcon class="h-5 w-5 text-blue-400" /> -->
-                                    <i class="pi pi-search"></i></button>
+                                    <i class="pi pi-id-card"></i></button>
                                 <button class="text-red-500 hover:text-red-700 flex cursor-pointer"
                                     v-if="hasPermission('delete-scholar-profile')" @click="deleteProfile(profile)">
                                     <i class="pi pi-trash"></i>
@@ -758,6 +778,9 @@ watch(showJpmColumns, (val) => {
         <!-- VIEW PROFILE MODAL -->
         <ViewProfileModal :isOpen="isViewProfileOpen" :errors="props.errors" :profile="selectedProfile"
             @close="closeViewProfile" />
+
+        <!-- Quick View Modal -->
+        <QuickViewModal :isOpen="isViewSequenceOpen" :profile="selectedProfile" @close="closeViewSequence" />
 
         <!-- Generate Report Modal -->
         <GenerateReportModal v-model:show="showReportModal" />
