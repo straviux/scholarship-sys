@@ -95,7 +95,7 @@ const closeViewProfile = () => {
 //     selectedProfile.value = profile;
 // }
 
-const filterList = () => {
+const filterList = (resetToPage1 = false) => {
     // Prepare filter values
     const program = filter.program?.id || "";
     const course = filter.course?.shortname?.toLowerCase() || "";
@@ -123,6 +123,14 @@ const filterList = () => {
         remarks,
         per_page, sort
     };
+
+    // Reset to page 1 if per_page changed, otherwise preserve current page
+    if (resetToPage1 && props.profiles && props.profiles.links) {
+        // Don't include page parameter to go to page 1
+    } else if (props.profiles && props.profiles.meta && props.profiles.meta.current_page > 1) {
+        params.page = props.profiles.meta.current_page;
+    }
+
     router.get(route('profile.index'), params, {
         preserveState: true,
         preserveScroll: true,
@@ -187,8 +195,11 @@ onBeforeUnmount(() => {
 
 
 watch(form, debounce(
-    () =>
-        filterList(),
+    (newForm, oldForm) => {
+        // Check if per_page specifically changed
+        const perPageChanged = oldForm && newForm.per_page !== oldForm.per_page;
+        filterList(perPageChanged);
+    },
     500
 ));
 watch(filter, debounce(

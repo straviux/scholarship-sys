@@ -95,7 +95,7 @@ const closeViewProfile = () => {
 }
 
 
-const filterList = () => {
+const filterList = (resetToPage1 = false) => {
     // Prepare filter values
     const program = filter.program?.shortname?.toLowerCase() || "";
     const parent_name = filter.parent_name.toLowerCase() || "";
@@ -112,8 +112,8 @@ const filterList = () => {
     let date_from = filter.date_from ? moment(filter.date_from).format('YYYY-MM-DD') : "";
     let date_to = filter.date_to ? moment(filter.date_to).format('YYYY-MM-DD') : "";
 
-    // Preserve current page if available
-    let currentPage = (props.profiles && props.profiles.meta && props.profiles.meta.current_page) ? props.profiles.meta.current_page : 1;
+    // Preserve current page if available, but reset to page 1 if records changed
+    let currentPage = resetToPage1 ? 1 : (props.profiles && props.profiles.meta && props.profiles.meta.current_page) ? props.profiles.meta.current_page : 1;
 
     const params = {};
     if (program) params.program = program;
@@ -202,10 +202,15 @@ onBeforeUnmount(() => {
 
 // Only trigger filterList from filter changes, not both form and filter
 let filterListTimeout = null;
-watch(filter, () => {
+let previousRecords = filter.records;
+
+watch(filter, (newFilter, oldFilter) => {
     if (filterListTimeout) clearTimeout(filterListTimeout);
     filterListTimeout = setTimeout(() => {
-        filterList();
+        // Check if records field specifically changed
+        const recordsChanged = newFilter.records !== previousRecords;
+        filterList(recordsChanged);
+        previousRecords = newFilter.records;
         filterListTimeout = null;
     }, 500);
 });
@@ -322,7 +327,7 @@ watch(showJpmColumns, (val) => {
                 <div class="flex gap-2 flex-1 items-center">
                     <div class="flex shadow-xs">
                         <div class="bg-gray-700 rounded-l-lg text-white p-2">Show</div>
-                        <select v-model="filter.records"
+                        <select v-model="filter.records" @change=""
                             class="w-[60px] rounded-r-lg border cursor-pointer text-center">
                             <option value="500">500</option>
                             <option value="200">200</option>
@@ -647,7 +652,7 @@ watch(showJpmColumns, (val) => {
                         <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
                             <div class="px-2 text-[11px] font-semibold">{{ profile.scholarship_grant[0]?.year_level ||
                                 '-'
-                            }}
+                                }}
                             </div>
                         </TableDataCell>
                         <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
