@@ -428,7 +428,8 @@ watch(showJpmColumns, (val) => {
             <div class="flex justify-between mb-2">
                 <Chip class="py-0 pl-0 pr-4" removable>
 
-                    <span class="ml-2 text-xs font-medium">PRIME</span>
+                    <span class="ml-2 text-xs font-medium text-gray-500">by default, sequence # is by -school per
+                        course-</span>
                 </Chip>
                 <button class="px-3 py-1 rounded bg-gray-700 text-white text-xs cursor-pointer"
                     v-if="hasPermission('can-view-jpm')" @click="showJpmColumns = !showJpmColumns">

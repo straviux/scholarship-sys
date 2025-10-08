@@ -12,6 +12,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -20,47 +21,66 @@ class DashboardController extends Controller
      */
     public function index(): Response
     {
-        // Get daily statistics for the current month
-        $dailyStats = $this->getDailyStatistics();
+        try {
+            // Get daily statistics for the current month
+            $dailyStats = $this->getDailyStatistics();
+            
+            // Get monthly statistics for the current year
+            $monthlyStats = $this->getMonthlyStatistics();
+            
+            // Get program distribution
+            $programDistribution = $this->getProgramDistribution();
+            
+            // Get course distribution
+            $courseDistribution = $this->getCourseDistribution();
+            
+            // Get status distribution
+            $statusDistribution = $this->getStatusDistribution();
+            
+            // Get school distribution
+            $schoolDistribution = $this->getSchoolDistribution();
+            
+            // Get recent statistics
+            $recentStats = $this->getRecentStatistics();
+            
+            // Get yearly trends
+            $yearlyTrends = $this->getYearlyTrends();
 
-        // Get monthly statistics for the current year
-        $monthlyStats = $this->getMonthlyStatistics();
-
-        // Get program distribution
-        $programDistribution = $this->getProgramDistribution();
-
-        // Get course distribution
-        $courseDistribution = $this->getCourseDistribution();
-
-        // Get status distribution
-        $statusDistribution = $this->getStatusDistribution();
-
-        // Get school distribution
-        $schoolDistribution = $this->getSchoolDistribution();
-
-        // Get recent statistics
-        $recentStats = $this->getRecentStatistics();
-
-        // Get yearly trends
-        $yearlyTrends = $this->getYearlyTrends();
-
-        return Inertia::render('Dashboard/Index', [
-            'dailyStats' => $dailyStats,
-            'monthlyStats' => $monthlyStats,
-            'programDistribution' => $programDistribution,
-            'courseDistribution' => $courseDistribution,
-            'statusDistribution' => $statusDistribution,
-            'schoolDistribution' => $schoolDistribution,
-            'recentStats' => $recentStats,
-            'yearlyTrends' => $yearlyTrends,
-            'dashboard_links' => [
-                'dashboard',
-                'scholar.index',
-            ]
-        ]);
-    }
-
-    /**
+            return Inertia::render('Dashboard/Index', [
+                'dailyStats' => $dailyStats,
+                'monthlyStats' => $monthlyStats,
+                'programDistribution' => $programDistribution,
+                'courseDistribution' => $courseDistribution,
+                'statusDistribution' => $statusDistribution,
+                'schoolDistribution' => $schoolDistribution,
+                'recentStats' => $recentStats,
+                'yearlyTrends' => $yearlyTrends,
+                'dashboard_links' => [
+                    'dashboard',
+                    'scholar.index',
+                ]
+            ]);
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            Log::error('Dashboard error: ' . $e->getMessage());
+            
+            // Return default empty data to prevent 500 error
+            return Inertia::render('Dashboard/Index', [
+                'dailyStats' => $this->getEmptyChartData(),
+                'monthlyStats' => $this->getEmptyChartData(),
+                'programDistribution' => $this->getEmptyPieChartData(),
+                'courseDistribution' => $this->getEmptyChartData(),
+                'statusDistribution' => $this->getEmptyPieChartData(),
+                'schoolDistribution' => $this->getEmptyChartData(),
+                'recentStats' => $this->getEmptyStats(),
+                'yearlyTrends' => $this->getEmptyChartData(),
+                'dashboard_links' => [
+                    'dashboard',
+                    'scholar.index',
+                ]
+            ]);
+        }
+    }    /**
      * Get daily statistics for current month
      */
     private function getDailyStatistics()
@@ -166,41 +186,52 @@ class DashboardController extends Controller
      */
     private function getProgramDistribution()
     {
-        $programData = ScholarshipRecord::join('courses', 'scholarship_records.course_id', '=', 'courses.id')
-            ->join('scholarship_programs', 'courses.scholarship_program_id', '=', 'scholarship_programs.id')
-            ->select('scholarship_programs.shortname as program', DB::raw('COUNT(*) as count'))
-            ->groupBy('scholarship_programs.id', 'scholarship_programs.shortname')
-            ->orderBy('count', 'desc')
-            ->get();
+        try {
+            $programData = ScholarshipRecord::join('courses', 'scholarship_records.course_id', '=', 'courses.id')
+                ->join('scholarship_programs', 'courses.scholarship_program_id', '=', 'scholarship_programs.id')
+                ->select('scholarship_programs.shortname as program', DB::raw('COUNT(*) as count'))
+                ->whereNotNull('scholarship_records.course_id')
+                ->whereNotNull('courses.scholarship_program_id')
+                ->groupBy('scholarship_programs.id', 'scholarship_programs.shortname')
+                ->orderBy('count', 'desc')
+                ->get();
 
-        return [
-            'labels' => $programData->pluck('program'),
-            'datasets' => [
-                [
-                    'data' => $programData->pluck('count'),
-                    'backgroundColor' => [
-                        '#FF6384',
-                        '#36A2EB',
-                        '#FFCE56',
-                        '#4BC0C0',
-                        '#9966FF',
-                        '#FF9F40',
-                        '#FF6384',
-                        '#C9CBCF'
-                    ],
-                    'hoverBackgroundColor' => [
-                        '#FF6384',
-                        '#36A2EB',
-                        '#FFCE56',
-                        '#4BC0C0',
-                        '#9966FF',
-                        '#FF9F40',
-                        '#FF6384',
-                        '#C9CBCF'
+            if ($programData->isEmpty()) {
+                return $this->getEmptyPieChartData();
+            }
+
+            return [
+                'labels' => $programData->pluck('program'),
+                'datasets' => [
+                    [
+                        'data' => $programData->pluck('count'),
+                        'backgroundColor' => [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF',
+                            '#FF9F40',
+                            '#FF6384',
+                            '#C9CBCF'
+                        ],
+                        'hoverBackgroundColor' => [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF',
+                            '#FF9F40',
+                            '#FF6384',
+                            '#C9CBCF'
+                        ]
                     ]
                 ]
-            ]
-        ];
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error in getProgramDistribution: ' . $e->getMessage());
+            return $this->getEmptyPieChartData();
+        }
     }
 
     /**
@@ -208,25 +239,35 @@ class DashboardController extends Controller
      */
     private function getCourseDistribution()
     {
-        $courseData = ScholarshipRecord::join('courses', 'scholarship_records.course_id', '=', 'courses.id')
-            ->select('courses.shortname as course', DB::raw('COUNT(*) as count'))
-            ->groupBy('courses.id', 'courses.shortname')
-            ->orderBy('count', 'desc')
-            ->limit(10)
-            ->get();
+        try {
+            $courseData = ScholarshipRecord::join('courses', 'scholarship_records.course_id', '=', 'courses.id')
+                ->select('courses.shortname as course', DB::raw('COUNT(*) as count'))
+                ->whereNotNull('scholarship_records.course_id')
+                ->groupBy('courses.id', 'courses.shortname')
+                ->orderBy('count', 'desc')
+                ->limit(10)
+                ->get();
 
-        return [
-            'labels' => $courseData->pluck('course'),
-            'datasets' => [
-                [
-                    'label' => 'Students',
-                    'data' => $courseData->pluck('count'),
-                    'backgroundColor' => 'rgba(54, 162, 235, 0.8)',
-                    'borderColor' => 'rgba(54, 162, 235, 1)',
-                    'borderWidth' => 1
+            if ($courseData->isEmpty()) {
+                return $this->getEmptyChartData();
+            }
+
+            return [
+                'labels' => $courseData->pluck('course'),
+                'datasets' => [
+                    [
+                        'label' => 'Students',
+                        'data' => $courseData->pluck('count'),
+                        'backgroundColor' => 'rgba(54, 162, 235, 0.8)',
+                        'borderColor' => 'rgba(54, 162, 235, 1)',
+                        'borderWidth' => 1
+                    ]
                 ]
-            ]
-        ];
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error in getCourseDistribution: ' . $e->getMessage());
+            return $this->getEmptyChartData();
+        }
     }
 
     /**
@@ -270,25 +311,35 @@ class DashboardController extends Controller
      */
     private function getSchoolDistribution()
     {
-        $schoolData = ScholarshipRecord::join('schools', 'scholarship_records.school_id', '=', 'schools.id')
-            ->select('schools.shortname as school', DB::raw('COUNT(*) as count'))
-            ->groupBy('schools.id', 'schools.shortname')
-            ->orderBy('count', 'desc')
-            ->limit(10)
-            ->get();
+        try {
+            $schoolData = ScholarshipRecord::join('schools', 'scholarship_records.school_id', '=', 'schools.id')
+                ->select('schools.shortname as school', DB::raw('COUNT(*) as count'))
+                ->whereNotNull('scholarship_records.school_id')
+                ->groupBy('schools.id', 'schools.shortname')
+                ->orderBy('count', 'desc')
+                ->limit(10)
+                ->get();
 
-        return [
-            'labels' => $schoolData->pluck('school'),
-            'datasets' => [
-                [
-                    'label' => 'Students',
-                    'data' => $schoolData->pluck('count'),
-                    'backgroundColor' => 'rgba(153, 102, 255, 0.8)',
-                    'borderColor' => 'rgba(153, 102, 255, 1)',
-                    'borderWidth' => 1
+            if ($schoolData->isEmpty()) {
+                return $this->getEmptyChartData();
+            }
+
+            return [
+                'labels' => $schoolData->pluck('school'),
+                'datasets' => [
+                    [
+                        'label' => 'Students',
+                        'data' => $schoolData->pluck('count'),
+                        'backgroundColor' => 'rgba(153, 102, 255, 0.8)',
+                        'borderColor' => 'rgba(153, 102, 255, 1)',
+                        'borderWidth' => 1
+                    ]
                 ]
-            ]
-        ];
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error in getSchoolDistribution: ' . $e->getMessage());
+            return $this->getEmptyChartData();
+        }
     }
 
     /**
@@ -296,22 +347,27 @@ class DashboardController extends Controller
      */
     private function getRecentStatistics()
     {
-        $today = Carbon::today();
-        $yesterday = Carbon::yesterday();
-        $thisWeek = Carbon::now()->startOfWeek();
-        $thisMonth = Carbon::now()->startOfMonth();
+        try {
+            $today = Carbon::today();
+            $yesterday = Carbon::yesterday();
+            $thisWeek = Carbon::now()->startOfWeek();
+            $thisMonth = Carbon::now()->startOfMonth();
 
-        return [
-            'today' => ScholarshipRecord::whereDate('date_filed', $today)->count(),
-            'yesterday' => ScholarshipRecord::whereDate('date_filed', $yesterday)->count(),
-            'thisWeek' => ScholarshipRecord::where('date_filed', '>=', $thisWeek)->count(),
-            'thisMonth' => ScholarshipRecord::where('date_filed', '>=', $thisMonth)->count(),
-            'total' => ScholarshipRecord::count(),
-            'totalProfiles' => ScholarshipProfile::count(),
-            'pendingApplications' => ScholarshipRecord::where('scholarship_status', 0)->count(),
-            'approvedApplications' => ScholarshipRecord::where('scholarship_status', 1)->count(),
-            'completedApplications' => ScholarshipRecord::where('scholarship_status', 2)->count()
-        ];
+            return [
+                'today' => ScholarshipRecord::whereDate('date_filed', $today)->count(),
+                'yesterday' => ScholarshipRecord::whereDate('date_filed', $yesterday)->count(),
+                'thisWeek' => ScholarshipRecord::where('date_filed', '>=', $thisWeek)->count(),
+                'thisMonth' => ScholarshipRecord::where('date_filed', '>=', $thisMonth)->count(),
+                'total' => ScholarshipRecord::count(),
+                'totalProfiles' => ScholarshipProfile::count(),
+                'pendingApplications' => ScholarshipRecord::where('scholarship_status', 0)->count(),
+                'approvedApplications' => ScholarshipRecord::where('scholarship_status', 1)->count(),
+                'completedApplications' => ScholarshipRecord::where('scholarship_status', 2)->count()
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error in getRecentStatistics: ' . $e->getMessage());
+            return $this->getEmptyStats();
+        }
     }
 
     /**
@@ -348,6 +404,60 @@ class DashboardController extends Controller
                     'fill' => false
                 ]
             ]
+        ];
+    }
+
+    /**
+     * Get empty chart data for error fallback
+     */
+    private function getEmptyChartData()
+    {
+        return [
+            'labels' => [],
+            'datasets' => [
+                [
+                    'label' => 'No Data',
+                    'data' => [],
+                    'backgroundColor' => 'rgba(200, 200, 200, 0.2)',
+                    'borderColor' => 'rgba(200, 200, 200, 1)',
+                    'borderWidth' => 1
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * Get empty pie chart data for error fallback
+     */
+    private function getEmptyPieChartData()
+    {
+        return [
+            'labels' => ['No Data'],
+            'datasets' => [
+                [
+                    'data' => [1],
+                    'backgroundColor' => ['rgba(200, 200, 200, 0.8)'],
+                    'hoverBackgroundColor' => ['rgba(200, 200, 200, 1)']
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * Get empty stats for error fallback
+     */
+    private function getEmptyStats()
+    {
+        return [
+            'today' => 0,
+            'yesterday' => 0,
+            'thisWeek' => 0,
+            'thisMonth' => 0,
+            'total' => 0,
+            'totalProfiles' => 0,
+            'pendingApplications' => 0,
+            'approvedApplications' => 0,
+            'completedApplications' => 0
         ];
     }
 }
