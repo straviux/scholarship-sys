@@ -425,7 +425,11 @@ watch(showJpmColumns, (val) => {
                 </div>
             </div>
 
-            <div class="flex justify-end mb-2">
+            <div class="flex justify-between mb-2">
+                <Chip class="py-0 pl-0 pr-4" removable>
+
+                    <span class="ml-2 text-xs font-medium">PRIME</span>
+                </Chip>
                 <button class="px-3 py-1 rounded bg-gray-700 text-white text-xs cursor-pointer"
                     v-if="hasPermission('can-view-jpm')" @click="showJpmColumns = !showJpmColumns">
                     {{ showJpmColumns ? 'Hide JPM' : 'Show JPM' }}
@@ -437,11 +441,11 @@ watch(showJpmColumns, (val) => {
             <Table class="border-collapse border border-slate-100 bg-[#f1f1f1]" :loading="form.processing">
                 <template #header>
                     <TableRow>
-                        <TableHeaderCell
+                        <!-- <TableHeaderCell
                             class="px-3 text-center bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600"
                             colspan="1">
                             <p class="text-[11px]">Sequence</p>
-                        </TableHeaderCell>
+                        </TableHeaderCell> -->
                         <TableHeaderCell @click="sortBy('name')"
                             class="cursor-pointer w-80 bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
                             <div class="flex items-center justify-between">
@@ -517,8 +521,8 @@ watch(showJpmColumns, (val) => {
                         <!-- <TableDataCell class="px-3"></TableDataCell>
                         <TableDataCell class="px-3 border-collapse border-slate-400"></TableDataCell>
                         <TableDataCell class="px-3 border-collapse border-slate-400"></TableDataCell> -->
-                        <TableDataCell class="px-3 border-collapse border-slate-400"><span
-                                class="text-[10px] text-gray-500">Sch/Cour</span></TableDataCell>
+                        <!-- <TableDataCell class="px-3 border-collapse border-slate-400"><span
+                                class="text-[10px] text-gray-500">Sch/Cour</span></TableDataCell> -->
 
                         <TableDataCell class="border-collapse border-slate-400">
                             <div class="px-2">
@@ -598,13 +602,15 @@ watch(showJpmColumns, (val) => {
                         <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-500">{{
                             profile.daily_sequence_number }}
                         </TableDataCell> -->
-                        <TableDataCell
+                        <!-- <TableDataCell
                             class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-400 font-bold">#{{
                                 profile.sequence_number_by_school_course || '-' }}
-                        </TableDataCell>
+                        </TableDataCell> -->
 
                         <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700 uppercase">
                             <div class="flex items-center gap-2 px-2">
+                                <span class="text-gray-400"> #{{
+                                    profile.sequence_number_by_school_course || '-' }}</span>
                                 <figure>
                                     <img v-if="profile.gender == 'M'" src="/images/male-avatar.png" alt="avatar"
                                         class="rounded-xl w-[28px]" />
