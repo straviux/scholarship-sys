@@ -4,6 +4,11 @@ import { Head } from '@inertiajs/vue3';
 import { ref, computed, onMounted } from 'vue';
 import Chart from 'primevue/chart';
 import Card from 'primevue/card';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
+// Register the plugin globally
+import { Chart as ChartJS } from 'chart.js';
+ChartJS.register(ChartDataLabels);
 
 const props = defineProps({
     dailyStats: Object,
@@ -40,6 +45,44 @@ const pieChartOptions = ref({
         legend: {
             position: 'right',
         },
+        datalabels: {
+            display: true,
+            color: 'white',
+            font: {
+                weight: 'bold',
+                size: 14
+            },
+            formatter: (value, context) => {
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${value}\n(${percentage}%)`;
+            },
+            textAlign: 'center'
+        }
+    }
+});
+
+const doughnutChartOptions = ref({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            position: 'right',
+        },
+        datalabels: {
+            display: true,
+            color: 'white',
+            font: {
+                weight: 'bold',
+                size: 12
+            },
+            formatter: (value, context) => {
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${value}\n(${percentage}%)`;
+            },
+            textAlign: 'center'
+        }
     }
 });
 
@@ -270,7 +313,7 @@ onMounted(() => {
                     </template>
                     <template #content>
                         <div class="h-80">
-                            <Chart type="doughnut" :data="statusDistribution" :options="pieChartOptions"
+                            <Chart type="doughnut" :data="statusDistribution" :options="doughnutChartOptions"
                                 class="h-full" />
                         </div>
                     </template>
