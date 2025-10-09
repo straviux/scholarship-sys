@@ -40,6 +40,20 @@ const overallTotal = computed(() => {
     return programTotal;
 });
 
+// Computed property for latest activity
+const latestActivity = computed(() => {
+    const latestActivityDate = props.reportData.user_summary.encoding_statistics.latest_activity_date;
+    const lastLogin = props.reportData.user_summary.basic_info.last_login;
+
+    // Use latest activity if available, otherwise fall back to last login
+    return latestActivityDate || lastLogin;
+});
+
+const activityLabel = computed(() => {
+    const latestActivityDate = props.reportData.user_summary.encoding_statistics.latest_activity_date;
+    return latestActivityDate ? 'Latest encoding activity' : 'Last login';
+});
+
 </script>
 
 <template>
@@ -148,10 +162,12 @@ const overallTotal = computed(() => {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
-                                    <span class="text-gray-600 font-medium">Last activity</span>
+                                    <span class="text-gray-600 font-medium">{{ activityLabel }}</span>
                                 </div>
-                                <span class="text-gray-900 font-semibold">{{
-                                    formatDate(reportData.user_summary.basic_info.last_login) }}</span>
+                                <span class="text-gray-900 font-semibold">
+                                    <span v-if="latestActivity">{{ formatDate(latestActivity) }}</span>
+                                    <span v-else class="text-gray-500 italic">No activity yet</span>
+                                </span>
                             </div>
                         </div>
                     </div>

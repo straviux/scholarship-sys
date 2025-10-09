@@ -585,6 +585,7 @@ class SystemReportController extends Controller
             'breakdowns' => $this->getUserBreakdownStatistics($userId),
             'monthly_activity' => $monthlyActivity,
             'first_encoding_date' => $this->getUserFirstEncodingDate($userId),
+            'latest_activity_date' => $this->getUserLatestActivity($userId),
         ];
     }
 
@@ -688,5 +689,39 @@ class SystemReportController extends Controller
             ->first();
 
         return $firstRecord?->created_at?->toDateTimeString();
+    }
+
+    /**
+     * Get user's latest activity date (either creating or updating records)
+     */
+    private function getUserLatestActivity(int $userId): ?string
+    {
+        // Get latest creation activity
+        $latestCreated = ScholarshipRecord::where('created_by', $userId)
+            ->orderBy('created_at', 'desc')
+            ->value('created_at');
+
+        // Get latest update activity
+        $latestUpdated = ScholarshipRecord::where('updated_by', $userId)
+            ->where('created_by', '!=', $userId) // Exclude records they created
+            ->orderBy('updated_at', 'desc')
+            ->value('updated_at');
+
+        // Return the most recent of the two
+        if (!$latestCreated && !$latestUpdated) {
+            return null;
+        }
+
+        if (!$latestCreated) {
+            return $latestUpdated->toDateTimeString();
+        }
+
+        if (!$latestUpdated) {
+            return $latestCreated->toDateTimeString();
+        }
+
+        return $latestCreated->gt($latestUpdated)
+            ? $latestCreated->toDateTimeString()
+            : $latestUpdated->toDateTimeString();
     }
 }
