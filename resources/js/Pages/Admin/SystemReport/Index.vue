@@ -5,7 +5,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900">System Status Report</h1>
-                    <p class="text-gray-600 mt-1">Generated on {{ formatDate(report.generated_at) }}</p>
+                    <p class="text-gray-600 mt-1">Generated on {{ report.generated_at }}</p>
                 </div>
                 <div class="flex gap-3">
                     <Button @click="refreshReport" :loading="loading" icon="pi pi-refresh" label="Refresh" />
@@ -47,7 +47,7 @@
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Approval Rate</p>
                                 <p class="text-2xl font-bold text-green-600">{{ report.executive_summary.approval_rate
-                                }}%</p>
+                                    }}%</p>
                             </div>
                             <i class="pi pi-check-circle text-3xl text-green-500"></i>
                         </div>
@@ -80,7 +80,7 @@
                         <div class="p-4 bg-red-50 rounded-lg border border-red-200">
                             <p class="text-sm text-red-600">Records without Programs</p>
                             <p class="text-xl font-bold text-red-700">{{ report.data_integrity.records_without_programs
-                            }}</p>
+                                }}</p>
                         </div>
                         <div class="p-4 bg-orange-50 rounded-lg border border-orange-200">
                             <p class="text-sm text-orange-600">Records without Courses</p>
@@ -95,7 +95,7 @@
                         <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
                             <p class="text-sm text-purple-600">Orphaned Requirements</p>
                             <p class="text-xl font-bold text-purple-700">{{ report.data_integrity.orphaned_requirements
-                            }}</p>
+                                }}</p>
                         </div>
                     </div>
                 </template>
@@ -393,9 +393,6 @@ const barChartOptions = {
     }
 }
 
-const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString()
-}
 
 const refreshReport = () => {
     loading.value = true

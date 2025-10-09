@@ -34,7 +34,10 @@ Route::middleware(['auth', 'role:administrator'])->group(function () {
     Route::get('/admin/system-report/export-json', [SystemReportController::class, 'exportJson'])->name('admin.system-report.export-json');
 });
 
-
+// User Profile Route - Display user account information
+Route::middleware(['auth'])->group(function () {
+    Route::get('/user/profile', [SystemReportController::class, 'getUserSummaryReport'])->name('user.profile');
+});
 
 Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->group(function () {
     Route::get('/profiles/generate-report', 'generateReport')->name('profile.generateReport');

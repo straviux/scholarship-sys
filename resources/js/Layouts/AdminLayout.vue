@@ -20,7 +20,8 @@ import {
     LockClosedIcon,
     ArrowRightStartOnRectangleIcon,
     TableCellsIcon,
-    ShieldExclamationIcon
+    ShieldExclamationIcon,
+    DocumentTextIcon
 } from "@heroicons/vue/20/solid";
 const toggleMenu = ref(false);
 const sidebarMinimized = ref(localStorage.getItem('sidebarMinimized') === 'true');
@@ -312,6 +313,13 @@ function toggleSidebarMinimized() {
                                 $page.props.auth.user.name }}</div>
                             <ul tabindex="0"
                                 class="menu dropdown-content bg-base-100 rounded-box z-1 mt-4 w-52 p-2 shadow-sm">
+                                <li>
+                                    <Link class="px-2 py-3 flex items-center space-x-2 group"
+                                        :href="route('user.profile')">
+                                    <DocumentTextIcon class="h-4 w-4" />
+                                    <span>User Profile</span>
+                                    </Link>
+                                </li>
                                 <li>
                                     <Link class="px-2 py-3 flex items-center space-x-2 group" :href="route('logout')"
                                         method="post" as="button">

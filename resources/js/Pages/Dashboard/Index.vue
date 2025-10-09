@@ -171,7 +171,8 @@ onMounted(() => {
             <div class="flex justify-between items-end gap-2">
                 <h1 class="text-2xl text-white">Dashboard</h1>
                 <div class="text-sm text-white">
-                    {{ new Date().toLocaleDateString('en-US', {
+                    {{ new Date().toLocaleDateString('en-PH', {
+                        timeZone: 'Asia/Manila',
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric'

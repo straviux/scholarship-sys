@@ -453,4 +453,196 @@ class SystemReportController extends Controller
         return response()->json($report)
             ->header('Content-Disposition', 'attachment; filename="system-report-' . now()->format('Y-m-d-H-i-s') . '.json"');
     }
+
+    /**
+     * Display encoded summary report for logged-in user
+     */
+    public function getUserSummaryReport(Request $request): Response
+    {
+        $user = $request->user();
+
+        // Generate user-specific summary
+        $userSummary = $this->generateUserSummaryData($user);
+
+        // Encode the summary (base64 for simplicity, could use other encoding methods)
+        $encodedSummary = base64_encode(json_encode($userSummary));
+
+        $reportData = [
+            'user_summary' => $userSummary,
+            'encoded_summary' => $encodedSummary,
+            'generated_at' => now()->toDateTimeString(),
+            'user_id' => $user->id,
+            'user_name' => $user->name
+        ];
+
+        return Inertia::render('User/UserProfile', [
+            'reportData' => $reportData
+        ]);
+    }
+
+    /**
+     * Generate user-specific summary data
+     */
+    private function generateUserSummaryData(User $user): array
+    {
+        // Get user's role information
+        $userRoles = $user->getRoleNames()->toArray();
+        $userPermissions = $user->getAllPermissions()->pluck('name')->toArray();
+
+        // Basic user statistics
+        $userStats = [
+            'basic_info' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'username' => $user->username,
+                'created_at' => $user->created_at->toDateTimeString(),
+                'roles' => $userRoles,
+                'permissions_count' => count($userPermissions),
+                'last_login' => $user->updated_at->toDateTimeString(), // Approximation
+            ],
+            'system_access' => [
+                'can_view_dashboard' => $user->can('view dashboard') || in_array('administrator', $userRoles) || in_array('moderator', $userRoles),
+                'can_manage_scholarships' => $user->hasPermissionTo('manage-scholarship-programs') ?? false,
+                'can_view_reports' => in_array('administrator', $userRoles),
+                'access_level' => $this->getUserAccessLevel($userRoles),
+            ],
+            'encoding_statistics' => $this->getUserEncodingStatistics($user)
+        ];
+
+        // If user has higher privileges, include more detailed stats
+        if (in_array('administrator', $userRoles) || in_array('moderator', $userRoles)) {
+            $userStats['privileged_access'] = [
+                'total_scholarship_records' => ScholarshipRecord::count(),
+                'total_profiles' => ScholarshipProfile::count(),
+                'total_programs' => ScholarshipProgram::count(),
+                'system_users' => User::count(),
+                'report_generated_by' => 'privileged_user'
+            ];
+        }
+
+        return $userStats;
+    }
+
+    /**
+     * Determine user access level based on roles
+     */
+    private function getUserAccessLevel(array $roles): string
+    {
+        if (in_array('administrator', $roles)) {
+            return 'full_admin';
+        } elseif (in_array('moderator', $roles)) {
+            return 'moderator';
+        } elseif (in_array('user', $roles)) {
+            return 'basic_user';
+        } else {
+            return 'guest';
+        }
+    }
+
+    /**
+     * Get user-specific encoding statistics
+     */
+    private function getUserEncodingStatistics(User $user): array
+    {
+        $userId = $user->id;
+
+        // Get scholarship applications created by this user
+        $applicationsCreated = ScholarshipRecord::where('created_by', $userId)->count();
+
+        // Get applications updated by this user, but exclude those they also created
+        // (if user created and updated same record, count only as created)
+        $applicationsUpdated = ScholarshipRecord::where('updated_by', $userId)
+            ->where('created_by', '!=', $userId)
+            ->count();
+
+        // Get recent activity (current month) - only count created applications
+        $recentApplications = ScholarshipRecord::where('created_by', $userId)
+            ->where('created_at', '>=', now()->startOfMonth())->count();
+
+        // Get most active months for this user
+        $monthlyActivity = ScholarshipRecord::where('created_by', $userId)
+            ->select(DB::raw('YEAR(created_at) as year'), DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as count'))
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->limit(12)
+            ->get()
+            ->toArray();
+
+        return [
+            'applications' => [
+                'total_created' => $applicationsCreated,
+                'total_updated' => $applicationsUpdated,
+                'recent_created' => $recentApplications,
+            ],
+            'summary' => [
+                'total_encoded' => $applicationsCreated,
+                'total_contributions' => $applicationsCreated + $applicationsUpdated,
+                'recent_activity' => $recentApplications,
+            ],
+            'breakdowns' => $this->getUserBreakdownStatistics($userId),
+            'monthly_activity' => $monthlyActivity,
+            'first_encoding_date' => $this->getUserFirstEncodingDate($userId),
+        ];
+    }
+
+    /**
+     * Get breakdown statistics for user's applications
+     */
+    private function getUserBreakdownStatistics(int $userId): array
+    {
+        // Get program breakdown
+        $programBreakdown = ScholarshipRecord::where('scholarship_records.created_by', $userId)
+            ->leftJoin('scholarship_programs', 'scholarship_records.program_id', '=', 'scholarship_programs.id')
+            ->select(
+                DB::raw('COALESCE(scholarship_programs.name, "No Program") as program_name'),
+                DB::raw('count(*) as count')
+            )
+            ->groupBy('scholarship_programs.name')
+            ->orderBy('count', 'desc')
+            ->get()
+            ->toArray();
+
+        // Get course breakdown
+        $courseBreakdown = ScholarshipRecord::where('scholarship_records.created_by', $userId)
+            ->leftJoin('courses', 'scholarship_records.course_id', '=', 'courses.id')
+            ->select(
+                DB::raw('COALESCE(courses.name, "No Course") as course_name'),
+                DB::raw('count(*) as count')
+            )
+            ->groupBy('courses.name')
+            ->orderBy('count', 'desc')
+            ->get()
+            ->toArray();
+
+        // Get school breakdown
+        $schoolBreakdown = ScholarshipRecord::where('scholarship_records.created_by', $userId)
+            ->leftJoin('schools', 'scholarship_records.school_id', '=', 'schools.id')
+            ->select(
+                DB::raw('COALESCE(schools.name, "No School") as school_name'),
+                DB::raw('count(*) as count')
+            )
+            ->groupBy('schools.name')
+            ->orderBy('count', 'desc')
+            ->get()
+            ->toArray();
+
+        return [
+            'by_program' => $programBreakdown,
+            'by_course' => $courseBreakdown,
+            'by_school' => $schoolBreakdown,
+        ];
+    }
+
+    /**
+     * Get the date of user's first encoding activity
+     */
+    private function getUserFirstEncodingDate(int $userId): ?string
+    {
+        $firstRecord = ScholarshipRecord::where('created_by', $userId)
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        return $firstRecord?->created_at?->toDateTimeString();
+    }
 }
