@@ -515,6 +515,8 @@ class SystemReportController extends Controller
                 'total_scholarship_records' => ScholarshipRecord::count(),
                 'total_profiles' => ScholarshipProfile::count(),
                 'total_programs' => ScholarshipProgram::count(),
+                'total_courses' => Course::count(),
+                'total_schools' => School::count(),
                 'system_users' => User::count(),
                 'report_generated_by' => 'privileged_user'
             ];
@@ -591,7 +593,7 @@ class SystemReportController extends Controller
      */
     private function getUserBreakdownStatistics(int $userId): array
     {
-        // Get program breakdown
+        // Get program breakdown (all time)
         $programBreakdown = ScholarshipRecord::where('scholarship_records.created_by', $userId)
             ->leftJoin('scholarship_programs', 'scholarship_records.program_id', '=', 'scholarship_programs.id')
             ->select(
@@ -603,7 +605,20 @@ class SystemReportController extends Controller
             ->get()
             ->toArray();
 
-        // Get course breakdown
+        // Get program breakdown (current month)
+        $programBreakdownCurrentMonth = ScholarshipRecord::where('scholarship_records.created_by', $userId)
+            ->where('scholarship_records.created_at', '>=', now()->startOfMonth())
+            ->leftJoin('scholarship_programs', 'scholarship_records.program_id', '=', 'scholarship_programs.id')
+            ->select(
+                DB::raw('COALESCE(scholarship_programs.name, "No Program") as program_name'),
+                DB::raw('count(*) as count')
+            )
+            ->groupBy('scholarship_programs.name')
+            ->orderBy('count', 'desc')
+            ->get()
+            ->toArray();
+
+        // Get course breakdown (all time)
         $courseBreakdown = ScholarshipRecord::where('scholarship_records.created_by', $userId)
             ->leftJoin('courses', 'scholarship_records.course_id', '=', 'courses.id')
             ->select(
@@ -615,8 +630,34 @@ class SystemReportController extends Controller
             ->get()
             ->toArray();
 
-        // Get school breakdown
+        // Get course breakdown (current month)
+        $courseBreakdownCurrentMonth = ScholarshipRecord::where('scholarship_records.created_by', $userId)
+            ->where('scholarship_records.created_at', '>=', now()->startOfMonth())
+            ->leftJoin('courses', 'scholarship_records.course_id', '=', 'courses.id')
+            ->select(
+                DB::raw('COALESCE(courses.name, "No Course") as course_name'),
+                DB::raw('count(*) as count')
+            )
+            ->groupBy('courses.name')
+            ->orderBy('count', 'desc')
+            ->get()
+            ->toArray();
+
+        // Get school breakdown (all time)
         $schoolBreakdown = ScholarshipRecord::where('scholarship_records.created_by', $userId)
+            ->leftJoin('schools', 'scholarship_records.school_id', '=', 'schools.id')
+            ->select(
+                DB::raw('COALESCE(schools.name, "No School") as school_name'),
+                DB::raw('count(*) as count')
+            )
+            ->groupBy('schools.name')
+            ->orderBy('count', 'desc')
+            ->get()
+            ->toArray();
+
+        // Get school breakdown (current month)
+        $schoolBreakdownCurrentMonth = ScholarshipRecord::where('scholarship_records.created_by', $userId)
+            ->where('scholarship_records.created_at', '>=', now()->startOfMonth())
             ->leftJoin('schools', 'scholarship_records.school_id', '=', 'schools.id')
             ->select(
                 DB::raw('COALESCE(schools.name, "No School") as school_name'),
@@ -631,6 +672,9 @@ class SystemReportController extends Controller
             'by_program' => $programBreakdown,
             'by_course' => $courseBreakdown,
             'by_school' => $schoolBreakdown,
+            'by_program_current_month' => $programBreakdownCurrentMonth,
+            'by_course_current_month' => $courseBreakdownCurrentMonth,
+            'by_school_current_month' => $schoolBreakdownCurrentMonth,
         ];
     }
 

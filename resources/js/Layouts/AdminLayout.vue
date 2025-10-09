@@ -51,7 +51,8 @@ function toggleSidebarMinimized() {
                 <ul v-if="!sidebarMinimized"
                     class="menu space-y-6 md:space-y-4 mt-8 text-normal md:text-sm w-full text-gray-300 hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block h-[calc(100vh-160px)]">
                     <li>
-                        <SidebarLink :href="route('dashboard')" :active="route().current('dashboard')">
+                        <SidebarLink :href="route('dashboard')"
+                            :active="route().current('dashboard') || route().current('home') || route().current('index')">
                             <Squares2X2Icon class="h-5 w-5 mr-2" />
                             <span class="font-medium">Dashboard</span>
                         </SidebarLink>
@@ -170,7 +171,8 @@ function toggleSidebarMinimized() {
                 <ul v-else
                     class="menu space-y-4 mt-8 w-full text-gray-300 hover:text-gray-50 items-center min-h-0 min-w-0 block h-[calc(100vh-160px)] overflow-y-auto overflow-x-hidden">
                     <li>
-                        <SidebarLink :href="route('dashboard')" :active="route().current('dashboard')"
+                        <SidebarLink :href="route('dashboard')"
+                            :active="route().current('dashboard') || route().current('index')"
                             class="flex flex-col justify-center text-center">
 
                             <Squares2X2Icon class="h-6 w-6" />

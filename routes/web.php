@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 // This file is part of the routes/web.php file for the Laravel application.
 Route::middleware('auth')->group(function () {
-    Route::get('/', [DashboardController::class, 'index']);
+    Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 

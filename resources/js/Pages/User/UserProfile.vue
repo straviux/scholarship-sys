@@ -2,7 +2,7 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import Card from 'primevue/card';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useDateUtils } from '@/composables/dateUtils.js';
 
 const { formatDate } = useDateUtils();
@@ -11,18 +11,35 @@ const props = defineProps({
     reportData: Object
 });
 
-const downloadAsFile = () => {
-    const dataStr = JSON.stringify(props.reportData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `user-profile-${props.reportData.user_name}-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-};
+// Checkbox for current month filter
+const showCurrentMonthOnly = ref(false);
+
+// Computed properties for filtering data
+const filteredProgramData = computed(() => {
+    return showCurrentMonthOnly.value
+        ? props.reportData.user_summary.encoding_statistics.breakdowns.by_program_current_month
+        : props.reportData.user_summary.encoding_statistics.breakdowns.by_program;
+});
+
+const filteredCourseData = computed(() => {
+    return showCurrentMonthOnly.value
+        ? props.reportData.user_summary.encoding_statistics.breakdowns.by_course_current_month
+        : props.reportData.user_summary.encoding_statistics.breakdowns.by_course;
+});
+
+const filteredSchoolData = computed(() => {
+    return showCurrentMonthOnly.value
+        ? props.reportData.user_summary.encoding_statistics.breakdowns.by_school_current_month
+        : props.reportData.user_summary.encoding_statistics.breakdowns.by_school;
+});
+
+// Computed total for all breakdown categories
+const overallTotal = computed(() => {
+    // Use just one total since program, course, and school are different views of the same records
+    const programTotal = filteredProgramData.value.reduce((sum, item) => sum + item.count, 0);
+    return programTotal;
+});
+
 </script>
 
 <template>
@@ -311,15 +328,28 @@ const downloadAsFile = () => {
 
                 <!-- Application Breakdown Statistics -->
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                                </path>
-                            </svg>
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">Application Breakdown</h3>
+                                <p class="text-sm text-orange-600 font-medium">Total: {{ overallTotal }}</p>
+                            </div>
                         </div>
-                        <h3 class="text-lg font-semibold text-gray-900">Application Breakdown</h3>
+
+                        <!-- Filter Checkbox -->
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="showCurrentMonthOnly"
+                                class="form-checkbox h-4 w-4 text-orange-600 transition duration-150 ease-in-out" />
+                            <span class="ml-2 text-sm font-medium text-gray-700">This Month Only</span>
+                        </label>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -336,10 +366,8 @@ const downloadAsFile = () => {
                                 </div>
                                 By Program
                             </h4>
-                            <div v-if="reportData.user_summary.encoding_statistics.breakdowns.by_program.length > 0"
-                                class="space-y-3 max-h-60 overflow-y-auto">
-                                <div v-for="item in reportData.user_summary.encoding_statistics.breakdowns.by_program"
-                                    :key="item.program_name"
+                            <div v-if="filteredProgramData.length > 0" class="space-y-3 max-h-60 overflow-y-auto">
+                                <div v-for="item in filteredProgramData" :key="item.program_name"
                                     class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
                                     <div class="flex items-center">
                                         <div class="w-2 h-2 rounded-full bg-blue-500 mr-3"></div>
@@ -351,27 +379,28 @@ const downloadAsFile = () => {
                                 </div>
                             </div>
                             <div v-else class="text-center text-gray-500 py-4">
-                                No applications encoded yet
+                                {{ showCurrentMonthOnly ? 'No applications this month' : 'No applications encoded yet'
+                                }}
                             </div>
                         </div>
 
                         <!-- By Course -->
                         <div class="bg-gray-50 rounded-xl p-6">
                             <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                <div class="w-6 h-6 bg-green-500 rounded-md flex items-center justify-center mr-2">
-                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253">
-                                        </path>
-                                    </svg>
+                                <div class="flex items-center">
+                                    <div class="w-6 h-6 bg-green-500 rounded-md flex items-center justify-center mr-2">
+                                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                    By Course
                                 </div>
-                                By Course
                             </h4>
-                            <div v-if="reportData.user_summary.encoding_statistics.breakdowns.by_course.length > 0"
-                                class="space-y-3 max-h-60 overflow-y-auto">
-                                <div v-for="item in reportData.user_summary.encoding_statistics.breakdowns.by_course"
-                                    :key="item.course_name"
+                            <div v-if="filteredCourseData.length > 0" class="space-y-3 max-h-60 overflow-y-auto">
+                                <div v-for="item in filteredCourseData" :key="item.course_name"
                                     class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
                                     <div class="flex items-center">
                                         <div class="w-2 h-2 rounded-full bg-green-500 mr-3"></div>
@@ -383,7 +412,8 @@ const downloadAsFile = () => {
                                 </div>
                             </div>
                             <div v-else class="text-center text-gray-500 py-4">
-                                No applications encoded yet
+                                {{ showCurrentMonthOnly ? 'No applications this month' : 'No applications encoded yet'
+                                }}
                             </div>
                         </div>
 
@@ -400,10 +430,8 @@ const downloadAsFile = () => {
                                 </div>
                                 By School
                             </h4>
-                            <div v-if="reportData.user_summary.encoding_statistics.breakdowns.by_school.length > 0"
-                                class="space-y-3 max-h-60 overflow-y-auto">
-                                <div v-for="item in reportData.user_summary.encoding_statistics.breakdowns.by_school"
-                                    :key="item.school_name"
+                            <div v-if="filteredSchoolData.length > 0" class="space-y-3 max-h-60 overflow-y-auto">
+                                <div v-for="item in filteredSchoolData" :key="item.school_name"
                                     class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
                                     <div class="flex items-center">
                                         <div class="w-2 h-2 rounded-full bg-purple-500 mr-3"></div>
@@ -415,7 +443,8 @@ const downloadAsFile = () => {
                                 </div>
                             </div>
                             <div v-else class="text-center text-gray-500 py-4">
-                                No applications encoded yet
+                                {{ showCurrentMonthOnly ? 'No applications this month' : 'No applications encoded yet'
+                                }}
                             </div>
                         </div>
                     </div>
@@ -438,7 +467,7 @@ const downloadAsFile = () => {
                             View</span>
                     </div>
 
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-6">
                         <div
                             class="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
                             <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-3">
@@ -492,14 +521,29 @@ const downloadAsFile = () => {
                                 class="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mx-auto mb-3">
                                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z">
+                                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253">
                                     </path>
                                 </svg>
                             </div>
                             <div class="text-2xl font-bold text-orange-600 mb-1">
-                                {{ reportData.user_summary.privileged_access.system_users }}
+                                {{ reportData.user_summary.privileged_access.total_courses }}
                             </div>
-                            <div class="text-sm text-orange-700 font-medium">System Users</div>
+                            <div class="text-sm text-orange-700 font-medium">Active Courses</div>
+                        </div>
+
+                        <div
+                            class="text-center p-6 bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl border border-teal-200">
+                            <div class="w-12 h-12 bg-teal-500 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold text-teal-600 mb-1">
+                                {{ reportData.user_summary.privileged_access.total_schools }}
+                            </div>
+                            <div class="text-sm text-teal-700 font-medium">Active Schools</div>
                         </div>
                     </div>
                 </div>
