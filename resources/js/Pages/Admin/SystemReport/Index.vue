@@ -1,4 +1,6 @@
 <template>
+
+    <Head title="System Status" />
     <AdminLayout title="System Status Report">
         <div class="p-6 space-y-6">
             <!-- Header -->
@@ -290,8 +292,9 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { router, Head } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
+// import  from '@inertiajs/vue3'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Chart from 'primevue/chart'
