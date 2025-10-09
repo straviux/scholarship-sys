@@ -14,13 +14,11 @@ const props = defineProps({
     dailyStats: Object,
     monthlyStats: Object,
     programDistribution: Object,
-    courseDistribution: Object,
     statusDistribution: Object,
-    schoolDistribution: Object,
-    courseDistributionPie: Object,
-    schoolDistributionPie: Object,
     recentStats: Object,
     yearlyTrends: Object,
+    geographicDistribution: Object,
+    academicAnalysis: Object,
     dashboard_links: Array
 });
 
@@ -299,8 +297,8 @@ onMounted(() => {
                 </Card>
             </div>
 
-            <!-- Charts Row 1 -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Charts Row 1 - Time-based Analytics -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Daily Statistics -->
                 <Card class="shadow-sm">
                     <template #header>
@@ -327,6 +325,21 @@ onMounted(() => {
                     <template #content>
                         <div class="h-80">
                             <Chart type="bar" :data="monthlyStats" :options="chartOptions" class="h-full" />
+                        </div>
+                    </template>
+                </Card>
+
+                <!-- Yearly Trends -->
+                <Card class="shadow-sm">
+                    <template #header>
+                        <div class="flex justify-between items-center p-4 border-b">
+                            <h3 class="text-lg font-semibold text-gray-800">Yearly Trends</h3>
+                            <i class="pi pi-chart-line text-gray-400"></i>
+                        </div>
+                    </template>
+                    <template #content>
+                        <div class="h-80">
+                            <Chart type="line" :data="yearlyTrends" :options="chartOptions" class="h-full" />
                         </div>
                     </template>
                 </Card>
@@ -366,83 +379,107 @@ onMounted(() => {
                 </Card>
             </div>
 
-            <!-- Charts Row 3 -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Top Courses -->
-                <Card class="shadow-sm">
-                    <template #header>
-                        <div class="flex justify-between items-center p-4 border-b">
-                            <h3 class="text-lg font-semibold text-gray-800">Top 10 Courses</h3>
-                            <i class="pi pi-chart-bar text-gray-400"></i>
-                        </div>
-                    </template>
-                    <template #content>
-                        <div class="h-80">
-                            <Chart type="bar" :data="courseDistribution" :options="barChartOptions" class="h-full" />
-                        </div>
-                    </template>
-                </Card>
+        </div>
 
-                <!-- Top Schools -->
-                <Card class="shadow-sm">
-                    <template #header>
-                        <div class="flex justify-between items-center p-4 border-b">
-                            <h3 class="text-lg font-semibold text-gray-800">Top 10 Schools</h3>
-                            <i class="pi pi-chart-bar text-gray-400"></i>
-                        </div>
-                    </template>
-                    <template #content>
-                        <div class="h-80">
-                            <Chart type="bar" :data="schoolDistribution" :options="barChartOptions" class="h-full" />
-                        </div>
-                    </template>
-                </Card>
-            </div>
-
-            <!-- Charts Row 4 - Pie Charts -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Course Distribution Pie Chart -->
-                <Card class="shadow-sm">
-                    <template #header>
-                        <div class="flex justify-between items-center p-4 border-b">
-                            <h3 class="text-lg font-semibold text-gray-800">Course Distribution</h3>
-                            <i class="pi pi-chart-pie text-gray-400"></i>
-                        </div>
-                    </template>
-                    <template #content>
-                        <div class="h-80">
-                            <Chart type="pie" :data="courseDistributionPie" :options="pieChartOptions" class="h-full" />
-                        </div>
-                    </template>
-                </Card>
-
-                <!-- School Distribution Pie Chart -->
-                <Card class="shadow-sm">
-                    <template #header>
-                        <div class="flex justify-between items-center p-4 border-b">
-                            <h3 class="text-lg font-semibold text-gray-800">School Distribution</h3>
-                            <i class="pi pi-chart-pie text-gray-400"></i>
-                        </div>
-                    </template>
-                    <template #content>
-                        <div class="h-80">
-                            <Chart type="pie" :data="schoolDistributionPie" :options="pieChartOptions" class="h-full" />
-                        </div>
-                    </template>
-                </Card>
-            </div>
-
-            <!-- Yearly Trends -->
+        <!-- Geographic Distribution Section -->
+        <div class="grid grid-cols-1 gap-6 mt-6">
             <Card class="shadow-sm">
                 <template #header>
                     <div class="flex justify-between items-center p-4 border-b">
-                        <h3 class="text-lg font-semibold text-gray-800">Yearly Trends</h3>
-                        <i class="pi pi-chart-line text-gray-400"></i>
+                        <h3 class="text-lg font-semibold text-gray-800">Geographic Distribution</h3>
+                        <i class="pi pi-map-marker text-gray-400"></i>
                     </div>
                 </template>
                 <template #content>
-                    <div class="h-80">
-                        <Chart type="line" :data="yearlyTrends" :options="chartOptions" class="h-full" />
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold mb-3">Top Municipalities</h4>
+                            <div class="space-y-2 max-h-64 overflow-y-auto">
+                                <div v-for="item in geographicDistribution.by_municipality" :key="item.municipality"
+                                    class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                    <span class="text-sm">{{ item.municipality }}</span>
+                                    <div class="text-right">
+                                        <span class="font-semibold text-blue-600">{{ item.count }}</span>
+                                        <div class="text-xs text-gray-500">
+                                            {{((item.count / geographicDistribution.by_municipality.reduce((sum, m) =>
+                                                sum + m.count, 0)) * 100).toFixed(1)}}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold mb-3">Top Schools</h4>
+                            <div class="space-y-2 max-h-64 overflow-y-auto">
+                                <div v-for="item in geographicDistribution.by_school" :key="item.school_name"
+                                    class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                    <div>
+                                        <div class="text-sm font-medium">{{ item.school_name }}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="font-semibold text-green-600">{{ item.count }}</span>
+                                        <div class="text-xs text-gray-500">
+                                            {{((item.count / geographicDistribution.by_school.reduce((sum, s) => sum +
+                                                s.count, 0)) * 100).toFixed(1)}}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </Card>
+        </div>
+
+        <!-- Academic Analysis Section -->
+        <div class="grid grid-cols-1 gap-6 mt-6">
+            <Card class="shadow-sm">
+                <template #header>
+                    <div class="flex justify-between items-center p-4 border-b">
+                        <h3 class="text-lg font-semibold text-gray-800">Academic Analysis</h3>
+                        <i class="pi pi-book text-gray-400"></i>
+                    </div>
+                </template>
+                <template #content>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold mb-3">Top Courses</h4>
+                            <div class="space-y-2 max-h-64 overflow-y-auto">
+                                <div v-for="item in academicAnalysis.by_course" :key="item.course_name"
+                                    class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                    <div>
+                                        <div class="text-sm font-medium">{{ item.course_name }}</div>
+                                        <div class="text-xs text-gray-500">{{ item.approval_rate }}% approval rate</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="font-semibold text-purple-600">{{ item.total_applications }}</span>
+                                        <div class="text-xs text-gray-500">
+                                            {{((item.total_applications / academicAnalysis.by_course.reduce((sum, c) =>
+                                                sum + c.total_applications, 0)) * 100).toFixed(1)}}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold mb-3">By Year Level</h4>
+                            <div class="space-y-2 max-h-64 overflow-y-auto">
+                                <div v-for="item in academicAnalysis.by_year_level" :key="item.year_level"
+                                    class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                    <div>
+                                        <div class="text-sm font-medium">{{ item.year_level }}</div>
+                                        <div class="text-xs text-gray-500">{{ item.approval_rate }}% approval rate</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="font-semibold text-blue-600">{{ item.count }}</span>
+                                        <div class="text-xs text-gray-500">
+                                            {{((item.count / academicAnalysis.by_year_level.reduce((sum, y) => sum +
+                                                y.count, 0)) * 100).toFixed(1)}}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </template>
             </Card>

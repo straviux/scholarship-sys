@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
@@ -34,6 +35,16 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         JsonResource::withoutWrapping();
+
+        // Define Gates
+        Gate::define('admin', function ($user) {
+            return $user->hasRole('administrator');
+        });
+
+        Gate::define('create-scholar-profile', function ($user) {
+            return $user->hasRole('administrator') || $user->hasRole('moderator');
+        });
+
         try {
             Storage::extend('google', function ($app, $config) {
                 $options = [];

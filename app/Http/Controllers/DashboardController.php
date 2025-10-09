@@ -37,18 +37,8 @@ class DashboardController extends Controller
                 // Get program distribution
                 $programDistribution = $this->getProgramDistribution();
 
-                // Get course distribution
-                $courseDistribution = $this->getCourseDistribution();
-
                 // Get status distribution
                 $statusDistribution = $this->getStatusDistribution();
-
-                // Get school distribution
-                $schoolDistribution = $this->getSchoolDistribution();
-
-                // Get pie chart distributions
-                $courseDistributionPie = $this->getCourseDistributionPie();
-                $schoolDistributionPie = $this->getSchoolDistributionPie();
 
                 // Get recent statistics
                 $recentStats = $this->getRecentStatistics();
@@ -56,17 +46,21 @@ class DashboardController extends Controller
                 // Get yearly trends
                 $yearlyTrends = $this->getYearlyTrends();
 
+                // Get geographic distribution
+                $geographicDistribution = $this->getGeographicDistribution();
+
+                // Get academic analysis
+                $academicAnalysis = $this->getAcademicAnalysis();
+
                 return Inertia::render('Dashboard/Index', [
                     'dailyStats' => $dailyStats,
                     'monthlyStats' => $monthlyStats,
                     'programDistribution' => $programDistribution,
-                    'courseDistribution' => $courseDistribution,
                     'statusDistribution' => $statusDistribution,
-                    'schoolDistribution' => $schoolDistribution,
-                    'courseDistributionPie' => $courseDistributionPie,
-                    'schoolDistributionPie' => $schoolDistributionPie,
                     'recentStats' => $recentStats,
                     'yearlyTrends' => $yearlyTrends,
+                    'geographicDistribution' => $geographicDistribution,
+                    'academicAnalysis' => $academicAnalysis,
                     'dashboard_links' => [
                         'dashboard',
                         'scholar.index',
@@ -84,13 +78,11 @@ class DashboardController extends Controller
                 'dailyStats' => $this->getEmptyChartData(),
                 'monthlyStats' => $this->getEmptyChartData(),
                 'programDistribution' => $this->getEmptyPieChartData(),
-                'courseDistribution' => $this->getEmptyChartData(),
                 'statusDistribution' => $this->getEmptyPieChartData(),
-                'schoolDistribution' => $this->getEmptyChartData(),
-                'courseDistributionPie' => $this->getEmptyPieChartData(),
-                'schoolDistributionPie' => $this->getEmptyPieChartData(),
                 'recentStats' => $this->getEmptyStats(),
                 'yearlyTrends' => $this->getEmptyChartData(),
+                'geographicDistribution' => $this->getEmptyGeographicData(),
+                'academicAnalysis' => $this->getEmptyAcademicData(),
                 'dashboard_links' => [
                     'dashboard',
                     'scholar.index',
@@ -613,6 +605,84 @@ class DashboardController extends Controller
                     'fill' => false
                 ]
             ]
+        ];
+    }
+
+    /**
+     * Get geographic distribution for dashboard
+     */
+    private function getGeographicDistribution()
+    {
+        return [
+            'by_municipality' => ScholarshipProfile::selectRaw('
+                COALESCE(municipality, "Not Specified") as municipality,
+                COUNT(*) as count
+            ')
+                ->groupBy('municipality')
+                ->orderBy('count', 'desc')
+                ->limit(20)
+                ->get(),
+
+            'by_school' => ScholarshipRecord::leftJoin('schools', 'scholarship_records.school_id', '=', 'schools.id')
+                ->selectRaw('
+                    COALESCE(schools.name, "No School") as school_name,
+                    COUNT(*) as count
+                ')
+                ->groupBy('scholarship_records.school_id', 'schools.name')
+                ->orderBy('count', 'desc')
+                ->limit(15)
+                ->get()
+        ];
+    }
+
+    /**
+     * Get academic analysis for dashboard
+     */
+    private function getAcademicAnalysis()
+    {
+        return [
+            'by_course' => ScholarshipRecord::leftJoin('courses', 'scholarship_records.course_id', '=', 'courses.id')
+                ->selectRaw('
+                    COALESCE(courses.name, "No Course") as course_name,
+                    COUNT(*) as total_applications,
+                    SUM(CASE WHEN scholarship_status = 1 THEN 1 ELSE 0 END) as approved,
+                    ROUND((SUM(CASE WHEN scholarship_status = 1 THEN 1 ELSE 0 END) / COUNT(*)) * 100, 2) as approval_rate
+                ')
+                ->groupBy('scholarship_records.course_id', 'courses.name')
+                ->orderBy('total_applications', 'desc')
+                ->limit(15)
+                ->get(),
+
+            'by_year_level' => ScholarshipRecord::selectRaw('
+                COALESCE(year_level, "Not Specified") as year_level,
+                COUNT(*) as count,
+                ROUND(AVG(CASE WHEN scholarship_status = 1 THEN 1.0 ELSE 0.0 END) * 100, 2) as approval_rate
+            ')
+                ->groupBy('year_level')
+                ->orderBy('count', 'desc')
+                ->get()
+        ];
+    }
+
+    /**
+     * Get empty geographic data for error fallback
+     */
+    private function getEmptyGeographicData()
+    {
+        return [
+            'by_municipality' => collect(),
+            'by_school' => collect()
+        ];
+    }
+
+    /**
+     * Get empty academic data for error fallback
+     */
+    private function getEmptyAcademicData()
+    {
+        return [
+            'by_course' => collect(),
+            'by_year_level' => collect()
         ];
     }
 

@@ -155,6 +155,13 @@ function toggleSidebarMinimized() {
                                         <span class="-mr-1 font-medium indent-3">Permissions</span>
                                     </SidebarLink>
                                 </li>
+                                <li>
+                                    <SidebarLink v-if="hasRole('administrator')" :href="route('admin.system-report')"
+                                        :active="route().current('admin.system-report')">
+                                        <TableCellsIcon class="h-5 w-5 mr-2" />
+                                        <span class="-mr-1 font-medium indent-3">System Report</span>
+                                    </SidebarLink>
+                                </li>
                             </ul>
                         </details>
                     </li>

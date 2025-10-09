@@ -11,6 +11,7 @@ use App\Http\Controllers\ScholarshipRecordController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\ScholarshipProfileController;
+use App\Http\Controllers\SystemReportController;
 use Illuminate\Support\Facades\Route;
 
 // This file is part of the routes/web.php file for the Laravel application.
@@ -27,6 +28,10 @@ Route::middleware(['auth', 'role:administrator'])->group(function () {
     Route::resource('/permissions', PermissionController::class);
 
     Route::delete('/roles/{role}/permissions/{permission}', RevokePermissionFromRoleController::class)->name('roles.permission.destroy');
+
+    // System Report Routes - Administrator Only
+    Route::get('/admin/system-report', [SystemReportController::class, 'index'])->name('admin.system-report');
+    Route::get('/admin/system-report/export-json', [SystemReportController::class, 'exportJson'])->name('admin.system-report.export-json');
 });
 
 
