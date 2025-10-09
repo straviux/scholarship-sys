@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, watchEffect } from 'vue';
+import { ref, watch, watchEffect, computed } from 'vue';
 import { useApi } from '@/composable/api';
 const props = defineProps({
     scholarshipProgramId: {
@@ -22,12 +22,30 @@ const props = defineProps({
         type: String,
         default: 'Select Course'
     },
+    showNullOption: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
 // const { data, error, fetchData } = useApi(route('courses-api.list', { scholarship_program_id: props.scholarshipProgramId }));
 const courses = ref([]);
 const loading = ref(false);
+
+// Computed property to include null option when needed
+const courseOptions = computed(() => {
+    const options = [...(courses.value || [])];
+    if (props.showNullOption) {
+        options.unshift({
+            id: null,
+            name: 'No Course',
+            shortname: 'NO COURSE',
+            isNullOption: true
+        });
+    }
+    return options;
+});
 
 // Local value for v-model
 const localValue = ref(props.modelValue);
@@ -98,7 +116,7 @@ watch(
 </script>
 
 <template>
-    <Select v-model="localValue" :options="courses" filter :filterFields="['name', 'shortname']" autoFilterFocus
+    <Select v-model="localValue" :options="courseOptions" filter :filterFields="['name', 'shortname']" autoFilterFocus
         showClear optionLabel="name" :placeholder="customPlaceholder" class="w-full">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">

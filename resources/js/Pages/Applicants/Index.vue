@@ -128,10 +128,10 @@ const filterList = (resetToPage1 = false) => {
     const params = {};
     if (program) params.program = program;
     if (course) params.course = course;
+    if (school) params.school = school;
     if (municipality) params.municipality = municipality;
     if (name) params.name = name;
     if (parent_name) params.parent_name = parent_name;
-    if (school) params.school = school;
     if (year_level) params.year_level = year_level;
     if (date_from) params.date_from = date_from;
     if (date_to) params.date_to = date_to;
@@ -674,7 +674,7 @@ watch(showJpmColumns, (val) => {
                         <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
                             <div class="px-2 text-[11px] font-semibold">{{ profile.scholarship_grant[0]?.year_level ||
                                 '-'
-                                }}
+                            }}
                             </div>
                         </TableDataCell>
                         <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">

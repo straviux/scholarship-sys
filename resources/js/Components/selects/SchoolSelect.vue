@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useApi } from '@/composable/api';
 const props = defineProps({
     modelValue: {
@@ -18,12 +18,30 @@ const props = defineProps({
         type: String,
         default: 'Select school'
     },
+    showNullOption: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
 const { data, error, fetchData } = useApi(route('schools.getactivelist'));
 const schools = ref([]);
 const loading = ref(false);
+
+// Computed property to include null option when needed
+const schoolOptions = computed(() => {
+    const options = [...(schools.value || [])];
+    if (props.showNullOption) {
+        options.unshift({
+            id: null,
+            name: 'No School',
+            shortname: 'NO SCHOOL',
+            isNullOption: true
+        });
+    }
+    return options;
+});
 
 // Local value for v-modelroute('scholarshipschools.getactivelist')
 const localValue = ref(props.modelValue);
@@ -85,7 +103,7 @@ onMounted(fetchData);
 </script>
 
 <template>
-    <Select v-model="localValue" :options="schools" filter autoFilterFocus showClear optionLabel="name"
+    <Select v-model="localValue" :options="schoolOptions" filter autoFilterFocus showClear optionLabel="name"
         :placeholder="customPlaceholder" class="w-full" :filterFields="['name', 'shortname']">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
@@ -97,7 +115,11 @@ onMounted(fetchData);
         </template>
         <template #option="slotProps">
             <div class="flex items-start uppercase">
-                <div><span class="text-[12px]">{{ slotProps.option.name }}</span><br>
+                <div v-if="slotProps.option.isNullOption">
+                    <span class="text-[12px]">{{ slotProps.option.name }}</span>
+                </div>
+                <div v-else>
+                    <span class="text-[12px]">{{ slotProps.option.name }}</span><br>
                     <span class="text-[10px] font-bold">[{{ slotProps.option.shortname }}]</span>
                 </div>
             </div>

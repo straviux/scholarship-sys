@@ -17,6 +17,8 @@ const props = defineProps({
     courseDistribution: Object,
     statusDistribution: Object,
     schoolDistribution: Object,
+    courseDistributionPie: Object,
+    schoolDistributionPie: Object,
     recentStats: Object,
     yearlyTrends: Object,
     dashboard_links: Array
@@ -44,6 +46,28 @@ const pieChartOptions = ref({
     plugins: {
         legend: {
             position: 'right',
+            labels: {
+                generateLabels: function (chart) {
+                    const data = chart.data;
+                    if (data.labels.length && data.datasets.length) {
+                        return data.labels.map((label, i) => {
+                            const value = data.datasets[0].data[i];
+                            const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+
+                            return {
+                                text: `${label}: ${value} (${percentage}%)`,
+                                fillStyle: data.datasets[0].backgroundColor[i],
+                                strokeStyle: data.datasets[0].backgroundColor[i],
+                                lineWidth: 0,
+                                hidden: false,
+                                index: i
+                            };
+                        });
+                    }
+                    return [];
+                }
+            }
         },
         datalabels: {
             display: true,
@@ -68,6 +92,28 @@ const doughnutChartOptions = ref({
     plugins: {
         legend: {
             position: 'right',
+            labels: {
+                generateLabels: function (chart) {
+                    const data = chart.data;
+                    if (data.labels.length && data.datasets.length) {
+                        return data.labels.map((label, i) => {
+                            const value = data.datasets[0].data[i];
+                            const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+
+                            return {
+                                text: `${label}: ${value} (${percentage}%)`,
+                                fillStyle: data.datasets[0].backgroundColor[i],
+                                strokeStyle: data.datasets[0].backgroundColor[i],
+                                lineWidth: 0,
+                                hidden: false,
+                                index: i
+                            };
+                        });
+                    }
+                    return [];
+                }
+            }
         },
         datalabels: {
             display: true,
@@ -348,6 +394,39 @@ onMounted(() => {
                     <template #content>
                         <div class="h-80">
                             <Chart type="bar" :data="schoolDistribution" :options="barChartOptions" class="h-full" />
+                        </div>
+                    </template>
+                </Card>
+            </div>
+
+            <!-- Charts Row 4 - Pie Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Course Distribution Pie Chart -->
+                <Card class="shadow-sm">
+                    <template #header>
+                        <div class="flex justify-between items-center p-4 border-b">
+                            <h3 class="text-lg font-semibold text-gray-800">Course Distribution</h3>
+                            <i class="pi pi-chart-pie text-gray-400"></i>
+                        </div>
+                    </template>
+                    <template #content>
+                        <div class="h-80">
+                            <Chart type="pie" :data="courseDistributionPie" :options="pieChartOptions" class="h-full" />
+                        </div>
+                    </template>
+                </Card>
+
+                <!-- School Distribution Pie Chart -->
+                <Card class="shadow-sm">
+                    <template #header>
+                        <div class="flex justify-between items-center p-4 border-b">
+                            <h3 class="text-lg font-semibold text-gray-800">School Distribution</h3>
+                            <i class="pi pi-chart-pie text-gray-400"></i>
+                        </div>
+                    </template>
+                    <template #content>
+                        <div class="h-80">
+                            <Chart type="pie" :data="schoolDistributionPie" :options="pieChartOptions" class="h-full" />
                         </div>
                     </template>
                 </Card>
