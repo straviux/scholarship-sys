@@ -93,6 +93,13 @@ function toggleSidebarMinimized() {
                             </ul>
                         </details>
                     </li>
+                    <li>
+                        <SidebarLink :href="route('admin.system-updates')"
+                            :active="route().current('admin.system-updates')">
+                            <BellIcon class="h-5 w-5 mr-2" />
+                            <span class="font-medium">System Updates</span>
+                        </SidebarLink>
+                    </li>
                     <li v-if="hasRole('administrator') || hasRole('moderator')">
                         <details open>
                             <summary>
@@ -166,13 +173,6 @@ function toggleSidebarMinimized() {
                                         <span class="-mr-1 font-medium indent-3">System Report</span>
                                     </SidebarLink>
                                 </li>
-                                <li>
-                                    <SidebarLink v-if="hasRole('administrator')" :href="route('admin.system-updates')"
-                                        :active="route().current('admin.system-updates')">
-                                        <BellIcon class="h-5 w-5 mr-2" />
-                                        <span class="-mr-1 font-medium indent-3">System Updates</span>
-                                    </SidebarLink>
-                                </li>
                             </ul>
                         </details>
                     </li>
@@ -213,6 +213,16 @@ function toggleSidebarMinimized() {
 
                             <DocumentDuplicateIcon class="h-6 w-6" />
                             <span class="text-xs">scholarship records</span>
+
+                        </SidebarLink>
+                    </li>
+                    <li>
+                        <SidebarLink :href="route('admin.system-updates')"
+                            :active="route().current('admin.system-updates')"
+                            class="flex flex-col justify-center text-center">
+
+                            <BellIcon class="h-6 w-6" />
+                            <span class="text-xs">system updates</span>
 
                         </SidebarLink>
                     </li>

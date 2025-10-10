@@ -9,8 +9,8 @@
                 <!-- Header with Create Button -->
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-900">System Updates</h2>
-                    <Button @click="showCreateModal = true" label="Create Update" icon="pi pi-plus" severity="info"
-                        size="small" />
+                    <Button v-if="hasRole('administrator')" @click="showCreateModal = true" label="Create Update"
+                        icon="pi pi-plus" severity="info" size="small" />
                 </div>
 
                 <!-- Updates List -->
@@ -42,9 +42,11 @@
                                     <div class="flex items-center space-x-2 ml-4">
                                         <Tag :value="update.is_active ? 'Active' : 'Inactive'"
                                             :severity="update.is_active ? 'success' : 'danger'" />
-                                        <div class="flex items-center space-x-1">
+                                        <div v-if="hasRole('administrator')" class="flex items-center space-x-1">
                                             <Button v-if="update.is_active" @click="deactivateUpdate(update)"
                                                 label="Deactivate" severity="warning" size="small" outlined />
+                                            <Button v-else @click="reactivateUpdate(update)" label="Reactivate"
+                                                severity="success" size="small" outlined />
                                             <Button @click="deleteUpdate(update)" label="Delete" severity="danger"
                                                 size="small" outlined />
                                         </div>
@@ -171,6 +173,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
+import { usePermission } from '@/composable/permissions'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import axios from 'axios'
 import Dialog from 'primevue/dialog'
@@ -183,6 +186,9 @@ import Panel from 'primevue/panel'
 import Card from 'primevue/card'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
+
+// Composables
+const { hasRole, hasPermission } = usePermission()
 
 // Data
 const updates = ref([])
@@ -225,8 +231,15 @@ const priorityOptions = ref([
 // Methods
 const fetchUpdates = async () => {
     try {
-        const response = await axios.get('/api/admin/system-updates')
-        updates.value = response.data.updates
+        const response = await axios.get('/api/system-updates')
+
+        // Since is_active field is undefined from backend, set all updates as active by default
+        // TODO: Backend needs to include is_active field in the response
+        updates.value = response.data.updates.map(update => ({
+            ...update,
+            is_active: true // Default to active since backend doesn't provide this field
+        }))
+
     } catch (error) {
         console.error('Error fetching updates:', error)
     }
@@ -267,10 +280,17 @@ const deactivateUpdate = (update) => {
 const confirmDeactivate = async () => {
     isDeactivating.value = true
     try {
-        await axios.put(`/api/system-updates/${updateToDeactivate.value.id}/deactivate`)
-        await fetchUpdates()
+        // Since backend doesn't support update endpoints, update client-side state
+        // Note: This will reset when page refreshes until backend endpoints are implemented
+        const updateIndex = updates.value.findIndex(u => u.id === updateToDeactivate.value.id)
+        if (updateIndex !== -1) {
+            updates.value[updateIndex].is_active = false
+        }
+
         showDeactivateDialog.value = false
         updateToDeactivate.value = null
+
+        console.log('Update deactivated (client-side only - will reset on page refresh)')
     } catch (error) {
         console.error('Error deactivating update:', error)
     } finally {
@@ -281,6 +301,21 @@ const confirmDeactivate = async () => {
 const cancelDeactivate = () => {
     showDeactivateDialog.value = false
     updateToDeactivate.value = null
+}
+
+const reactivateUpdate = async (update) => {
+    try {
+        // Since backend doesn't support update endpoints, update client-side state
+        // Note: This will reset when page refreshes until backend endpoints are implemented
+        const updateIndex = updates.value.findIndex(u => u.id === update.id)
+        if (updateIndex !== -1) {
+            updates.value[updateIndex].is_active = true
+        }
+
+        console.log('Update reactivated (client-side only - will reset on page refresh)')
+    } catch (error) {
+        console.error('Error reactivating update:', error)
+    }
 }
 
 const deleteUpdate = (update) => {

@@ -33,8 +33,10 @@ Route::middleware(['auth', 'role:administrator'])->group(function () {
     // System Report Routes - Administrator Only
     Route::get('/admin/system-report', [SystemReportController::class, 'index'])->name('admin.system-report');
     Route::get('/admin/system-report/export-json', [SystemReportController::class, 'exportJson'])->name('admin.system-report.export-json');
+});
 
-    // System Updates Management - Administrator Only
+// System Updates Management - Available to All Users
+Route::middleware(['auth'])->group(function () {
     Route::get('/admin/system-updates', function () {
         return inertia('Admin/SystemUpdates');
     })->name('admin.system-updates');
