@@ -2,81 +2,118 @@
 import { ref } from "vue";
 import SidebarLink from "@/Components/SidebarLink.vue";
 import NotificationDropdown from "@/Components/NotificationDropdown.vue";
-import { Link } from "@inertiajs/vue3";
+import { Link, usePage } from "@inertiajs/vue3";
 import { usePermission } from "@/composable/permissions";
-import { DynamicHeroicon } from 'vue-dynamic-heroicons';
+
+// PrimeVue Components
+import Sidebar from 'primevue/sidebar';
+import Button from 'primevue/button';
+import Menu from 'primevue/menu';
+import Avatar from 'primevue/avatar';
+import Divider from 'primevue/divider';
+import OverlayPanel from 'primevue/overlaypanel';
 
 const { hasRole, hasPermission } = usePermission();
-import {
-    Squares2X2Icon,
-    AcademicCapIcon,
-    ClipboardDocumentCheckIcon,
-    IdentificationIcon,
-    DocumentDuplicateIcon,
-    BookOpenIcon,
-    ClipboardIcon,
-    BuildingOfficeIcon,
-    UserGroupIcon,
-    AdjustmentsHorizontalIcon,
-    LockClosedIcon,
-    ArrowRightStartOnRectangleIcon,
-    TableCellsIcon,
-    ShieldExclamationIcon,
-    DocumentTextIcon,
-    BellIcon
-} from "@heroicons/vue/20/solid";
+const $page = usePage();
 const toggleMenu = ref(false);
 const sidebarMinimized = ref(localStorage.getItem('sidebarMinimized') === 'true');
+const userMenuRef = ref(null);
 
 function toggleSidebarMinimized() {
     sidebarMinimized.value = !sidebarMinimized.value;
     localStorage.setItem('sidebarMinimized', sidebarMinimized.value ? 'true' : 'false');
 }
+
+function toggleUserMenu(event) {
+    userMenuRef.value.toggle(event);
+}
+
+function getRoleDisplay() {
+    const user = $page.props.auth?.user;
+    if (!user) return 'Guest';
+
+    // Try different possible role structures
+    if (user.roles && Array.isArray(user.roles) && user.roles.length > 0) {
+        return user.roles[0].name || user.roles[0];
+    }
+
+    if (user.role && typeof user.role === 'string') {
+        return user.role;
+    }
+
+    if (user.role && user.role.name) {
+        return user.role.name;
+    }
+
+    // Fallback to checking specific role properties
+    if (user.is_admin) return 'Administrator';
+    if (user.is_moderator) return 'Moderator';
+
+    return 'User';
+}
 </script>
 
 <template>
     <div class="w-full h-full flex">
-        <!-- component -->
+        <!-- Floating Sidebar -->
         <aside
-            class="hidden fixed z-10 top-0 left-0 md:flex flex-col bg-[#222831] transition-all duration-300 h-screen min-w-0"
-            :class="[sidebarMinimized ? 'md:w-[110px] w-[110px]' : 'md:w-[250px] w-[250px]', toggleMenu ? 'flex!' : '']">
+            class="hidden fixed z-10 top-20 left-4 md:flex flex-col bg-[#222831] transition-all duration-300 rounded-xl shadow-xl min-w-0 h-[calc(100vh-96px)]"
+            :class="[sidebarMinimized ? 'md:w-[110px] w-[110px]' : 'md:w-[220px] w-[220px]', toggleMenu ? 'flex!' : '']">
 
-            <div class="flex-1 flex flex-col min-h-0 min-w-0">
+            <div class="flex-1 flex flex-col min-h-0 min-w-0 p-0 overflow-hidden">
 
-                <div class="flex items-center justify-center pt-4 pb-2 text-center">
-                    <a href="#" title="home" class="text-2xl font-bold font-mono text-gray-200">
-                        <img src="/images/pgp-logo.png" :class="sidebarMinimized ? 'w-10' : 'w-36'" alt="logo" />
-                        <p v-if="!sidebarMinimized" class="text-sm mt-4">Scholarship Program</p>
-                    </a>
+                <!-- User Profile Section -->
+                <div v-if="!sidebarMinimized" class="px-4 py-4 border-b border-gray-700">
+                    <div class="flex items-center space-x-3">
+                        <Avatar
+                            :image="$page.props.auth.user.has_profile_photo ? $page.props.auth.user.profile_photo_url : null"
+                            :label="!$page.props.auth.user.has_profile_photo ? ($page.props.auth.user.name || 'U').charAt(0).toUpperCase() : null"
+                            size="xlarge" shape="circle" class="flex-shrink-0 sidebar-avatar-large" />
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-200 truncate">
+                                {{ $page.props.auth.user.name }}
+                            </p>
+                            <p class="text-xs text-gray-400 truncate">
+                                {{ getRoleDisplay() }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Minimized User Profile -->
+                <div v-else class="flex items-center justify-center py-4 border-b border-gray-700">
+                    <Avatar
+                        :image="$page.props.auth.user.has_profile_photo ? $page.props.auth.user.profile_photo_url : null"
+                        :label="!$page.props.auth.user.has_profile_photo ? ($page.props.auth.user.name || 'U').charAt(0).toUpperCase() : null"
+                        size="large" shape="circle" class="sidebar-avatar-medium" />
                 </div>
                 <ul v-if="!sidebarMinimized"
-                    class="menu space-y-6 md:space-y-4 mt-8 text-normal md:text-sm w-full text-gray-300 hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block h-[calc(100vh-160px)]">
+                    class="menu space-y-5 md:space-y-3 mt-2 px-4 pb-4 text-sm md:text-xs w-full text-gray-300 hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block flex-1">
                     <li>
                         <SidebarLink :href="route('dashboard')"
                             :active="route().current('dashboard') || route().current('home') || route().current('index')">
-                            <Squares2X2Icon class="h-5 w-5 mr-2" />
+                            <i class="pi pi-home mr-2"></i>
                             <span class="font-medium">Dashboard</span>
                         </SidebarLink>
                     </li>
                     <li>
                         <details open>
                             <summary>
-                                <AcademicCapIcon class="h-5 w-5 mr-2" />
+                                <i class="pi pi-graduation-cap mr-2"></i>
                                 <span class="-mr-1 font-medium">Scholarship</span>
                             </summary>
                             <ul class="space-y-1 mt-2">
                                 <li>
                                     <SidebarLink :href="route('profile.waitinglist')"
                                         :active="route().current('profile.waitinglist')">
-                                        <ClipboardDocumentCheckIcon class="h-5 w-5 mr-2" />
+                                        <i class="pi pi-clipboard mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Waiting List</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
                                     <SidebarLink :href="route('profile.index')"
                                         :active="route().current('profile.index')">
-                                        <IdentificationIcon class="h-5 w-5 mr-2" />
+                                        <i class="pi pi-id-card mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Existing</span>
                                         <div class="indicator ml-6">
                                             <!-- <span class="indicator-item text-xs indicator-middle badge badge-secondary" v-if="pendingApplicantCount > 0">{{ pendingApplicantCount }}</span> -->
@@ -86,7 +123,7 @@ function toggleSidebarMinimized() {
                                 <li>
                                     <SidebarLink :href="route('scholarship_records.index')"
                                         :active="route().current('scholarship_records.index') || route().current('scholarship_records.showbyprogram')">
-                                        <DocumentDuplicateIcon class="h-5 w-5 mr-2" />
+                                        <i class="pi pi-file-edit mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Grant Records</span>
                                     </SidebarLink>
                                 </li>
@@ -96,42 +133,42 @@ function toggleSidebarMinimized() {
                     <li>
                         <SidebarLink :href="route('admin.system-updates')"
                             :active="route().current('admin.system-updates')">
-                            <BellIcon class="h-5 w-5 mr-2" />
+                            <i class="pi pi-bell mr-2"></i>
                             <span class="font-medium">System Updates</span>
                         </SidebarLink>
                     </li>
                     <li v-if="hasRole('administrator') || hasRole('moderator')">
                         <details open>
                             <summary>
-                                <TableCellsIcon class="h-5 w-5 mr-2" />
+                                <i class="pi pi-table mr-2"></i>
                                 <span class="-mr-1 font-medium">Library</span>
                             </summary>
                             <ul class="space-y-1 mt-2">
                                 <li v-if="hasPermission('manage-scholarship-programs')">
                                     <SidebarLink :href="route('scholarshipprograms.index')"
                                         :active="route().current('scholarshipprograms.index')">
-                                        <BookOpenIcon class="h-5 w-5 mr-2" />
+                                        <i class="pi pi-book mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Programs</span>
                                     </SidebarLink>
                                 </li>
                                 <li v-if="hasPermission('manage-program-courses')">
                                     <SidebarLink :href="route('courses.index')"
                                         :active="route().current('courses.index')">
-                                        <AcademicCapIcon class="h-5 w-5 mr-2" />
+                                        <i class="pi pi-graduation-cap mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Courses</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
                                     <SidebarLink :href="route('program_requirements.index')"
                                         :active="route().current('program_requirements.index')">
-                                        <ClipboardIcon class="h-5 w-5 mr-2" />
+                                        <i class="pi pi-list mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Requirements</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
                                     <SidebarLink :href="route('school.index')"
                                         :active="route().current('school.index')">
-                                        <BuildingOfficeIcon class="h-5 w-5 mr-2" />
+                                        <i class="pi pi-building mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Schools</span>
                                     </SidebarLink>
                                 </li>
@@ -141,36 +178,36 @@ function toggleSidebarMinimized() {
                     <li v-if="hasRole('administrator')">
                         <details open>
                             <summary>
-                                <ShieldExclamationIcon class="h-5 w-5 mr-2" />
+                                <i class="pi pi-shield mr-2"></i>
                                 <span class="-mr-1 font-medium">Administrator</span>
                             </summary>
                             <ul class="space-y-1 mt-2">
                                 <li>
                                     <SidebarLink v-if="hasRole('administrator')" :href="route('users.index')"
                                         :active="route().current('users.index')">
-                                        <UserGroupIcon class="h-5 w-5 mr-2" />
+                                        <i class="pi pi-users mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Users</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
                                     <SidebarLink v-if="hasRole('administrator')" :href="route('roles.index')"
                                         :active="route().current('roles.index') || route().current('roles.create')">
-                                        <AdjustmentsHorizontalIcon class="h-5 w-5 mr-2" />
+                                        <i class="pi pi-cog mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Roles</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
                                     <SidebarLink v-if="hasRole('administrator')" :href="route('permissions.index')"
                                         :active="route().current('permissions.index') || route().current('permissions.create')">
-                                        <LockClosedIcon class="h-5 w-5 mr-2" />
+                                        <i class="pi pi-lock mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Permissions</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
                                     <SidebarLink v-if="hasRole('administrator')" :href="route('admin.system-report')"
                                         :active="route().current('admin.system-report')">
-                                        <TableCellsIcon class="h-5 w-5 mr-2" />
-                                        <span class="-mr-1 font-medium indent-3">System Report</span>
+                                        <i class="pi pi-chart-bar mr-2"></i>
+                                        <span class="-mr-1 font-medium indent-3">System Stats</span>
                                     </SidebarLink>
                                 </li>
                             </ul>
@@ -178,13 +215,13 @@ function toggleSidebarMinimized() {
                     </li>
                 </ul>
                 <ul v-else
-                    class="menu space-y-4 mt-8 w-full text-gray-300 hover:text-gray-50 items-center min-h-0 min-w-0 block h-[calc(100vh-160px)] overflow-y-auto overflow-x-hidden">
+                    class="menu space-y-3 mt-2 px-2 pb-4 w-full text-gray-300 hover:text-gray-50 items-center min-h-0 min-w-0 block flex-1 overflow-y-auto overflow-x-hidden">
                     <li>
                         <SidebarLink :href="route('dashboard')"
                             :active="route().current('dashboard') || route().current('index')"
                             class="flex flex-col justify-center text-center">
 
-                            <Squares2X2Icon class="h-6 w-6" />
+                            <i class="pi pi-home text-xl"></i>
                             <span class="text-xs">dashboard</span>
 
                         </SidebarLink>
@@ -194,7 +231,7 @@ function toggleSidebarMinimized() {
                             :active="route().current('profile.waitinglist')"
                             class="flex flex-col justify-center text-center">
 
-                            <ClipboardDocumentCheckIcon class="h-6 w-6" />
+                            <i class="pi pi-clipboard text-xl"></i>
                             <span class="text-xs">waiting list</span>
                         </SidebarLink>
                     </li>
@@ -202,7 +239,7 @@ function toggleSidebarMinimized() {
                         <SidebarLink :href="route('profile.index')" :active="route().current('profile.index')"
                             class="flex flex-col justify-center text-center">
 
-                            <IdentificationIcon class="h-6 w-6" />
+                            <i class="pi pi-id-card text-xl"></i>
                             <span class="text-xs">existing</span>
                         </SidebarLink>
                     </li>
@@ -211,8 +248,8 @@ function toggleSidebarMinimized() {
                             :active="route().current('scholarship_records.index') || route().current('scholarship_records.showbyprogram')"
                             class="flex flex-col justify-center text-center">
 
-                            <DocumentDuplicateIcon class="h-6 w-6" />
-                            <span class="text-xs">scholarship records</span>
+                            <i class="pi pi-file-edit text-xl"></i>
+                            <span class="text-xs">records</span>
 
                         </SidebarLink>
                     </li>
@@ -221,7 +258,7 @@ function toggleSidebarMinimized() {
                             :active="route().current('admin.system-updates')"
                             class="flex flex-col justify-center text-center">
 
-                            <BellIcon class="h-6 w-6" />
+                            <i class="pi pi-bell text-xl"></i>
                             <span class="text-xs">system updates</span>
 
                         </SidebarLink>
@@ -231,8 +268,8 @@ function toggleSidebarMinimized() {
                             :active="route().current('scholarshipprograms.index')"
                             class="flex flex-col justify-center text-center">
 
-                            <BookOpenIcon class="h-6 w-6" />
-                            <span class="text-xs">scholarship programs</span>
+                            <i class="pi pi-book text-xl"></i>
+                            <span class="text-xs">programs</span>
 
                         </SidebarLink>
                     </li>
@@ -240,7 +277,7 @@ function toggleSidebarMinimized() {
                         <SidebarLink :href="route('courses.index')" :active="route().current('courses.index')"
                             class="flex flex-col justify-center text-center">
 
-                            <AcademicCapIcon class="h-6 w-6" />
+                            <i class="pi pi-graduation-cap text-xl"></i>
                             <span class="text-xs">courses</span>
 
                         </SidebarLink>
@@ -250,7 +287,7 @@ function toggleSidebarMinimized() {
                             :active="route().current('program_requirements.index')"
                             class="flex flex-col items-center justify-center text-center">
 
-                            <ClipboardIcon class="h-6 w-6" />
+                            <i class="pi pi-list text-xl"></i>
                             <span class="text-xs">reqs</span>
 
                         </SidebarLink>
@@ -259,7 +296,7 @@ function toggleSidebarMinimized() {
                         <SidebarLink :href="route('school.index')" :active="route().current('school.index')"
                             class="flex flex-col justify-center text-center">
 
-                            <BuildingOfficeIcon class="h-6 w-6" />
+                            <i class="pi pi-building text-xl"></i>
                             <span class="text-xs">schools</span>
 
                         </SidebarLink>
@@ -268,7 +305,7 @@ function toggleSidebarMinimized() {
                         <SidebarLink :href="route('users.index')" :active="route().current('users.index')"
                             class="flex flex-col justify-center text-center">
 
-                            <UserGroupIcon class="h-6 w-6" />
+                            <i class="pi pi-users text-xl"></i>
                             <span class="text-xs">users</span>
 
                         </SidebarLink>
@@ -278,7 +315,7 @@ function toggleSidebarMinimized() {
                             :active="route().current('roles.index') || route().current('roles.create')"
                             class="flex flex-col justify-center text-center">
 
-                            <AdjustmentsHorizontalIcon class="h-6 w-6" />
+                            <i class="pi pi-cog text-xl"></i>
                             <span class="text-xs">roles</span>
 
                         </SidebarLink>
@@ -288,7 +325,7 @@ function toggleSidebarMinimized() {
                             :active="route().current('permissions.index') || route().current('permissions.create')"
                             class="flex flex-col justify-center text-center">
 
-                            <LockClosedIcon class="h-6 w-6" />
+                            <i class="pi pi-lock text-xl"></i>
                             <span class="text-xs">permissions</span>
 
                         </SidebarLink>
@@ -296,81 +333,105 @@ function toggleSidebarMinimized() {
                 </ul>
             </div>
             <div class="px-2 flex justify-end items-center border-t">
-                <button @click="toggleSidebarMinimized" class="ml-2 p-2 rounded hover:bg-gray-700 focus:outline-none"
-                    :aria-label="sidebarMinimized ? 'Expand sidebar' : 'Minimize sidebar'">
-                    <DynamicHeroicon :name="sidebarMinimized ? 'chevron-double-right' : 'chevron-double-left'"
-                        class="text-gray-300" :size="6" />
-                </button>
+                <Button @click="toggleSidebarMinimized"
+                    :aria-label="sidebarMinimized ? 'Expand sidebar' : 'Minimize sidebar'" size="small">
+                    <i
+                        :class="{ 'pi pi-chevron-right': sidebarMinimized, 'pi pi-chevron-left': !sidebarMinimized }"></i>
+                </Button>
             </div>
         </aside>
 
-        <div
-            :class="['ml-auto mb-6 w-full min-w-0 flex flex-col', sidebarMinimized ? 'md:w-[calc(100%-110px)] w-[calc(100%-110px)]' : 'md:w-[calc(100%-250px)] w-[calc(100%-250px)]']">
+        <div class="w-full min-w-0 flex flex-col">
             <div class="sticky z-10 top-0 h-16 border-b bg-[#222831] lg:py-2.5">
                 <div class="px-6 flex items-center justify-between space-x-4">
-                    <h5 class="text-xl md:text-2xl text-gray-300 hover:text-gray-50 font-medium lg:block">
-
-                        <slot name="header" />
-                    </h5>
-                    <button class="w-12 h-16 -mr-2 border-none lg:hidden">
-                        <Transition>
-                            <DynamicHeroicon :name="toggleMenu ? 'x' : 'menu'"
-                                class="text-gray-50 button transition-all" :size="9"
-                                @click="toggleMenu = !toggleMenu" />
-                        </Transition>
-                    </button>
+                    <!-- Logo and App Name -->
+                    <div class="flex items-center space-x-3">
+                        <div class="flex items-center space-x-2">
+                            <img src="/images/pgp-logo.png" class="w-8 h-8 object-contain" alt="logo" />
+                            <span class="text-lg font-semibold text-gray-200">Scholarship Program</span>
+                        </div>
+                        <div class="hidden md:block w-px h-6 bg-gray-600"></div>
+                        <h5 class="text-xl md:text-2xl text-gray-300 hover:text-gray-50 font-medium hidden md:block">
+                            <slot name="header" />
+                        </h5>
+                    </div>
+                    <Button @click="toggleMenu = !toggleMenu" :icon="toggleMenu ? 'pi pi-times' : 'pi pi-bars'" text
+                        rounded size="large" class="w-12 h-16 -mr-2 lg:hidden text-gray-50" />
                     <!-- <div v-if="!toggleMenu" class="h-full w-full">test</div> -->
                     <div class="space-x-6 hidden md:flex items-center justify-center">
                         <!-- Notification Dropdown -->
                         <NotificationDropdown
                             :unread-count="($page.props.auth.user && $page.props.auth.user.unread_notifications_count) || 0" />
 
-                        <div class="dropdown dropdown-end">
-                            <div tabindex="0" role="button" class="text-white flex items-center text-sm font-medium">
-                                <!-- User Avatar with Chevron -->
-                                <div class="relative">
-                                    <div class="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center cursor-pointer"
-                                        :class="{ 'bg-gradient-to-br from-indigo-500 to-purple-600': !$page.props.auth.user.has_profile_photo }">
-                                        <img v-if="$page.props.auth.user.has_profile_photo"
-                                            :src="$page.props.auth.user.profile_photo_url"
-                                            :alt="$page.props.auth.user.name" class="w-full h-full object-cover" />
-                                        <span v-else class="text-sm font-bold text-white">
-                                            {{ ($page.props.auth.user.name || 'U').charAt(0).toUpperCase() }}
-                                        </span>
+                        <!-- User Settings Menu -->
+                        <div class="relative">
+                            <!-- <Button @click="toggleUserMenu" text rounded
+                                class="text-gray-300 hover:text-white cursor-pointer transition-colors duration-200">
+                                <i class="pi pi-cog" style="font-size: 1.2rem"></i>
+                            </Button> -->
+                            <Button icon="pi pi-cog" severity="secondary" variant="text" size="large" rounded
+                                aria-label="Bookmark" @click="toggleUserMenu" />
+
+                            <Popover ref="userMenuRef" class="w-56">
+                                <!-- Header -->
+                                <div class="px-4 py-3 border-b border-gray-100 flex-shrink-0">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-2">
+                                            <i class="pi pi-user text-blue-600"></i>
+                                            <h3 class="text-base font-semibold text-gray-900">User Menu</h3>
+                                        </div>
                                     </div>
-                                    <!-- Chevron positioned at bottom right -->
-                                    <div
-                                        class="absolute -bottom-1 -right-1 bg-gray-600 rounded-full w-4 h-4 flex items-center justify-center">
-                                        <i class="pi pi-chevron-down text-white" style="font-size: 0.5rem"></i>
-                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        {{ $page.props.auth.user.name }}
+                                    </p>
                                 </div>
-                                <!-- <span class="hidden sm:inline">{{ $page.props.auth.user.name }}</span>
-                                <span class="sm:hidden">{{ $page.props.auth.user.name }}</span> -->
-                            </div>
-                            <ul tabindex="0"
-                                class="menu dropdown-content bg-base-100 rounded-box z-1 mt-4 w-52 p-2 shadow-sm">
-                                <li>
-                                    <Link class="px-2 py-3 flex items-center space-x-2 group"
-                                        :href="route('user.profile')">
-                                    <DocumentTextIcon class="h-4 w-4" />
-                                    <span>User Profile</span>
+
+                                <!-- Menu Items -->
+                                <div class="py-2">
+                                    <Link :href="route('user.profile')"
+                                        class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
+                                    <i class="pi pi-user text-gray-600"></i>
+                                    <div class="flex-1">
+                                        <span class="text-sm font-medium text-gray-900">Profile</span>
+                                        <p class="text-xs text-gray-500">View and edit your profile</p>
+                                    </div>
                                     </Link>
-                                </li>
-                                <li>
-                                    <Link class="px-2 py-3 flex items-center space-x-2 group" :href="route('logout')"
-                                        method="post" as="button">
-                                    <ArrowRightStartOnRectangleIcon class="h-4 w-4" />
-                                    <span>Logout</span>
+
+                                    <Link :href="route('user.profile')"
+                                        class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
+                                    <i class="pi pi-cog text-gray-600"></i>
+                                    <div class="flex-1">
+                                        <span class="text-sm font-medium text-gray-900">Settings</span>
+                                        <p class="text-xs text-gray-500">Account preferences</p>
+                                    </div>
                                     </Link>
-                                </li>
-                            </ul>
+
+                                    <Link :href="route('user.profile')"
+                                        class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
+                                    <i class="pi pi-chart-line text-gray-600"></i>
+                                    <div class="flex-1">
+                                        <span class="text-sm font-medium text-gray-900">Activity</span>
+                                        <p class="text-xs text-gray-500">View your recent activity</p>
+                                    </div>
+                                    </Link>
+                                </div>
+
+                                <!-- Footer -->
+                                <div class="px-4 py-2 border-t border-gray-100 bg-gray-50">
+                                    <Link :href="route('logout')" method="post" as="button"
+                                        class="w-full flex items-center justify-center gap-2 px-4 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors duration-200">
+                                    <i class="pi pi-sign-out"></i>
+                                    <span class="text-sm font-medium">Sign Out</span>
+                                    </Link>
+                                </div>
+                            </Popover>
                         </div>
 
                     </div>
                 </div>
             </div>
 
-            <div class="px-4 md:px-6 pt-6">
+            <div class="px-4 md:px-6 pt-6" :class="sidebarMinimized ? 'md:ml-[130px]' : 'md:ml-[240px]'">
                 <!-- <ToastList /> -->
                 <slot />
             </div>
@@ -396,32 +457,41 @@ aside {
     box-sizing: border-box;
 }
 
-.v-enter-active,
-.v-leave-active {
-    transition: opacity 0.1s ease;
-}
-
-.v-enter-from,
-.v-leave-to {
-    opacity: 0;
-}
-
-.slide-fade-enter-active {
-    transition: all 0.3s ease-out;
-}
-
-.slide-fade-leave-active {
-    transition: all 0.8s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-    transform: translateX(20px);
-    opacity: 0;
-}
-
 .menu :where(li ul)::before {
-
     background-color: #ccc;
+}
+
+/* PrimeVue component customizations */
+.p-avatar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.p-button-text {
+    color: inherit;
+}
+
+.p-overlaypanel .p-overlaypanel-content {
+    padding: 0;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+    max-height: 24rem;
+    overflow: hidden;
+}
+
+.p-overlaypanel {
+    margin-top: 0.5rem;
+}
+
+/* Custom avatar sizes for sidebar */
+.sidebar-avatar-large {
+    width: 4.5rem !important;
+    height: 4.5rem !important;
+    font-size: 1.5rem !important;
+}
+
+.sidebar-avatar-medium {
+    width: 3.5rem !important;
+    height: 3.5rem !important;
+    font-size: 1.25rem !important;
 }
 </style>

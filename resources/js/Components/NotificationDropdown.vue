@@ -1,118 +1,112 @@
 <template>
-    <div class="relative">
-        <!-- Notification Bell Button with OverlayBadge -->
-        <!-- <OverlayBadge :value="unreadCount > 99 ? '99+' : unreadCount" :visible="unreadCount > 1" severity="danger"
-            size="small">
-            <button @click.stop="toggleDropdown"
-                class="p-2 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded-full transition-colors duration-200"
-                :class="{ 'text-yellow-400': hasUnreadNotifications }">
-                <i class="pi pi-bell" style="font-size: 1.3rem" />
-            </button>
-        </OverlayBadge> -->
-        <Button type="button" label="System Updates" icon="pi pi-bell" @click.stop="toggleDropdown"
+    <div>
+        <!-- Notification Bell Button -->
+        <Button type="button" label="System Updates" icon="pi pi-bell" @click="togglePopover"
             :severity="unreadCount > 0 ? 'info' : 'contrast'" :badge="unreadCount > 99 ? '99+' : unreadCount || ''"
             size="small" />
-        <!-- Dropdown Menu -->
-        <div v-if="isOpen" v-click-outside="closeDropdown"
-            class="absolute right-0 z-50 mt-2 w-80 bg-white rounded-lg shadow-xl max-h-96 overflow-hidden transform transition-all duration-200 ease-out flex flex-col"
-            style="z-index: 9999;">
 
-            <!-- Header -->
-            <div class="px-4 py-3 border-b border-gray-100 flex-shrink-0">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <BellIcon class="h-4 w-4 text-blue-600" />
-                        <h3 class="text-base font-semibold text-gray-900">SystemUpdates</h3>
+        <!-- Popover Menu -->
+        <Popover ref="popoverRef" class="w-80">
+            <div class="max-h-96 overflow-hidden flex flex-col">
+                <!-- Header -->
+                <div class="px-4 py-3 border-b border-gray-100 flex-shrink-0">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="pi pi-bell text-blue-600"></i>
+                            <h3 class="text-base font-semibold text-gray-900">System Updates</h3>
+                        </div>
+                        <button v-if="unreadCount > 0" @click="markAllAsRead" :disabled="isMarkingAllAsRead"
+                            class="text-xs text-blue-600 hover:text-blue-800 focus:outline-none disabled:opacity-50 font-medium transition-colors duration-200">
+                            <span v-if="isMarkingAllAsRead">Marking...</span>
+                            <span v-else>Mark all</span>
+                        </button>
                     </div>
-                    <button v-if="unreadCount > 0" @click="markAllAsRead" :disabled="isMarkingAllAsRead"
-                        class="text-xs text-blue-600 hover:text-blue-800 focus:outline-none disabled:opacity-50 font-medium transition-colors duration-200">
-                        <span v-if="isMarkingAllAsRead">Marking...</span>
-                        <span v-else>Mark all</span>
-                    </button>
-                </div>
-                <p class="text-xs text-gray-500 mt-1">
-                    {{ unreadCount }} unread
-                </p>
-            </div>
-
-            <!-- Notifications List -->
-            <div class="flex-1 overflow-y-auto pb-4 min-h-0">
-                <!-- Loading State -->
-                <div v-if="isLoading" class="px-4 py-6 text-center">
-                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                    <p class="text-xs text-gray-500 mt-2">Loading...</p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        {{ unreadCount }} unread
+                    </p>
                 </div>
 
-                <!-- Empty State -->
-                <div v-else-if="notifications.length === 0" class="px-4 py-8 text-center">
-                    <BellIcon class="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                    <h4 class="text-sm font-medium text-gray-900 mb-1">No notifications</h4>
-                    <p class="text-xs text-gray-500">You're all caught up!</p>
-                </div>
+                <!-- Notifications List -->
+                <div class="flex-1 overflow-y-auto pb-4 min-h-0">
+                    <!-- Loading State -->
+                    <div v-if="isLoading" class="px-4 py-6 text-center">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                        <p class="text-xs text-gray-500 mt-2">Loading...</p>
+                    </div>
 
-                <!-- Notifications -->
-                <div v-else class="divide-y divide-gray-100">
-                    <div v-for="notification in notifications" :key="notification.id"
-                        class="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-200" :class="{
-                            'bg-blue-50': !notification.is_read,
-                            'bg-white': notification.is_read
-                        }" @click="openNotificationModal(notification)">
+                    <!-- Empty State -->
+                    <div v-else-if="notifications.length === 0" class="px-4 py-8 text-center">
+                        <i class="pi pi-bell text-gray-300" style="font-size: 2rem"></i>
+                        <h4 class="text-sm font-medium text-gray-900 mb-1 mt-2">No notifications</h4>
+                        <p class="text-xs text-gray-500">You're all caught up!</p>
+                    </div>
 
-                        <!-- Notification Content -->
-                        <div>
-                            <div class="flex items-start justify-between">
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center space-x-2">
-                                        <h4 class="text-xs font-medium text-gray-900 line-clamp-2 leading-4">
-                                            {{ notification.title }}
-                                        </h4>
-                                        <!-- Simple Priority Dot -->
-                                        <div v-if="notification.priority === 'urgent' || notification.priority === 'high'"
-                                            class="w-2 h-2 rounded-full flex-shrink-0" :class="{
-                                                'bg-red-500': notification.priority === 'urgent',
-                                                'bg-orange-500': notification.priority === 'high'
-                                            }">
+                    <!-- Notifications -->
+                    <div v-else class="divide-y divide-gray-100">
+                        <div v-for="notification in notifications" :key="notification.id"
+                            class="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-200" :class="{
+                                'bg-blue-50': !notification.is_read,
+                                'bg-white': notification.is_read
+                            }" @click="openNotificationModal(notification)">
+
+                            <!-- Notification Content -->
+                            <div>
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center space-x-2">
+                                            <h4 class="text-xs font-medium text-gray-900 line-clamp-2 leading-4">
+                                                {{ notification.title }}
+                                            </h4>
+                                            <!-- Simple Priority Dot -->
+                                            <div v-if="notification.priority === 'urgent' || notification.priority === 'high'"
+                                                class="w-2 h-2 rounded-full flex-shrink-0" :class="{
+                                                    'bg-red-500': notification.priority === 'urgent',
+                                                    'bg-orange-500': notification.priority === 'high'
+                                                }">
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mt-1 line-clamp-2 leading-4">
+                                            {{ notification.content }}
+                                        </p>
+                                    </div>
+
+                                    <div class="flex items-center ml-2 flex-shrink-0">
+                                        <!-- Mark as read button -->
+                                        <button v-if="!notification.is_read" @click.stop="markAsRead(notification)"
+                                            class="p-1 text-gray-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full transition-colors duration-200"
+                                            title="Mark as read">
+                                            <i class="pi pi-check-circle" style="font-size: 1rem"></i>
+                                        </button>
+                                        <!-- Type Icon -->
+                                        <i :class="[getTypeIcon(notification.type), getTypeIconClass(notification.type)]"
+                                            style="font-size: 0.75rem; margin-left: 0.25rem"></i>
+                                        <!-- Unread Indicator -->
+                                        <div v-if="!notification.is_read"
+                                            class="w-1.5 h-1.5 bg-blue-600 rounded-full ml-1">
                                         </div>
                                     </div>
-                                    <p class="text-xs text-gray-600 mt-1 line-clamp-2 leading-4">
-                                        {{ notification.content }}
-                                    </p>
                                 </div>
 
-                                <div class="flex items-center ml-2 flex-shrink-0">
-                                    <!-- Mark as read button -->
-                                    <button v-if="!notification.is_read" @click.stop="markAsRead(notification)"
-                                        class="p-1 text-gray-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full transition-colors duration-200"
-                                        title="Mark as read">
-                                        <CheckCircleIcon class="h-4 w-4" />
-                                    </button>
-                                    <!-- Type Icon -->
-                                    <component :is="getTypeIcon(notification.type)" class="h-3 w-3 ml-1"
-                                        :class="getTypeIconClass(notification.type)" />
-                                    <!-- Unread Indicator -->
-                                    <div v-if="!notification.is_read" class="w-1.5 h-1.5 bg-blue-600 rounded-full ml-1">
-                                    </div>
+                                <!-- Footer -->
+                                <div class="flex items-center justify-between mt-2 text-xs text-gray-400">
+                                    <span class="truncate">{{ notification.created_by }}</span>
+                                    <span class="text-xs">{{ notification.created_at }}</span>
                                 </div>
-                            </div>
-
-                            <!-- Footer -->
-                            <div class="flex items-center justify-between mt-2 text-xs text-gray-400">
-                                <span class="truncate">{{ notification.created_by }}</span>
-                                <span class="text-xs">{{ notification.created_at }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Footer -->
-            <div v-if="notifications.length > 0" class="px-4 py-2 border-t border-gray-100 bg-gray-50 flex-shrink-0">
-                <button @click="viewAllNotifications"
-                    class="w-full text-center text-xs text-blue-600 hover:text-blue-800 focus:outline-none font-medium transition-colors duration-200">
-                    View all
-                </button>
+                <!-- Footer -->
+                <div v-if="notifications.length > 0"
+                    class="px-4 py-2 border-t border-gray-100 bg-gray-50 flex-shrink-0">
+                    <button @click="viewAllNotifications"
+                        class="w-full text-center text-xs text-blue-600 hover:text-blue-800 focus:outline-none font-medium transition-colors duration-200">
+                        View all
+                    </button>
+                </div>
             </div>
-        </div>
+        </Popover>
 
         <!-- Notification Detail Dialog -->
         <Dialog v-model:visible="showModal" modal :header="selectedNotification?.title" :style="{ width: '32rem' }"
@@ -120,8 +114,8 @@
 
             <template #header>
                 <div class="flex items-center space-x-3 w-full">
-                    <component :is="getTypeIcon(selectedNotification?.type)" class="h-6 w-6"
-                        :class="getTypeIconClass(selectedNotification?.type)" />
+                    <i :class="[getTypeIcon(selectedNotification?.type), getTypeIconClass(selectedNotification?.type)]"
+                        style="font-size: 1.5rem"></i>
                     <div class="flex items-center space-x-2 flex-1">
                         <h3 class="text-lg font-medium text-gray-900">
                             {{ selectedNotification?.title }}
@@ -152,7 +146,7 @@
                         <div class="flex items-center space-x-4">
                             <!-- <span>Type: <span class="font-medium">{{ selectedNotification?.type }}</span></span> -->
                             <span>Priority: <span class="font-medium capitalize">{{ selectedNotification?.priority
-                                    }}</span></span>
+                            }}</span></span>
                         </div>
                         <div class="flex items-center space-x-4">
                             <span>@<span class="font-medium">{{ selectedNotification?.created_by }}</span></span>
@@ -166,7 +160,6 @@
                 <div class="flex justify-end space-x-2">
                     <Button v-if="!selectedNotification?.is_read" @click="markAsReadAndClose(selectedNotification)"
                         label="Mark as Read" severity="info" icon="pi pi-check" />
-                    <Button @click="closeModal" label="Close" severity="secondary" outlined />
                 </div>
             </template>
         </Dialog>
@@ -177,13 +170,11 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import axios from 'axios'
-import {
-    BellIcon,
-    InformationCircleIcon,
-    ExclamationTriangleIcon,
-    CheckCircleIcon,
-    XCircleIcon
-} from '@heroicons/vue/24/outline'
+
+// PrimeVue Components
+import Button from 'primevue/button'
+import Popover from 'primevue/popover'
+import Dialog from 'primevue/dialog'
 
 // Props
 const props = defineProps({
@@ -194,7 +185,7 @@ const props = defineProps({
 })
 
 // Reactive data
-const isOpen = ref(false) // Reset to normal behavior
+const popoverRef = ref(null)
 const notifications = ref([])
 const isLoading = ref(false)
 const isMarkingAllAsRead = ref(false)
@@ -212,19 +203,13 @@ watch(() => props.unreadCount, (newValue) => {
 })
 
 // Methods
-const toggleDropdown = async () => {
-    console.log('Toggle dropdown clicked, current state:', isOpen.value)
-    isOpen.value = !isOpen.value
-    console.log('New state:', isOpen.value)
-    if (isOpen.value && notifications.value.length === 0) {
+const togglePopover = async (event) => {
+    console.log('Toggle popover clicked')
+    popoverRef.value.toggle(event)
+    if (notifications.value.length === 0) {
         console.log('Fetching notifications...')
         await fetchNotifications()
     }
-}
-
-const closeDropdown = () => {
-    console.log('Closing dropdown')
-    isOpen.value = false
 }
 
 const fetchNotifications = async () => {
@@ -297,12 +282,12 @@ const markAllAsRead = async () => {
 
 const getTypeIcon = (type) => {
     const icons = {
-        info: InformationCircleIcon,
-        warning: ExclamationTriangleIcon,
-        success: CheckCircleIcon,
-        error: XCircleIcon
+        info: 'pi pi-info-circle',
+        warning: 'pi pi-exclamation-triangle',
+        success: 'pi pi-check-circle',
+        error: 'pi pi-times-circle'
     }
-    return icons[type] || InformationCircleIcon
+    return icons[type] || 'pi pi-info-circle'
 }
 
 const getTypeIconClass = (type) => {
@@ -317,14 +302,14 @@ const getTypeIconClass = (type) => {
 
 const viewAllNotifications = () => {
     // Navigate to full notifications page
-    closeDropdown()
+    popoverRef.value.hide()
     router.visit(route('admin.system-updates'))
 }
 
 const openNotificationModal = (notification) => {
     selectedNotification.value = notification
     showModal.value = true
-    closeDropdown() // Close the dropdown when opening modal
+    popoverRef.value.hide() // Close the popover when opening modal
 }
 
 const closeModal = () => {
@@ -335,21 +320,6 @@ const closeModal = () => {
 const markAsReadAndClose = async (notification) => {
     await markAsRead(notification)
     closeModal()
-}
-
-// Click outside directive
-const vClickOutside = {
-    beforeMount(el, binding) {
-        el.clickOutsideEvent = (event) => {
-            if (!(el === event.target || el.contains(event.target))) {
-                binding.value(event)
-            }
-        }
-        document.addEventListener('click', el.clickOutsideEvent)
-    },
-    unmounted(el) {
-        document.removeEventListener('click', el.clickOutsideEvent)
-    }
 }
 
 // Lifecycle
@@ -388,21 +358,28 @@ onMounted(() => {
 }
 
 /* Custom scrollbar for the dropdown */
-.max-h-64::-webkit-scrollbar {
+.max-h-96::-webkit-scrollbar {
     width: 3px;
 }
 
-.max-h-64::-webkit-scrollbar-track {
+.max-h-96::-webkit-scrollbar-track {
     background: #f1f5f9;
 }
 
-.max-h-64::-webkit-scrollbar-thumb {
+.max-h-96::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 2px;
 }
 
-.max-h-64::-webkit-scrollbar-thumb:hover {
+.max-h-96::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/* PrimeVue Popover customizations */
+:deep(.p-popover .p-popover-content) {
+    padding: 0;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
 }
 
 /* PrimeVue Dialog custom styles */

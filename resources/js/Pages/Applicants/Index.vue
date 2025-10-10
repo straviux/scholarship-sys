@@ -10,9 +10,19 @@ import Table from '@/Components/Table.vue';
 import TableRow from '@/Components/TableRow.vue';
 import TableHeaderCell from '@/Components/TableHeaderCell.vue';
 import TableDataCell from '@/Components/TableDataCell.vue';
-import {
-    ChevronUpDownIcon
-} from '@heroicons/vue/20/solid';
+
+// PrimeVue Components
+import Button from 'primevue/button';
+import Toolbar from 'primevue/toolbar';
+import Chip from 'primevue/chip';
+import DatePicker from 'primevue/datepicker';
+import FloatLabel from 'primevue/floatlabel';
+import Divider from 'primevue/divider';
+import InputText from 'primevue/inputtext';
+import Select from 'primevue/select';
+import IftaLabel from 'primevue/iftalabel';
+import Checkbox from 'primevue/checkbox';
+
 import ApplicantProfileModal from '@/Pages/Applicants/Modal/ApplicantProfileModal.vue';
 import ViewProfileModal from './Modal/ViewProfileModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
@@ -81,6 +91,17 @@ const filter = useForm({
     date_to: props.filter.date_to ? toDate(props.filter.date_to) : null,
     remarks: props.filter.remarks || "",
 })
+
+// Records options for dropdown
+const recordsOptions = [
+    { label: '500', value: 500 },
+    { label: '200', value: 200 },
+    { label: '100', value: 100 },
+    { label: '50', value: 50 },
+    { label: '25', value: 25 },
+    { label: '10', value: 10 },
+    { label: '5', value: 5 }
+];
 
 // console.log(props.filter)
 
@@ -308,6 +329,23 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
 
 // Persist showJpmColumns state in localStorage
 const showJpmColumns = ref(false);
+
+// Calculate colspan based on visible columns
+const tableColspan = computed(() => {
+    // Base columns: Name, Parent/Guardian, Address, School, Course, Year Level, Action = 7
+    let count = 7;
+
+    if (showJpmColumns.value && hasPermission('can-view-jpm')) {
+        // Add JPM columns: Tagged, Tagged Remarks = +2
+        count += 2;
+    } else {
+        // Add regular columns: Contact #, Date Filed, Remarks = +3
+        count += 3;
+    }
+
+    return count;
+});
+
 onMounted(() => {
     const stored = localStorage.getItem('showJpmColumns');
     if (stored !== null) {
@@ -334,18 +372,10 @@ watch(showJpmColumns, (val) => {
                 <!-- {{ props.action }} -->
 
                 <div class="flex gap-2 flex-1 items-center">
-                    <div class="flex shadow-xs">
-                        <div class="bg-gray-700 rounded-l-lg text-white p-2">Show</div>
-                        <select v-model="filter.records" @change=""
-                            class="w-[60px] rounded-r-lg border cursor-pointer text-center">
-                            <option value="500">500</option>
-                            <option value="200">200</option>
-                            <option value="100">100</option>
-                            <option value="50">50</option>
-                            <option value="25">25</option>
-                            <option value="10">10</option>
-                            <option value="5">5</option>
-                        </select>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-gray-600">Show</span>
+                        <Select v-model="filter.records" :options="recordsOptions" optionLabel="label"
+                            optionValue="value" class="w-20" size="small" />
                     </div>
 
                     <Divider layout="vertical" />
@@ -407,11 +437,6 @@ watch(showJpmColumns, (val) => {
             <div class="flex gap-4 justify-between items-center mb-2 bg-gray-100 p-2 rounded">
                 <div class="text-gray-500 p-2 font-semibold">{{ profiles_total }} record(s) found</div>
                 <div class="flex gap-4 text-sm">
-                    <div class="text-normal text-gray-500 flex gap-2">Encoder: <p
-                            class="font-bold font-mono text-emerald-600 capitalize">{{
-                                userEncodedCount.name
-                            }}</p>
-                    </div>-
                     <div class="text-normal text-gray-500 flex gap-2">Today: <p
                             class="font-bold font-mono text-purple-600">
                             {{
@@ -431,10 +456,10 @@ watch(showJpmColumns, (val) => {
                     <span class="ml-2 text-xs font-medium text-gray-500">by default, sequence # is by -school per
                         course-</span>
                 </Chip>
-                <button class="px-3 py-1 rounded bg-gray-700 text-white text-xs cursor-pointer"
-                    v-if="hasPermission('can-view-jpm')" @click="showJpmColumns = !showJpmColumns">
-                    {{ showJpmColumns ? 'Hide JPM' : 'Show JPM' }}
-                </button>
+                <div class="flex items-center gap-2" v-if="hasPermission('can-view-jpm')">
+                    <Checkbox v-model="showJpmColumns" inputId="showJpmToggle" binary />
+                    <label for="showJpmToggle" class="text-sm text-gray-600 cursor-pointer">Enable Tagging</label>
+                </div>
 
 
             </div>
@@ -451,7 +476,7 @@ watch(showJpmColumns, (val) => {
                             class="cursor-pointer w-80 bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
                             <div class="flex items-center justify-between">
                                 <p class="text-[11px]">Applicant Name</p>
-                                <ChevronUpDownIcon class="h-4 w-4" />
+                                <i class="pi pi-sort-alt text-sm"></i>
                             </div>
                         </TableHeaderCell>
                         <TableHeaderCell
@@ -467,45 +492,45 @@ watch(showJpmColumns, (val) => {
                             class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
                             <div class="flex items-center justify-between">
                                 <p class="text-[11px]">School</p>
-                                <ChevronUpDownIcon class="h-4 w-4" />
+                                <i class="pi pi-sort-alt text-sm"></i>
                             </div>
                         </TableHeaderCell>
                         <TableHeaderCell @click="sortBy('course')"
                             class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
                             <div class="flex items-center justify-between">
                                 <p class="text-[11px]">Course</p>
-                                <ChevronUpDownIcon class="h-4 w-4" />
+                                <i class="pi pi-sort-alt text-sm"></i>
                             </div>
                         </TableHeaderCell>
                         <TableHeaderCell @click="sortBy('year_level')"
                             class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600 w-[30px]">
                             <div class="flex items-center justify-between">
                                 <p class="text-[11px]">Year Level</p>
-                                <ChevronUpDownIcon class="h-4 w-4" />
+                                <i class="pi pi-sort-alt text-sm"></i>
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell
+                        <TableHeaderCell v-if="!showJpmColumns"
                             class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
                             <p class="text-[11px]">Contact #</p>
                         </TableHeaderCell>
-                        <TableHeaderCell @click="sortBy('date_filed')"
+                        <TableHeaderCell v-if="!showJpmColumns" @click="sortBy('date_filed')"
                             class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600 w-[110px]">
                             <div class="flex items-center justify-between">
                                 <p class="text-[11px]">Date Filed</p>
-                                <ChevronUpDownIcon class="h-4 w-4" />
+                                <i class="pi pi-sort-alt text-sm"></i>
                             </div>
                         </TableHeaderCell>
-                        <TableHeaderCell
+                        <TableHeaderCell v-if="!showJpmColumns"
                             class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600 w-[200px]">
                             <p class="text-[11px]">Remarks</p>
                         </TableHeaderCell>
                         <TableHeaderCell v-if="hasPermission('can-view-jpm') && showJpmColumns"
                             class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
-                            <p class="text-[11px]">JPM MEMBER</p>
+                            <p class="text-[11px]">Tagged</p>
                         </TableHeaderCell>
                         <TableHeaderCell v-if="hasPermission('can-view-jpm') && showJpmColumns"
                             class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600 w-[200px]">
-                            <p class="text-[11px]">JPM Remarks</p>
+                            <p class="text-[11px]">Tagged Remarks</p>
                         </TableHeaderCell>
                         <!-- <TableHeaderCell class="w-[160px]">Status</TableHeaderCell> -->
                         <TableHeaderCell
@@ -563,9 +588,9 @@ watch(showJpmColumns, (val) => {
                                     size="small" />
                             </div>
                         </TableDataCell>
-                        <TableDataCell class="border-collapse border-slate-400"></TableDataCell>
-                        <TableDataCell class="border-collapse border-slate-400"></TableDataCell>
-                        <TableDataCell class="border-collapse border-slate-400">
+                        <TableDataCell v-if="!showJpmColumns" class="border-collapse border-slate-400"></TableDataCell>
+                        <TableDataCell v-if="!showJpmColumns" class="border-collapse border-slate-400"></TableDataCell>
+                        <TableDataCell v-if="!showJpmColumns" class="border-collapse border-slate-400">
                             <div class="px-2">
 
                                 <InputText v-model="filter.remarks" placeholder="Search remarks" class="w-full"
@@ -674,18 +699,21 @@ watch(showJpmColumns, (val) => {
                         <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
                             <div class="px-2 text-[11px] font-semibold">{{ profile.scholarship_grant[0]?.year_level ||
                                 '-'
-                                }}
+                            }}
                             </div>
                         </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
+                        <TableDataCell v-if="!showJpmColumns"
+                            class="border-collapse border-t border-slate-100 text-gray-700">
                             <div class="px-2 text-[11px] font-semibold">{{ profile.contact_no || '-' }}</div>
                         </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700 uppercase">
+                        <TableDataCell v-if="!showJpmColumns"
+                            class="border-collapse border-t border-slate-100 text-gray-700 uppercase">
                             <div class="px-2 text-[11px] font-semibold">
                                 {{ profile.date_filed ? moment(profile.date_filed).format('MMM DD, YYYY')
                                     : '-' }}</div>
                         </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
+                        <TableDataCell v-if="!showJpmColumns"
+                            class="border-collapse border-t border-slate-100 text-gray-700">
                             <div class="px-2 text-[10px]">
                                 {{ profile.remarks || '-' }}
                             </div>
@@ -731,44 +759,33 @@ watch(showJpmColumns, (val) => {
                         </TableDataCell>
 
                         <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
-                            <div class="flex gap-4 justify-center">
-                                <button class="text-indigo-500 hover:text-indigo-400 flex cursor-pointer"
-                                    @click="viewSequence(profile)">
-                                    <!-- <IdentificationIcon class="h-5 w-5 text-blue-400" /> -->
-                                    <i class="pi pi-hashtag"></i></button>
+                            <div class="flex gap-2 justify-center">
+                                <Button icon="pi pi-eye" @click="viewSequence(profile)" text rounded size="small"
+                                    severity="info" />
 
-                                <button class="text-emerald-500 hover:text-emerald-400 flex cursor-pointer"
-                                    @click="addRemarks(profile)"
-                                    v-if="hasPermission('can-view-jpm') && !hasRole('user')">
-                                    <!-- <IdentificationIcon class="h-5 w-5 text-blue-400" /> -->
-                                    <i class="pi pi-heart"></i></button>
+                                <Button icon="pi pi-heart" @click="addRemarks(profile)"
+                                    v-if="hasPermission('can-view-jpm') && !hasRole('user')" text rounded size="small"
+                                    severity="success" />
 
-
-                                <!-- <button class="text-purple-500 hover:text-blue-600 flex cursor-pointer"
-                                    @click="editProfile(profile)">
-                                    <i class="pi pi-pen-to-square"></i></button> -->
                                 <Link v-if="!hasRole('user')" :href="route('profile.waitinglist', {
                                     id: profile.profile_id,
                                     action: 'update'
-                                })" preserve-state preserve-scroll
-                                    class="text-purple-500 hover:text-purple-600 underline font-medium">
-                                <i class="pi pi-pen-to-square"></i></Link>
+                                })" preserve-state preserve-scroll>
+                                <Button icon="pi pi-pen-to-square" text rounded size="small" severity="warn" />
+                                </Link>
 
-                                <button class="text-blue-400 hover:text-blue-600 flex cursor-pointer"
-                                    @click="viewProfile(profile)">
-                                    <!-- <IdentificationIcon class="h-5 w-5 text-blue-400" /> -->
-                                    <i class="pi pi-id-card"></i></button>
-                                <button class="text-red-500 hover:text-red-700 flex cursor-pointer"
+                                <Button icon="pi pi-id-card" @click="viewProfile(profile)" text rounded size="small"
+                                    severity="secondary" />
+
+                                <Button icon="pi pi-trash"
                                     v-if="hasPermission('delete-scholar-profile') && !hasRole('user')"
-                                    @click="deleteProfile(profile)">
-                                    <i class="pi pi-trash"></i>
-                                </button>
+                                    @click="deleteProfile(profile)" text rounded size="small" severity="danger" />
                             </div>
                         </TableDataCell>
                     </TableRow>
                     <TableRow v-else>
                         <TableDataCell class="px-6 py-8 w-[10px] border-collapse border-t border-slate-100 text-center"
-                            colspan="14">
+                            :colspan="tableColspan">
                             No data
                             to be displayed</TableDataCell>
                     </TableRow>
@@ -804,9 +821,8 @@ watch(showJpmColumns, (val) => {
                     ${selectedProfile.first_name}` }}
                 </div>
                 <div class="flex justify-end gap-4 mt-6">
-                    <button class="px-4 py-2 bg-gray-200 rounded cursor-pointer" @click="cancelDelete">Cancel</button>
-                    <button class="px-4 py-2 bg-red-500 text-white rounded cursor-pointer"
-                        @click="confirmDelete">Delete</button>
+                    <Button label="Cancel" icon="pi pi-times" @click="cancelDelete" severity="secondary" />
+                    <Button label="Delete" icon="pi pi-trash" @click="confirmDelete" severity="danger" />
                 </div>
             </div>
         </div>
@@ -829,11 +845,8 @@ watch(showJpmColumns, (val) => {
                     </IftaLabel>
                 </div>
                 <div class="flex justify-end gap-4 mt-6">
-                    <button class="px-4 py-2 bg-gray-200 rounded cursor-pointer"
-                        @click="cancelAddRemarks">Cancel</button>
-                    <button class="px-4 py-2 bg-emerald-500 text-white rounded cursor-pointer"
-                        @click="confirmAddRemarks">Add
-                        Remarks</button>
+                    <Button label="Cancel" icon="pi pi-times" @click="cancelAddRemarks" severity="secondary" />
+                    <Button label="Add Remarks" icon="pi pi-heart" @click="confirmAddRemarks" severity="success" />
                 </div>
             </div>
         </div>
