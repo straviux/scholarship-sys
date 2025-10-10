@@ -291,34 +291,6 @@ const drawCanvas = () => {
 
     // Restore context
     ctx.restore();
-
-    // Draw circular border
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius - 1, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#d1d5db';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Draw grid lines within circle (optional, for composition guide)
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
-    ctx.clip();
-
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-
-    // Vertical line
-    ctx.moveTo(centerX, 0);
-    ctx.lineTo(centerX, canvasSize);
-
-    // Horizontal line
-    ctx.moveTo(0, centerY);
-    ctx.lineTo(canvasSize, centerY);
-
-    ctx.stroke();
-    ctx.restore();
 };
 
 const handleZoomIn = () => {
@@ -750,7 +722,7 @@ const confirmImageEdit = () => {
                     <p class="text-sm text-gray-600 mb-4">Zoom and drag to position your photo</p>
 
                     <!-- Canvas Editor -->
-                    <div class="relative inline-block border-2 border-gray-300 rounded-full overflow-hidden">
+                    <div class="relative inline-block border-2 border-gray-600 rounded-full overflow-hidden">
                         <canvas ref="editorCanvas" :width="canvasSize" :height="canvasSize" class="cursor-move block"
                             @mousedown="handleMouseDown" @mousemove="handleMouseMove" @mouseup="handleMouseUp"
                             @mouseleave="handleMouseUp" @wheel="handleWheel"></canvas>
