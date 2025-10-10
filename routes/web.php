@@ -37,6 +37,8 @@ Route::middleware(['auth', 'role:administrator'])->group(function () {
 // User Profile Route - Display user account information
 Route::middleware(['auth'])->group(function () {
     Route::get('/user/profile', [SystemReportController::class, 'getUserSummaryReport'])->name('user.profile');
+    Route::put('/user/profile', [ProfileController::class, 'updateProfile'])->name('user.profile.update');
+    Route::post('/user/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
 });
 
 Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->group(function () {

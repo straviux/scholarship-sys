@@ -311,8 +311,21 @@ function toggleSidebarMinimized() {
                             </svg>
                         </button> -->
                         <div class="dropdown dropdown-end">
-                            <div tabindex="0" role="button" class="btn btn-ghost rounded-btn text-white">Welcome, {{
-                                $page.props.auth.user.name }}</div>
+                            <div tabindex="0" role="button"
+                                class="btn btn-ghost rounded-btn text-white flex items-center space-x-3">
+                                <!-- User Avatar -->
+                                <div class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center"
+                                    :class="{ 'bg-gradient-to-br from-indigo-500 to-purple-600': !$page.props.auth.user.has_profile_photo }">
+                                    <img v-if="$page.props.auth.user.has_profile_photo"
+                                        :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name"
+                                        class="w-full h-full object-cover" />
+                                    <span v-else class="text-sm font-bold text-white">
+                                        {{ ($page.props.auth.user.name || 'U').charAt(0).toUpperCase() }}
+                                    </span>
+                                </div>
+                                <span class="hidden sm:inline">Welcome, {{ $page.props.auth.user.name }}</span>
+                                <span class="sm:hidden">{{ $page.props.auth.user.name }}</span>
+                            </div>
                             <ul tabindex="0"
                                 class="menu dropdown-content bg-base-100 rounded-box z-1 mt-4 w-52 p-2 shadow-sm">
                                 <li>

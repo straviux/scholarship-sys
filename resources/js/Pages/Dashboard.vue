@@ -18,10 +18,23 @@ const localip = computed(() => page.props.localip)
         <template #header>Dashboard</template>
         <div class="py-4">
             <div class="mx-4">
-
-                <h1>Welcome {{ $page.props.auth.user.name }}</h1>
-                <div>You can access this site on your local network thru
-                    <span class="underline font-semibold font-mono">{{ localip }}:9001</span>
+                <div class="flex items-center space-x-4 mb-4">
+                    <!-- User Avatar -->
+                    <div class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center"
+                        :class="{ 'bg-gradient-to-br from-indigo-500 to-purple-600': !$page.props.auth.user.has_profile_photo }">
+                        <img v-if="$page.props.auth.user.has_profile_photo"
+                            :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name"
+                            class="w-full h-full object-cover" />
+                        <span v-else class="text-lg font-bold text-white">
+                            {{ ($page.props.auth.user.name || 'U').charAt(0).toUpperCase() }}
+                        </span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold">Welcome {{ $page.props.auth.user.name }}</h1>
+                        <div class="text-gray-600">You can access this site on your local network thru
+                            <span class="underline font-semibold font-mono">{{ localip }}:9001</span>
+                        </div>
+                    </div>
                 </div>
 
 

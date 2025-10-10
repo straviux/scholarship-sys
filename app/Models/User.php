@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'username',
         'password',
+        'profile_photo',
     ];
 
     /**
@@ -44,5 +45,30 @@ class User extends Authenticatable
             'user_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the user's profile photo URL.
+     *
+     * @return string|null
+     */
+    public function getProfilePhotoUrlAttribute(): ?string
+    {
+        if ($this->profile_photo) {
+            return asset('storage/' . $this->profile_photo);
+        }
+
+        // Return a default avatar or initials-based avatar
+        return null;
+    }
+
+    /**
+     * Check if user has a profile photo.
+     *
+     * @return bool
+     */
+    public function hasProfilePhoto(): bool
+    {
+        return !empty($this->profile_photo);
     }
 }

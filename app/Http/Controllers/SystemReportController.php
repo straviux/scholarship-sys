@@ -472,7 +472,9 @@ class SystemReportController extends Controller
             'encoded_summary' => $encodedSummary,
             'generated_at' => now()->toDateTimeString(),
             'user_id' => $user->id,
-            'user_name' => $user->name
+            'user_name' => $user->name,
+            'profile_photo_url' => $user->profile_photo_url,
+            'has_profile_photo' => $user->hasProfilePhoto()
         ];
 
         return Inertia::render('User/UserProfile', [
