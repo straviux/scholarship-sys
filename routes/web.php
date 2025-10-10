@@ -12,6 +12,7 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\ScholarshipProfileController;
 use App\Http\Controllers\SystemReportController;
+use App\Http\Controllers\SystemUpdateController;
 use Illuminate\Support\Facades\Route;
 
 // This file is part of the routes/web.php file for the Laravel application.
@@ -32,6 +33,11 @@ Route::middleware(['auth', 'role:administrator'])->group(function () {
     // System Report Routes - Administrator Only
     Route::get('/admin/system-report', [SystemReportController::class, 'index'])->name('admin.system-report');
     Route::get('/admin/system-report/export-json', [SystemReportController::class, 'exportJson'])->name('admin.system-report.export-json');
+
+    // System Updates Management - Administrator Only
+    Route::get('/admin/system-updates', function () {
+        return inertia('Admin/SystemUpdates');
+    })->name('admin.system-updates');
 });
 
 // User Profile Route - Display user account information
@@ -135,5 +141,44 @@ Route::middleware(['auth'])->controller(App\Http\Controllers\SchoolController::c
 Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ReportController::class, 'generateWaitinglist'])->name('report.generatePdf');
 // Report Excel generation route
 Route::middleware(['auth'])->get('/api/report/excel', [App\Http\Controllers\ReportController::class, 'generateExcelWaitingList'])->name('report.generateExcelWaitingList');
+
+// System Updates API Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/api/system-updates', [SystemUpdateController::class, 'index']);
+    Route::get('/api/system-updates/unread-count', [SystemUpdateController::class, 'getUnreadCount']);
+    Route::post('/api/system-updates/mark-all-read', [SystemUpdateController::class, 'markAllAsRead']);
+
+    // Admin routes for managing system updates
+    Route::middleware(['role:administrator'])->group(function () {
+        Route::get('/api/admin/system-updates', [SystemUpdateController::class, 'adminIndex']);
+        Route::post('/api/system-updates', [SystemUpdateController::class, 'store']);
+    });
+
+    // Individual update routes (must be after specific routes)
+    Route::post('/api/system-updates/{systemUpdate}/mark-read', [SystemUpdateController::class, 'markAsRead'])->name('system-updates.mark-read');
+    Route::delete('/api/system-updates/{systemUpdate}', [SystemUpdateController::class, 'destroy'])->middleware('role:administrator');
+});
+
+// Test route for debugging notifications
+Route::middleware(['auth'])->get('/test-notifications', function () {
+    $user = request()->user();
+    $unreadCount = $user->getUnreadNotificationsCount();
+    $systemUpdates = \App\Models\SystemUpdate::all();
+
+    return response()->json([
+        'user_id' => $user->id,
+        'user_name' => $user->name,
+        'unread_count' => $unreadCount,
+        'total_system_updates' => $systemUpdates->count(),
+        'system_updates' => $systemUpdates->take(3)->map(function ($update) {
+            return [
+                'id' => $update->id,
+                'title' => $update->title,
+                'is_active' => $update->is_active,
+                'is_global' => $update->is_global,
+            ];
+        }),
+    ]);
+});
 
 require __DIR__ . '/auth.php';

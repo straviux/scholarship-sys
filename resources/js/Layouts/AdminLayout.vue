@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import SidebarLink from "@/Components/SidebarLink.vue";
+import NotificationDropdown from "@/Components/NotificationDropdown.vue";
 import { Link } from "@inertiajs/vue3";
 import { usePermission } from "@/composable/permissions";
 import { DynamicHeroicon } from 'vue-dynamic-heroicons';
@@ -21,7 +22,8 @@ import {
     ArrowRightStartOnRectangleIcon,
     TableCellsIcon,
     ShieldExclamationIcon,
-    DocumentTextIcon
+    DocumentTextIcon,
+    BellIcon
 } from "@heroicons/vue/20/solid";
 const toggleMenu = ref(false);
 const sidebarMinimized = ref(localStorage.getItem('sidebarMinimized') === 'true');
@@ -164,6 +166,13 @@ function toggleSidebarMinimized() {
                                         <span class="-mr-1 font-medium indent-3">System Report</span>
                                     </SidebarLink>
                                 </li>
+                                <li>
+                                    <SidebarLink v-if="hasRole('administrator')" :href="route('admin.system-updates')"
+                                        :active="route().current('admin.system-updates')">
+                                        <BellIcon class="h-5 w-5 mr-2" />
+                                        <span class="-mr-1 font-medium indent-3">System Updates</span>
+                                    </SidebarLink>
+                                </li>
                             </ul>
                         </details>
                     </li>
@@ -301,18 +310,14 @@ function toggleSidebarMinimized() {
                         </Transition>
                     </button>
                     <!-- <div v-if="!toggleMenu" class="h-full w-full">test</div> -->
-                    <div class="space-x-4 hidden md:flex">
-                        <!-- <button aria-label="notification"
-                            class="w-10 h-10 rounded-xl border bg-gray-100 focus:bg-gray-100 active:bg-gray-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 m-auto text-gray-600"
-                                viewBox="0 0 20 20" fill="currentColor">
-                                <path
-                                    d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
-                            </svg>
-                        </button> -->
+                    <div class="space-x-6 hidden md:flex items-center justify-center">
+                        <!-- Notification Dropdown -->
+                        <NotificationDropdown
+                            :unread-count="($page.props.auth.user && $page.props.auth.user.unread_notifications_count) || 0" />
+
                         <div class="dropdown dropdown-end">
                             <div tabindex="0" role="button"
-                                class="btn btn-ghost rounded-btn text-white flex items-center space-x-3">
+                                class="text-white flex items-center text-sm font-medium space-x-3">
                                 <!-- User Avatar -->
                                 <div class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center"
                                     :class="{ 'bg-gradient-to-br from-indigo-500 to-purple-600': !$page.props.auth.user.has_profile_photo }">
@@ -323,7 +328,7 @@ function toggleSidebarMinimized() {
                                         {{ ($page.props.auth.user.name || 'U').charAt(0).toUpperCase() }}
                                     </span>
                                 </div>
-                                <span class="hidden sm:inline">Welcome, {{ $page.props.auth.user.name }}</span>
+                                <span class="hidden sm:inline">{{ $page.props.auth.user.name }}</span>
                                 <span class="sm:hidden">{{ $page.props.auth.user.name }}</span>
                             </div>
                             <ul tabindex="0"

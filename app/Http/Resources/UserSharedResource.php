@@ -22,6 +22,7 @@ class UserSharedResource extends JsonResource
             'permissions' => $this->getAllPermissions()->pluck('name'),
             'profile_photo_url' => $this->profile_photo_url,
             'has_profile_photo' => $this->hasProfilePhoto(),
+            'unread_notifications_count' => $this->getUnreadNotificationsCount(),
         ];
     }
 }

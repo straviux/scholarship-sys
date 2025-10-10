@@ -71,4 +71,24 @@ class User extends Authenticatable
     {
         return !empty($this->profile_photo);
     }
+
+    /**
+     * Get unread notifications count for this user.
+     *
+     * @return int
+     */
+    public function getUnreadNotificationsCount(): int
+    {
+        try {
+            return \App\Models\SystemUpdate::where('is_active', true)
+                ->where('is_global', true)
+                ->whereDoesntHave('readByUsers', function ($query) {
+                    $query->where('user_id', $this->id);
+                })
+                ->count();
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error getting unread notifications count: ' . $e->getMessage());
+            return 0;
+        }
+    }
 }
