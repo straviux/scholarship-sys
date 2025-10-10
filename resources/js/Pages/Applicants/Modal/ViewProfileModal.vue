@@ -355,7 +355,7 @@
 
                             </div>
                             <div class="w-full bg-white px-4 py-2 flex gap-2 items-center -mt-4 justify-between"
-                                v-if="profile.application_status != 2">
+                                v-if="profile.application_status != 2 && hasPermission('approve-scholar-profile')">
 
                                 <!-- <button
                                         class="btn btn-sm bg-red-500 text-white shadow font-semibold px-4 py-2 rounded"
@@ -453,7 +453,9 @@ import DangerButton from "@/Components/DangerButton.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import TextInput from "@/Components/TextInput.vue";
 import InputLabel from "@/Components/InputLabel.vue";
+import { usePermission } from '@/composable/permissions';
 
+const { hasPermission, hasRole } = usePermission();
 // import municipalities from '@/Data/municipalities.json';
 
 const props = defineProps({

@@ -31,7 +31,7 @@ import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 import QuickViewModal from './Modal/QuickViewModal.vue';
 
-const { hasPermission } = usePermission();
+const { hasPermission, hasRole } = usePermission();
 // import { usePage } from '@inertiajs/vue3'
 // const page = usePage()
 // console.log(route)
@@ -122,8 +122,8 @@ const filterList = (resetToPage1 = false) => {
     let date_from = filter.date_from ? moment(filter.date_from).format('YYYY-MM-DD') : "";
     let date_to = filter.date_to ? moment(filter.date_to).format('YYYY-MM-DD') : "";
 
-    // Preserve current page if available, but reset to page 1 if records changed
-    let currentPage = resetToPage1 ? 1 : (props.profiles && props.profiles.meta && props.profiles.meta.current_page) ? props.profiles.meta.current_page : 1;
+    // Always reset to page 1 when filtering/searching to ensure we search through all records
+    let currentPage = 1;
 
     const params = {};
     if (program) params.program = program;
@@ -179,6 +179,8 @@ const sortBy = (column) => {
     if (column == 'year_level') {
         form.sort.year_level = form.sort.year_level == 'desc' ? 'asc' : 'desc';
     }
+    // Apply the sort by triggering a filter with current filters
+    filterList(true);
 }
 
 const handleKeydown = (e) => {
@@ -212,15 +214,12 @@ onBeforeUnmount(() => {
 
 // Only trigger filterList from filter changes, not both form and filter
 let filterListTimeout = null;
-let previousRecords = filter.records;
 
 watch(filter, (newFilter, oldFilter) => {
     if (filterListTimeout) clearTimeout(filterListTimeout);
     filterListTimeout = setTimeout(() => {
-        // Check if records field specifically changed
-        const recordsChanged = newFilter.records !== previousRecords;
-        filterList(recordsChanged);
-        previousRecords = newFilter.records;
+        // Always reset to page 1 when any filter changes to search through all records
+        filterList(true);
         filterListTimeout = null;
     }, 500);
 });
@@ -386,16 +385,17 @@ watch(showJpmColumns, (val) => {
                         <template #end>
                             <div class="space-x-2">
                                 <Button as="a" label="New" icon="pi pi-user-plus"
-                                    v-if="hasPermission('create-scholar-profile')" severity="success" :href="route('profile.waitinglist', {
+                                    v-if="hasPermission('create-scholar-profile') && !hasRole('user')"
+                                    severity="success" :href="route('profile.waitinglist', {
                                         action: 'create'
                                     })" raised size="small" />
                                 <Button as="a" label="Existing" icon="pi pi-user"
-                                    v-if="hasPermission('create-scholar-profile')" :href="route('profile.waitinglist', {
+                                    v-if="hasPermission('create-scholar-profile') && !hasRole('user')" :href="route('profile.waitinglist', {
                                         action: 'add-existing'
                                     })" size="small" severity="secondary" />
 
                                 <Button label="Export" icon="pi pi-upload" severity="secondary"
-                                    v-if="hasPermission('create-scholar-profile')" size="small"
+                                    v-if="hasPermission('create-scholar-profile') && !hasRole('user')" size="small"
                                     @click="openReportModal" />
                             </div>
                         </template>
@@ -696,13 +696,13 @@ watch(showJpmColumns, (val) => {
                                 <div class="flex gap-2">
                                     <label class="label hover:text-gray-800">
                                         <input type="checkbox" :checked="profile.is_jpm_member"
-                                            class="checkbox  checkbox-sm "
+                                            class="checkbox  checkbox-sm " :disabled="hasRole('user')"
                                             @change="updateJpmStatus({ id: profile.profile_id, is_jpm_member: $event.target.checked })" />
                                         <span>applicant</span>
                                     </label>
                                     <label class="label hover:text-gray-800">
                                         <input type="checkbox" :checked="profile.is_father_jpm"
-                                            class="checkbox  checkbox-sm"
+                                            class="checkbox  checkbox-sm" :disabled="hasRole('user')"
                                             @change="updateJpmStatus({ id: profile.profile_id, is_father_jpm: $event.target.checked })" />
                                         <span>father</span>
                                     </label>
@@ -711,13 +711,13 @@ watch(showJpmColumns, (val) => {
                                 <div class="flex gap-2">
                                     <label class="label hover:text-gray-800">
                                         <input type="checkbox" :checked="profile.is_guardian_jpm"
-                                            class="checkbox  checkbox-sm"
+                                            class="checkbox  checkbox-sm" :disabled="hasRole('user')"
                                             @change="updateJpmStatus({ id: profile.profile_id, is_guardian_jpm: $event.target.checked })" />
                                         <span>guardian</span>
                                     </label>
                                     <label class="label ml-1 hover:text-gray-800">
                                         <input type="checkbox" :checked="profile.is_mother_jpm"
-                                            class="checkbox  checkbox-sm"
+                                            class="checkbox  checkbox-sm" :disabled="hasRole('user')"
                                             @change="updateJpmStatus({ id: profile.profile_id, is_mother_jpm: $event.target.checked })" />
                                         <span>mother</span>
                                     </label>
@@ -738,7 +738,8 @@ watch(showJpmColumns, (val) => {
                                     <i class="pi pi-hashtag"></i></button>
 
                                 <button class="text-emerald-500 hover:text-emerald-400 flex cursor-pointer"
-                                    @click="addRemarks(profile)" v-if="hasPermission('can-view-jpm')">
+                                    @click="addRemarks(profile)"
+                                    v-if="hasPermission('can-view-jpm') && !hasRole('user')">
                                     <!-- <IdentificationIcon class="h-5 w-5 text-blue-400" /> -->
                                     <i class="pi pi-heart"></i></button>
 
@@ -746,7 +747,7 @@ watch(showJpmColumns, (val) => {
                                 <!-- <button class="text-purple-500 hover:text-blue-600 flex cursor-pointer"
                                     @click="editProfile(profile)">
                                     <i class="pi pi-pen-to-square"></i></button> -->
-                                <Link :href="route('profile.waitinglist', {
+                                <Link v-if="!hasRole('user')" :href="route('profile.waitinglist', {
                                     id: profile.profile_id,
                                     action: 'update'
                                 })" preserve-state preserve-scroll
@@ -758,7 +759,8 @@ watch(showJpmColumns, (val) => {
                                     <!-- <IdentificationIcon class="h-5 w-5 text-blue-400" /> -->
                                     <i class="pi pi-id-card"></i></button>
                                 <button class="text-red-500 hover:text-red-700 flex cursor-pointer"
-                                    v-if="hasPermission('delete-scholar-profile')" @click="deleteProfile(profile)">
+                                    v-if="hasPermission('delete-scholar-profile') && !hasRole('user')"
+                                    @click="deleteProfile(profile)">
                                     <i class="pi pi-trash"></i>
                                 </button>
                             </div>
@@ -779,7 +781,7 @@ watch(showJpmColumns, (val) => {
 
         <!-- CREATE PROFILE MODAL -->
         <ApplicantProfileModal
-            v-if="props.action == 'create' || props.action == 'update' || props.action == 'add-existing' && hasPermission('create-scholar-profile')"
+            v-if="(props.action == 'create' || props.action == 'update' || props.action == 'add-existing') && hasPermission('create-scholar-profile') && !hasRole('user')"
             :action="props.action" :errors="props.errors" :profile="props.profile" />
 
         <!-- VIEW PROFILE MODAL -->
