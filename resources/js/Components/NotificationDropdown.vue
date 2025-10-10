@@ -1,17 +1,16 @@
 <template>
     <div class="relative">
-        <!-- Notification Bell Button -->
-        <button @click.stop="toggleDropdown"
-            class="relative p-2 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded-full transition-colors duration-200"
-            :class="{ 'text-yellow-400': hasUnreadNotifications }">
-            <BellIcon class="h-6 w-6" />
-            <!-- Notification Badge -->
-            <span v-if="unreadCount > 0"
-                class="absolute right-0 -top-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full animate-pulse">
-                {{ unreadCount > 99 ? '99+' : unreadCount }}
-            </span>
-        </button>
-
+        <!-- Notification Bell Button with OverlayBadge -->
+        <!-- <OverlayBadge :value="unreadCount > 99 ? '99+' : unreadCount" :visible="unreadCount > 1" severity="danger"
+            size="small">
+            <button @click.stop="toggleDropdown"
+                class="p-2 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded-full transition-colors duration-200"
+                :class="{ 'text-yellow-400': hasUnreadNotifications }">
+                <i class="pi pi-bell" style="font-size: 1.3rem" />
+            </button>
+        </OverlayBadge> -->
+        <Button type="button" label="System Updates" icon="pi pi-bell" @click.stop="toggleDropdown" severity="contrast"
+            :badge="unreadCount > 99 ? '99+' : unreadCount || ''" size="small" />
         <!-- Dropdown Menu -->
         <div v-if="isOpen" v-click-outside="closeDropdown"
             class="absolute right-0 z-50 mt-2 w-80 bg-white rounded-lg shadow-xl max-h-96 overflow-hidden transform transition-all duration-200 ease-out flex flex-col"
@@ -22,7 +21,7 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2">
                         <BellIcon class="h-4 w-4 text-blue-600" />
-                        <h3 class="text-base font-semibold text-gray-900">Notifications</h3>
+                        <h3 class="text-base font-semibold text-gray-900">SystemUpdates</h3>
                     </div>
                     <button v-if="unreadCount > 0" @click="markAllAsRead" :disabled="isMarkingAllAsRead"
                         class="text-xs text-blue-600 hover:text-blue-800 focus:outline-none disabled:opacity-50 font-medium transition-colors duration-200">
@@ -177,8 +176,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
-import Dialog from 'primevue/dialog'
-import Button from 'primevue/button'
 import {
     BellIcon,
     InformationCircleIcon,

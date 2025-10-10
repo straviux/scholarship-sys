@@ -316,20 +316,26 @@ function toggleSidebarMinimized() {
                             :unread-count="($page.props.auth.user && $page.props.auth.user.unread_notifications_count) || 0" />
 
                         <div class="dropdown dropdown-end">
-                            <div tabindex="0" role="button"
-                                class="text-white flex items-center text-sm font-medium space-x-3">
-                                <!-- User Avatar -->
-                                <div class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center"
-                                    :class="{ 'bg-gradient-to-br from-indigo-500 to-purple-600': !$page.props.auth.user.has_profile_photo }">
-                                    <img v-if="$page.props.auth.user.has_profile_photo"
-                                        :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name"
-                                        class="w-full h-full object-cover" />
-                                    <span v-else class="text-sm font-bold text-white">
-                                        {{ ($page.props.auth.user.name || 'U').charAt(0).toUpperCase() }}
-                                    </span>
+                            <div tabindex="0" role="button" class="text-white flex items-center text-sm font-medium">
+                                <!-- User Avatar with Chevron -->
+                                <div class="relative">
+                                    <div class="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center cursor-pointer"
+                                        :class="{ 'bg-gradient-to-br from-indigo-500 to-purple-600': !$page.props.auth.user.has_profile_photo }">
+                                        <img v-if="$page.props.auth.user.has_profile_photo"
+                                            :src="$page.props.auth.user.profile_photo_url"
+                                            :alt="$page.props.auth.user.name" class="w-full h-full object-cover" />
+                                        <span v-else class="text-sm font-bold text-white">
+                                            {{ ($page.props.auth.user.name || 'U').charAt(0).toUpperCase() }}
+                                        </span>
+                                    </div>
+                                    <!-- Chevron positioned at bottom right -->
+                                    <div
+                                        class="absolute -bottom-1 -right-1 bg-gray-600 rounded-full w-4 h-4 flex items-center justify-center">
+                                        <i class="pi pi-chevron-down text-white" style="font-size: 0.5rem"></i>
+                                    </div>
                                 </div>
-                                <span class="hidden sm:inline">{{ $page.props.auth.user.name }}</span>
-                                <span class="sm:hidden">{{ $page.props.auth.user.name }}</span>
+                                <!-- <span class="hidden sm:inline">{{ $page.props.auth.user.name }}</span>
+                                <span class="sm:hidden">{{ $page.props.auth.user.name }}</span> -->
                             </div>
                             <ul tabindex="0"
                                 class="menu dropdown-content bg-base-100 rounded-box z-1 mt-4 w-52 p-2 shadow-sm">
