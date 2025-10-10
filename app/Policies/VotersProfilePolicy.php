@@ -29,7 +29,7 @@ class VotersProfilePolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole(['admin', 'moderator', 'encoder', 'user']) ? true : false;
+        return $user->hasRole(['administrator', 'jpm_admin', 'moderator', 'encoder', 'user']) ? true : false;
     }
 
     /**
@@ -37,7 +37,7 @@ class VotersProfilePolicy
      */
     public function update(User $user, VoterProfile $voterProfile): bool
     {
-        return $user->hasRole(['admin', 'moderator', 'encoder']) ? true : false;
+        return $user->hasRole(['administrator', 'jpm_admin', 'moderator', 'encoder']) ? true : false;
     }
 
     /**
@@ -45,7 +45,7 @@ class VotersProfilePolicy
      */
     public function delete(User $user, VoterProfile $voterProfile): bool
     {
-        return $user->hasRole(['admin', 'moderator']) ? true : false;
+        return $user->hasRole(['administrator', 'jpm_admin', 'moderator']) ? true : false;
     }
 
     /**

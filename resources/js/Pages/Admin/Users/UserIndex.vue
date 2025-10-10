@@ -2,11 +2,6 @@
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { Head, Link, useForm, router } from "@inertiajs/vue3";
 import { ref } from "vue";
-import Table from "@/Components/Table.vue";
-import TableRow from "@/Components/TableRow.vue";
-import TableHeaderCell from "@/Components/TableHeaderCell.vue";
-import TableDataCell from "@/Components/TableDataCell.vue";
-import Modal from "@/Components/Modal.vue";
 import ChangePasswordModal from "@/Pages/Admin/Users/ChangePasswordModal.vue";
 import { UserPlusIcon } from "@heroicons/vue/20/solid";
 import { toast } from 'vue3-toastify';
@@ -60,6 +55,17 @@ const deleteUser = (userID) => {
         },
     });
 };
+
+// Helper function to format role names for display
+const formatRoleName = (roleName) => {
+    if (!roleName) return 'Unknown Role';
+
+    // Replace underscores with spaces and capitalize each word
+    return roleName
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+};
 </script>
 
 <template>
@@ -69,80 +75,122 @@ const deleteUser = (userID) => {
     <AdminLayout>
         <template #header>Users</template>
 
-        <div class="max-w-4xl mx-auto py-4">
-            <div class="flex justify-end">
-                <Link :href="route('users.create')"
-                    class="text-emerald-500 underline font-bold px-3 py-2 bg-none rounded-sm flex items-center justify-center gap-1">
-                <UserPlusIcon class="h-5 w-5" />New User</Link>
+        <div class="max-w-6xl mx-auto py-4">
+            <!-- Header with Add User Button -->
+            <Panel>
+                <template #header>
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-users text-xl"></i>
+                        <span class="font-semibold text-lg">User Management</span>
+                    </div>
+                </template>
 
-                <!-- {{ users }} -->
-            </div>
+                <div class="flex justify-between items-center">
+                    <div class="text-gray-600">
+                        Manage system users and their access levels
+                    </div>
+                    <Button label="New User" icon="pi pi-user-plus" severity="success" raised
+                        @click="router.get(route('users.create'))" />
+                </div>
+            </Panel>
+
+            <!-- Users DataTable -->
             <div class="mt-6">
-                <Table class="border-collapse border border-slate-400">
+                <DataTable :value="users" stripedRows showGridlines responsiveLayout="scroll" :paginator="true"
+                    :rows="10"
+                    paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                    currentPageReportTemplate="{first} to {last} of {totalRecords}"
+                    :rowsPerPageOptions="[5, 10, 20, 50]">
                     <template #header>
-                        <TableRow class="border-b">
-                            <TableHeaderCell class="-indent-1">#</TableHeaderCell>
-                            <TableHeaderCell class="-indent-2 w-[35%]">Name</TableHeaderCell>
-                            <TableHeaderCell class="-indent-2">Username</TableHeaderCell>
-                            <TableHeaderCell class="-indent-2 w-[20%]">Action</TableHeaderCell>
-                        </TableRow>
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-800">System Users</h3>
+                            <Tag :value="`${users.length} users`" severity="info" />
+                        </div>
                     </template>
-                    <template #default>
-                        <TableRow v-for="(user, index) in users" :key="user.id">
-                            <TableDataCell class="px-6 w-[10px] border-collapse border-t border-slate-400 -indent-1">{{
-                                index + 1 }}</TableDataCell>
-                            <TableDataCell class="border-collapse border-t border-l border-slate-400 indent-4">{{
-                                user.name }}</TableDataCell>
-                            <TableDataCell class="border-collapse border-t border-l border-slate-400 indent-4">{{
-                                user.username }}</TableDataCell>
-                            <TableDataCell
-                                class="space-x-2 border-collapse border-t border-l border-slate-400 indent-4">
 
+                    <Column field="id" header="#" style="width: 50px">
+                        <template #body="slotProps">
+                            <div class="text-center font-mono text-sm text-gray-500">
+                                {{ slotProps.index + 1 }}
+                            </div>
+                        </template>
+                    </Column>
 
+                    <Column field="name" header="Full Name">
+                        <template #body="slotProps">
+                            <div class="flex items-center gap-3">
+                                <Avatar v-if="slotProps.data.has_profile_photo"
+                                    :image="slotProps.data.profile_photo_url" class="border-2 border-gray-200"
+                                    shape="circle" size="large" />
+                                <Avatar v-else :label="slotProps.data.name.charAt(0).toUpperCase()"
+                                    class="bg-blue-500 text-white" shape="circle" size="large" />
+                                <div>
+                                    <div class="font-semibold text-gray-800">{{ slotProps.data.name }}</div>
+                                    <div class="text-sm text-gray-500">@{{ slotProps.data.username }}</div>
+                                </div>
+                            </div>
+                        </template>
+                    </Column>
 
+                    <Column field="roles" header="Role">
+                        <template #body="slotProps">
+                            <span v-if="slotProps.data.roles && slotProps.data.roles.length > 0"
+                                class="font-medium text-gray-700">
+                                {{ formatRoleName(slotProps.data.roles[0].name) }}
+                            </span>
+                            <span v-else class="text-gray-400 italic">
+                                No Role
+                            </span>
+                        </template>
+                    </Column>
 
-                                <Button icon="pi pi-pen-to-square" severity="info" variant="text" rounded
-                                    aria-label="Edit" @click="editUser(user.id)" />
+                    <Column header="Actions" style="width: 200px">
+                        <template #body="slotProps">
+                            <div class="flex gap-2 justify-center">
+                                <Button icon="pi pi-pen-to-square" severity="info" size="small" rounded outlined
+                                    v-tooltip.top="'Edit User'" @click="editUser(slotProps.data.id)" />
 
-                                <Button icon="pi pi-shield" severity="warn" variant="text" rounded
-                                    aria-label="Change Password" @click="openChangePasswordModal(user)" />
+                                <Button icon="pi pi-shield" severity="warn" size="small" rounded outlined
+                                    v-tooltip.top="'Change Password'"
+                                    @click="openChangePasswordModal(slotProps.data)" />
 
-
-                                <Button icon="pi pi-trash" severity="danger" variant="text" rounded aria-label="Delete"
-                                    @click="
-                                        confirmDeleteUser(
-                                            user.id,
-                                            user.name,
-                                            user.username
-                                        )
-                                        " />
-                            </TableDataCell>
-
-                        </TableRow>
-                    </template>
-                </Table>
+                                <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
+                                    v-tooltip.top="'Delete User'"
+                                    @click="confirmDeleteUser(slotProps.data.id, slotProps.data.name, slotProps.data.username)" />
+                            </div>
+                        </template>
+                    </Column>
+                </DataTable>
             </div>
         </div>
-        <Modal marginTop="md" maxWidth="lg" :show="showConfirmDeleteUserModal" @close="closeModal">
-            <div class="p-6">
-                <h2 class="text-lg font-semibold text-slate-800">
-                    Are you sure you want to delete this user?
-                </h2>
 
-                <p class="mt-4 bg-slate-100 p-2 text-center text-red-700 font-semibold">
-                    "{{ modalUserData.name }} / {{ modalUserData.username }}"
-                </p>
-                <div class="mt-6 flex justify-end gap-3">
-                    <!-- <DangerButton @click="deleteRole(modalRoleData.id)">
-                        Delete</DangerButton> -->
-                    <Button label="Delete" severity="danger" raised @click="deleteUser(modalUserData.id)"
-                        size="small" />
-                    <Button label="Cancel" severity="secondary" @click="closeModal" size="small" />
-                    <!-- <SecondaryButton @click="closeModal">Cancel</SecondaryButton> -->
+        <!-- Delete Confirmation Dialog -->
+        <Dialog v-model:visible="showConfirmDeleteUserModal" :style="{ width: '450px' }" header="Confirm Deletion"
+            :modal="true">
+            <div class="flex items-center gap-4">
+                <i class="pi pi-exclamation-triangle text-3xl text-red-500"></i>
+                <div>
+                    <p class="text-lg font-semibold text-gray-800 mb-2">
+                        Are you sure you want to delete this user?
+                    </p>
+                    <div class="bg-gray-100 p-3 rounded border-l-4 border-red-500">
+                        <div class="font-semibold text-red-700">{{ modalUserData.name }}</div>
+                        <div class="text-sm text-gray-600">Username: {{ modalUserData.username }}</div>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-2">
+                        This action cannot be undone.
+                    </p>
                 </div>
             </div>
-        </Modal>
 
+            <template #footer>
+                <Button label="Cancel" severity="secondary" @click="closeModal" outlined />
+                <Button label="Delete User" severity="danger" @click="deleteUser(modalUserData.id)"
+                    :loading="form.processing" />
+            </template>
+        </Dialog>
+
+        <!-- Change Password Modal -->
         <ChangePasswordModal :show="showChangePasswordModal" :user="selectedUser" @close="closeChangePasswordModal"
             @success="handlePasswordChangeSuccess" />
     </AdminLayout>

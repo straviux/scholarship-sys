@@ -18,6 +18,8 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'username' => $this->username,
+            'profile_photo_url' => $this->profile_photo_url,
+            'has_profile_photo' => !empty($this->profile_photo),
             'roles' => RoleResource::collection($this->whenLoaded('roles')),
             'permission' => PermissionResource::collection($this->whenLoaded('permissions'))
         ];

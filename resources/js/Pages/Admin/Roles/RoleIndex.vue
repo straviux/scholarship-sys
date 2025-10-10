@@ -73,6 +73,10 @@ const deleteRole = (roleID) => {
                                 <Button icon="pi pi-pen-to-square" severity="info" variant="text" rounded
                                     aria-label="Edit" @click="editRole(role.id)" />
 
+                                <!-- Hide delete button for administrator role to prevent system issues -->
+                                <Button v-if="role.name !== 'administrator'" icon="pi pi-trash" severity="danger"
+                                    variant="text" rounded aria-label="Delete"
+                                    @click="confirmDeleteRole(role.id, role.name)" />
                                 <!-- <Link
                                     :href="route('roles.destroy', role.id)"
                                     class="text-red-500 hover:text-red-600"
@@ -80,8 +84,6 @@ const deleteRole = (roleID) => {
                                     as="button"
                                     >Delete</Link
                                 > -->
-                                <Button icon="pi pi-trash" severity="danger" variant="text" rounded aria-label="Edit"
-                                    @click="confirmDeleteRole(role.id, role.name)" />
                                 <!-- <button class="text-red-500 hover:text-red-600  cursor-pointer" @click="
                                     confirmDeleteRole(role.id, role.name)
                                     ">

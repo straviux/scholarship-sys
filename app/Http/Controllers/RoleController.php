@@ -67,6 +67,11 @@ class RoleController extends Controller
      */
     public function update(CreateRoleRequest $request, Role $role): RedirectResponse
     {
+        // Prevent renaming administrator role to maintain system integrity
+        if ($role->name === 'administrator' && $request->name !== 'administrator') {
+            return back()->withErrors(['name' => 'Administrator role name cannot be changed.']);
+        }
+
         // $role = Role::findById($id);
         $role->update([
             'name' => $request->name
@@ -80,6 +85,11 @@ class RoleController extends Controller
      */
     public function destroy(Role $role)
     {
+        // Prevent deletion of administrator role to maintain system integrity
+        if ($role->name === 'administrator') {
+            return back()->withErrors(['error' => 'Administrator role cannot be deleted.']);
+        }
+
         // $role = Role::findById($id);
         $role->delete();
         return back();

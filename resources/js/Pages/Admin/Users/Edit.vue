@@ -10,13 +10,23 @@ import Table from "@/Components/Table.vue";
 import TableRow from "@/Components/TableRow.vue";
 import TableHeaderCell from "@/Components/TableHeaderCell.vue";
 import TableDataCell from "@/Components/TableDataCell.vue";
-import { onMounted } from "vue";
+import { onMounted, computed } from "vue";
 import { ArrowUturnLeftIcon } from "@heroicons/vue/20/solid";
+
 const props = defineProps({
     user: { type: Object, required: true },
     roles: Array,
 });
-// const form = useForm({ name: props.role.name });
+
+// Filter out administrator role - there should only be one administrator
+// However, if current user is already administrator, allow keeping that role
+const availableRoles = computed(() => {
+    const isCurrentlyAdmin = props.user?.roles?.some(role => role.name === 'administrator');
+    if (isCurrentlyAdmin) {
+        return props.roles; // Allow administrator to keep their role
+    }
+    return props.roles.filter(role => role.name !== 'administrator');
+});
 
 const form = useForm({
     name: props.user?.name,
@@ -69,7 +79,7 @@ const submit = () => {
                     </div>
                     <div class="mt-4">
                         <InputLabel for="roles" value="Role" />
-                        <VueMultiselect v-model="form.roles" :options="roles" :close-on-select="true"
+                        <VueMultiselect v-model="form.roles" :options="availableRoles" :close-on-select="true"
                             placeholder="Select role" label="name" track-by="name" />
                     </div>
 

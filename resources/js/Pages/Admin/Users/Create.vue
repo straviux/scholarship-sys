@@ -7,8 +7,15 @@ import TextInput from "@/Components/TextInput.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import VueMultiselect from "vue-multiselect";
 import { ArrowUturnLeftIcon } from "@heroicons/vue/20/solid";
+import { computed } from "vue";
+
 const props = defineProps({
     roles: Array,
+});
+
+// Filter out administrator role - there should only be one administrator
+const availableRoles = computed(() => {
+    return props.roles.filter(role => role.name !== 'administrator');
 });
 
 const form = useForm({
@@ -63,7 +70,7 @@ const submit = () => {
                     </div>
                     <div class="mt-4">
                         <InputLabel for="roles" value="Role" />
-                        <VueMultiselect v-model="form.roles" :options="roles" :close-on-select="true"
+                        <VueMultiselect v-model="form.roles" :options="availableRoles" :close-on-select="true"
                             placeholder="Select role" label="name" track-by="name" />
                     </div>
 

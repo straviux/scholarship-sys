@@ -10,12 +10,16 @@ import Table from "@/Components/Table.vue";
 import TableRow from "@/Components/TableRow.vue";
 import TableHeaderCell from "@/Components/TableHeaderCell.vue";
 import TableDataCell from "@/Components/TableDataCell.vue";
-import { onMounted, watch } from "vue";
+import { onMounted, watch, computed } from "vue";
 import { ArrowUturnLeftIcon } from "@heroicons/vue/20/solid";
 const props = defineProps({
     role: { type: Object, required: true },
     permissions: Array,
 });
+
+// Check if this is the administrator role to prevent modification
+const isAdministratorRole = computed(() => props.role.name === 'administrator');
+
 const form = useForm({ name: props.role.name, permissions: [] });
 
 onMounted(() => {
@@ -51,8 +55,14 @@ watch(
                     <div class="mt-4">
                         <InputLabel for="name" value="Name" />
 
-                        <TextInput id="name" type="text" class="mt-1 block w-full" v-model="form.name" autofocus
+                        <TextInput id="name" type="text" class="mt-1 block w-full" v-model="form.name"
+                            :readonly="isAdministratorRole"
+                            :class="{ 'bg-gray-200 cursor-not-allowed': isAdministratorRole }" autofocus
                             autocomplete="username" />
+
+                        <p v-if="isAdministratorRole" class="mt-1 text-sm text-gray-600">
+                            Administrator role name cannot be modified for security reasons.
+                        </p>
 
                         <InputError class="mt-2" :message="form.errors.name" />
                     </div>
@@ -86,7 +96,7 @@ watch(
                             <TableDataCell>{{ index + 1 }}</TableDataCell>
                             <TableDataCell>{{
                                 rolePermission.name
-                            }}</TableDataCell>
+                                }}</TableDataCell>
                             <TableDataCell class="space-x-6">
                                 <Link :href="route('roles.permission.destroy', [
                                     role.id,

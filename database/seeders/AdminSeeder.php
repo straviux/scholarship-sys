@@ -23,6 +23,6 @@ class AdminSeeder extends Seeder
             'user_verified_at' => now(),
             'password' => static::$password ??= Hash::make('admin'),
             'remember_token' => Str::random(10),
-        ])->assignRole('admin');
+        ])->assignRole('administrator');
     }
 }
