@@ -61,6 +61,20 @@ class ScholarshipProfile extends Model
         'unique_id'
     ];
 
+    protected $casts = [
+        'is_active' => 'boolean',
+        'is_jpm_member' => 'boolean',
+        'is_father_jpm' => 'boolean',
+        'is_mother_jpm' => 'boolean',
+        'is_guardian_jpm' => 'boolean',
+        'is_on_waiting_list' => 'boolean',
+        'date_filed' => 'date',
+        'birthdate' => 'date',
+        'father_birthdate' => 'date',
+        'mother_birthdate' => 'date',
+        'application_status_date' => 'date',
+    ];
+
     public function educationalBackgrounds()
     {
         return $this->hasMany(EducationalBackground::class, 'profile_id');

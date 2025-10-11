@@ -6,10 +6,6 @@ import moment from 'moment'
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { usePermission } from '@/composable/permissions';
-import Table from '@/Components/Table.vue';
-import TableRow from '@/Components/TableRow.vue';
-import TableHeaderCell from '@/Components/TableHeaderCell.vue';
-import TableDataCell from '@/Components/TableDataCell.vue';
 
 // PrimeVue Components
 import Button from 'primevue/button';
@@ -22,6 +18,14 @@ import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import IftaLabel from 'primevue/iftalabel';
 import Checkbox from 'primevue/checkbox';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Panel from 'primevue/panel';
+import Tag from 'primevue/tag';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import Dialog from 'primevue/dialog';
+import Textarea from 'primevue/textarea';
 
 import ApplicantProfileModal from '@/Pages/Applicants/Modal/ApplicantProfileModal.vue';
 import ViewProfileModal from './Modal/ViewProfileModal.vue';
@@ -33,6 +37,7 @@ const openReportModal = () => { showReportModal.value = true; };
 // How to use: 1. import component, 2. define model, 3. define scholarshipProgramId (set to null if fetching all course)
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
+import RecordsSelect from '@/Components/selects/RecordsSelect.vue';
 import Pagination from '@/Components/Pagination.vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
@@ -42,15 +47,13 @@ import 'vue3-toastify/dist/index.css';
 import QuickViewModal from './Modal/QuickViewModal.vue';
 
 const { hasPermission, hasRole } = usePermission();
-// import { usePage } from '@inertiajs/vue3'
-// const page = usePage()
-// console.log(route)
+
 const props = defineProps({
     profile: Object,
     profiles: Object,
     profiles_total: [String, Number],
     action: String,
-    records: Number,
+    records: [String, Number],
     filter: Object,
     message: Object,
     sort: {
@@ -59,7 +62,6 @@ const props = defineProps({
         course: { type: String },
         applied_year_level: { type: String },
     },
-
 });
 
 const form = useForm({
@@ -74,12 +76,19 @@ const form = useForm({
         course: props.sort.course || "",
         year_level: props.sort.year_level || "",
     },
-
 });
 
 const toDate = (val) => val ? new Date(val) : null;
+
+// Get records from URL if not provided by backend
+const getRecordsFromUrl = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlRecords = urlParams.get('records');
+    return urlRecords ? parseInt(urlRecords) : 10;
+};
+
 const filter = useForm({
-    records: props.records || 10,
+    records: parseInt(props.records) || getRecordsFromUrl(),
     name: props.filter.name || "",
     parent_name: props.filter.parent_name || "",
     program: props.filter.program || "",
@@ -90,25 +99,20 @@ const filter = useForm({
     date_from: props.filter.date_from ? toDate(props.filter.date_from) : null,
     date_to: props.filter.date_to ? toDate(props.filter.date_to) : null,
     remarks: props.filter.remarks || "",
+    global_search: props.filter.global_search || "",
+    page: props.filter.page || 1,
 })
-
-// Records options for dropdown
-const recordsOptions = [
-    { label: '500', value: 500 },
-    { label: '200', value: 200 },
-    { label: '100', value: 100 },
-    { label: '50', value: 50 },
-    { label: '25', value: 25 },
-    { label: '10', value: 10 },
-    { label: '5', value: 5 }
-];
-
-// console.log(props.filter)
 
 const searchInput = ref(null);
 const selectedProfile = ref({});
 const isViewProfileOpen = ref(false);
 const isViewSequenceOpen = ref(false);
+
+// Applicant Modal state
+const showApplicantModal = ref(false);
+const modalAction = ref('');
+const modalProfile = ref(null);
+
 const viewProfile = (profile) => {
     selectedProfile.value = profile;
     isViewProfileOpen.value = true;
@@ -125,6 +129,17 @@ const closeViewSequence = () => {
     isViewSequenceOpen.value = false;
 }
 
+const editApplicant = (profile) => {
+    modalProfile.value = profile;
+    modalAction.value = 'update';
+    showApplicantModal.value = true;
+}
+
+const closeApplicantModal = () => {
+    showApplicantModal.value = false;
+    modalProfile.value = null;
+    modalAction.value = '';
+}
 
 const filterList = (resetToPage1 = false) => {
     // Prepare filter values
@@ -136,6 +151,7 @@ const filterList = (resetToPage1 = false) => {
     const school = filter.school?.shortname?.toLowerCase() || "";
     const year_level = filter.year_level?.value?.toLowerCase() || "";
     const remarks = filter.remarks.toLowerCase() || "";
+    const global_search = globalFilter.value.toLowerCase() || "";
     const records = filter.records;
     const sort = form.sort;
 
@@ -143,8 +159,8 @@ const filterList = (resetToPage1 = false) => {
     let date_from = filter.date_from ? moment(filter.date_from).format('YYYY-MM-DD') : "";
     let date_to = filter.date_to ? moment(filter.date_to).format('YYYY-MM-DD') : "";
 
-    // Always reset to page 1 when filtering/searching to ensure we search through all records
-    let currentPage = 1;
+    // Reset to page 1 only when filtering/searching, otherwise use current page
+    let currentPage = resetToPage1 ? 1 : filter.page;
 
     const params = {};
     if (program) params.program = program;
@@ -157,9 +173,11 @@ const filterList = (resetToPage1 = false) => {
     if (date_from) params.date_from = date_from;
     if (date_to) params.date_to = date_to;
     if (remarks) params.remarks = remarks;
-    if (records) params.records = records;
+    if (global_search) params.global_search = global_search;
+    params.records = records; // Always include records to persist pagination
     if (sort && Object.values(sort).some(v => v)) params.sort = sort;
     params.page = currentPage;
+
     router.get(route('profile.waitinglist'), params, {
         preserveState: true,
         preserveScroll: true,
@@ -178,12 +196,16 @@ const clearFilter = () => {
     filter.date_from = null;
     filter.date_to = null;
     filter.records = 10;
+    filter.global_search = '';
+    filter.page = 1;
+    globalFilter.value = ''; // Clear global search
     // Clear URL params by reloading the page with no query params
     router.get(route('profile.waitinglist'), {}, {
         replace: true,
         preserveScroll: true,
     });
 }
+
 const sortBy = (column) => {
     if (column == 'name') {
         form.sort.last_name = form.sort.last_name == 'desc' ? 'asc' : 'desc';
@@ -211,7 +233,6 @@ const handleKeydown = (e) => {
     }
 }
 
-
 const userEncodedCount = ref({ total: 0, today: 0 });
 
 onMounted(async () => {
@@ -225,9 +246,7 @@ onMounted(async () => {
     } catch (e) {
         userEncodedCount.value = { total: 0, today: 0 };
     }
-    // console.log(props.profiles.data)
 });
-
 
 onBeforeUnmount(() => {
     window.removeEventListener('keydown', handleKeydown);
@@ -236,73 +255,27 @@ onBeforeUnmount(() => {
 // Only trigger filterList from filter changes, not both form and filter
 let filterListTimeout = null;
 
-watch(filter, (newFilter, oldFilter) => {
+// Watch for filter changes but exclude page and global_search changes to avoid pagination conflicts
+watch(() => ({
+    name: filter.name,
+    parent_name: filter.parent_name,
+    program: filter.program,
+    school: filter.school,
+    course: filter.course,
+    municipality: filter.municipality,
+    year_level: filter.year_level,
+    remarks: filter.remarks,
+    date_from: filter.date_from,
+    date_to: filter.date_to,
+    records: filter.records
+}), (newFilter, oldFilter) => {
     if (filterListTimeout) clearTimeout(filterListTimeout);
     filterListTimeout = setTimeout(() => {
         // Always reset to page 1 when any filter changes to search through all records
         filterList(true);
         filterListTimeout = null;
     }, 500);
-});
-
-const showDeleteConfirm = ref(false);
-const showAddRemarksConfirm = ref(false);
-
-const deleteProfile = (profile) => {
-    selectedProfile.value = profile;
-    showDeleteConfirm.value = true;
-};
-
-const addRemarks = (profile) => {
-    selectedProfile.value = profile;
-    showAddRemarksConfirm.value = true;
-};
-
-const confirmDelete = () => {
-    if (!selectedProfile.value) return;
-    router.delete(route('profile.destroy', selectedProfile.value.profile_id), {
-        preserveState: true,
-        preserveScroll: true,
-        onSuccess: () => {
-            showDeleteConfirm.value = false;
-            selectedProfile.value = null;
-            // Optionally show a toast here
-        },
-        onError: () => {
-            showDeleteConfirm.value = false;
-            selectedProfile.value = null;
-        }
-    });
-};
-
-const confirmAddRemarks = () => {
-    if (!selectedProfile.value) return;
-    router.put(route('applicants.updateJpmRemarks', selectedProfile.value.profile_id), { jpm_remarks: selectedProfile.value.jpm_remarks }, {
-        preserveState: true,
-        preserveScroll: true,
-        onSuccess: () => {
-            showAddRemarksConfirm.value = false;
-            selectedProfile.value = null;
-            toast.success('JPM remarks updated successfully');
-            // Optionally show a toast here
-        },
-        onError: () => {
-            showAddRemarksConfirm.value = false;
-            selectedProfile.value = null;
-        }
-    });
-};
-
-const cancelDelete = () => {
-    showDeleteConfirm.value = false;
-    selectedProfile.value = null;
-};
-
-const cancelAddRemarks = () => {
-    showAddRemarksConfirm.value = false;
-    selectedProfile.value = null;
-};
-
+}, { deep: true });
 
 // Inline JPM status update
 const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null, is_mother_jpm = null, is_guardian_jpm = null }) => {
@@ -312,544 +285,623 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
     if (is_father_jpm !== null) payload.is_father_jpm = is_father_jpm;
     if (is_mother_jpm !== null) payload.is_mother_jpm = is_mother_jpm;
     if (is_guardian_jpm !== null) payload.is_guardian_jpm = is_guardian_jpm;
-    // router.put(route('applicants.updateJpmStatus', payload), {
-    //     preserveState: true,
-    //     preserveScroll: true,
-    //     replace: false,
-    //     onSuccess: page => { console.log(page) },
-    // });
+
+    console.log('Updating JPM status:', { id, payload }); // Debug log
+
     router.put(route('applicants.updateJpmStatus', id), payload, {
         preserveScroll: true,
         preserveState: true,
-        onSuccess: () => { toast.success('status updated successfully'); },
-    });
+        onSuccess: (page) => {
+            console.log('JPM update success:', page);
 
+            // Manually update the original props data to reflect the changes
+            // This will automatically trigger the computed applicants to re-evaluate
+            const profileIndex = props.profiles.data.findIndex(profile => profile.profile_id === id);
+            if (profileIndex !== -1) {
+                // Update each field that was changed in the original props data
+                if (is_jpm_member !== null) {
+                    props.profiles.data[profileIndex].is_jpm_member = is_jpm_member;
+                }
+                if (is_father_jpm !== null) {
+                    props.profiles.data[profileIndex].is_father_jpm = is_father_jpm;
+                }
+                if (is_mother_jpm !== null) {
+                    props.profiles.data[profileIndex].is_mother_jpm = is_mother_jpm;
+                }
+                if (is_guardian_jpm !== null) {
+                    props.profiles.data[profileIndex].is_guardian_jpm = is_guardian_jpm;
+                }
+                console.log('Updated local data for profile:', id, props.profiles.data[profileIndex]);
+            }
+
+            toast.success('JPM status updated successfully');
+        },
+        onError: (errors) => {
+            console.error('JPM update errors:', errors);
+            toast.error('Failed to update JPM status: ' + Object.values(errors).join(', '));
+        },
+        onFinish: () => {
+            console.log('JPM update finished');
+        }
+    });
 };
 
+// JPM Remarks functionality
+const showJpmRemarksModal = ref(false);
+const selectedProfileForRemarks = ref(null);
+const jpmRemarksForm = ref('');
+
+const editJpmRemarks = (profile) => {
+    selectedProfileForRemarks.value = profile;
+    jpmRemarksForm.value = profile.jpm_remarks || '';
+    showJpmRemarksModal.value = true;
+};
+
+const closeJpmRemarksModal = () => {
+    showJpmRemarksModal.value = false;
+    selectedProfileForRemarks.value = null;
+    jpmRemarksForm.value = '';
+};
+
+const updateJpmRemarks = () => {
+    if (!selectedProfileForRemarks.value) return;
+
+    const payload = {
+        jpm_remarks: jpmRemarksForm.value
+    };
+
+    router.put(route('applicants.updateJpmRemarks', selectedProfileForRemarks.value.profile_id), payload, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            // Update the local data
+            const profileIndex = props.profiles.data.findIndex(profile => profile.profile_id === selectedProfileForRemarks.value.profile_id);
+            if (profileIndex !== -1) {
+                props.profiles.data[profileIndex].jpm_remarks = jpmRemarksForm.value;
+            }
+
+            closeJpmRemarksModal();
+            toast.success('JPM remarks updated successfully');
+        },
+        onError: (errors) => {
+            console.error('JPM remarks update errors:', errors);
+            toast.error('Failed to update JPM remarks: ' + Object.values(errors).join(', '));
+        }
+    });
+};
 
 // Persist showJpmColumns state in localStorage
-const showJpmColumns = ref(false);
+const showJpmColumns = ref(localStorage.getItem('showJpmColumns') === 'true');
 
-// Calculate colspan based on visible columns
-const tableColspan = computed(() => {
-    // Base columns: Name, Parent/Guardian, Address, School, Course, Year Level, Action = 7
-    let count = 7;
-
-    if (showJpmColumns.value && hasPermission('can-view-jpm')) {
-        // Add JPM columns: Tagged, Tagged Remarks = +2
-        count += 2;
-    } else {
-        // Add regular columns: Contact #, Date Filed, Remarks = +3
-        count += 3;
-    }
-
-    return count;
+// Watch for changes in showJpmColumns and persist to localStorage
+watch(showJpmColumns, (newValue) => {
+    localStorage.setItem('showJpmColumns', newValue.toString());
 });
 
-onMounted(() => {
-    const stored = localStorage.getItem('showJpmColumns');
-    if (stored !== null) {
-        showJpmColumns.value = stored === 'true';
-    }
+// Filter state
+const showAllFilters = ref(false);
+
+// DataTable properties - disable client-side filtering and pagination
+const globalFilter = ref(props.filter.global_search || '');
+const filters = ref({});
+const first = ref(0);
+const rows = ref(parseInt(props.records) || 10);
+
+// Watch for changes in globalFilter and trigger backend search only
+watch(globalFilter, (newValue) => {
+    // Update the filter object for backend search
+    filter.global_search = newValue;
+    // Trigger backend search with debouncing
+    if (filterListTimeout) clearTimeout(filterListTimeout);
+    filterListTimeout = setTimeout(() => {
+        filterList(true); // Reset to page 1 when searching
+        filterListTimeout = null;
+    }, 500);
 });
-watch(showJpmColumns, (val) => {
-    localStorage.setItem('showJpmColumns', val ? 'true' : 'false');
+
+// Watch for changes in filter.records and sync with DataTable rows
+watch(() => filter.records, (newValue) => {
+    rows.value = parseInt(newValue) || 10;
+}, { immediate: true });
+
+// Handle pagination change
+const onPageChange = (event) => {
+    const page = event.page + 1; // PrimeVue uses 0-based indexing, backend uses 1-based
+    filter.page = page;
+    // Call filterList immediately without debouncing for pagination
+    filterList(false); // Don't reset to page 1, use current page
+};
+
+// Calculate total records for pagination
+const totalRecords = computed(() => props.profiles_total || 0);
+
+// Sync first with current page
+watch(() => filter.page, (newPage) => {
+    first.value = (newPage - 1) * rows.value;
+}, { immediate: true });
+
+// Update first value when rows change
+watch(() => rows.value, () => {
+    first.value = (filter.page - 1) * rows.value;
 });
+
+// Computed for DataTable data
+const applicants = computed(() => {
+    const data = props.profiles.data || [];
+
+    // Ensure JPM boolean fields are properly converted to boolean values
+    return data.map(profile => ({
+        ...profile,
+        is_jpm_member: Boolean(profile.is_jpm_member),
+        is_father_jpm: Boolean(profile.is_father_jpm),
+        is_mother_jpm: Boolean(profile.is_mother_jpm),
+        is_guardian_jpm: Boolean(profile.is_guardian_jpm),
+    }));
+});
+
+// Delete confirmation properties
+const showConfirmDeleteModal = ref(false);
+const selectedApplicant = ref(null);
+
+const confirmDeleteApplicant = (applicant) => {
+    selectedApplicant.value = applicant;
+    showConfirmDeleteModal.value = true;
+};
+
+const closeDeleteModal = () => {
+    showConfirmDeleteModal.value = false;
+    selectedApplicant.value = null;
+};
+
+const deleteApplicant = () => {
+    if (!selectedApplicant.value) return;
+
+    router.delete(route('profile.destroy', selectedApplicant.value.profile_id), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            closeDeleteModal();
+            toast.success('Applicant deleted successfully');
+        },
+        onError: () => {
+            closeDeleteModal();
+            toast.error('Failed to delete applicant');
+        }
+    });
+};
 
 </script>
+
 <template>
 
     <Head title="Applicants" />
-
     <AdminLayout>
-        <template #header> Applicant Records</template>
-
-        <div class="p-4">
-            <div
-                class="text-normal font-medium text-center text-gray-500  border-gray-200 flex justify-between items-center mb-4 gap-4">
-                <!-- <h1>Welcome {{ $page.props.auth.user.name }}</h1> -->
-                <!-- <h3>{{ props }}</h3> -->
-                <!-- {{ props.action }} -->
-
-                <div class="flex gap-2 flex-1 items-center">
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm text-gray-600">Show</span>
-                        <Select v-model="filter.records" :options="recordsOptions" optionLabel="label"
-                            optionValue="value" class="w-20" size="small" />
+        <div>
+            <!-- Toolbar -->
+            <Toolbar class="mb-4">
+                <template #start>
+                    <div class="flex items-center gap-3">
+                        <i class="pi pi-users text-2xl text-blue-600"></i>
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-800">Applicants Management</h1>
+                            <p class="text-sm text-gray-600">Manage scholarship applicants and their profiles</p>
+                        </div>
                     </div>
+                </template>
 
-                    <Divider layout="vertical" />
-                    <div class="flex gap-4 items-center">
+                <template #end>
+                    <div class="flex gap-2">
+                        <Button @click="openReportModal" label="Generate Report" icon="pi pi-file-pdf" severity="info"
+                            size="small" />
+                        <Button as="a" label="New" icon="pi pi-user-plus"
+                            v-if="hasPermission('create-scholar-profile') && !hasRole('user')" severity="success" :href="route('profile.waitinglist', {
+                                action: 'create'
+                            })" raised size="small" />
+                        <Button as="a" label="Existing" icon="pi pi-user"
+                            v-if="hasPermission('create-scholar-profile') && !hasRole('user')"
+                            :href="route('profile.waitinglist', { action: 'add-existing' })" severity="secondary"
+                            size="small" />
+                    </div>
+                </template>
+            </Toolbar>
+
+            <!-- Header Section -->
+            <Panel>
+                <!-- Filters Section -->
+                <div class="space-y-3 -mt-6">
+                    <!-- Filter Controls Header -->
+                    <div class="flex justify-between items-center py-1">
                         <div class="flex items-center gap-2">
-                            <p>Program</p>
-                            <ProgramSelect v-model="filter.program" label="shortname"
-                                custom-placeholder="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                                size="small" />
+                            <i class="pi pi-filter text-blue-600"></i>
+                            <h3 class="text-base font-medium text-gray-700">Filters</h3>
                         </div>
-                        <p>Date Filed</p>
-
-                        <div class="flex items-center gap-2 w-32">
-
-                            <FloatLabel variant="on">
-                                <DatePicker v-model="filter.date_from" :manualInput="true" showButtonBar
-                                    @clear-click="filter.date_from = null" id="filter_from_date" size="small" />
-                                <label for="filter_from_date">From</label>
-                            </FloatLabel>
-                        </div>
-                        <div class="flex items-center gap-2 w-32">
-                            <FloatLabel variant="on">
-                                <DatePicker v-model="filter.date_to" :manualInput="true" showButtonBar
-                                    @clear-click="filter.date_to = null" id="filter_to_date" size="small" />
-                                <label for="filter_to_date">To</label>
-                            </FloatLabel>
+                        <div class="flex items-center gap-3">
+                            <Button :label="showAllFilters ? 'Show Basic Filters' : 'Show All Filters'"
+                                :icon="showAllFilters ? 'pi pi-minus' : 'pi pi-plus'" severity="info" size="small"
+                                outlined @click="showAllFilters = !showAllFilters" />
+                            <Button label="Clear" severity="secondary" size="small" icon="pi pi-times"
+                                @click="clearFilter" outlined />
                         </div>
                     </div>
-                </div>
 
-                <div class="flex justify-end gap-4">
-                    <Toolbar>
-                        <template #start>
-                            <!-- <InputText ref="searchInput" v-model="filter.name" placeholder="Search keyword" class="w-48"
-                                size="small" /> -->
-                        </template>
-                        <template #end>
-                            <div class="space-x-2">
-                                <Button as="a" label="New" icon="pi pi-user-plus"
-                                    v-if="hasPermission('create-scholar-profile') && !hasRole('user')"
-                                    severity="success" :href="route('profile.waitinglist', {
-                                        action: 'create'
-                                    })" raised size="small" />
-                                <Button as="a" label="Existing" icon="pi pi-user"
-                                    v-if="hasPermission('create-scholar-profile') && !hasRole('user')" :href="route('profile.waitinglist', {
-                                        action: 'add-existing'
-                                    })" size="small" severity="secondary" />
+                    <!-- All Filters in grouped rows -->
+                    <div class="space-y-3">
+                        <!-- Default Filters Row: Program, School, Municipality, Applicant Name -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <div class="flex flex-col">
+                                <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
+                                <ProgramSelect v-model="filter.program" label="shortname"
+                                    custom-placeholder="All Programs" size="small" class="w-full" />
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-xs font-medium text-gray-600 mb-1">School</label>
+                                <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="All Schools"
+                                    size="small" class="w-full" />
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-xs font-medium text-gray-600 mb-1">Municipality</label>
+                                <MunicipalitySelect v-model="filter.municipality"
+                                    custom-placeholder="All Municipalities" size="small" class="w-full" />
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-xs font-medium text-gray-600 mb-1">Applicant Name</label>
+                                <InputText v-model="filter.name" placeholder="Search applicant name..." class="w-full"
+                                    size="small" />
+                            </div>
+                        </div>
 
-                                <Button label="Export" icon="pi pi-upload" severity="secondary"
-                                    v-if="hasPermission('create-scholar-profile') && !hasRole('user')" size="small"
-                                    @click="openReportModal" />
+                        <!-- Additional Filters (shown when showAllFilters is true) -->
+                        <template v-if="showAllFilters">
+                            <!-- Second Row: Course, Year Level, Parents/Guardian, Remarks -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
+                                    <CourseSelect v-model="filter.course" label="shortname"
+                                        custom-placeholder="All Courses" size="small" class="w-full" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
+                                    <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
+                                        size="small" class="w-full" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Parents/Guardian</label>
+                                    <InputText v-model="filter.parent_name" placeholder="Search parent/guardian..."
+                                        size="small" class="w-full" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Remarks</label>
+                                    <InputText v-model="filter.remarks" placeholder="Search remarks..." class="w-full"
+                                        size="small" />
+                                </div>
+                            </div>
+
+                            <!-- Third Row: Date Range -->
+                            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Date From</label>
+                                    <DatePicker v-model="filter.date_from" :manualInput="true" showButtonBar
+                                        @clear-click="filter.date_from = null" placeholder="Start date" size="small"
+                                        class="w-full" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Date To</label>
+                                    <DatePicker v-model="filter.date_to" :manualInput="true" showButtonBar
+                                        @clear-click="filter.date_to = null" placeholder="End date" size="small"
+                                        class="w-full" />
+                                </div>
                             </div>
                         </template>
-                    </Toolbar>
-                </div>
-            </div>
-
-
-            <div class="flex gap-4 justify-between items-center mb-2 bg-gray-100 p-2 rounded">
-                <div class="text-gray-500 p-2 font-semibold">{{ profiles_total }} record(s) found</div>
-                <div class="flex gap-4 text-sm">
-                    <div class="text-normal text-gray-500 flex gap-2">Today: <p
-                            class="font-bold font-mono text-purple-600">
-                            {{
-                                userEncodedCount.today }}</p>
-                    </div>-
-                    <div class="text-normal text-gray-500 flex gap-2">Total: <p
-                            class="font-bold font-mono text-purple-600">
-                            {{
-                                userEncodedCount.total }}</p>
                     </div>
                 </div>
+            </Panel>
+
+            <!-- Applicants DataTable -->
+            <div class="mt-4">
+                <Panel>
+                    <template #header>
+                        <div class="flex items-center gap-3">
+                            <i class="pi pi-list text-xl text-blue-600"></i>
+                            <span class="font-semibold text-lg">Waiting List</span>
+                        </div>
+                    </template>
+
+                    <template #icons>
+                        <div class="flex items-center">
+                            <div class="flex items-center gap-2" v-if="hasPermission('can-view-jpm')">
+                                <Checkbox v-model="showJpmColumns" inputId="showJpmToggle" binary />
+                                <label for="showJpmToggle" class="text-sm text-gray-600 cursor-pointer">Enable JPM
+                                    Tagging</label>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Search and Controls -->
+                    <div class="flex justify-between items-center mb-4">
+
+                    </div>
+
+                    <!-- Info Bar -->
+                    <div class="md:flex hidden  justify-between items-center mb-4 p-3 bg-gray-50 rounded">
+                        <div class="text-sm text-gray-600">
+                            <i class="pi pi-info-circle mr-2"></i>
+                            By default, sequence # is by school per course
+                        </div>
+                        <div class="flex gap-4 items-center">
+                            <IconField iconPosition="left">
+                                <InputIcon class="pi pi-search" />
+                                <InputText v-model="globalFilter" placeholder="Search across all fields..."
+                                    class="w-80" />
+                            </IconField>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            Showing
+                            <RecordsSelect v-model="filter.records" label="label" class="w-24" size="small" /> of {{
+                                props.profiles_total || 0 }} records
+                        </div>
+                    </div>
+
+                    <DataTable :value="applicants" stripedRows showGridlines responsiveLayout="scroll"
+                        :emptyMessage="'No applicants to display'" :lazy="true" paginator :rows="rows"
+                        :totalRecords="totalRecords" :first="first" @page="onPageChange"
+                        paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                        :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
+
+                        <!-- Sequence Number & Name Column -->
+                        <Column header="Applicant" style="min-width: 300px">
+                            <template #body="slotProps">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-gray-400 text-sm">#{{
+                                        slotProps.data.sequence_number_by_school_course || '-' }}</span>
+                                    <div class="flex items-center gap-2">
+                                        <img v-if="slotProps.data.gender == 'M'" src="/images/male-avatar.png"
+                                            alt="avatar" class="rounded-full w-8 h-8" />
+                                        <img v-if="slotProps.data.gender == 'F'" src="/images/female-avatar.png"
+                                            alt="avatar" class="rounded-full w-8 h-8" />
+                                        <div>
+                                            <div class="font-semibold text-gray-800 text-sm">
+                                                {{ slotProps.data.last_name }}, {{ slotProps.data.first_name }} {{
+                                                    slotProps.data.middle_name || '' }} {{ slotProps.data.extension_name ||
+                                                    '' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </Column>
+
+                        <!-- Parent/Guardian Column -->
+                        <Column header="Parent/Guardian" style="min-width: 200px">
+                            <template #body="slotProps">
+                                <div class="text-sm space-y-1">
+                                    <div v-if="slotProps.data.father_name">
+                                        <span class="font-medium">{{ slotProps.data.father_name }}</span>
+                                        <span class="text-gray-500 italic text-xs"> (father)</span>
+                                    </div>
+                                    <div v-if="slotProps.data.mother_name">
+                                        <span class="font-medium">{{ slotProps.data.mother_name }}</span>
+                                        <span class="text-gray-500 italic text-xs"> (mother)</span>
+                                    </div>
+                                    <div v-if="slotProps.data.guardian_name">
+                                        <span class="font-medium">{{ slotProps.data.guardian_name }}</span>
+                                        <span class="text-gray-500 italic text-xs"> (guardian)</span>
+                                    </div>
+                                    <span
+                                        v-if="!slotProps.data.father_name && !slotProps.data.mother_name && !slotProps.data.guardian_name"
+                                        class="text-gray-400">-</span>
+                                </div>
+                            </template>
+                        </Column>
+
+                        <!-- Address Column -->
+                        <Column header="Address" style="min-width: 150px">
+                            <template #body="slotProps">
+                                <div class="text-sm font-medium" v-if="slotProps.data.municipality">
+                                    {{ slotProps.data.municipality }}{{ slotProps.data.barangay ? `,
+                                    ${slotProps.data.barangay}` : '' }}
+                                </div>
+                                <span v-else class="text-gray-400">-</span>
+                            </template>
+                        </Column>
+
+                        <!-- School Column -->
+                        <Column header="School" style="min-width: 120px">
+                            <template #body="slotProps">
+                                <div class="text-sm font-medium" v-if="slotProps.data.scholarship_grant[0]?.school">
+                                    {{ slotProps.data.scholarship_grant[0].school.shortname }}
+                                </div>
+                                <span v-else class="text-gray-400">-</span>
+                            </template>
+                        </Column>
+
+                        <!-- Course Column -->
+                        <Column header="Course" style="min-width: 120px">
+                            <template #body="slotProps">
+                                <div v-if="slotProps.data.scholarship_grant[0]?.course">
+                                    <div class="text-sm font-bold">{{
+                                        slotProps.data.scholarship_grant[0].course.shortname }}</div>
+                                    <div v-if="slotProps.data.scholarship_grant[0]?.program"
+                                        class="text-xs text-gray-600">
+                                        [{{ slotProps.data.scholarship_grant[0].program.shortname }}]
+                                    </div>
+                                </div>
+                                <span v-else class="text-gray-400">-</span>
+                            </template>
+                        </Column>
+
+                        <!-- Year Level Column -->
+                        <Column header="Year Level" style="width: 100px">
+                            <template #body="slotProps">
+                                <div class="text-sm font-medium text-center">
+                                    {{ slotProps.data.scholarship_grant[0]?.year_level || '-' }}
+                                </div>
+                            </template>
+                        </Column>
+
+                        <!-- Contact Number Column (hidden when JPM columns visible) -->
+                        <Column header="Contact #" v-if="!showJpmColumns" style="min-width: 120px">
+                            <template #body="slotProps">
+                                <div class="text-sm font-medium">{{ slotProps.data.contact_no || '-' }}</div>
+                            </template>
+                        </Column>
+
+                        <!-- Date Filed Column (hidden when JPM columns visible) -->
+                        <Column header="Date Filed" v-if="!showJpmColumns" style="min-width: 110px">
+                            <template #body="slotProps">
+                                <div class="text-sm font-medium">
+                                    {{ slotProps.data.date_filed ? moment(slotProps.data.date_filed).format(`MMM DD,
+                                    YYYY`) : '-' }}
+                                </div>
+                            </template>
+                        </Column>
+
+                        <!-- Remarks Column (hidden when JPM columns visible) -->
+                        <Column header="Remarks" v-if="!showJpmColumns" style="min-width: 150px">
+                            <template #body="slotProps">
+                                <div class="text-xs">{{ slotProps.data.remarks || '-' }}</div>
+                            </template>
+                        </Column>
+
+                        <!-- JPM Tagged Column (visible when JPM columns enabled) -->
+                        <Column header="Tagged" v-if="hasPermission('can-view-jpm') && showJpmColumns"
+                            style="min-width: 150px">
+                            <template #body="slotProps">
+                                <div class="flex flex-col gap-2">
+                                    <div class="flex gap-2">
+                                        <label class="flex items-center gap-1 text-xs cursor-pointer">
+                                            <Checkbox v-model="slotProps.data.is_jpm_member" binary
+                                                :disabled="hasRole('user')"
+                                                @update:modelValue="(value) => updateJpmStatus({ id: slotProps.data.profile_id, is_jpm_member: value })" />
+                                            <span>applicant</span>
+                                        </label>
+                                        <label class="flex items-center gap-1 text-xs cursor-pointer">
+                                            <Checkbox v-model="slotProps.data.is_father_jpm" binary
+                                                :disabled="hasRole('user')"
+                                                @update:modelValue="(value) => updateJpmStatus({ id: slotProps.data.profile_id, is_father_jpm: value })" />
+                                            <span>father</span>
+                                        </label>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <label class="flex items-center gap-1 text-xs cursor-pointer">
+                                            <Checkbox v-model="slotProps.data.is_guardian_jpm" binary
+                                                :disabled="hasRole('user')"
+                                                @update:modelValue="(value) => updateJpmStatus({ id: slotProps.data.profile_id, is_guardian_jpm: value })" />
+                                            <span>guardian</span>
+                                        </label>
+                                        <label class="flex items-center gap-1 text-xs cursor-pointer">
+                                            <Checkbox v-model="slotProps.data.is_mother_jpm" binary
+                                                :disabled="hasRole('user')"
+                                                @update:modelValue="(value) => updateJpmStatus({ id: slotProps.data.profile_id, is_mother_jpm: value })" />
+                                            <span>mother</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </template>
+                        </Column>
+
+                        <!-- JPM Remarks Column (visible when JPM columns enabled) -->
+                        <Column v-if="hasPermission('can-view-jpm') && showJpmColumns" style="min-width: 220px">
+                            <template #header>
+                                <div class="flex justify-between items-center w-full">
+                                    <span>JPM Remarks</span>
+                                    <i class="pi pi-comment text-gray-400 text-sm"
+                                        v-tooltip.top="'Click on any row to edit remarks'"></i>
+                                </div>
+                            </template>
+                            <template #body="slotProps">
+                                <div class="text-xs cursor-pointer hover:bg-gray-100 p-1 rounded relative group"
+                                    @click="editJpmRemarks(slotProps.data)" v-tooltip.top="'Click to edit JPM remarks'">
+                                    <div class="flex justify-between items-center">
+                                        <span>{{ slotProps.data.jpm_remarks || 'Click to add remarks...' }}</span>
+                                        <Button icon="pi pi-pencil" severity="secondary" size="small" class="ml-1" text
+                                            rounded />
+                                    </div>
+                                </div>
+                            </template>
+                        </Column>
+
+                        <!-- Actions Column -->
+                        <Column header="Actions" style="width: 200px">
+                            <template #body="slotProps">
+                                <div class="flex gap-2 justify-center">
+                                    <Button icon="pi pi-eye" severity="info" size="small" rounded outlined
+                                        v-tooltip.top="'View Profile'" @click="viewProfile(slotProps.data)" />
+                                    <Button icon="pi pi-user-edit" severity="warning" size="small" rounded outlined
+                                        v-tooltip.top="'Edit Applicant'" @click="editApplicant(slotProps.data)" />
+                                    <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
+                                        v-tooltip.top="'Delete Applicant'"
+                                        @click="confirmDeleteApplicant(slotProps.data)"
+                                        v-if="hasPermission('delete-scholar-profile') && !hasRole('user')" />
+                                </div>
+                            </template>
+                        </Column>
+                    </DataTable>
+                </Panel>
             </div>
-
-            <div class="flex justify-between mb-2">
-                <Chip class="py-0 pl-0 pr-4" removable>
-
-                    <span class="ml-2 text-xs font-medium text-gray-500">by default, sequence # is by -school per
-                        course-</span>
-                </Chip>
-                <div class="flex items-center gap-2" v-if="hasPermission('can-view-jpm')">
-                    <Checkbox v-model="showJpmColumns" inputId="showJpmToggle" binary />
-                    <label for="showJpmToggle" class="text-sm text-gray-600 cursor-pointer">Enable Tagging</label>
-                </div>
-
-
-            </div>
-
-            <Table class="border-collapse border border-slate-100 bg-[#f1f1f1]" :loading="form.processing">
-                <template #header>
-                    <TableRow>
-                        <!-- <TableHeaderCell
-                            class="px-3 text-center bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600"
-                            colspan="1">
-                            <p class="text-[11px]">Sequence</p>
-                        </TableHeaderCell> -->
-                        <TableHeaderCell @click="sortBy('name')"
-                            class="cursor-pointer w-80 bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
-                            <div class="flex items-center justify-between">
-                                <p class="text-[11px]">Applicant Name</p>
-                                <i class="pi pi-sort-alt text-sm"></i>
-                            </div>
-                        </TableHeaderCell>
-                        <TableHeaderCell
-                            class="w-[200px] bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
-                            <p class="text-[11px]">Parent/Guardian</p>
-                        </TableHeaderCell>
-                        <TableHeaderCell
-                            class="w-[200px] bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
-                            <p class="text-[11px]">Address</p>
-                        </TableHeaderCell>
-
-                        <TableHeaderCell @click="sortBy('school')"
-                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
-                            <div class="flex items-center justify-between">
-                                <p class="text-[11px]">School</p>
-                                <i class="pi pi-sort-alt text-sm"></i>
-                            </div>
-                        </TableHeaderCell>
-                        <TableHeaderCell @click="sortBy('course')"
-                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
-                            <div class="flex items-center justify-between">
-                                <p class="text-[11px]">Course</p>
-                                <i class="pi pi-sort-alt text-sm"></i>
-                            </div>
-                        </TableHeaderCell>
-                        <TableHeaderCell @click="sortBy('year_level')"
-                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600 w-[30px]">
-                            <div class="flex items-center justify-between">
-                                <p class="text-[11px]">Year Level</p>
-                                <i class="pi pi-sort-alt text-sm"></i>
-                            </div>
-                        </TableHeaderCell>
-                        <TableHeaderCell v-if="!showJpmColumns"
-                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
-                            <p class="text-[11px]">Contact #</p>
-                        </TableHeaderCell>
-                        <TableHeaderCell v-if="!showJpmColumns" @click="sortBy('date_filed')"
-                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600 w-[110px]">
-                            <div class="flex items-center justify-between">
-                                <p class="text-[11px]">Date Filed</p>
-                                <i class="pi pi-sort-alt text-sm"></i>
-                            </div>
-                        </TableHeaderCell>
-                        <TableHeaderCell v-if="!showJpmColumns"
-                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600 w-[200px]">
-                            <p class="text-[11px]">Remarks</p>
-                        </TableHeaderCell>
-                        <TableHeaderCell v-if="hasPermission('can-view-jpm') && showJpmColumns"
-                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600">
-                            <p class="text-[11px]">Tagged</p>
-                        </TableHeaderCell>
-                        <TableHeaderCell v-if="hasPermission('can-view-jpm') && showJpmColumns"
-                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600 w-[200px]">
-                            <p class="text-[11px]">Tagged Remarks</p>
-                        </TableHeaderCell>
-                        <!-- <TableHeaderCell class="w-[160px]">Status</TableHeaderCell> -->
-                        <TableHeaderCell
-                            class="cursor-pointer bg-[#f8f8f8] dark:bg-[#f8f8f8] text-gray-600 dark:text-gray-600 w-[160px]">
-                            <p class="text-[11px]">Action</p>
-                        </TableHeaderCell>
-                    </TableRow>
-
-
-                </template>
-                <template #default>
-                    <!-- filter row -->
-                    <TableRow class="bg-white">
-                        <!-- <TableDataCell class="px-3"></TableDataCell>
-                        <TableDataCell class="px-3 border-collapse border-slate-400"></TableDataCell>
-                        <TableDataCell class="px-3 border-collapse border-slate-400"></TableDataCell> -->
-                        <!-- <TableDataCell class="px-3 border-collapse border-slate-400"><span
-                                class="text-[10px] text-gray-500">Sch/Cour</span></TableDataCell> -->
-
-                        <TableDataCell class="border-collapse border-slate-400">
-                            <div class="px-2">
-                                <InputText v-model="filter.name" placeholder="Search name" class="w-full"
-                                    size="small" />
-                            </div>
-                        </TableDataCell>
-                        <TableDataCell class="border-collapse border-slate-400">
-                            <div class="px-2">
-                                <!-- <InputText v-model="filter.name" placeholder="Search name" class="w-full" /> -->
-                                <InputText v-model="filter.parent_name" placeholder="Search name" class="w-full"
-                                    size="small" />
-                            </div>
-                        </TableDataCell>
-                        <TableDataCell class="border-collapse border-slate-400">
-                            <div class="px-2">
-                                <MunicipalitySelect v-model="filter.municipality" custom-placeholder="---"
-                                    size="small" />
-                            </div>
-                        </TableDataCell>
-
-                        <TableDataCell class="border-collapse border-slate-400">
-                            <div class="px-2">
-                                <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="---"
-                                    size="small" />
-                            </div>
-                        </TableDataCell>
-                        <TableDataCell class="border-collapse border-slate-400">
-                            <div class="px-2">
-                                <CourseSelect v-model="filter.course" :scholarship-program-id="filter.program?.id"
-                                    custom-placeholder="---" label="shortname" size="small" />
-                            </div>
-                        </TableDataCell>
-                        <TableDataCell class="border-collapse border-slate-400">
-                            <div class="px-2">
-                                <YearLevelSelect v-model="filter.year_level" label="shortname" custom-placeholder="---"
-                                    size="small" />
-                            </div>
-                        </TableDataCell>
-                        <TableDataCell v-if="!showJpmColumns" class="border-collapse border-slate-400"></TableDataCell>
-                        <TableDataCell v-if="!showJpmColumns" class="border-collapse border-slate-400"></TableDataCell>
-                        <TableDataCell v-if="!showJpmColumns" class="border-collapse border-slate-400">
-                            <div class="px-2">
-
-                                <InputText v-model="filter.remarks" placeholder="Search remarks" class="w-full"
-                                    size="small" />
-
-                            </div>
-                        </TableDataCell>
-                        <TableDataCell class="border-collapse border-slate-400"
-                            v-if="hasPermission('can-view-jpm') && showJpmColumns">
-                        </TableDataCell>
-                        <TableDataCell class="border-collapse border-slate-400"
-                            v-if="hasPermission('can-view-jpm') && showJpmColumns">
-                        </TableDataCell>
-                        <TableDataCell class="border-collapse border-slate-400">
-                            <div class="px-2 flex justify-end">
-                                <!-- <div class="bg-gray-600 text-gray-200 p-2 rounded-lg border flex items-center cursor-pointer"
-                                    @click="clearFilter" as="button">
-                                    <button class="cursor-pointer">
-                                        Clear Filter
-                                    </button>
-                                </div> -->
-                                <Button label="Clear" icon="pi pi-refresh" @click="clearFilter" size="small" />
-                            </div>
-                        </TableDataCell>
-                    </TableRow>
-
-                    <TableRow class="hover:bg-gray-200 bg-white" v-for="(profile, index) in profiles.data"
-                        :key="'profile_' + profile.id" v-if="profiles.data && profiles.data.length">
-                        <!-- <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-500">{{
-                            profile.sequence_number }}
-                        </TableDataCell>
-                        <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-500">{{
-                            profile.sequence_number_by_course || '-' }}
-                        </TableDataCell>
-                        <TableDataCell class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-500">{{
-                            profile.daily_sequence_number }}
-                        </TableDataCell> -->
-                        <!-- <TableDataCell
-                            class="px-3 w-[10px] border-collapse border-t border-slate-100 text-gray-400 font-bold">#{{
-                                profile.sequence_number_by_school_course || '-' }}
-                        </TableDataCell> -->
-
-                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700 uppercase">
-                            <div class="flex items-center gap-2 px-2">
-                                <span class="text-gray-400"> #{{
-                                    profile.sequence_number_by_school_course || '-' }}</span>
-                                <figure>
-                                    <img v-if="profile.gender == 'M'" src="/images/male-avatar.png" alt="avatar"
-                                        class="rounded-xl w-[28px]" />
-
-                                    <img v-if="profile.gender == 'F'" src="/images/female-avatar.png" alt="avatar"
-                                        class="rounded-xl w-[28px]" />
-                                </figure>
-                                <div class="text-[11px] font-semibold">
-                                    {{ profile.last_name + ', ' + profile.first_name + ' ' + (profile.middle_name ||
-                                        '') + ' ' + (profile.extension_name || '') }}
-                                </div>
-                            </div>
-                        </TableDataCell>
-                        <TableDataCell
-                            class="border-collapse border-t border-slate-100 text-gray-700 uppercase w-[200px]">
-                            <div class="px-2"
-                                v-if="profile.father_name || profile.mother_name || profile.guardian_name">
-                                <div v-if="profile.father_name"><span class="font-semibold  text-[11px]">{{
-                                    profile.father_name }}</span><span
-                                        class="text-gray-700 italic text-[11px] lowercase">
-                                        (father)</span>
-                                </div>
-                                <div v-if="profile.mother_name"><span class="font-semibold  text-[11px]">{{
-                                    profile.mother_name }}</span><span
-                                        class="text-gray-700 italic text-[11px] lowercase">
-                                        (mother)</span>
-                                </div>
-                                <div v-if="profile.guardian_name"><span class="font-semibold  text-[11px]">{{
-                                    profile.guardian_name }}</span><span
-                                        class="text-gray-700 italic text-[11px] lowercase">
-                                        (guardian)</span>
-                                </div>
-
-                            </div>
-                            <div v-else class="text-center">-</div>
-                        </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700 uppercase">
-                            <div class="px-2 text-[11px] font-semibold" v-if="profile.municipality">
-                                {{ profile.municipality }} {{ profile.barangay
-                                    ? `, ${profile.barangay}`
-                                    : '' }}</div>
-                            <div class="text-center" v-else>-</div>
-                        </TableDataCell>
-
-                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700 uppercase">
-                            <div class="px-2 text-[11px] font-semibold" v-if="profile.scholarship_grant[0]?.school">
-                                {{ profile.scholarship_grant[0]?.school?.shortname }}
-                            </div>
-                            <div class="px-2" v-else>-</div>
-                        </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-slate-100 pl-2 text-gray-700 uppercase">
-                            <div class="px-2 text-[10px] font-bold" v-if="profile.scholarship_grant[0]?.course">
-                                <div>{{ profile.scholarship_grant[0]?.course?.shortname }}</div>
-                                <div v-if="profile.scholarship_grant[0]?.program"
-                                    class="text-[10px] font-medium text-slate-600">[{{
-                                        profile.scholarship_grant[0]?.program.shortname }}]</div>
-                            </div>
-                            <div class="px-2" v-else>-</div>
-                        </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
-                            <div class="px-2 text-[11px] font-semibold">{{ profile.scholarship_grant[0]?.year_level ||
-                                '-'
-                            }}
-                            </div>
-                        </TableDataCell>
-                        <TableDataCell v-if="!showJpmColumns"
-                            class="border-collapse border-t border-slate-100 text-gray-700">
-                            <div class="px-2 text-[11px] font-semibold">{{ profile.contact_no || '-' }}</div>
-                        </TableDataCell>
-                        <TableDataCell v-if="!showJpmColumns"
-                            class="border-collapse border-t border-slate-100 text-gray-700 uppercase">
-                            <div class="px-2 text-[11px] font-semibold">
-                                {{ profile.date_filed ? moment(profile.date_filed).format('MMM DD, YYYY')
-                                    : '-' }}</div>
-                        </TableDataCell>
-                        <TableDataCell v-if="!showJpmColumns"
-                            class="border-collapse border-t border-slate-100 text-gray-700">
-                            <div class="px-2 text-[10px]">
-                                {{ profile.remarks || '-' }}
-                            </div>
-                        </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700"
-                            v-if="hasPermission('can-view-jpm') && showJpmColumns">
-                            <div class="px-2 flex flex-col gap-2">
-                                <div class="flex gap-2">
-                                    <label class="label hover:text-gray-800">
-                                        <input type="checkbox" :checked="profile.is_jpm_member"
-                                            class="checkbox  checkbox-sm " :disabled="hasRole('user')"
-                                            @change="updateJpmStatus({ id: profile.profile_id, is_jpm_member: $event.target.checked })" />
-                                        <span>applicant</span>
-                                    </label>
-                                    <label class="label hover:text-gray-800">
-                                        <input type="checkbox" :checked="profile.is_father_jpm"
-                                            class="checkbox  checkbox-sm" :disabled="hasRole('user')"
-                                            @change="updateJpmStatus({ id: profile.profile_id, is_father_jpm: $event.target.checked })" />
-                                        <span>father</span>
-                                    </label>
-
-                                </div>
-                                <div class="flex gap-2">
-                                    <label class="label hover:text-gray-800">
-                                        <input type="checkbox" :checked="profile.is_guardian_jpm"
-                                            class="checkbox  checkbox-sm" :disabled="hasRole('user')"
-                                            @change="updateJpmStatus({ id: profile.profile_id, is_guardian_jpm: $event.target.checked })" />
-                                        <span>guardian</span>
-                                    </label>
-                                    <label class="label ml-1 hover:text-gray-800">
-                                        <input type="checkbox" :checked="profile.is_mother_jpm"
-                                            class="checkbox  checkbox-sm" :disabled="hasRole('user')"
-                                            @change="updateJpmStatus({ id: profile.profile_id, is_mother_jpm: $event.target.checked })" />
-                                        <span>mother</span>
-                                    </label>
-
-                                </div>
-                            </div>
-                        </TableDataCell>
-                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700"
-                            v-if="hasPermission('can-view-jpm') && showJpmColumns">
-                            <div class="px-2 text-xs">{{ profile.jpm_remarks || '-' }}</div>
-                        </TableDataCell>
-
-                        <TableDataCell class="border-collapse border-t border-slate-100 text-gray-700">
-                            <div class="flex gap-2 justify-center">
-                                <Button icon="pi pi-eye" @click="viewSequence(profile)" text rounded size="small"
-                                    severity="info" />
-
-                                <Button icon="pi pi-heart" @click="addRemarks(profile)"
-                                    v-if="hasPermission('can-view-jpm') && !hasRole('user')" text rounded size="small"
-                                    severity="success" />
-
-                                <Link v-if="!hasRole('user')" :href="route('profile.waitinglist', {
-                                    id: profile.profile_id,
-                                    action: 'update'
-                                })" preserve-state preserve-scroll>
-                                <Button icon="pi pi-pen-to-square" text rounded size="small" severity="warn" />
-                                </Link>
-
-                                <Button icon="pi pi-id-card" @click="viewProfile(profile)" text rounded size="small"
-                                    severity="secondary" />
-
-                                <Button icon="pi pi-trash"
-                                    v-if="hasPermission('delete-scholar-profile') && !hasRole('user')"
-                                    @click="deleteProfile(profile)" text rounded size="small" severity="danger" />
-                            </div>
-                        </TableDataCell>
-                    </TableRow>
-                    <TableRow v-else>
-                        <TableDataCell class="px-6 py-8 w-[10px] border-collapse border-t border-slate-100 text-center"
-                            :colspan="tableColspan">
-                            No data
-                            to be displayed</TableDataCell>
-                    </TableRow>
-
-                </template>
-            </Table>
-            <Pagination :links="props.profiles.meta?.links" class="mt-8" />
         </div>
 
+        <!-- JPM Remarks Modal -->
+        <Dialog v-model:visible="showJpmRemarksModal" :style="{ width: '500px' }" header="Edit JPM Remarks"
+            :modal="true">
+            <div class="space-y-4">
+                <div v-if="selectedProfileForRemarks" class="bg-gray-100 p-3 rounded border-l-4 border-blue-500">
+                    <div class="font-semibold text-blue-700">
+                        {{ selectedProfileForRemarks.last_name }}, {{ selectedProfileForRemarks.first_name }}
+                    </div>
+                    <div class="text-sm text-gray-600">{{ selectedProfileForRemarks.contact_no }}</div>
+                </div>
 
-        <!-- CREATE PROFILE MODAL -->
-        <ApplicantProfileModal
-            v-if="(props.action == 'create' || props.action == 'update' || props.action == 'add-existing') && hasPermission('create-scholar-profile') && !hasRole('user')"
-            :action="props.action" :errors="props.errors" :profile="props.profile" />
+                <div class="space-y-2">
+                    <label for="jpmRemarks" class="block text-sm font-medium text-gray-700">JPM Remarks</label>
+                    <Textarea id="jpmRemarks" v-model="jpmRemarksForm" rows="4" placeholder="Enter JPM remarks..."
+                        class="w-full" />
+                </div>
+            </div>
 
-        <!-- VIEW PROFILE MODAL -->
-        <ViewProfileModal :isOpen="isViewProfileOpen" :errors="props.errors" :profile="selectedProfile"
-            @close="closeViewProfile" />
-
-        <!-- Quick View Modal -->
-        <QuickViewModal :isOpen="isViewSequenceOpen" :profile="selectedProfile" @close="closeViewSequence" />
-
-        <!-- Generate Report Modal -->
-        <GenerateReportModal v-model:show="showReportModal" />
+            <template #footer>
+                <div class="flex justify-end gap-2">
+                    <Button label="Cancel" severity="secondary" @click="closeJpmRemarksModal" />
+                    <Button label="Save" severity="info" @click="updateJpmRemarks" />
+                </div>
+            </template>
+        </Dialog>
 
         <!-- Delete Confirmation Dialog -->
-        <div v-if="showDeleteConfirm" class="fixed inset-0 flex items-center justify-center z-50">
-            <div class="bg-white rounded shadow-xl border p-8 w-full max-w-md">
-                <h2 class="text-lg font-bold mb-4">Confirm Delete</h2>
-                <p>Are you sure you want to delete this profile?</p>
-                <div class="font-semibold font-mono text-gray-800 p-2 rounded bg-gray-100 text-xl mt-2">{{
-                    `${selectedProfile.last_name},
-                    ${selectedProfile.first_name}` }}
-                </div>
-                <div class="flex justify-end gap-4 mt-6">
-                    <Button label="Cancel" icon="pi pi-times" @click="cancelDelete" severity="secondary" />
-                    <Button label="Delete" icon="pi pi-trash" @click="confirmDelete" severity="danger" />
-                </div>
-            </div>
-        </div>
-
-        <!-- Add JPM remarks Dialog -->
-        <div v-if="showAddRemarksConfirm" class="fixed inset-0 flex items-center justify-center z-50">
-            <div class="bg-white rounded shadow-xl border p-8 w-full max-w-md">
-                <h2 class="text-lg font-bold mb-4">Add JPM Remarks</h2>
-                <p>Currently adding remarks for:</p>
-                <div class="font-semibold font-mono text-gray-700 p-1 rounded bg-gray-100 mt-1">{{
-                    `${selectedProfile.last_name},
-                    ${selectedProfile.first_name}` }}
-                </div>
-                <div class="mt-4">
-
-                    <!-- <InputText fluid type="text" :value="selectedProfile.jpm_remarks" /> -->
-                    <IftaLabel class="w-full">
-                        <InputText fluid id="jpm_remarks" v-model="selectedProfile.jpm_remarks" />
-                        <label for="jpm_remarks">JPM remarks</label>
-                    </IftaLabel>
-                </div>
-                <div class="flex justify-end gap-4 mt-6">
-                    <Button label="Cancel" icon="pi pi-times" @click="cancelAddRemarks" severity="secondary" />
-                    <Button label="Add Remarks" icon="pi pi-heart" @click="confirmAddRemarks" severity="success" />
+        <Dialog v-model:visible="showConfirmDeleteModal" :style="{ width: '450px' }" header="Confirm Deletion"
+            :modal="true">
+            <div class="flex items-center gap-4">
+                <i class="pi pi-exclamation-triangle text-3xl text-red-500"></i>
+                <div>
+                    <p class="text-lg font-semibold text-gray-800 mb-2">
+                        Are you sure you want to delete this applicant?
+                    </p>
+                    <div class="bg-gray-100 p-3 rounded border-l-4 border-red-500" v-if="selectedApplicant">
+                        <div class="font-semibold text-red-700">
+                            {{ selectedApplicant.last_name }}, {{ selectedApplicant.first_name }}
+                        </div>
+                        <div class="text-sm text-gray-600">{{ selectedApplicant.contact_no }}</div>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-2">
+                        This action cannot be undone.
+                    </p>
                 </div>
             </div>
-        </div>
+
+            <template #footer>
+                <Button label="Cancel" severity="secondary" @click="closeDeleteModal" outlined />
+                <Button label="Delete Applicant" severity="danger" @click="deleteApplicant" />
+            </template>
+        </Dialog>
+
+        <!-- Modals -->
+        <ViewProfileModal :is-open="isViewProfileOpen" :profile="selectedProfile" @close="closeViewProfile" />
+        <QuickViewModal :is-open="isViewSequenceOpen" :profile="selectedProfile" @close="closeViewSequence" />
+        <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" />
+
+        <!-- Applicant Profile Modal - handles both route-level and local modal state -->
+        <ApplicantProfileModal v-if="(props.action == 'create' || props.action == 'update') || showApplicantModal"
+            :action="showApplicantModal ? modalAction : props.action"
+            :profile="showApplicantModal ? modalProfile : props.profile" :is-inline-modal="showApplicantModal"
+            @close="closeApplicantModal" />
     </AdminLayout>
-
 </template>

@@ -1,462 +1,366 @@
 <template>
-    <TransitionRoot appear :show="isOpen" as="template">
-        <Dialog as="div" class="relative z-10">
-            <TransitionChild as="template" enter="duration-300 ease-out" enter-from="opacity-0" enter-to="opacity-100"
-                leave="duration-200 ease-in" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-black/75" />
-            </TransitionChild>
+    <Dialog :visible="isOpen" modal :header="getHeaderTitle()" :style="{ width: '90vw', maxWidth: '1200px' }"
+        :closable="true" @update:visible="(value) => !value && handleCloseModal()" class="p-fluid">
+        <!-- Header Summary Card -->
+        <div class="grid grid-cols-12 gap-2 mb-2">
+            <div class="col-span-12">
+                <Card class="bg-blue-50 border-blue-200">
+                    <template #content>
+                        <div class="flex items-center gap-4">
+                            <Avatar :label="getInitials()" size="large" shape="circle" class="bg-gray-600 text-white" />
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex flex-col items-start gap-1">
+                                        <h3 class="text-xl font-bold text-gray-900">{{ getFullName() }}</h3>
+                                        <div class="flex items-center gap-4">
 
-            <div class="fixed inset-0 overflow-y-auto">
-                <div class="flex justify-center p-4 text-center items-center min-h-screen">
-                    <TransitionChild as="template" enter="duration-300 ease-out" enter-from="opacity-0 scale-95"
-                        enter-to="opacity-100 scale-100" leave="duration-200 ease-in" leave-from="opacity-100 scale-100"
-                        leave-to="opacity-0 scale-95">
-                        <DialogPanel
-                            class="w-full max-w-3xl transform overflow-hidden rounded-sm  text-left align-middle shadow-xl transition-all">
-                            <DialogTitle as="h3"
-                                class="text-normal font-medium leading-6 bg-[#222831] text-white flex items-center justify-between px-4 py-2">
-                                <span>View Application</span>
-
-                                <button class="-mr-2 cursor-pointer " @click="handleCloseModal">
-                                    <XMarkIcon class="h-8 w-8 text-red-500" />
-                                </button>
-                            </DialogTitle>
-                            <div class="px-4 py-2 bg-white">
-
-                                <div class="rounded-lg border border-gray-200 px-4 py-2 mb-2 bg-white shadow-sm">
-                                    <div
-                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1 flex items-center">
-                                        <span class="inline-block w-2 h-5 bg-slate-600 rounded mr-2"></span> Applicant
-                                        Information
-                                    </div>
-                                    <div class="flex flex-row flex-wrap gap-3 mb-2 items-start">
-                                        <div class="flex flex-col min-w-[220px] justify-start">
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                Name</div>
-                                            <div class="font-semibold text-gray-800 text-xs uppercase">
-                                                <span v-if="profile.last_name">{{ `${profile.last_name}, ` }}</span>
-                                                <span v-if="profile.first_name">{{ `${profile.first_name} ` }}</span>
-                                                <span v-if="profile.middle_name">{{ `${profile.middle_name} ` }}</span>
-                                                <span v-if="profile.extension_name">{{ profile.extension_name }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="flex flex-col min-w-[180px] justify-start">
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                Date Filed
-                                            </div>
-                                            <div class="font-semibold text-gray-800 text-xs uppercase">
-                                                <span v-if="!profile.date_filed"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else>{{ moment(profile.date_filed).format('MMMM DD, YYYY')
+                                            <div class="flex gap-3 text-sm text-gray-600">
+                                                <span><i class="pi pi-phone mr-1"></i>{{ profile.contact_no || 'N/A'
+                                                }}</span>
+                                                <span><i class="pi pi-envelope mr-1"></i>{{ profile.email || 'N/A'
                                                 }}</span>
                                             </div>
                                         </div>
-                                        <div class="flex flex-row gap-4 min-w-[540px] items-start">
-                                            <div class="flex flex-col min-w-[160px] justify-start">
-                                                <div
-                                                    class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                    Contact #
+                                    </div>
+                                    <div class="flex flex-col items-end gap-4">
+                                        <div class="flex items-center gap-2">
+                                            <div
+                                                class="text-center px-2 py-1 bg-indigo-100 rounded-md border border-indigo-200">
+                                                <div class="text-sm font-bold text-indigo-600 leading-tight">
+                                                    #{{ profile.sequence_number || '-' }}
                                                 </div>
-                                                <div class="font-semibold text-gray-800 text-xs">
-                                                    <span v-if="!profile.contact_no"
-                                                        class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                        data
-                                                        provided</span>
-                                                    <span v-else>{{ profile.contact_no }}</span>
-                                                </div>
+                                                <div class="text-xs text-indigo-700 leading-tight">Program</div>
                                             </div>
-                                            <div class="flex flex-col min-w-[160px] justify-start">
-                                                <div
-                                                    class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                    Contact
-                                                    No.
-                                                    2</div>
-                                                <div class="font-semibold text-gray-800 text-xs">
-                                                    <span v-if="!profile.contact_no_2"
-                                                        class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                        data
-                                                        provided</span>
-                                                    <span v-else>{{ profile.contact_no_2 }}</span>
+                                            <div
+                                                class="text-center px-2 py-1 bg-purple-100 rounded-md border border-purple-200">
+                                                <div class="text-sm font-bold text-purple-600 leading-tight">
+                                                    #{{ profile.sequence_number_by_course || '-' }}
                                                 </div>
+                                                <div class="text-xs text-purple-700 leading-tight">Course</div>
                                             </div>
-                                            <div class="flex flex-col min-w-[160px] justify-start">
-                                                <div
-                                                    class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                    Email
-                                                    Address</div>
-                                                <div class="font-semibold text-gray-800 text-xs">
-                                                    <span v-if="!profile.email"
-                                                        class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                        data
-                                                        provided</span>
-                                                    <span v-else>{{ profile.email }}</span>
+                                            <div
+                                                class="text-center px-2 py-1 bg-orange-100 rounded-md border border-orange-200">
+                                                <div class="text-sm font-bold text-orange-600 leading-tight">
+                                                    #{{ profile.daily_sequence_number || '-' }}
                                                 </div>
+                                                <div class="text-xs text-orange-700 leading-tight">Date</div>
+                                            </div>
+                                            <div
+                                                class="text-center px-2 py-1 bg-green-100 rounded-md border border-green-200">
+                                                <div class="text-sm font-bold text-green-600 leading-tight">
+                                                    #{{ profile.sequence_number_by_school_course || '-' }}
+                                                </div>
+                                                <div class="text-xs text-green-700 leading-tight">School/Course</div>
                                             </div>
                                         </div>
-                                        <div class="flex flex-col min-w-[220px] justify-start">
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                Address</div>
-                                            <div class="font-semibold text-gray-800 text-xs uppercase">
-                                                <span
-                                                    v-if="!profile.municipality && !profile.barangay && !profile.address"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else>{{ profile.municipality }}{{ profile.barangay ? ', ' +
-                                                    profile.barangay : '' }}{{ profile.address ? ', ' + profile.address
-                                                        : '' }}
-                                                </span>
+                                        <div class="bg-emerald-100 border border-emerald-300 rounded-lg px-2 py-1">
+                                            <div class="flex items-center gap-2">
+                                                <i class="pi pi-calendar text-emerald-700 text-sm"></i>
+                                                <div>
+                                                    <div class="text-xs text-emerald-600 font-medium leading-tight">Date
+                                                        Filed
+                                                    </div>
+                                                    <div class="text-sm font-bold text-emerald-800 leading-tight">{{
+                                                        formatDate(profile.date_filed) }}</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
-                                <div class="rounded-lg border border-gray-200 px-4 py-2 mb-2 bg-white shadow-sm">
-                                    <div
-                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1 flex items-center">
-                                        <span class="inline-block w-2 h-5 bg-slate-600 rounded mr-2"></span> Academic
-                                        Information
-                                    </div>
-                                    <div class="flex flex-row flex-wrap gap-3 mb-2 items-start">
-                                        <div class="flex flex-col min-w-[180px] justify-start">
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                Program</div>
-                                            <div class="font-semibold text-gray-800 text-xs uppercase">
-                                                <span
-                                                    v-if="!profile.scholarship_grant || !profile.scholarship_grant.length || !profile.scholarship_grant[0].program"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else
-                                                    v-tooltip.top="profile.scholarship_grant[0].program.name">{{
-                                                        profile.scholarship_grant[0].program.shortname }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="flex flex-col min-w-[180px] justify-start">
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                School</div>
-                                            <div class="font-semibold text-gray-800 text-xs uppercase">
-                                                <span
-                                                    v-if="!profile.scholarship_grant || !profile.scholarship_grant.length || !profile.scholarship_grant[0].school || !profile.scholarship_grant[0].school.name"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else v-tooltip.top="profile.scholarship_grant[0].school.name">{{
-                                                    profile.scholarship_grant[0].school.shortname }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="flex flex-col min-w-[180px] justify-start">
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                Course</div>
-                                            <div class="font-semibold text-gray-800 text-xs uppercase">
-                                                <span
-                                                    v-if="!profile.scholarship_grant || !profile.scholarship_grant.length || !profile.scholarship_grant[0].course || !profile.scholarship_grant[0].course.name"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else v-tooltip.top="profile.scholarship_grant[0].course.name">{{
-                                                    profile.scholarship_grant[0].course.shortname }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="flex flex-col min-w-[120px] justify-start">
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                Year Level
-                                            </div>
-                                            <div class="font-semibold text-gray-800 text-xs uppercase">
-                                                <span
-                                                    v-if="!profile.scholarship_grant || !profile.scholarship_grant.length || !profile.scholarship_grant[0].year_level"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else>{{ profile.scholarship_grant[0].year_level }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="flex flex-col min-w-[120px] justify-start">
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                Academic Year
-                                            </div>
-                                            <div class="font-semibold text-gray-800 text-xs uppercase">
-                                                <span
-                                                    v-if="!profile.scholarship_grant || !profile.scholarship_grant.length || !profile.scholarship_grant[0].academic_year"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else>{{ profile.scholarship_grant[0].academic_year }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="rounded-lg border border-gray-200 px-4 py-2 mb-2 bg-gray-50 shadow-sm">
-                                    <div
-                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1 flex items-center">
-                                        <span class="inline-block w-2 h-5 bg-slate-600 rounded mr-2"></span>Parent &
-                                        Guardian Information
-                                    </div>
-                                    <div class="flex flex-row flex-wrap gap-2 mb-2 items-start">
-                                        <div class="flex flex-col min-w-[220px] justify-start">
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                Father's Name
-                                            </div>
-                                            <div class="font-semibold text-gray-800 text-xs">
-                                                <span v-if="!profile.father_name"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else>{{ profile.father_name }}</span>
-                                            </div>
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2 mt-2">
-                                                Father's
-                                                Occupation
-                                            </div>
-                                            <div class="font-semibold text-gray-800 text-xs">
-                                                <span v-if="!profile.father_occupation"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data provided</span>
-                                                <span v-else>{{ profile.father_occupation }}</span>
-                                            </div>
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2 mt-2">
-                                                Father's
-                                                Contact #
-                                            </div>
-                                            <div class="font-semibold text-gray-800 text-xs">
-                                                <span v-if="!profile.father_contact_no"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data provided</span>
-                                                <span v-else>{{ profile.father_contact_no }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="flex flex-col min-w-[220px] justify-start">
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                Mother's Name
-                                            </div>
-                                            <div class="font-semibold text-gray-800 text-xs">
-                                                <span v-if="!profile.mother_name"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else>{{ profile.mother_name }}</span>
-                                            </div>
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2 mt-2">
-                                                Mother's
-                                                Occupation
-                                            </div>
-                                            <div class="font-semibold text-gray-800 text-xs">
-                                                <span v-if="!profile.mother_occupation"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data provided</span>
-                                                <span v-else>{{ profile.mother_occupation }}</span>
-                                            </div>
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2 mt-2">
-                                                Mother's
-                                                Contact #
-                                            </div>
-                                            <div class="font-semibold text-gray-800 text-xs">
-                                                <span v-if="!profile.mother_contact_no"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else>{{ profile.mother_contact_no }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="flex flex-col min-w-[220px] justify-start">
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                Guardian Name
-                                            </div>
-                                            <div class="font-semibold text-gray-800 text-xs">
-                                                <span v-if="!profile.guardian_name"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else>{{ profile.guardian_name }}</span>
-                                            </div>
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2 mt-2">
-                                                Relationship</div>
-                                            <div class="font-semibold text-gray-800 text-xs">
-                                                <span v-if="!profile.guardian_relationship"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else>{{ profile.guardian_relationship }}</span>
-                                            </div>
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2 mt-2">
-                                                Guardian
-                                                Occupation
-                                            </div>
-                                            <div class="font-semibold text-gray-800 text-xs">
-                                                <span v-if="!profile.guardian_occupation"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else>{{ profile.guardian_occupation }}</span>
-                                            </div>
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2 mt-2">
-                                                Guardian
-                                                Contact #
-                                            </div>
-                                            <div class="font-semibold text-gray-800 text-xs">
-                                                <span v-if="!profile.guardian_contact_no"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else>{{ profile.guardian_contact_no }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex flex-row gap-6 items-start mt-2">
-                                        <div class="flex flex-col min-w-[220px] justify-start">
-                                            <div
-                                                class="text-[11px] text-gray-600 font-medium capitalized underline underline-offset-2">
-                                                Estimated
-                                                Gross
-                                                Monthly
-                                                Income</div>
-                                            <div class="font-semibold text-gray-800 text-xs">
-                                                <span v-if="!profile.parents_guardian_gross_monthly_income"
-                                                    class="text-gray-400 text-[10px] lowercase font-normal italic">No
-                                                    data
-                                                    provided</span>
-                                                <span v-else>{{ profile.parents_guardian_gross_monthly_income }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="rounded-lg border border-gray-200 px-4 py-2 mb-2 bg-white shadow-sm">
-                                    <div
-                                        class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b pb-1 flex items-center">
-                                        <span class="inline-block w-2 h-5 bg-slate-600 rounded mr-2"></span>Remarks
-                                    </div>
-                                    <div class="p-2 rounded bg-gray-100 font-medium text-gray-700 text-sm">
-                                        {{ profile.remarks ? profile.remarks : 'No remarks provided' }}
-                                    </div>
-                                </div>
-
 
                             </div>
-                            <div class="w-full bg-white px-4 py-2 flex gap-2 items-center -mt-4 justify-between"
-                                v-if="profile.application_status != 2 && hasPermission('approve-scholar-profile')">
-
-                                <!-- <button
-                                        class="btn btn-sm bg-red-500 text-white shadow font-semibold px-4 py-2 rounded"
-                                        @click="declineApplication">Decline</button> -->
-
-                                <Fieldset class="w-1/3">
-                                    <template #legend><span class="text-xs font-bold">APPLICATION
-                                            STATUS</span></template>
-                                    <Button label="Decline" variant="text" @click="declineApplication" severity="danger"
-                                        icon="pi pi-times" size="small" />
-                                    <!-- <button class="" @click="showApproveModal = true"><i class="pi pi-times"
-                                            style="color: green"></i> Approve</button> -->
-                                    <Button label="Approve" variant="text" @click="showApproveModal = true"
-                                        severity="success" icon="pi pi-check" size="small" />
-                                </Fieldset>
-
-                                <!-- <button
-                                    class="btn btn-sm bg-gray-300 text-gray-700 shadow ml-auto font-semibold px-4 py-2 rounded"
-                                    @click="handleCloseModal">Cancel</button> -->
-
-                                <Button @click="handleCloseModal" label="Close" variant="text" severity="secondary"
-                                    raised class="mt-12" />
-                            </div>
-
-
-                            <Modal marginTop="md" maxWidth="lg" :show="showDeclineModal" @close="handleCloseModal">
-                                <div class="p-2 bg-slate-700 text-left text-white">Decline Application</div>
-                                <div class="p-4">
-                                    <div class="mt-4 bg-slate-100 p-4 text-center text-red-700 font-semibold">
-                                        <div class="w-full text-left">
-                                            <InputLabel class="mb-1" for="remarks" value="Reason/Remarks" />
-                                            <TextInput id="remarks" type="text" class="w-full block text-gray-700"
-                                                v-model="form.remarks" />
-                                            <!-- <InputError class="mt-2" :message="form.errors.applied_school" v-if="!form.applied_school" /> -->
-                                        </div>
-
-                                    </div>
-                                    <div class="mt-6 flex justify-end space-x-4">
-                                        <DangerButton @click="confirmDecline">
-                                            Submit</DangerButton>
-                                        <SecondaryButton @click="handleCloseModal">Cancel</SecondaryButton>
-                                    </div>
-                                </div>
-                            </Modal>
-
-                            <Modal marginTop="md" maxWidth="lg" :show="showApproveModal"
-                                @close="handleCloseApproveModal">
-                                <div class="p-2 bg-slate-800 text-left text-white">Approve Application</div>
-                                <div class="p-4">
-                                    <div class="mt-4 bg-gray-100 p-4 text-center text-green-700 font-semibold">
-                                        <div class="w-full text-left">
-                                            <InputLabel class="mb-1" for="date_approved" value="Date Approved" />
-                                            <TextInput id="date_approved" type="date" class="w-full block text-gray-700"
-                                                v-model="form.date_approved" />
-                                        </div>
-                                    </div>
-                                    <div class="mt-6 flex justify-end space-x-4">
-                                        <button
-                                            class="btn btn-sm bg-green-600 text-white shadow font-semibold px-4 py-2 rounded"
-                                            @click="confirmApprove"><i class="pi pi-times"
-                                                style="color: green"></i>Confirm</button>
-                                        <button
-                                            class="btn btn-sm bg-gray-50 text-gray-700 shadow font-semibold px-4 py-2 rounded"
-                                            @click="handleCloseApproveModal">Cancel</button>
-                                    </div>
-                                </div>
-                            </Modal>
-                        </DialogPanel>
-                    </TransitionChild>
-                </div>
+                        </div>
+                    </template>
+                </Card>
             </div>
-        </Dialog>
-    </TransitionRoot>
+        </div>
 
+        <!-- Tabbed Content -->
+        <TabView>
+            <TabPanel header="Personal Info">
+                <div class="grid grid-cols-12 gap-4">
+                    <!-- Personal Information -->
+                    <div class="col-span-6">
+                        <Card>
+                            <template #title>
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-user text-blue-600"></i>
+                                    Personal Information
+                                </div>
+                            </template>
+                            <template #content>
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Full
+                                                Name</label>
+                                            <InputText :value="getFullName()" readonly class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                                            <InputText
+                                                :value="profile.gender === 'M' ? 'Male' : profile.gender === 'F' ? 'Female' : 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Primary
+                                                Contact</label>
+                                            <InputText :value="profile.contact_no || 'N/A'" readonly class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Secondary
+                                                Contact</label>
+                                            <InputText :value="profile.contact_no_2 || 'N/A'" readonly class="w-full" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Email
+                                            Address</label>
+                                        <InputText :value="profile.email || 'N/A'" readonly class="w-full" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                        <Textarea :value="getFullAddress()" readonly class="w-full" rows="2" />
+                                    </div>
+                                </div>
+                            </template>
+                        </Card>
+                    </div>
+
+                    <!-- Academic Information -->
+                    <div class="col-span-6">
+                        <Card>
+                            <template #title>
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-graduation-cap text-green-600"></i>
+                                    Academic Information
+                                </div>
+                            </template>
+                            <template #content>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Program</label>
+                                        <InputText :value="profile.scholarship_grant?.[0]?.program?.shortname || 'N/A'"
+                                            readonly class="w-full" />
+
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">School</label>
+                                        <InputText :value="profile.scholarship_grant?.[0]?.school?.shortname || 'N/A'"
+                                            readonly class="w-full" />
+
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Course</label>
+                                        <InputText :value="profile.scholarship_grant?.[0]?.course?.shortname || 'N/A'"
+                                            readonly class="w-full" />
+
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Year Level</label>
+                                        <InputText :value="profile.scholarship_grant?.[0]?.year_level || 'N/A'" readonly
+                                            class="w-full" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Academic
+                                            Year</label>
+                                        <InputText :value="profile.scholarship_grant?.[0]?.academic_year || 'N/A'"
+                                            readonly class="w-full" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
+                                        <InputText :value="profile.scholarship_grant?.[0]?.term || 'N/A'" readonly
+                                            class="w-full" />
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+                                    <Textarea :value="profile.remarks || 'No remarks provided'" readonly class="w-full"
+                                        rows="2" />
+                                </div>
+                            </template>
+                        </Card>
+                    </div>
+                </div>
+            </TabPanel>
+
+            <TabPanel header="Family Info">
+                <div class="grid grid-cols-12 gap-4">
+                    <!-- Father Information -->
+                    <div class="col-span-4">
+                        <Card>
+                            <template #title>
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-user text-blue-600"></i>
+                                    Father
+                                </div>
+                            </template>
+                            <template #content>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                        <InputText :value="profile.father_name || 'N/A'" readonly class="w-full" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
+                                        <InputText :value="profile.father_occupation || 'N/A'" readonly
+                                            class="w-full" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                                        <InputText :value="profile.father_contact_no || 'N/A'" readonly
+                                            class="w-full" />
+                                    </div>
+                                </div>
+                            </template>
+                        </Card>
+                    </div>
+
+                    <!-- Mother Information -->
+                    <div class="col-span-4">
+                        <Card>
+                            <template #title>
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-user text-pink-600"></i>
+                                    Mother
+                                </div>
+                            </template>
+                            <template #content>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                        <InputText :value="profile.mother_name || 'N/A'" readonly class="w-full" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
+                                        <InputText :value="profile.mother_occupation || 'N/A'" readonly
+                                            class="w-full" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                                        <InputText :value="profile.mother_contact_no || 'N/A'" readonly
+                                            class="w-full" />
+                                    </div>
+                                </div>
+                            </template>
+                        </Card>
+                    </div>
+
+                    <!-- Guardian Information -->
+                    <div class="col-span-4">
+                        <Card>
+                            <template #title>
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-users text-green-600"></i>
+                                    Guardian
+                                </div>
+                            </template>
+                            <template #content>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                        <InputText :value="profile.guardian_name || 'N/A'" readonly class="w-full" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+                                        <InputText :value="profile.guardian_relationship || 'N/A'" readonly
+                                            class="w-full" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                                        <InputText :value="profile.guardian_contact_no || 'N/A'" readonly
+                                            class="w-full" />
+                                    </div>
+                                </div>
+                            </template>
+                        </Card>
+                    </div>
+                </div>
+
+                <!-- Monthly Income -->
+                <div class="mt-4">
+                    <Card>
+                        <template #title>
+                            <div class="flex items-center gap-2">
+                                <i class="pi pi-wallet text-amber-600"></i>
+                                Financial Information
+                            </div>
+                        </template>
+                        <template #content>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Gross Income</label>
+                                <InputText :value="formatCurrency(profile.parents_guardian_gross_monthly_income)"
+                                    readonly class="w-full" />
+                            </div>
+                        </template>
+                    </Card>
+                </div>
+            </TabPanel>
+        </TabView>
+
+        <!-- Action Buttons -->
+        <template #footer>
+            <div class="dialog-footer">
+                <div class="flex gap-3">
+                    <template v-if="hasPermission('approve-scholar-profile')">
+                        <Button label="Decline" icon="pi pi-times" severity="danger" outlined
+                            @click="declineApplication" />
+                        <Button label="Approve" icon="pi pi-check" severity="success"
+                            @click="showApproveModal = true" />
+                    </template>
+                </div>
+                <Button label="Close" icon="pi pi-times" severity="secondary" outlined @click="handleCloseModal" />
+            </div>
+        </template>
+
+        <!-- Decline Modal -->
+        <Dialog v-model:visible="showDeclineModal" modal header="Decline Application" :style="{ width: '450px' }">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Reason for Decline</label>
+                <Textarea v-model="form.remarks" rows="4" class="w-full" placeholder="Please provide a reason..." />
+            </div>
+            <template #footer>
+                <Button label="Cancel" severity="secondary" outlined @click="showDeclineModal = false" />
+                <Button label="Confirm Decline" severity="danger" @click="confirmDecline" />
+            </template>
+        </Dialog>
+
+        <!-- Approve Modal -->
+        <Dialog v-model:visible="showApproveModal" modal header="Approve Application" :style="{ width: '450px' }">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date Approved</label>
+                <Calendar v-model="form.date_approved" showIcon dateFormat="yy-mm-dd" class="w-full" />
+            </div>
+            <template #footer>
+                <Button label="Cancel" severity="secondary" outlined @click="showApproveModal = false" />
+                <Button label="Confirm Approval" severity="success" @click="confirmApprove" />
+            </template>
+        </Dialog>
+    </Dialog>
 </template>
 
 <script setup>
-
-import { ref, computed, watch, onMounted } from "vue";
-import { Head, Link, useForm, router } from "@inertiajs/vue3";
-import { debounce } from "lodash";
-import moment from 'moment'
-import {
-    TransitionRoot,
-    TransitionChild,
-    Dialog,
-    DialogPanel,
-    DialogTitle,
-} from "@headlessui/vue";
-import { XMarkIcon } from "@heroicons/vue/20/solid";
+import { ref, computed } from "vue";
+import { useForm, router } from "@inertiajs/vue3";
+import moment from 'moment';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
-import Modal from "@/Components/Modal.vue";
-import DangerButton from "@/Components/DangerButton.vue";
-import SecondaryButton from "@/Components/SecondaryButton.vue";
-import TextInput from "@/Components/TextInput.vue";
-import InputLabel from "@/Components/InputLabel.vue";
 import { usePermission } from '@/composable/permissions';
 
+// PrimeVue Components
+import Dialog from 'primevue/dialog';
+import TabView from 'primevue/tabview';
+import TabPanel from 'primevue/tabpanel';
+import Card from 'primevue/card';
+import Button from 'primevue/button';
+import InputText from 'primevue/inputtext';
+import Textarea from 'primevue/textarea';
+import Calendar from 'primevue/calendar';
+import Avatar from 'primevue/avatar';
+
 const { hasPermission, hasRole } = usePermission();
-// import municipalities from '@/Data/municipalities.json';
 
 const props = defineProps({
     profile: Object,
@@ -466,40 +370,85 @@ const props = defineProps({
     isOpen: Boolean
 });
 
-// console.log(props.profile);
+const emit = defineEmits(['close']);
+
 const form = useForm({
     date_approved: '',
     remarks: ''
-})
+});
 
-// Use isOpen from props for modal visibility
 const showDeclineModal = ref(false);
-const declineApplication = () => {
-    showDeclineModal.value = true;
-}
-const emit = defineEmits(['close']);
+const showApproveModal = ref(false);
+
+// Helper Functions
+const getHeaderTitle = () => {
+    return 'View Application';
+};
+
+const getFullName = () => {
+    const parts = [
+        props.profile.last_name,
+        props.profile.first_name,
+        props.profile.middle_name,
+        props.profile.extension_name
+    ].filter(Boolean);
+
+    if (parts.length === 0) return 'N/A';
+
+    const lastName = parts[0];
+    const otherNames = parts.slice(1).join(' ');
+    return `${lastName}, ${otherNames}`;
+};
+
+const getInitials = () => {
+    const firstName = props.profile.first_name || '';
+    const lastName = props.profile.last_name || '';
+    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'NA';
+};
+
+const getFullAddress = () => {
+    const parts = [
+        props.profile.address,
+        props.profile.barangay,
+        props.profile.municipality
+    ].filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : 'N/A';
+};
+
+const formatDate = (date) => {
+    return date ? moment(date).format('MMM DD, YYYY') : 'N/A';
+};
+
+const formatCurrency = (amount) => {
+    return amount ? `₱${Number(amount).toLocaleString()}` : 'N/A';
+};
+
 const handleCloseModal = () => {
     showDeclineModal.value = false;
+    showApproveModal.value = false;
     emit('close');
 };
 
+const declineApplication = () => {
+    showDeclineModal.value = true;
+};
 
 const confirmDecline = () => {
     const recordId = props.profile.scholarship_grant && Array.isArray(props.profile.scholarship_grant) && props.profile.scholarship_grant.length > 0
         ? props.profile.scholarship_grant[0].id
         : null;
+
     if (recordId) {
-        form.post(route("scholarship-record.decline", recordId), {
+        form.put(route("scholarship-record.decline", recordId), {
             onSuccess: (response) => {
-                toast.success("Application has been declined", {
+                toast.success("Application declined successfully", {
                     position: toast.POSITION.TOP_RIGHT,
                 });
-                // showDeclineModal.value = false;
-                router.visit(route('profile.waitinglist'))
+                router.visit(route('profile.waitinglist', { id: props.profile.profile_id, action: 'view' }));
             },
             onError: (err) => {
                 form.errors = err;
-                console.log(err)
+                console.log(err);
             }
         });
     } else {
@@ -508,29 +457,25 @@ const confirmDecline = () => {
         });
     }
     showDeclineModal.value = false;
-}
-const showApproveModal = ref(false);
-
-const handleCloseApproveModal = () => {
-    showApproveModal.value = false;
+    handleCloseModal();
 };
 
 const confirmApprove = () => {
-
     const recordId = props.profile.scholarship_grant && Array.isArray(props.profile.scholarship_grant) && props.profile.scholarship_grant.length > 0
         ? props.profile.scholarship_grant[0].id
         : null;
+
     if (recordId) {
         form.post(route("scholarship-record.approve", recordId), {
             onSuccess: (response) => {
-                toast.success("Profile has been updated", {
+                toast.success("Application approved successfully", {
                     position: toast.POSITION.TOP_RIGHT,
                 });
-                router.visit(route('profile.index', { id: props.profile.profile_id, action: 'view' }))
+                router.visit(route('profile.index', { id: props.profile.profile_id, action: 'view' }));
             },
             onError: (err) => {
                 form.errors = err;
-                console.log(err)
+                console.log(err);
             }
         });
     } else {
@@ -539,6 +484,30 @@ const confirmApprove = () => {
         });
     }
     showApproveModal.value = false;
-}
+    handleCloseModal();
+};
 </script>
-<style></style>
+
+<style scoped>
+.p-tabview .p-tabview-nav li .p-tabview-nav-link {
+    font-weight: 500;
+}
+
+.p-card .p-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.p-card .p-card-content {
+    padding-top: 0;
+}
+
+.dialog-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1rem;
+}
+</style>

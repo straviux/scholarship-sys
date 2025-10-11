@@ -17,6 +17,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ScholarshipProfileController extends Controller
 {
@@ -102,6 +103,59 @@ class ScholarshipProfileController extends Controller
                     ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $request->name . '%'])
                     ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ['%' . $request->name . '%'])
                     ->orWhereRaw("CONCAT(last_name, ', ', first_name, ' ', middle_name) LIKE ?", ['%' . $request->name . '%']);
+            });
+        }
+
+        // Filter by parent_name
+        if ($request->filled('parent_name')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('father_name', 'like', '%' . $request->parent_name . '%')
+                    ->orWhere('mother_name', 'like', '%' . $request->parent_name . '%')
+                    ->orWhere('guardian_name', 'like', '%' . $request->parent_name . '%');
+            });
+        }
+
+        // Global search across multiple fields
+        if ($request->filled('global_search')) {
+            $searchTerm = $request->global_search;
+            $query->where(function ($q) use ($searchTerm) {
+                // Search in profile fields
+                $q->where('first_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('middle_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('extension_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('father_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('mother_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('guardian_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('municipality', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('barangay', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('address', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('contact_no', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('contact_no_2', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('remarks', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('jpm_remarks', 'like', '%' . $searchTerm . '%')
+                    // Search in scholarship grant relations
+                    ->orWhereHas('scholarshipGrant.school', function ($schoolQuery) use ($searchTerm) {
+                        $schoolQuery->where('schools.name', 'like', '%' . $searchTerm . '%')
+                            ->orWhere('schools.shortname', 'like', '%' . $searchTerm . '%');
+                    })
+                    ->orWhereHas('scholarshipGrant.course', function ($courseQuery) use ($searchTerm) {
+                        $courseQuery->where('courses.name', 'like', '%' . $searchTerm . '%')
+                            ->orWhere('courses.shortname', 'like', '%' . $searchTerm . '%');
+                    })
+                    ->orWhereHas('scholarshipGrant.course.scholarshipProgram', function ($programQuery) use ($searchTerm) {
+                        $programQuery->where('scholarship_programs.name', 'like', '%' . $searchTerm . '%')
+                            ->orWhere('scholarship_programs.shortname', 'like', '%' . $searchTerm . '%');
+                    })
+                    ->orWhereHas('scholarshipGrant', function ($grantQuery) use ($searchTerm) {
+                        $grantQuery->where('year_level', 'like', '%' . $searchTerm . '%');
+                    })
+                    // Search for full name combinations
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $searchTerm . '%'])
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ['%' . $searchTerm . '%'])
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name, ' ', COALESCE(middle_name, '')) LIKE ?", ['%' . $searchTerm . '%'])
+                    ->orWhereRaw("CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name) LIKE ?", ['%' . $searchTerm . '%']);
             });
         }
 
@@ -345,6 +399,50 @@ class ScholarshipProfileController extends Controller
                 $q->where('father_name', 'like', '%' . $request->parent_name . '%')
                     ->orWhere('mother_name', 'like', '%' . $request->parent_name . '%')
                     ->orWhere('guardian_name', 'like', '%' . $request->parent_name . '%');
+            });
+        }
+
+        // Global search across multiple fields
+        if ($request->filled('global_search')) {
+            $searchTerm = $request->global_search;
+            $query->where(function ($q) use ($searchTerm) {
+                // Search in profile fields
+                $q->where('first_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('middle_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('extension_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('father_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('mother_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('guardian_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('municipality', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('barangay', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('address', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('contact_no', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('contact_no_2', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('remarks', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('jpm_remarks', 'like', '%' . $searchTerm . '%')
+                    // Search in scholarship grant relations
+                    ->orWhereHas('scholarshipGrant.school', function ($schoolQuery) use ($searchTerm) {
+                        $schoolQuery->where('schools.name', 'like', '%' . $searchTerm . '%')
+                            ->orWhere('schools.shortname', 'like', '%' . $searchTerm . '%');
+                    })
+                    ->orWhereHas('scholarshipGrant.course', function ($courseQuery) use ($searchTerm) {
+                        $courseQuery->where('courses.name', 'like', '%' . $searchTerm . '%')
+                            ->orWhere('courses.shortname', 'like', '%' . $searchTerm . '%');
+                    })
+                    ->orWhereHas('scholarshipGrant.course.scholarshipProgram', function ($programQuery) use ($searchTerm) {
+                        $programQuery->where('scholarship_programs.name', 'like', '%' . $searchTerm . '%')
+                            ->orWhere('scholarship_programs.shortname', 'like', '%' . $searchTerm . '%');
+                    })
+                    ->orWhereHas('scholarshipGrant', function ($grantQuery) use ($searchTerm) {
+                        $grantQuery->where('year_level', 'like', '%' . $searchTerm . '%');
+                    })
+                    // Search for full name combinations
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $searchTerm . '%'])
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ['%' . $searchTerm . '%'])
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name, ' ', COALESCE(middle_name, '')) LIKE ?", ['%' . $searchTerm . '%'])
+                    ->orWhereRaw("CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name) LIKE ?", ['%' . $searchTerm . '%']);
             });
         }
 
@@ -956,21 +1054,39 @@ class ScholarshipProfileController extends Controller
      */
     public function updateJpmStatus($id, Request $request)
     {
-        $profile = ScholarshipProfile::findOrFail($id);
-        $fields = [
-            'is_jpm_member',
-            'is_mother_jpm',
-            'is_father_jpm',
-            'is_guardian_jpm',
-        ];
-        foreach ($fields as $field) {
-            if ($request->has($field)) {
-                $profile->{$field} = $request->input($field);
+        try {
+            Log::info('Updating JPM status for profile: ' . $id, $request->all());
+
+            $profile = ScholarshipProfile::findOrFail($id);
+            $fields = [
+                'is_jpm_member',
+                'is_mother_jpm',
+                'is_father_jpm',
+                'is_guardian_jpm',
+            ];
+
+            $updated = false;
+            foreach ($fields as $field) {
+                if ($request->has($field)) {
+                    $oldValue = $profile->{$field};
+                    $newValue = $request->input($field);
+                    $profile->{$field} = $newValue;
+                    $updated = true;
+                    Log::info("Updated {$field}: {$oldValue} -> {$newValue}");
+                }
             }
+
+            if ($updated) {
+                $profile->save();
+                Log::info('JPM status saved successfully for profile: ' . $id);
+            }
+
+            // Return a valid Inertia response to avoid error
+            return redirect()->back()->with('success', 'JPM status updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error updating JPM status: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update JPM status: ' . $e->getMessage());
         }
-        $profile->save();
-        // Return a valid Inertia response to avoid error
-        return redirect()->back()->with('success', 'JPM status updated successfully.');
     }
 
     /**

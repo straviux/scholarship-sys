@@ -37,11 +37,7 @@ watch(() => props.modelValue, (val) => {
     localValue.value = val;
 });
 
-// Sync localValue with parent prop
-// watch(() => props.preselect, (val) => {
-//     localValue.value = val;
-// });
-// Emit changes to parent
+
 watch(localValue, (val) => {
     emit('update:modelValue', val);
 });

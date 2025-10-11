@@ -18,7 +18,12 @@
                                 <span v-if="action == 'create'">New Applicant Form</span>
                                 <span v-if="action == 'update'">Update Applicant Form</span>
                                 <span v-if="action == 'add-existing'">Applicant Form</span>
-                                <Link class="-mr-2 " :href="prevPage">
+
+                                <!-- Close button - handle both inline modal and route navigation -->
+                                <button v-if="isInlineModal" class="-mr-2 cursor-pointer" @click="emit('close')">
+                                    <XMarkIcon class="h-6 w-6 text-red-500" />
+                                </button>
+                                <Link v-else class="-mr-2" :href="prevPage">
                                 <XMarkIcon class="h-6 w-6 text-red-500" />
                                 </Link>
                             </DialogTitle>
@@ -414,7 +419,13 @@ const props = defineProps({
     msg: String,
     errors: Object,
     page: [Number, String],
+    isInlineModal: {
+        type: Boolean,
+        default: false
+    }
 });
+
+const emit = defineEmits(['close']);
 
 const mncplt = ref(municipalities.municipalities);
 const municipalitiesOptions = ref(mncplt.value.map(m => ({
@@ -574,8 +585,14 @@ const submit = (closeAfter = false) => {
                     position: toast.POSITION.TOP_RIGHT,
                 });
                 setTimeout(() => {
-                    router.visit(route('profile.waitinglist', { id: profile_id, action: props.action }), { preserveState: true });
-                    if (closeAfter) router.visit(JSON.parse(JSON.stringify(prevPage.value)));
+                    if (props.isInlineModal) {
+                        emit('close');
+                        // Refresh the current page to show updated data
+                        router.reload();
+                    } else {
+                        router.visit(route('profile.waitinglist', { id: profile_id, action: props.action }), { preserveState: true });
+                        if (closeAfter) router.visit(JSON.parse(JSON.stringify(prevPage.value)));
+                    }
                 }, 1200);
             },
             onError: (err) => {
