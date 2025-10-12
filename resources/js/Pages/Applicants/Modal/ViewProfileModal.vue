@@ -290,7 +290,8 @@
                         </template>
                         <template #content>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Gross Income</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Parents' Monthly Gross
+                                    Income</label>
                                 <InputText :value="formatCurrency(profile.parents_guardian_gross_monthly_income)"
                                     readonly class="w-full" />
                             </div>

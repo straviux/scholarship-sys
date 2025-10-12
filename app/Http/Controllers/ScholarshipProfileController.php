@@ -12,6 +12,8 @@ use App\Models\ScholarshipProgram;
 use App\Models\ScholarshipRecord;
 use App\Models\Course;
 use App\Models\School;
+use App\Services\ScholarshipApprovalService;
+use App\Services\ScholarshipCompletionService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -599,6 +601,13 @@ class ScholarshipProfileController extends Controller
                     'profile' => $profile,
                     'profiles' => ScholarshipProfileResource::collection($profiles),
                     'profiles_total' => $profiles->total(),
+                    // Add approval workflow data
+                    'approvalStatuses' => collect(config('scholarship.approval_statuses'))
+                        ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label']])
+                        ->values()
+                        ->toArray(),
+                    'declineReasons' => config('scholarship.decline_reasons'),
+                    'autoApprovalConfig' => config('scholarship.auto_approval', []),
                 ]
             );
         }
@@ -631,6 +640,13 @@ class ScholarshipProfileController extends Controller
                 'sort' => $sort,
                 'profiles' => ScholarshipProfileResource::collection($profiles),
                 'profiles_total' => $profiles->total(),
+                // Add approval workflow data
+                'approvalStatuses' => collect(config('scholarship.approval_statuses'))
+                    ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label']])
+                    ->values()
+                    ->toArray(),
+                'declineReasons' => config('scholarship.decline_reasons'),
+                'autoApprovalConfig' => config('scholarship.auto_approval', []),
             ]
         );
     }
@@ -1101,5 +1117,388 @@ class ScholarshipProfileController extends Controller
         $profile->save();
         // Return a valid Inertia response to avoid error
         return redirect()->back()->with('success', 'JPM remarks updated successfully.');
+    }
+
+    /**
+     * Enhanced Scholarship Workflow Methods
+     */
+
+    /**
+     * Display all applications with enhanced status tracking
+     */
+    public function applications(Request $request)
+    {
+        $query = ScholarshipRecord::with([
+            'profile:profile_id,first_name,last_name,middle_name',
+            'course:id,name,shortname',
+            'program', // Remove field selection for hasOneThrough relationship
+            'school:id,name,shortname',
+            'approvedBy:id,name',
+            'declinedBy:id,name',
+            'completion',
+            'approvalHistory' => function ($q) {
+                $q->latest('performed_at')->limit(5);
+            }
+        ]);
+
+        // Apply filters
+        if ($request->filled('approval_status')) {
+            $query->where('approval_status', $request->approval_status);
+        }
+
+        if ($request->filled('completion_status')) {
+            $query->where('completion_status', $request->completion_status);
+        }
+
+        if ($request->filled('program_id')) {
+            $query->where('program_id', $request->program_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('profile', function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('middle_name', 'like', "%{$search}%");
+            });
+        }
+
+        $applications = $query->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 15));
+
+        // Get filter options
+        $programs = ScholarshipProgram::select('id', 'name')->get();
+        $approvalStatuses = collect(config('scholarship.approval_statuses'))
+            ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label']])
+            ->values()
+            ->toArray();
+        $completionStatuses = collect(config('scholarship.completion_statuses'))
+            ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label']])
+            ->values()
+            ->toArray();
+
+        return Inertia::render('Scholarship/Applications', [
+            'applications' => $applications,
+            'filters' => $request->only(['approval_status', 'completion_status', 'program_id', 'search']),
+            'programs' => $programs,
+            'approvalStatuses' => $approvalStatuses,
+            'completionStatuses' => $completionStatuses,
+            'declineReasons' => config('scholarship.decline_reasons'),
+        ]);
+    }
+
+    /**
+     * Set conditional approval for scholarship application
+     */
+    public function setConditionalApproval(Request $request, $id)
+    {
+        $request->validate([
+            'conditions' => 'required|string|max:1000',
+            'deadline' => 'nullable|date|after:today',
+            'remarks' => 'nullable|string|max:500'
+        ]);
+
+        try {
+            $record = ScholarshipRecord::findOrFail($id);
+            $approvalService = app(ScholarshipApprovalService::class);
+
+            $approvalService->setConditional($record, Auth::user(), [
+                'conditions' => $request->conditions,
+                'deadline' => $request->deadline,
+                'remarks' => $request->remarks ?? $request->conditions
+            ]);
+
+            return back()->with('success', 'Conditional approval set successfully.');
+        } catch (\Exception $e) {
+            Log::error('Conditional approval failed', [
+                'record_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->with('error', 'Failed to set conditional approval: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update conditional approval deadline and conditions
+     */
+    public function updateConditionalApproval(Request $request, $id)
+    {
+        $request->validate([
+            'conditions' => 'nullable|string|max:1000',
+            'deadline' => 'nullable|date|after:today'
+        ]);
+
+        try {
+            $record = ScholarshipRecord::findOrFail($id);
+
+            if ($record->approval_status !== 'conditional') {
+                return back()->with('error', 'Only conditional approvals can be updated.');
+            }
+
+            $approvalService = app(ScholarshipApprovalService::class);
+
+            $updates = [];
+            if ($request->has('conditions')) {
+                $updates['conditions'] = $request->conditions;
+            }
+            if ($request->has('deadline')) {
+                $updates['deadline'] = $request->deadline;
+            }
+
+            if (empty($updates)) {
+                return back()->with('error', 'No updates provided.');
+            }
+
+            $approvalService->updateConditional($record, Auth::user(), $updates);
+
+            return back()->with('success', 'Conditional approval updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Conditional approval update failed', [
+                'record_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->with('error', 'Failed to update conditional approval: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display completed scholarships
+     */
+    public function completions(Request $request)
+    {
+        $query = ScholarshipRecord::with([
+            'profile:profile_id,first_name,last_name,middle_name',
+            'course:id,name,shortname',
+            'program', // Remove field selection for hasOneThrough relationship 
+            'school:id,name,shortname',
+            'completion.verifiedBy:id,name'
+        ])->where('completion_status', 'completed');
+
+        if ($request->filled('program_id')) {
+            $query->where('program_id', $request->program_id);
+        }
+
+        if ($request->filled('year')) {
+            $query->whereYear('completion_date', $request->year);
+        }
+
+        $completions = $query->orderBy('completion_date', 'desc')
+            ->paginate($request->get('per_page', 15));
+
+        $programs = ScholarshipProgram::select('id', 'name')->get();
+        $years = ScholarshipRecord::whereNotNull('completion_date')
+            ->selectRaw('YEAR(completion_date) as year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year');
+
+        return Inertia::render('Scholarship/Completions', [
+            'completions' => $completions,
+            'filters' => $request->only(['program_id', 'year']),
+            'programs' => $programs,
+            'years' => $years,
+        ]);
+    }
+
+    /**
+     * Display renewal applications
+     */
+    public function renewals(Request $request)
+    {
+        $query = ScholarshipRecord::with([
+            'profile:profile_id,first_name,last_name,middle_name',
+            'course:id,name,shortname',
+            'program', // Remove field selection for hasOneThrough relationship
+            'school:id,name,shortname',
+            'previousScholarship.course:id,name',
+            'previousScholarship.program' // Remove field selection for hasOneThrough relationship
+        ])->whereNotNull('previous_scholarship_id');
+
+        if ($request->filled('approval_status')) {
+            $query->where('approval_status', $request->approval_status);
+        }
+
+        $renewals = $query->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 15));
+
+        return Inertia::render('Scholarship/Renewals', [
+            'renewals' => $renewals,
+            'filters' => $request->only(['approval_status']),
+        ]);
+    }
+
+    /**
+     * Approve scholarship application
+     */
+    public function approve(Request $request, ScholarshipRecord $record)
+    {
+        $request->validate([
+            'date_approved' => 'nullable|date',
+            'remarks' => 'nullable|string|max:500'
+        ]);
+
+        try {
+            $approvalService = app(ScholarshipApprovalService::class);
+
+            $approvalService->approve($record, auth()->user(), [
+                'date_approved' => $request->date_approved,
+                'remarks' => $request->remarks
+            ]);
+
+            return back()->with('success', 'Application approved successfully.');
+        } catch (\Exception $e) {
+            Log::error('Approval failed', [
+                'record_id' => $record->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->with('error', 'Failed to approve application: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Decline scholarship application
+     */
+    public function decline(Request $request, ScholarshipRecord $record)
+    {
+        $request->validate([
+            'reason' => 'required|string',
+            'details' => 'required|string|max:1000'
+        ]);
+
+        try {
+            $approvalService = app(ScholarshipApprovalService::class);
+
+            $approvalService->decline($record, auth()->user(), [
+                'reason' => $request->reason,
+                'details' => $request->details
+            ]);
+
+            return back()->with('success', 'Application declined successfully.');
+        } catch (\Exception $e) {
+            Log::error('Decline failed', [
+                'record_id' => $record->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->with('error', 'Failed to decline application: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Enhanced approve method with auto-approval logic
+     */
+    public function approveEnhanced(Request $request, ScholarshipRecord $record)
+    {
+        $request->validate([
+            'type' => 'required|in:full,conditional',
+            'remarks' => 'nullable|string|max:1000',
+            'requirements' => 'nullable|string|max:1000',
+        ]);
+
+        $approvalService = app(\App\Services\ScholarshipApprovalService::class);
+
+        try {
+            if ($request->type === 'conditional') {
+                $approvalService->setConditional($record, auth()->user(), [
+                    'conditions' => $request->requirements ? [$request->requirements] : [],
+                    'remarks' => $request->remarks,
+                ]);
+                $message = 'Application conditionally approved';
+            } else {
+                $approvalService->approve($record, auth()->user(), [
+                    'remarks' => $request->remarks,
+                ]);
+                $message = 'Application approved successfully';
+            }
+
+            return response()->json(['message' => $message]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Enhanced decline method
+     */
+    public function declineEnhanced(Request $request, ScholarshipRecord $record)
+    {
+        $validReasons = array_keys(config('scholarship.decline_reasons'));
+
+        $request->validate([
+            'reason' => ['required', 'string', 'in:' . implode(',', $validReasons)],
+            'details' => 'nullable|string|max:1000',
+        ]);
+
+        $approvalService = app(\App\Services\ScholarshipApprovalService::class);
+
+        try {
+            $approvalService->decline($record, auth()->user(), [
+                'reason' => $request->reason,
+                'details' => $request->details,
+            ]);
+
+            return response()->json(['message' => 'Application declined']);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Mark scholarship as completed
+     */
+    public function markCompleted(Request $request, ScholarshipRecord $record)
+    {
+        $request->validate([
+            'completion_date' => 'required|date|before_or_equal:today',
+            'graduation_date' => 'nullable|date',
+            'final_grade' => 'nullable|numeric|min:1|max:5',
+            'honors' => 'nullable|string|max:100',
+            'completion_certificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'completion_remarks' => 'nullable|string|max:1000',
+        ]);
+
+        $completionService = app(\App\Services\ScholarshipCompletionService::class);
+
+        $data = $request->only([
+            'completion_date',
+            'graduation_date',
+            'final_grade',
+            'honors',
+            'completion_remarks'
+        ]);
+
+        // Handle certificate upload
+        if ($request->hasFile('completion_certificate')) {
+            $data['certificate_path'] = $request->file('completion_certificate')
+                ->store('completion-certificates', 'public');
+        }
+
+        try {
+            $completionService->markAsCompleted($record, $data, auth()->user());
+            return response()->json(['message' => 'Scholarship marked as completed successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Get approval statistics
+     */
+    public function getApprovalStats(Request $request)
+    {
+        $approvalService = app(\App\Services\ScholarshipApprovalService::class);
+
+        $filters = [];
+        if ($request->filled('date_from')) {
+            $filters['date_from'] = $request->date_from;
+        }
+        if ($request->filled('date_to')) {
+            $filters['date_to'] = $request->date_to;
+        }
+
+        return response()->json($approvalService->getApprovalStats($filters));
     }
 }

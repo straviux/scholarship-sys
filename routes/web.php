@@ -94,6 +94,55 @@ Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->gro
     Route::post('/scholarship_records/{record}/requirements/upload', 'uploadRequirement')->name('scholarship.requirements.upload');
 });
 
+// Enhanced Scholarship Workflow Routes
+Route::middleware(['auth'])->group(function () {
+    // Unified applications view (replaces Grant Records and Existing)
+    Route::get('/scholarship/applications', [ScholarshipProfileController::class, 'applications'])
+        ->name('scholarship.applications');
+
+    // Approval workflow routes
+    Route::post('/scholarship/{record}/approve', [ScholarshipProfileController::class, 'approve'])
+        ->name('scholarship.record.approve');
+
+    Route::post('/scholarship/{record}/decline', [ScholarshipProfileController::class, 'decline'])
+        ->name('scholarship.record.decline');
+
+    Route::post('/scholarship/{record}/conditional', [ScholarshipProfileController::class, 'setConditionalApproval'])
+        ->name('scholarship.record.conditional');
+
+    Route::put('/scholarship/{record}/conditional', [ScholarshipProfileController::class, 'updateConditionalApproval'])
+        ->name('scholarship.record.conditional.update');
+
+    // Scholarship completion routes
+    Route::get('/scholarship/completions', [ScholarshipProfileController::class, 'completions'])
+        ->name('scholarship.completions');
+
+    Route::post('/scholarship/{record}/complete', [ScholarshipProfileController::class, 'markCompleted'])
+        ->name('scholarship.complete');
+
+    Route::get('/scholarship/renewals', [ScholarshipProfileController::class, 'renewals'])
+        ->name('scholarship.renewals');
+
+    Route::post('/scholarship/{record}/apply-next', [ScholarshipProfileController::class, 'applyNext'])
+        ->name('scholarship.apply-next');
+
+    // Enhanced approval workflow
+    Route::post('/scholarship/{record}/approve-enhanced', [ScholarshipProfileController::class, 'approveEnhanced'])
+        ->name('scholarship.approve-enhanced');
+
+    Route::post('/scholarship/{record}/decline-enhanced', [ScholarshipProfileController::class, 'declineEnhanced'])
+        ->name('scholarship.decline-enhanced');
+
+    Route::post('/scholarship/{record}/resubmit', [ScholarshipProfileController::class, 'resubmit'])
+        ->name('scholarship.resubmit');
+
+    // Approval history and statistics
+    Route::get('/scholarship/{record}/history', [ScholarshipProfileController::class, 'getApprovalHistory'])
+        ->name('scholarship.history');
+
+    Route::get('/api/scholarship/stats', [ScholarshipProfileController::class, 'getApprovalStats'])
+        ->name('api.scholarship.stats');
+});
 Route::middleware(['auth'])->controller(ScholarshipProgramController::class)->group(function () {
     Route::get('/scholarshipprograms/get-active-list', 'getActiveProgramsApi')->name('scholarshipprograms.getactivelist');
     Route::get('/scholarshipprograms/{action?}/{id?}', 'index')->name('scholarshipprograms.index');

@@ -26,10 +26,14 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Dialog from 'primevue/dialog';
 import Textarea from 'primevue/textarea';
+import TabView from 'primevue/tabview';
+import TabPanel from 'primevue/tabpanel';
+import Card from 'primevue/card';
+import Avatar from 'primevue/avatar';
 
 import ApplicantProfileModal from '@/Pages/Applicants/Modal/ApplicantProfileModal.vue';
-import ViewProfileModal from './Modal/ViewProfileModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
+import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
 const showReportModal = ref(false);
 const openReportModal = () => { showReportModal.value = true; };
 
@@ -62,6 +66,19 @@ const props = defineProps({
         course: { type: String },
         applied_year_level: { type: String },
     },
+    // Approval workflow props
+    approvalStatuses: {
+        type: Array,
+        default: () => []
+    },
+    declineReasons: {
+        type: Object,
+        default: () => ({})
+    },
+    autoApprovalConfig: {
+        type: Object,
+        default: () => ({})
+    }
 });
 
 const form = useForm({
@@ -105,21 +122,12 @@ const filter = useForm({
 
 const searchInput = ref(null);
 const selectedProfile = ref({});
-const isViewProfileOpen = ref(false);
 const isViewSequenceOpen = ref(false);
 
 // Applicant Modal state
 const showApplicantModal = ref(false);
 const modalAction = ref('');
 const modalProfile = ref(null);
-
-const viewProfile = (profile) => {
-    selectedProfile.value = profile;
-    isViewProfileOpen.value = true;
-}
-const closeViewProfile = () => {
-    isViewProfileOpen.value = false;
-}
 
 const viewSequence = (profile) => {
     selectedProfile.value = profile;
@@ -429,8 +437,23 @@ watch(() => rows.value, () => {
 const applicants = computed(() => {
     const data = props.profiles.data || [];
 
+    // Filter out approved applicants from waiting list
+    const filteredData = data.filter(profile => {
+        // Check if the profile has any scholarship grants
+        if (profile.scholarship_grant && profile.scholarship_grant.length > 0) {
+            // Check if any grant is approved or auto_approved
+            const hasApprovedGrant = profile.scholarship_grant.some(grant =>
+                grant.approval_status === 'approved' || grant.approval_status === 'auto_approved'
+            );
+            // If has approved grant, exclude from waiting list
+            return !hasApprovedGrant;
+        }
+        // If no grants, include in waiting list
+        return true;
+    });
+
     // Ensure JPM boolean fields are properly converted to boolean values
-    return data.map(profile => ({
+    return filteredData.map(profile => ({
         ...profile,
         is_jpm_member: Boolean(profile.is_jpm_member),
         is_father_jpm: Boolean(profile.is_father_jpm),
@@ -442,6 +465,11 @@ const applicants = computed(() => {
 // Delete confirmation properties
 const showConfirmDeleteModal = ref(false);
 const selectedApplicant = ref(null);
+
+// Combined profile and review modal state
+const showProfileReviewModal = ref(false);
+const selectedApplication = ref(null);
+const selectedApplicantForReview = ref(null);
 
 const confirmDeleteApplicant = (applicant) => {
     selectedApplicant.value = applicant;
@@ -470,6 +498,85 @@ const deleteApplicant = () => {
     });
 };
 
+// Combined profile and review modal methods
+const openProfileReviewModal = (applicant) => {
+    // Store the full profile data
+    selectedApplicantForReview.value = applicant;
+
+    // Convert applicant data to application format expected by ApprovalWorkflow
+    selectedApplication.value = {
+        id: applicant.scholarship_grant?.[0]?.id || applicant.profile_id,
+        profile_id: applicant.profile_id,
+        profile: applicant,
+        program: applicant.scholarship_grant?.[0]?.program || null,
+        course: applicant.scholarship_grant?.[0]?.course || null,
+        school: applicant.scholarship_grant?.[0]?.school || null,
+        year_level: applicant.scholarship_grant?.[0]?.year_level || null,
+        approval_status: applicant.scholarship_grant?.[0]?.approval_status || 'pending',
+        application_status: applicant.scholarship_grant?.[0]?.application_status || 0,
+        created_at: applicant.scholarship_grant?.[0]?.created_at || applicant.created_at,
+        conditional_requirements: applicant.scholarship_grant?.[0]?.conditional_requirements || null,
+        conditional_deadline: applicant.scholarship_grant?.[0]?.conditional_deadline || null,
+        conditional_deadline_notified_at: applicant.scholarship_grant?.[0]?.conditional_deadline_notified_at || null,
+        conditional_deadline_expired: applicant.scholarship_grant?.[0]?.conditional_deadline_expired || false,
+        approval_remarks: applicant.scholarship_grant?.[0]?.approval_remarks || null,
+    };
+    showProfileReviewModal.value = true;
+};
+
+const closeProfileReviewModal = () => {
+    showProfileReviewModal.value = false;
+    selectedApplication.value = null;
+    selectedApplicantForReview.value = null;
+};
+
+const handleApprovalAction = (application) => {
+    closeProfileReviewModal();
+    toast.success('Application reviewed successfully');
+    refreshApplicationList();
+};
+
+const refreshApplicationList = () => {
+    router.reload({ only: ['profiles'] });
+};
+
+// Utility functions for applicant data formatting
+const getApplicantInitials = (applicant) => {
+    if (!applicant) return '';
+    const firstInitial = applicant.first_name?.charAt(0) || '';
+    const lastInitial = applicant.last_name?.charAt(0) || '';
+    return `${firstInitial}${lastInitial}`.toUpperCase();
+};
+
+const getApplicantFullName = (applicant) => {
+    if (!applicant) return '';
+    const parts = [
+        applicant.last_name,
+        ',',
+        applicant.first_name,
+        applicant.middle_name,
+        applicant.extension_name
+    ].filter(Boolean);
+
+    return parts.join(' ').replace(' ,', ',');
+};
+
+const getApplicantFullAddress = (applicant) => {
+    if (!applicant) return '';
+    const parts = [
+        applicant.barangay,
+        applicant.municipality,
+        applicant.province
+    ].filter(Boolean);
+
+    return parts.join(', ') || 'N/A';
+};
+
+const formatDate = (date) => {
+    if (!date) return 'N/A';
+    return moment(date).format('MMM DD, YYYY');
+};
+
 </script>
 
 <template>
@@ -490,7 +597,16 @@ const deleteApplicant = () => {
                 </template>
 
                 <template #end>
-                    <div class="flex gap-2">
+                    <div class="flex gap-3 items-center">
+                        <!-- JPM Tagging Toggle -->
+                        <div class="flex items-center gap-2" v-if="hasPermission('can-view-jpm')">
+                            <Checkbox v-model="showJpmColumns" inputId="showJpmToggle" binary />
+                            <label for="showJpmToggle" class="text-sm text-gray-600 cursor-pointer">Enable JPM
+                                Tagging</label>
+                        </div>
+
+                        <Divider layout="vertical" class="h-6" v-if="hasPermission('can-view-jpm')" />
+
                         <Button @click="openReportModal" label="Generate Report" icon="pi pi-file-pdf" severity="info"
                             size="small" />
                         <Button as="a" label="New" icon="pi pi-user-plus"
@@ -599,30 +715,8 @@ const deleteApplicant = () => {
             <!-- Applicants DataTable -->
             <div class="mt-4">
                 <Panel>
-                    <template #header>
-                        <div class="flex items-center gap-3">
-                            <i class="pi pi-list text-xl text-blue-600"></i>
-                            <span class="font-semibold text-lg">Waiting List</span>
-                        </div>
-                    </template>
-
-                    <template #icons>
-                        <div class="flex items-center">
-                            <div class="flex items-center gap-2" v-if="hasPermission('can-view-jpm')">
-                                <Checkbox v-model="showJpmColumns" inputId="showJpmToggle" binary />
-                                <label for="showJpmToggle" class="text-sm text-gray-600 cursor-pointer">Enable JPM
-                                    Tagging</label>
-                            </div>
-                        </div>
-                    </template>
-
-                    <!-- Search and Controls -->
-                    <div class="flex justify-between items-center mb-4">
-
-                    </div>
-
                     <!-- Info Bar -->
-                    <div class="md:flex hidden  justify-between items-center mb-4 p-3 bg-gray-50 rounded">
+                    <div class="md:flex hidden  justify-between items-center mb-4 px-3 bg-gray-50 rounded -mt-2">
                         <div class="text-sm text-gray-600">
                             <i class="pi pi-info-circle mr-2"></i>
                             By default, sequence # is by school per course
@@ -821,11 +915,13 @@ const deleteApplicant = () => {
                         </Column>
 
                         <!-- Actions Column -->
-                        <Column header="Actions" style="width: 200px">
+                        <Column header="Actions" style="width: 250px">
                             <template #body="slotProps">
-                                <div class="flex gap-2 justify-center">
-                                    <Button icon="pi pi-eye" severity="info" size="small" rounded outlined
-                                        v-tooltip.top="'View Profile'" @click="viewProfile(slotProps.data)" />
+                                <div class="flex gap-1 justify-center">
+                                    <Button icon="pi pi-check-circle" label="Review" severity="success" size="small"
+                                        v-tooltip.top="'Review Application & View Profile'"
+                                        @click="openProfileReviewModal(slotProps.data)"
+                                        v-if="hasPermission('create-scholar-profile')" />
                                     <Button icon="pi pi-user-edit" severity="warning" size="small" rounded outlined
                                         v-tooltip.top="'Edit Applicant'" @click="editApplicant(slotProps.data)" />
                                     <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
@@ -894,9 +990,306 @@ const deleteApplicant = () => {
         </Dialog>
 
         <!-- Modals -->
-        <ViewProfileModal :is-open="isViewProfileOpen" :profile="selectedProfile" @close="closeViewProfile" />
         <QuickViewModal :is-open="isViewSequenceOpen" :profile="selectedProfile" @close="closeViewSequence" />
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" />
+
+        <!-- Integrated Profile & Review Modal -->
+        <Dialog v-model:visible="showProfileReviewModal" modal header="Application Review & Applicant Profile"
+            :style="{ width: '95vw', maxWidth: '1400px' }" :maximizable="true" class="p-fluid">
+
+            <div v-if="selectedApplicantForReview">
+                <!-- Header Summary Card -->
+                <Card class="bg-blue-50 border-blue-200 mb-4">
+                    <template #content>
+                        <div class="flex items-center gap-4">
+                            <Avatar :label="getApplicantInitials(selectedApplicantForReview)" size="xlarge"
+                                shape="circle" class="bg-blue-600 text-white" />
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div>
+                                        <h3 class="text-2xl font-bold text-gray-900">{{
+                                            getApplicantFullName(selectedApplicantForReview) }}</h3>
+                                        <div class="flex items-center gap-4 mt-1">
+                                            <span class="text-sm text-gray-600">
+                                                <i class="pi pi-phone mr-1"></i>{{ selectedApplicantForReview.contact_no
+                                                    || 'N/A' }}
+                                            </span>
+                                            <span class="text-sm text-gray-600">
+                                                <i class="pi pi-envelope mr-1"></i>{{ selectedApplicantForReview.email
+                                                    || 'N/A' }}
+                                            </span>
+                                            <span class="text-sm text-gray-600">
+                                                <i class="pi pi-calendar mr-1"></i>Filed: {{
+                                                    formatDate(selectedApplicantForReview.date_filed) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <!-- Complete Queue Sequencing Information -->
+                                    <div class="flex items-center gap-2">
+                                        <div
+                                            class="text-center px-2 py-1 bg-indigo-100 rounded-md border border-indigo-200">
+                                            <div class="text-sm font-bold text-indigo-600 leading-tight">
+                                                #{{ selectedApplicantForReview.sequence_number || '-' }}
+                                            </div>
+                                            <div class="text-xs text-indigo-700 leading-tight">Program</div>
+                                        </div>
+                                        <div
+                                            class="text-center px-2 py-1 bg-purple-100 rounded-md border border-purple-200">
+                                            <div class="text-sm font-bold text-purple-600 leading-tight">
+                                                #{{ selectedApplicantForReview.sequence_number_by_course || '-' }}
+                                            </div>
+                                            <div class="text-xs text-purple-700 leading-tight">Course</div>
+                                        </div>
+                                        <div
+                                            class="text-center px-2 py-1 bg-orange-100 rounded-md border border-orange-200">
+                                            <div class="text-sm font-bold text-orange-600 leading-tight">
+                                                #{{ selectedApplicantForReview.daily_sequence_number || '-' }}
+                                            </div>
+                                            <div class="text-xs text-orange-700 leading-tight">Daily</div>
+                                        </div>
+                                        <div
+                                            class="text-center px-2 py-1 bg-green-100 rounded-md border border-green-200">
+                                            <div class="text-sm font-bold text-green-600 leading-tight">
+                                                #{{ selectedApplicantForReview.sequence_number_by_school_course || '-'
+                                                }}
+                                            </div>
+                                            <div class="text-xs text-green-700 leading-tight">School/Course</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </Card>
+
+                <!-- Tabbed Content -->
+                <TabView>
+                    <TabPanel header="Application Review">
+                        <ApprovalWorkflow v-if="selectedApplication" :application="selectedApplication"
+                            :approval-statuses="props.approvalStatuses || []"
+                            :decline-reasons="props.declineReasons || {}"
+                            :auto-approval-config="props.autoApprovalConfig || {}" :show-applicant-name="false"
+                            @approved="handleApprovalAction" @declined="handleApprovalAction"
+                            @conditionalApproval="handleApprovalAction" @refresh="refreshApplicationList" />
+                    </TabPanel>
+
+                    <TabPanel header="Profile Information">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Personal Information -->
+                            <Card>
+                                <template #title>
+                                    <div class="flex items-center gap-2">
+                                        <i class="pi pi-user text-blue-600"></i>
+                                        Personal Information
+                                    </div>
+                                </template>
+                                <template #content>
+                                    <div class="space-y-4">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Full
+                                                    Name</label>
+                                                <InputText :value="getApplicantFullName(selectedApplicantForReview)"
+                                                    readonly class="w-full" />
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                                                <InputText
+                                                    :value="selectedApplicantForReview.gender === 'M' ? 'Male' : selectedApplicantForReview.gender === 'F' ? 'Female' : 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Primary
+                                                    Contact</label>
+                                                <InputText :value="selectedApplicantForReview.contact_no || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Secondary
+                                                    Contact</label>
+                                                <InputText :value="selectedApplicantForReview.contact_no_2 || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Email
+                                                Address</label>
+                                            <InputText :value="selectedApplicantForReview.email || 'N/A'" readonly
+                                                class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Parent's Gross
+                                                Monthly
+                                                Income</label>
+                                            <InputText :value="selectedApplicantForReview.gross_monthly_income || 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                            <Textarea :value="getApplicantFullAddress(selectedApplicantForReview)"
+                                                readonly class="w-full" rows="2" />
+                                        </div>
+                                    </div>
+                                </template>
+                            </Card>
+
+                            <!-- Academic Information -->
+                            <Card>
+                                <template #title>
+                                    <div class="flex items-center gap-2 p-2">
+                                        <i class="pi pi-graduation-cap text-lg text-green-600"></i>
+                                        <span class="font-medium">Academic Information</span>
+                                    </div>
+                                </template>
+                                <template #content>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Program</label>
+                                            <InputText
+                                                :value="selectedApplicantForReview.scholarship_grant?.[0]?.program?.shortname || 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">School</label>
+                                            <InputText
+                                                :value="selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname || 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Course</label>
+                                            <InputText
+                                                :value="selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname || 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Year
+                                                Level</label>
+                                            <InputText
+                                                :value="selectedApplicantForReview.scholarship_grant?.[0]?.year_level || 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Academic
+                                                Year</label>
+                                            <InputText
+                                                :value="selectedApplicantForReview.scholarship_grant?.[0]?.academic_year || 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
+                                            <InputText
+                                                :value="selectedApplicantForReview.scholarship_grant?.[0]?.term || 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+                                        <Textarea :value="selectedApplicantForReview.remarks || 'No remarks provided'"
+                                            readonly class="w-full" rows="2" />
+                                    </div>
+                                </template>
+                            </Card>
+                        </div>
+
+                        <!-- Family Information -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                            <!-- Father Information -->
+                            <Card>
+                                <template #title>
+                                    <div class="flex items-center gap-2">
+                                        <i class="pi pi-user text-blue-600"></i>
+                                        Father Information
+                                    </div>
+                                </template>
+                                <template #content>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                            <InputText :value="selectedApplicantForReview.father_name || 'N/A'" readonly
+                                                class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
+                                            <InputText :value="selectedApplicantForReview.father_occupation || 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                                            <InputText :value="selectedApplicantForReview.father_contact_no || 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                    </div>
+                                </template>
+                            </Card>
+
+                            <!-- Mother Information -->
+                            <Card>
+                                <template #title>
+                                    <div class="flex items-center gap-2">
+                                        <i class="pi pi-user text-pink-600"></i>
+                                        Mother Information
+                                    </div>
+                                </template>
+                                <template #content>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                            <InputText :value="selectedApplicantForReview.mother_name || 'N/A'" readonly
+                                                class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
+                                            <InputText :value="selectedApplicantForReview.mother_occupation || 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                                            <InputText :value="selectedApplicantForReview.mother_contact_no || 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                    </div>
+                                </template>
+                            </Card>
+
+                            <!-- Guardian Information -->
+                            <Card>
+                                <template #title>
+                                    <div class="flex items-center gap-2">
+                                        <i class="pi pi-users text-purple-600"></i>
+                                        Guardian Information
+                                    </div>
+                                </template>
+                                <template #content>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                            <InputText :value="selectedApplicantForReview.guardian_name || 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
+                                            <InputText :value="selectedApplicantForReview.guardian_occupation || 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                                            <InputText :value="selectedApplicantForReview.guardian_contact_no || 'N/A'"
+                                                readonly class="w-full" />
+                                        </div>
+                                    </div>
+                                </template>
+                            </Card>
+                        </div>
+                    </TabPanel>
+                </TabView>
+            </div>
+        </Dialog>
 
         <!-- Applicant Profile Modal - handles both route-level and local modal state -->
         <ApplicantProfileModal v-if="(props.action == 'create' || props.action == 'update') || showApplicantModal"

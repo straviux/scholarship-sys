@@ -64,7 +64,7 @@ function getRoleDisplay() {
                 <Button v-slot="slotProps" asChild>
                     <button v-bind="slotProps.a11yAttrs" @click="toggleSidebarMinimized"
                         class="flex w-full bg-[#222831] pt-2 px-2 text-gray-500 cursor-pointer rounded-tr-xl rounded-tl-xl justify-end">
-                        <i :class="{ 'pi pi-window-maximize': sidebarMinimized, 'pi pi-window-minimize': !sidebarMinimized }"
+                        <i :class="{ 'pi pi-chevron-right': sidebarMinimized, 'pi pi-chevron-left': !sidebarMinimized }"
                             style="font-size: 0.7rem"></i>
                     </button>
                 </Button>
@@ -124,24 +124,20 @@ function getRoleDisplay() {
                                     </SidebarLink>
                                 </li>
                                 <li>
-                                    <SidebarLink :href="route('scholarship.applications')"
-                                        :active="route().current('scholarship.applications')">
-                                        <i class="pi pi-database mr-2"></i>
-                                        <span class="-mr-1 font-medium pl-3">Application Records</span>
+                                    <SidebarLink :href="route('profile.index')"
+                                        :active="route().current('profile.index')">
+                                        <i class="pi pi-id-card mr-2"></i>
+                                        <span class="-mr-1 font-medium indent-3">Existing</span>
+                                        <div class="indicator ml-6">
+                                            <!-- <span class="indicator-item text-xs indicator-middle badge badge-secondary" v-if="pendingApplicantCount > 0">{{ pendingApplicantCount }}</span> -->
+                                        </div>
                                     </SidebarLink>
                                 </li>
                                 <li>
-                                    <SidebarLink :href="route('scholarship.completions')"
-                                        :active="route().current('scholarship.completions')">
-                                        <i class="pi pi-check-circle mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Completions</span>
-                                    </SidebarLink>
-                                </li>
-                                <li>
-                                    <SidebarLink :href="route('scholarship.renewals')"
-                                        :active="route().current('scholarship.renewals')">
-                                        <i class="pi pi-refresh mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Renewals</span>
+                                    <SidebarLink :href="route('scholarship_records.index')"
+                                        :active="route().current('scholarship_records.index') || route().current('scholarship_records.showbyprogram')">
+                                        <i class="pi pi-file-edit mr-2"></i>
+                                        <span class="-mr-1 font-medium indent-3">Grant Records</span>
                                     </SidebarLink>
                                 </li>
                             </ul>
@@ -253,31 +249,20 @@ function getRoleDisplay() {
                         </SidebarLink>
                     </li>
                     <li>
-                        <SidebarLink :href="route('scholarship.applications')"
-                            :active="route().current('scholarship.applications')"
+                        <SidebarLink :href="route('profile.index')" :active="route().current('profile.index')"
                             class="flex flex-col justify-center text-center">
 
-                            <i class="pi pi-database text-xl"></i>
+                            <i class="pi pi-id-card text-xl"></i>
+                            <span class="text-xs">existing</span>
+                        </SidebarLink>
+                    </li>
+                    <li>
+                        <SidebarLink :href="route('scholarship_records.index')"
+                            :active="route().current('scholarship_records.index') || route().current('scholarship_records.showbyprogram')"
+                            class="flex flex-col justify-center text-center">
+
+                            <i class="pi pi-file-edit text-xl"></i>
                             <span class="text-xs">records</span>
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('scholarship.completions')"
-                            :active="route().current('scholarship.completions')"
-                            class="flex flex-col justify-center text-center">
-
-                            <i class="pi pi-check-circle text-xl"></i>
-                            <span class="text-xs">completions</span>
-
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('scholarship.renewals')"
-                            :active="route().current('scholarship.renewals')"
-                            class="flex flex-col justify-center text-center">
-
-                            <i class="pi pi-refresh text-xl"></i>
-                            <span class="text-xs">renewals</span>
 
                         </SidebarLink>
                     </li>
