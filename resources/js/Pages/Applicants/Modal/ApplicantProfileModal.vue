@@ -562,14 +562,14 @@ const submit = (closeAfter = false) => {
 
     if (props.action == 'create') {
         form.is_on_waiting_list = 1;
-        form.post(route("profile.storeapplicant"), {
+        form.post(route("waitinglist.store"), {
             onSuccess: (response) => {
                 form.reset();
                 toast.success("Application has been submitted", {
                     position: toast.POSITION.TOP_RIGHT,
                 });
                 setTimeout(() => {
-                    router.visit(route('profile.waitinglist', { page: props.page }), { preserveState: true, preserveScroll: true });
+                    router.visit(route('waitinglist.index', { page: props.page }), { preserveState: true, preserveScroll: true });
                 }, 1200);
             },
             onError: (err) => {
@@ -579,7 +579,7 @@ const submit = (closeAfter = false) => {
     }
     if (props.action == 'update' || props.action == 'add-existing') {
         const profile_id = form.selectedProfile.profile_id || props.profile.profile_id;
-        form.put(route("profile.updateapplicant", profile_id), {
+        form.put(route("waitinglist.update", profile_id), {
             onSuccess: (response) => {
                 toast.success("Profile has been updated", {
                     position: toast.POSITION.TOP_RIGHT,
@@ -590,7 +590,7 @@ const submit = (closeAfter = false) => {
                         // Refresh the current page to show updated data
                         router.reload();
                     } else {
-                        router.visit(route('profile.waitinglist', { id: profile_id, action: props.action }), { preserveState: true });
+                        router.visit(route('waitinglist.index', { id: profile_id, action: props.action }), { preserveState: true });
                         if (closeAfter) router.visit(JSON.parse(JSON.stringify(prevPage.value)));
                     }
                 }, 1200);

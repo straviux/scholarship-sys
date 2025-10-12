@@ -368,11 +368,11 @@ const onPage = (event) => {
 
 // Action methods
 const viewApplication = (application) => {
-    router.visit(route('scholarship.record.show', application.id));
+    router.visit(route('scholarship_records.index', { id: application.id, action: 'view' }));
 };
 
 const editApplication = (application) => {
-    router.visit(route('scholarship.record.edit', application.id));
+    router.visit(route('scholarship_records.index', { id: application.id, action: 'edit' }));
 };
 
 const refreshApplications = () => {

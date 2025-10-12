@@ -63,7 +63,7 @@ const localip = computed(() => page.props.localip)
 
                         </Link>
 
-                        <Link :href="route('scholarship_records.index')"
+                        <Link :href="route('profile.waitinglist')"
                             class="flex flex-col md:flex-row gap-y-2 items-center py-4 md:py-8 rounded-lg bg-white shadow-sm border border-gray-300 transition hover:-translate-y-2 duration-150 hover:shadow-lg  mt-6 px-0 md:px-6 md:w-auto xl:mt-0">
 
 

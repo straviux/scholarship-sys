@@ -491,7 +491,7 @@ const props = defineProps({
         default: () => []
     },
     declineReasons: {
-        type: Array,
+        type: [Object],
         default: () => []
     },
     autoApprovalConfig: {

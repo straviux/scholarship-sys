@@ -11,6 +11,7 @@ use App\Http\Controllers\ScholarshipRecordController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\ScholarshipProfileController;
+use App\Http\Controllers\WaitingListController;
 use App\Http\Controllers\SystemReportController;
 use App\Http\Controllers\SystemUpdateController;
 use Illuminate\Support\Facades\Route;
@@ -64,14 +65,15 @@ Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->gr
 
 
     // WAITING LIST ROUTES
-    // same as profile index routes
-    Route::get('/applicants/{action?}/{id?}', 'showWaitingList')->name('profile.waitinglist'); // Accepts filter values via query string: ?applied_course=...&municipality=...&name=...&per_page=...
-    Route::post('/applicants', 'storeApplicant')->name('profile.storeapplicant');
-    Route::put('/applicants/{id}', 'updateApplicant')->name('profile.updateapplicant');
-    Route::put('/applicants/{id}/jpm-status', 'updateJpmStatus')->name('applicants.updateJpmStatus');
-    Route::put('/applicants/{id}/jpm-remarks', 'updateJpmRemarks')->name('applicants.updateJpmRemarks');
+    // Dedicated routes for waiting list management
+    Route::get('/applicants/{action?}/{id?}', [WaitingListController::class, 'index'])->name('waitinglist.index'); // Accepts filter values via query string: ?applied_course=...&municipality=...&name=...&per_page=...
+    Route::post('/applicants', [ScholarshipProfileController::class, 'storeApplicant'])->name('waitinglist.store');
+    Route::put('/applicants/{id}', [ScholarshipProfileController::class, 'updateApplicant'])->name('waitinglist.update');
+    Route::delete('/applicants/{id}', [WaitingListController::class, 'destroy'])->name('waitinglist.destroy');
+    Route::put('/applicants/{id}/jpm-status', [WaitingListController::class, 'updateJpmStatus'])->name('waitinglist.updateJpmStatus');
+    Route::put('/applicants/{id}/jmp-remarks', [WaitingListController::class, 'updateJmpRemarks'])->name('waitinglist.updateJmpRemarks');
 
-    Route::get('/get-user-encoded-records', 'countByCurrentUser')->name('profile.getuserencodedrecords');
+    Route::get('/get-user-encoded-records', [WaitingListController::class, 'getUserEncodedRecords'])->name('waitinglist.getUserEncodedRecords');
 });
 
 // API route for searching profiles by name

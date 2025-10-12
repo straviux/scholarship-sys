@@ -48,7 +48,6 @@ import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
-import QuickViewModal from './Modal/QuickViewModal.vue';
 
 const { hasPermission, hasRole } = usePermission();
 
@@ -122,20 +121,11 @@ const filter = useForm({
 
 const searchInput = ref(null);
 const selectedProfile = ref({});
-const isViewSequenceOpen = ref(false);
 
 // Applicant Modal state
 const showApplicantModal = ref(false);
 const modalAction = ref('');
 const modalProfile = ref(null);
-
-const viewSequence = (profile) => {
-    selectedProfile.value = profile;
-    isViewSequenceOpen.value = true;
-}
-const closeViewSequence = () => {
-    isViewSequenceOpen.value = false;
-}
 
 const editApplicant = (profile) => {
     modalProfile.value = profile;
@@ -186,7 +176,7 @@ const filterList = (resetToPage1 = false) => {
     if (sort && Object.values(sort).some(v => v)) params.sort = sort;
     params.page = currentPage;
 
-    router.get(route('profile.waitinglist'), params, {
+    router.get(route('waitinglist.index'), params, {
         preserveState: true,
         preserveScroll: true,
     });
@@ -208,7 +198,7 @@ const clearFilter = () => {
     filter.page = 1;
     globalFilter.value = ''; // Clear global search
     // Clear URL params by reloading the page with no query params
-    router.get(route('profile.waitinglist'), {}, {
+    router.get(route('waitinglist.index'), {}, {
         replace: true,
         preserveScroll: true,
     });
@@ -247,7 +237,7 @@ onMounted(async () => {
     window.addEventListener('keydown', handleKeydown);
     // Fetch user encoded records count
     try {
-        const res = await fetch(route('profile.getuserencodedrecords'));
+        const res = await fetch(route('waitinglist.getUserEncodedRecords'));
         if (res.ok) {
             userEncodedCount.value = await res.json();
         }
@@ -296,7 +286,7 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
 
     console.log('Updating JPM status:', { id, payload }); // Debug log
 
-    router.put(route('applicants.updateJpmStatus', id), payload, {
+    router.put(route('waitinglist.updateJpmStatus', id), payload, {
         preserveScroll: true,
         preserveState: true,
         onSuccess: (page) => {
@@ -358,7 +348,7 @@ const updateJpmRemarks = () => {
         jpm_remarks: jpmRemarksForm.value
     };
 
-    router.put(route('applicants.updateJpmRemarks', selectedProfileForRemarks.value.profile_id), payload, {
+    router.put(route('waitinglist.updateJmpRemarks', selectedProfileForRemarks.value.profile_id), payload, {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
@@ -610,12 +600,12 @@ const formatDate = (date) => {
                         <Button @click="openReportModal" label="Generate Report" icon="pi pi-file-pdf" severity="info"
                             size="small" />
                         <Button as="a" label="New" icon="pi pi-user-plus"
-                            v-if="hasPermission('create-scholar-profile') && !hasRole('user')" severity="success" :href="route('profile.waitinglist', {
+                            v-if="hasPermission('create-scholar-profile') && !hasRole('user')" severity="success" :href="route('waitinglist.index', {
                                 action: 'create'
                             })" raised size="small" />
                         <Button as="a" label="Existing" icon="pi pi-user"
                             v-if="hasPermission('create-scholar-profile') && !hasRole('user')"
-                            :href="route('profile.waitinglist', { action: 'add-existing' })" severity="secondary"
+                            :href="route('waitinglist.index', { action: 'add-existing' })" severity="secondary"
                             size="small" />
                     </div>
                 </template>
@@ -990,7 +980,6 @@ const formatDate = (date) => {
         </Dialog>
 
         <!-- Modals -->
-        <QuickViewModal :is-open="isViewSequenceOpen" :profile="selectedProfile" @close="closeViewSequence" />
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" />
 
         <!-- Integrated Profile & Review Modal -->
@@ -1063,231 +1052,255 @@ const formatDate = (date) => {
                 </Card>
 
                 <!-- Tabbed Content -->
-                <TabView>
-                    <TabPanel header="Application Review">
-                        <ApprovalWorkflow v-if="selectedApplication" :application="selectedApplication"
-                            :approval-statuses="props.approvalStatuses || []"
-                            :decline-reasons="props.declineReasons || {}"
-                            :auto-approval-config="props.autoApprovalConfig || {}" :show-applicant-name="false"
-                            @approved="handleApprovalAction" @declined="handleApprovalAction"
-                            @conditionalApproval="handleApprovalAction" @refresh="refreshApplicationList" />
-                    </TabPanel>
+                <Tabs value="applicationReview">
+                    <TabList>
+                        <Tab value="applicationReview">Application Review</Tab>
+                        <Tab value="profileInformation">Profile Information</Tab>
+                        <Tab value="attachments">Attachments</Tab>
+                    </TabList>
+                    <TabPanels>
+                        <TabPanel value="applicationReview" header="Application Review">
+                            <ApprovalWorkflow v-if="selectedApplication" :application="selectedApplication"
+                                :approval-statuses="props.approvalStatuses || []"
+                                :decline-reasons="props.declineReasons || {}"
+                                :auto-approval-config="props.autoApprovalConfig || {}" :show-applicant-name="false"
+                                @approved="handleApprovalAction" @declined="handleApprovalAction"
+                                @conditionalApproval="handleApprovalAction" @refresh="refreshApplicationList" />
+                        </TabPanel>
 
-                    <TabPanel header="Profile Information">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <!-- Personal Information -->
-                            <Card>
-                                <template #title>
-                                    <div class="flex items-center gap-2">
-                                        <i class="pi pi-user text-blue-600"></i>
-                                        Personal Information
-                                    </div>
-                                </template>
-                                <template #content>
-                                    <div class="space-y-4">
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <TabPanel value="profileInformation" header="Profile Information">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <!-- Personal Information -->
+                                <Card>
+                                    <template #title>
+                                        <div class="flex items-center gap-2">
+                                            <i class="pi pi-user text-blue-600"></i>
+                                            Personal Information
+                                        </div>
+                                    </template>
+                                    <template #content>
+                                        <div class="space-y-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full
+                                                        Name</label>
+                                                    <InputText :value="getApplicantFullName(selectedApplicantForReview)"
+                                                        readonly class="w-full" />
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                                                    <InputText
+                                                        :value="selectedApplicantForReview.gender === 'M' ? 'Male' : selectedApplicantForReview.gender === 'F' ? 'Female' : 'N/A'"
+                                                        readonly class="w-full" />
+                                                </div>
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Primary
+                                                        Contact</label>
+                                                    <InputText :value="selectedApplicantForReview.contact_no || 'N/A'"
+                                                        readonly class="w-full" />
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        class="block text-sm font-medium text-gray-700 mb-1">Secondary
+                                                        Contact</label>
+                                                    <InputText :value="selectedApplicantForReview.contact_no_2 || 'N/A'"
+                                                        readonly class="w-full" />
+                                                </div>
+                                            </div>
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Full
-                                                    Name</label>
-                                                <InputText :value="getApplicantFullName(selectedApplicantForReview)"
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Email
+                                                    Address</label>
+                                                <InputText :value="selectedApplicantForReview.email || 'N/A'" readonly
+                                                    class="w-full" />
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Parent's
+                                                    Gross
+                                                    Monthly
+                                                    Income</label>
+                                                <InputText
+                                                    :value="selectedApplicantForReview.gross_monthly_income || 'N/A'"
                                                     readonly class="w-full" />
                                             </div>
                                             <div>
                                                 <label
-                                                    class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-                                                <InputText
-                                                    :value="selectedApplicantForReview.gender === 'M' ? 'Male' : selectedApplicantForReview.gender === 'F' ? 'Female' : 'N/A'"
-                                                    readonly class="w-full" />
+                                                    class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                                <Textarea :value="getApplicantFullAddress(selectedApplicantForReview)"
+                                                    readonly class="w-full" rows="2" />
                                             </div>
                                         </div>
+                                    </template>
+                                </Card>
+
+                                <!-- Academic Information -->
+                                <Card>
+                                    <template #title>
+                                        <div class="flex items-center gap-2 p-2">
+                                            <i class="pi pi-graduation-cap text-lg text-green-600"></i>
+                                            <span class="font-medium">Academic Information</span>
+                                        </div>
+                                    </template>
+                                    <template #content>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Primary
-                                                    Contact</label>
-                                                <InputText :value="selectedApplicantForReview.contact_no || 'N/A'"
+                                                <label
+                                                    class="block text-sm font-medium text-gray-700 mb-1">Program</label>
+                                                <InputText
+                                                    :value="selectedApplicantForReview.scholarship_grant?.[0]?.program?.shortname || 'N/A'"
                                                     readonly class="w-full" />
                                             </div>
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Secondary
-                                                    Contact</label>
-                                                <InputText :value="selectedApplicantForReview.contact_no_2 || 'N/A'"
+                                                <label
+                                                    class="block text-sm font-medium text-gray-700 mb-1">School</label>
+                                                <InputText
+                                                    :value="selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-sm font-medium text-gray-700 mb-1">Course</label>
+                                                <InputText
+                                                    :value="selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Year
+                                                    Level</label>
+                                                <InputText
+                                                    :value="selectedApplicantForReview.scholarship_grant?.[0]?.year_level || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Academic
+                                                    Year</label>
+                                                <InputText
+                                                    :value="selectedApplicantForReview.scholarship_grant?.[0]?.academic_year || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
+                                                <InputText
+                                                    :value="selectedApplicantForReview.scholarship_grant?.[0]?.term || 'N/A'"
                                                     readonly class="w-full" />
                                             </div>
                                         </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Email
-                                                Address</label>
-                                            <InputText :value="selectedApplicantForReview.email || 'N/A'" readonly
-                                                class="w-full" />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Parent's Gross
-                                                Monthly
-                                                Income</label>
-                                            <InputText :value="selectedApplicantForReview.gross_monthly_income || 'N/A'"
-                                                readonly class="w-full" />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                            <Textarea :value="getApplicantFullAddress(selectedApplicantForReview)"
+                                        <div class="mt-4">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+                                            <Textarea
+                                                :value="selectedApplicantForReview.remarks || 'No remarks provided'"
                                                 readonly class="w-full" rows="2" />
                                         </div>
-                                    </div>
-                                </template>
-                            </Card>
+                                    </template>
+                                </Card>
+                            </div>
 
-                            <!-- Academic Information -->
-                            <Card>
-                                <template #title>
-                                    <div class="flex items-center gap-2 p-2">
-                                        <i class="pi pi-graduation-cap text-lg text-green-600"></i>
-                                        <span class="font-medium">Academic Information</span>
-                                    </div>
-                                </template>
-                                <template #content>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Program</label>
-                                            <InputText
-                                                :value="selectedApplicantForReview.scholarship_grant?.[0]?.program?.shortname || 'N/A'"
-                                                readonly class="w-full" />
+                            <!-- Family Information -->
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                                <!-- Father Information -->
+                                <Card>
+                                    <template #title>
+                                        <div class="flex items-center gap-2">
+                                            <i class="pi pi-user text-blue-600"></i>
+                                            Father Information
                                         </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">School</label>
-                                            <InputText
-                                                :value="selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname || 'N/A'"
-                                                readonly class="w-full" />
+                                    </template>
+                                    <template #content>
+                                        <div class="space-y-3">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                                <InputText :value="selectedApplicantForReview.father_name || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
+                                                <InputText
+                                                    :value="selectedApplicantForReview.father_occupation || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                                                <InputText
+                                                    :value="selectedApplicantForReview.father_contact_no || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Course</label>
-                                            <InputText
-                                                :value="selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname || 'N/A'"
-                                                readonly class="w-full" />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Year
-                                                Level</label>
-                                            <InputText
-                                                :value="selectedApplicantForReview.scholarship_grant?.[0]?.year_level || 'N/A'"
-                                                readonly class="w-full" />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Academic
-                                                Year</label>
-                                            <InputText
-                                                :value="selectedApplicantForReview.scholarship_grant?.[0]?.academic_year || 'N/A'"
-                                                readonly class="w-full" />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
-                                            <InputText
-                                                :value="selectedApplicantForReview.scholarship_grant?.[0]?.term || 'N/A'"
-                                                readonly class="w-full" />
-                                        </div>
-                                    </div>
-                                    <div class="mt-4">
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
-                                        <Textarea :value="selectedApplicantForReview.remarks || 'No remarks provided'"
-                                            readonly class="w-full" rows="2" />
-                                    </div>
-                                </template>
-                            </Card>
-                        </div>
+                                    </template>
+                                </Card>
 
-                        <!-- Family Information -->
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                            <!-- Father Information -->
-                            <Card>
-                                <template #title>
-                                    <div class="flex items-center gap-2">
-                                        <i class="pi pi-user text-blue-600"></i>
-                                        Father Information
-                                    </div>
-                                </template>
-                                <template #content>
-                                    <div class="space-y-3">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                                            <InputText :value="selectedApplicantForReview.father_name || 'N/A'" readonly
-                                                class="w-full" />
+                                <!-- Mother Information -->
+                                <Card>
+                                    <template #title>
+                                        <div class="flex items-center gap-2">
+                                            <i class="pi pi-user text-pink-600"></i>
+                                            Mother Information
                                         </div>
-                                        <div>
-                                            <label
-                                                class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
-                                            <InputText :value="selectedApplicantForReview.father_occupation || 'N/A'"
-                                                readonly class="w-full" />
+                                    </template>
+                                    <template #content>
+                                        <div class="space-y-3">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                                <InputText :value="selectedApplicantForReview.mother_name || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
+                                                <InputText
+                                                    :value="selectedApplicantForReview.mother_occupation || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                                                <InputText
+                                                    :value="selectedApplicantForReview.mother_contact_no || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
-                                            <InputText :value="selectedApplicantForReview.father_contact_no || 'N/A'"
-                                                readonly class="w-full" />
-                                        </div>
-                                    </div>
-                                </template>
-                            </Card>
+                                    </template>
+                                </Card>
 
-                            <!-- Mother Information -->
-                            <Card>
-                                <template #title>
-                                    <div class="flex items-center gap-2">
-                                        <i class="pi pi-user text-pink-600"></i>
-                                        Mother Information
-                                    </div>
-                                </template>
-                                <template #content>
-                                    <div class="space-y-3">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                                            <InputText :value="selectedApplicantForReview.mother_name || 'N/A'" readonly
-                                                class="w-full" />
+                                <!-- Guardian Information -->
+                                <Card>
+                                    <template #title>
+                                        <div class="flex items-center gap-2">
+                                            <i class="pi pi-users text-purple-600"></i>
+                                            Guardian Information
                                         </div>
-                                        <div>
-                                            <label
-                                                class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
-                                            <InputText :value="selectedApplicantForReview.mother_occupation || 'N/A'"
-                                                readonly class="w-full" />
+                                    </template>
+                                    <template #content>
+                                        <div class="space-y-3">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                                <InputText :value="selectedApplicantForReview.guardian_name || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
+                                                <InputText
+                                                    :value="selectedApplicantForReview.guardian_occupation || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                                                <InputText
+                                                    :value="selectedApplicantForReview.guardian_contact_no || 'N/A'"
+                                                    readonly class="w-full" />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
-                                            <InputText :value="selectedApplicantForReview.mother_contact_no || 'N/A'"
-                                                readonly class="w-full" />
-                                        </div>
-                                    </div>
-                                </template>
-                            </Card>
-
-                            <!-- Guardian Information -->
-                            <Card>
-                                <template #title>
-                                    <div class="flex items-center gap-2">
-                                        <i class="pi pi-users text-purple-600"></i>
-                                        Guardian Information
-                                    </div>
-                                </template>
-                                <template #content>
-                                    <div class="space-y-3">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                                            <InputText :value="selectedApplicantForReview.guardian_name || 'N/A'"
-                                                readonly class="w-full" />
-                                        </div>
-                                        <div>
-                                            <label
-                                                class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
-                                            <InputText :value="selectedApplicantForReview.guardian_occupation || 'N/A'"
-                                                readonly class="w-full" />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
-                                            <InputText :value="selectedApplicantForReview.guardian_contact_no || 'N/A'"
-                                                readonly class="w-full" />
-                                        </div>
-                                    </div>
-                                </template>
-                            </Card>
-                        </div>
-                    </TabPanel>
-                </TabView>
+                                    </template>
+                                </Card>
+                            </div>
+                        </TabPanel>
+                    </TabPanels>
+                </Tabs>
             </div>
         </Dialog>
 

@@ -60,7 +60,7 @@
                                 item.scholarship_grant[0].year_level.toString().toUpperCase() : '-' }}</td>
                             <td class="border px-2 py-1">{{ item.scholarship_grant[0]?.date_filed ?
                                 moment(item.scholarship_grant[0]?.date_filed).format('YYYY-MM-DD').toUpperCase() : '-'
-                            }}</td>
+                                }}</td>
                         </tr>
                     </tbody>
                 </table>

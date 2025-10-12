@@ -6,12 +6,8 @@ import { Link, usePage } from "@inertiajs/vue3";
 import { usePermission } from "@/composable/permissions";
 
 // PrimeVue Components
-import Sidebar from 'primevue/sidebar';
 import Button from 'primevue/button';
-import Menu from 'primevue/menu';
 import Avatar from 'primevue/avatar';
-import Divider from 'primevue/divider';
-import OverlayPanel from 'primevue/overlaypanel';
 
 const { hasRole, hasPermission } = usePermission();
 const $page = usePage();
@@ -117,8 +113,8 @@ function getRoleDisplay() {
                             </summary>
                             <ul class="space-y-1 mt-2">
                                 <li>
-                                    <SidebarLink :href="route('profile.waitinglist')"
-                                        :active="route().current('profile.waitinglist')">
+                                    <SidebarLink :href="route('waitinglist.index')"
+                                        :active="route().current('waitinglist.index')">
                                         <i class="pi pi-clipboard mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Waiting List</span>
                                     </SidebarLink>
@@ -244,8 +240,7 @@ function getRoleDisplay() {
                         </SidebarLink>
                     </li>
                     <li>
-                        <SidebarLink :href="route('profile.waitinglist')"
-                            :active="route().current('profile.waitinglist')"
+                        <SidebarLink :href="route('waitinglist.index')" :active="route().current('waitinglist.index')"
                             class="flex flex-col justify-center text-center">
 
                             <i class="pi pi-clipboard text-xl"></i>
