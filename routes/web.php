@@ -71,7 +71,7 @@ Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->gr
     Route::put('/applicants/{id}', [ScholarshipProfileController::class, 'updateApplicant'])->name('waitinglist.update');
     Route::delete('/applicants/{id}', [WaitingListController::class, 'destroy'])->name('waitinglist.destroy');
     Route::put('/applicants/{id}/jpm-status', [WaitingListController::class, 'updateJpmStatus'])->name('waitinglist.updateJpmStatus');
-    Route::put('/applicants/{id}/jmp-remarks', [WaitingListController::class, 'updateJmpRemarks'])->name('waitinglist.updateJmpRemarks');
+    Route::put('/applicants/{id}/jpm-remarks', [WaitingListController::class, 'updateJpmRemarks'])->name('waitinglist.updateJpmRemarks');
 
     Route::get('/get-user-encoded-records', [WaitingListController::class, 'getUserEncodedRecords'])->name('waitinglist.getUserEncodedRecords');
 });
@@ -102,6 +102,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/scholarship/applications', [ScholarshipProfileController::class, 'applications'])
         ->name('scholarship.applications');
 
+    // New Profiles routes
+    Route::get('/scholarship/profiles', [ScholarshipProfileController::class, 'profiles'])
+        ->name('scholarship.profiles');
+
+    Route::get('/scholarship/profile/{profile_id}/history', [ScholarshipProfileController::class, 'profileHistory'])
+        ->name('scholarship.profile.history');
+
     // Approval workflow routes
     Route::post('/scholarship/{record}/approve', [ScholarshipProfileController::class, 'approve'])
         ->name('scholarship.record.approve');
@@ -114,6 +121,14 @@ Route::middleware(['auth'])->group(function () {
 
     Route::put('/scholarship/{record}/conditional', [ScholarshipProfileController::class, 'updateConditionalApproval'])
         ->name('scholarship.record.conditional.update');
+
+    // Completion status update route
+    Route::post('/scholarship/{record}/completion-status', [ScholarshipProfileController::class, 'updateCompletionStatus'])
+        ->name('scholarship.record.update-completion-status');
+
+    // Debug route for completion statuses
+    Route::get('/debug/completion-statuses', [ScholarshipProfileController::class, 'debugCompletionStatuses'])
+        ->name('debug.completion-statuses');
 
     // Scholarship completion routes
     Route::get('/scholarship/completions', [ScholarshipProfileController::class, 'completions'])

@@ -6,6 +6,7 @@ use App\Http\Resources\ScholarshipProfileResource;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipProgram;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -28,6 +29,7 @@ class WaitingListController extends Controller
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])
             ->whereHas('scholarshipGrant', function ($q) use ($programId) {
                 $q->where('scholarship_status', 0)
+                    ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
                     ->orderBy('date_filed', 'asc')
                     ->orderBy('created_at', 'asc');
                 if ($programId) {
@@ -122,7 +124,7 @@ class WaitingListController extends Controller
                     ->orWhere('contact_no_2', 'like', '%' . $searchTerm . '%')
                     ->orWhere('email', 'like', '%' . $searchTerm . '%')
                     ->orWhere('remarks', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('jmp_remarks', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('jpm_remarks', 'like', '%' . $searchTerm . '%')
                     // Search in scholarship grant relations
                     ->orWhereHas('scholarshipGrant.school', function ($schoolQuery) use ($searchTerm) {
                         $schoolQuery->where('schools.name', 'like', '%' . $searchTerm . '%')
@@ -179,7 +181,8 @@ class WaitingListController extends Controller
             // Get all profile IDs for this program
             $programIds = ScholarshipProfile::with(['scholarshipGrant'])
                 ->whereHas('scholarshipGrant', function ($q) use ($program_id) {
-                    $q->where('scholarship_status', 0);
+                    $q->where('scholarship_status', 0)
+                        ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
                     if ($program_id) {
                         $q->where('program_id', $program_id);
                     }
@@ -198,7 +201,9 @@ class WaitingListController extends Controller
             if ($dateFiled) {
                 $dailyIds = ScholarshipProfile::with(['scholarshipGrant'])
                     ->whereHas('scholarshipGrant', function ($q) use ($dateFiled, $program_id) {
-                        $q->whereDate('date_filed', $dateFiled)->where('scholarship_status', 0);
+                        $q->whereDate('date_filed', $dateFiled)
+                            ->where('scholarship_status', 0)
+                            ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
                         if ($program_id) {
                             $q->where('program_id', $program_id);
                         }
@@ -225,6 +230,7 @@ class WaitingListController extends Controller
                     ->whereHas('scholarshipGrant', function ($q) use ($courseId, $program_id) {
                         $q->where('course_id', $courseId)
                             ->where('scholarship_status', 0)
+                            ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
                             ->orderBy('date_filed', 'asc')
                             ->orderBy('created_at', 'asc');
                         if ($program_id) {
@@ -248,6 +254,7 @@ class WaitingListController extends Controller
                         $q->where('course_id', $courseId)
                             ->where('school_id', $schoolId)
                             ->where('scholarship_status', 0)
+                            ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
                             ->orderBy('date_filed', 'asc')
                             ->orderBy('created_at', 'asc');
                         if ($program_id) {
@@ -308,6 +315,7 @@ class WaitingListController extends Controller
                         ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label']])
                         ->values()
                         ->toArray(),
+                    'completionStatuses' => config('scholarship.completion_statuses'),
                     'declineReasons' => config('scholarship.decline_reasons'),
                     'autoApprovalConfig' => config('scholarship.auto_approval', []),
                 ]
@@ -353,6 +361,7 @@ class WaitingListController extends Controller
                     ->values()
                     ->toArray(),
                 'declineReasons' => config('scholarship.decline_reasons'),
+                'completionStatuses' => config('scholarship.completion_statuses'),
                 'autoApprovalConfig' => config('scholarship.auto_approval', []),
             ]
         );
@@ -400,11 +409,11 @@ class WaitingListController extends Controller
     /**
      * Update JPM remarks for an applicant
      */
-    public function updateJmpRemarks($id, Request $request)
+    public function updateJpmRemarks($id, Request $request)
     {
         $profile = ScholarshipProfile::findOrFail($id);
-        if ($request->has('jmp_remarks')) {
-            $profile->jmp_remarks = $request->input('jmp_remarks');
+        if ($request->has('jpm_remarks')) {
+            $profile->jpm_remarks = $request->input('jpm_remarks');
         }
         $profile->save();
 
@@ -416,7 +425,7 @@ class WaitingListController extends Controller
      */
     public function getUserEncodedRecords(Request $request)
     {
-        $userId = auth()->id();
+        $userId = Auth::id();
         $today = now()->toDateString();
 
         $total = ScholarshipProfile::where('created_by', $userId)->count();

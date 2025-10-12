@@ -348,7 +348,7 @@ const updateJpmRemarks = () => {
         jpm_remarks: jpmRemarksForm.value
     };
 
-    router.put(route('waitinglist.updateJmpRemarks', selectedProfileForRemarks.value.profile_id), payload, {
+    router.put(route('waitinglist.updateJpmRemarks', selectedProfileForRemarks.value.profile_id), payload, {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
@@ -427,20 +427,8 @@ watch(() => rows.value, () => {
 const applicants = computed(() => {
     const data = props.profiles.data || [];
 
-    // Filter out approved applicants from waiting list
-    const filteredData = data.filter(profile => {
-        // Check if the profile has any scholarship grants
-        if (profile.scholarship_grant && profile.scholarship_grant.length > 0) {
-            // Check if any grant is approved or auto_approved
-            const hasApprovedGrant = profile.scholarship_grant.some(grant =>
-                grant.approval_status === 'approved' || grant.approval_status === 'auto_approved'
-            );
-            // If has approved grant, exclude from waiting list
-            return !hasApprovedGrant;
-        }
-        // If no grants, include in waiting list
-        return true;
-    });
+    // Data is already filtered in the backend to exclude approved and declined applications
+    const filteredData = data;
 
     // Ensure JPM boolean fields are properly converted to boolean values
     return filteredData.map(profile => ({
@@ -909,7 +897,7 @@ const formatDate = (date) => {
                             <template #body="slotProps">
                                 <div class="flex gap-1 justify-center">
                                     <Button icon="pi pi-check-circle" label="Review" severity="success" size="small"
-                                        v-tooltip.top="'Review Application & View Profile'"
+                                        outlined v-tooltip.top="'Review Application & View Profile'"
                                         @click="openProfileReviewModal(slotProps.data)"
                                         v-if="hasPermission('create-scholar-profile')" />
                                     <Button icon="pi pi-user-edit" severity="warning" size="small" rounded outlined
@@ -1020,21 +1008,26 @@ const formatDate = (date) => {
                                             <div class="text-sm font-bold text-indigo-600 leading-tight">
                                                 #{{ selectedApplicantForReview.sequence_number || '-' }}
                                             </div>
-                                            <div class="text-xs text-indigo-700 leading-tight">Program</div>
+                                            <div class="text-xs text-indigo-700 leading-tight">{{
+                                                selectedApplicantForReview.scholarship_grant?.[0]?.program?.shortname }}
+                                            </div>
                                         </div>
                                         <div
                                             class="text-center px-2 py-1 bg-purple-100 rounded-md border border-purple-200">
                                             <div class="text-sm font-bold text-purple-600 leading-tight">
                                                 #{{ selectedApplicantForReview.sequence_number_by_course || '-' }}
                                             </div>
-                                            <div class="text-xs text-purple-700 leading-tight">Course</div>
+                                            <div class="text-xs text-purple-700 leading-tight">{{
+                                                selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname }}
+                                            </div>
                                         </div>
                                         <div
                                             class="text-center px-2 py-1 bg-orange-100 rounded-md border border-orange-200">
                                             <div class="text-sm font-bold text-orange-600 leading-tight">
                                                 #{{ selectedApplicantForReview.daily_sequence_number || '-' }}
                                             </div>
-                                            <div class="text-xs text-orange-700 leading-tight">Daily</div>
+                                            <div class="text-xs text-orange-700 leading-tight">{{
+                                                formatDate(selectedApplicantForReview.date_filed) }}</div>
                                         </div>
                                         <div
                                             class="text-center px-2 py-1 bg-green-100 rounded-md border border-green-200">
@@ -1042,7 +1035,11 @@ const formatDate = (date) => {
                                                 #{{ selectedApplicantForReview.sequence_number_by_school_course || '-'
                                                 }}
                                             </div>
-                                            <div class="text-xs text-green-700 leading-tight">School/Course</div>
+                                            <div class="text-xs text-green-700 leading-tight">{{
+                                                selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname
+                                                }}/{{
+                                                    selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

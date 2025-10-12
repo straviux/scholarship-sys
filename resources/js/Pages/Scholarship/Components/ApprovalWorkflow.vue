@@ -51,7 +51,7 @@
                             <div class="text-sm text-gray-600">Application Date</div>
                         </div>
                         <div class="font-medium text-gray-800">
-                            {{ formatDate(application.created_at) }}
+                            {{ formatDate(application.profile.date_filed) }}
                         </div>
                     </div>
                 </template>
@@ -327,7 +327,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Reason for Decline <span class="text-red-500">*</span>
                     </label>
-                    <Dropdown v-model="declineForm.reason" :options="declineReasons" optionLabel="label"
+                    <Select v-model="declineForm.reason" :options="declineReasonsOptions" optionLabel="label"
                         optionValue="value" placeholder="Select a reason" class="w-full"
                         :class="{ 'p-invalid': declineForm.errors.reason }" />
                     <small v-if="declineForm.errors.reason" class="p-error">
@@ -478,7 +478,7 @@ import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import Calendar from 'primevue/calendar';
 import Textarea from 'primevue/textarea';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import Timeline from 'primevue/timeline';
 
 const props = defineProps({
@@ -491,8 +491,8 @@ const props = defineProps({
         default: () => []
     },
     declineReasons: {
-        type: [Object],
-        default: () => []
+        type: Object,
+        default: () => ({})
     },
     autoApprovalConfig: {
         type: Object,
@@ -535,6 +535,19 @@ const editConditionalForm = useForm({
     conditions: '',
     deadline: null,
     errors: {}
+});
+
+// Computed properties
+const declineReasonsOptions = computed(() => {
+    if (Array.isArray(props.declineReasons)) {
+        return props.declineReasons;
+    }
+
+    // Convert object format to array format for dropdown
+    return Object.entries(props.declineReasons).map(([value, label]) => ({
+        value,
+        label
+    }));
 });
 
 // Helper methods

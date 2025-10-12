@@ -97,47 +97,54 @@ function getRoleDisplay() {
                         size="large" shape="circle" class="sidebar-avatar-medium" />
                 </div>
                 <ul v-if="!sidebarMinimized"
-                    class="menu space-y-5 md:space-y-3 mt-2 px-4 pb-4 text-sm md:text-xs w-full text-gray-300 hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block flex-1">
+                    class="menu space-y-3 md:space-y-2 mt-2 px-3 pb-3 text-sm md:text-xs w-full text-gray-300 hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block flex-1">
                     <li>
                         <SidebarLink :href="route('dashboard')"
                             :active="route().current('dashboard') || route().current('home') || route().current('index')">
-                            <i class="pi pi-home mr-2"></i>
+                            <i class="pi pi-home mr-2 text-sm"></i>
                             <span class="font-medium">Dashboard</span>
                         </SidebarLink>
                     </li>
                     <li>
                         <details open>
-                            <summary>
-                                <i class="pi pi-graduation-cap mr-2"></i>
+                            <summary class="cursor-pointer">
+                                <i class="pi pi-graduation-cap mr-2 text-sm"></i>
                                 <span class="-mr-1 font-medium">Scholarship</span>
                             </summary>
-                            <ul class="space-y-1 mt-2">
+                            <ul class="space-y-1 mt-1 ml-2">
                                 <li>
                                     <SidebarLink :href="route('waitinglist.index')"
                                         :active="route().current('waitinglist.index')">
-                                        <i class="pi pi-clipboard mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Waiting List</span>
+                                        <i class="pi pi-clipboard mr-2 text-sm"></i>
+                                        <span class="-mr-1 font-medium">Waiting List</span>
+                                    </SidebarLink>
+                                </li>
+                                <li>
+                                    <SidebarLink :href="route('scholarship.profiles')"
+                                        :active="route().current('scholarship.profiles')">
+                                        <i class="pi pi-users mr-2 text-sm"></i>
+                                        <span class="-mr-1 font-medium">Profiles</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
                                     <SidebarLink :href="route('scholarship.applications')"
                                         :active="route().current('scholarship.applications')">
-                                        <i class="pi pi-database mr-2"></i>
-                                        <span class="-mr-1 font-medium pl-3">Application Records</span>
+                                        <i class="pi pi-database mr-2 text-sm"></i>
+                                        <span class="-mr-1 font-medium">Records</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
                                     <SidebarLink :href="route('scholarship.completions')"
                                         :active="route().current('scholarship.completions')">
-                                        <i class="pi pi-check-circle mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Completions</span>
+                                        <i class="pi pi-check-circle mr-2 text-sm"></i>
+                                        <span class="-mr-1 font-medium">Completions</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
                                     <SidebarLink :href="route('scholarship.renewals')"
                                         :active="route().current('scholarship.renewals')">
-                                        <i class="pi pi-refresh mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Renewals</span>
+                                        <i class="pi pi-refresh mr-2 text-sm"></i>
+                                        <span class="-mr-1 font-medium">Renewals</span>
                                     </SidebarLink>
                                 </li>
                             </ul>

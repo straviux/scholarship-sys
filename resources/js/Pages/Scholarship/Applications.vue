@@ -45,22 +45,14 @@
                     <!-- Approval Status Filter -->
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-gray-700">Approval Status</label>
-                        <Dropdown v-model="selectedApprovalStatus" :options="approvalStatusOptions" optionLabel="label"
+                        <Select v-model="selectedApprovalStatus" :options="approvalStatusOptions" optionLabel="label"
                             optionValue="value" placeholder="All Statuses" showClear class="w-full" />
-                    </div>
-
-                    <!-- Completion Status Filter -->
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700">Completion Status</label>
-                        <Dropdown v-model="selectedCompletionStatus" :options="completionStatusOptions"
-                            optionLabel="label" optionValue="value" placeholder="All Statuses" showClear
-                            class="w-full" />
                     </div>
 
                     <!-- Program Filter -->
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-gray-700">Program</label>
-                        <Dropdown v-model="selectedProgram" :options="programs" optionLabel="name" optionValue="id"
+                        <Select v-model="selectedProgram" :options="programs" optionLabel="name" optionValue="id"
                             placeholder="All Programs" showClear class="w-full" />
                     </div>
                 </div>
@@ -149,13 +141,6 @@
                         </template>
                     </Column>
 
-                    <Column field="completion_status" header="Completion Status" style="width: 140px">
-                        <template #body="slotProps">
-                            <Chip :label="getCompletionStatusLabel(slotProps.data.completion_status)"
-                                :severity="getCompletionStatusSeverity(slotProps.data.completion_status)" />
-                        </template>
-                    </Column>
-
                     <Column field="created_at" header="Applied Date" sortable style="width: 120px">
                         <template #body="slotProps">
                             <span class="text-gray-600">
@@ -169,6 +154,8 @@
                             <div class="flex gap-2 justify-center">
                                 <Button icon="pi pi-eye" severity="info" size="small" rounded outlined
                                     v-tooltip.top="'View Application'" @click="viewApplication(slotProps.data)" />
+                                <Button icon="pi pi-clipboard-check" severity="success" size="small" rounded outlined
+                                    v-tooltip.top="'Review Application'" @click="reviewApplication(slotProps.data)" />
                                 <Button v-if="canEdit(slotProps.data)" icon="pi pi-pen-to-square" severity="warning"
                                     size="small" rounded outlined v-tooltip.top="'Edit Application'"
                                     @click="editApplication(slotProps.data)" />
@@ -178,6 +165,27 @@
                 </DataTable>
             </div>
         </div>
+
+        <!-- Approval Workflow Dialog -->
+        <Dialog v-model:visible="showApprovalDialog" modal header="Application Review & Approval"
+            :style="{ width: '90vw', maxWidth: '1200px' }" class="p-fluid" :closable="true" :dismissableMask="false">
+            <template #header>
+                <div class="flex items-center justify-between w-full">
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-clipboard-check text-xl text-blue-600"></i>
+                        <span class="font-semibold text-lg">Application Review & Approval</span>
+                    </div>
+                    <div v-if="selectedApplication" class="text-sm text-gray-600">
+                        {{ getFullName(selectedApplication.profile) }} - {{ selectedApplication.program?.shortname }}
+                    </div>
+                </div>
+            </template>
+
+            <ApprovalWorkflow v-if="selectedApplication" :application="selectedApplication"
+                :approval-statuses="approvalStatuses || []" :decline-reasons="declineReasons || {}"
+                :show-applicant-name="true" @approved="handleApprovalAction" @declined="handleApprovalAction"
+                @conditionalApproval="handleApprovalAction" @refresh="refreshData" />
+        </Dialog>
     </AdminLayout>
 </template>
 
@@ -195,17 +203,19 @@ import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import Chip from 'primevue/chip';
 import Dialog from 'primevue/dialog';
+
+// Custom Components
+import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
 
 const props = defineProps({
     applications: Object,
     filters: Object,
     programs: Array,
     approvalStatuses: Array,
-    completionStatuses: Array,
     declineReasons: Object,
 });
 
@@ -219,8 +229,11 @@ const filters = ref({
 
 // Filter state
 const selectedApprovalStatus = ref(props.filters?.approval_status || null);
-const selectedCompletionStatus = ref(props.filters?.completion_status || null);
 const selectedProgram = ref(props.filters?.program_id || null);
+
+// Approval workflow state
+const showApprovalDialog = ref(false);
+const selectedApplication = ref(null);
 
 // Computed filter options
 const approvalStatusOptions = computed(() => [
@@ -228,14 +241,8 @@ const approvalStatusOptions = computed(() => [
     ...(Array.isArray(props.approvalStatuses) ? props.approvalStatuses : [])
 ]);
 
-const completionStatusOptions = computed(() => [
-    { label: 'All Statuses', value: null },
-    ...(Array.isArray(props.completionStatuses) ? props.completionStatuses : [])
-]);
-
 const hasActiveFilters = computed(() => {
     return selectedApprovalStatus.value ||
-        selectedCompletionStatus.value ||
         selectedProgram.value ||
         globalFilter.value;
 });
@@ -263,12 +270,6 @@ const getApprovalStatusLabel = (status) => {
     return statusObj?.label || status || 'Unknown';
 };
 
-const getCompletionStatusLabel = (status) => {
-    if (!Array.isArray(props.completionStatuses)) return status || 'Unknown';
-    const statusObj = props.completionStatuses.find(s => s.value === status);
-    return statusObj?.label || status || 'Unknown';
-};
-
 const getApprovalStatusSeverity = (status) => {
     switch (status) {
         case 'approved':
@@ -279,21 +280,6 @@ const getApprovalStatusSeverity = (status) => {
             return 'danger';
         case 'auto_approved':
             return 'info';
-        default:
-            return 'secondary';
-    }
-};
-
-const getCompletionStatusSeverity = (status) => {
-    switch (status) {
-        case 'completed':
-            return 'success';
-        case 'in_progress':
-            return 'info';
-        case 'dropped':
-            return 'danger';
-        case 'transferred':
-            return 'warning';
         default:
             return 'secondary';
     }
@@ -310,9 +296,6 @@ const applyFilters = () => {
     if (selectedApprovalStatus.value) {
         filterParams.approval_status = selectedApprovalStatus.value;
     }
-    if (selectedCompletionStatus.value) {
-        filterParams.completion_status = selectedCompletionStatus.value;
-    }
     if (selectedProgram.value) {
         filterParams.program_id = selectedProgram.value;
     }
@@ -328,7 +311,6 @@ const applyFilters = () => {
 
 const clearFilters = () => {
     selectedApprovalStatus.value = null;
-    selectedCompletionStatus.value = null;
     selectedProgram.value = null;
     globalFilter.value = '';
 
@@ -350,9 +332,6 @@ const onPage = (event) => {
     if (selectedApprovalStatus.value) {
         filterParams.approval_status = selectedApprovalStatus.value;
     }
-    if (selectedCompletionStatus.value) {
-        filterParams.completion_status = selectedCompletionStatus.value;
-    }
     if (selectedProgram.value) {
         filterParams.program_id = selectedProgram.value;
     }
@@ -373,6 +352,21 @@ const viewApplication = (application) => {
 
 const editApplication = (application) => {
     router.visit(route('scholarship_records.index', { id: application.id, action: 'edit' }));
+};
+
+const reviewApplication = (application) => {
+    selectedApplication.value = application;
+    showApprovalDialog.value = true;
+};
+
+const handleApprovalAction = () => {
+    showApprovalDialog.value = false;
+    selectedApplication.value = null;
+    refreshData();
+};
+
+const refreshData = () => {
+    applyFilters();
 };
 
 const refreshApplications = () => {

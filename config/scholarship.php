@@ -47,6 +47,12 @@ return [
     ],
 
     'completion_statuses' => [
+        'pending' => [
+            'label' => 'Pending',
+            'color' => 'warning',
+            'icon' => 'pi-clock',
+            'description' => 'Completion status pending review'
+        ],
         'active' => [
             'label' => 'Active Scholarship',
             'color' => 'success',
@@ -59,6 +65,18 @@ return [
             'icon' => 'pi-check-circle',
             'description' => 'Successfully completed the program'
         ],
+        'declined' => [
+            'label' => 'Declined',
+            'color' => 'danger',
+            'icon' => 'pi-times-circle',
+            'description' => 'Completion declined or not approved'
+        ],
+        'suspended' => [
+            'label' => 'Suspended',
+            'color' => 'danger',
+            'icon' => 'pi-ban',
+            'description' => 'Temporarily suspended'
+        ],
         'discontinued' => [
             'label' => 'Discontinued',
             'color' => 'warning',
@@ -70,12 +88,6 @@ return [
             'color' => 'secondary',
             'icon' => 'pi-arrow-right-arrow-left',
             'description' => 'Transferred to another program/school'
-        ],
-        'suspended' => [
-            'label' => 'Suspended',
-            'color' => 'danger',
-            'icon' => 'pi-ban',
-            'description' => 'Temporarily suspended'
         ]
     ],
 

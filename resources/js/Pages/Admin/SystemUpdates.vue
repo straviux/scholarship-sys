@@ -80,13 +80,13 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                            <Dropdown v-model="form.type" :options="typeOptions" option-label="label"
-                                option-value="value" class="w-full" />
+                            <Select v-model="form.type" :options="typeOptions" option-label="label" option-value="value"
+                                class="w-full" />
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                            <Dropdown v-model="form.priority" :options="priorityOptions" option-label="label"
+                            <Select v-model="form.priority" :options="priorityOptions" option-label="label"
                                 option-value="value" class="w-full" />
                         </div>
                     </div>
@@ -180,7 +180,7 @@ import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import Panel from 'primevue/panel'
 import Card from 'primevue/card'
