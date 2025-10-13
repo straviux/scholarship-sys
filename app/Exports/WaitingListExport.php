@@ -16,13 +16,15 @@ class WaitingListExport implements FromView, ShouldAutoSize, WithEvents
     protected $filters;
     protected $summary;
     protected $reportType;
+    protected $canViewJpm;
 
-    public function __construct($profiles, $summary, $filters, $reportType)
+    public function __construct($profiles, $summary, $filters, $reportType, $canViewJpm = false)
     {
         $this->profiles = $profiles;
         $this->filters = $filters;
         $this->summary = $summary;
         $this->reportType = $reportType;
+        $this->canViewJpm = $canViewJpm;
     }
 
     public function view(): View
@@ -32,6 +34,7 @@ class WaitingListExport implements FromView, ShouldAutoSize, WithEvents
             'summary' => $this->summary,
             'reportType' => $this->reportType,
             'filters' => $this->filters,
+            'canViewJpm' => $this->canViewJpm,
         ]);
     }
 
@@ -53,8 +56,9 @@ class WaitingListExport implements FromView, ShouldAutoSize, WithEvents
                     ],
                 ]);
 
-                // Example: Style the header row with a bold font and a background color
-                $event->sheet->getStyle('A1:' . $highestColumn . '1')->applyFromArray([
+                // Style the header row with a bold font and a background color
+                $headerRow = $this->reportType === 'summary' ? 1 : 2;
+                $event->sheet->getStyle('A' . $headerRow . ':' . $highestColumn . $headerRow)->applyFromArray([
                     'font' => [
                         'bold' => true,
                     ],
@@ -63,6 +67,33 @@ class WaitingListExport implements FromView, ShouldAutoSize, WithEvents
                         'color' => ['rgb' => 'E0E0E0'],
                     ],
                 ]);
+
+                // Apply JPM highlighting for list reports (only if user has permission)
+                if ($this->reportType === 'list' && $this->canViewJpm) {
+                    $dataStartRow = 3; // Data starts from row 3 (after title and header)
+                    $sortedProfiles = $this->profiles->sortBy(function ($profile) {
+                        $dateFiled = optional($profile->scholarshipGrant->first())->date_filed;
+                        return [$dateFiled, $profile->created_at];
+                    });
+
+                    $currentRow = $dataStartRow;
+                    foreach ($sortedProfiles as $profile) {
+                        // Check if applicant, parent, or guardian is JPM
+                        $isJpm = $profile->is_jpm_member || $profile->is_father_jpm || $profile->is_mother_jpm || $profile->is_guardian_jpm;
+
+                        if ($isJpm) {
+                            // Green highlight for any JPM affiliation
+                            $event->sheet->getStyle('A' . $currentRow . ':' . $highestColumn . $currentRow)->applyFromArray([
+                                'fill' => [
+                                    'fillType' => Fill::FILL_SOLID,
+                                    'color' => ['rgb' => 'D1FAE5'], // Green
+                                ],
+                            ]);
+                        }
+
+                        $currentRow++;
+                    }
+                }
             },
         ];
     }

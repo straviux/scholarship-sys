@@ -439,11 +439,27 @@ const barangayOptions = ref([]);
 const isOpen = computed(() => props.action == 'create' || props.action == 'update' || props.action == 'add-existing');
 // console.log(props.profile?.scholarship_grant[0].year_level);
 
+// Helper function to format date for input[type="date"]
+const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
+    // If already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString;
+    }
+    // Otherwise, parse and format to YYYY-MM-DD
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 // const selectedProfile = ref(null);
 const form = useForm({
     scholarship_grant_id: props.profile?.scholarship_grant[0]?.id || null,
     school: props.profile?.scholarship_grant[0]?.school?.name || "",
-    course: props.profile?.scholarship_grant[0]?.course?.name || "",
+    course: props.profile?.scholarship_grant[0]?.course || null, // Changed: pass full object instead of just name
     year_level: props.profile?.scholarship_grant[0]?.year_level || "",
     term: props.profile?.scholarship_grant[0]?.term || "",
     academic_year: props.profile?.scholarship_grant[0]?.academic_year || "",
@@ -467,7 +483,7 @@ const form = useForm({
     gender: props.profile?.gender || "",
     remarks: props.profile?.remarks || "",
     is_on_waiting_list: true,
-    date_filed: props.profile?.date_filed || "",
+    date_filed: formatDateForInput(props.profile?.date_filed) || "", // Changed: format date properly
     selectedProfile: "",
     contact_no_2: props.profile?.contact_no_2 || "",
     guardian_name: props.profile?.guardian_name || "",

@@ -93,7 +93,8 @@ class ReportController extends Controller
         }
         if ($request->filled('year_level')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->where('year_level', 'like', '%' . $request->year_level . '%');
+                $q->where('year_level', 'like', '%' . $request->year_level . '%')
+                    ->whereNotNull('year_level');
             });
         }
         if ($request->filled('date_from') && $request->filled('date_to')) {
@@ -159,11 +160,15 @@ class ReportController extends Controller
                 . ($request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to'))->translatedFormat('F d, Y') : '')
         ];
 
+        // Check if user has permission to view JPM highlighting
+        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm');
+
         $html = View::make('waiting_list_report', [
             'profiles' => $profiles,
             'summary' => $summary,
             'reportType' => $reportType,
             'filters' => $filters,
+            'canViewJpm' => $canViewJpm,
         ])->render();
 
         $paperSize = $request->get('paper_size', 'A4');
@@ -249,7 +254,8 @@ class ReportController extends Controller
         }
         if ($request->filled('year_level')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->where('year_level', 'like', '%' . $request->year_level . '%')->$q->whereNotNull('year_level');
+                $q->where('year_level', 'like', '%' . $request->year_level . '%')
+                    ->whereNotNull('year_level');
             });
         }
         if ($request->filled('date_from') && $request->filled('date_to')) {
@@ -315,11 +321,14 @@ class ReportController extends Controller
                 . ($request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to'))->translatedFormat('F d, Y') : '')
         ];
 
+        // Check if user has permission to view JPM highlighting
+        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm');
+
         // Generate filename with current date and time
         $currentDateTime = \Carbon\Carbon::now()->format('Y-m-d_H-i-s');
         $filename = "scholarship_waiting_list_{$currentDateTime}.xlsx";
 
-        return Excel::download(new WaitingListExport($profiles, $summary, $filters, $reportType), $filename);
+        return Excel::download(new WaitingListExport($profiles, $summary, $filters, $reportType, $canViewJpm), $filename);
 
 
         // $html = Excel::download('waiting_list_report', [

@@ -54,8 +54,9 @@ const localValue = ref(props.multiple ? (props.modelValue || []) : props.modelVa
 
 // Sync localValue with parent prop
 watch(() => props.modelValue, (val) => {
+    // console.log('CourseSelect modelValue changed:', val);
     localValue.value = val;
-});
+}, { deep: true });
 
 // Sync localValue with parent prop
 // watch(() => props.preselect, (val) => {
@@ -77,12 +78,19 @@ watch(
             params: { program_id: newProgramId }
         }).then(response => {
             courses.value = response.data;
+            // console.log('Courses loaded:', courses.value.length, 'courses');
+        }).catch(error => {
+            console.error('Error loading courses:', error);
+            courses.value = [];
         });
-        // Reset selection when program changes
-        if (props.multiple) {
-            localValue.value = [];
-        } else {
-            localValue.value = null;
+        // Don't reset selection when program is empty string (fetch all courses)
+        // Only reset when program actually changes to a specific value
+        if (newProgramId !== '' && newProgramId !== null) {
+            if (props.multiple) {
+                localValue.value = [];
+            } else {
+                localValue.value = null;
+            }
         }
     },
     { immediate: true }
@@ -94,9 +102,17 @@ watch(
         if (localValue.value && newCourses.length) {
             if (props.multiple && Array.isArray(localValue.value)) {
                 localValue.value = localValue.value.map(val => {
-                    if (typeof val == 'object' && val != null && val.shortname) {
-                        return newCourses.find(course => course.shortname == val.shortname) || val;
+                    if (typeof val == 'object' && val != null) {
+                        // Try matching by ID first (most reliable)
+                        if (val.id) {
+                            return newCourses.find(course => course.id == val.id) || val;
+                        }
+                        // Fall back to shortname matching
+                        if (val.shortname) {
+                            return newCourses.find(course => course.shortname == val.shortname) || val;
+                        }
                     }
+                    // Handle string values
                     return newCourses.find(course =>
                         course.shortname?.toLowerCase() == String(val).toLowerCase() ||
                         course.name?.toLowerCase() == String(val).toLowerCase()
@@ -104,9 +120,27 @@ watch(
                 });
             } else {
                 let val = localValue.value;
-                if (typeof val == 'object' && val !== null && val.shortname) {
-                    localValue.value = newCourses.find(course => course.shortname == val.shortname) || val;
+                if (typeof val == 'object' && val !== null) {
+                    // Try matching by ID first (most reliable)
+                    if (val.id) {
+                        const matchedCourse = newCourses.find(course => course.id == val.id);
+                        if (matchedCourse) {
+                            localValue.value = matchedCourse;
+                            return;
+                        }
+                    }
+                    // Fall back to shortname matching
+                    if (val.shortname) {
+                        const matchedCourse = newCourses.find(course => course.shortname == val.shortname);
+                        if (matchedCourse) {
+                            localValue.value = matchedCourse;
+                            return;
+                        }
+                    }
+                    // Keep the original value if no match found
+                    localValue.value = val;
                 } else {
+                    // Handle string values
                     const selected = newCourses.find(course =>
                         course.shortname?.toLowerCase() == String(val).toLowerCase() ||
                         course.name?.toLowerCase() == String(val).toLowerCase()

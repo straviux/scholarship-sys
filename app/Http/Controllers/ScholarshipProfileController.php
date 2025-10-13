@@ -644,9 +644,9 @@ class ScholarshipProfileController extends Controller
             });
         }
         if ($request->filled('year_level')) {
-            $query->whereHas('scholarshipGrant.course', function ($cq) use ($request) {
-                $cq->where('shortname', 'like', '%' . $request->year_level . '%')
-                    ->orWhere('name', 'like', '%' . $request->year_level . '%');
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('year_level', 'like', '%' . $request->year_level . '%')
+                    ->whereNotNull('year_level');
             });
         }
 
@@ -714,6 +714,7 @@ class ScholarshipProfileController extends Controller
                 'type' => 'summary',
                 'summary' => $summary,
                 'parameters' => $filters,
+                'canViewJpm' => $request->user() && $request->user()->can('can-view-jpm'),
             ]);
         } else {
             return response()->json([
@@ -722,6 +723,7 @@ class ScholarshipProfileController extends Controller
                 'count' => $profiles->count(),
                 'data' => $profiles,
                 'parameters' => $filters,
+                'canViewJpm' => $request->user() && $request->user()->can('can-view-jpm'),
             ]);
         }
     }

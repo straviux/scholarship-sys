@@ -113,11 +113,6 @@
             margin-right: 0.3rem;
             font-size: 0.85rem;
         }
-
-        .jpm-highlight {
-            background-color: #fef3c7 !important;
-            border-left: 3px solid #f59e0b !important;
-        }
     </style>
 </head>
 
@@ -133,8 +128,8 @@
         <div style="flex: 1; text-align: center;">
             <h1 style="margin:0; font-size:14px; font-weight:500; color:#333;">Republic of the Philippines</h1>
             <h1 style="margin:0; font-size:14px; font-weight:500; color:#333;">Provincial Government of Palawan</h1>
-            <h1 style="margin:0; font-size:14px; font-weight:600; color:#333;">Akbay sa Mag-Aaral at Yaman ng Kinabukasan</h1>
-            <h1 style="margin:0; font-size:14px; font-weight:600; color:#333;">(Programang Pang-Edukasyon para sa Palawenyo)</h1>
+            <h1 style="margin:0; font-size:14px; font-weight:600; color:#333;">Akbay sa Mag-Aaral Yaman ng Kinabukasan</h1>
+            <h1 style="margin:0; font-size:14px; font-weight:600; color:#333;">(Programang Pang-Edukasyon para sa Palaweño)</h1>
         </div>
         <img src="data:image/svg+xml;base64,<?php echo $yakapLogoBase64; ?>" alt="Yakap Logo" style="height: 72px; width: auto; margin-right: 0.5rem;">
     </div>
@@ -152,7 +147,7 @@
         @endforeach
     </div>
     @if($reportType === 'summary')
-    <h2>Summary</h2>
+    <h3>Summary</h3>
     <table class="summary-table">
         <tr>
             <th>Total</th>
@@ -236,12 +231,12 @@
         @endif
     </table>
     @else
-    <h2>Waiting List</h2>
+    <h3>Waiting List</h3>
     <table>
         <thead>
             <tr>
                 <th style="min-width:30px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">#</th>
-                <th style="width:30px;padding-left:0.05cm;padding-right:0.05cm;">Seq</th>
+                <th style="width:30px;padding-left:0.05cm;padding-right:0.05cm;">Q#</th>
                 <th>Name</th>
                 <th>Contact No(s).</th>
                 @if(empty($filters['municipality']))
@@ -257,10 +252,10 @@
                 <th>Course</th>
                 @endif
                 @if(empty($filters['year_level']))
-                <th style="min-width:40px">Level</th>
+                <th style="width:35px">Level</th>
                 @endif
                 <th>Remarks</th>
-                <th>Date Filed (mm/dd/Y)</th>
+                <th style="width:68px">Date Filed (mm/dd/Y)</th>
             </tr>
         </thead>
         <tbody>
@@ -281,14 +276,15 @@
             $dateIndex = 1;
             $lastDate = $dateKey;
             }
-            // Check if applicant, parent, or guardian is JPM
-            $isJpm = $profile->is_jpm_member || $profile->is_father_jpm || $profile->is_mother_jpm || $profile->is_guardian_jpm;
+            // Check if applicant, parent, or guardian is JPM (only if user has permission)
+            $isJpm = ($canViewJpm ?? false) && ($profile->is_jpm_member || $profile->is_father_jpm || $profile->is_mother_jpm || $profile->is_guardian_jpm);
+            $bgStyle = $isJpm ? 'background-color: #d1fae5 !important;' : '';
             @endphp
-            <tr{{ $isJpm ? ' class="jpm-highlight"' : '' }}>
-                <td style="min-width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">{{ $overallIndex }}</td>
-                <td style="padding-left:0.05cm;padding-right:0.05cm;">{{ $dateIndex }}</td>
-                <td>{{ $profile->last_name }}, {{ $profile->first_name }}</td>
-                <td>
+            <tr>
+                <td style="min-width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;{{ $bgStyle }}">{{ $overallIndex }}</td>
+                <td style="padding-left:0.05cm;padding-right:0.05cm;{{ $bgStyle }}">{{ $dateIndex }}</td>
+                <td style="font-size:12px;{{ $bgStyle }}">{{ $profile->last_name }}, {{ $profile->first_name }}</td>
+                <td style="font-size:12px;{{ $bgStyle }}">
                     @php
                     $contacts = array_filter([
                     $profile->contact_no ?? null,
@@ -298,27 +294,27 @@
                     {{ count($contacts) ? implode(' / ', $contacts) : '-' }}
                 </td>
                 @if(empty($filters['municipality']))
-                <td>{{ $profile->municipality ?? '-' }}</td>
+                <td style="font-size:12px;{{ $bgStyle }}">{{ $profile->municipality ?? '-' }}</td>
                 @endif
                 @if(empty($filters['program']))
-                <td>{{ optional(optional($profile->scholarshipGrant->first())->program)->shortname ?? '-' }}</td>
+                <td style="font-size:12px;{{ $bgStyle }}">{{ optional(optional($profile->scholarshipGrant->first())->program)->shortname ?? '-' }}</td>
                 @endif
                 @if(empty($filters['school']))
-                <td>{{ optional($profile->scholarshipGrant->first())->school->shortname ?? '-' }}</td>
+                <td style="font-size:12px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->school->shortname ?? '-' }}</td>
                 @endif
                 @if(empty($filters['course']))
-                <td>{{ optional($profile->scholarshipGrant->first())->course->name ?? '-' }}</td>
+                <td style="font-size:12px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->course->name ?? '-' }}</td>
                 @endif
                 @if(empty($filters['year_level']))
-                <td>{{ optional($profile->scholarshipGrant->first())->year_level ?? '-' }}</td>
+                <td style="font-size:12px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->year_level ?? '-' }}</td>
                 @endif
-                <td>{{ $profile->remarks ?? '-' }}</td>
-                <td>
+                <td style="text-transform:lowercase;font-size:11px;{{ $bgStyle }}">{{ $profile->remarks ?? '-' }}</td>
+                <td style="font-size:12px;{{ $bgStyle }}">
                     {{ $dateFiled ? \Carbon\Carbon::parse($dateFiled)->format('m/d/Y') : '-' }}
                 </td>
-                </tr>
-                @php $dateIndex++; $overallIndex++; @endphp
-                @endforeach
+            </tr>
+            @php $dateIndex++; $overallIndex++; @endphp
+            @endforeach
         </tbody>
     </table>
     @endif
