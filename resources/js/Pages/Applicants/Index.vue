@@ -33,6 +33,7 @@ import Avatar from 'primevue/avatar';
 
 import ApplicantProfileModal from '@/Pages/Applicants/Modal/ApplicantProfileModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
+import PriorityModal from './Modal/PriorityModal.vue';
 import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
 const showReportModal = ref(false);
 const openReportModal = () => { showReportModal.value = true; };
@@ -449,6 +450,10 @@ const showProfileReviewModal = ref(false);
 const selectedApplication = ref(null);
 const selectedApplicantForReview = ref(null);
 
+// Priority modal state
+const showPriorityModal = ref(false);
+const selectedApplicantForPriority = ref(null);
+
 const confirmDeleteApplicant = (applicant) => {
     selectedApplicant.value = applicant;
     showConfirmDeleteModal.value = true;
@@ -518,6 +523,38 @@ const refreshApplicationList = () => {
     router.reload({ only: ['profiles'] });
 };
 
+// Priority modal functions
+const openPriorityModal = (applicant) => {
+    selectedApplicantForPriority.value = applicant;
+    showPriorityModal.value = true;
+};
+
+const closePriorityModal = () => {
+    showPriorityModal.value = false;
+    selectedApplicantForPriority.value = null;
+};
+
+const handlePrioritySuccess = () => {
+    closePriorityModal();
+    refreshApplicationList();
+};
+
+const removePriority = (applicant) => {
+    if (!applicant?.profile_id) return;
+
+    router.delete(route("applicants.remove-priority", applicant.profile_id), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Priority level removed successfully!');
+            refreshApplicationList();
+        },
+        onError: () => {
+            toast.error('Failed to remove priority level.');
+        }
+    });
+};
+
 // Utility functions for applicant data formatting
 const getApplicantInitials = (applicant) => {
     if (!applicant) return '';
@@ -548,6 +585,21 @@ const getApplicantFullAddress = (applicant) => {
     ].filter(Boolean);
 
     return parts.join(', ') || 'N/A';
+};
+
+// Priority helper functions
+const getPrioritySeverity = (priority) => {
+    switch (priority) {
+        case 'urgent': return 'danger';
+        case 'high': return 'warn';
+        case 'normal': return 'info';
+        case 'low': return 'secondary';
+        default: return 'secondary';
+    }
+};
+
+const formatPriorityName = (priority) => {
+    return priority.charAt(0).toUpperCase() + priority.slice(1);
 };
 
 const formatDate = (date) => {
@@ -892,14 +944,38 @@ const formatDate = (date) => {
                             </template>
                         </Column>
 
-                        <!-- Actions Column -->
-                        <Column header="Actions" style="width: 250px">
+                        <!-- Priority Column -->
+                        <Column header="Priority" style="width: 120px" v-if="hasPermission('can-manage-priority')">
                             <template #body="slotProps">
-                                <div class="flex gap-1 justify-center">
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        v-if="slotProps.data.priority_level && slotProps.data.priority_level !== 'normal'">
+                                        <Tag :severity="getPrioritySeverity(slotProps.data.priority_level)"
+                                            :value="formatPriorityName(slotProps.data.priority_level)"
+                                            v-tooltip.top="slotProps.data.priority_reason" />
+                                    </div>
+                                    <span v-else class="text-gray-400 text-sm">Normal</span>
+                                </div>
+                            </template>
+                        </Column>
+
+                        <!-- Actions Column -->
+                        <Column header="Actions" style="width: 300px">
+                            <template #body="slotProps">
+                                <div class="flex gap-1 justify-center flex-wrap">
                                     <Button icon="pi pi-check-circle" label="Review" severity="success" size="small"
                                         outlined v-tooltip.top="'Review Application & View Profile'"
                                         @click="openProfileReviewModal(slotProps.data)"
                                         v-if="hasPermission('create-scholar-profile')" />
+
+                                    <Button icon="pi pi-flag" severity="warn" size="small" rounded outlined
+                                        v-tooltip.top="'Assign Priority'" @click="openPriorityModal(slotProps.data)"
+                                        v-if="hasPermission('can-manage-priority')" />
+
+                                    <Button icon="pi pi-flag-fill" severity="secondary" size="small" rounded outlined
+                                        v-tooltip.top="'Remove Priority'" @click="removePriority(slotProps.data)"
+                                        v-if="hasPermission('can-manage-priority') && slotProps.data.priority_level && slotProps.data.priority_level !== 'normal'" />
+
                                     <Button icon="pi pi-user-edit" severity="warning" size="small" rounded outlined
                                         v-tooltip.top="'Edit Applicant'" @click="editApplicant(slotProps.data)" />
                                     <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
@@ -1037,7 +1113,7 @@ const formatDate = (date) => {
                                             </div>
                                             <div class="text-xs text-green-700 leading-tight">{{
                                                 selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname
-                                                }}/{{
+                                            }}/{{
                                                     selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname }}
                                             </div>
                                         </div>
@@ -1306,5 +1382,9 @@ const formatDate = (date) => {
             :action="showApplicantModal ? modalAction : props.action"
             :profile="showApplicantModal ? modalProfile : props.profile" :is-inline-modal="showApplicantModal"
             @close="closeApplicantModal" />
+
+        <!-- Priority Modal -->
+        <PriorityModal :show="showPriorityModal" :applicant="selectedApplicantForPriority"
+            @update:show="showPriorityModal = $event" @success="handlePrioritySuccess" />
     </AdminLayout>
 </template>

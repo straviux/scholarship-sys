@@ -85,6 +85,13 @@ class ScholarshipProfileResource extends JsonResource
             'guardian_contact_no' => $this->guardian_contact_no,
             'guardian_occupation' => $this->guardian_occupation,
             'parents_guardian_gross_monthly_income' => $this->parents_guardian_gross_monthly_income,
+            'priority_level' => $this->priority_level,
+            'priority_reason' => $this->priority_reason,
+            'priority_assigned_at' => $this->priority_assigned_at,
+            'priority_assigned_by' => $this->priorityAssignedBy ? [
+                'id' => $this->priorityAssignedBy->id,
+                'name' => $this->priorityAssignedBy->name,
+            ] : null,
         ];
     }
 }

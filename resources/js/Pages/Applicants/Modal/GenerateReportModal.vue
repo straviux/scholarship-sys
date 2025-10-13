@@ -24,13 +24,20 @@
                 <SchoolSelect v-model="selectedSchool" label="shortname" custom-placeholder="All Schools" />
             </div>
             <div class="mb-4">
-                <label class="block mb-1 font-semibold">Course</label>
-                <CourseSelect v-model="selectedCourse" :scholarship-program-id="selectedProgram?.id" label="shortname"
-                    custom-placeholder="All Courses" />
+                <label class="block mb-1 font-semibold">Course(s)</label>
+                <CourseSelect v-model="selectedCourses" :scholarship-program-id="selectedProgram?.id" label="shortname"
+                    custom-placeholder="All Courses" :multiple="true" />
+                <small class="text-gray-500 text-xs mt-1">
+                    Select multiple courses or leave empty for all courses
+                </small>
             </div>
             <div class="mb-4">
                 <label class="block mb-1 font-semibold">Municipality</label>
                 <MunicipalitySelect v-model="selectedMunicipality" custom-placeholder="All Municipalities" />
+            </div>
+            <div class="mb-4">
+                <label class="block mb-1 font-semibold">Year Level</label>
+                <YearLevelSelect v-model="selectedYearLevel" custom-placeholder="All Year Levels" />
             </div>
             <div class="mb-4">
                 <label class="block mb-1 font-semibold">Report Type</label>
@@ -73,6 +80,7 @@ import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
+import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import { router } from '@inertiajs/vue3';
 import moment from 'moment';
 
@@ -85,8 +93,9 @@ const dateFrom = ref(null);
 const dateTo = ref(null);
 const selectedProgram = ref(null);
 const selectedSchool = ref(null);
-const selectedCourse = ref(null);
+const selectedCourses = ref([]);
 const selectedMunicipality = ref(null);
+const selectedYearLevel = ref(null);
 const reportType = ref('list');
 
 function close() {
@@ -102,13 +111,20 @@ function generateReport() {
     if (date_from && date_to && moment(date_to).isBefore(date_from)) {
         return;
     }
+
+    // Convert selected courses array to comma-separated shortnames
+    const courseShortnames = selectedCourses.value && selectedCourses.value.length > 0
+        ? selectedCourses.value.map(course => course.shortname).join(',')
+        : '';
+
     const params = {
         date_from,
         date_to,
         program: selectedProgram.value?.id || '',
         school: selectedSchool.value?.shortname || '',
-        course: selectedCourse.value?.shortname || '',
+        courses: courseShortnames, // Changed from 'course' to 'courses' and now supports multiple
         municipality: selectedMunicipality.value?.name || '',
+        year_level: selectedYearLevel.value?.value || '',
         report_type: reportType.value,
     };
     // Instead of fetching here, show the report modal and pass params

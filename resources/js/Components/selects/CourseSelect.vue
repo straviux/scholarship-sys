@@ -1,6 +1,8 @@
 <script setup>
 import { ref, watch, watchEffect, computed } from 'vue';
 import { useApi } from '@/composable/api';
+import Select from 'primevue/select';
+import MultiSelect from 'primevue/multiselect';
 const props = defineProps({
     scholarshipProgramId: {
         type: [String, Number],
@@ -48,7 +50,7 @@ const courseOptions = computed(() => {
 });
 
 // Local value for v-model
-const localValue = ref(props.modelValue);
+const localValue = ref(props.multiple ? (props.modelValue || []) : props.modelValue);
 
 // Sync localValue with parent prop
 watch(() => props.modelValue, (val) => {
@@ -76,8 +78,12 @@ watch(
         }).then(response => {
             courses.value = response.data;
         });
-        // localValue.value = "";
-        // fetchData({ scholarship_program_id: newProgramId });
+        // Reset selection when program changes
+        if (props.multiple) {
+            localValue.value = [];
+        } else {
+            localValue.value = null;
+        }
     },
     { immediate: true }
 );
@@ -116,8 +122,25 @@ watch(
 </script>
 
 <template>
-    <Select v-model="localValue" :options="courseOptions" filter :filterFields="['name', 'shortname']" autoFilterFocus
-        showClear optionLabel="name" :placeholder="customPlaceholder" class="w-full">
+    <!-- Use MultiSelect when multiple is true -->
+    <MultiSelect v-if="multiple" v-model="localValue" :options="courseOptions" filter
+        :filterFields="['name', 'shortname']" optionLabel="name" :placeholder="customPlaceholder" class="w-full"
+        :maxSelectedLabels="3" :selectedItemsLabel="'{0} courses selected'" showSelectAll showClear>
+        <template #option="slotProps">
+            <div class="flex items-start uppercase">
+                <div>{{ slotProps.option.shortname }}</div>
+            </div>
+        </template>
+        <template #chip="slotProps">
+            <div class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded uppercase mr-1">
+                {{ slotProps.value.shortname }}
+            </div>
+        </template>
+    </MultiSelect>
+
+    <!-- Use Select when multiple is false -->
+    <Select v-else v-model="localValue" :options="courseOptions" filter :filterFields="['name', 'shortname']"
+        autoFilterFocus showClear optionLabel="name" :placeholder="customPlaceholder" class="w-full">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.shortname }}</div>

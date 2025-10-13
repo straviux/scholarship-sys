@@ -629,6 +629,20 @@ class ScholarshipProfileController extends Controller
                     ->orWhere('name', 'like', '%' . $request->course . '%');
             });
         }
+
+        // Handle multiple courses filter
+        if ($request->filled('courses')) {
+            $coursesArray = explode(',', $request->courses);
+            $coursesArray = array_map('trim', $coursesArray); // Remove any whitespace
+            $query->whereHas('scholarshipGrant.course', function ($cq) use ($coursesArray) {
+                $cq->where(function ($subQuery) use ($coursesArray) {
+                    foreach ($coursesArray as $course) {
+                        $subQuery->orWhere('shortname', 'like', '%' . $course . '%')
+                            ->orWhere('name', 'like', '%' . $course . '%');
+                    }
+                });
+            });
+        }
         if ($request->filled('year_level')) {
             $query->whereHas('scholarshipGrant.course', function ($cq) use ($request) {
                 $cq->where('shortname', 'like', '%' . $request->year_level . '%')
@@ -659,6 +673,7 @@ class ScholarshipProfileController extends Controller
             'program' => ScholarshipProgram::find($request->program)->name ?? '',
             'school' =>  School::find($request->school)->name ?? '',
             'course' => Course::find($request->course)->name ?? '',
+            'courses' => $request->get('courses', ''), // Add support for multiple courses
             'municipality' => $request->get('municipality', ''),
             'year_level' => $request->get('year_level', ''),
             'date_from' => $request->get('date_from', ''),
@@ -682,7 +697,7 @@ class ScholarshipProfileController extends Controller
                     return ($grant && $grant->school) ? $grant->school->name : 'no_school';
                 })->map(fn($group) => $group->count());
             }
-            if (!$request->filled('course')) {
+            if (!$request->filled('course') && !$request->filled('courses')) {
                 $summary['by_course'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                     return ($grant && $grant->course) ? $grant->course->name : 'no_course';
@@ -1263,5 +1278,60 @@ class ScholarshipProfileController extends Controller
         }
 
         return response()->json($approvalService->getApprovalStats($filters));
+    }
+
+    /**
+     * Assign priority to an applicant
+     */
+    public function assignPriority(Request $request, $id)
+    {
+        // Check permissions
+        if (!Gate::allows('can-manage-priority')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'priority_level' => 'required|in:low,normal,high,urgent',
+            'priority_reason' => 'required|string|max:500'
+        ]);
+
+        $profile = ScholarshipProfile::findOrFail($id);
+
+        $profile->update([
+            'priority_level' => $request->priority_level,
+            'priority_reason' => $request->priority_reason,
+            'priority_assigned_at' => now(),
+            'priority_assigned_by' => Auth::id()
+        ]);
+
+        return back()->with('message', [
+            'type' => 'success',
+            'content' => 'Priority level assigned successfully!'
+        ]);
+    }
+
+    /**
+     * Remove priority from an applicant
+     */
+    public function removePriority($id)
+    {
+        // Check permissions
+        if (!Gate::allows('can-manage-priority')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $profile = ScholarshipProfile::findOrFail($id);
+
+        $profile->update([
+            'priority_level' => 'normal',
+            'priority_reason' => null,
+            'priority_assigned_at' => null,
+            'priority_assigned_by' => null
+        ]);
+
+        return back()->with('message', [
+            'type' => 'success',
+            'content' => 'Priority level removed successfully!'
+        ]);
     }
 }

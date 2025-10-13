@@ -15,6 +15,11 @@
             padding: 0.03rem 0.25rem 0.03rem 0.18rem;
             margin: 0;
         }
+
+        .jpm-highlight {
+            background-color: #fef3c7 !important;
+            border-left: 3px solid #f59e0b !important;
+        }
     </style>
 </head>
 
@@ -125,7 +130,7 @@
     </table>
     @else
     @php
-    $colCount = 5;
+    $colCount = 6; // Updated from 5 to 6 to include remarks column
     if(empty($filters['municipality'])) $colCount++;
     if(empty($filters['program'])) $colCount++;
     if(empty($filters['school'])) $colCount++;
@@ -159,6 +164,7 @@
                 @if(empty($filters['year_level']))
                 <th>Level</th>
                 @endif
+                <th>Remarks</th>
                 <th>Date Filed</th>
             </tr>
         </thead>
@@ -184,8 +190,10 @@
             $profile->contact_no ?? null,
             $profile->contact_no_2 ?? null
             ]);
+            // Check if applicant, parent, or guardian is JPM
+            $isJpm = $profile->is_jpm_member || $profile->is_father_jpm || $profile->is_mother_jpm || $profile->is_guardian_jpm;
             @endphp
-            <tr>
+            <tr{{ $isJpm ? ' class="jpm-highlight"' : '' }}>
                 <td>{{ $overallIndex }}</td>
                 <td>{{ $dateIndex }}</td>
                 <td>{{ $profile->last_name }}, {{ $profile->first_name }}</td>
@@ -200,18 +208,19 @@
                 <td>{{ optional($profile->scholarshipGrant->first())->school->shortname ?? '-' }}</td>
                 @endif
                 @if(empty($filters['course']))
-                <td>{{ optional($profile->scholarshipGrant->first())->course->shortname ?? '-' }}</td>
+                <td>{{ optional($profile->scholarshipGrant->first())->course->name ?? '-' }}</td>
                 @endif
                 @if(empty($filters['year_level']))
                 <td>{{ optional($profile->scholarshipGrant->first())->year_level ?? '-' }}</td>
                 @endif
+                <td>{{ $profile->remarks ?? '-' }}</td>
                 <td>{{ $dateFiled ? \Carbon\Carbon::parse($dateFiled)->format('M d, Y') : '-' }}</td>
-            </tr>
-            @php $dateIndex++; $overallIndex++; @endphp
-            @endforeach
-            {{-- Example summary/footer row: --}}
-            {{-- <tr><td colspan="{{ $colCount }}">Summary or footer here</td>
-            </tr> --}}
+                </tr>
+                @php $dateIndex++; $overallIndex++; @endphp
+                @endforeach
+                {{-- Example summary/footer row: --}}
+                {{-- <tr><td colspan="{{ $colCount }}">Summary or footer here</td>
+                </tr> --}}
         </tbody>
     </table>
     @endif

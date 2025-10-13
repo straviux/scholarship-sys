@@ -159,6 +159,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/api/scholarship/stats', [ScholarshipProfileController::class, 'getApprovalStats'])
         ->name('api.scholarship.stats');
+
+    // Priority management routes
+    Route::post('/applicants/{id}/assign-priority', [ScholarshipProfileController::class, 'assignPriority'])
+        ->name('applicants.assign-priority');
+
+    Route::delete('/applicants/{id}/remove-priority', [ScholarshipProfileController::class, 'removePriority'])
+        ->name('applicants.remove-priority');
 });
 Route::middleware(['auth'])->controller(ScholarshipProgramController::class)->group(function () {
     Route::get('/scholarshipprograms/get-active-list', 'getActiveProgramsApi')->name('scholarshipprograms.getactivelist');

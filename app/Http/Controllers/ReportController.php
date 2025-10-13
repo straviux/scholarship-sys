@@ -43,16 +43,26 @@ class ReportController extends Controller
                 $q->where('shortname', 'like', '%' . $request->school . '%')->orWhere('name', 'like', '%' . $request->school . '%');
             });
         }
-        if ($request->filled('course')) {
+        if ($request->filled('courses') || $request->filled('course')) {
             $query->whereHas('scholarshipGrant.course', function ($cq) use ($request) {
-                $cq->where('shortname', 'like', '%' . $request->course . '%')
-                    ->orWhere('name', 'like', '%' . $request->course . '%');
+                if ($request->filled('courses')) {
+                    $courses = explode(',', $request->courses);
+                    $cq->where(function ($subQuery) use ($courses) {
+                        foreach ($courses as $course) {
+                            $course = trim($course);
+                            $subQuery->orWhere('shortname', 'like', '%' . $course . '%')
+                                ->orWhere('name', 'like', '%' . $course . '%');
+                        }
+                    });
+                } else {
+                    $cq->where('shortname', 'like', '%' . $request->course . '%')
+                        ->orWhere('name', 'like', '%' . $request->course . '%');
+                }
             });
         }
         if ($request->filled('year_level')) {
-            $query->whereHas('scholarshipGrant.course', function ($cq) use ($request) {
-                $cq->where('shortname', 'like', '%' . $request->year_level . '%')
-                    ->orWhere('name', 'like', '%' . $request->year_level . '%');
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('year_level', 'like', '%' . $request->year_level . '%');
             });
         }
         if ($request->filled('date_from') && $request->filled('date_to')) {
@@ -89,7 +99,7 @@ class ReportController extends Controller
                     return ($grant && $grant->school) ? $grant->school->name : 'no_school';
                 })->map(fn($group) => $group->count());
             }
-            if (!$request->filled('course')) {
+            if (!$request->filled('courses') && !$request->filled('course')) {
                 $summary['by_course'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                     return ($grant && $grant->course) ? $grant->course->name : 'no_course';
@@ -108,6 +118,7 @@ class ReportController extends Controller
             'program' => $request->get('program', ''),
             'school' => $request->get('school', ''),
             'course' => $request->get('course', ''),
+            'courses' => $request->get('courses', ''),
             'municipality' => $request->get('municipality', ''),
             'year_level' => $request->get('year_level', ''),
             // 'date_from' => $request->get('date_from', ''),
@@ -189,16 +200,26 @@ class ReportController extends Controller
                 $q->where('shortname', 'like', '%' . $request->school . '%')->orWhere('name', 'like', '%' . $request->school . '%');
             });
         }
-        if ($request->filled('course')) {
+        if ($request->filled('courses') || $request->filled('course')) {
             $query->whereHas('scholarshipGrant.course', function ($cq) use ($request) {
-                $cq->where('shortname', 'like', '%' . $request->course . '%')
-                    ->orWhere('name', 'like', '%' . $request->course . '%');
+                if ($request->filled('courses')) {
+                    $courses = explode(',', $request->courses);
+                    $cq->where(function ($subQuery) use ($courses) {
+                        foreach ($courses as $course) {
+                            $course = trim($course);
+                            $subQuery->orWhere('shortname', 'like', '%' . $course . '%')
+                                ->orWhere('name', 'like', '%' . $course . '%');
+                        }
+                    });
+                } else {
+                    $cq->where('shortname', 'like', '%' . $request->course . '%')
+                        ->orWhere('name', 'like', '%' . $request->course . '%');
+                }
             });
         }
         if ($request->filled('year_level')) {
-            $query->whereHas('scholarshipGrant.course', function ($cq) use ($request) {
-                $cq->where('shortname', 'like', '%' . $request->year_level . '%')
-                    ->orWhere('name', 'like', '%' . $request->year_level . '%');
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('year_level', 'like', '%' . $request->year_level . '%');
             });
         }
         if ($request->filled('date_from') && $request->filled('date_to')) {
@@ -235,7 +256,7 @@ class ReportController extends Controller
                     return ($grant && $grant->school) ? $grant->school->name : 'no_school';
                 })->map(fn($group) => $group->count());
             }
-            if (!$request->filled('course')) {
+            if (!$request->filled('courses') && !$request->filled('course')) {
                 $summary['by_course'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                     return ($grant && $grant->course) ? $grant->course->name : 'no_course';
@@ -254,6 +275,7 @@ class ReportController extends Controller
             'program' => $request->get('program', ''),
             'school' => $request->get('school', ''),
             'course' => $request->get('course', ''),
+            'courses' => $request->get('courses', ''),
             'municipality' => $request->get('municipality', ''),
             'year_level' => $request->get('year_level', ''),
             // 'date_from' => $request->get('date_from', ''),
@@ -262,7 +284,12 @@ class ReportController extends Controller
                 . ($request->get('date_from') && $request->get('date_to') ? ' to ' : '')
                 . ($request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to'))->translatedFormat('F d, Y') : '')
         ];
-        return Excel::download(new WaitingListExport($profiles, $summary, $filters, $reportType), 'waiting_list.xlsx');
+
+        // Generate filename with current date and time
+        $currentDateTime = \Carbon\Carbon::now()->format('Y-m-d_H-i-s');
+        $filename = "scholarship_waiting_list_{$currentDateTime}.xlsx";
+
+        return Excel::download(new WaitingListExport($profiles, $summary, $filters, $reportType), $filename);
 
 
         // $html = Excel::download('waiting_list_report', [

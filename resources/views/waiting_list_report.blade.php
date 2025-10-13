@@ -113,6 +113,11 @@
             margin-right: 0.3rem;
             font-size: 0.85rem;
         }
+
+        .jpm-highlight {
+            background-color: #fef3c7 !important;
+            border-left: 3px solid #f59e0b !important;
+        }
     </style>
 </head>
 
@@ -254,7 +259,8 @@
                 @if(empty($filters['year_level']))
                 <th style="min-width:40px">Level</th>
                 @endif
-                <th>Date Filed</th>
+                <th>Remarks</th>
+                <th>Date Filed (mm/dd/Y)</th>
             </tr>
         </thead>
         <tbody>
@@ -275,8 +281,10 @@
             $dateIndex = 1;
             $lastDate = $dateKey;
             }
+            // Check if applicant, parent, or guardian is JPM
+            $isJpm = $profile->is_jpm_member || $profile->is_father_jpm || $profile->is_mother_jpm || $profile->is_guardian_jpm;
             @endphp
-            <tr>
+            <tr{{ $isJpm ? ' class="jpm-highlight"' : '' }}>
                 <td style="min-width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">{{ $overallIndex }}</td>
                 <td style="padding-left:0.05cm;padding-right:0.05cm;">{{ $dateIndex }}</td>
                 <td>{{ $profile->last_name }}, {{ $profile->first_name }}</td>
@@ -299,17 +307,18 @@
                 <td>{{ optional($profile->scholarshipGrant->first())->school->shortname ?? '-' }}</td>
                 @endif
                 @if(empty($filters['course']))
-                <td>{{ optional($profile->scholarshipGrant->first())->course->shortname ?? '-' }}</td>
+                <td>{{ optional($profile->scholarshipGrant->first())->course->name ?? '-' }}</td>
                 @endif
                 @if(empty($filters['year_level']))
                 <td>{{ optional($profile->scholarshipGrant->first())->year_level ?? '-' }}</td>
                 @endif
+                <td>{{ $profile->remarks ?? '-' }}</td>
                 <td>
-                    {{ $dateFiled ? \Carbon\Carbon::parse($dateFiled)->format('M d, Y') : '-' }}
+                    {{ $dateFiled ? \Carbon\Carbon::parse($dateFiled)->format('m/d/Y') : '-' }}
                 </td>
-            </tr>
-            @php $dateIndex++; $overallIndex++; @endphp
-            @endforeach
+                </tr>
+                @php $dateIndex++; $overallIndex++; @endphp
+                @endforeach
         </tbody>
     </table>
     @endif

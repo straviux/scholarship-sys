@@ -26,7 +26,7 @@ class WaitingListController extends Controller
         }
 
         $programId = ScholarshipProgram::where('shortname', $request->get('program'))->first()?->id;
-        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])
+        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant', 'priorityAssignedBy'])
             ->whereHas('scholarshipGrant', function ($q) use ($programId) {
                 $q->where('scholarship_status', 0)
                     ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
@@ -169,6 +169,7 @@ class WaitingListController extends Controller
         }
 
         $records = $request->get('records', 10);
+        /** @disregard UndefinedMethod withQueryString */
         $profiles = $query->paginate($records)->withQueryString();
 
         // Assign sequence numbers (same logic as original showWaitingList)
@@ -378,9 +379,9 @@ class WaitingListController extends Controller
             $profile = ScholarshipProfile::findOrFail($id);
             $fields = [
                 'is_jpm_member',
-                'is_mother_jmp',
-                'is_father_jmp',
-                'is_guardian_jmp',
+                'is_mother_jpm',
+                'is_father_jpm',
+                'is_guardian_jpm',
             ];
 
             $updated = false;

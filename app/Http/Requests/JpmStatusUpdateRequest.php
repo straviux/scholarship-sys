@@ -21,9 +21,9 @@ class JpmStatusUpdateRequest extends FormRequest
     {
         return [
             'is_jpm_member' => 'nullable|boolean',
-            'is_mother_jmp' => 'nullable|boolean',
-            'is_father_jmp' => 'nullable|boolean',
-            'is_guardian_jmp' => 'nullable|boolean',
+            'is_mother_jpm' => 'nullable|boolean',
+            'is_father_jpm' => 'nullable|boolean',
+            'is_guardian_jpm' => 'nullable|boolean',
         ];
     }
 }

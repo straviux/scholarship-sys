@@ -58,7 +58,11 @@ class ScholarshipProfile extends Model
         'is_mother_jpm',
         'is_guardian_jpm',
         'jpm_remarks',
-        'unique_id'
+        'unique_id',
+        'priority_level',
+        'priority_reason',
+        'priority_assigned_at',
+        'priority_assigned_by'
     ];
 
     protected $casts = [
@@ -73,6 +77,7 @@ class ScholarshipProfile extends Model
         'father_birthdate' => 'date',
         'mother_birthdate' => 'date',
         'application_status_date' => 'date',
+        'priority_assigned_at' => 'datetime',
     ];
 
     public function educationalBackgrounds()
@@ -112,6 +117,11 @@ class ScholarshipProfile extends Model
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by')->select(['id', 'name']);
+    }
+
+    public function priorityAssignedBy()
+    {
+        return $this->belongsTo(User::class, 'priority_assigned_by')->select(['id', 'name']);
     }
 
     public static function boot()
