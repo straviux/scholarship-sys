@@ -12,6 +12,37 @@ use Maatwebsite\Excel\Facades\Excel;
 class ReportController extends Controller
 {
     /**
+     * Get the Chrome executable path with fallback logic
+     * Tries the configured path first, then fallback paths
+     * 
+     * @return string
+     * @throws \Exception
+     */
+    protected function getChromePath()
+    {
+        $primaryPath = config('scholarship.browsershot.chrome_path');
+
+        // Try primary path first
+        if ($primaryPath && file_exists($primaryPath)) {
+            return $primaryPath;
+        }
+
+        // Try fallback paths
+        $fallbackPaths = config('scholarship.browsershot.fallback_paths', []);
+        foreach ($fallbackPaths as $path) {
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        // If no valid path found, throw exception
+        throw new \Exception(
+            'Chrome executable not found. Please configure CHROME_PATH in your .env file or install Chrome/Chromium. ' .
+                'Tried paths: ' . $primaryPath . ', ' . implode(', ', $fallbackPaths)
+        );
+    }
+
+    /**
      * Generate a PDF waiting list report using Spatie/Browsershot.
      */
     public function generateWaitinglist(Request $request)
@@ -139,8 +170,7 @@ class ReportController extends Controller
         $orientation = $request->get('orientation', 'portrait');
         try {
             $browsershot = Browsershot::html($html)
-                // Make sure to set the correct path to your Chrome or Chromium executable
-                ->setChromePath('C:\Users\Administrator\.cache\puppeteer\chrome-headless-shell\win64-140.0.7339.82\chrome-headless-shell-win64\chrome-headless-shell.exe')
+                ->setChromePath($this->getChromePath())
                 ->showBackground()
                 ->showBrowserHeaderAndFooter()
                 ->footerHtml('<div class="report-footer" style="font-size: 9px; color: #444;position:fixed;right:0.5cm;bottom:0.1cm;">
@@ -219,7 +249,7 @@ class ReportController extends Controller
         }
         if ($request->filled('year_level')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->where('year_level', 'like', '%' . $request->year_level . '%');
+                $q->where('year_level', 'like', '%' . $request->year_level . '%')->$q->whereNotNull('year_level');
             });
         }
         if ($request->filled('date_from') && $request->filled('date_to')) {

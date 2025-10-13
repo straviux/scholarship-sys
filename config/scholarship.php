@@ -142,5 +142,24 @@ return [
         ],
         'excluded_programs' => [], // Program IDs that should not auto-approve
         'notification_delay_minutes' => 5, // Delay before sending approval notifications
+    ],
+
+    // Browsershot / PDF Generation settings
+    'browsershot' => [
+        // Chrome executable path - can be overridden via CHROME_PATH env variable
+        'chrome_path' => env('CHROME_PATH', 'C:\\Users\\Administrator\\.cache\\puppeteer\\chrome\\win64-140.0.7339.82\\chrome-win64\\chrome.exe'),
+
+        // Alternative paths to try if the primary path fails
+        'fallback_paths' => [
+            'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+            'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+            'C:\\Users\\Administrator\\.cache\\puppeteer\\chrome-headless-shell\\win64-140.0.7339.82\\chrome-headless-shell-win64\\chrome-headless-shell.exe',
+        ],
+
+        // Node binary path (usually auto-detected)
+        'node_path' => env('NODE_PATH', null),
+
+        // NPM binary path (usually auto-detected)
+        'npm_path' => env('NPM_PATH', null),
     ]
 ];
