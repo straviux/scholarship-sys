@@ -112,10 +112,8 @@
     <!-- Report Preview Modal -->
     <Dialog v-if="showReportModal" :visible="showReportModal" modal :closable="true" :maximizable="true"
         :style="{ width: '95vw', height: '90vh' }" @update:visible="val => showReportModal = val"
-        :pt="{ header: { class: 'text-lg font-medium leading-6 bg-[#222831] text-white flex justify-between px-4 py-2 items-center' } }">
-        <template #header>
-            <span>Report Preview</span>
-        </template>
+        header="Report Preview">
+
         <component :is="ReportView" v-if="ReportView" :params="lastParams" @close="showReportModal = false" />
     </Dialog>
 </template>
