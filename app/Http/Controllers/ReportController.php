@@ -111,6 +111,25 @@ class ReportController extends Controller
             });
         }
 
+        // JPM Filters - handle both string and boolean values (and check for non-empty)
+        if ($request->filled('show_jpm_only') && $request->show_jpm_only !== '' && in_array($request->show_jpm_only, [1, '1', true, 'true'], true)) {
+            $query->where(function ($q) {
+                $q->where('is_jpm_member', true)
+                    ->orWhere('is_father_jpm', true)
+                    ->orWhere('is_mother_jpm', true)
+                    ->orWhere('is_guardian_jpm', true);
+            });
+        }
+
+        if ($request->filled('hide_jpm') && $request->hide_jpm !== '' && in_array($request->hide_jpm, [1, '1', true, 'true'], true)) {
+            $query->where(function ($q) {
+                $q->where('is_jpm_member', false)
+                    ->where('is_father_jpm', false)
+                    ->where('is_mother_jpm', false)
+                    ->where('is_guardian_jpm', false);
+            });
+        }
+
         $profiles = $query->get();
 
         $reportType = $request->input('report_type', 'list');
@@ -157,13 +176,15 @@ class ReportController extends Controller
             'date_filed' => ($request->get('date_from') ? \Carbon\Carbon::parse($request->get('date_from'))->translatedFormat('F d, Y') : '')
                 . ($request->get('date_from') && $request->get('date_to') ? ' to ' : '')
                 . ($request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to'))->translatedFormat('F d, Y') : ''),
-            'show_jpm_only' => $request->filled('show_jpm_only') && $request->show_jpm_only,
+            'show_jpm_only' => $request->filled('show_jpm_only') && $request->show_jpm_only !== '' && in_array($request->show_jpm_only, [1, '1', true, 'true'], true),
+            'hide_jpm' => $request->filled('hide_jpm') && $request->hide_jpm !== '' && in_array($request->hide_jpm, [1, '1', true, 'true'], true),
         ];
 
         // Check if user has permission to view JPM highlighting
-        // Disable JPM highlighting when show_jpm_only filter is active
-        $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
-        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && !$showJpmOnly;
+        // Disable JPM highlighting when show_jpm_only or hide_jpm filter is active
+        $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only !== '' && in_array($request->show_jpm_only, [1, '1', true, 'true'], true);
+        $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm !== '' && in_array($request->hide_jpm, [1, '1', true, 'true'], true);
+        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && !$showJpmOnly && !$hideJpm;
 
         $html = View::make('waiting_list_report', [
             'profiles' => $profiles,
@@ -274,6 +295,25 @@ class ReportController extends Controller
             });
         }
 
+        // JPM Filters - handle both string and boolean values (and check for non-empty)
+        if ($request->filled('show_jpm_only') && $request->show_jpm_only !== '' && in_array($request->show_jpm_only, [1, '1', true, 'true'], true)) {
+            $query->where(function ($q) {
+                $q->where('is_jpm_member', true)
+                    ->orWhere('is_father_jpm', true)
+                    ->orWhere('is_mother_jpm', true)
+                    ->orWhere('is_guardian_jpm', true);
+            });
+        }
+
+        if ($request->filled('hide_jpm') && $request->hide_jpm !== '' && in_array($request->hide_jpm, [1, '1', true, 'true'], true)) {
+            $query->where(function ($q) {
+                $q->where('is_jpm_member', false)
+                    ->where('is_father_jpm', false)
+                    ->where('is_mother_jpm', false)
+                    ->where('is_guardian_jpm', false);
+            });
+        }
+
         $profiles = $query->get();
 
         $reportType = $request->input('report_type', 'list');
@@ -322,12 +362,14 @@ class ReportController extends Controller
                 . ($request->get('date_from') && $request->get('date_to') ? ' to ' : '')
                 . ($request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to'))->translatedFormat('F d, Y') : ''),
             'show_jpm_only' => $request->filled('show_jpm_only') && $request->show_jpm_only,
+            'hide_jpm' => $request->filled('hide_jpm') && $request->hide_jpm,
         ];
 
         // Check if user has permission to view JPM highlighting
-        // Disable JPM highlighting when show_jpm_only filter is active
+        // Disable JPM highlighting when show_jpm_only or hide_jpm filter is active
         $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
-        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && !$showJpmOnly;
+        $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm;
+        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && !$showJpmOnly && !$hideJpm;
 
         // Generate filename with current date and time
         $currentDateTime = \Carbon\Carbon::now()->format('Y-m-d_H-i-s');

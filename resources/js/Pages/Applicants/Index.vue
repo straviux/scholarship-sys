@@ -111,6 +111,17 @@ const getRecordsFromUrl = () => {
     return urlRecords ? parseInt(urlRecords) : 10;
 };
 
+// Determine initial JPM filter value from props
+const getInitialJpmFilter = () => {
+    if (props.filter.show_jpm_only === true || props.filter.show_jpm_only === 'true' || props.filter.show_jpm_only === '1') {
+        return 'jpm_only';
+    }
+    if (props.filter.hide_jpm === true || props.filter.hide_jpm === 'true' || props.filter.hide_jpm === '1') {
+        return 'hide_jpm';
+    }
+    return 'all';
+};
+
 const filter = useForm({
     records: parseInt(props.records) || getRecordsFromUrl(),
     name: props.filter.name || "",
@@ -124,12 +135,19 @@ const filter = useForm({
     date_to: props.filter.date_to ? toDate(props.filter.date_to) : null,
     remarks: props.filter.remarks || "",
     global_search: props.filter.global_search || "",
-    show_jpm_only: props.filter.show_jpm_only === true || props.filter.show_jpm_only === 'true' || props.filter.show_jpm_only === '1',
+    jpm_filter: getInitialJpmFilter(),
     page: props.filter.page || 1,
 })
 
 const searchInput = ref(null);
 const selectedProfile = ref({});
+
+// JPM Filter Options
+const jpmFilterOptions = [
+    { label: 'Show All', value: 'all' },
+    { label: 'Show JPM Only', value: 'jpm_only' },
+    { label: 'Hide JPM', value: 'hide_jpm' }
+];
 
 // Applicant Modal state
 const showApplicantModal = ref(false);
@@ -181,7 +199,15 @@ const filterList = (resetToPage1 = false) => {
     if (date_to) params.date_to = date_to;
     if (remarks) params.remarks = remarks;
     if (global_search) params.global_search = global_search;
-    if (filter.show_jpm_only) params.show_jpm_only = 1; // Convert to 1 for URL
+
+    // Handle JPM filter
+    if (filter.jpm_filter === 'jpm_only') {
+        params.show_jpm_only = 1;
+    } else if (filter.jpm_filter === 'hide_jpm') {
+        params.hide_jpm = 1;
+    }
+    // If 'all', don't add any JPM filter parameters
+
     params.records = records; // Always include records to persist pagination
     if (sort && Object.values(sort).some(v => v)) params.sort = sort;
     params.page = currentPage;
@@ -205,7 +231,7 @@ const clearFilter = () => {
     filter.date_to = null;
     filter.records = 10;
     filter.global_search = '';
-    filter.show_jpm_only = false;
+    filter.jpm_filter = 'all';
     filter.page = 1;
     globalFilter.value = ''; // Clear global search
     // Clear URL params by reloading the page with no query params
@@ -276,7 +302,7 @@ watch(() => ({
     remarks: filter.remarks,
     date_from: filter.date_from,
     date_to: filter.date_to,
-    show_jpm_only: filter.show_jpm_only,
+    jpm_filter: filter.jpm_filter,
     records: filter.records
 }), (newFilter, oldFilter) => {
     if (filterListTimeout) clearTimeout(filterListTimeout);
@@ -288,13 +314,14 @@ watch(() => ({
 }, { deep: true });
 
 // Inline JPM status update
-const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null, is_mother_jpm = null, is_guardian_jpm = null }) => {
+const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null, is_mother_jpm = null, is_guardian_jpm = null, is_not_jpm = null }) => {
     // Only send fields that are not null
     const payload = {};
     if (is_jpm_member !== null) payload.is_jpm_member = is_jpm_member;
     if (is_father_jpm !== null) payload.is_father_jpm = is_father_jpm;
     if (is_mother_jpm !== null) payload.is_mother_jpm = is_mother_jpm;
     if (is_guardian_jpm !== null) payload.is_guardian_jpm = is_guardian_jpm;
+    if (is_not_jpm !== null) payload.is_not_jpm = is_not_jpm;
 
     console.log('Updating JPM status:', { id, payload }); // Debug log
 
@@ -321,6 +348,9 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
                 if (is_guardian_jpm !== null) {
                     props.profiles.data[profileIndex].is_guardian_jpm = is_guardian_jpm;
                 }
+                if (is_not_jpm !== null) {
+                    props.profiles.data[profileIndex].is_not_jpm = is_not_jpm;
+                }
                 console.log('Updated local data for profile:', id, props.profiles.data[profileIndex]);
             }
 
@@ -336,46 +366,72 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
     });
 };
 
-// JPM Remarks functionality
-const showJpmRemarksModal = ref(false);
-const selectedProfileForRemarks = ref(null);
-const jpmRemarksForm = ref('');
+// Combined JPM Tagging & Remarks functionality
+const showJpmModal = ref(false);
+const selectedProfileForJpm = ref(null);
+const jpmForm = ref({
+    is_jpm_member: false,
+    is_father_jpm: false,
+    is_mother_jpm: false,
+    is_guardian_jpm: false,
+    is_not_jpm: false,
+    jpm_remarks: ''
+});
 
-const editJpmRemarks = (profile) => {
-    selectedProfileForRemarks.value = profile;
-    jpmRemarksForm.value = profile.jpm_remarks || '';
-    showJpmRemarksModal.value = true;
+const openJpmModal = (profile) => {
+    selectedProfileForJpm.value = profile;
+    jpmForm.value = {
+        is_jpm_member: Boolean(profile.is_jpm_member),
+        is_father_jpm: Boolean(profile.is_father_jpm),
+        is_mother_jpm: Boolean(profile.is_mother_jpm),
+        is_guardian_jpm: Boolean(profile.is_guardian_jpm),
+        is_not_jpm: Boolean(profile.is_not_jpm),
+        jpm_remarks: profile.jpm_remarks || ''
+    };
+    showJpmModal.value = true;
 };
 
-const closeJpmRemarksModal = () => {
-    showJpmRemarksModal.value = false;
-    selectedProfileForRemarks.value = null;
-    jpmRemarksForm.value = '';
+const closeJpmModal = () => {
+    showJpmModal.value = false;
+    selectedProfileForJpm.value = null;
+    jpmForm.value = {
+        is_jpm_member: false,
+        is_father_jpm: false,
+        is_mother_jpm: false,
+        is_guardian_jpm: false,
+        is_not_jpm: false,
+        jpm_remarks: ''
+    };
 };
 
-const updateJpmRemarks = () => {
-    if (!selectedProfileForRemarks.value) return;
+const saveJpmData = () => {
+    if (!selectedProfileForJpm.value) return;
 
     const payload = {
-        jpm_remarks: jpmRemarksForm.value
+        is_jpm_member: jpmForm.value.is_jpm_member,
+        is_father_jpm: jpmForm.value.is_father_jpm,
+        is_mother_jpm: jpmForm.value.is_mother_jpm,
+        is_guardian_jpm: jpmForm.value.is_guardian_jpm,
+        is_not_jpm: jpmForm.value.is_not_jpm,
+        jpm_remarks: jpmForm.value.jpm_remarks
     };
 
-    router.put(route('waitinglist.updateJpmRemarks', selectedProfileForRemarks.value.profile_id), payload, {
+    router.put(route('waitinglist.updateJpmStatus', selectedProfileForJpm.value.profile_id), payload, {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
             // Update the local data
-            const profileIndex = props.profiles.data.findIndex(profile => profile.profile_id === selectedProfileForRemarks.value.profile_id);
+            const profileIndex = props.profiles.data.findIndex(profile => profile.profile_id === selectedProfileForJpm.value.profile_id);
             if (profileIndex !== -1) {
-                props.profiles.data[profileIndex].jpm_remarks = jpmRemarksForm.value;
+                Object.assign(props.profiles.data[profileIndex], payload);
             }
 
-            closeJpmRemarksModal();
-            toast.success('JPM remarks updated successfully');
+            closeJpmModal();
+            toast.success('JPM data updated successfully');
         },
         onError: (errors) => {
-            console.error('JPM remarks update errors:', errors);
-            toast.error('Failed to update JPM remarks: ' + Object.values(errors).join(', '));
+            console.error('JPM update errors:', errors);
+            toast.error('Failed to update JPM data: ' + Object.values(errors).join(', '));
         }
     });
 };
@@ -449,6 +505,7 @@ const applicants = computed(() => {
         is_father_jpm: Boolean(profile.is_father_jpm),
         is_mother_jpm: Boolean(profile.is_mother_jpm),
         is_guardian_jpm: Boolean(profile.is_guardian_jpm),
+        is_not_jpm: Boolean(profile.is_not_jpm),
     }));
 });
 
@@ -587,6 +644,69 @@ const getApplicantFullName = (applicant) => {
     return parts.join(' ').replace(' ,', ',');
 };
 
+// Get JPM status for tag display with member details
+const getJpmStatus = (profile) => {
+    if (!profile) return null;
+
+    const members = [];
+    if (profile.is_jpm_member) members.push('Applicant');
+    if (profile.is_father_jpm) members.push('Father');
+    if (profile.is_mother_jpm) members.push('Mother');
+    if (profile.is_guardian_jpm) members.push('Guardian');
+
+    if (members.length > 0) {
+        return {
+            status: 'member',
+            members: members
+        };
+    }
+
+    // Check if explicitly marked as "Not JPM"
+    if (profile.is_not_jpm) {
+        return {
+            status: 'not_member',
+            members: []
+        };
+    }
+
+    // If jpm_remarks exists, it means they've been checked but not a member
+    if (profile.jpm_remarks && profile.jpm_remarks.trim() !== '') {
+        return {
+            status: 'not_member',
+            members: []
+        };
+    }
+
+    // Return null if no JPM status has been tagged
+    return null;
+};
+
+// Get tag severity for JPM status
+const getJpmTagSeverity = (statusObj) => {
+    if (!statusObj) return 'secondary';
+    switch (statusObj.status) {
+        case 'member': return 'success';
+        case 'not_member': return 'warn';
+        default: return 'secondary';
+    }
+};
+
+// Get tag label for JPM status
+const getJpmTagLabel = (statusObj) => {
+    if (!statusObj) return '';
+    switch (statusObj.status) {
+        case 'member': return 'Member';
+        case 'not_member': return 'Not Member';
+        default: return '';
+    }
+};
+
+// Get member details text
+const getJpmMemberDetails = (statusObj) => {
+    if (!statusObj || statusObj.status !== 'member' || !statusObj.members.length) return '';
+    return statusObj.members.join(', ');
+};
+
 const getApplicantFullAddress = (applicant) => {
     if (!applicant) return '';
     const parts = [
@@ -649,9 +769,10 @@ const formatDate = (date) => {
                                     Tagging</label>
                             </div>
                             <div class="flex items-center gap-2">
-                                <Checkbox v-model="filter.show_jpm_only" inputId="showJpmOnlyToggle" binary />
-                                <label for="showJpmOnlyToggle" class="text-sm text-gray-600 cursor-pointer">Show JPM
-                                    Only</label>
+                                <label for="jpmFilter" class="text-sm text-gray-600">JPM Filter:</label>
+                                <Select v-model="filter.jpm_filter" :options="jpmFilterOptions" optionLabel="label"
+                                    size="small" optionValue="value" placeholder="Select filter" class="w-40"
+                                    inputId="jpmFilter" />
                             </div>
                         </div>
 
@@ -887,6 +1008,26 @@ const formatDate = (date) => {
                             </template>
                         </Column>
 
+                        <!-- JPM Status Column (only visible when showJpmColumns is enabled) -->
+                        <Column header="JPM Status" v-if="hasPermission('can-view-jpm') && showJpmColumns"
+                            style="min-width: 180px">
+                            <template #body="slotProps">
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex justify-center" v-if="getJpmStatus(slotProps.data)">
+                                        <Tag :severity="getJpmTagSeverity(getJpmStatus(slotProps.data))"
+                                            :value="getJpmTagLabel(getJpmStatus(slotProps.data))" />
+                                    </div>
+                                    <span v-else class="text-gray-400 text-sm text-center">-</span>
+
+                                    <!-- Show member details -->
+                                    <div v-if="getJpmStatus(slotProps.data)?.status === 'member'"
+                                        class="text-xs text-gray-600 text-center italic">
+                                        {{ getJpmMemberDetails(getJpmStatus(slotProps.data)) }}
+                                    </div>
+                                </div>
+                            </template>
+                        </Column>
+
                         <!-- Contact Number Column (hidden when JPM columns visible) -->
                         <Column header="Contact #" v-if="!showJpmColumns" style="min-width: 120px">
                             <template #body="slotProps">
@@ -911,68 +1052,28 @@ const formatDate = (date) => {
                             </template>
                         </Column>
 
-                        <!-- JPM Tagged Column (visible when JPM columns enabled) -->
-                        <Column header="Tagged" v-if="hasPermission('can-view-jpm') && showJpmColumns"
+                        <!-- JPM Actions Column (visible when JPM columns enabled) -->
+                        <Column header="Tagging" v-if="hasPermission('can-view-jpm') && showJpmColumns"
                             style="min-width: 150px">
                             <template #body="slotProps">
-                                <div class="flex flex-col gap-2">
-                                    <div class="flex gap-2">
-                                        <label class="flex items-center gap-1 text-xs cursor-pointer">
-                                            <Checkbox v-model="slotProps.data.is_jpm_member" binary
-                                                :disabled="hasRole('user')"
-                                                @update:modelValue="(value) => updateJpmStatus({ id: slotProps.data.profile_id, is_jpm_member: value })" />
-                                            <span>applicant</span>
-                                        </label>
-                                        <label class="flex items-center gap-1 text-xs cursor-pointer">
-                                            <Checkbox v-model="slotProps.data.is_father_jpm" binary
-                                                :disabled="hasRole('user')"
-                                                @update:modelValue="(value) => updateJpmStatus({ id: slotProps.data.profile_id, is_father_jpm: value })" />
-                                            <span>father</span>
-                                        </label>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <label class="flex items-center gap-1 text-xs cursor-pointer">
-                                            <Checkbox v-model="slotProps.data.is_guardian_jpm" binary
-                                                :disabled="hasRole('user')"
-                                                @update:modelValue="(value) => updateJpmStatus({ id: slotProps.data.profile_id, is_guardian_jpm: value })" />
-                                            <span>guardian</span>
-                                        </label>
-                                        <label class="flex items-center gap-1 text-xs cursor-pointer">
-                                            <Checkbox v-model="slotProps.data.is_mother_jpm" binary
-                                                :disabled="hasRole('user')"
-                                                @update:modelValue="(value) => updateJpmStatus({ id: slotProps.data.profile_id, is_mother_jpm: value })" />
-                                            <span>mother</span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </template>
-                        </Column>
+                                <div class="flex flex-col gap-2 items-center">
+                                    <Button @click="openJpmModal(slotProps.data)" rounded icon="pi pi-tags"
+                                        severity="info" size="small" outlined :disabled="hasRole('user')"
+                                        v-tooltip.top="'Edit JPM tagging and remarks'" />
 
-                        <!-- JPM Remarks Column (visible when JPM columns enabled) -->
-                        <Column v-if="hasPermission('can-view-jpm') && showJpmColumns" style="min-width: 220px">
-                            <template #header>
-                                <div class="flex justify-between items-center w-full">
-                                    <span>JPM Remarks</span>
-                                    <i class="pi pi-comment text-gray-400 text-sm"
-                                        v-tooltip.top="'Click on any row to edit remarks'"></i>
-                                </div>
-                            </template>
-                            <template #body="slotProps">
-                                <div class="text-xs cursor-pointer hover:bg-gray-100 p-1 rounded relative group"
-                                    @click="editJpmRemarks(slotProps.data)" v-tooltip.top="'Click to edit JPM remarks'">
-                                    <div class="flex justify-between items-center">
-                                        <span>{{ slotProps.data.jpm_remarks || 'Click to add remarks...' }}</span>
-                                        <Button icon="pi pi-pencil" severity="secondary" size="small" class="ml-1" text
-                                            rounded />
+                                    <!-- Quick preview of remarks if exists -->
+                                    <div v-if="slotProps.data.jpm_remarks"
+                                        class="text-xs text-gray-600 italic truncate">
+                                        "{{ slotProps.data.jpm_remarks }}"
                                     </div>
                                 </div>
                             </template>
                         </Column>
 
                         <!-- Priority Column -->
-                        <Column header="Priority" style="width: 120px" v-if="hasPermission('can-manage-priority')">
+                        <Column header="Priority" style="width: 180px" v-if="hasPermission('can-manage-priority')">
                             <template #body="slotProps">
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 justify-between">
                                     <div
                                         v-if="slotProps.data.priority_level && slotProps.data.priority_level !== 'normal'">
                                         <Tag :severity="getPrioritySeverity(slotProps.data.priority_level)"
@@ -980,26 +1081,30 @@ const formatDate = (date) => {
                                             v-tooltip.top="slotProps.data.priority_reason" />
                                     </div>
                                     <span v-else class="text-gray-400 text-sm">Normal</span>
+
+                                    <!-- Priority Actions -->
+                                    <div class="flex">
+                                        <Button icon="pi pi-star" severity="warn" size="small" rounded outlined
+                                            v-tooltip.top="'Assign Priority'"
+                                            @click="openPriorityModal(slotProps.data)" />
+
+                                        <Button icon="pi pi-star-fill" severity="secondary" size="small" rounded
+                                            outlined v-tooltip.top="'Remove Priority'"
+                                            @click="removePriority(slotProps.data)"
+                                            v-if="slotProps.data.priority_level && slotProps.data.priority_level !== 'normal'" />
+                                    </div>
                                 </div>
                             </template>
                         </Column>
 
                         <!-- Actions Column -->
-                        <Column header="Actions" style="width: 300px">
+                        <Column header="Actions" style="width: 200px">
                             <template #body="slotProps">
                                 <div class="flex gap-1 justify-center flex-wrap">
                                     <Button icon="pi pi-check-circle" label="Review" severity="success" size="small"
                                         rounded outlined v-tooltip.top="'Review Application & View Profile'"
                                         @click="openProfileReviewModal(slotProps.data)"
                                         v-if="hasPermission('create-scholar-profile')" />
-
-                                    <Button icon="pi pi-star" severity="warn" size="small" rounded outlined
-                                        v-tooltip.top="'Assign Priority'" @click="openPriorityModal(slotProps.data)"
-                                        v-if="hasPermission('can-manage-priority')" />
-
-                                    <Button icon="pi pi-star-fill" severity="secondary" size="small" rounded outlined
-                                        v-tooltip.top="'Remove Priority'" @click="removePriority(slotProps.data)"
-                                        v-if="hasPermission('can-manage-priority') && slotProps.data.priority_level && slotProps.data.priority_level !== 'normal'" />
 
                                     <Button icon="pi pi-user-edit" severity="help" size="small" rounded outlined
                                         v-tooltip.top="'Edit Applicant'" @click="editApplicant(slotProps.data)" />
@@ -1015,28 +1120,69 @@ const formatDate = (date) => {
             </div>
         </div>
 
-        <!-- JPM Remarks Modal -->
-        <Dialog v-model:visible="showJpmRemarksModal" :style="{ width: '500px' }" header="Edit JPM Remarks"
-            :modal="true">
+        <!-- Combined JPM Tagging & Remarks Modal -->
+        <Dialog v-model:visible="showJpmModal" :style="{ width: '600px' }" header="Edit JPM Information" :modal="true">
             <div class="space-y-4">
-                <div v-if="selectedProfileForRemarks" class="bg-gray-100 p-3 rounded border-l-4 border-blue-500">
-                    <div class="font-semibold text-blue-700">
-                        {{ selectedProfileForRemarks.last_name }}, {{ selectedProfileForRemarks.first_name }}
+                <!-- Applicant Info Header -->
+                <div v-if="selectedProfileForJpm" class="bg-blue-50 p-3 rounded border-l-4 border-blue-500">
+                    <div class="font-semibold text-blue-700 text-lg">
+                        {{ selectedProfileForJpm.last_name }}, {{ selectedProfileForJpm.first_name }}
                     </div>
-                    <div class="text-sm text-gray-600">{{ selectedProfileForRemarks.contact_no }}</div>
+                    <div class="text-sm text-gray-600">{{ selectedProfileForJpm.contact_no }}</div>
                 </div>
 
+                <!-- JPM Tagging Section -->
+                <div class="space-y-3">
+                    <label class="block text-sm font-bold text-gray-700 border-b pb-2">JPM Member Tagging</label>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <Checkbox v-model="jpmForm.is_jpm_member" binary inputId="jpm_applicant" />
+                            <span class="text-sm">Applicant</span>
+                        </label>
+
+                        <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <Checkbox v-model="jpmForm.is_father_jpm" binary inputId="jpm_father" />
+                            <span class="text-sm">Father</span>
+                        </label>
+
+                        <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <Checkbox v-model="jpmForm.is_mother_jpm" binary inputId="jpm_mother" />
+                            <span class="text-sm">Mother</span>
+                        </label>
+
+                        <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <Checkbox v-model="jpmForm.is_guardian_jpm" binary inputId="jpm_guardian" />
+                            <span class="text-sm">Guardian</span>
+                        </label>
+                    </div>
+
+                    <div class="pt-2 border-t">
+                        <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <Checkbox v-model="jpmForm.is_not_jpm" binary inputId="jpm_not_member" />
+                            <span class="text-sm font-medium text-orange-600">Not a JPM Member</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- JPM Remarks Section -->
                 <div class="space-y-2">
-                    <label for="jpmRemarks" class="block text-sm font-medium text-gray-700">JPM Remarks</label>
-                    <Textarea id="jpmRemarks" v-model="jpmRemarksForm" rows="4" placeholder="Enter JPM remarks..."
+                    <label for="jpmRemarks" class="block text-sm font-bold text-gray-700 border-b pb-2">
+                        Remarks</label>
+                    <Textarea id="jpmRemarks" v-model="jpmForm.jpm_remarks" rows="4"
+                        placeholder="Enter additional remarks about JPM status, verification details, etc..."
                         class="w-full" />
+                    <p class="text-xs text-gray-500">
+                        <i class="pi pi-info-circle mr-1"></i>
+                        Add any additional notes or verification details regarding JPM membership.
+                    </p>
                 </div>
             </div>
 
             <template #footer>
                 <div class="flex justify-end gap-2">
-                    <Button label="Cancel" severity="secondary" @click="closeJpmRemarksModal" />
-                    <Button label="Save" severity="info" @click="updateJpmRemarks" />
+                    <Button label="Cancel" severity="secondary" @click="closeJpmModal" outlined />
+                    <Button label="Save" severity="success" icon="pi pi-check" @click="saveJpmData" />
                 </div>
             </template>
         </Dialog>
@@ -1140,7 +1286,7 @@ const formatDate = (date) => {
                                             </div>
                                             <div class="text-xs text-green-700 leading-tight">{{
                                                 selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname
-                                            }}/{{
+                                                }}/{{
                                                     selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname }}
                                             </div>
                                         </div>

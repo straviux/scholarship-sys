@@ -160,6 +160,16 @@ class WaitingListController extends Controller
             });
         }
 
+        // Filter to hide JPM members (exclude JPM applicants if requested)
+        if ($request->filled('hide_jpm') && $request->hide_jpm) {
+            $query->where(function ($q) {
+                $q->where('is_jpm_member', false)
+                    ->where('is_father_jpm', false)
+                    ->where('is_mother_jpm', false)
+                    ->where('is_guardian_jpm', false);
+            });
+        }
+
         $query->orderBy('date_filed', $request->sort['date_filed'] ?? 'asc')->orderBy('created_at', 'asc');
         if ($request->filled('sort')) {
             if (isset($request->sort['date_filed'])) {
@@ -348,6 +358,7 @@ class WaitingListController extends Controller
             'remarks' => $request->get('remarks', ''),
             'global_search' => $request->get('global_search', ''),
             'show_jpm_only' => $request->get('show_jpm_only', ''),
+            'hide_jpm' => $request->get('hide_jpm', ''),
             'page' => $request->get('page', 1),
         ];
 
@@ -381,12 +392,12 @@ class WaitingListController extends Controller
     }
 
     /**
-     * Update JPM status for an applicant
+     * Update JPM status and remarks for an applicant
      */
     public function updateJpmStatus($id, Request $request)
     {
         try {
-            Log::info('Updating JPM status for profile: ' . $id, $request->all());
+            Log::info('Updating JPM data for profile: ' . $id, $request->all());
 
             $profile = ScholarshipProfile::findOrFail($id);
             $fields = [
@@ -394,6 +405,8 @@ class WaitingListController extends Controller
                 'is_mother_jpm',
                 'is_father_jpm',
                 'is_guardian_jpm',
+                'is_not_jpm',
+                'jpm_remarks',
             ];
 
             $updated = false;
@@ -409,13 +422,13 @@ class WaitingListController extends Controller
 
             if ($updated) {
                 $profile->save();
-                Log::info('JPM status saved successfully for profile: ' . $id);
+                Log::info('JPM data saved successfully for profile: ' . $id);
             }
 
-            return redirect()->back()->with('success', 'JPM status updated successfully.');
+            return redirect()->back()->with('success', 'JPM data updated successfully.');
         } catch (\Exception $e) {
-            Log::error('Error updating JPM status: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to update JPM status: ' . $e->getMessage());
+            Log::error('Error updating JPM data: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update JPM data: ' . $e->getMessage());
         }
     }
 
@@ -584,6 +597,16 @@ class WaitingListController extends Controller
             });
         }
 
+        // Filter to hide JPM members (exclude JPM applicants if requested)
+        if ($request->filled('hide_jpm') && $request->hide_jpm) {
+            $query->where(function ($q) {
+                $q->where('is_jpm_member', false)
+                    ->where('is_father_jpm', false)
+                    ->where('is_mother_jpm', false)
+                    ->where('is_guardian_jpm', false);
+            });
+        }
+
         // Get all profiles (no pagination for export)
         $profiles = $query->get();
 
@@ -611,6 +634,7 @@ class WaitingListController extends Controller
             'paper_size' => $paperSize,
             'orientation' => $orientation,
             'show_jpm_only' => $request->filled('show_jpm_only') && $request->show_jpm_only,
+            'hide_jpm' => $request->filled('hide_jpm') && $request->hide_jpm,
         ];
 
         // Check if user has JPM viewing permission

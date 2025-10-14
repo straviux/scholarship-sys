@@ -118,7 +118,10 @@ function exportData() {
         date_from: props.filters.date_from ? moment(props.filters.date_from).format('YYYY-MM-DD') : '',
         date_to: props.filters.date_to ? moment(props.filters.date_to).format('YYYY-MM-DD') : '',
         global_search: props.filters.global_search || '',
-        show_jpm_only: props.filters.show_jpm_only ? 1 : '',
+
+        // Handle JPM filter - convert to appropriate parameter
+        show_jpm_only: props.filters.jpm_filter === 'jpm_only' ? 1 : '',
+        hide_jpm: props.filters.jpm_filter === 'hide_jpm' ? 1 : '',
 
         // Export settings
         export_format: exportFormat.value,

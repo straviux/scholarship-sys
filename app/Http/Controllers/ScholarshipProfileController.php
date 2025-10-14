@@ -665,6 +665,25 @@ class ScholarshipProfileController extends Controller
             });
         }
 
+        // JPM Filters - handle both string and boolean values (and check for non-empty)
+        if ($request->filled('show_jpm_only') && $request->show_jpm_only !== '' && in_array($request->show_jpm_only, [1, '1', true, 'true'], true)) {
+            $query->where(function ($q) {
+                $q->where('is_jpm_member', true)
+                    ->orWhere('is_father_jpm', true)
+                    ->orWhere('is_mother_jpm', true)
+                    ->orWhere('is_guardian_jpm', true);
+            });
+        }
+
+        if ($request->filled('hide_jpm') && $request->hide_jpm !== '' && in_array($request->hide_jpm, [1, '1', true, 'true'], true)) {
+            $query->where(function ($q) {
+                $q->where('is_jpm_member', false)
+                    ->where('is_father_jpm', false)
+                    ->where('is_mother_jpm', false)
+                    ->where('is_guardian_jpm', false);
+            });
+        }
+
         $profiles = $query->get();
 
         $reportType = $request->input('report_type', 'list');
@@ -709,21 +728,34 @@ class ScholarshipProfileController extends Controller
                     return ($grant && $grant->year_level) ? $grant->year_level : 'no_year_level';
                 })->map(fn($group) => $group->count());
             }
+
+            // Check if user has permission to view JPM highlighting
+            // Disable JPM highlighting when show_jpm_only or hide_jpm filter is active
+            $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
+            $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm;
+            $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && !$showJpmOnly && !$hideJpm;
+
             return response()->json([
                 'success' => true,
                 'type' => 'summary',
                 'summary' => $summary,
                 'parameters' => $filters,
-                'canViewJpm' => $request->user() && $request->user()->can('can-view-jpm'),
+                'canViewJpm' => $canViewJpm,
             ]);
         } else {
+            // Check if user has permission to view JPM highlighting
+            // Disable JPM highlighting when show_jpm_only or hide_jpm filter is active
+            $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
+            $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm;
+            $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && !$showJpmOnly && !$hideJpm;
+
             return response()->json([
                 'success' => true,
                 'type' => 'list',
                 'count' => $profiles->count(),
                 'data' => $profiles,
                 'parameters' => $filters,
-                'canViewJpm' => $request->user() && $request->user()->can('can-view-jpm'),
+                'canViewJpm' => $canViewJpm,
             ]);
         }
     }

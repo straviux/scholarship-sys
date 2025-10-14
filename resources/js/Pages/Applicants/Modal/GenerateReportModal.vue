@@ -85,6 +85,13 @@
                     </div>
                 </div>
 
+                <!-- JPM Filter -->
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium text-gray-700">JPM Filter</label>
+                    <Select v-model="jpmFilter" :options="jpmFilterOptions" optionLabel="label" optionValue="value"
+                        placeholder="Select JPM filter" class="w-full" />
+                </div>
+
                 <!-- Paper Settings -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -159,6 +166,7 @@ const selectedYearLevel = ref(null);
 const reportType = ref('list');
 const paperSize = ref('A4');
 const orientation = ref('landscape');
+const jpmFilter = ref('all');
 
 // Options
 const paperSizeOptions = [
@@ -170,6 +178,12 @@ const paperSizeOptions = [
 const orientationOptions = [
     { label: 'Portrait (Vertical)', value: 'portrait' },
     { label: 'Landscape (Horizontal)', value: 'landscape' },
+];
+
+const jpmFilterOptions = [
+    { label: 'Show All', value: 'all' },
+    { label: 'Show JPM Only', value: 'jpm_only' },
+    { label: 'Hide JPM', value: 'hide_jpm' }
 ];
 
 // Computed Properties
@@ -204,6 +218,7 @@ function clearAllFilters() {
     selectedCourses.value = [];
     selectedMunicipality.value = null;
     selectedYearLevel.value = null;
+    jpmFilter.value = 'all';
 }
 
 function generateReport() {
@@ -233,6 +248,8 @@ function generateReport() {
         report_type: reportType.value,
         paper_size: paperSize.value,
         orientation: orientation.value,
+        show_jpm_only: jpmFilter.value === 'jpm_only' ? 1 : '',
+        hide_jpm: jpmFilter.value === 'hide_jpm' ? 1 : '',
     };
 
     // Store params and load report view

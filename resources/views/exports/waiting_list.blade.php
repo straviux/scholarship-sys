@@ -90,7 +90,9 @@
         @if($key === 'program' && isset($profiles) && count($profiles) && optional($profiles->first()->scholarshipGrant->first())->program)
         <span class="badge" style="color:#444;">Program: {{ optional($profiles->first()->scholarshipGrant->first())->program->name }}</span>
         @elseif($key === 'show_jpm_only' && $value)
-        <span class="badge" style="color:#444;">Member: JPM</span>
+        <span class="badge" style="color:#444;">JPM Filter: Show JPM Only</span>
+        @elseif($key === 'hide_jpm' && $value)
+        <span class="badge" style="color:#444;">JPM Filter: Hide JPM</span>
         @else
         <span class="badge" style="color:#444;">{{ ucfirst(str_replace('_', ' ', $key)) }}: {{ $value }}</span>
         @endif
