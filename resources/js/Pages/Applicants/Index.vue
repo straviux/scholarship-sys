@@ -36,6 +36,7 @@ import ApplicantProfileModal from '@/Pages/Applicants/Modal/ApplicantProfileModa
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
 import ExportModal from './Modal/ExportModal.vue';
 import PriorityModal from './Modal/PriorityModal.vue';
+import JpmModal from './Modal/JpmModal.vue';
 import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
 const showReportModal = ref(false);
 const openReportModal = () => { showReportModal.value = true; };
@@ -369,71 +370,27 @@ const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null
 // Combined JPM Tagging & Remarks functionality
 const showJpmModal = ref(false);
 const selectedProfileForJpm = ref(null);
-const jpmForm = ref({
-    is_jpm_member: false,
-    is_father_jpm: false,
-    is_mother_jpm: false,
-    is_guardian_jpm: false,
-    is_not_jpm: false,
-    jpm_remarks: ''
-});
 
 const openJpmModal = (profile) => {
     selectedProfileForJpm.value = profile;
-    jpmForm.value = {
-        is_jpm_member: Boolean(profile.is_jpm_member),
-        is_father_jpm: Boolean(profile.is_father_jpm),
-        is_mother_jpm: Boolean(profile.is_mother_jpm),
-        is_guardian_jpm: Boolean(profile.is_guardian_jpm),
-        is_not_jpm: Boolean(profile.is_not_jpm),
-        jpm_remarks: profile.jpm_remarks || ''
-    };
     showJpmModal.value = true;
 };
 
 const closeJpmModal = () => {
     showJpmModal.value = false;
     selectedProfileForJpm.value = null;
-    jpmForm.value = {
-        is_jpm_member: false,
-        is_father_jpm: false,
-        is_mother_jpm: false,
-        is_guardian_jpm: false,
-        is_not_jpm: false,
-        jpm_remarks: ''
-    };
 };
 
-const saveJpmData = () => {
-    if (!selectedProfileForJpm.value) return;
-
-    const payload = {
-        is_jpm_member: jpmForm.value.is_jpm_member,
-        is_father_jpm: jpmForm.value.is_father_jpm,
-        is_mother_jpm: jpmForm.value.is_mother_jpm,
-        is_guardian_jpm: jpmForm.value.is_guardian_jpm,
-        is_not_jpm: jpmForm.value.is_not_jpm,
-        jpm_remarks: jpmForm.value.jpm_remarks
-    };
-
-    router.put(route('waitinglist.updateJpmStatus', selectedProfileForJpm.value.profile_id), payload, {
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: () => {
-            // Update the local data
-            const profileIndex = props.profiles.data.findIndex(profile => profile.profile_id === selectedProfileForJpm.value.profile_id);
-            if (profileIndex !== -1) {
-                Object.assign(props.profiles.data[profileIndex], payload);
-            }
-
-            closeJpmModal();
-            toast.success('JPM data updated successfully');
-        },
-        onError: (errors) => {
-            console.error('JPM update errors:', errors);
-            toast.error('Failed to update JPM data: ' + Object.values(errors).join(', '));
+const handleJpmSuccess = (payload) => {
+    // Update the local data
+    if (selectedProfileForJpm.value) {
+        const profileIndex = props.profiles.data.findIndex(
+            profile => profile.profile_id === selectedProfileForJpm.value.profile_id
+        );
+        if (profileIndex !== -1) {
+            Object.assign(props.profiles.data[profileIndex], payload);
         }
-    });
+    }
 };
 
 // Persist showJpmColumns state in localStorage
@@ -1121,71 +1078,9 @@ const formatDate = (date) => {
         </div>
 
         <!-- Combined JPM Tagging & Remarks Modal -->
-        <Dialog v-model:visible="showJpmModal" :style="{ width: '600px' }" header="Edit JPM Information" :modal="true">
-            <div class="space-y-4">
-                <!-- Applicant Info Header -->
-                <div v-if="selectedProfileForJpm" class="bg-blue-50 p-3 rounded border-l-4 border-blue-500">
-                    <div class="font-semibold text-blue-700 text-lg">
-                        {{ selectedProfileForJpm.last_name }}, {{ selectedProfileForJpm.first_name }}
-                    </div>
-                    <div class="text-sm text-gray-600">{{ selectedProfileForJpm.contact_no }}</div>
-                </div>
-
-                <!-- JPM Tagging Section -->
-                <div class="space-y-3">
-                    <label class="block text-sm font-bold text-gray-700 border-b pb-2">JPM Member Tagging</label>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <Checkbox v-model="jpmForm.is_jpm_member" binary inputId="jpm_applicant" />
-                            <span class="text-sm">Applicant</span>
-                        </label>
-
-                        <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <Checkbox v-model="jpmForm.is_father_jpm" binary inputId="jpm_father" />
-                            <span class="text-sm">Father</span>
-                        </label>
-
-                        <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <Checkbox v-model="jpmForm.is_mother_jpm" binary inputId="jpm_mother" />
-                            <span class="text-sm">Mother</span>
-                        </label>
-
-                        <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <Checkbox v-model="jpmForm.is_guardian_jpm" binary inputId="jpm_guardian" />
-                            <span class="text-sm">Guardian</span>
-                        </label>
-                    </div>
-
-                    <div class="pt-2 border-t">
-                        <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <Checkbox v-model="jpmForm.is_not_jpm" binary inputId="jpm_not_member" />
-                            <span class="text-sm font-medium text-orange-600">Not a JPM Member</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- JPM Remarks Section -->
-                <div class="space-y-2">
-                    <label for="jpmRemarks" class="block text-sm font-bold text-gray-700 border-b pb-2">
-                        Remarks</label>
-                    <Textarea id="jpmRemarks" v-model="jpmForm.jpm_remarks" rows="4"
-                        placeholder="Enter additional remarks about JPM status, verification details, etc..."
-                        class="w-full" />
-                    <p class="text-xs text-gray-500">
-                        <i class="pi pi-info-circle mr-1"></i>
-                        Add any additional notes or verification details regarding JPM membership.
-                    </p>
-                </div>
-            </div>
-
-            <template #footer>
-                <div class="flex justify-end gap-2">
-                    <Button label="Cancel" severity="secondary" @click="closeJpmModal" outlined />
-                    <Button label="Save" severity="success" icon="pi pi-check" @click="saveJpmData" />
-                </div>
-            </template>
-        </Dialog>
+        <!-- JPM Modal -->
+        <JpmModal :show="showJpmModal" :profile="selectedProfileForJpm" @update:show="showJpmModal = $event"
+            @success="handleJpmSuccess" />
 
         <!-- Delete Confirmation Dialog -->
         <Dialog v-model:visible="showConfirmDeleteModal" :style="{ width: '450px' }" header="Confirm Deletion"
