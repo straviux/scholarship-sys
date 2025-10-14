@@ -120,6 +120,9 @@ const getInitialJpmFilter = () => {
     if (props.filter.hide_jpm === true || props.filter.hide_jpm === 'true' || props.filter.hide_jpm === '1') {
         return 'hide_jpm';
     }
+    if (props.filter.hide_all_tagged === true || props.filter.hide_all_tagged === 'true' || props.filter.hide_all_tagged === '1') {
+        return 'hide_all_tagged';
+    }
     return 'all';
 };
 
@@ -147,7 +150,8 @@ const selectedProfile = ref({});
 const jpmFilterOptions = [
     { label: 'Show All', value: 'all' },
     { label: 'Show JPM Only', value: 'jpm_only' },
-    { label: 'Hide JPM', value: 'hide_jpm' }
+    { label: 'Hide JPM', value: 'hide_jpm' },
+    { label: 'Hide All Tagged', value: 'hide_all_tagged' }
 ];
 
 // Applicant Modal state
@@ -206,6 +210,8 @@ const filterList = (resetToPage1 = false) => {
         params.show_jpm_only = 1;
     } else if (filter.jpm_filter === 'hide_jpm') {
         params.hide_jpm = 1;
+    } else if (filter.jpm_filter === 'hide_all_tagged') {
+        params.hide_all_tagged = 1;
     }
     // If 'all', don't add any JPM filter parameters
 
@@ -314,59 +320,6 @@ watch(() => ({
     }, 500);
 }, { deep: true });
 
-// Inline JPM status update
-const updateJpmStatus = ({ id = null, is_jpm_member = null, is_father_jpm = null, is_mother_jpm = null, is_guardian_jpm = null, is_not_jpm = null }) => {
-    // Only send fields that are not null
-    const payload = {};
-    if (is_jpm_member !== null) payload.is_jpm_member = is_jpm_member;
-    if (is_father_jpm !== null) payload.is_father_jpm = is_father_jpm;
-    if (is_mother_jpm !== null) payload.is_mother_jpm = is_mother_jpm;
-    if (is_guardian_jpm !== null) payload.is_guardian_jpm = is_guardian_jpm;
-    if (is_not_jpm !== null) payload.is_not_jpm = is_not_jpm;
-
-    console.log('Updating JPM status:', { id, payload }); // Debug log
-
-    router.put(route('waitinglist.updateJpmStatus', id), payload, {
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: (page) => {
-            console.log('JPM update success:', page);
-
-            // Manually update the original props data to reflect the changes
-            // This will automatically trigger the computed applicants to re-evaluate
-            const profileIndex = props.profiles.data.findIndex(profile => profile.profile_id === id);
-            if (profileIndex !== -1) {
-                // Update each field that was changed in the original props data
-                if (is_jpm_member !== null) {
-                    props.profiles.data[profileIndex].is_jpm_member = is_jpm_member;
-                }
-                if (is_father_jpm !== null) {
-                    props.profiles.data[profileIndex].is_father_jpm = is_father_jpm;
-                }
-                if (is_mother_jpm !== null) {
-                    props.profiles.data[profileIndex].is_mother_jpm = is_mother_jpm;
-                }
-                if (is_guardian_jpm !== null) {
-                    props.profiles.data[profileIndex].is_guardian_jpm = is_guardian_jpm;
-                }
-                if (is_not_jpm !== null) {
-                    props.profiles.data[profileIndex].is_not_jpm = is_not_jpm;
-                }
-                console.log('Updated local data for profile:', id, props.profiles.data[profileIndex]);
-            }
-
-            toast.success('JPM status updated successfully');
-        },
-        onError: (errors) => {
-            console.error('JPM update errors:', errors);
-            toast.error('Failed to update JPM status: ' + Object.values(errors).join(', '));
-        },
-        onFinish: () => {
-            console.log('JPM update finished');
-        }
-    });
-};
-
 // Combined JPM Tagging & Remarks functionality
 const showJpmModal = ref(false);
 const selectedProfileForJpm = ref(null);
@@ -379,18 +332,6 @@ const openJpmModal = (profile) => {
 const closeJpmModal = () => {
     showJpmModal.value = false;
     selectedProfileForJpm.value = null;
-};
-
-const handleJpmSuccess = (payload) => {
-    // Update the local data
-    if (selectedProfileForJpm.value) {
-        const profileIndex = props.profiles.data.findIndex(
-            profile => profile.profile_id === selectedProfileForJpm.value.profile_id
-        );
-        if (profileIndex !== -1) {
-            Object.assign(props.profiles.data[profileIndex], payload);
-        }
-    }
 };
 
 // Persist showJpmColumns state in localStorage
@@ -455,6 +396,7 @@ const applicants = computed(() => {
     // Data is already filtered in the backend to exclude approved and declined applications
     const filteredData = data;
 
+    console.log(data)
     // Ensure JPM boolean fields are properly converted to boolean values
     return filteredData.map(profile => ({
         ...profile,
@@ -466,7 +408,7 @@ const applicants = computed(() => {
     }));
 });
 
-// Delete confirmation properties
+// Delete confirmation propertiesr
 const showConfirmDeleteModal = ref(false);
 const selectedApplicant = ref(null);
 
@@ -1079,8 +1021,7 @@ const formatDate = (date) => {
 
         <!-- Combined JPM Tagging & Remarks Modal -->
         <!-- JPM Modal -->
-        <JpmModal :show="showJpmModal" :profile="selectedProfileForJpm" @update:show="showJpmModal = $event"
-            @success="handleJpmSuccess" />
+        <JpmModal :show="showJpmModal" :profile="selectedProfileForJpm" @update:show="showJpmModal = $event" />
 
         <!-- Delete Confirmation Dialog -->
         <Dialog v-model:visible="showConfirmDeleteModal" :style="{ width: '450px' }" header="Confirm Deletion"

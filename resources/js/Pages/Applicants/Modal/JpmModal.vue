@@ -18,7 +18,7 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['update:show', 'success']);
+const emit = defineEmits(['update:show']);
 
 const jpmForm = ref({
     is_jpm_member: false,
@@ -136,21 +136,20 @@ const saveJpmData = () => {
     if (!props.profile) return;
 
     const payload = {
-        is_jpm_member: jpmForm.value.is_jpm_member,
-        is_father_jpm: jpmForm.value.is_father_jpm,
-        is_mother_jpm: jpmForm.value.is_mother_jpm,
-        is_guardian_jpm: jpmForm.value.is_guardian_jpm,
-        is_not_jpm: jpmForm.value.is_not_jpm,
+        is_jpm_member: jpmForm.value.is_jpm_member ? 1 : 0,
+        is_father_jpm: jpmForm.value.is_father_jpm ? 1 : 0,
+        is_mother_jpm: jpmForm.value.is_mother_jpm ? 1 : 0,
+        is_guardian_jpm: jpmForm.value.is_guardian_jpm ? 1 : 0,
+        is_not_jpm: jpmForm.value.is_not_jpm ? 1 : 0,
         jpm_remarks: jpmForm.value.jpm_remarks
     };
 
     router.put(route('waitinglist.updateJpmStatus', props.profile.profile_id), payload, {
         preserveScroll: true,
-        preserveState: true,
+        preserveState: false,  // Changed to false to reload fresh data
         onSuccess: () => {
             closeModal();
             toast.success('JPM data updated successfully');
-            emit('success', payload);
         },
         onError: (errors) => {
             console.error('JPM update errors:', errors);

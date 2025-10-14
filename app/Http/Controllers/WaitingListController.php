@@ -170,6 +170,17 @@ class WaitingListController extends Controller
             });
         }
 
+        // Filter to hide all tagged applicants (both JPM and Not JPM)
+        if ($request->filled('hide_all_tagged') && $request->hide_all_tagged) {
+            $query->where(function ($q) {
+                $q->where('is_jpm_member', false)
+                    ->where('is_father_jpm', false)
+                    ->where('is_mother_jpm', false)
+                    ->where('is_guardian_jpm', false)
+                    ->where('is_not_jpm', false);
+            });
+        }
+
         $query->orderBy('date_filed', $request->sort['date_filed'] ?? 'asc')->orderBy('created_at', 'asc');
         if ($request->filled('sort')) {
             if (isset($request->sort['date_filed'])) {
@@ -359,6 +370,7 @@ class WaitingListController extends Controller
             'global_search' => $request->get('global_search', ''),
             'show_jpm_only' => $request->get('show_jpm_only', ''),
             'hide_jpm' => $request->get('hide_jpm', ''),
+            'hide_all_tagged' => $request->get('hide_all_tagged', ''),
             'page' => $request->get('page', 1),
         ];
 
