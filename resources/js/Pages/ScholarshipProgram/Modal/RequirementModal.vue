@@ -27,15 +27,13 @@ const form = useForm({
     name: props.program?.name || "",
     requirements: selectedRequirements || [] // set default status to active for new records
 });
-// console.log(selectedRequirements.value)
+
 const submit = () => {
     form.put(route("scholarshipprograms.update-requirement", props.program.id), {
         onSuccess: (response) => {
             toast.success("data has been updated", {
                 position: toast.POSITION.TOP_RIGHT,
             });
-            // show_next_form.value = true;
-            // console.log(response);
         },
         onError: (err) => {
             form.errors = err;
@@ -76,7 +74,7 @@ const submit = () => {
                                             <InputLabel for="name" value="Name" />
                                             <div class="p-2 bg-gray-100 mt-2 text-lg font-medium text-gray-700">{{
                                                 props.program.name
-                                            }}</div>
+                                                }}</div>
 
                                         </div>
                                         <div class="w-1/4">

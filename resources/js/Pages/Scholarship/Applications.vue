@@ -191,7 +191,7 @@
 
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { ref, reactive, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import moment from 'moment';
 

@@ -248,25 +248,7 @@ const clearFilter = () => {
     });
 }
 
-const sortBy = (column) => {
-    if (column == 'name') {
-        form.sort.last_name = form.sort.last_name == 'desc' ? 'asc' : 'desc';
-    }
-    if (column == 'date_filed') {
-        form.sort.date_filed = form.sort.date_filed == 'desc' ? 'asc' : 'desc';
-    }
-    if (column == 'school') {
-        form.sort.school = form.sort.school == 'desc' ? 'asc' : 'desc';
-    }
-    if (column == 'course') {
-        form.sort.course = form.sort.course == 'desc' ? 'asc' : 'desc';
-    }
-    if (column == 'year_level') {
-        form.sort.year_level = form.sort.year_level == 'desc' ? 'asc' : 'desc';
-    }
-    // Apply the sort by triggering a filter with current filters
-    filterList(true);
-}
+
 
 const handleKeydown = (e) => {
     if (e.ctrlKey && e.key.toLowerCase() === 'k') {
@@ -329,10 +311,6 @@ const openJpmModal = (profile) => {
     showJpmModal.value = true;
 };
 
-const closeJpmModal = () => {
-    showJpmModal.value = false;
-    selectedProfileForJpm.value = null;
-};
 
 // Persist showJpmColumns state in localStorage
 const showJpmColumns = ref(localStorage.getItem('showJpmColumns') === 'true');
@@ -347,7 +325,6 @@ const showAllFilters = ref(false);
 
 // DataTable properties - disable client-side filtering and pagination
 const globalFilter = ref(props.filter.global_search || '');
-const filters = ref({});
 const first = ref(0);
 const rows = ref(parseInt(props.records) || 10);
 
@@ -396,7 +373,6 @@ const applicants = computed(() => {
     // Data is already filtered in the backend to exclude approved and declined applications
     const filteredData = data;
 
-    console.log(data)
     // Ensure JPM boolean fields are properly converted to boolean values
     return filteredData.map(profile => ({
         ...profile,
@@ -1122,7 +1098,7 @@ const formatDate = (date) => {
                                             </div>
                                             <div class="text-xs text-green-700 leading-tight">{{
                                                 selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname
-                                                }}/{{
+                                            }}/{{
                                                     selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname }}
                                             </div>
                                         </div>

@@ -41,10 +41,6 @@ watch(globalFilter, (newValue) => {
     filters.value.global.value = newValue;
 });
 
-onMounted(() => {
-    // console.log(props.schools);
-});
-
 const editSchool = (schoolId) => {
     // Navigate to the edit school page
     router.get(route("school.index", {
@@ -155,7 +151,7 @@ const closeDeleteModal = () => {
                         <template #body="slotProps">
                             <span class="text-gray-600">
                                 {{ slotProps.data.start_date ? moment(slotProps.data.start_date).format('MMM DD, YYYY')
-                                : '-' }}
+                                    : '-' }}
                             </span>
                         </template>
                     </Column>
@@ -164,7 +160,7 @@ const closeDeleteModal = () => {
                         <template #body="slotProps">
                             <span class="text-gray-600">
                                 {{ slotProps.data.end_date ? moment(slotProps.data.end_date).format('MMM DD, YYYY') :
-                                '-' }}
+                                    '-' }}
                             </span>
                         </template>
                     </Column>

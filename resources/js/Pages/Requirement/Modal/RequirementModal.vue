@@ -1,6 +1,6 @@
 <script setup>
 import { computed, } from "vue";
-import { Link, useForm, router } from "@inertiajs/vue3";
+import { Link, useForm } from "@inertiajs/vue3";
 import {
     TransitionRoot,
     TransitionChild,
@@ -47,10 +47,9 @@ const submit = () => {
                 toast.success("Data has been added", {
                     position: toast.POSITION.TOP_RIGHT,
                 });
-
             },
             onError: (err) => {
-                console.log(err.name)
+                // Error will be handled by form.errors
             }
         });
     } if (props.action == 'edit') {

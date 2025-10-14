@@ -1,7 +1,6 @@
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
-import { Head, Link, useForm, router } from "@inertiajs/vue3";
-import { debounce } from "lodash";
+import { computed } from "vue";
+import { Link, useForm } from "@inertiajs/vue3";
 import {
     TransitionRoot,
     TransitionChild,
@@ -17,19 +16,14 @@ import { XMarkIcon } from "@heroicons/vue/20/solid";
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 import TextArea from "@/Components/TextArea.vue";
+
 const props = defineProps({
     action: String,
     program: Object,
-    // requirements: Array,
     msg: String
 });
 
-// console.log(props.action);
-
-
 const isOpen = computed(() => props.action == 'create' || props.action == 'edit');
-
-
 
 const form = useForm({
     name: props.program?.name || "",
@@ -45,7 +39,6 @@ const resetForm = () => {
     form.reset();
 }
 
-// const emit = defineEmits(['refreshParentData']);
 const submit = () => {
     if (props.action == 'create') {
         form.post(route("scholarshipprograms.store"), {
@@ -60,10 +53,9 @@ const submit = () => {
                 toast.success("Program has been added", {
                     position: toast.POSITION.TOP_RIGHT,
                 });
-
             },
             onError: (err) => {
-                console.log(err.name)
+                // Error will be handled by form.errors
             }
         });
     } if (props.action == 'edit') {
@@ -72,8 +64,6 @@ const submit = () => {
                 toast.success("data has been updated", {
                     position: toast.POSITION.TOP_RIGHT,
                 });
-                // show_next_form.value = true;
-                // console.log(response);
             },
             onError: (err) => {
                 form.errors = err;

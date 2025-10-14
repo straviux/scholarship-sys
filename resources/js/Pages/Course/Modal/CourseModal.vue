@@ -1,7 +1,6 @@
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
-import { Head, Link, useForm, router } from "@inertiajs/vue3";
-import { debounce } from "lodash";
+import { computed } from "vue";
+import { Link, useForm } from "@inertiajs/vue3";
 import {
     TransitionRoot,
     TransitionChild,
@@ -63,10 +62,9 @@ const submit = () => {
                 toast.success("Program has been added", {
                     position: toast.POSITION.TOP_RIGHT,
                 });
-
             },
             onError: (err) => {
-                console.log(err.name)
+                // Error will be handled by form.errors
             }
         });
     }
