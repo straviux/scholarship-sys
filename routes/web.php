@@ -72,6 +72,7 @@ Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->gr
     Route::delete('/applicants/{id}', [WaitingListController::class, 'destroy'])->name('waitinglist.destroy');
     Route::put('/applicants/{id}/jpm-status', [WaitingListController::class, 'updateJpmStatus'])->name('waitinglist.updateJpmStatus');
     Route::put('/applicants/{id}/jpm-remarks', [WaitingListController::class, 'updateJpmRemarks'])->name('waitinglist.updateJpmRemarks');
+    Route::get('/applicants-export', [WaitingListController::class, 'export'])->name('waitinglist.export');
 
     Route::get('/get-user-encoded-records', [WaitingListController::class, 'getUserEncodedRecords'])->name('waitinglist.getUserEncodedRecords');
 });

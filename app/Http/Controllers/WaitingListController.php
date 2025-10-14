@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Browsershot\Browsershot;
 
 class WaitingListController extends Controller
 {
@@ -146,6 +147,16 @@ class WaitingListController extends Controller
                     ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ['%' . $searchTerm . '%'])
                     ->orWhereRaw("CONCAT(last_name, ', ', first_name, ' ', COALESCE(middle_name, '')) LIKE ?", ['%' . $searchTerm . '%'])
                     ->orWhereRaw("CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name) LIKE ?", ['%' . $searchTerm . '%']);
+            });
+        }
+
+        // Filter by JPM status (show only JPM members if requested)
+        if ($request->filled('show_jpm_only') && $request->show_jpm_only) {
+            $query->where(function ($q) {
+                $q->where('is_jpm_member', true)
+                    ->orWhere('is_father_jpm', true)
+                    ->orWhere('is_mother_jpm', true)
+                    ->orWhere('is_guardian_jpm', true);
             });
         }
 
@@ -336,6 +347,7 @@ class WaitingListController extends Controller
             'date_to' => $request->get('date_to', ''),
             'remarks' => $request->get('remarks', ''),
             'global_search' => $request->get('global_search', ''),
+            'show_jpm_only' => $request->get('show_jpm_only', ''),
             'page' => $request->get('page', 1),
         ];
 
@@ -438,6 +450,231 @@ class WaitingListController extends Controller
             'total' => $total,
             'today' => $todayCount
         ]);
+    }
+
+    /**
+     * Get the Chrome executable path with fallback logic
+     * 
+     * @return string
+     * @throws \Exception
+     */
+    protected function getChromePath()
+    {
+        $primaryPath = config('scholarship.browsershot.chrome_path');
+
+        // Try primary path first
+        if ($primaryPath && file_exists($primaryPath)) {
+            return $primaryPath;
+        }
+
+        // Try fallback paths
+        $fallbackPaths = config('scholarship.browsershot.fallback_paths', []);
+        foreach ($fallbackPaths as $path) {
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        // If no valid path found, throw exception
+        throw new \Exception(
+            'Chrome executable not found. Please configure CHROME_PATH in your .env file or install Chrome/Chromium. ' .
+                'Tried paths: ' . $primaryPath . ', ' . implode(', ', $fallbackPaths)
+        );
+    }
+
+    /**
+     * Export filtered applicants to Excel/PDF
+     */
+    public function export(Request $request)
+    {
+        // Build the same query as index method
+        $programId = ScholarshipProgram::where('shortname', $request->get('program'))->first()?->id;
+        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant', 'priorityAssignedBy'])
+            ->whereHas('scholarshipGrant', function ($q) use ($programId) {
+                $q->where('scholarship_status', 0)
+                    ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
+                    ->orderBy('date_filed', 'asc')
+                    ->orderBy('created_at', 'asc');
+                if ($programId) {
+                    $q->where('program_id', $programId);
+                }
+            });
+
+        // Apply the same filters as index method
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->whereBetween('date_filed', [$request->date_from, $request->date_to]);
+            });
+        } elseif ($request->filled('date_from')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->whereDate('date_filed', '>=', $request->date_from);
+            });
+        } elseif ($request->filled('date_to')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->whereDate('date_filed', '<=', $request->date_to);
+            });
+        }
+
+        if ($request->filled('school')) {
+            $query->whereHas('scholarshipGrant.school', function ($q) use ($request) {
+                $q->where('shortname', 'like', '%' . $request->school . '%')->orWhere('name', 'like', '%' . $request->school . '%');
+            });
+        }
+
+        if ($request->filled('year_level')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('year_level', 'like', '%' . $request->year_level . '%');
+            });
+        }
+
+        if ($request->filled('course')) {
+            $query->whereHas('scholarshipGrant.course', function ($q) use ($request) {
+                $q->where('shortname', 'like', '%' . $request->course . '%')->orWhere('name', 'like', '%' . $request->course . '%');
+            });
+        }
+
+        if ($request->filled('municipality')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('municipality', 'like', '%' . $request->municipality . '%');
+            });
+        }
+
+        if ($request->filled('name')) {
+            $query->where(function ($q) use ($request) {
+                $searchTerm = '%' . $request->name . '%';
+                $q->where('first_name', 'like', $searchTerm)
+                    ->orWhere('middle_name', 'like', $searchTerm)
+                    ->orWhere('last_name', 'like', $searchTerm);
+            });
+        }
+
+        if ($request->filled('parent_name')) {
+            $query->where(function ($q) use ($request) {
+                $searchTerm = '%' . $request->parent_name . '%';
+                $q->where('father_name', 'like', $searchTerm)
+                    ->orWhere('mother_name', 'like', $searchTerm)
+                    ->orWhere('guardian_name', 'like', $searchTerm);
+            });
+        }
+
+        // Global search filter (after all specific filters)
+        if ($request->filled('global_search')) {
+            $searchTerm = '%' . $request->global_search . '%';
+            $query->where(function ($q) use ($searchTerm, $request) {
+                $q->where('first_name', 'like', $searchTerm)
+                    ->orWhere('middle_name', 'like', $searchTerm)
+                    ->orWhere('last_name', 'like', $searchTerm)
+                    ->orWhere('father_name', 'like', $searchTerm)
+                    ->orWhere('mother_name', 'like', $searchTerm)
+                    ->orWhere('guardian_name', 'like', $searchTerm)
+                    ->orWhere('contact_no', 'like', $searchTerm)
+                    ->orWhere('barangay', 'like', $searchTerm)
+                    ->orWhere('municipality', 'like', $searchTerm)
+                    ->orWhere('remarks', 'like', $searchTerm);
+            });
+        }
+
+        // Filter by JPM status (show only JPM members if requested)
+        if ($request->filled('show_jpm_only') && $request->show_jpm_only) {
+            $query->where(function ($q) {
+                $q->where('is_jpm_member', true)
+                    ->orWhere('is_father_jpm', true)
+                    ->orWhere('is_mother_jpm', true)
+                    ->orWhere('is_guardian_jpm', true);
+            });
+        }
+
+        // Get all profiles (no pagination for export)
+        $profiles = $query->get();
+
+        // Calculate summary statistics
+        $summary = [
+            'total_applicants' => $profiles->count(),
+            'male_count' => $profiles->where('gender', 'M')->count(),
+            'female_count' => $profiles->where('gender', 'F')->count(),
+        ];
+
+        // Get export settings
+        $exportFormat = $request->get('export_format', 'xlsx');
+        $paperSize = $request->get('paper_size', 'A4');
+        $orientation = $request->get('orientation', 'landscape');
+
+        // Collect filter information for display in export
+        $filters = [
+            'date_from' => $request->get('date_from', ''),
+            'date_to' => $request->get('date_to', ''),
+            'program' => $request->get('program', ''),
+            'school' => $request->get('school', ''),
+            'course' => $request->get('course', ''),
+            'municipality' => $request->get('municipality', ''),
+            'year_level' => $request->get('year_level', ''),
+            'paper_size' => $paperSize,
+            'orientation' => $orientation,
+            'show_jpm_only' => $request->filled('show_jpm_only') && $request->show_jpm_only,
+        ];
+
+        // Check if user has JPM viewing permission
+        // Disable JPM highlighting when show_jpm_only filter is active
+        $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
+        $canViewJpm = Gate::allows('can-view-jpm') && !$showJpmOnly;
+
+        // Generate filename
+        $filename = 'applicants_export_' . date('Y-m-d_His');
+
+        // Return appropriate format
+        if ($exportFormat === 'pdf') {
+            // Generate HTML from waiting_list_report view
+            $html = view('waiting_list_report', [
+                'profiles' => $profiles,
+                'summary' => [
+                    'total' => $profiles->count(),
+                ],
+                'reportType' => 'list',
+                'filters' => $filters,
+                'canViewJpm' => $canViewJpm,
+            ])->render();
+
+            try {
+                // Use Browsershot for PDF generation
+                $browsershot = Browsershot::html($html)
+                    ->setChromePath($this->getChromePath())
+                    ->showBackground()
+                    ->showBrowserHeaderAndFooter()
+                    ->footerHtml('<div class="report-footer" style="font-size: 9px; color: #444;position:fixed;right:0.5cm;bottom:0.1cm;">
+                        <span>Generated on <span class="date"></span></span>
+                        <span> - Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+                    </div>')
+                    ->margins(4, 4, 4, 4);
+
+                // Set orientation
+                if ($orientation === 'landscape') {
+                    $browsershot->landscape();
+                }
+
+                // Handle paper size
+                if ($paperSize === 'Legal' || $paperSize === 'Long') {
+                    $browsershot->setPaperSize(215.9, 330.2); // Legal/Long size in mm
+                } else {
+                    $browsershot->format($paperSize); // A4, Letter, etc.
+                }
+
+                $pdf = $browsershot->pdf();
+
+                return response($pdf)
+                    ->header('Content-Type', 'application/pdf')
+                    ->header('Content-Disposition', 'inline; filename="' . $filename . '.pdf"');
+            } catch (\Exception $e) {
+                Log::error('PDF generation failed: ' . $e->getMessage());
+                return response()->json([
+                    'error' => true,
+                    'message' => 'PDF generation failed: ' . $e->getMessage()
+                ], 500);
+            }
+        }
+
+        // Excel export using Maatwebsite Excel
+        $export = new \App\Exports\WaitingListExport($profiles, $summary, $filters, 'list', $canViewJpm);
+        return \Maatwebsite\Excel\Facades\Excel::download($export, $filename . '.xlsx');
     }
 
     /**

@@ -146,7 +146,6 @@ class ReportController extends Controller
         }
 
         $filters = [
-            'name' => $request->get('name', ''),
             'program' => $request->get('program', ''),
             'school' => $request->get('school', ''),
             'course' => $request->get('course', ''),
@@ -157,11 +156,14 @@ class ReportController extends Controller
             // 'date_to' => $request->get('date_to', ''),
             'date_filed' => ($request->get('date_from') ? \Carbon\Carbon::parse($request->get('date_from'))->translatedFormat('F d, Y') : '')
                 . ($request->get('date_from') && $request->get('date_to') ? ' to ' : '')
-                . ($request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to'))->translatedFormat('F d, Y') : '')
+                . ($request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to'))->translatedFormat('F d, Y') : ''),
+            'show_jpm_only' => $request->filled('show_jpm_only') && $request->show_jpm_only,
         ];
 
         // Check if user has permission to view JPM highlighting
-        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm');
+        // Disable JPM highlighting when show_jpm_only filter is active
+        $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
+        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && !$showJpmOnly;
 
         $html = View::make('waiting_list_report', [
             'profiles' => $profiles,
@@ -318,11 +320,14 @@ class ReportController extends Controller
             // 'date_to' => $request->get('date_to', ''),
             'date_filed' => ($request->get('date_from') ? \Carbon\Carbon::parse($request->get('date_from'))->translatedFormat('F d, Y') : '')
                 . ($request->get('date_from') && $request->get('date_to') ? ' to ' : '')
-                . ($request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to'))->translatedFormat('F d, Y') : '')
+                . ($request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to'))->translatedFormat('F d, Y') : ''),
+            'show_jpm_only' => $request->filled('show_jpm_only') && $request->show_jpm_only,
         ];
 
         // Check if user has permission to view JPM highlighting
-        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm');
+        // Disable JPM highlighting when show_jpm_only filter is active
+        $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
+        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && !$showJpmOnly;
 
         // Generate filename with current date and time
         $currentDateTime = \Carbon\Carbon::now()->format('Y-m-d_H-i-s');

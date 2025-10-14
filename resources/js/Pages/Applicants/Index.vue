@@ -30,13 +30,20 @@ import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Card from 'primevue/card';
 import Avatar from 'primevue/avatar';
+import Popover from 'primevue/popover';
 
 import ApplicantProfileModal from '@/Pages/Applicants/Modal/ApplicantProfileModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
+import ExportModal from './Modal/ExportModal.vue';
 import PriorityModal from './Modal/PriorityModal.vue';
 import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
 const showReportModal = ref(false);
 const openReportModal = () => { showReportModal.value = true; };
+const showExportModal = ref(false);
+const openExportModal = () => { showExportModal.value = true; };
+
+// Actions popover
+const actionsPopover = ref();
 
 // COURSE MULTISELECT COMPONENT
 // How to use: 1. import component, 2. define model, 3. define scholarshipProgramId (set to null if fetching all course)
@@ -117,6 +124,7 @@ const filter = useForm({
     date_to: props.filter.date_to ? toDate(props.filter.date_to) : null,
     remarks: props.filter.remarks || "",
     global_search: props.filter.global_search || "",
+    show_jpm_only: props.filter.show_jpm_only === true || props.filter.show_jpm_only === 'true' || props.filter.show_jpm_only === '1',
     page: props.filter.page || 1,
 })
 
@@ -173,6 +181,7 @@ const filterList = (resetToPage1 = false) => {
     if (date_to) params.date_to = date_to;
     if (remarks) params.remarks = remarks;
     if (global_search) params.global_search = global_search;
+    if (filter.show_jpm_only) params.show_jpm_only = 1; // Convert to 1 for URL
     params.records = records; // Always include records to persist pagination
     if (sort && Object.values(sort).some(v => v)) params.sort = sort;
     params.page = currentPage;
@@ -196,6 +205,7 @@ const clearFilter = () => {
     filter.date_to = null;
     filter.records = 10;
     filter.global_search = '';
+    filter.show_jpm_only = false;
     filter.page = 1;
     globalFilter.value = ''; // Clear global search
     // Clear URL params by reloading the page with no query params
@@ -266,6 +276,7 @@ watch(() => ({
     remarks: filter.remarks,
     date_from: filter.date_from,
     date_to: filter.date_to,
+    show_jpm_only: filter.show_jpm_only,
     records: filter.records
 }), (newFilter, oldFilter) => {
     if (filterListTimeout) clearTimeout(filterListTimeout);
@@ -618,9 +629,11 @@ const formatDate = (date) => {
             <Toolbar class="mb-4">
                 <template #start>
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-users text-2xl text-blue-600"></i>
+
+                        <i class="pi pi-users text-indigo-900" style="font-size:2rem"></i>
+
                         <div>
-                            <h1 class="text-2xl font-bold text-gray-800">Applicants Management</h1>
+                            <h1 class="text-2xl font-bold text-gray-700">Applicants Management</h1>
                             <p class="text-sm text-gray-600">Manage scholarship applicants and their profiles</p>
                         </div>
                     </div>
@@ -628,25 +641,38 @@ const formatDate = (date) => {
 
                 <template #end>
                     <div class="flex gap-3 items-center">
-                        <!-- JPM Tagging Toggle -->
-                        <div class="flex items-center gap-2" v-if="hasPermission('can-view-jpm')">
-                            <Checkbox v-model="showJpmColumns" inputId="showJpmToggle" binary />
-                            <label for="showJpmToggle" class="text-sm text-gray-600 cursor-pointer">Enable JPM
-                                Tagging</label>
+                        <!-- JPM Controls -->
+                        <div class="flex items-center gap-4" v-if="hasPermission('can-view-jpm')">
+                            <div class="flex items-center gap-2">
+                                <Checkbox v-model="showJpmColumns" inputId="showJpmToggle" binary />
+                                <label for="showJpmToggle" class="text-sm text-gray-600 cursor-pointer">Enable JPM
+                                    Tagging</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <Checkbox v-model="filter.show_jpm_only" inputId="showJpmOnlyToggle" binary />
+                                <label for="showJpmOnlyToggle" class="text-sm text-gray-600 cursor-pointer">Show JPM
+                                    Only</label>
+                            </div>
                         </div>
 
                         <Divider layout="vertical" class="h-6" v-if="hasPermission('can-view-jpm')" />
 
-                        <Button @click="openReportModal" label="Generate Report" icon="pi pi-file-pdf" severity="info"
-                            size="small" />
-                        <Button as="a" label="New" icon="pi pi-user-plus"
+                        <Button as="a" icon="pi pi-user-plus"
                             v-if="hasPermission('create-scholar-profile') && !hasRole('user')" severity="success" :href="route('waitinglist.index', {
                                 action: 'create'
-                            })" raised size="small" />
-                        <Button as="a" label="Existing" icon="pi pi-user"
+                            })" v-tooltip.bottom="'Add New Applicant'" />
+                        <Button icon="pi pi-print" @click="actionsPopover.toggle($event)" severity="info"
+                            v-tooltip.bottom="'Reports & Export'" />
+                        <Popover ref="actionsPopover">
+                            <div class="flex flex-col gap-2 w-48">
+                                <Button @click="openReportModal(); actionsPopover.hide()" label="Generate Report"
+                                    icon="pi pi-file-pdf" severity="secondary" outlined class="justify-start" />
+                            </div>
+                        </Popover>
+                        <!-- <Button as="a" label="Existing" icon="pi pi-user"
                             v-if="hasPermission('create-scholar-profile') && !hasRole('user')"
                             :href="route('waitinglist.index', { action: 'add-existing' })" severity="secondary"
-                            size="small" />
+                            size="small" /> -->
                     </div>
                 </template>
             </Toolbar>
@@ -657,84 +683,81 @@ const formatDate = (date) => {
                 <div class="space-y-3 -mt-6">
                     <!-- Filter Controls Header -->
                     <div class="flex justify-between items-center py-1">
-                        <div class="flex items-center gap-2">
-                            <i class="pi pi-filter text-blue-600"></i>
-                            <h3 class="text-base font-medium text-gray-700">Filters</h3>
+                        <div class="flex items-center gap-3">
+
+                            <Button :label="showAllFilters ? 'Show Basic Filters' : 'Show All Filters'"
+                                icon="pi pi-filter" severity="secondary" size="small" outlined
+                                @click="showAllFilters = !showAllFilters" />
                         </div>
                         <div class="flex items-center gap-3">
-                            <Button :label="showAllFilters ? 'Show Basic Filters' : 'Show All Filters'"
-                                :icon="showAllFilters ? 'pi pi-minus' : 'pi pi-plus'" severity="info" size="small"
-                                outlined @click="showAllFilters = !showAllFilters" />
-                            <Button label="Clear" severity="secondary" size="small" icon="pi pi-times"
-                                @click="clearFilter" outlined />
+                            <Button severity="secondary" outlined size="small" icon="pi pi-history" @click="clearFilter"
+                                v-tooltip.bottom="'Clear Filters'" />
                         </div>
                     </div>
 
                     <!-- All Filters in grouped rows -->
                     <div class="space-y-3">
-                        <!-- Default Filters Row: Program, School, Municipality, Applicant Name -->
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <!-- Default Filters Row: Applicant Name, Program, Date From, Date To -->
+                        <div class="grid grid-cols-2 gap-2 md:grid-cols-4 lg:gap-8">
+                            <div class="flex flex-col">
+                                <label class="text-xs font-medium text-gray-600 mb-1">Applicant Name</label>
+                                <InputText v-model="filter.name" placeholder="Search applicant name..." class="w-full"
+                                    size="small" />
+                            </div>
                             <div class="flex flex-col">
                                 <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
                                 <ProgramSelect v-model="filter.program" label="shortname"
                                     custom-placeholder="All Programs" size="small" class="w-full" />
                             </div>
                             <div class="flex flex-col">
-                                <label class="text-xs font-medium text-gray-600 mb-1">School</label>
-                                <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="All Schools"
+                                <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
+                                <CourseSelect v-model="filter.course" label="shortname" custom-placeholder="All Courses"
                                     size="small" class="w-full" />
                             </div>
                             <div class="flex flex-col">
-                                <label class="text-xs font-medium text-gray-600 mb-1">Municipality</label>
-                                <MunicipalitySelect v-model="filter.municipality"
-                                    custom-placeholder="All Municipalities" size="small" class="w-full" />
-                            </div>
-                            <div class="flex flex-col">
-                                <label class="text-xs font-medium text-gray-600 mb-1">Applicant Name</label>
-                                <InputText v-model="filter.name" placeholder="Search applicant name..." class="w-full"
-                                    size="small" />
+                                <label class="text-xs font-medium text-gray-600 mb-1">Date Filed</label>
+                                <div class="flex gap-2">
+                                    <!-- <FloatLabel label="Date From" class="w-full">
+                                        <DatePicker v-model="filter.date_from" placeholder="Date From" size="small"
+                                            class="w-full" :show-icon="true" date-format="M dd, yy" />
+                                    </FloatLabel> -->
+                                    <InputGroup>
+                                        <InputGroupAddon>
+                                            <span class="text-xs">From</span>
+                                        </InputGroupAddon>
+                                        <DatePicker v-model="filter.date_from" size="small" class="w-full"
+                                            :show-icon="true" iconDisplay="input" date-format="M dd, yy" />
+                                    </InputGroup>
+                                    <InputGroup>
+                                        <InputGroupAddon>
+                                            <span class="text-xs">To</span>
+                                        </InputGroupAddon>
+                                        <DatePicker v-model="filter.date_to" size="small" class="w-full"
+                                            :show-icon="true" iconDisplay="input" date-format="M dd, yy" />
+                                    </InputGroup>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Additional Filters (shown when showAllFilters is true) -->
                         <template v-if="showAllFilters">
-                            <!-- Second Row: Course, Year Level, Parents/Guardian, Remarks -->
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <!-- Second Row: School, Municipality, Course, Year Level -->
+                            <div class="grid grid-cols-2 gap-2 md:grid-cols-4 lg:gap-8">
                                 <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
-                                    <CourseSelect v-model="filter.course" label="shortname"
-                                        custom-placeholder="All Courses" size="small" class="w-full" />
+                                    <label class="text-xs font-medium text-gray-600 mb-1">School</label>
+                                    <SchoolSelect v-model="filter.school" label="shortname"
+                                        custom-placeholder="All Schools" size="small" class="w-full" />
                                 </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Municipality</label>
+                                    <MunicipalitySelect v-model="filter.municipality"
+                                        custom-placeholder="All Municipalities" size="small" class="w-full" />
+                                </div>
+
                                 <div class="flex flex-col">
                                     <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
                                     <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
                                         size="small" class="w-full" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Parents/Guardian</label>
-                                    <InputText v-model="filter.parent_name" placeholder="Search parent/guardian..."
-                                        size="small" class="w-full" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Remarks</label>
-                                    <InputText v-model="filter.remarks" placeholder="Search remarks..." class="w-full"
-                                        size="small" />
-                                </div>
-                            </div>
-
-                            <!-- Third Row: Date Range -->
-                            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2">
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Date From</label>
-                                    <DatePicker v-model="filter.date_from" :manualInput="true" showButtonBar
-                                        @clear-click="filter.date_from = null" placeholder="Start date" size="small"
-                                        class="w-full" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Date To</label>
-                                    <DatePicker v-model="filter.date_to" :manualInput="true" showButtonBar
-                                        @clear-click="filter.date_to = null" placeholder="End date" size="small"
-                                        class="w-full" />
                                 </div>
                             </div>
                         </template>
@@ -743,26 +766,28 @@ const formatDate = (date) => {
             </Panel>
 
             <!-- Applicants DataTable -->
-            <div class="mt-4">
+            <div class="mt-8">
                 <Panel>
                     <!-- Info Bar -->
-                    <div class="md:flex hidden  justify-between items-center mb-4 px-3 bg-gray-50 rounded -mt-2">
-                        <div class="text-sm text-gray-600">
-                            <i class="pi pi-info-circle mr-2"></i>
-                            By default, sequence # is by school per course
-                        </div>
+                    <div class="md:grid hidden grid-cols-3 items-center mb-4 bg-gray-50 rounded -mt-2">
+
                         <div class="flex gap-4 items-center">
-                            <IconField iconPosition="left">
+                            <IconField iconPosition="left" class="w-full">
                                 <InputIcon class="pi pi-search" />
                                 <InputText v-model="globalFilter" placeholder="Search across all fields..."
-                                    class="w-80" />
+                                    class="w-full" />
                             </IconField>
                         </div>
-                        <div class="text-sm text-gray-600">
+                        <div class="text-sm text-gray-600 text-center">
                             Showing
                             <RecordsSelect v-model="filter.records" label="label" class="w-24" size="small" /> of {{
                                 props.profiles_total || 0 }} records
                         </div>
+                        <div class="flex items-center gap-3 justify-end">
+                            <Button @click="openExportModal" label="Export" icon="pi pi-download" severity="info"
+                                size="small" outlined />
+                        </div>
+
                     </div>
 
                     <DataTable :value="applicants" stripedRows showGridlines responsiveLayout="scroll"
@@ -964,19 +989,19 @@ const formatDate = (date) => {
                             <template #body="slotProps">
                                 <div class="flex gap-1 justify-center flex-wrap">
                                     <Button icon="pi pi-check-circle" label="Review" severity="success" size="small"
-                                        outlined v-tooltip.top="'Review Application & View Profile'"
+                                        rounded outlined v-tooltip.top="'Review Application & View Profile'"
                                         @click="openProfileReviewModal(slotProps.data)"
                                         v-if="hasPermission('create-scholar-profile')" />
 
-                                    <Button icon="pi pi-flag" severity="warn" size="small" rounded outlined
+                                    <Button icon="pi pi-star" severity="warn" size="small" rounded outlined
                                         v-tooltip.top="'Assign Priority'" @click="openPriorityModal(slotProps.data)"
                                         v-if="hasPermission('can-manage-priority')" />
 
-                                    <Button icon="pi pi-flag-fill" severity="secondary" size="small" rounded outlined
+                                    <Button icon="pi pi-star-fill" severity="secondary" size="small" rounded outlined
                                         v-tooltip.top="'Remove Priority'" @click="removePriority(slotProps.data)"
                                         v-if="hasPermission('can-manage-priority') && slotProps.data.priority_level && slotProps.data.priority_level !== 'normal'" />
 
-                                    <Button icon="pi pi-user-edit" severity="warning" size="small" rounded outlined
+                                    <Button icon="pi pi-user-edit" severity="help" size="small" rounded outlined
                                         v-tooltip.top="'Edit Applicant'" @click="editApplicant(slotProps.data)" />
                                     <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
                                         v-tooltip.top="'Delete Applicant'"
@@ -1045,6 +1070,8 @@ const formatDate = (date) => {
 
         <!-- Modals -->
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" />
+        <ExportModal :show="showExportModal" @update:show="showExportModal = $event" :filters="filter"
+            :totalRecords="props.profiles_total" />
 
         <!-- Integrated Profile & Review Modal -->
         <Dialog v-model:visible="showProfileReviewModal" modal header="Application Review & Applicant Profile"

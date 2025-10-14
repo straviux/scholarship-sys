@@ -9,8 +9,10 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithDrawings;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
-class WaitingListExport implements FromView, ShouldAutoSize, WithEvents
+class WaitingListExport implements FromView, ShouldAutoSize, WithEvents, WithDrawings
 {
     protected $profiles;
     protected $filters;
@@ -45,7 +47,7 @@ class WaitingListExport implements FromView, ShouldAutoSize, WithEvents
                 // Style the entire data range (A1 to the last cell)
                 $highestRow = $event->sheet->getHighestRow();
                 $highestColumn = $event->sheet->getHighestColumn();
-                $cellRange = 'A1:' . $highestColumn . $highestRow;
+                $cellRange = 'A7:' . $highestColumn . $highestRow;
 
                 $event->sheet->getStyle($cellRange)->applyFromArray([
                     'borders' => [
@@ -57,20 +59,26 @@ class WaitingListExport implements FromView, ShouldAutoSize, WithEvents
                 ]);
 
                 // Style the header row with a bold font and a background color
-                $headerRow = $this->reportType === 'summary' ? 1 : 2;
-                $event->sheet->getStyle('A' . $headerRow . ':' . $highestColumn . $headerRow)->applyFromArray([
-                    'font' => [
-                        'bold' => true,
-                    ],
-                    'fill' => [
-                        'fillType' => Fill::FILL_SOLID,
-                        'color' => ['rgb' => 'E0E0E0'],
-                    ],
-                ]);
+                // $headerRow = $this->reportType === 'summary' ? 1 : 2;
+                // $event->sheet->getStyle('A' . $headerRow . ':' . $highestColumn . $headerRow)->applyFromArray([
+                //     'font' => [
+                //         'bold' => true,
+                //     ],
+                //     'fill' => [
+                //         'fillType' => Fill::FILL_SOLID,
+                //         'color' => ['rgb' => 'E0E0E0'],
+                //     ],
+                // ]);
 
                 // Apply JPM highlighting for list reports (only if user has permission)
                 if ($this->reportType === 'list' && $this->canViewJpm) {
-                    $dataStartRow = 3; // Data starts from row 3 (after title and header)
+                    // Data starts at row 8:
+                    // Rows 1-4: Organization header table (Republic, Provincial Govt, Akbay, Programang)
+                    // Row 5: "Waiting List" title row
+                    // Row 6: Column headers (#, Seq, Name, etc.)
+                    // Row 7: (empty/spacing)
+                    // Row 8+: Actual data rows
+                    $dataStartRow = 8;
                     $sortedProfiles = $this->profiles->sortBy(function ($profile) {
                         $dateFiled = optional($profile->scholarshipGrant->first())->date_filed;
                         return [$dateFiled, $profile->created_at];
@@ -96,5 +104,26 @@ class WaitingListExport implements FromView, ShouldAutoSize, WithEvents
                 }
             },
         ];
+    }
+
+    public function drawings()
+    {
+
+
+        $drawing = new Drawing();
+        $drawing->setName('PGL Logo');
+        $drawing->setDescription('PGP Logo');
+        $drawing->setPath(public_path('images/pgp-logo.png')); // Path to your logo file
+        $drawing->setHeight(80); // Set the height of the logo
+        $drawing->setCoordinates('A1'); // Positioning the logo at cell A1
+
+        $drawing2 = new Drawing();
+        $drawing2->setName('Yakap Logo');
+        $drawing2->setDescription('Yakap Logo');
+        $drawing2->setPath(public_path('images/yakap-logo.png'));
+        $drawing2->setHeight(80);
+        $drawing2->setCoordinates('K1'); // Position at last column, row 1
+
+        return [$drawing, $drawing2];
     }
 }

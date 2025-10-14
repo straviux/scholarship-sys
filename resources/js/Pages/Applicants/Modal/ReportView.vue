@@ -104,7 +104,8 @@
                             <tr v-for="(item, idx) in report.data" :key="idx"
                                 :style="isJpm(item) ? 'background-color: #d1fae5;' : ''" class="hover:bg-gray-100">
                                 <td class="border border-gray-300 px-3 py-2">
-                                    {{ (item.first_name + ' ' + item.last_name).toUpperCase() }}
+                                    {{ (item.last_name + ', ' + item.first_name + ' ' + item.middle_name).toUpperCase()
+                                    }}
                                 </td>
                                 <td class="border border-gray-300 px-3 py-2">
                                     <span v-if="item.municipality">{{ item.municipality.toUpperCase() }}</span>

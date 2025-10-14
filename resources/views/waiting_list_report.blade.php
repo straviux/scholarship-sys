@@ -136,10 +136,12 @@
     <div class="filters" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: flex-start; margin-bottom: 1rem; background: #f1f5f9;">
         <span class="badge" style="color:#444;">Report type: {{ ucfirst($reportType) }}</span>
         @foreach($filters as $key => $value)
-        @if($value)
+        @if($value && !in_array($key, ['paper_size', 'orientation']))
         <span style="font-size:1.5em;color:#c2c2c2;vertical-align:middle;margin:0 0.2em;">|</span>
         @if($key === 'program' && isset($profiles) && count($profiles) && optional($profiles->first()->scholarshipGrant->first())->program)
         <span class="badge" style="color:#444;">Program: {{ optional($profiles->first()->scholarshipGrant->first())->program->name }}</span>
+        @elseif($key === 'show_jpm_only' && $value)
+        <span class="badge" style="color:#444;">Member: JPM</span>
         @else
         <span class="badge" style="color:#444;">{{ ucfirst(str_replace('_', ' ', $key)) }}: {{ $value }}</span>
         @endif
