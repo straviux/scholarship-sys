@@ -849,54 +849,144 @@ class ScholarshipProfileController extends Controller
             }
         ])->whereHas('scholarshipGrant'); // Only profiles that have scholarship records
 
-        // Apply filters
-        if ($request->filled('program_id')) {
+        // Handle profile_type filter
+        $profileType = $request->get('profile_type', 'all');
+
+        if ($profileType === 'existing') {
+            // Filter for approved profiles (approved, auto_approved, conditionally_approved)
+            $query->whereHas('scholarshipGrant', function ($q) {
+                $q->whereIn('approval_status', ['approved', 'auto_approved', 'conditionally_approved']);
+            });
+        } elseif ($profileType === 'declined') {
+            // Filter for declined profiles
+            $query->whereHas('scholarshipGrant', function ($q) {
+                $q->where('approval_status', 'declined');
+            });
+        } else {
+            // For 'all' - apply approval_status filter if provided
+            if ($request->filled('approval_status')) {
+                $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                    $q->where('approval_status', $request->approval_status);
+                });
+            }
+        }
+
+        // Filter by program
+        if ($request->filled('program')) {
+            $query->whereHas('scholarshipGrant.program', function ($q) use ($request) {
+                $q->where('shortname', 'like', '%' . $request->program . '%')
+                    ->orWhere('name', 'like', '%' . $request->program . '%');
+            });
+        }
+
+        // Filter by school
+        if ($request->filled('school')) {
+            $query->whereHas('scholarshipGrant.school', function ($q) use ($request) {
+                $q->where('shortname', 'like', '%' . $request->school . '%')
+                    ->orWhere('name', 'like', '%' . $request->school . '%');
+            });
+        }
+
+        // Filter by course
+        if ($request->filled('course')) {
+            $query->whereHas('scholarshipGrant.course', function ($q) use ($request) {
+                $q->where('shortname', 'like', '%' . $request->course . '%')
+                    ->orWhere('name', 'like', '%' . $request->course . '%');
+            });
+        }
+
+        // Filter by year_level
+        if ($request->filled('year_level')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->where('program_id', $request->program_id);
+                $q->where('year_level', 'like', '%' . $request->year_level . '%');
             });
         }
 
-        if ($request->filled('approval_status')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->where('approval_status', $request->approval_status);
+        // Filter by municipality
+        if ($request->filled('municipality')) {
+            $query->where('municipality', 'like', '%' . $request->municipality . '%');
+        }
+
+        // Filter by name
+        if ($request->filled('name')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('first_name', 'like', '%' . $request->name . '%')
+                    ->orWhere('last_name', 'like', '%' . $request->name . '%')
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $request->name . '%'])
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ['%' . $request->name . '%'])
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name, ' ', middle_name) LIKE ?", ['%' . $request->name . '%']);
             });
         }
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('middle_name', 'like', "%{$search}%")
-                    ->orWhere('unique_id', 'like', "%{$search}%");
+        // Global search across multiple fields
+        if ($request->filled('global_search')) {
+            $searchTerm = $request->global_search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('first_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('middle_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('extension_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('municipality', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('barangay', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('contact_no', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%')
+                    ->orWhereHas('scholarshipGrant.school', function ($schoolQuery) use ($searchTerm) {
+                        $schoolQuery->where('schools.name', 'like', '%' . $searchTerm . '%')
+                            ->orWhere('schools.shortname', 'like', '%' . $searchTerm . '%');
+                    })
+                    ->orWhereHas('scholarshipGrant.course', function ($courseQuery) use ($searchTerm) {
+                        $courseQuery->where('courses.name', 'like', '%' . $searchTerm . '%')
+                            ->orWhere('courses.shortname', 'like', '%' . $searchTerm . '%');
+                    })
+                    ->orWhereHas('scholarshipGrant.program', function ($programQuery) use ($searchTerm) {
+                        $programQuery->where('scholarship_programs.name', 'like', '%' . $searchTerm . '%')
+                            ->orWhere('scholarship_programs.shortname', 'like', '%' . $searchTerm . '%');
+                    })
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $searchTerm . '%'])
+                    ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ['%' . $searchTerm . '%']);
             });
         }
 
+        // Pagination
+        $perPage = $request->get('records', 10);
         $profiles = $query->orderBy('updated_at', 'desc')
-            ->paginate($request->get('per_page', 15));
+            ->paginate($perPage)
+            ->withQueryString();
 
         // Transform data to include latest scholarship record info
         $profiles->getCollection()->transform(function ($profile) {
             $latestRecord = $profile->scholarshipGrant->first();
             $profile->latest_scholarship_record = $latestRecord;
-            $profile->total_scholarships = $profile->scholarshipGrant->count();
-            unset($profile->scholarshipGrant); // Remove to avoid confusion
+            $profile->total_scholarships = $profile->scholarshipGrant()->count();
             return $profile;
         });
 
         // Get filter options
-        $programs = ScholarshipProgram::select('id', 'name')->get();
+        $programs = ScholarshipProgram::select('id', 'name', 'shortname')->get();
         $approvalStatuses = collect(config('scholarship.approval_statuses'))
             ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label']])
             ->values()
             ->toArray();
 
-        return Inertia::render('Scholarship/Profiles', [
+        return Inertia::render('Scholarship/Index', [
             'profiles' => $profiles,
-            'filters' => $request->only(['approval_status', 'program_id', 'search']),
+            'filters' => $request->only([
+                'approval_status',
+                'profile_type',
+                'name',
+                'program',
+                'school',
+                'course',
+                'municipality',
+                'year_level',
+                'global_search',
+                'records',
+                'page'
+            ]),
             'programs' => $programs,
             'approvalStatuses' => $approvalStatuses,
             'declineReasons' => config('scholarship.decline_reasons'),
+            'profiles_total' => $profiles->total(),
         ]);
     }
 
@@ -997,72 +1087,6 @@ class ScholarshipProfileController extends Controller
 
             return back()->with('error', 'Failed to update conditional approval: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Display completed scholarships
-     */
-    public function completions(Request $request)
-    {
-        $query = ScholarshipRecord::with([
-            'profile:profile_id,first_name,last_name,middle_name',
-            'course:id,name,shortname',
-            'program', // Remove field selection for hasOneThrough relationship 
-            'school:id,name,shortname',
-            'completion.verifiedBy:id,name'
-        ])->where('completion_status', 'completed');
-
-        if ($request->filled('program_id')) {
-            $query->where('program_id', $request->program_id);
-        }
-
-        if ($request->filled('year')) {
-            $query->whereYear('completion_date', $request->year);
-        }
-
-        $completions = $query->orderBy('completion_date', 'desc')
-            ->paginate($request->get('per_page', 15));
-
-        $programs = ScholarshipProgram::select('id', 'name')->get();
-        $years = ScholarshipRecord::whereNotNull('completion_date')
-            ->selectRaw('YEAR(completion_date) as year')
-            ->distinct()
-            ->orderBy('year', 'desc')
-            ->pluck('year');
-
-        return Inertia::render('Scholarship/Completions', [
-            'completions' => $completions,
-            'filters' => $request->only(['program_id', 'year']),
-            'programs' => $programs,
-            'years' => $years,
-        ]);
-    }
-
-    /**
-     * Display renewal applications
-     */
-    public function renewals(Request $request)
-    {
-        $query = ScholarshipRecord::with([
-            'profile:profile_id,first_name,last_name,middle_name',
-            'course:id,name,shortname',
-            'program', // Remove field selection for hasOneThrough relationship
-            'school:id,name,shortname',
-            'previousScholarship.course:id,name',
-            'previousScholarship.program' // Remove field selection for hasOneThrough relationship
-        ])->whereNotNull('previous_scholarship_id');
-
-        if ($request->filled('approval_status')) {
-            $query->where('approval_status', $request->approval_status);
-        }
-
-        $renewals = $query->orderBy('created_at', 'desc')
-            ->paginate($request->get('per_page', 15));
-
-        return Inertia::render('Scholarship/Renewals', [
-            'renewals' => $renewals,
-            'filters' => $request->only(['approval_status']),
-        ]);
     }
 
     /**

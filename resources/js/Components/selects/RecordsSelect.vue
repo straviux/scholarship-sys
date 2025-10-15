@@ -5,7 +5,7 @@ import Select from 'primevue/select';
 const props = defineProps({
     modelValue: {
         type: [String, Number],
-        default: 10,
+        default: null,
     },
     customPlaceholder: {
         type: String,
@@ -34,7 +34,7 @@ const recordsOptions = [
     { label: '5', value: 5 }
 ];
 
-const localValue = ref(parseInt(props.modelValue) || 10);
+const localValue = ref(props.modelValue ? parseInt(props.modelValue) : null);
 
 console.log('RecordsSelect - Initial props.modelValue:', props.modelValue, 'Type:', typeof props.modelValue);
 console.log('RecordsSelect - Initial localValue:', localValue.value);
@@ -42,7 +42,7 @@ console.log('RecordsSelect - Initial localValue:', localValue.value);
 // Sync localValue with parent prop
 watch(() => props.modelValue, (val) => {
     console.log('RecordsSelect - modelValue changed from parent:', val, 'Type:', typeof val);
-    localValue.value = parseInt(val) || 10;
+    localValue.value = val ? parseInt(val) : null;
 }, { immediate: true });
 
 // Emit changes to parent
@@ -54,11 +54,11 @@ watch(localValue, (val) => {
 onMounted(() => {
     console.log('RecordsSelect mounted with modelValue:', props.modelValue);
     // Ensure localValue is initialized correctly
-    localValue.value = props.modelValue;
+    localValue.value = props.modelValue ? parseInt(props.modelValue) : null;
 });
 </script>
 
 <template>
     <Select v-model="localValue" :options="recordsOptions" optionLabel="label" optionValue="value"
-        :placeholder="customPlaceholder" :size="size" :class="class" />
+        :placeholder="customPlaceholder" :size="size" :class="class" showClear />
 </template>

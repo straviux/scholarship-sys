@@ -106,6 +106,10 @@ const activityLabel = computed(() => {
     return latestActivityDate ? 'Latest encoding activity' : 'Last login';
 });
 
+const encodedToday = computed(() => {
+    return userApplications.value?.today || 0;
+});
+
 // Change password methods
 const openChangePasswordModal = () => {
     changePasswordForm.reset();
@@ -470,14 +474,35 @@ const confirmImageEdit = () => {
                 </div>
 
                 <!-- Statistics Dashboard -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+
+                    <!-- Encoded Today -->
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Encoded Today</p>
+                                <p class="text-3xl font-bold text-blue-600">
+                                    {{ encodedToday }}
+                                </p>
+                            </div>
+                            <div
+                                class="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Total Applications Encoded -->
                     <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm font-medium text-gray-600">Total Applications Encoded</p>
+                                <p class="text-sm font-medium text-gray-600">Total Encoded</p>
                                 <p class="text-3xl font-bold text-indigo-600">
-                                    {{ (userApplications.total_created || 0) + (userApplications.total_updated || 0) }}
+                                    {{ (userApplications.total_created || 0) }}
                                 </p>
                             </div>
                             <div
@@ -534,8 +559,8 @@ const confirmImageEdit = () => {
                     <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm font-medium text-gray-600">{{ activityLabel }}</p>
-                                <p class="text-sm font-bold text-gray-800">
+                                <p class="text-xs font-medium text-gray-600">{{ activityLabel }}</p>
+                                <p class="text-xs font-bold text-gray-800 mt-1">
                                     {{ latestActivity ? formatDate(latestActivity) : 'No activity' }}
                                 </p>
                             </div>

@@ -133,20 +133,6 @@ function getRoleDisplay() {
                                         <span class="-mr-1 font-medium">Records</span>
                                     </SidebarLink>
                                 </li>
-                                <li>
-                                    <SidebarLink :href="route('scholarship.completions')"
-                                        :active="route().current('scholarship.completions')">
-                                        <i class="pi pi-check-circle mr-2 text-sm"></i>
-                                        <span class="-mr-1 font-medium">Completions</span>
-                                    </SidebarLink>
-                                </li>
-                                <li>
-                                    <SidebarLink :href="route('scholarship.renewals')"
-                                        :active="route().current('scholarship.renewals')">
-                                        <i class="pi pi-refresh mr-2 text-sm"></i>
-                                        <span class="-mr-1 font-medium">Renewals</span>
-                                    </SidebarLink>
-                                </li>
                             </ul>
                         </details>
                     </li>
@@ -180,7 +166,7 @@ function getRoleDisplay() {
                                 </li>
                                 <li>
                                     <SidebarLink :href="route('program_requirements.index')"
-                                        :active="route().current('program_requirements.index')">
+                                        :active="route().current('program_requirements.index') ">
                                         <i class="pi pi-list mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Requirements</span>
                                     </SidebarLink>
@@ -264,28 +250,8 @@ function getRoleDisplay() {
                         </SidebarLink>
                     </li>
                     <li>
-                        <SidebarLink :href="route('scholarship.completions')"
-                            :active="route().current('scholarship.completions')"
-                            class="flex flex-col justify-center text-center">
-
-                            <i class="pi pi-check-circle text-xl"></i>
-                            <span class="text-xs">completions</span>
-
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('scholarship.renewals')"
-                            :active="route().current('scholarship.renewals')"
-                            class="flex flex-col justify-center text-center">
-
-                            <i class="pi pi-refresh text-xl"></i>
-                            <span class="text-xs">renewals</span>
-
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('admin.system-updates')"
-                            :active="route().current('admin.system-updates')"
+                        <SidebarLink :href="route('admin.system-updates') "
+                            :active="route().current('admin.system-updates') "
                             class="flex flex-col justify-center text-center">
 
                             <i class="pi pi-bell text-xl"></i>

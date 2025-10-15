@@ -130,6 +130,20 @@ class CreateScholarshipProfileRequest extends FormRequest
                 'string',
                 'max:100'
             ],
+            "date_of_birth" => [
+                'nullable',
+                'date',
+            ],
+            "gender" => [
+                'nullable',
+                'string',
+                'max:10'
+            ],
+            "place_of_birth" => [
+                'nullable',
+                'string',
+                'max:50'
+            ],
             "civil_status" => [
                 'nullable',
                 'string',
@@ -140,10 +154,10 @@ class CreateScholarshipProfileRequest extends FormRequest
                 'string',
                 'max:50'
             ],
-            "gender" => [
+            "indigenous_group" => [
                 'nullable',
                 'string',
-                'max:10'
+                'max:100'
             ],
             // "applied_year_level" => [
             //     'nullable',

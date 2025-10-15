@@ -131,19 +131,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/debug/completion-statuses', [ScholarshipProfileController::class, 'debugCompletionStatuses'])
         ->name('debug.completion-statuses');
 
-    // Scholarship completion routes
-    Route::get('/scholarship/completions', [ScholarshipProfileController::class, 'completions'])
-        ->name('scholarship.completions');
-
-    Route::post('/scholarship/{record}/complete', [ScholarshipProfileController::class, 'markCompleted'])
-        ->name('scholarship.complete');
-
-    Route::get('/scholarship/renewals', [ScholarshipProfileController::class, 'renewals'])
-        ->name('scholarship.renewals');
-
-    Route::post('/scholarship/{record}/apply-next', [ScholarshipProfileController::class, 'applyNext'])
-        ->name('scholarship.apply-next');
-
     // Enhanced approval workflow
     Route::post('/scholarship/{record}/approve-enhanced', [ScholarshipProfileController::class, 'approveEnhanced'])
         ->name('scholarship.approve-enhanced');
