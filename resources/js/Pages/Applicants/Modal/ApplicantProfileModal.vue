@@ -124,19 +124,15 @@
                                                     <div>
                                                         <InputLabel class="mb-1" for="municipality"
                                                             value="Municipality" />
-                                                        <VueMultiselect v-model="form.selected_municipality"
-                                                            :options="municipalitiesOptions" :close-on-select="true"
-                                                            :show-labels="false" placeholder="Select Municipality"
-                                                            label="name" @select="resetBarangay" track-by="name"
-                                                            class="mt-1" />
+                                                        <MunicipalitySelect v-model="form.municipality"
+                                                            custom-placeholder="Select Municipality" />
                                                         <InputError class="mt-1" :message="form.errors.municipality" />
                                                     </div>
                                                     <div>
                                                         <InputLabel class="mb-1" for="barangay" value="Barangay" />
-                                                        <VueMultiselect v-model="form.selected_barangay"
-                                                            :options="barangayOptions" :close-on-select="true"
-                                                            :show-labels="false" placeholder="Select Barangay"
-                                                            label="name" track-by="name" class="mt-1" />
+                                                        <BarangaySelect v-model="form.barangay"
+                                                            :municipality="form.municipality"
+                                                            custom-placeholder="Select Barangay" />
                                                         <InputError class="mt-1" :message="form.errors.barangay" />
                                                     </div>
                                                     <div>
@@ -401,7 +397,6 @@ import VueMultiselect from "vue-multiselect";
 import { XMarkIcon } from "@heroicons/vue/20/solid";
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
-import municipalities from '@/Data/municipalities.json';
 
 // COURSE MULTISELECT COMPONENT
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
@@ -410,6 +405,8 @@ import TermSelect from "@/Components/selects/TermSelect.vue";
 import ProfileSelect from "@/Components/selects/ProfileSelect.vue";
 import AcademicYearSelect from "@/Components/selects/AcademicYearSelect.vue";
 import SchoolSelect from "@/Components/selects/SchoolSelect.vue";
+import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
+import BarangaySelect from '@/Components/selects/BarangaySelect.vue';
 
 const props = defineProps({
     profile: Object,
@@ -424,15 +421,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close']);
-
-const mncplt = ref(municipalities.municipalities);
-const municipalitiesOptions = ref(mncplt.value.map(m => ({
-    label: m.name,
-    name: m.name,
-    value: m.name,
-})));
-
-const barangayOptions = ref([]);
 
 const isOpen = computed(() => props.action == 'create' || props.action == 'update' || props.action == 'add-existing');
 // console.log(props.profile?.scholarship_grant[0].year_level);
@@ -471,10 +459,8 @@ const form = useForm({
     mother_name: props.profile?.mother_name || "",
     mother_occupation: props.profile?.mother_occupation || "",
     mother_contact_no: props.profile?.mother_contact_no || "",
-    selected_municipality: { name: props.profile?.municipality || "" } || "",
-    municipality: props.profile?.municipality || "",
-    barangay: props.profile?.barangay || "",
-    selected_barangay: { name: props.profile?.barangay || "" } || "",
+    municipality: props.profile?.municipality || null,
+    barangay: props.profile?.barangay || null,
     address: props.profile?.address || "",
     contact_no: props.profile?.contact_no || "",
     email: props.profile?.email || "",
@@ -490,23 +476,6 @@ const form = useForm({
     guardian_occupation: props.profile?.guardian_occupation || "",
     parents_guardian_gross_monthly_income: props.profile?.parents_guardian_gross_monthly_income || "",
 });
-
-
-watch(form, (newValue) => {
-    if (newValue.selected_municipality.value) {
-        barangayOptions.value = mncplt.value.find(m => m.name == newValue.selected_municipality.value).barangays.map(b => ({
-            name: b,
-            label: b,
-            value: b
-        }));
-    } else {
-
-        barangayOptions.value = [];
-    }
-    // console.log(form.selectedProfile)
-}, { deep: true });
-
-
 
 
 const hasPendingOrOngoing = computed(() => {
@@ -539,10 +508,8 @@ watch(() => form.selectedProfile, (profile) => {
         form.guardian_relationship = profile.profile.guardian_relationship || '';
         form.guardian_name = profile.profile.guardian_name || '';
         form.guardian_contact_no = profile.profile.guardian_contact_no || '';
-        form.municipality = profile.profile.municipality || '';
-        form.selected_municipality = { name: profile.profile.municipality || '' };
-        form.barangay = profile.profile.barangay || '';
-        form.selected_barangay = { name: profile.profile.barangay || '' };
+        form.municipality = profile.profile.municipality || null;
+        form.barangay = profile.profile.barangay || null;
         form.address = profile.profile.address || '';
         form.contact_no = profile.profile.contact_no || '';
         form.email = profile.profile.email || '';
@@ -552,10 +519,6 @@ watch(() => form.selectedProfile, (profile) => {
     }
 });
 
-const resetBarangay = () => {
-    form.selected_barangay = "";
-};
-
 const page = usePage();
 const prevPage = ref(page.props.urlPrev);
 
@@ -564,8 +527,22 @@ const submit = (closeAfter = false) => {
     form.first_name = form.first_name.toUpperCase();
     form.middle_name = form.middle_name.toUpperCase();
     form.extension_name = form.extension_name.toUpperCase();
-    form.municipality = form.selected_municipality.name.toUpperCase();
-    form.barangay = form.selected_barangay?.name ? form.selected_barangay?.name.toUpperCase() : '';
+    // Municipality and barangay are already objects from the select components
+    // Extract the name property if they are objects
+    if (typeof form.municipality === 'object' && form.municipality?.name) {
+        form.municipality = form.municipality.name.toUpperCase();
+    } else if (typeof form.municipality === 'string') {
+        form.municipality = form.municipality.toUpperCase();
+    }
+
+    if (typeof form.barangay === 'object' && form.barangay?.name) {
+        form.barangay = form.barangay.name.toUpperCase();
+    } else if (typeof form.barangay === 'string' && form.barangay) {
+        form.barangay = form.barangay.toUpperCase();
+    } else {
+        form.barangay = '';
+    }
+
     form.father_name = form.father_name.toUpperCase();
     form.mother_name = form.mother_name.toUpperCase();
     // Handle empty academic info - only set if values exist
