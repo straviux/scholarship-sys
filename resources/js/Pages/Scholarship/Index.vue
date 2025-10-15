@@ -32,8 +32,8 @@
 
                 <template #end>
                     <div class="flex gap-3 items-center">
-                        <Button label="Add Record" icon="pi pi-plus" @click="addRecordPopover.toggle($event)"
-                            severity="success" v-tooltip.bottom="'Add New Record'" />
+                        <Button icon="pi pi-plus" @click="addRecordPopover.toggle($event)" severity="success"
+                            v-tooltip.bottom="'Add New Record'" />
                         <Popover ref="addRecordPopover">
                             <div class="flex flex-col gap-2 w-48">
                                 <Button @click="openAddApplicantModal" label="Add Applicant" icon="pi pi-user-plus"

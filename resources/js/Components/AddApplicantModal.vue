@@ -1,10 +1,10 @@
 <template>
-    <Dialog :visible="visible" modal header="Add New Applicant" :style="{ width: '90vw', maxWidth: '800px' }"
-        @update:visible="handleVisibilityChange">
+    <Dialog :visible="visible" modal header="Add New Applicant" :style="{ width: '90vw', maxWidth: '50vw' }"
+        @update:visible="handleVisibilityChange" :maximizable="true">
         <template #header>
             <div class="flex items-center gap-2">
                 <i class="pi pi-user-plus text-lg text-green-600"></i>
-                <span class="font-semibold">Add New Applicant</span>
+                <span class="font-semibold text-xl">New Applicant</span>
             </div>
         </template>
 
@@ -14,7 +14,7 @@
                 details later.
             </p>
 
-            <PersonalInformationFields v-model="personalInfo" :show-header="false" />
+            <PersonalInformationFields v-model="personalInfo" :show-header="true" />
 
             <div class="bg-blue-50 border border-blue-200 rounded p-3">
                 <p class="text-sm text-blue-800">
@@ -64,6 +64,9 @@ const form = useForm({
     civil_status: '',
     religion: '',
     indigenous_group: '',
+    municipality: null,
+    barangay: null,
+    address: '',
 });
 
 // Computed property for two-way binding with PersonalInformationFields
@@ -82,6 +85,9 @@ const personalInfo = computed({
         civil_status: form.civil_status,
         religion: form.religion,
         indigenous_group: form.indigenous_group,
+        municipality: form.municipality,
+        barangay: form.barangay,
+        address: form.address,
     }),
     set: (value) => {
         form.first_name = value.first_name;
@@ -97,6 +103,9 @@ const personalInfo = computed({
         form.civil_status = value.civil_status;
         form.religion = value.religion;
         form.indigenous_group = value.indigenous_group;
+        form.municipality = value.municipality;
+        form.barangay = value.barangay;
+        form.address = value.address;
     }
 });
 

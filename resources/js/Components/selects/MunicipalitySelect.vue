@@ -1,6 +1,5 @@
 <script setup>
 import { ref, watch } from 'vue';
-import Multiselect from 'vue-multiselect';
 import municipalitiesData from '@/Data/municipalities.json';
 
 const props = defineProps({
@@ -76,5 +75,3 @@ watch(
         </template>
     </Select>
 </template>
-
-<style src="vue-multiselect/dist/vue-multiselect.css"></style>

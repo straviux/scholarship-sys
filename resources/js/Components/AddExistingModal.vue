@@ -103,6 +103,8 @@ const form = useForm({
     course: null,
     year_level: null,
     municipality: null,
+    barangay: null,
+    address: '',
 });
 
 // Computed property for two-way binding with PersonalInformationFields
@@ -121,6 +123,9 @@ const personalInfo = computed({
         civil_status: form.civil_status,
         religion: form.religion,
         indigenous_group: form.indigenous_group,
+        municipality: form.municipality,
+        barangay: form.barangay,
+        address: form.address,
     }),
     set: (value) => {
         form.first_name = value.first_name;
@@ -136,6 +141,9 @@ const personalInfo = computed({
         form.civil_status = value.civil_status;
         form.religion = value.religion;
         form.indigenous_group = value.indigenous_group;
+        form.municipality = value.municipality;
+        form.barangay = value.barangay;
+        form.address = value.address;
     }
 });
 

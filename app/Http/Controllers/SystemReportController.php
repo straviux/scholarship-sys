@@ -563,6 +563,10 @@ class SystemReportController extends Controller
         $recentApplications = ScholarshipRecord::where('created_by', $userId)
             ->where('created_at', '>=', now()->startOfMonth())->count();
 
+        // Get applications created today
+        $todayApplications = ScholarshipRecord::where('created_by', $userId)
+            ->whereDate('created_at', now()->toDateString())->count();
+
         // Get most active months for this user
         $monthlyActivity = ScholarshipRecord::where('created_by', $userId)
             ->select(DB::raw('YEAR(created_at) as year'), DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as count'))
@@ -578,6 +582,7 @@ class SystemReportController extends Controller
                 'total_created' => $applicationsCreated,
                 'total_updated' => $applicationsUpdated,
                 'recent_created' => $recentApplications,
+                'today' => $todayApplications,
             ],
             'summary' => [
                 'total_encoded' => $applicationsCreated,
