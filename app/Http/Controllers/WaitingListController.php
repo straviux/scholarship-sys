@@ -28,14 +28,19 @@ class WaitingListController extends Controller
 
         $programId = ScholarshipProgram::where('shortname', $request->get('program'))->first()?->id;
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant', 'priorityAssignedBy'])
-            ->whereHas('scholarshipGrant', function ($q) use ($programId) {
-                $q->where('scholarship_status', 0)
-                    ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
-                    ->orderBy('date_filed', 'asc')
-                    ->orderBy('created_at', 'asc');
-                if ($programId) {
-                    $q->where('program_id', $programId);
-                }
+            ->where(function ($q) use ($programId) {
+                // Include profiles with scholarship grants (pending status)
+                $q->whereHas('scholarshipGrant', function ($subQ) use ($programId) {
+                    $subQ->where('scholarship_status', 0)
+                        ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
+                        ->orderBy('date_filed', 'asc')
+                        ->orderBy('created_at', 'asc');
+                    if ($programId) {
+                        $subQ->where('program_id', $programId);
+                    }
+                })
+                    // OR include profiles marked as on waiting list (even without scholarship grants)
+                    ->orWhere('is_on_waiting_list', true);
             });
 
         // Filter by date range (date_filed) from scholarshipGrant relation
@@ -213,12 +218,15 @@ class WaitingListController extends Controller
 
             // Get all profile IDs for this program
             $programIds = ScholarshipProfile::with(['scholarshipGrant'])
-                ->whereHas('scholarshipGrant', function ($q) use ($program_id) {
-                    $q->where('scholarship_status', 0)
-                        ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
-                    if ($program_id) {
-                        $q->where('program_id', $program_id);
-                    }
+                ->where(function ($q) use ($program_id) {
+                    $q->whereHas('scholarshipGrant', function ($subQ) use ($program_id) {
+                        $subQ->where('scholarship_status', 0)
+                            ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
+                        if ($program_id) {
+                            $subQ->where('program_id', $program_id);
+                        }
+                    })
+                        ->orWhere('is_on_waiting_list', true);
                 })
                 ->orderBy('date_filed', 'asc')
                 ->orderBy('created_at', 'asc')
@@ -230,16 +238,25 @@ class WaitingListController extends Controller
             $dateFiled = null;
             if ($profile->scholarshipGrant && count($profile->scholarshipGrant) > 0) {
                 $dateFiled = $profile->scholarshipGrant[0]->date_filed;
+            } else {
+                // Use date_filed from profile if no scholarship grant
+                $dateFiled = $profile->date_filed;
             }
             if ($dateFiled) {
                 $dailyIds = ScholarshipProfile::with(['scholarshipGrant'])
-                    ->whereHas('scholarshipGrant', function ($q) use ($dateFiled, $program_id) {
-                        $q->whereDate('date_filed', $dateFiled)
-                            ->where('scholarship_status', 0)
-                            ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
-                        if ($program_id) {
-                            $q->where('program_id', $program_id);
-                        }
+                    ->where(function ($q) use ($dateFiled, $program_id) {
+                        $q->whereHas('scholarshipGrant', function ($subQ) use ($dateFiled, $program_id) {
+                            $subQ->whereDate('date_filed', $dateFiled)
+                                ->where('scholarship_status', 0)
+                                ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
+                            if ($program_id) {
+                                $subQ->where('program_id', $program_id);
+                            }
+                        })
+                            ->orWhere(function ($subQ) use ($dateFiled) {
+                                $subQ->where('is_on_waiting_list', true)
+                                    ->whereDate('date_filed', $dateFiled);
+                            });
                     })
                     ->orderBy('date_filed', 'asc')
                     ->orderBy('created_at', 'asc')

@@ -311,8 +311,7 @@
                                                             custom-class="uppercase"
                                                             v-model="form.applied_school" /> -->
                                                         <SchoolSelect v-model="form.school" label="name" />
-                                                        <InputError class="mt-2" :message="form.errors.school"
-                                                            v-if="!form.applied_school" />
+                                                        <InputError class="mt-2" :message="form.errors.school" />
                                                     </div>
 
                                                     <div class="w-full">
@@ -320,8 +319,7 @@
 
                                                         <CourseSelect v-model="form.course" :scholarship-program-id="''"
                                                             label="shortname" />
-                                                        <InputError class="mt-2" :message="form.errors.course"
-                                                            v-if="!form.course" />
+                                                        <InputError class="mt-2" :message="form.errors.course" />
                                                     </div>
                                                     <div class="w-full">
                                                         <InputLabel for="yearlevel" class="mb-1"
@@ -570,11 +568,12 @@ const submit = (closeAfter = false) => {
     form.barangay = form.selected_barangay?.name ? form.selected_barangay?.name.toUpperCase() : '';
     form.father_name = form.father_name.toUpperCase();
     form.mother_name = form.mother_name.toUpperCase();
-    form.year_level = form.year_level.value;
-    form.school = form.school.name;
-    form.academic_year = form.academic_year.value;
-    form.term = form.term.value;
-    form.course = form.course.shortname;
+    // Handle empty academic info - only set if values exist
+    form.year_level = form.year_level?.value || null;
+    form.school = form.school?.name || null;
+    form.academic_year = form.academic_year?.value || null;
+    form.term = form.term?.value || null;
+    form.course = form.course?.shortname || null;
 
     if (props.action == 'create') {
         form.is_on_waiting_list = 1;

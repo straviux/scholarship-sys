@@ -12,6 +12,8 @@ class SystemUpdate extends Model
     protected $fillable = [
         'title',
         'content',
+        'markdown_content',
+        'is_markdown',
         'type',
         'priority',
         'is_global',
@@ -24,6 +26,7 @@ class SystemUpdate extends Model
     protected $casts = [
         'target_roles' => 'array',
         'is_global' => 'boolean',
+        'is_markdown' => 'boolean',
         'is_active' => 'boolean',
         'expires_at' => 'datetime',
     ];
@@ -67,5 +70,15 @@ class SystemUpdate extends Model
     public function isReadBy(User $user): bool
     {
         return $this->readByUsers()->where('user_id', $user->id)->exists();
+    }
+
+    /**
+     * Get the display content (markdown or regular content)
+     */
+    public function getDisplayContentAttribute(): string
+    {
+        return $this->is_markdown && $this->markdown_content
+            ? $this->markdown_content
+            : $this->content;
     }
 }

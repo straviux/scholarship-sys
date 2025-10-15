@@ -384,7 +384,8 @@ function getRoleDisplay() {
                     <div class="space-x-6 hidden md:flex items-center justify-center">
                         <!-- Notification Dropdown -->
                         <NotificationDropdown
-                            :unread-count="($page.props.auth.user && $page.props.auth.user.unread_notifications_count) || 0" />
+                            :unread-count="($page.props.auth.user && $page.props.auth.user.unread_notifications_count) || 0"
+                            :class="{ 'animate-shake': ($page.props.auth.user && $page.props.auth.user.unread_notifications_count) > 0 }" />
 
                         <!-- User Settings Menu -->
                         <div class="relative">

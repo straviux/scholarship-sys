@@ -337,7 +337,8 @@ class ScholarshipProfileController extends Controller
     public function storeApplicant(CreateScholarshipProfileRequest $request): Response
     {
         $new_profile = ScholarshipProfile::create($request->validated());
-        if ($new_profile) {
+        if ($new_profile && $request->course && $request->school) {
+            // Only create scholarship record if academic information is provided
             // Check for ongoing or pending scholarship record
             $hasActive = ScholarshipRecord::where('profile_id', $new_profile->profile_id)
                 ->whereIn('scholarship_status', [0, 1]) // 0: Pending, 1: Ongoing/Active
@@ -381,47 +382,53 @@ class ScholarshipProfileController extends Controller
     public function updateApplicant(UpdateScholarshipProfileRequest $request, $id)
     {
         $profile = ScholarshipProfile::findOrFail($id);
-        $course = Course::where('name', $request->course)->orWhere('shortname', $request->course)->first();
-        $school = School::where('name', $request->school)->orWhere('shortname', $request->school)->first();
-        $program_id = $course ? $course->scholarship_program_id : null;
-        // Check for ongoing or pending scholarship record
-        $hasActive = ScholarshipRecord::where('profile_id', $profile->profile_id)
-            ->whereIn('scholarship_status', [0, 1]) // 0: Pending, 1: Ongoing/Active
-            ->exists();
-        if (!$hasActive) {
-            // Get course and its program_id
 
-            ScholarshipRecord::create([
-                'profile_id' => $profile->profile_id,
-                'course_id' => $course->id ?? null, // or map as needed
-                'term' => $request->term, // or map as needed
-                'academic_year' => $request->academic_year, // or map as needed
-                'year_level' => $request->year_level, // or map as needed
-                'program_id' => $program_id,
-                'school_id' => $school->id ?? null,
-                'scholarship_status' => 0, // Pending by default
-                'is_active' => 1,
-                'date_filed' =>  $request->date_filed ?? now(),
-                // 'date_approved' => $request->date_approved ?? null,
+        // Only create/update scholarship record if academic information is provided
+        if ($request->course && $request->school) {
+            $course = Course::where('name', $request->course)->orWhere('shortname', $request->course)->first();
+            $school = School::where('name', $request->school)->orWhere('shortname', $request->school)->first();
+            $program_id = $course ? $course->scholarship_program_id : null;
+
+            // Check for ongoing or pending scholarship record
+            $hasActive = ScholarshipRecord::where('profile_id', $profile->profile_id)
+                ->whereIn('scholarship_status', [0, 1]) // 0: Pending, 1: Ongoing/Active
+                ->exists();
+            if (!$hasActive) {
+                // Get course and its program_id
+
+                ScholarshipRecord::create([
+                    'profile_id' => $profile->profile_id,
+                    'course_id' => $course->id ?? null, // or map as needed
+                    'term' => $request->term, // or map as needed
+                    'academic_year' => $request->academic_year, // or map as needed
+                    'year_level' => $request->year_level, // or map as needed
+                    'program_id' => $program_id,
+                    'school_id' => $school->id ?? null,
+                    'scholarship_status' => 0, // Pending by default
+                    'is_active' => 1,
+                    'date_filed' =>  $request->date_filed ?? now(),
+                    // 'date_approved' => $request->date_approved ?? null,
+                    // Add other required fields as needed
+                ]);
+            } else {
+                // Just update the record
+                $record = ScholarshipRecord::find($request->scholarship_grant_id);
+                $record->course_id = $course->id ?? null; // or map as needed
+                $record->term = $request->term;
+                $record->academic_year = $request->academic_year;
+                $record->year_level = $request->year_level;
+                $record->program_id = $program_id ?? null;
+                $record->school_id = $school->id ?? null;
+                // $record->scholarship_status = 0; // Pending by default
+                // $record->is_active = 1;
+                // $record->scholarship_status_remarks = $request->scholarship_status_remarks ?? $record->scholarship_status_remarks;
+                $record->date_filed =  $request->date_filed ?? $record->date_filed;
+                $record->date_approved = $request->date_approved ?? $record->date_approved;
                 // Add other required fields as needed
-            ]);
-        } else {
-            // Just update the record
-            $record = ScholarshipRecord::find($request->scholarship_grant_id);
-            $record->course_id = $course->id ?? null; // or map as needed
-            $record->term = $request->term;
-            $record->academic_year = $request->academic_year;
-            $record->year_level = $request->year_level;
-            $record->program_id = $program_id ?? null;
-            $record->school_id = $school->id ?? null;
-            // $record->scholarship_status = 0; // Pending by default
-            // $record->is_active = 1;
-            // $record->scholarship_status_remarks = $request->scholarship_status_remarks ?? $record->scholarship_status_remarks;
-            $record->date_filed =  $request->date_filed ?? $record->date_filed;
-            $record->date_approved = $request->date_approved ?? $record->date_approved;
-            // Add other required fields as needed
-            $record->save();
+                $record->save();
+            }
         }
+
         $profile->update($request->validated());
         return redirect()->back()->with('success', 'Profile status updated successfully.');
     }

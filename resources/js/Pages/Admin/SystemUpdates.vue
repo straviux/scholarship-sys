@@ -32,6 +32,8 @@
                                                 :severity="getPrioritySeverity(update.priority)" class="text-xs" />
                                             <Tag :value="update.type" :severity="getTypeSeverity(update.type)"
                                                 class="text-xs" />
+                                            <Tag v-if="update.is_markdown" value="Markdown" severity="info"
+                                                icon="pi pi-file-edit" class="text-xs" />
                                         </div>
                                         <p class="text-gray-600 mb-3">{{ update.content }}</p>
                                         <div class="text-sm text-gray-500">
@@ -60,7 +62,7 @@
         </div>
 
         <!-- Create Update Dialog -->
-        <Dialog v-model:visible="showCreateModal" modal header="Create System Update" :style="{ width: '32rem' }"
+        <Dialog v-model:visible="showCreateModal" modal header="Create System Update" :style="{ width: '56rem' }"
             :breakpoints="{ '960px': '90vw', '640px': '95vw' }" class="create-update-dialog">
 
             <form @submit.prevent="createUpdate">
@@ -71,9 +73,32 @@
                             placeholder="Enter update title" />
                     </div>
 
+                    <!-- Markdown Toggle -->
                     <div>
+                        <label class="flex items-center">
+                            <Checkbox v-model="form.is_markdown" binary @change="onMarkdownToggle" />
+                            <span class="ml-2 text-sm text-gray-700">Use Markdown Format</span>
+                        </label>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Enable rich text formatting with headings, lists, code blocks, and more
+                        </p>
+                    </div>
+
+                    <!-- Markdown Editor -->
+                    <div v-if="form.is_markdown">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Markdown Content</label>
+                        <MdEditor v-model="form.markdown_content" :language="'en-US'" :preview-theme="'github'"
+                            :code-theme="'github'" :toolbars-exclude="['github', 'save', 'htmlPreview', 'catalog']"
+                            :placeholder="'Enter your markdown content here...'" style="height: 400px;" />
+                        <p class="text-xs text-gray-500 mt-1">
+                            Preview on the right shows how the content will appear to users
+                        </p>
+                    </div>
+
+                    <!-- Plain Text Editor -->
+                    <div v-else>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                        <Textarea v-model="form.content" required rows="4" class="w-full"
+                        <Textarea v-model="form.content" required rows="6" class="w-full"
                             placeholder="Enter update content" />
                     </div>
 
@@ -186,6 +211,8 @@ import Panel from 'primevue/panel'
 import Card from 'primevue/card'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
+import { MdEditor } from 'md-editor-v3'
+import 'md-editor-v3/lib/style.css'
 
 // Composables
 const { hasRole, hasPermission } = usePermission()
@@ -208,6 +235,8 @@ const isDeactivating = ref(false)
 const form = ref({
     title: '',
     content: '',
+    markdown_content: '',
+    is_markdown: false,
     type: 'info',
     priority: 'normal',
     is_global: true
@@ -229,6 +258,21 @@ const priorityOptions = ref([
 ])
 
 // Methods
+const onMarkdownToggle = () => {
+    // When toggling markdown mode, preserve content between formats
+    if (form.value.is_markdown) {
+        // Switching to markdown: copy content to markdown_content if empty
+        if (!form.value.markdown_content && form.value.content) {
+            form.value.markdown_content = form.value.content
+        }
+    } else {
+        // Switching to plain text: copy markdown_content to content if empty
+        if (!form.value.content && form.value.markdown_content) {
+            form.value.content = form.value.markdown_content
+        }
+    }
+}
+
 const fetchUpdates = async () => {
     try {
         const response = await axios.get('/api/system-updates')
@@ -247,21 +291,51 @@ const fetchUpdates = async () => {
 
 const createUpdate = async () => {
     // Validate required fields
-    if (!form.value.title || !form.value.content) {
+    if (!form.value.title) {
+        return
+    }
+
+    // Validate content based on markdown mode
+    if (form.value.is_markdown && !form.value.markdown_content) {
+        return
+    }
+    if (!form.value.is_markdown && !form.value.content) {
         return
     }
 
     isCreating.value = true
     try {
-        await axios.post('/api/system-updates', form.value)
+        // Prepare payload based on markdown mode
+        const payload = {
+            title: form.value.title,
+            type: form.value.type,
+            priority: form.value.priority,
+            is_global: form.value.is_global,
+            is_markdown: form.value.is_markdown
+        }
+
+        if (form.value.is_markdown) {
+            payload.markdown_content = form.value.markdown_content
+            // Optionally provide a plain text summary
+            payload.content = form.value.content || form.value.markdown_content.substring(0, 200)
+        } else {
+            payload.content = form.value.content
+        }
+
+        await axios.post('/api/system-updates', payload)
         showCreateModal.value = false
+
+        // Reset form
         form.value = {
             title: '',
             content: '',
+            markdown_content: '',
+            is_markdown: false,
             type: 'info',
             priority: 'normal',
             is_global: true
         }
+
         await fetchUpdates()
         // Optionally show success message
     } catch (error) {

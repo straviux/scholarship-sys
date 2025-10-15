@@ -2,8 +2,8 @@
     <div>
         <!-- Notification Bell Button -->
         <Button type="button" label="System Updates" icon="pi pi-bell" @click="togglePopover"
-            :severity="unreadCount > 0 ? 'info' : 'contrast'" :badge="unreadCount > 99 ? '99+' : unreadCount || ''"
-            size="small" />
+            :severity="unreadCount > 0 ? 'info' : 'contrast'"
+            :badge="(unreadCount > 99 ? '99+' : unreadCount).toString() || ''" size="small" />
 
         <!-- Popover Menu -->
         <Popover ref="popoverRef" class="w-80">
@@ -109,8 +109,10 @@
         </Popover>
 
         <!-- Notification Detail Dialog -->
-        <Dialog v-model:visible="showModal" modal :header="selectedNotification?.title" :style="{ width: '32rem' }"
-            :breakpoints="{ '960px': '90vw', '640px': '95vw' }" class="notification-dialog">
+        <Dialog v-model:visible="showModal" modal :header="selectedNotification?.title"
+            :style="{ width: 'auto', minWidth: '28rem', maxWidth: '56rem' }"
+            :breakpoints="{ '1200px': '75vw', '960px': '85vw', '640px': '95vw' }"
+            :contentStyle="{ maxHeight: '70vh', overflow: 'auto' }" class="notification-dialog" :maximizable="true">
 
             <template #header>
                 <div class="flex items-center space-x-3 w-full">
@@ -134,8 +136,13 @@
             <!-- Modal Content -->
             <div class="space-y-4">
                 <div>
-                    <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                        {{ selectedNotification?.content }}
+                    <!-- Markdown content with v-html -->
+                    <div v-if="isMarkdownContent" class="markdown-content text-sm text-gray-700 leading-relaxed"
+                        v-html="renderedContent">
+                    </div>
+                    <!-- Regular text content -->
+                    <p v-else class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                        {{ renderedContent }}
                     </p>
                 </div>
 
@@ -170,11 +177,15 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import axios from 'axios'
+import { useMarkdown } from '@/composable/useMarkdown'
 
 // PrimeVue Components
 import Button from 'primevue/button'
 import Popover from 'primevue/popover'
 import Dialog from 'primevue/dialog'
+
+// Markdown composable
+const { renderMarkdown } = useMarkdown()
 
 // Props
 const props = defineProps({
@@ -196,6 +207,21 @@ const showModal = ref(false)
 // Computed
 const hasUnreadNotifications = computed(() => unreadCount.value > 0)
 const page = usePage()
+
+// Computed property for rendered notification content
+const renderedContent = computed(() => {
+    if (!selectedNotification.value) return ''
+
+    if (selectedNotification.value.is_markdown && selectedNotification.value.markdown_content) {
+        return renderMarkdown(selectedNotification.value.markdown_content)
+    }
+
+    return selectedNotification.value.content
+})
+
+const isMarkdownContent = computed(() => {
+    return selectedNotification.value?.is_markdown && selectedNotification.value?.markdown_content
+})
 
 // Watch for prop changes
 watch(() => props.unreadCount, (newValue) => {
@@ -357,6 +383,45 @@ onMounted(() => {
     overflow: hidden;
 }
 
+/* Dialog dynamic width adjustments */
+.notification-dialog :deep(.p-dialog) {
+    width: auto !important;
+    max-width: 90vw;
+}
+
+.notification-dialog :deep(.p-dialog-content) {
+    padding: 1.5rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.notification-dialog :deep(.p-dialog-header) {
+    padding: 1.25rem 1.5rem;
+}
+
+.notification-dialog :deep(.p-dialog-footer) {
+    padding: 1rem 1.5rem;
+}
+
+/* Custom scrollbar for dialog content */
+.notification-dialog :deep(.p-dialog-content)::-webkit-scrollbar {
+    width: 6px;
+}
+
+.notification-dialog :deep(.p-dialog-content)::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.notification-dialog :deep(.p-dialog-content)::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.notification-dialog :deep(.p-dialog-content)::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
 /* Custom scrollbar for the dropdown */
 .max-h-96::-webkit-scrollbar {
     width: 3px;
@@ -393,5 +458,148 @@ onMounted(() => {
 
 :deep(.notification-dialog .p-dialog-footer) {
     padding: 1rem 1.5rem 1.5rem 1.5rem;
+}
+
+/* Markdown content styling */
+.markdown-content {
+    line-height: 1.6;
+}
+
+.markdown-content :deep(h1),
+.markdown-content :deep(h2),
+.markdown-content :deep(h3),
+.markdown-content :deep(h4),
+.markdown-content :deep(h5),
+.markdown-content :deep(h6) {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+    line-height: 1.25;
+    color: #1f2937;
+}
+
+.markdown-content :deep(h1) {
+    font-size: 1.5em;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 0.3em;
+}
+
+.markdown-content :deep(h2) {
+    font-size: 1.25em;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.3em;
+}
+
+.markdown-content :deep(h3) {
+    font-size: 1.125em;
+}
+
+.markdown-content :deep(h4) {
+    font-size: 1em;
+}
+
+.markdown-content :deep(h5),
+.markdown-content :deep(h6) {
+    font-size: 0.875em;
+}
+
+.markdown-content :deep(p) {
+    margin-bottom: 1em;
+}
+
+.markdown-content :deep(ul),
+.markdown-content :deep(ol) {
+    margin-bottom: 1em;
+    padding-left: 2em;
+}
+
+.markdown-content :deep(li) {
+    margin-bottom: 0.25em;
+}
+
+.markdown-content :deep(code) {
+    background-color: #f3f4f6;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.markdown-content :deep(pre) {
+    background-color: #1f2937;
+    color: #f9fafb;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 1em;
+}
+
+.markdown-content :deep(pre code) {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+}
+
+.markdown-content :deep(blockquote) {
+    border-left: 4px solid #3b82f6;
+    padding-left: 1rem;
+    margin-left: 0;
+    margin-bottom: 1em;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.markdown-content :deep(a) {
+    color: #3b82f6;
+    text-decoration: underline;
+}
+
+.markdown-content :deep(a:hover) {
+    color: #2563eb;
+}
+
+.markdown-content :deep(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 1em 0;
+}
+
+.markdown-content :deep(hr) {
+    border: none;
+    border-top: 2px solid #e5e7eb;
+    margin: 2em 0;
+}
+
+.markdown-content :deep(table) {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1em;
+}
+
+.markdown-content :deep(table th),
+.markdown-content :deep(table td) {
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.markdown-content :deep(table th) {
+    background-color: #f3f4f6;
+    font-weight: 600;
+}
+
+.markdown-content :deep(table tr:nth-child(even)) {
+    background-color: #f9fafb;
+}
+
+.markdown-content :deep(strong),
+.markdown-content :deep(b) {
+    font-weight: 600;
+}
+
+.markdown-content :deep(em),
+.markdown-content :deep(i) {
+    font-style: italic;
 }
 </style>

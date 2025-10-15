@@ -10,6 +10,51 @@
 @theme {
 	--font-sans: Figtree, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
 		'Segoe UI Symbol', 'Noto Color Emoji';
+
+	/* Custom wiggle animation */
+	--ease-wiggle: linear;
+
+	@keyframes wiggle {
+		0%,
+		100% {
+			transform: rotate(-1deg);
+		}
+		50% {
+			transform: rotate(1deg);
+		}
+	}
+
+	--animate-wiggle: wiggle 1s ease-in-out infinite;
+
+	/* Custom shake animation with smooth intervals */
+	@keyframes shake {
+		0% {
+			transform: translateX(0);
+		}
+		2% {
+			transform: translateX(-4px);
+		}
+		4% {
+			transform: translateX(4px);
+		}
+		6% {
+			transform: translateX(-4px);
+		}
+		8% {
+			transform: translateX(4px);
+		}
+		10% {
+			transform: translateX(-4px);
+		}
+		12% {
+			transform: translateX(0);
+		}
+		100% {
+			transform: translateX(0);
+		}
+	}
+
+	--animate-shake: shake 3s ease-in-out infinite;
 }
 
 /*

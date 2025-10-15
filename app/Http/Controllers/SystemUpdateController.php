@@ -51,6 +51,8 @@ class SystemUpdateController extends Controller
                     'id' => $update->id,
                     'title' => $update->title,
                     'content' => $update->content,
+                    'markdown_content' => $update->markdown_content,
+                    'is_markdown' => $update->is_markdown,
                     'type' => $update->type,
                     'priority' => $update->priority,
                     'created_at' => $update->created_at->format('M j, Y g:i A'),
@@ -121,6 +123,8 @@ class SystemUpdateController extends Controller
                     'id' => $update->id,
                     'title' => $update->title,
                     'content' => $update->content,
+                    'markdown_content' => $update->markdown_content,
+                    'is_markdown' => $update->is_markdown,
                     'type' => $update->type,
                     'priority' => $update->priority,
                     'is_global' => $update->is_global,
@@ -138,7 +142,9 @@ class SystemUpdateController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'content' => 'required|string',
+            'content' => 'required_without:markdown_content|string',
+            'markdown_content' => 'required_without:content|string',
+            'is_markdown' => 'boolean',
             'type' => 'in:info,warning,success,error',
             'priority' => 'in:low,normal,high,urgent',
             'is_global' => 'boolean',
@@ -149,6 +155,8 @@ class SystemUpdateController extends Controller
         $update = SystemUpdate::create([
             'title' => $request->title,
             'content' => $request->content,
+            'markdown_content' => $request->markdown_content,
+            'is_markdown' => $request->is_markdown ?? false,
             'type' => $request->type ?? 'info',
             'priority' => $request->priority ?? 'normal',
             'is_global' => $request->is_global ?? true,
