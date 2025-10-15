@@ -564,13 +564,10 @@ class SystemReportController extends Controller
             ->where('created_at', '>=', now()->startOfMonth())->count();
 
         // Get applications created today
-        // Using whereBetween for more accurate date range (start of today to end of today)
-        // This ensures we capture all records created on the current day regardless of timezone
+        // Using DB::raw with DATE() to ensure consistent date comparison regardless of datetime format
         $todayApplications = ScholarshipRecord::where('created_by', $userId)
-            ->whereBetween('created_at', [
-                now()->startOfDay(),
-                now()->endOfDay()
-            ])->count();
+            ->whereRaw('DATE(created_at) = ?', [now()->toDateString()])
+            ->count();
 
         // Get most active months for this user
         $monthlyActivity = ScholarshipRecord::where('created_by', $userId)

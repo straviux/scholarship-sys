@@ -61,6 +61,8 @@ class ScholarshipRecord extends Model
     ];
 
     protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'completion_date' => 'date',
         'resubmitted_at' => 'datetime',
         'resubmission_allowed_at' => 'datetime',
