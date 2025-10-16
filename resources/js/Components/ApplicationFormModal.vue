@@ -21,7 +21,7 @@
                 application process.` }}
             </p>
 
-            <Stepper v-model:value="activeStep" linear>
+            <Stepper v-model:value="activeStep">
                 <StepList>
                     <Step value="1">Personal Information</Step>
                     <Step value="2">Family Information</Step>
