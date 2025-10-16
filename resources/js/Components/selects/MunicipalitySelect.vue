@@ -1,6 +1,7 @@
 <script setup>
-import { ref, watch } from 'vue';
-import municipalitiesData from '@/Data/municipalities.json';
+import { ref, watch, onMounted } from 'vue';
+import Select from 'primevue/select';
+import MultiSelect from 'primevue/multiselect';
 
 const props = defineProps({
     modelValue: {
@@ -11,61 +12,138 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    label: {
+        type: String,
+        default: 'name'
+    },
     customPlaceholder: {
         type: String,
         default: 'Select Municipality'
     },
+    customPlaceholderClass: {
+        type: String,
+        default: ''
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
-const localValue = ref(props.modelValue);
+const municipalities = ref([]);
+const loading = ref(false);
+
+// Local value for v-model
+const localValue = ref(props.multiple ? (props.modelValue || []) : props.modelValue);
 
 // Sync localValue with parent prop
 watch(() => props.modelValue, (val) => {
     localValue.value = val;
-});
+}, { deep: true });
 
 // Emit changes to parent
 watch(localValue, (val) => {
     emit('update:modelValue', val);
 });
 
+// Fetch municipalities from API
+const fetchMunicipalities = async () => {
+    loading.value = true;
+    try {
+        const response = await axios.get(route('api.municipalities.index'));
+        municipalities.value = response.data;
+    } catch (error) {
+        console.error('Error fetching municipalities:', error);
+        municipalities.value = [];
+    } finally {
+        loading.value = false;
+    }
+};
 
-const municipalities = municipalitiesData.municipalities;
-
-// Ensure selected value matches localValue when options are loaded
+// Watch for changes in municipalities data and update localValue
 watch(
-    () => municipalities,
-    (newOptions) => {
-        // console.log(localValue.value)
-        if (localValue.value && newOptions.length) {
+    () => municipalities.value,
+    (newMunicipalities) => {
+        if (localValue.value && newMunicipalities.length) {
             if (props.multiple && Array.isArray(localValue.value)) {
-                localValue.value = newOptions.filter(m =>
-                    localValue.value.some(val => val === m.name?.toLowerCase())
-                );
+                localValue.value = localValue.value.map(val => {
+                    if (typeof val == 'object' && val != null) {
+                        // Try matching by ID first (most reliable)
+                        if (val.id) {
+                            return newMunicipalities.find(municipality => municipality.id == val.id) || val;
+                        }
+                        // Fall back to name matching
+                        if (val.name) {
+                            return newMunicipalities.find(municipality => municipality.name == val.name) || val;
+                        }
+                    }
+                    // Handle string/number values
+                    return newMunicipalities.find(municipality =>
+                        municipality.name?.toLowerCase() == String(val).toLowerCase() ||
+                        municipality.id == val
+                    ) || val;
+                });
             } else {
-                const selected = newOptions.find(m => m.name?.toLowerCase() === localValue.value);
-                if (selected) localValue.value = selected;
+                let val = localValue.value;
+                if (typeof val == 'object' && val !== null) {
+                    // Try matching by ID first (most reliable)
+                    if (val.id) {
+                        const matchedMunicipality = newMunicipalities.find(municipality => municipality.id == val.id);
+                        if (matchedMunicipality) {
+                            localValue.value = matchedMunicipality;
+                            return;
+                        }
+                    }
+                    // Fall back to name matching
+                    if (val.name) {
+                        const matchedMunicipality = newMunicipalities.find(municipality => municipality.name == val.name);
+                        if (matchedMunicipality) {
+                            localValue.value = matchedMunicipality;
+                            return;
+                        }
+                    }
+                    // Keep the original value if no match found
+                    localValue.value = val;
+                } else {
+                    // Handle string/number values
+                    const selected = newMunicipalities.find(municipality =>
+                        municipality.name?.toLowerCase() == String(val).toLowerCase() ||
+                        municipality.id == val
+                    );
+                    if (selected) localValue.value = selected;
+                }
             }
-        } else {
-            localValue.value = "";
         }
     },
     { immediate: true }
 );
-</script>
+
+onMounted(fetchMunicipalities);</script>
 
 <template>
-    <!-- <Multiselect v-model="localValue" :options="municipalities" :multiple="props.multiple" label="name" track-by="id"
-        :show-labels="false" placeholder="Select municipality" /> -->
-    <Select v-model="localValue" :options="municipalities" filter autoFilterFocus showClear optionLabel="name"
-        :placeholder="customPlaceholder" class="w-full">
+    <!-- Use MultiSelect when multiple is true -->
+    <MultiSelect v-if="multiple" v-model="localValue" :options="municipalities" filter :filterFields="['name']"
+        optionLabel="name" :placeholder="customPlaceholder" :loading="loading" class="w-full" :maxSelectedLabels="3"
+        :selectedItemsLabel="'{0} municipalities selected'" showSelectAll showClear>
+        <template #option="slotProps">
+            <div class="flex items-start uppercase">
+                <div>{{ slotProps.option.name }}</div>
+            </div>
+        </template>
+        <template #chip="slotProps">
+            <div class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded uppercase mr-1">
+                {{ slotProps.value.name }}
+            </div>
+        </template>
+    </MultiSelect>
+
+    <!-- Use Select when multiple is false -->
+    <Select v-else v-model="localValue" :options="municipalities" filter :filterFields="['name']" autoFilterFocus
+        showClear optionLabel="name" :placeholder="customPlaceholder" :loading="loading" class="w-full">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.name }}</div>
             </div>
             <span v-else>
-                <div class="flex itesm-start">{{ slotProps.placeholder }}</div>
+                <div class="flex w-full" :class="customPlaceholderClass">{{
+                    slotProps.placeholder }}</div>
             </span>
         </template>
         <template #option="slotProps">

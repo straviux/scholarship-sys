@@ -131,7 +131,7 @@
                                                     <div>
                                                         <InputLabel class="mb-1" for="barangay" value="Barangay" />
                                                         <BarangaySelect v-model="form.barangay"
-                                                            :municipality="form.municipality"
+                                                            :municipalityId="form.municipality"
                                                             custom-placeholder="Select Barangay" />
                                                         <InputError class="mt-1" :message="form.errors.barangay" />
                                                     </div>
@@ -293,55 +293,7 @@
                                         </StepPanel>
                                         <StepPanel v-slot="{ activateCallback }" value="3">
                                             <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
-                                                <h2
-                                                    class="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                                    <span
-                                                        class="inline-block w-2 h-5 bg-indigo-500 rounded mr-2"></span>Academic
-                                                    Information
-                                                </h2>
-                                                <div class="grid grid-cols-2 gap-3 mb-2">
-
-                                                    <div class="w-full">
-                                                        <InputLabel class="mb-1" for="school" value="School" />
-                                                        <!-- <TextInput id="school" type="text" class="w-full block"
-                                                            custom-class="uppercase"
-                                                            v-model="form.applied_school" /> -->
-                                                        <SchoolSelect v-model="form.school" label="name" />
-                                                        <InputError class="mt-2" :message="form.errors.school" />
-                                                    </div>
-
-                                                    <div class="w-full">
-                                                        <InputLabel class="mb-1" for="course" value="Course" />
-
-                                                        <CourseSelect v-model="form.course" :scholarship-program-id="''"
-                                                            label="shortname" />
-                                                        <InputError class="mt-2" :message="form.errors.course" />
-                                                    </div>
-                                                    <div class="w-full">
-                                                        <InputLabel for="yearlevel" class="mb-1"
-                                                            value="Year/Grade Level" />
-
-                                                        <YearLevelSelect v-model="form.year_level" label="label" />
-
-                                                        <InputError class="mt-2" :message="form.errors.year_level" />
-                                                    </div>
-                                                    <div class="w-full">
-                                                        <InputLabel for="term" class="mb-1" value="Term" />
-
-                                                        <TermSelect v-model="form.term" label="label" />
-
-                                                        <InputError class="mt-2" :message="form.errors.term" />
-                                                    </div>
-                                                    <div class="w-full">
-                                                        <InputLabel for="acadedmic_year" class="mb-1"
-                                                            value="Academic Year" />
-
-                                                        <AcademicYearSelect v-model="form.academic_year"
-                                                            label="label" />
-
-                                                        <InputError class="mt-2" :message="form.errors.academic_year" />
-                                                    </div>
-                                                </div>
+                                                <AcademicInformationFields v-model="academicInfo" />
                                             </div>
                                             <div class="flex items-end gap-3 mt-4">
                                                 <div class="flex-1">
@@ -349,14 +301,6 @@
                                                     <TextInput id="remarks" type="text" class="w-full block uppercase"
                                                         v-model="form.remarks" />
                                                     <InputError class="mt-1" :message="form.errors.remarks" />
-                                                </div>
-                                                <div style="min-width:110px;max-width:140px;">
-                                                    <InputLabel for="date_filed" value="Date Filed" />
-
-                                                    <TextInput id="date_filed" type="date" class="mt-1 block w-full"
-                                                        v-model="form.date_filed" autocomplete="date_filed" />
-
-                                                    <InputError class="mt-1" :message="form.errors.date_filed" />
                                                 </div>
                                             </div>
                                             <div class="mt-12 flex justify-between">
@@ -399,12 +343,8 @@ import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
 // COURSE MULTISELECT COMPONENT
-import CourseSelect from '@/Components/selects/CourseSelect.vue';
-import YearLevelSelect from "@/Components/selects/YearLevelSelect.vue";
-import TermSelect from "@/Components/selects/TermSelect.vue";
+import AcademicInformationFields from '@/Components/AcademicInformationFields.vue';
 import ProfileSelect from "@/Components/selects/ProfileSelect.vue";
-import AcademicYearSelect from "@/Components/selects/AcademicYearSelect.vue";
-import SchoolSelect from "@/Components/selects/SchoolSelect.vue";
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import BarangaySelect from '@/Components/selects/BarangaySelect.vue';
 
@@ -444,6 +384,7 @@ const formatDateForInput = (dateString) => {
 // const selectedProfile = ref(null);
 const form = useForm({
     scholarship_grant_id: props.profile?.scholarship_grant[0]?.id || null,
+    program: props.profile?.scholarship_grant[0]?.scholarship_program || null,
     school: props.profile?.scholarship_grant[0]?.school?.name || "",
     course: props.profile?.scholarship_grant[0]?.course || null, // Changed: pass full object instead of just name
     year_level: props.profile?.scholarship_grant[0]?.year_level || "",
@@ -468,6 +409,7 @@ const form = useForm({
     remarks: props.profile?.remarks || "",
     is_on_waiting_list: true,
     date_filed: formatDateForInput(props.profile?.date_filed) || "", // Changed: format date properly
+    date_approved: formatDateForInput(props.profile?.scholarship_grant[0]?.date_approved) || "",
     selectedProfile: "",
     contact_no_2: props.profile?.contact_no_2 || "",
     guardian_name: props.profile?.guardian_name || "",
@@ -485,6 +427,27 @@ const hasPendingOrOngoing = computed(() => {
     }
     return false;
 });
+
+// Computed property for two-way binding with AcademicInformationFields
+const academicInfo = computed({
+    get: () => ({
+        program: form.program,
+        school: form.school,
+        course: form.course,
+        year_level: form.year_level,
+        term: form.term,
+        academic_year: form.academic_year,
+    }),
+    set: (value) => {
+        form.program = value.program;
+        form.school = value.school;
+        form.course = value.course;
+        form.year_level = value.year_level;
+        form.term = value.term;
+        form.academic_year = value.academic_year;
+    }
+});
+
 const errorMessage = ref("");
 
 watch(() => form.selectedProfile, (profile) => {

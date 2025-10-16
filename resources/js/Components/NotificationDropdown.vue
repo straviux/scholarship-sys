@@ -153,7 +153,7 @@
                         <div class="flex items-center space-x-4">
                             <!-- <span>Type: <span class="font-medium">{{ selectedNotification?.type }}</span></span> -->
                             <span>Priority: <span class="font-medium capitalize">{{ selectedNotification?.priority
-                            }}</span></span>
+                                    }}</span></span>
                         </div>
                         <div class="flex items-center space-x-4">
                             <span>@<span class="font-medium">{{ selectedNotification?.created_by }}</span></span>
@@ -230,10 +230,8 @@ watch(() => props.unreadCount, (newValue) => {
 
 // Methods
 const togglePopover = async (event) => {
-    console.log('Toggle popover clicked')
     popoverRef.value.toggle(event)
     if (notifications.value.length === 0) {
-        console.log('Fetching notifications...')
         await fetchNotifications()
     }
 }
@@ -246,7 +244,6 @@ const fetchNotifications = async () => {
         notifications.value = response.data.updates.sort((a, b) => {
             return new Date(b.created_at) - new Date(a.created_at)
         })
-        console.log('Fetched and sorted notifications:', notifications.value)
     } catch (error) {
         console.error('Error fetching notifications:', error)
     } finally {
@@ -258,7 +255,6 @@ const fetchUnreadCount = async () => {
     try {
         const response = await axios.get('/api/system-updates/unread-count')
         unreadCount.value = response.data.unread_count
-        console.log('Fetched unread count:', unreadCount.value)
     } catch (error) {
         console.error('Error fetching unread count:', error)
     }
@@ -350,9 +346,6 @@ const markAsReadAndClose = async (notification) => {
 
 // Lifecycle
 onMounted(() => {
-    console.log('NotificationDropdown mounted')
-    console.log('Props unreadCount:', props.unreadCount)
-    console.log('Page props:', page.props.auth?.user)
 
     // Update unread count from page props if available
     if (page.props.auth?.user?.unread_notifications_count !== undefined) {

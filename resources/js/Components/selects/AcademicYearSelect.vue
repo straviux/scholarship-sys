@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 const props = defineProps({
 
     modelValue: {
@@ -30,9 +30,24 @@ const acad_year = computed(() => {
 // Local value for v-model
 const defaultYearValue = `${currentYear}-${currentYear + 1}`;
 const defaultYearObj = computed(() => acad_year.value.find(y => y.value === defaultYearValue));
+
+// Helper function to find the year object from a value (string or object)
+const findYearObject = (val) => {
+    if (!val) return null;
+    // If val is already an object with a value property, find by that value
+    if (typeof val === 'object' && val.value) {
+        return acad_year.value.find(y => y.value === val.value);
+    }
+    // If val is a string, find by value
+    if (typeof val === 'string') {
+        return acad_year.value.find(y => y.value === val);
+    }
+    return null;
+};
+
 const localValue = ref(
     props.modelValue
-        ? acad_year.value.find(y => y.value === props.modelValue || y === props.modelValue) || props.modelValue
+        ? findYearObject(props.modelValue) || defaultYearObj.value
         : defaultYearObj.value
 );
 
@@ -40,48 +55,25 @@ const localValue = ref(
 watch(() => props.modelValue, (val) => {
     // Always select the correct year object from acad_year
     if (val) {
-        const selected = acad_year.value.find(y => y.value === val || y === val);
-        localValue.value = selected || val;
+        const selected = findYearObject(val);
+        localValue.value = selected || defaultYearObj.value;
     } else {
         // Default to current academic year if not set
         localValue.value = defaultYearObj.value;
     }
-});
+}, { immediate: true });
 
-// Sync localValue with parent prop
-// watch(() => props.preselect, (val) => {
-//     localValue.value = val;
-// });
 // Emit changes to parent
 watch(localValue, (val) => {
-
-    if (localValue.value) {
-        if (props.multiple && Array.isArray(localValue.value)) {
-            localValue.value = acad_year.value.filter(m =>
-                localValue.value.some(val => val == m.value || val == m)
-            );
-        } else {
-            const selected = acad_year.value.find(m => m.value == localValue.value);
-            if (selected) localValue.value = selected;
-        }
-    }
     emit('update:modelValue', val);
+}, { deep: true });
+
+// Emit initial value on mount to ensure parent gets the preselected value
+onMounted(() => {
+    if (localValue.value) {
+        emit('update:modelValue', localValue.value);
+    }
 });
-watch(
-    () => acad_year,
-    (newOptions) => {
-
-        if (props.multiple && Array.isArray(localValue.value)) {
-            localValue.value = newOptions.filter(m =>
-                localValue.value.some(val => val === m.value || val === m)
-            );
-        } else {
-            const selected = acad_year.value.find(m => m.value === localValue.value);
-            if (selected) localValue.value = selected;
-        }
-
-    },
-    { immediate: true });
 
 </script>
 

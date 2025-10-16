@@ -27,7 +27,13 @@ class WaitingListController extends Controller
         }
 
         $programId = ScholarshipProgram::where('shortname', $request->get('program'))->first()?->id;
-        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant', 'priorityAssignedBy'])
+        $query = ScholarshipProfile::with([
+            'createdBy',
+            'scholarshipGrant.program',
+            'scholarshipGrant.school',
+            'scholarshipGrant.course',
+            'priorityAssignedBy'
+        ])
             ->where(function ($q) use ($programId) {
                 // Include profiles with scholarship grants (pending status)
                 $q->whereHas('scholarshipGrant', function ($subQ) use ($programId) {
@@ -324,8 +330,41 @@ class WaitingListController extends Controller
             return $profile;
         });
 
-        if ($action == 'update' && $id) {
-            $profile = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])->where('is_on_waiting_list', '=', 1)->find($id);
+        if (in_array($action, ['edit', 'update']) && $id) {
+            $profile = ScholarshipProfile::with([
+                'createdBy',
+                'scholarshipGrant.program',
+                'scholarshipGrant.school',
+                'scholarshipGrant.course'
+            ])->where('is_on_waiting_list', '=', 1)->find($id);
+
+            // Transform municipality and barangay strings to objects for select components
+            if ($profile) {
+                if ($profile->municipality) {
+                    $municipality = \App\Models\Municipality::where('name', $profile->municipality)->first();
+                    if ($municipality) {
+                        $profile->municipality = [
+                            'id' => $municipality->id,
+                            'name' => $municipality->name
+                        ];
+                    }
+                }
+
+                if ($profile->barangay && $profile->municipality) {
+                    $municipalityId = is_array($profile->municipality) ? $profile->municipality['id'] : null;
+                    if ($municipalityId) {
+                        $barangay = \App\Models\Barangay::where('name', $profile->barangay)
+                            ->where('municipality_id', $municipalityId)
+                            ->first();
+                        if ($barangay) {
+                            $profile->barangay = [
+                                'id' => $barangay->id,
+                                'name' => $barangay->name
+                            ];
+                        }
+                    }
+                }
+            }
 
             $filters = [
                 'name' => $request->get('name', ''),

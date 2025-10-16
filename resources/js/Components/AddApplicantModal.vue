@@ -1,54 +1,136 @@
 <template>
-    <Dialog :visible="visible" modal header="Add New Applicant" :style="{ width: '90vw', maxWidth: '50vw' }"
+    <Dialog :visible="visible" modal header="Add New Applicant" :style="{ width: '90vw', maxWidth: '980px' }"
         @update:visible="handleVisibilityChange" :maximizable="true">
         <template #header>
             <div class="flex items-center gap-2">
-                <i class="pi pi-user-plus text-lg text-green-600"></i>
+                <i class="pi pi-user-plus text-lg text-green-600" style="font-size: 1.2rem;"></i>
                 <span class="font-semibold text-xl">New Applicant</span>
             </div>
         </template>
 
         <div class="space-y-4">
             <p class="text-sm text-gray-600">
-                Add a new applicant to the waiting list. You can add basic information now and complete the academic
-                details later.
+                Add a new applicant to the waiting list. Complete all sections to create a comprehensive applicant
+                record.
             </p>
 
-            <PersonalInformationFields v-model="personalInfo" :show-header="true" />
+            <Stepper v-model:value="activeStep" linear>
+                <StepList>
+                    <Step value="1">Personal Information</Step>
+                    <Step value="2">Family Information</Step>
+                    <Step value="3">Academic Information</Step>
+                </StepList>
+                <StepPanels>
+                    <StepPanel value="1">
+                        <div class="flex flex-col h-full">
+                            <div class="flex-auto">
+                                <PersonalInformationFields v-model="personalInfo" />
 
-            <div class="bg-blue-50 border border-blue-200 rounded p-3">
-                <p class="text-sm text-blue-800">
-                    <i class="pi pi-info-circle mr-2"></i>
-                    You can complete the academic information and other details after creating the applicant record.
-                </p>
-            </div>
+                                <!-- Duplicate Name Warning -->
+                                <div v-if="validationError" class="mt-4 bg-red-50 border border-red-200 rounded p-3">
+                                    <p class="text-sm text-red-800 font-medium">
+                                        <i class="pi pi-exclamation-triangle mr-2"></i>
+                                        {{ validationError }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex pt-6 justify-end">
+                                <Button label="Next" icon="pi pi-arrow-right" iconPos="right" @click="handleNextStep1"
+                                    :loading="isValidating" :disabled="!canProceedStep1" />
+                            </div>
+                        </div>
+                    </StepPanel>
+                    <StepPanel value="2">
+                        <div class="flex flex-col h-full">
+                            <div class="flex-auto">
+                                <FamilyInformationFields v-model="familyInfo" />
+                            </div>
+                            <div class="flex pt-6 justify-between">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    @click="activeStep = '1'" />
+                                <Button label="Next" icon="pi pi-arrow-right" iconPos="right"
+                                    @click="activeStep = '3'" />
+                            </div>
+                        </div>
+                    </StepPanel>
+                    <StepPanel value="3">
+                        <div class="flex flex-col h-full">
+                            <div class="flex-auto">
+                                <div>
+                                    <h4 class="text-md font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                        <i class="pi pi-book text-blue-600"></i>
+                                        Academic Information (Optional)
+                                    </h4>
+                                    <div class="space-y-4">
+                                        <AcademicInformationFields v-model="academicInfo" :show-header="false" />
+
+                                        <!-- Date Filed -->
+                                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-10">
+                                            <FloatLabel>
+                                                <DatePicker v-model="form.date_filed" type="date" inputId="date_filed"
+                                                    variant="filled" placeholder="mm/dd/yyyy" showIcon fluid
+                                                    iconDisplay="input" />
+                                                <label class="text-sm" for="date_filed">Date Filed</label>
+                                            </FloatLabel>
+                                        </div>
+
+                                        <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                                            <p class="text-sm text-blue-800">
+                                                <i class="pi pi-info-circle mr-2"></i>
+                                                Academic information is optional. You can complete it now or update it
+                                                later.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex pt-6 justify-between">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    @click="activeStep = '2'" />
+                                <Button label="Add Applicant" icon="pi pi-check" severity="success"
+                                    @click="handleSubmit" :loading="form.processing" />
+                            </div>
+                        </div>
+                    </StepPanel>
+                </StepPanels>
+            </Stepper>
         </div>
-
-        <template #footer>
-            <div class="flex justify-end gap-2">
-                <Button label="Cancel" icon="pi pi-times" severity="secondary" outlined @click="handleCancel" />
-                <Button label="Add Applicant" icon="pi pi-check" severity="success" @click="handleSubmit"
-                    :loading="form.processing" />
-            </div>
-        </template>
     </Dialog>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
+import axios from 'axios';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
+import Stepper from 'primevue/stepper';
+import StepList from 'primevue/steplist';
+import Step from 'primevue/step';
+import StepPanels from 'primevue/steppanels';
+import StepPanel from 'primevue/steppanel';
+import FloatLabel from 'primevue/floatlabel';
+import DatePicker from 'primevue/datepicker';
 import PersonalInformationFields from '@/Components/PersonalInformationFields.vue';
+import FamilyInformationFields from '@/Components/FamilyInformationFields.vue';
+import AcademicInformationFields from '@/Components/AcademicInformationFields.vue';
 
 const props = defineProps({
     visible: {
         type: Boolean,
         default: false
+    },
+    profiles: {
+        type: Object,
+        default: null
     }
 });
 
 const emit = defineEmits(['update:visible', 'success']);
+
+const activeStep = ref('1');
+const isValidating = ref(false);
+const validationError = ref('');
 
 const form = useForm({
     first_name: '',
@@ -64,6 +146,24 @@ const form = useForm({
     civil_status: '',
     religion: '',
     indigenous_group: '',
+    father_name: '',
+    father_occupation: '',
+    father_contact_no: '',
+    mother_name: '',
+    mother_occupation: '',
+    mother_contact_no: '',
+    guardian_name: '',
+    guardian_occupation: '',
+    guardian_relationship: '',
+    guardian_contact_no: '',
+    parents_guardian_gross_monthly_income: '',
+    program: null,
+    school: null,
+    course: null,
+    year_level: null,
+    term: null,
+    academic_year: null,
+    date_filed: '',
     municipality: null,
     barangay: null,
     address: '',
@@ -109,16 +209,115 @@ const personalInfo = computed({
     }
 });
 
+// Computed property for two-way binding with FamilyInformationFields
+const familyInfo = computed({
+    get: () => ({
+        father_name: form.father_name,
+        father_occupation: form.father_occupation,
+        father_contact_no: form.father_contact_no,
+        mother_name: form.mother_name,
+        mother_occupation: form.mother_occupation,
+        mother_contact_no: form.mother_contact_no,
+        guardian_name: form.guardian_name,
+        guardian_occupation: form.guardian_occupation,
+        guardian_relationship: form.guardian_relationship,
+        guardian_contact_no: form.guardian_contact_no,
+        parents_guardian_gross_monthly_income: form.parents_guardian_gross_monthly_income,
+    }),
+    set: (value) => {
+        form.father_name = value.father_name;
+        form.father_occupation = value.father_occupation;
+        form.father_contact_no = value.father_contact_no;
+        form.mother_name = value.mother_name;
+        form.mother_occupation = value.mother_occupation;
+        form.mother_contact_no = value.mother_contact_no;
+        form.guardian_name = value.guardian_name;
+        form.guardian_occupation = value.guardian_occupation;
+        form.guardian_relationship = value.guardian_relationship;
+        form.guardian_contact_no = value.guardian_contact_no;
+        form.parents_guardian_gross_monthly_income = value.parents_guardian_gross_monthly_income;
+    }
+});
+
+// Computed property for two-way binding with AcademicInformationFields
+const academicInfo = computed({
+    get: () => ({
+        program: form.program,
+        school: form.school,
+        course: form.course,
+        year_level: form.year_level,
+        term: form.term,
+        academic_year: form.academic_year,
+    }),
+    set: (value) => {
+        form.program = value.program;
+        form.school = value.school;
+        form.course = value.course;
+        form.year_level = value.year_level;
+        form.term = value.term;
+        form.academic_year = value.academic_year;
+    }
+});
+
+// Validation for step 1
+const canProceedStep1 = computed(() => {
+    return form.first_name && form.last_name && form.municipality && form.contact_no;
+});
+
+// Handle next step 1 with backend validation
+const handleNextStep1 = async () => {
+    // Validate required fields
+    const missingFields = [];
+    if (!form.first_name) missingFields.push('First Name');
+    if (!form.last_name) missingFields.push('Last Name');
+    if (!form.municipality) missingFields.push('Municipality');
+    if (!form.contact_no) missingFields.push('Contact Number');
+
+    if (missingFields.length > 0) {
+        validationError.value = `Please fill in the following required fields: ${missingFields.join(', ')}.`;
+        return;
+    }
+
+    isValidating.value = true;
+    validationError.value = '';
+
+    try {
+        const response = await axios.post(route('api.profiles.validate-name'), {
+            first_name: form.first_name,
+            middle_name: form.middle_name || '',
+            last_name: form.last_name
+        });
+
+        if (response.data.exists) {
+            validationError.value = `A record with this exact name (${[form.first_name, form.middle_name, form.last_name].filter(Boolean).join(' ')}) already exists in the system. Please verify if this is a different person before proceeding.`;
+        } else {
+            // Validation passed, proceed to next step
+            activeStep.value = '2';
+        }
+    } catch (error) {
+        console.error('Validation error:', error);
+        validationError.value = 'An error occurred while validating. Please try again.';
+    } finally {
+        isValidating.value = false;
+    }
+};
+
 const handleVisibilityChange = (value) => {
     emit('update:visible', value);
     if (!value) {
         form.reset();
+        activeStep.value = '1';
+        validationError.value = '';
+        isValidating.value = false;
     }
 };
 
 const handleCancel = () => {
     emit('update:visible', false);
     form.reset();
+    activeStep.value = '1';
+    validationError.value = '';
+    isValidating.value = false;
 };
 
 const handleSubmit = () => {

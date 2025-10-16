@@ -72,7 +72,7 @@ watch(localValue, (val) => {
 
 watch(
     () => props.scholarshipProgramId,
-    (newProgramId) => {
+    (newProgramId, oldProgramId) => {
         // console.log('scholarshipProgramId changed:', newProgramId);
         axios.get(route('courses-api.findbyprogram'), {
             params: { program_id: newProgramId }
@@ -83,9 +83,17 @@ watch(
             console.error('Error loading courses:', error);
             courses.value = [];
         });
-        // Don't reset selection when program is empty string (fetch all courses)
-        // Only reset when program actually changes to a specific value
-        if (newProgramId !== '' && newProgramId !== null) {
+        // Only reset selection when:
+        // 1. Program actually changes (not initial load)
+        // 2. There's no existing valid selection (modelValue)
+        // 3. Program changes to a specific value (not empty)
+        const hasExistingSelection = props.modelValue && (
+            typeof props.modelValue === 'object'
+                ? props.modelValue.id
+                : props.modelValue
+        );
+
+        if (newProgramId !== '' && newProgramId !== null && oldProgramId !== undefined && !hasExistingSelection) {
             if (props.multiple) {
                 localValue.value = [];
             } else {

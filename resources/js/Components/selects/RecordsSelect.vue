@@ -36,23 +36,19 @@ const recordsOptions = [
 
 const localValue = ref(props.modelValue ? parseInt(props.modelValue) : null);
 
-console.log('RecordsSelect - Initial props.modelValue:', props.modelValue, 'Type:', typeof props.modelValue);
-console.log('RecordsSelect - Initial localValue:', localValue.value);
+
 
 // Sync localValue with parent prop
 watch(() => props.modelValue, (val) => {
-    console.log('RecordsSelect - modelValue changed from parent:', val, 'Type:', typeof val);
     localValue.value = val ? parseInt(val) : null;
 }, { immediate: true });
 
 // Emit changes to parent
 watch(localValue, (val) => {
-    console.log('RecordsSelect - localValue changed, emitting:', val);
     emit('update:modelValue', val);
 });
 
 onMounted(() => {
-    console.log('RecordsSelect mounted with modelValue:', props.modelValue);
     // Ensure localValue is initialized correctly
     localValue.value = props.modelValue ? parseInt(props.modelValue) : null;
 });

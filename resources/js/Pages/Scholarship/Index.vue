@@ -474,8 +474,8 @@
             </template>
         </Dialog>
 
-        <!-- Add Applicant Modal -->
-        <AddApplicantModal v-model:visible="showAddApplicantModal" @success="refreshData" />
+        <!-- Application Form Modal -->
+        <ApplicationFormModal v-model:visible="showAddApplicantModal" :profiles="profiles" @success="refreshData" />
 
         <!-- Add Existing Modal -->
         <AddExistingModal v-model:visible="showAddExistingModal" @success="refreshData" />
@@ -515,7 +515,7 @@ import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 
 // Modal Components
-import AddApplicantModal from '@/Components/AddApplicantModal.vue';
+import ApplicationFormModal from '@/Components/ApplicationFormModal.vue';
 import AddExistingModal from '@/Components/AddExistingModal.vue';
 
 // Props

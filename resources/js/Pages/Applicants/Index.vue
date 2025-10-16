@@ -32,7 +32,8 @@ import Card from 'primevue/card';
 import Avatar from 'primevue/avatar';
 import Popover from 'primevue/popover';
 
-import ApplicantProfileModal from '@/Pages/Applicants/Modal/ApplicantProfileModal.vue';
+import ApplicationFormModal from '@/Components/ApplicationFormModal.vue';
+// import ApplicantProfileModal from '@/Pages/Applicants/Modal/ApplicantProfileModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
 import ExportModal from './Modal/ExportModal.vue';
 import PriorityModal from './Modal/PriorityModal.vue';
@@ -155,21 +156,37 @@ const jpmFilterOptions = [
 ];
 
 // Applicant Modal state
-const showApplicantModal = ref(false);
-const modalAction = ref('');
+// const showApplicantModal = ref(false);
+const showApplicationFormModal = ref(false);
+const applicationFormMode = ref('create');
+// const modalAction = ref('');
 const modalProfile = ref(null);
 
 const editApplicant = (profile) => {
+    console.log(profile)
     modalProfile.value = profile;
-    modalAction.value = 'update';
-    showApplicantModal.value = true;
+    applicationFormMode.value = 'edit';
+    showApplicationFormModal.value = true;
 }
 
-const closeApplicantModal = () => {
-    showApplicantModal.value = false;
+const closeModal = () => {
+    showApplicationFormModal.value = false;
     modalProfile.value = null;
-    modalAction.value = '';
+    // Refresh the applicants list after modal closes
+    refreshApplicationList();
 }
+
+const openApplicationFormModal = () => {
+    modalProfile.value = null;
+    applicationFormMode.value = 'create';
+    showApplicationFormModal.value = true;
+}
+
+// const closeApplicantModal = () => {
+//     showApplicantModal.value = false;
+//     modalProfile.value = null;
+//     modalAction.value = '';
+// }
 
 const filterList = (resetToPage1 = false) => {
     // Prepare filter values
@@ -463,7 +480,11 @@ const handleApprovalAction = (application) => {
 };
 
 const refreshApplicationList = () => {
-    router.reload({ only: ['profiles'] });
+    router.reload({
+        only: ['profiles'],
+        preserveState: true,
+        preserveScroll: true,
+    });
 };
 
 // Priority modal functions
@@ -653,10 +674,9 @@ const formatDate = (date) => {
 
                         <Divider layout="vertical" class="h-6" v-if="hasPermission('can-view-jpm')" />
 
-                        <Button as="a" icon="pi pi-user-plus"
-                            v-if="hasPermission('create-scholar-profile') && !hasRole('user')" severity="success" :href="route('waitinglist.index', {
-                                action: 'create'
-                            })" v-tooltip.bottom="'Add New Applicant'" />
+                        <Button icon="pi pi-user-plus" @click="openApplicationFormModal"
+                            v-if="hasPermission('create-scholar-profile') && !hasRole('user')" severity="success"
+                            v-tooltip.bottom="'Add New Applicant'" />
                         <Button icon="pi pi-print" @click="actionsPopover.toggle($event)" severity="info"
                             v-tooltip.bottom="'Reports & Export'" />
                         <Popover ref="actionsPopover">
@@ -975,6 +995,7 @@ const formatDate = (date) => {
                         <!-- Actions Column -->
                         <Column header="Actions" style="width: 200px">
                             <template #body="slotProps">
+
                                 <div class="flex gap-1 justify-center flex-wrap">
                                     <Button icon="pi pi-check-circle" label="Review" severity="success" size="small"
                                         rounded outlined v-tooltip.top="'Review Application & View Profile'"
@@ -983,6 +1004,7 @@ const formatDate = (date) => {
 
                                     <Button icon="pi pi-user-edit" severity="help" size="small" rounded outlined
                                         v-tooltip.top="'Edit Applicant'" @click="editApplicant(slotProps.data)" />
+
                                     <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
                                         v-tooltip.top="'Delete Applicant'"
                                         @click="confirmDeleteApplicant(slotProps.data)"
@@ -1362,11 +1384,15 @@ const formatDate = (date) => {
             </div>
         </Dialog>
 
-        <!-- Applicant Profile Modal - handles both route-level and local modal state -->
-        <ApplicantProfileModal v-if="(props.action == 'create' || props.action == 'update') || showApplicantModal"
+        <!-- Application Form Modal - for creating/editing applicants -->
+        <ApplicationFormModal v-model:visible="showApplicationFormModal" :mode="applicationFormMode"
+            :profile="modalProfile" @success="closeModal" />
+
+        <!-- Applicant Profile Modal - for editing existing applicants (keeping for backward compatibility) -->
+        <!-- <ApplicantProfileModal v-if="(props.action == 'update') || showApplicantModal"
             :action="showApplicantModal ? modalAction : props.action"
             :profile="showApplicantModal ? modalProfile : props.profile" :is-inline-modal="showApplicantModal"
-            @close="closeApplicantModal" />
+            @close="closeApplicantModal" /> -->
 
         <!-- Priority Modal -->
         <PriorityModal :show="showPriorityModal" :applicant="selectedApplicantForPriority"

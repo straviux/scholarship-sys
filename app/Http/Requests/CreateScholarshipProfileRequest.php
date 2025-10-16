@@ -226,6 +226,53 @@ class CreateScholarshipProfileRequest extends FormRequest
                 'numeric',
                 'min:0'
             ],
+            // Academic Information IDs (preferred)
+            "course_id" => [
+                'nullable',
+                'integer',
+                'exists:courses,id'
+            ],
+            "school_id" => [
+                'nullable',
+                'integer',
+                'exists:schools,id'
+            ],
+            "program_id" => [
+                'nullable',
+                'integer',
+                'exists:scholarship_programs,id'
+            ],
+            // Academic Information Names (fallback)
+            "course" => [
+                'nullable',
+                'string',
+                'max:255'
+            ],
+            "school" => [
+                'nullable',
+                'string',
+                'max:255'
+            ],
+            "program" => [
+                'nullable',
+                'string',
+                'max:255'
+            ],
+            "year_level" => [
+                'nullable',
+                'string',
+                'max:50'
+            ],
+            "term" => [
+                'nullable',
+                'string',
+                'max:50'
+            ],
+            "academic_year" => [
+                'nullable',
+                'string',
+                'max:50'
+            ],
         ];
     }
 

@@ -80,6 +80,7 @@ Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->gr
 // API route for searching profiles by name
 Route::middleware(['auth'])->get('/api/profiles', [ScholarshipProfileController::class, 'apiSearch'])->name('api.profiles.search');
 Route::middleware(['auth'])->get('/api/existing', [ScholarshipProfileController::class, 'searchExistingProfile'])->name('api.profiles.existing');
+Route::middleware(['auth'])->post('/api/validate-name', [ScholarshipProfileController::class, 'validateName'])->name('api.profiles.validate-name');
 
 Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->group(function () {
     // Route::get('/scholarship_records/{id?}', 'getScholarshipRecordsApi')->name('scholarship_records_api.getlist');
@@ -243,5 +244,9 @@ Route::middleware(['auth'])->get('/test-notifications', function () {
         }),
     ]);
 });
+
+// API Routes for Municipalities and Barangays
+Route::get('/api/municipalities', [\App\Http\Controllers\Api\MunicipalityController::class, 'index'])->name('api.municipalities.index');
+Route::get('/api/municipalities/{municipality}/barangays', [\App\Http\Controllers\Api\MunicipalityController::class, 'getBarangays'])->name('api.municipalities.barangays');
 
 require __DIR__ . '/auth.php';
