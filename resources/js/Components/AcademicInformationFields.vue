@@ -46,12 +46,22 @@
                     <label class="text-sm" for="academic_year">Academic Year</label>
                 </FloatLabel>
             </div>
+
+            <!-- Remarks Field -->
+            <div class="grid grid-cols-1 gap-3 mt-10">
+                <FloatLabel>
+                    <Textarea :modelValue="remarks" @update:modelValue="$emit('update:remarks', $event)"
+                        inputId="remarks" variant="filled" rows="3" fluid autoResize />
+                    <label class="text-sm" for="remarks">Remarks (Optional)</label>
+                </FloatLabel>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup>
 import FloatLabel from 'primevue/floatlabel';
+import Textarea from 'primevue/textarea';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
@@ -66,6 +76,7 @@ const props = defineProps({
     year_level: [String, Object],
     term: [String, Object],
     academic_year: [String, Object],
+    remarks: String,
     showHeader: {
         type: Boolean,
         default: true
@@ -78,19 +89,15 @@ const emit = defineEmits([
     'update:course',
     'update:year_level',
     'update:term',
-    'update:academic_year'
+    'update:academic_year',
+    'update:remarks'
 ]);
 </script>
 
 <style>
-.p-inputtext.p-variant-filled {
-    background-color: #ffffff !important;
-}
-
-.p-select.p-variant-filled .p-select-label {
-    background-color: #ffffff !important;
-}
-
+.p-inputtext.p-variant-filled,
+.p-textarea.p-variant-filled,
+.p-select.p-variant-filled .p-select-label,
 .p-datepicker.p-variant-filled .p-datepicker-input {
     background-color: #ffffff !important;
 }

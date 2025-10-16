@@ -89,7 +89,8 @@
                                         <AcademicInformationFields v-model:program="form.program"
                                             v-model:school="form.school" v-model:course="form.course"
                                             v-model:year_level="form.year_level" v-model:term="form.term"
-                                            v-model:academic_year="form.academic_year" :show-header="false" />
+                                            v-model:academic_year="form.academic_year" v-model:remarks="form.remarks"
+                                            :show-header="false" />
 
                                         <!-- Date Filed -->
                                         <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-10">
@@ -213,6 +214,7 @@ const form = useForm({
     term: grant?.term || null,
     academic_year: grant?.academic_year || null,
     date_filed: formatDateForPicker(grant?.date_filed),
+    remarks: grant?.remarks || p?.remarks || '',
 });
 
 // Validation for step 1
@@ -338,6 +340,7 @@ watch(() => props.visible, async (newValue) => {
         form.term = grant?.term || null;
         form.academic_year = grant?.academic_year || null;
         form.date_filed = formatDateForPicker(grant?.date_filed);
+        form.remarks = grant?.remarks || p?.remarks || '';
 
         form.clearErrors();
         activeStep.value = '1';
