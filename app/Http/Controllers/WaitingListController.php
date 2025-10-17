@@ -46,7 +46,15 @@ class WaitingListController extends Controller
                     }
                 })
                     // OR include profiles marked as on waiting list (even without scholarship grants)
-                    ->orWhere('is_on_waiting_list', true);
+                    // But still apply program filter if specified
+                    ->orWhere(function ($subQ) use ($programId) {
+                        $subQ->where('is_on_waiting_list', true);
+                        if ($programId) {
+                            $subQ->whereHas('scholarshipGrant', function ($grantQ) use ($programId) {
+                                $grantQ->where('program_id', $programId);
+                            });
+                        }
+                    });
             });
 
         // Filter by date range (date_filed) from scholarshipGrant relation
@@ -222,23 +230,23 @@ class WaitingListController extends Controller
                 $program_id = $profile->scholarshipGrant[0]->program_id ?? null;
             }
 
-            // Get all profile IDs for this program
-            $programIds = ScholarshipProfile::with(['scholarshipGrant'])
-                ->where(function ($q) use ($program_id) {
-                    $q->whereHas('scholarshipGrant', function ($subQ) use ($program_id) {
+            // Get all profile IDs for this program - only if program exists
+            if ($program_id) {
+                $programIds = ScholarshipProfile::with(['scholarshipGrant'])
+                    ->whereHas('scholarshipGrant', function ($subQ) use ($program_id) {
                         $subQ->where('scholarship_status', 0)
-                            ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
-                        if ($program_id) {
-                            $subQ->where('program_id', $program_id);
-                        }
+                            ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
+                            ->where('program_id', $program_id);
                     })
-                        ->orWhere('is_on_waiting_list', true);
-                })
-                ->orderBy('date_filed', 'asc')
-                ->orderBy('created_at', 'asc')
-                ->pluck('profile_id')->toArray();
-            $rowIndex = array_search($profile->profile_id, $programIds);
-            $profile->sequence_number = $rowIndex !== false ? $rowIndex + 1 : null;
+                    ->orderBy('date_filed', 'asc')
+                    ->orderBy('created_at', 'asc')
+                    ->pluck('profile_id')->toArray();
+                $rowIndex = array_search($profile->profile_id, $programIds);
+                $profile->sequence_number = $rowIndex !== false ? $rowIndex + 1 : null;
+            } else {
+                // No program ID - don't assign sequence number
+                $profile->sequence_number = null;
+            }
 
             // Calculate daily sequence number
             $dateFiled = null;
@@ -259,9 +267,15 @@ class WaitingListController extends Controller
                                 $subQ->where('program_id', $program_id);
                             }
                         })
-                            ->orWhere(function ($subQ) use ($dateFiled) {
+                            ->orWhere(function ($subQ) use ($dateFiled, $program_id) {
                                 $subQ->where('is_on_waiting_list', true)
                                     ->whereDate('date_filed', $dateFiled);
+                                // Also apply program filter to waiting list records
+                                if ($program_id) {
+                                    $subQ->whereHas('scholarshipGrant', function ($grantQ) use ($program_id) {
+                                        $grantQ->where('program_id', $program_id);
+                                    });
+                                }
                             });
                     })
                     ->orderBy('date_filed', 'asc')

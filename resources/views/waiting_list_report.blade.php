@@ -319,27 +319,37 @@
 
             // Calculate Queue Numbers (Q#) per Program, School, and Course
             // These represent the position in the waiting list for each grouping
+            // Exclude records without valid program/school/course from queue numbers
 
-            // Q# for Program (per program by date filed)
+            // Q# for Program (per program by date filed) - only if program exists
+            $programQNum = '-';
+            if ($programName !== 'no_program' && $grant && $grant->program) {
             if (!isset($programQueueNumbers[$programName])) {
             $programQueueNumbers[$programName] = 0;
             }
             $programQueueNumbers[$programName]++;
             $programQNum = $programQueueNumbers[$programName];
+            }
 
-            // Q# for School (per school by date filed)
+            // Q# for School (per school by date filed) - only if school exists
+            $schoolQNum = '-';
+            if ($schoolName !== 'no_school' && $grant && $grant->school) {
             if (!isset($schoolQueueNumbers[$schoolName])) {
             $schoolQueueNumbers[$schoolName] = 0;
             }
             $schoolQueueNumbers[$schoolName]++;
             $schoolQNum = $schoolQueueNumbers[$schoolName];
+            }
 
-            // Q# for Course (per course by date filed)
+            // Q# for Course (per course by date filed) - only if course exists
+            $courseQNum = '-';
+            if ($courseName !== 'no_course' && $grant && $grant->course) {
             if (!isset($courseQueueNumbers[$courseName])) {
             $courseQueueNumbers[$courseName] = 0;
             }
             $courseQueueNumbers[$courseName]++;
             $courseQNum = $courseQueueNumbers[$courseName];
+            }
 
             $dateFiled = $grant->date_filed;
 
