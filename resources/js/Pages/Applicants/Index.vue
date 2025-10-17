@@ -39,6 +39,8 @@ import ExportModal from './Modal/ExportModal.vue';
 import PriorityModal from './Modal/PriorityModal.vue';
 import JpmModal from './Modal/JpmModal.vue';
 import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
+import GridView from '@/Components/GridView.vue';
+import ApplicantGridCard from '@/Components/ApplicantGridCard.vue';
 const showReportModal = ref(false);
 const openReportModal = () => { showReportModal.value = true; };
 const showExportModal = ref(false);
@@ -143,6 +145,9 @@ const filter = useForm({
 
 const searchInput = ref(null);
 const selectedProfile = ref({});
+
+// View mode: 'table' or 'grid'
+const viewMode = ref('table');
 
 // JPM Filter Options
 const jpmFilterOptions = [
@@ -303,8 +308,8 @@ watch(() => ({
     municipality: filter.municipality,
     year_level: filter.year_level,
     remarks: filter.remarks,
-    date_from: filter.date_from,
-    date_to: filter.date_to,
+    date_from: filter.date_from ? filter.date_from.toString() : null,
+    date_to: filter.date_to ? filter.date_to.toString() : null,
     jpm_filter: filter.jpm_filter,
     records: filter.records
 }), (newFilter, oldFilter) => {
@@ -516,6 +521,29 @@ const removePriority = (applicant) => {
     });
 };
 
+// Handle grid card actions
+const handleCardAction = ({ action, applicant }) => {
+    switch (action) {
+        case 'review':
+            openProfileReviewModal(applicant);
+            break;
+        case 'jpm-tag':
+            openJpmModal(applicant);
+            break;
+        case 'assign-priority':
+            openPriorityModal(applicant);
+            break;
+        case 'edit':
+            editApplicant(applicant);
+            break;
+        case 'delete':
+            confirmDeleteApplicant(applicant);
+            break;
+        default:
+            console.warn('Unknown action:', action);
+    }
+};
+
 // Utility functions for applicant data formatting
 const getApplicantInitials = (applicant) => {
     if (!applicant) return '';
@@ -654,6 +682,18 @@ const formatDate = (date) => {
 
                 <template #end>
                     <div class="flex gap-3 items-center">
+                        <!-- View Mode Toggle -->
+                        <div class="flex gap-1 border border-gray-300 rounded-md p-1">
+                            <Button icon="pi pi-list" :severity="viewMode === 'table' ? 'info' : 'secondary'"
+                                :outlined="viewMode !== 'table'" @click="viewMode = 'table'" size="small"
+                                v-tooltip.bottom="'Table View'" />
+                            <Button icon="pi pi-th-large" :severity="viewMode === 'grid' ? 'info' : 'secondary'"
+                                :outlined="viewMode !== 'grid'" @click="viewMode = 'grid'" size="small"
+                                v-tooltip.bottom="'Grid View'" />
+                        </div>
+
+                        <Divider layout="vertical" class="h-6" />
+
                         <!-- JPM Controls -->
                         <div class="flex items-center gap-4" v-if="hasPermission('can-view-jpm')">
                             <div class="flex items-center gap-2">
@@ -803,9 +843,10 @@ const formatDate = (date) => {
 
                     </div>
 
-                    <DataTable :value="applicants" stripedRows showGridlines responsiveLayout="scroll"
-                        :emptyMessage="'No applicants to display'" :lazy="true" paginator :rows="rows"
-                        :totalRecords="totalRecords" :first="first" @page="onPageChange"
+                    <!-- Table View -->
+                    <DataTable v-if="viewMode === 'table'" :value="applicants" stripedRows showGridlines
+                        responsiveLayout="scroll" :emptyMessage="'No applicants to display'" :lazy="true" paginator
+                        :rows="rows" :totalRecords="totalRecords" :first="first" @page="onPageChange"
                         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                         :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
 
@@ -1041,6 +1082,54 @@ const formatDate = (date) => {
                             </template>
                         </Column>
                     </DataTable>
+
+                    <!-- Grid View -->
+                    <GridView v-else-if="viewMode === 'grid'" :items="applicants" :total-records="totalRecords"
+                        :rows="rows" :first="first" :columns="{ xs: 1, md: 2, lg: 3, xl: 4 }"
+                        empty-message="No applicants to display" empty-icon="pi pi-users" @page-change="onPageChange">
+                        <template #default="{ item: applicant }">
+                            <ApplicantGridCard :applicant="applicant"
+                                :show-jpm-badge="showJpmColumns && getJpmStatus(applicant)"
+                                :jpm-details="getJpmMemberDetails(applicant)" :actions="[
+                                    {
+                                        name: 'review',
+                                        icon: 'pi pi-check-circle',
+                                        label: 'Review',
+                                        severity: 'success',
+                                        condition: () => hasPermission('create-scholar-profile')
+                                    },
+                                    {
+                                        name: 'jpm-tag',
+                                        icon: 'pi pi-tags',
+                                        severity: 'info',
+                                        tooltip: 'JPM Tagging',
+                                        outlined: true,
+                                        condition: () => hasPermission('can-view-jpm') && showJpmColumns && !hasRole('user')
+                                    },
+                                    {
+                                        name: 'assign-priority',
+                                        icon: 'pi pi-star',
+                                        severity: 'warn',
+                                        tooltip: 'Assign Priority',
+                                        outlined: true,
+                                        condition: () => hasPermission('can-manage-priority')
+                                    },
+                                    {
+                                        name: 'edit',
+                                        icon: 'pi pi-user-edit',
+                                        severity: 'help',
+                                        tooltip: 'Edit'
+                                    },
+                                    {
+                                        name: 'delete',
+                                        icon: 'pi pi-trash',
+                                        severity: 'danger',
+                                        tooltip: 'Delete',
+                                        condition: () => hasPermission('delete-scholar-profile') && !hasRole('user')
+                                    }
+                                ]" @action="handleCardAction" />
+                        </template>
+                    </GridView>
                 </Panel>
             </div>
         </div>
