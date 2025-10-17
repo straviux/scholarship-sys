@@ -430,13 +430,69 @@ const handleSubmit = () => {
     }
 };
 
+// Define empty form state
+const emptyFormState = {
+    // Personal Information
+    first_name: '',
+    middle_name: '',
+    last_name: '',
+    extension_name: '',
+    contact_no: '',
+    contact_no_2: '',
+    email: '',
+    date_of_birth: null,
+    gender: '',
+    place_of_birth: null,
+    civil_status: '',
+    religion: '',
+    indigenous_group: '',
+    municipality: null,
+    barangay: null,
+    address: '',
+    // Family Information
+    father_name: '',
+    father_occupation: '',
+    father_contact_no: '',
+    mother_name: '',
+    mother_occupation: '',
+    mother_contact_no: '',
+    guardian_name: '',
+    guardian_occupation: '',
+    guardian_relationship: '',
+    guardian_contact_no: '',
+    parents_guardian_gross_monthly_income: '',
+    // Academic Information
+    scholarship_grant_id: null,
+    program: null,
+    school: null,
+    course: null,
+    year_level: null,
+    term: null,
+    academic_year: null,
+    date_filed: null,
+    remarks: '',
+};
+
 // Reset form to initial empty state
 const resetForm = () => {
-    form.reset();
+    // Reset to empty values for create mode
+    Object.keys(emptyFormState).forEach(key => {
+        form[key] = emptyFormState[key];
+    });
     form.clearErrors();
     activeStep.value = '1';
     validationError.value = null;
 };
+
+// Watch for modal visibility changes - reset form when opening in create mode
+watch(() => props.visible, (newVal, oldVal) => {
+    if (newVal && !oldVal && props.mode === 'create') {
+        // Modal is opening in create mode - reset to empty state
+        nextTick(() => {
+            resetForm();
+        });
+    }
+});
 
 onMounted(() => {
     console.log('ApplicantFormModal mounted with props:', props);

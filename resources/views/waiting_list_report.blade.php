@@ -240,7 +240,6 @@
         <thead>
             <tr>
                 <th style="min-width:30px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">#</th>
-                <th style="width:30px;padding-left:0.05cm;padding-right:0.05cm;">Q#</th>
                 <th>Name</th>
                 <th>Contact No(s).</th>
                 @if(empty($filters['municipality']))
@@ -264,14 +263,16 @@
         </thead>
         <tbody>
             @php
-            // Sort profiles by program, school, course, and date filed
+            // Sort profiles by program, school, course, and date filed (oldest to newest)
             $sortedProfiles = $profiles->sortBy(function($profile) {
             $grant = optional($profile->scholarshipGrant->first());
             $programName = optional($grant->program)->shortname ?? optional($grant->program)->name ?? 'zzz_no_program';
             $schoolName = optional($grant->school)->shortname ?? optional($grant->school)->name ?? 'zzz_no_school';
             $courseName = optional($grant->course)->shortname ?? optional($grant->course)->name ?? 'zzz_no_course';
-            $dateFiled = $grant->date_filed;
-            return [$programName, $schoolName, $courseName, $dateFiled, $profile->created_at];
+            // Ensure date is properly parsed for sorting (oldest first)
+            $dateFiled = $grant->date_filed ? \Carbon\Carbon::parse($grant->date_filed)->format('Y-m-d') : '9999-12-31';
+            $createdAt = $profile->created_at ? \Carbon\Carbon::parse($profile->created_at)->format('Y-m-d H:i:s') : '9999-12-31 23:59:59';
+            return [$programName, $schoolName, $courseName, $dateFiled, $createdAt];
             });
 
             // Initialize sequence counters for different groupings
@@ -323,14 +324,13 @@
             @endphp
             <tr>
                 <td style="min-width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;{{ $bgStyle }}">{{ $overallIndex }}</td>
-                <td style="padding-left:0.05cm;padding-right:0.05cm;{{ $bgStyle }}">{{ $dateIndex }}</td>
-                <td style="font-size:12px;{{ $bgStyle }}">
+                <td style="font-size:11px;{{ $bgStyle }}">
                     <div>{{ $profile->last_name }}, {{ $profile->first_name }}</div>
                     <div style="font-size:9px;color:#666;margin-top:2px;line-height:1.4;">
-                        P:{{ $programSeqNum }} | S:{{ $schoolSeqNum }} | C:{{ $courseSeqNum }} | D:{{ $dateIndex }}
+                        P: #{{ $programSeqNum }} | S: #{{ $schoolSeqNum }} | C: #{{ $courseSeqNum }} | D: #{{ $dateIndex }}
                     </div>
                 </td>
-                <td style="font-size:12px;{{ $bgStyle }}">
+                <td style="font-size:11px;{{ $bgStyle }}">
                     @php
                     $contacts = array_filter([
                     $profile->contact_no ?? null,
@@ -340,22 +340,22 @@
                     {{ count($contacts) ? implode(' / ', $contacts) : '-' }}
                 </td>
                 @if(empty($filters['municipality']))
-                <td style="font-size:12px;{{ $bgStyle }}">{{ $profile->municipality ?? '-' }}</td>
+                <td style="font-size:11px;{{ $bgStyle }}">{{ $profile->municipality ?? '-' }}</td>
                 @endif
                 @if(empty($filters['program']))
-                <td style="font-size:12px;{{ $bgStyle }}">{{ optional(optional($profile->scholarshipGrant->first())->program)->shortname ?? '-' }}</td>
+                <td style="font-size:11px;{{ $bgStyle }}">{{ optional(optional($profile->scholarshipGrant->first())->program)->shortname ?? '-' }}</td>
                 @endif
                 @if(empty($filters['school']))
-                <td style="font-size:12px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->school->shortname ?? '-' }}</td>
+                <td style="font-size:11px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->school->shortname ?? '-' }}</td>
                 @endif
                 @if(empty($filters['course']))
-                <td style="font-size:12px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->course->name ?? '-' }}</td>
+                <td style="font-size:11px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->course->name ?? '-' }}</td>
                 @endif
                 @if(empty($filters['year_level']))
-                <td style="font-size:12px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->year_level ?? '-' }}</td>
+                <td style="font-size:11px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->year_level ?? '-' }}</td>
                 @endif
                 <td style="text-transform:lowercase;font-size:11px;{{ $bgStyle }}">{{ $profile->remarks ?? '-' }}</td>
-                <td style="font-size:12px;{{ $bgStyle }}">
+                <td style="font-size:11px;{{ $bgStyle }}">
                     {{ $dateFiled ? \Carbon\Carbon::parse($dateFiled)->format('m/d/Y') : '-' }}
                 </td>
             </tr>
