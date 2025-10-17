@@ -166,7 +166,7 @@
             <template #footer>
                 <div class="flex justify-end space-x-2">
                     <Button v-if="!selectedNotification?.is_read" @click="markAsReadAndClose(selectedNotification)"
-                        label="Mark as Read" severity="info" icon="pi pi-check" />
+                        label="Mark as Read" severity="info" icon="pi pi-check" size="small" />
                 </div>
             </template>
         </Dialog>

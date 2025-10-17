@@ -53,8 +53,11 @@
             padding: 0.06rem 0.09rem 0.06rem 0.22rem;
             text-align: left;
             white-space: normal;
-            word-break: break-word;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: normal;
             max-width: 180px;
+            vertical-align: top;
         }
 
         @media print {
@@ -263,24 +266,27 @@
         </thead>
         <tbody>
             @php
-            // Sort profiles by program, school, course, and date filed (oldest to newest)
+            // Sort profiles by date filed only (oldest to newest)
             $sortedProfiles = $profiles->sortBy(function($profile) {
             $grant = optional($profile->scholarshipGrant->first());
-            $programName = optional($grant->program)->shortname ?? optional($grant->program)->name ?? 'zzz_no_program';
-            $schoolName = optional($grant->school)->shortname ?? optional($grant->school)->name ?? 'zzz_no_school';
-            $courseName = optional($grant->course)->shortname ?? optional($grant->course)->name ?? 'zzz_no_course';
             // Ensure date is properly parsed for sorting (oldest first)
             $dateFiled = $grant->date_filed ? \Carbon\Carbon::parse($grant->date_filed)->format('Y-m-d') : '9999-12-31';
             $createdAt = $profile->created_at ? \Carbon\Carbon::parse($profile->created_at)->format('Y-m-d H:i:s') : '9999-12-31 23:59:59';
-            return [$programName, $schoolName, $courseName, $dateFiled, $createdAt];
+            // Primary sort: Date Filed → Created At (keep original order for other columns)
+            return [$dateFiled, $createdAt];
             });
 
             // Initialize sequence counters for different groupings
             $programSequences = [];
             $schoolSequences = [];
             $courseSequences = [];
-            $lastDate = null;
-            $dateIndex = 1;
+
+            // Initialize queue number counters (Q#) for program, school, and course
+            // These track position within each group based on date filed order
+            $programQueueNumbers = [];
+            $schoolQueueNumbers = [];
+            $courseQueueNumbers = [];
+
             $overallIndex = 1;
             @endphp
             @foreach($sortedProfiles as $profile)
@@ -311,23 +317,43 @@
             $courseSequences[$courseName]++;
             $courseSeqNum = $courseSequences[$courseName];
 
-            $dateFiled = $grant->date_filed;
-            $dateKey = $dateFiled ? \Carbon\Carbon::parse($dateFiled)->format('Y-m-d') : '';
-            if ($dateKey !== $lastDate) {
-            $dateIndex = 1;
-            $lastDate = $dateKey;
+            // Calculate Queue Numbers (Q#) per Program, School, and Course
+            // These represent the position in the waiting list for each grouping
+
+            // Q# for Program (per program by date filed)
+            if (!isset($programQueueNumbers[$programName])) {
+            $programQueueNumbers[$programName] = 0;
             }
+            $programQueueNumbers[$programName]++;
+            $programQNum = $programQueueNumbers[$programName];
+
+            // Q# for School (per school by date filed)
+            if (!isset($schoolQueueNumbers[$schoolName])) {
+            $schoolQueueNumbers[$schoolName] = 0;
+            }
+            $schoolQueueNumbers[$schoolName]++;
+            $schoolQNum = $schoolQueueNumbers[$schoolName];
+
+            // Q# for Course (per course by date filed)
+            if (!isset($courseQueueNumbers[$courseName])) {
+            $courseQueueNumbers[$courseName] = 0;
+            }
+            $courseQueueNumbers[$courseName]++;
+            $courseQNum = $courseQueueNumbers[$courseName];
+
+            $dateFiled = $grant->date_filed;
 
             // Check if applicant, parent, or guardian is JPM (only if user has permission)
             $isJpm = ($canViewJpm ?? false) && ($profile->is_jpm_member || $profile->is_father_jpm || $profile->is_mother_jpm || $profile->is_guardian_jpm);
             $bgStyle = $isJpm ? 'background-color: #d1fae5 !important;' : '';
             @endphp
             <tr>
-                <td style="min-width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;{{ $bgStyle }}">{{ $overallIndex }}</td>
+                <td style="font-size:10px;min-width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;{{ $bgStyle }}">{{ $overallIndex }}</td>
                 <td style="font-size:11px;{{ $bgStyle }}">
                     <div>{{ $profile->last_name }}, {{ $profile->first_name }}</div>
-                    <div style="font-size:9px;color:#666;margin-top:2px;line-height:1.4;">
-                        P: #{{ $programSeqNum }} | S: #{{ $schoolSeqNum }} | C: #{{ $courseSeqNum }} | D: #{{ $dateIndex }}
+                    <div style="font-size:9px;color:#666;margin-top:4px;line-height:1.4;">
+                        【Prog.<span style="font-weight: bold;">#{{ $programQNum }}</span> | Sch.<span style="font-weight: bold;">#{{ $schoolQNum }}</span> | Course<span style="font-weight: bold;">#{{ $courseQNum }}</span>】
+                        　
                     </div>
                 </td>
                 <td style="font-size:11px;{{ $bgStyle }}">
@@ -349,7 +375,7 @@
                 <td style="font-size:11px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->school->shortname ?? '-' }}</td>
                 @endif
                 @if(empty($filters['course']))
-                <td style="font-size:11px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->course->name ?? '-' }}</td>
+                <td style="font-size:10px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->course->name ?? '-' }}</td>
                 @endif
                 @if(empty($filters['year_level']))
                 <td style="font-size:11px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->year_level ?? '-' }}</td>
@@ -359,7 +385,7 @@
                     {{ $dateFiled ? \Carbon\Carbon::parse($dateFiled)->format('m/d/Y') : '-' }}
                 </td>
             </tr>
-            @php $dateIndex++; $overallIndex++; @endphp
+            @php $overallIndex++; @endphp
             @endforeach
         </tbody>
     </table>
