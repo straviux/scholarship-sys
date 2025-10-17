@@ -58,6 +58,7 @@ class ScholarshipRecord extends Model
         'conditional_deadline',
         'conditional_deadline_notified_at',
         'conditional_deadline_expired'
+        // Note: application_status, application_status_remarks, application_status_date removed (redundant with scholarship_status)
     ];
 
     protected $casts = [

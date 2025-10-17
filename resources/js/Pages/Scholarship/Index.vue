@@ -131,31 +131,113 @@
             <div class="mt-8">
                 <Panel>
                     <!-- Info Bar -->
-                    <div class="md:grid hidden grid-cols-3 items-center mb-4 bg-gray-50 rounded -mt-2">
-                        <div class="flex gap-4 items-center">
-                            <IconField iconPosition="left" class="w-full">
-                                <InputIcon class="pi pi-search" />
-                                <InputText v-model="globalFilter" placeholder="Search across all fields..."
-                                    class="w-full" />
+                    <div class="md:flex hidden items-center justify-between gap-4 mb-4 p-3 bg-gray-50 rounded-lg -mt-2">
+                        <div class="flex-1 max-w-md">
+                            <IconField iconPosition="left">
+                                <InputIcon class="pi pi-search text-gray-400" />
+                                <InputText v-model="globalFilter" placeholder="Search..." class="w-full" size="small" />
                             </IconField>
                         </div>
-                        <div class="text-sm text-gray-600 text-center">
-                            Showing
-                            <RecordsSelect v-model="filter.records" label="label" class="w-24" size="small" /> of
-                            {{ totalRecords }} records
-                        </div>
-                        <div class="flex items-center gap-3 justify-end">
+                        <div class="flex items-center justify-center gap-4">
+                            <div class="text-sm text-gray-600 flex items-center justify-center gap-2">
+                                <RecordsSelect v-model="filter.records" label="label" class="w-28" size="small" />
+                                <span>/ <strong>{{ totalRecords }}</strong></span>
+                            </div>
                             <SelectButton v-model="layout" :options="layoutOptions" optionLabel="icon" dataKey="value"
-                                aria-labelledby="custom">
+                                aria-labelledby="custom" size="small">
                                 <template #option="slotProps">
-                                    <i :class="slotProps.option.icon"></i>
+                                    <i :class="slotProps.option.icon" v-tooltip.bottom="slotProps.option.tooltip"></i>
                                 </template>
                             </SelectButton>
                         </div>
                     </div>
 
-                    <!-- DataView -->
-                    <DataView :value="profilesData" :layout="layout" paginator :rows="dataViewRows"
+                    <!-- DataTable View -->
+                    <DataTable v-if="layout === 'table'" :value="profilesData" paginator :rows="dataViewRows"
+                        :totalRecords="totalRecords" :first="first" @page="onPageChange" :lazy="true"
+                        paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                        :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
+                        :rowHover="true" stripedRows class="compact-table">
+
+                        <Column field="unique_id" header="ID" style="min-width: 120px;">
+                            <template #body="slotProps">
+                                <div class="flex items-center gap-3">
+                                    <Avatar :label="getInitials(slotProps.data)" size="normal" shape="circle"
+                                        class="bg-gradient-to-br from-blue-500 to-blue-600 text-white" />
+                                    <div>
+                                        <div class="font-bold text-sm">{{ getFullName(slotProps.data) }}</div>
+                                        <div class="text-xs text-gray-500">{{ slotProps.data.unique_id || 'N/A' }}</div>
+                                    </div>
+                                </div>
+                            </template>
+                        </Column>
+
+                        <Column field="contact_no" header="Contact" style="min-width: 130px;">
+                            <template #body="slotProps">
+                                <div class="text-sm">
+                                    <div>{{ slotProps.data.contact_no || 'N/A' }}</div>
+                                    <div class="text-xs text-gray-500">{{ slotProps.data.municipality || 'N/A' }}</div>
+                                </div>
+                            </template>
+                        </Column>
+
+                        <Column field="program" header="Program" style="min-width: 150px;">
+                            <template #body="slotProps">
+                                <div v-if="slotProps.data.latest_scholarship_record"
+                                    class="text-sm font-semibold truncate">
+                                    {{ slotProps.data.latest_scholarship_record.program?.shortname || 'N/A' }}
+                                </div>
+                                <div v-else class="text-sm text-gray-400">N/A</div>
+                            </template>
+                        </Column>
+
+                        <Column field="course" header="Course" style="min-width: 150px;">
+                            <template #body="slotProps">
+                                <div v-if="slotProps.data.latest_scholarship_record">
+                                    <div class="text-sm font-medium truncate">
+                                        {{ slotProps.data.latest_scholarship_record.course?.shortname || 'N/A' }}
+                                    </div>
+                                    <div class="text-xs text-gray-500 truncate">
+                                        {{ slotProps.data.latest_scholarship_record.school?.shortname || 'N/A' }}
+                                    </div>
+                                </div>
+                                <div v-else class="text-sm text-gray-400">N/A</div>
+                            </template>
+                        </Column>
+
+                        <Column field="status" header="Status" style="min-width: 140px;">
+                            <template #body="slotProps">
+                                <Chip
+                                    v-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.scholarship_status !== null"
+                                    :label="getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.scholarship_status)"
+                                    :severity="getScholarshipStatusSeverity(slotProps.data.latest_scholarship_record.scholarship_status)"
+                                    size="small" class="font-medium" />
+                                <Chip v-else label="No Record" severity="secondary" size="small" />
+                            </template>
+                        </Column>
+
+                        <Column header="Actions" style="min-width: 120px;">
+                            <template #body="slotProps">
+                                <div class="flex gap-2">
+                                    <Button icon="pi pi-eye" size="small" severity="info" outlined rounded
+                                        v-tooltip.top="'View'" @click="viewFullProfile(slotProps.data)" />
+                                    <Button icon="pi pi-history" size="small" severity="secondary" outlined rounded
+                                        v-tooltip.top="'History'" @click="viewFullHistory(slotProps.data)" />
+                                </div>
+                            </template>
+                        </Column>
+
+                        <template #empty>
+                            <div class="text-center py-12">
+                                <i class="pi pi-users text-6xl text-gray-300 mb-4"></i>
+                                <p class="text-gray-500 text-lg">No profiles found</p>
+                                <p class="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
+                            </div>
+                        </template>
+                    </DataTable>
+
+                    <!-- DataView (List/Grid) -->
+                    <DataView v-else :value="profilesData" :layout="layout" paginator :rows="dataViewRows"
                         :totalRecords="totalRecords" :first="first" @page="onPageChange" :lazy="true"
                         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                         :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
@@ -164,75 +246,70 @@
                         <template #list="slotProps">
                             <div class="grid grid-cols-1 gap-3">
                                 <div v-for="(item, index) in slotProps.items" :key="index"
-                                    class="flex flex-col md:flex-row gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                    class="flex flex-col md:flex-row gap-4 p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-blue-300 transition-all duration-200 bg-white">
                                     <!-- Avatar and Basic Info -->
-                                    <div class="flex items-start gap-4 flex-1">
-                                        <Avatar :label="getInitials(item)" size="xlarge" shape="circle"
-                                            class="bg-blue-500 text-white" />
-                                        <div class="flex-1">
-                                            <div class="font-semibold text-lg text-gray-800">
+                                    <div class="flex items-center gap-3 md:min-w-[260px]">
+                                        <Avatar :label="getInitials(item)" size="large" shape="circle"
+                                            class="bg-gradient-to-br from-blue-500 to-blue-600 text-white" />
+                                        <div class="flex-1 min-w-0">
+                                            <div class="font-bold text-base text-gray-900 truncate"
+                                                :title="getFullName(item)">
                                                 {{ getFullName(item) }}
                                             </div>
-                                            <div class="text-sm text-gray-600 mt-1">
-                                                ID: {{ item.unique_id || 'N/A' }}
+                                            <div class="text-xs text-gray-500 mt-0.5">{{ item.unique_id || 'N/A' }}
                                             </div>
-                                            <div class="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                                                <i class="pi pi-phone text-xs"></i>
-                                                {{ item.contact_no || 'No contact' }}
-                                            </div>
-                                            <div class="text-sm text-gray-500 flex items-center gap-2">
-                                                <i class="pi pi-map-marker text-xs"></i>
-                                                {{ item.municipality || 'No location' }}
+                                            <div class="text-xs text-gray-600 mt-1 flex items-center gap-1.5">
+                                                <i class="pi pi-phone text-[10px]"></i>
+                                                {{ item.contact_no || 'N/A' }}
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Academic Info -->
-                                    <div class="flex-1 space-y-2">
+                                    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 min-w-0">
                                         <div v-if="item.latest_scholarship_record">
-                                            <div class="text-xs text-gray-500">Latest Program</div>
-                                            <div class="font-medium text-gray-800">
-                                                {{ item.latest_scholarship_record.program?.shortname ||
-                                                    item.latest_scholarship_record.program?.name || 'N/A' }}
+                                            <div class="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">
+                                                Program</div>
+                                            <div class="font-semibold text-sm text-gray-900 truncate"
+                                                :title="item.latest_scholarship_record.program?.name">
+                                                {{ item.latest_scholarship_record.program?.shortname || 'N/A' }}
                                             </div>
                                         </div>
                                         <div v-if="item.latest_scholarship_record">
-                                            <div class="text-xs text-gray-500">Course & School</div>
-                                            <div class="font-medium text-gray-800">
-                                                {{ item.latest_scholarship_record.course?.shortname ||
-                                                    item.latest_scholarship_record.course?.name || 'N/A' }}
+                                            <div class="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">Course
                                             </div>
-                                            <div class="text-xs text-gray-600">
-                                                {{ item.latest_scholarship_record.school?.shortname ||
-                                                    item.latest_scholarship_record.school?.name || 'N/A' }}
+                                            <div class="font-medium text-sm text-gray-900 truncate"
+                                                :title="item.latest_scholarship_record.course?.name">
+                                                {{ item.latest_scholarship_record.course?.shortname || 'N/A' }}
+                                            </div>
+                                            <div class="text-xs text-gray-600 truncate"
+                                                :title="item.latest_scholarship_record.school?.name">
+                                                {{ item.latest_scholarship_record.school?.shortname || 'N/A' }}
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Status and Actions -->
-                                    <div class="flex flex-col justify-between items-end gap-2">
-                                        <div class="space-y-2">
-                                            <div v-if="item.latest_scholarship_record">
-                                                <Chip
-                                                    :label="getApprovalStatusLabel(item.latest_scholarship_record.approval_status)"
-                                                    :severity="getApprovalStatusSeverity(item.latest_scholarship_record.approval_status)" />
-                                            </div>
-                                            <div v-else>
-                                                <Chip label="No Status" severity="secondary" />
-                                            </div>
-                                            <div class="text-xs text-gray-500 text-right">
-                                                {{ item.total_scholarships }} scholarship(s)
-                                            </div>
-                                            <div class="text-xs text-gray-400 text-right"
-                                                v-if="item.latest_scholarship_record">
-                                                Applied: {{ formatDate(item.latest_scholarship_record.created_at) }}
-                                            </div>
+                                    <div
+                                        class="flex flex-row md:flex-col justify-between md:justify-start items-center md:items-end gap-2 md:min-w-[140px]">
+                                        <!-- Scholarship Status -->
+                                        <div v-if="item.latest_scholarship_record && item.latest_scholarship_record.scholarship_status !== null"
+                                            class="text-right">
+                                            <Chip
+                                                :label="getScholarshipStatusLabel(item.latest_scholarship_record.scholarship_status)"
+                                                :severity="getScholarshipStatusSeverity(item.latest_scholarship_record.scholarship_status)"
+                                                size="small" class="font-medium" />
                                         </div>
+                                        <div v-else>
+                                            <Chip label="No Record" severity="secondary" size="small" />
+                                        </div>
+
+                                        <!-- Actions -->
                                         <div class="flex gap-2">
                                             <Button icon="pi pi-eye" size="small" severity="info" outlined rounded
-                                                v-tooltip.top="'View Full Profile'" @click="viewFullProfile(item)" />
+                                                v-tooltip.top="'View'" @click="viewFullProfile(item)" />
                                             <Button icon="pi pi-history" size="small" severity="secondary" outlined
-                                                rounded v-tooltip.top="'View History'" @click="viewFullHistory(item)" />
+                                                rounded v-tooltip.top="'History'" @click="viewFullHistory(item)" />
                                         </div>
                                     </div>
                                 </div>
@@ -243,45 +320,59 @@
                         <template #grid="slotProps">
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                 <div v-for="(item, index) in slotProps.items" :key="index"
-                                    class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                    class="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all duration-200 bg-white">
                                     <div class="flex flex-col items-center text-center space-y-3">
+                                        <!-- Avatar -->
                                         <Avatar :label="getInitials(item)" size="xlarge" shape="circle"
-                                            class="bg-blue-500 text-white" />
+                                            class="bg-gradient-to-br from-blue-500 to-blue-600 text-white" />
+
+                                        <!-- Name & ID -->
                                         <div class="w-full">
-                                            <div class="font-semibold text-gray-800 truncate">
+                                            <div class="font-bold text-sm text-gray-900 truncate"
+                                                :title="getFullName(item)">
                                                 {{ getFullName(item) }}
                                             </div>
-                                            <div class="text-xs text-gray-500 mt-1">
-                                                ID: {{ item.unique_id || 'N/A' }}
+                                            <div class="text-xs text-gray-500 mt-0.5">{{ item.unique_id || 'N/A' }}
                                             </div>
                                         </div>
 
-                                        <Divider />
+                                        <Divider class="my-1" />
 
+                                        <!-- Academic Info -->
                                         <div class="w-full space-y-2 text-sm">
                                             <div v-if="item.latest_scholarship_record">
-                                                <div class="text-xs text-gray-500">Program</div>
-                                                <div class="font-medium text-gray-800 truncate">
+                                                <div class="text-[10px] text-gray-500 uppercase tracking-wide">Program
+                                                </div>
+                                                <div class="font-semibold text-gray-900 truncate"
+                                                    :title="item.latest_scholarship_record.program?.name">
                                                     {{ item.latest_scholarship_record.program?.shortname || 'N/A' }}
                                                 </div>
                                             </div>
                                             <div v-if="item.latest_scholarship_record">
-                                                <div class="text-xs text-gray-500">Course</div>
-                                                <div class="font-medium text-gray-800 truncate">
+                                                <div class="text-[10px] text-gray-500 uppercase tracking-wide">Course
+                                                </div>
+                                                <div class="font-medium text-gray-900 truncate"
+                                                    :title="item.latest_scholarship_record.course?.name">
                                                     {{ item.latest_scholarship_record.course?.shortname || 'N/A' }}
                                                 </div>
                                             </div>
-                                            <div>
-                                                <Chip v-if="item.latest_scholarship_record"
-                                                    :label="getApprovalStatusLabel(item.latest_scholarship_record.approval_status)"
-                                                    :severity="getApprovalStatusSeverity(item.latest_scholarship_record.approval_status)"
-                                                    size="small" />
-                                                <Chip v-else label="No Status" severity="secondary" size="small" />
+
+                                            <!-- Status -->
+                                            <div class="pt-1">
+                                                <div
+                                                    v-if="item.latest_scholarship_record && item.latest_scholarship_record.scholarship_status !== null">
+                                                    <Chip
+                                                        :label="getScholarshipStatusLabel(item.latest_scholarship_record.scholarship_status)"
+                                                        :severity="getScholarshipStatusSeverity(item.latest_scholarship_record.scholarship_status)"
+                                                        size="small" class="font-medium" />
+                                                </div>
+                                                <Chip v-else label="No Record" severity="secondary" size="small" />
                                             </div>
                                         </div>
 
-                                        <Divider />
+                                        <Divider class="my-1" />
 
+                                        <!-- Actions -->
                                         <div class="flex gap-2 w-full">
                                             <Button icon="pi pi-eye" size="small" severity="info" outlined
                                                 class="flex-1" v-tooltip.top="'View'" @click="viewFullProfile(item)" />
@@ -391,11 +482,13 @@
                         </div>
                         <div>
                             <label class="text-xs font-medium text-gray-600">Status</label>
-                            <div class="mt-1">
+                            <div class="mt-1"
+                                v-if="selectedProfile.latest_scholarship_record.scholarship_status !== null">
                                 <Chip
-                                    :label="getApprovalStatusLabel(selectedProfile.latest_scholarship_record.approval_status)"
-                                    :severity="getApprovalStatusSeverity(selectedProfile.latest_scholarship_record.approval_status)" />
+                                    :label="getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.scholarship_status)"
+                                    :severity="getScholarshipStatusSeverity(selectedProfile.latest_scholarship_record.scholarship_status)" />
                             </div>
+                            <p v-else class="text-sm font-medium text-gray-500">N/A</p>
                         </div>
                         <div>
                             <label class="text-xs font-medium text-gray-600">School</label>
@@ -419,6 +512,13 @@
                             <label class="text-xs font-medium text-gray-600">Date Applied</label>
                             <p class="text-sm font-medium">
                                 {{ formatDate(selectedProfile.latest_scholarship_record.created_at) }}
+                            </p>
+                        </div>
+                        <div v-if="selectedProfile.latest_scholarship_record.scholarship_status_remarks"
+                            class="md:col-span-2">
+                            <label class="text-xs font-medium text-gray-600">Status Remarks</label>
+                            <p class="text-sm font-medium">
+                                {{ selectedProfile.latest_scholarship_record.scholarship_status_remarks }}
                             </p>
                         </div>
                     </div>
@@ -475,10 +575,10 @@
         </Dialog>
 
         <!-- Application Form Modal -->
-        <ApplicationFormModal v-model:visible="showAddApplicantModal" :profiles="profiles" @success="refreshData" />
+        <ApplicantFormModal v-model:visible="showAddApplicantModal" :profiles="profiles" @success="refreshData" />
 
-        <!-- Add Existing Modal -->
-        <AddExistingModal v-model:visible="showAddExistingModal" @success="refreshData" />
+        <!-- Scholar Form Modal -->
+        <ScholarFormModal v-model:visible="showAddExistingModal" mode="create" @success="refreshData" />
     </AdminLayout>
 </template>
 
@@ -493,6 +593,8 @@ import moment from 'moment';
 import Button from 'primevue/button';
 import Panel from 'primevue/panel';
 import DataView from 'primevue/dataview';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import SelectButton from 'primevue/selectbutton';
@@ -515,8 +617,8 @@ import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 
 // Modal Components
-import ApplicationFormModal from '@/Components/ApplicationFormModal.vue';
-import AddExistingModal from '@/Components/AddExistingModal.vue';
+import ApplicantFormModal from '@/Components/modals/ApplicantFormModal.vue';
+import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
 
 // Props
 const props = defineProps({
@@ -561,7 +663,7 @@ const showAllFilters = ref(false);
 const globalFilter = ref(props.filters?.global_search || '');
 const first = ref(0);
 const rows = ref(props.filters?.records ? parseInt(props.filters.records) : 10);
-const layout = ref('list');
+const layout = ref('table'); // Default to table view
 const actionsPopover = ref();
 const profileType = ref(getInitialProfileType());
 
@@ -574,8 +676,9 @@ const profileTypeOptions = ref([
 
 // Layout options
 const layoutOptions = ref([
-    { icon: 'pi pi-list', value: 'list' },
-    { icon: 'pi pi-th-large', value: 'grid' }
+    { icon: 'pi pi-table', value: 'table', tooltip: 'Table View' },
+    { icon: 'pi pi-list', value: 'list', tooltip: 'List View' },
+    { icon: 'pi pi-th-large', value: 'grid', tooltip: 'Grid View' }
 ]);
 
 // Approval workflow state
@@ -647,6 +750,34 @@ const getApprovalStatusSeverity = (status) => {
             return 'info';
         case 'conditionally_approved':
             return 'contrast';
+        default:
+            return 'secondary';
+    }
+};
+
+const getScholarshipStatusLabel = (status) => {
+    const statusMap = {
+        0: 'Pending',
+        1: 'Active Scholar',
+        2: 'Completed',
+        3: 'Suspended',
+        4: 'Cancelled'
+    };
+    return statusMap[status] || 'Unknown';
+};
+
+const getScholarshipStatusSeverity = (status) => {
+    switch (parseInt(status)) {
+        case 0:
+            return 'secondary'; // Pending
+        case 1:
+            return 'success'; // Active Scholar
+        case 2:
+            return 'info'; // Completed
+        case 3:
+            return 'warn'; // Suspended
+        case 4:
+            return 'danger'; // Cancelled
         default:
             return 'secondary';
     }

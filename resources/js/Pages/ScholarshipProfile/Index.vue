@@ -5,10 +5,10 @@ import moment from 'moment'
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { usePermission } from '@/composable/permissions';
-import Table from '@/Components/Table.vue';
-import TableRow from '@/Components/TableRow.vue';
-import TableHeaderCell from '@/Components/TableHeaderCell.vue';
-import TableDataCell from '@/Components/TableDataCell.vue';
+import Table from '@/Components/ui/table/Table.vue';
+import TableRow from '@/Components/ui/table/TableRow.vue';
+import TableHeaderCell from '@/Components/ui/table/TableHeaderCell.vue';
+import TableDataCell from '@/Components/ui/table/TableDataCell.vue';
 import {
     ChevronUpDownIcon,
     UserPlusIcon,
@@ -22,7 +22,7 @@ const openReportModal = () => { showReportModal.value = true; };
 // How to use: 1. import component, 2. define model, 3. define scholarshipProgramId (set to null if fetching all course)
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
-import Pagination from '@/Components/Pagination.vue';
+import Pagination from '@/Components/ui/table/Pagination.vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';

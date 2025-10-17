@@ -334,16 +334,16 @@ import {
     DialogPanel,
     DialogTitle,
 } from "@headlessui/vue";
-import InputError from "@/Components/InputError.vue";
-import InputLabel from "@/Components/InputLabel.vue";
-import TextInput from "@/Components/TextInput.vue";
+import InputError from "@/Components/ui/inputs/InputError.vue";
+import InputLabel from "@/Components/ui/inputs/InputLabel.vue";
+import TextInput from "@/Components/ui/inputs/TextInput.vue";
 import VueMultiselect from "vue-multiselect";
 import { XMarkIcon } from "@heroicons/vue/20/solid";
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
 // COURSE MULTISELECT COMPONENT
-import AcademicInformationFields from '@/Components/AcademicInformationFields.vue';
+import AcademicInformationFields from '@/Components/forms/fields/AcademicInformationFields.vue';
 import ProfileSelect from "@/Components/selects/ProfileSelect.vue";
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import BarangaySelect from '@/Components/selects/BarangaySelect.vue';

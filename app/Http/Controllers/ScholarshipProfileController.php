@@ -920,12 +920,13 @@ class ScholarshipProfileController extends Controller
         $profileType = $request->get('profile_type', 'all');
 
         if ($profileType === 'existing') {
-            // Filter for approved profiles (approved, auto_approved, conditionally_approved)
+            // Filter for active scholars (scholarship_status = 1 and scholarship_status_remarks = 'Active Scholar')
             $query->whereHas('scholarshipGrant', function ($q) {
-                $q->whereIn('approval_status', ['approved', 'auto_approved', 'conditionally_approved']);
+                $q->where('scholarship_status', 1)
+                    ->where('scholarship_status_remarks', 'Active Scholar');
             });
         } elseif ($profileType === 'declined') {
-            // Filter for declined profiles
+            // Filter for declined profiles based on approval_status
             $query->whereHas('scholarshipGrant', function ($q) {
                 $q->where('approval_status', 'declined');
             });

@@ -32,7 +32,7 @@ import Card from 'primevue/card';
 import Avatar from 'primevue/avatar';
 import Popover from 'primevue/popover';
 
-import ApplicationFormModal from '@/Components/ApplicationFormModal.vue';
+import ApplicantFormModal from '@/Components/modals/ApplicantFormModal.vue';
 // import ApplicantProfileModal from '@/Pages/Applicants/Modal/ApplicantProfileModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
 import ExportModal from './Modal/ExportModal.vue';
@@ -47,12 +47,9 @@ const openExportModal = () => { showExportModal.value = true; };
 // Actions popover
 const actionsPopover = ref();
 
-// COURSE MULTISELECT COMPONENT
-// How to use: 1. import component, 2. define model, 3. define scholarshipProgramId (set to null if fetching all course)
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import RecordsSelect from '@/Components/selects/RecordsSelect.vue';
-import Pagination from '@/Components/Pagination.vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
@@ -456,7 +453,7 @@ const openProfileReviewModal = (applicant) => {
         school: applicant.scholarship_grant?.[0]?.school || null,
         year_level: applicant.scholarship_grant?.[0]?.year_level || null,
         approval_status: applicant.scholarship_grant?.[0]?.approval_status || 'pending',
-        application_status: applicant.scholarship_grant?.[0]?.application_status || 0,
+        scholarship_status: applicant.scholarship_grant?.[0]?.scholarship_status || 0,
         created_at: applicant.scholarship_grant?.[0]?.created_at || applicant.created_at,
         conditional_requirements: applicant.scholarship_grant?.[0]?.conditional_requirements || null,
         conditional_deadline: applicant.scholarship_grant?.[0]?.conditional_deadline || null,
@@ -473,7 +470,7 @@ const closeProfileReviewModal = () => {
     selectedApplicantForReview.value = null;
 };
 
-const handleApprovalAction = (application) => {
+const handleApprovalAction = () => {
     closeProfileReviewModal();
     toast.success('Application reviewed successfully');
     refreshApplicationList();
@@ -1385,7 +1382,7 @@ const formatDate = (date) => {
         </Dialog>
 
         <!-- Application Form Modal - for creating/editing applicants -->
-        <ApplicationFormModal v-model:visible="showApplicationFormModal" :mode="applicationFormMode"
+        <ApplicantFormModal v-model:visible="showApplicationFormModal" :mode="applicationFormMode"
             :profile="modalProfile" @success="closeModal" />
 
         <!-- Applicant Profile Modal - for editing existing applicants (keeping for backward compatibility) -->

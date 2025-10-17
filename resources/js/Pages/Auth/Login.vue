@@ -1,10 +1,10 @@
 <script setup>
-import Checkbox from "@/Components/Checkbox.vue";
+import Checkbox from "@/Components/ui/inputs/Checkbox.vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
-import InputError from "@/Components/InputError.vue";
-import InputLabel from "@/Components/InputLabel.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
-import TextInput from "@/Components/TextInput.vue";
+import InputError from "@/Components/ui/inputs/InputError.vue";
+import InputLabel from "@/Components/ui/inputs/InputLabel.vue";
+import PrimaryButton from "@/Components/ui/buttons/PrimaryButton.vue";
+import TextInput from "@/Components/ui/inputs/TextInput.vue";
 import { Head, useForm, Link } from "@inertiajs/vue3";
 import { isAndroid, isIOS, isMobile } from '@basitcodeenv/vue3-device-detect'
 import { ref } from 'vue';

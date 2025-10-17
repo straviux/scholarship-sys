@@ -11,6 +11,7 @@ use App\Http\Controllers\ScholarshipRecordController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\ScholarshipProfileController;
+use App\Http\Controllers\ScholarController;
 use App\Http\Controllers\WaitingListController;
 use App\Http\Controllers\SystemReportController;
 use App\Http\Controllers\SystemUpdateController;
@@ -75,6 +76,12 @@ Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->gr
     Route::get('/applicants-export', [WaitingListController::class, 'export'])->name('waitinglist.export');
 
     Route::get('/get-user-encoded-records', [WaitingListController::class, 'getUserEncodedRecords'])->name('waitinglist.getUserEncodedRecords');
+
+    // SCHOLAR ROUTES
+    // Dedicated routes for managing active scholars (not applicants)
+    // These routes create profiles with scholarship_status = 1 (approved/active)
+    Route::post('/scholars', [ScholarController::class, 'store'])->name('scholars.store');
+    Route::put('/scholars/{id}', [ScholarController::class, 'update'])->name('scholars.update');
 });
 
 // API route for searching profiles by name

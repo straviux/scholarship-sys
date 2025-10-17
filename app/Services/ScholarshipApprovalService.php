@@ -22,7 +22,8 @@ class ScholarshipApprovalService
                 'approved_by' => $approver->id,
                 'approved_at' => now(),
                 'approval_remarks' => $data['remarks'] ?? null,
-                'application_status' => 1, // Update existing status field
+                'scholarship_status' => 1, // 1 = Approved/Active
+                'scholarship_status_remarks' => 'Active Scholar',
                 // Clear decline fields if previously declined
                 'declined_by' => null,
                 'declined_at' => null,
@@ -52,7 +53,8 @@ class ScholarshipApprovalService
                 'declined_by' => $decliner->id,
                 'declined_at' => now(),
                 'decline_reason' => $data['reason'],
-                'application_status' => 2, // Update existing status field
+                'scholarship_status' => 4, // 4 = Cancelled/Declined
+                'scholarship_status_remarks' => 'Application Declined',
                 // Clear approval fields if previously approved
                 'approved_by' => null,
                 'approved_at' => null,
@@ -186,6 +188,8 @@ class ScholarshipApprovalService
                 'declined_at' => now(),
                 'decline_reason' => 'conditional_deadline_expired',
                 'approval_remarks' => 'Conditional approval expired - deadline not met',
+                'scholarship_status' => 4, // 4 = Cancelled/Declined
+                'scholarship_status_remarks' => 'Conditional Deadline Expired',
             ]);
 
             $this->createStatusHistory($record, 'declined', $oldStatus, $systemUser, 'Conditional approval deadline expired');
@@ -317,7 +321,7 @@ class ScholarshipApprovalService
 
             $record->update([
                 'approval_status' => 'resubmitted',
-                'application_status' => 0, // Back to waiting
+                'scholarship_status' => 0, // Back to pending/waiting
                 'resubmitted_at' => now(),
                 'resubmission_notes' => $data['notes'] ?? null,
                 'resubmission_count' => $record->resubmission_count + 1,

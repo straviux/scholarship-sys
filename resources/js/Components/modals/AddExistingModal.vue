@@ -1,18 +1,20 @@
 <template>
-    <Dialog :visible="visible" modal header="Add New Applicant" :style="{ width: '90vw', maxWidth: '980px' }"
+    <Dialog :visible="visible" modal header="Add Existing Scholar" :style="{ width: '90vw', maxWidth: '980px' }"
         @update:visible="handleVisibilityChange" :maximizable="true">
         <template #header>
             <div class="flex items-center gap-2">
-                <i class="pi pi-user-plus text-lg text-green-600" style="font-size: 1.2rem;"></i>
-                <span class="font-semibold text-xl">New Applicant</span>
+                <i class="pi pi-user-edit text-blue-400" style="font-size: 1.2rem;"></i>
+                <span class="font-semibold text-xl">Existing Scholar</span>
             </div>
         </template>
 
         <div class="space-y-4">
-            <p class="text-sm text-gray-600">
-                Add a new applicant to the waiting list. Complete all sections to create a comprehensive applicant
-                record.
-            </p>
+            <div class="bg-amber-50 border border-amber-200 rounded p-3">
+                <p class="text-sm text-amber-800 font-medium">
+                    <i class="pi pi-exclamation-triangle mr-2"></i>
+                    All academic information must be filled out to add an existing scholar.
+                </p>
+            </div>
 
             <Stepper v-model:value="activeStep" linear>
                 <StepList>
@@ -24,9 +26,7 @@
                     <StepPanel value="1">
                         <div class="flex flex-col h-full">
                             <div class="flex-auto">
-                                <PersonalInformationFields v-model="personalInfo" />
-
-                                <!-- Duplicate Name Warning -->
+                                <PersonalInformationFields v-model="personalInfo" :show-header="false" />
                                 <div v-if="validationError" class="mt-4 bg-red-50 border border-red-200 rounded p-3">
                                     <p class="text-sm text-red-800 font-medium">
                                         <i class="pi pi-exclamation-triangle mr-2"></i>
@@ -59,27 +59,31 @@
                                 <div>
                                     <h4 class="text-md font-semibold text-gray-700 mb-3 flex items-center gap-2">
                                         <i class="pi pi-book text-blue-600"></i>
-                                        Academic Information (Optional)
+                                        Academic Information (Required)
                                     </h4>
                                     <div class="space-y-4">
                                         <AcademicInformationFields v-model="academicInfo" :show-header="false" />
 
-                                        <!-- Date Filed -->
-                                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-10">
+                                        <!-- Date Fields and Remarks (Only for Add Existing) -->
+                                        <div class="grid grid-cols-1 md:grid-cols-6 gap-3 mt-10">
+                                            <FloatLabel class="md:col-span-4">
+                                                <Textarea v-model="form.remarks" inputId="remarks" variant="filled"
+                                                    placeholder="&nbsp;" rows="1" fluid autoResize />
+                                                <label class="text-sm" for="remarks">Remarks</label>
+                                            </FloatLabel>
                                             <FloatLabel>
                                                 <DatePicker v-model="form.date_filed" type="date" inputId="date_filed"
                                                     variant="filled" placeholder="mm/dd/yyyy" showIcon fluid
                                                     iconDisplay="input" />
                                                 <label class="text-sm" for="date_filed">Date Filed</label>
                                             </FloatLabel>
-                                        </div>
 
-                                        <div class="bg-blue-50 border border-blue-200 rounded p-3">
-                                            <p class="text-sm text-blue-800">
-                                                <i class="pi pi-info-circle mr-2"></i>
-                                                Academic information is optional. You can complete it now or update it
-                                                later.
-                                            </p>
+                                            <FloatLabel>
+                                                <DatePicker v-model="form.date_approved" type="date"
+                                                    inputId="date_approved" variant="filled" placeholder="mm/dd/yyyy"
+                                                    showIcon fluid iconDisplay="input" />
+                                                <label class="text-sm" for="date_approved">Date Approved</label>
+                                            </FloatLabel>
                                         </div>
                                     </div>
                                 </div>
@@ -87,8 +91,8 @@
                             <div class="flex pt-6 justify-between">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                     @click="activeStep = '2'" />
-                                <Button label="Add Applicant" icon="pi pi-check" severity="success"
-                                    @click="handleSubmit" :loading="form.processing" />
+                                <Button label="Add Existing Scholar" icon="pi pi-check" severity="info"
+                                    @click="handleSubmit" :loading="form.processing" :disabled="!isFormValid" />
                             </div>
                         </div>
                     </StepPanel>
@@ -110,19 +114,16 @@ import Step from 'primevue/step';
 import StepPanels from 'primevue/steppanels';
 import StepPanel from 'primevue/steppanel';
 import FloatLabel from 'primevue/floatlabel';
+import Textarea from 'primevue/textarea';
 import DatePicker from 'primevue/datepicker';
-import PersonalInformationFields from '@/Components/PersonalInformationFields.vue';
-import FamilyInformationFields from '@/Components/FamilyInformationFields.vue';
-import AcademicInformationFields from '@/Components/AcademicInformationFields.vue';
+import PersonalInformationFields from '@/Components/forms/fields/PersonalInformationFields.vue';
+import AcademicInformationFields from '@/Components/forms/fields/AcademicInformationFields.vue';
+import FamilyInformationFields from '@/Components/forms/fields/FamilyInformationFields.vue';
 
 const props = defineProps({
     visible: {
         type: Boolean,
         default: false
-    },
-    profiles: {
-        type: Object,
-        default: null
     }
 });
 
@@ -142,7 +143,7 @@ const form = useForm({
     email: '',
     date_of_birth: '',
     gender: '',
-    place_of_birth: null,
+    place_of_birth: '',
     civil_status: '',
     religion: '',
     indigenous_group: '',
@@ -164,6 +165,8 @@ const form = useForm({
     term: null,
     academic_year: null,
     date_filed: '',
+    date_approved: '',
+    remarks: '',
     municipality: null,
     barangay: null,
     address: '',
@@ -259,12 +262,20 @@ const academicInfo = computed({
     }
 });
 
-// Validation for step 1
+const isFormValid = computed(() => {
+    return form.first_name &&
+        form.last_name &&
+        form.program &&
+        form.school &&
+        form.course &&
+        form.year_level &&
+        form.municipality;
+});
+
 const canProceedStep1 = computed(() => {
     return form.first_name && form.last_name && form.municipality && form.contact_no;
 });
 
-// Handle next step 1 with backend validation
 const handleNextStep1 = async () => {
     // Validate required fields
     const missingFields = [];
@@ -291,7 +302,6 @@ const handleNextStep1 = async () => {
         if (response.data.exists) {
             validationError.value = `A record with this exact name (${[form.first_name, form.middle_name, form.last_name].filter(Boolean).join(' ')}) already exists in the system. Please verify if this is a different person before proceeding.`;
         } else {
-            // Validation passed, proceed to next step
             activeStep.value = '2';
         }
     } catch (error) {
@@ -321,13 +331,71 @@ const handleCancel = () => {
 };
 
 const handleSubmit = () => {
-    form.post(route('scholarship.profile.store.applicant'), {
+    // Prepare the data with proper IDs and names
+    const submitData = {
+        // Personal Information
+        first_name: form.first_name,
+        middle_name: form.middle_name,
+        last_name: form.last_name,
+        extension_name: form.extension_name,
+        contact_no: form.contact_no,
+        contact_no_2: form.contact_no_2,
+        email: form.email,
+        date_of_birth: form.date_of_birth,
+        gender: form.gender,
+        place_of_birth: form.place_of_birth,
+        civil_status: form.civil_status,
+        religion: form.religion,
+        indigenous_group: form.indigenous_group,
+
+        // Address Information (using names as the database expects)
+        municipality: form.municipality?.name || null,
+        barangay: form.barangay?.name || null,
+        address: form.address,
+
+        // Family Information
+        father_name: form.father_name,
+        father_occupation: form.father_occupation,
+        father_contact_no: form.father_contact_no,
+        mother_name: form.mother_name,
+        mother_occupation: form.mother_occupation,
+        mother_contact_no: form.mother_contact_no,
+        guardian_name: form.guardian_name,
+        guardian_occupation: form.guardian_occupation,
+        guardian_relationship: form.guardian_relationship,
+        guardian_contact_no: form.guardian_contact_no,
+        parents_guardian_gross_monthly_income: form.parents_guardian_gross_monthly_income,
+
+        // Academic Information (Required for scholars) - send both IDs and names
+        program_id: form.program?.id || null,
+        program: form.program?.shortname || form.program?.name || null,
+        school_id: form.school?.id || null,
+        school: form.school?.shortname || form.school?.name || null,
+        course_id: form.course?.id || null,
+        course: form.course?.shortname || form.course?.name || null,
+        year_level: form.year_level?.value || form.year_level,
+        term: form.term?.value || form.term,
+        academic_year: form.academic_year?.value || form.academic_year,
+
+        // Date fields and remarks
+        date_filed: form.date_filed,
+        date_approved: form.date_approved,
+        remarks: form.remarks,
+    };
+
+    form.post(route('scholars.store'), {
+        data: submitData,
         preserveScroll: true,
         onSuccess: () => {
             emit('update:visible', false);
             emit('success');
             form.reset();
+            activeStep.value = '1';
+            validationError.value = '';
         },
+        onError: (errors) => {
+            console.error('Form errors:', errors);
+        }
     });
 };
 </script>

@@ -189,6 +189,10 @@ class CreateScholarshipProfileRequest extends FormRequest
                 'nullable',
                 'date',
             ],
+            "date_approved" => [
+                'nullable',
+                'date',
+            ],
             "application_status" => [
                 'integer'
             ],

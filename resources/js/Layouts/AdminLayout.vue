@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from "vue";
-import SidebarLink from "@/Components/SidebarLink.vue";
-import NotificationDropdown from "@/Components/NotificationDropdown.vue";
+import SidebarLink from "@/Components/ui/navigation/SidebarLink.vue";
+import NotificationDropdown from "@/Components/ui/navigation/NotificationDropdown.vue";
 import { Link, usePage } from "@inertiajs/vue3";
 import { usePermission } from "@/composable/permissions";
 

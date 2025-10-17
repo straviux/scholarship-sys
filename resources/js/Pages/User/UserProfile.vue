@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import Dialog from 'primevue/dialog';
@@ -8,8 +8,8 @@ import FileUpload from 'primevue/fileupload';
 import { ref, computed, nextTick } from 'vue';
 import { useDateUtils } from '@/composables/dateUtils.js';
 import { useForm } from '@inertiajs/vue3';
-import InputLabel from '@/Components/InputLabel.vue';
-import InputError from '@/Components/InputError.vue';
+import InputLabel from '@/Components/ui/inputs/InputLabel.vue';
+import InputError from '@/Components/ui/inputs/InputError.vue';
 import { toast } from 'vue3-toastify';
 
 const { formatDate } = useDateUtils();

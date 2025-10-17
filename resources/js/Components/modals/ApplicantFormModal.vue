@@ -21,7 +21,7 @@
                 application process.` }}
             </p>
 
-            <Stepper v-model:value="activeStep">
+            <Stepper v-model:value="activeStep" :linear="mode !== 'edit' || !canProceedStep1">
                 <StepList>
                     <Step value="1">Personal Information</Step>
                     <Step value="2">Family Information</Step>
@@ -430,6 +430,6 @@ const handleSubmit = () => {
 };
 
 onMounted(() => {
-    console.log('ApplicationFormModal mounted with props:', props);
+    console.log('ApplicantFormModal mounted with props:', props);
 });
 </script>

@@ -111,10 +111,10 @@ import {
     DialogPanel,
     DialogTitle,
 } from "@headlessui/vue";
-import InputError from "@/Components/InputError.vue";
-import InputLabel from "@/Components/InputLabel.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
-import TextInput from "@/Components/TextInput.vue";
+import InputError from "@/Components/ui/inputs/InputError.vue";
+import InputLabel from "@/Components/ui/inputs/InputLabel.vue";
+import PrimaryButton from "@/Components/ui/buttons/PrimaryButton.vue";
+import TextInput from "@/Components/ui/inputs/TextInput.vue";
 import VueMultiselect from "vue-multiselect";
 import { XMarkIcon, ExclamationCircleIcon } from "@heroicons/vue/20/solid";
 import { toast } from 'vue3-toastify';

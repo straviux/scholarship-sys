@@ -8,8 +8,8 @@ import {
     DialogPanel,
     DialogTitle,
 } from "@headlessui/vue";
-import InputLabel from "@/Components/InputLabel.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
+import InputLabel from "@/Components/ui/inputs/InputLabel.vue";
+import PrimaryButton from "@/Components/ui/buttons/PrimaryButton.vue";
 import { XMarkIcon } from "@heroicons/vue/20/solid";
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';

@@ -464,6 +464,24 @@
 </template>
 
 <script setup>
+/**
+ * ApprovalWorkflow Component
+ * 
+ * This component handles the approval workflow for scholarship applications.
+ * 
+ * Status Management:
+ * - Uses `approval_status` for workflow display (pending, approved, declined, conditional)
+ * - When approved, backend also sets:
+ *   - `scholarship_status = 1` (Active/Approved)
+ *   - `scholarship_status_remarks = 'Active Scholar'`
+ * - When declined, backend also sets:
+ *   - `scholarship_status = 4` (Cancelled/Declined)
+ *   - `scholarship_status_remarks = 'Application Declined'`
+ * 
+ * The dual status system ensures:
+ * - approval_status: Tracks workflow state (for this component and approval history)
+ * - scholarship_status: Primary status for filtering and business logic
+ */
 import { ref, computed } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
 import moment from 'moment';

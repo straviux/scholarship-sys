@@ -1,15 +1,15 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import InputError from "@/Components/InputError.vue";
-import InputLabel from "@/Components/InputLabel.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
-import TextInput from "@/Components/TextInput.vue";
+import InputError from "@/Components/ui/inputs/InputError.vue";
+import InputLabel from "@/Components/ui/inputs/InputLabel.vue";
+import PrimaryButton from "@/Components/ui/buttons/PrimaryButton.vue";
+import TextInput from "@/Components/ui/inputs/TextInput.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import VueMultiselect from "vue-multiselect";
-import Table from "@/Components/Table.vue";
-import TableRow from "@/Components/TableRow.vue";
-import TableHeaderCell from "@/Components/TableHeaderCell.vue";
-import TableDataCell from "@/Components/TableDataCell.vue";
+import Table from "@/Components/ui/table/Table.vue";
+import TableRow from "@/Components/ui/table/TableRow.vue";
+import TableHeaderCell from "@/Components/ui/table/TableHeaderCell.vue";
+import TableDataCell from "@/Components/ui/table/TableDataCell.vue";
 import { onMounted, watch, computed } from "vue";
 import { ArrowUturnLeftIcon } from "@heroicons/vue/20/solid";
 const props = defineProps({

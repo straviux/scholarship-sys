@@ -1,24 +1,21 @@
 <template>
-    <Dialog :visible="visible" modal :header="mode === 'edit' ? 'Edit Application' : 'Application Form'"
-        :style="{ width: '90vw', maxWidth: '980px' }" @update:visible="val => emit('update:visible', val)"
-        :maximizable="true">
+    <Dialog :visible="visible" modal header="Scholar Form" :style="{ width: '90vw', maxWidth: '980px' }"
+        @update:visible="val => emit('update:visible', val)" :maximizable="true">
         <template #header>
             <div class="flex items-center gap-2">
-                <i :class="mode === 'edit' ? 'pi pi-pencil text-lg text-orange-600' : 'pi pi-file-edit text-lg text-blue-600'"
+                <i :class="mode === 'edit' ? 'pi pi-pencil text-lg text-orange-600' : 'pi pi-graduation-cap text-lg text-blue-600'"
                     style="font-size: 1.2rem;"></i>
                 <span class="font-semibold text-xl">
-                    {{ mode === 'edit' ? 'Edit Application' : 'Scholarship Application Form' }}
+                    {{ mode === 'edit' ? 'Edit Scholar' : 'Add New Scholar' }}
                 </span>
             </div>
         </template>
 
         <div class="space-y-4">
             <p class="text-sm text-gray-600">
-                {{ mode === `edit`
-                    ? `Update the application information. Changes will be saved immediately.`
-                    : `Complete all sections to submit a scholarship application. All information will be reviewed during
-                the
-                application process.` }}
+                {{ mode === 'edit'
+                    ? 'Update the scholar information. All academic fields are required.'
+                    : 'Add a new scholar to the system. All fields marked with * are required.' }}
             </p>
 
             <Stepper v-model:value="activeStep">
@@ -28,6 +25,7 @@
                     <Step value="3">Academic Information</Step>
                 </StepList>
                 <StepPanels>
+                    <!-- Step 1: Personal Information -->
                     <StepPanel value="1">
                         <div class="flex flex-col h-full">
                             <div class="flex-auto">
@@ -42,7 +40,7 @@
                                     v-model:municipality="form.municipality" v-model:barangay="form.barangay"
                                     v-model:address="form.address" :show-header="false" />
 
-                                <!-- Duplicate Name Warning -->
+                                <!-- Validation Messages -->
                                 <div v-if="validationError" class="mt-4 bg-red-50 border border-red-200 rounded p-3">
                                     <p class="text-sm text-red-800 font-medium">
                                         <i class="pi pi-exclamation-triangle mr-2"></i>
@@ -52,11 +50,12 @@
                             </div>
                             <div class="flex pt-6 justify-end">
                                 <Button label="Next" icon="pi pi-arrow-right" iconPos="right" @click="handleNextStep1"
-                                    :loading="isValidating" :disabled="!canProceedStep1"
-                                    v-tooltip.top="step1TooltipMessage" />
+                                    :disabled="!canProceedStep1" v-tooltip.top="step1TooltipMessage" />
                             </div>
                         </div>
                     </StepPanel>
+
+                    <!-- Step 2: Family Information -->
                     <StepPanel value="2">
                         <div class="flex flex-col h-full">
                             <div class="flex-auto">
@@ -81,43 +80,59 @@
                             </div>
                         </div>
                     </StepPanel>
+
+                    <!-- Step 3: Academic Information (ALL REQUIRED for scholars) -->
                     <StepPanel value="3">
                         <div class="flex flex-col h-full">
                             <div class="flex-auto">
-                                <div>
-                                    <div class="space-y-4">
-                                        <AcademicInformationFields v-model:program="form.program"
-                                            v-model:school="form.school" v-model:course="form.course"
-                                            v-model:year_level="form.year_level" v-model:term="form.term"
-                                            v-model:academic_year="form.academic_year" v-model:remarks="form.remarks"
-                                            :show-header="false" />
+                                <div class="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+                                    <p class="text-sm text-blue-800">
+                                        <i class="pi pi-info-circle mr-2"></i>
+                                        <strong>Note:</strong> All academic fields are required for scholars.
+                                    </p>
+                                </div>
 
-                                        <!-- Date Filed -->
-                                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-10">
-                                            <FloatLabel>
-                                                <DatePicker v-model="form.date_filed" type="date" inputId="date_filed"
-                                                    variant="filled" placeholder="mm/dd/yyyy" showIcon fluid
-                                                    iconDisplay="input" />
-                                                <label class="text-sm" for="date_filed">Date Filed</label>
-                                            </FloatLabel>
-                                        </div>
+                                <AcademicInformationFields v-model:program="form.program" v-model:school="form.school"
+                                    v-model:course="form.course" v-model:year_level="form.year_level"
+                                    v-model:term="form.term" v-model:academic_year="form.academic_year"
+                                    :show-header="false" />
 
-                                        <div class="bg-blue-50 border border-blue-200 rounded p-3">
-                                            <p class="text-sm text-blue-800">
-                                                <i class="pi pi-info-circle mr-2"></i>
-                                                Academic information is optional. You can complete it now or update it
-                                                later.
-                                            </p>
-                                        </div>
-                                    </div>
+                                <!-- Date Fields and Remarks (for backlog encoding) -->
+                                <div class="grid grid-cols-1 md:grid-cols-6 gap-3 mt-6">
+                                    <FloatLabel class="md:col-span-4">
+                                        <Textarea v-model="form.remarks" inputId="remarks" variant="filled"
+                                            placeholder="&nbsp;" rows="1" fluid autoResize />
+                                        <label class="text-sm" for="remarks">Remarks</label>
+                                    </FloatLabel>
+                                    <FloatLabel>
+                                        <DatePicker v-model="form.date_filed" type="date" inputId="date_filed"
+                                            variant="filled" placeholder="mm/dd/yyyy" showIcon fluid
+                                            iconDisplay="input" />
+                                        <label class="text-sm" for="date_filed">Date Filed</label>
+                                    </FloatLabel>
+                                    <FloatLabel>
+                                        <DatePicker v-model="form.date_approved" type="date" inputId="date_approved"
+                                            variant="filled" placeholder="mm/dd/yyyy" showIcon fluid
+                                            iconDisplay="input" />
+                                        <label class="text-sm" for="date_approved">Date Approved</label>
+                                    </FloatLabel>
+                                </div>
+
+                                <!-- Academic Validation Messages -->
+                                <div v-if="academicValidationError"
+                                    class="mt-4 bg-red-50 border border-red-200 rounded p-3">
+                                    <p class="text-sm text-red-800 font-medium">
+                                        <i class="pi pi-exclamation-triangle mr-2"></i>
+                                        {{ academicValidationError }}
+                                    </p>
                                 </div>
                             </div>
                             <div class="flex pt-6 justify-between">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                     @click="activeStep = '2'" />
-                                <Button :label="mode === 'edit' ? 'Update Application' : 'Submit Application'"
-                                    icon="pi pi-check" severity="success" @click="handleSubmit"
-                                    :loading="form.processing" />
+                                <Button :label="mode === 'edit' ? 'Update Scholar' : 'Add Scholar'" icon="pi pi-check"
+                                    severity="success" @click="handleSubmit" :loading="form.processing"
+                                    :disabled="!canSubmit" v-tooltip.top="submitTooltipMessage" />
                             </div>
                         </div>
                     </StepPanel>
@@ -128,9 +143,18 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch, nextTick } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
-import axios from 'axios';
+import Dialog from 'primevue/dialog';
+import Button from 'primevue/button';
+import Stepper from 'primevue/stepper';
+import StepList from 'primevue/steplist';
+import Step from 'primevue/step';
+import StepPanels from 'primevue/steppanels';
+import StepPanel from 'primevue/steppanel';
+import FloatLabel from 'primevue/floatlabel';
+import Textarea from 'primevue/textarea';
+import DatePicker from 'primevue/datepicker';
 import PersonalInformationFields from '@/Components/forms/fields/PersonalInformationFields.vue';
 import FamilyInformationFields from '@/Components/forms/fields/FamilyInformationFields.vue';
 import AcademicInformationFields from '@/Components/forms/fields/AcademicInformationFields.vue';
@@ -141,10 +165,6 @@ const props = defineProps({
     visible: {
         type: Boolean,
         default: false
-    },
-    profiles: {
-        type: Object,
-        default: null
     },
     profile: Object,
     mode: {
@@ -157,15 +177,13 @@ const props = defineProps({
 const emit = defineEmits(['update:visible', 'success']);
 
 const activeStep = ref('1');
-const isValidating = ref(false);
 const validationError = ref('');
+const academicValidationError = ref('');
 
 // Helper function to format date for DatePicker
 const formatDateForPicker = (dateString) => {
     if (!dateString) return null;
-    // If already a Date object, return it
     if (dateString instanceof Date) return dateString;
-    // Parse string to Date
     const date = new Date(dateString);
     return isNaN(date.getTime()) ? null : date;
 };
@@ -173,6 +191,7 @@ const formatDateForPicker = (dateString) => {
 // Get profile data if in edit mode
 const p = props.profile;
 const grant = p?.scholarship_grant?.[0];
+
 const form = useForm({
     // Personal Information
     first_name: p?.first_name || '',
@@ -205,7 +224,7 @@ const form = useForm({
     guardian_contact_no: p?.guardian_contact_no || '',
     parents_guardian_gross_monthly_income: p?.parents_guardian_gross_monthly_income || '',
 
-    // Academic Information
+    // Academic Information (ALL REQUIRED for scholars)
     scholarship_grant_id: grant?.scholarship_grant_id || null,
     program: grant?.program || null,
     school: grant?.school || null,
@@ -213,21 +232,22 @@ const form = useForm({
     year_level: grant?.year_level || null,
     term: grant?.term || null,
     academic_year: grant?.academic_year || null,
-    date_filed: formatDateForPicker(grant?.date_filed),
+    date_filed: formatDateForPicker(grant?.date_filed) || new Date(),
+    date_approved: formatDateForPicker(grant?.date_approved) || null,
     remarks: grant?.remarks || p?.remarks || '',
 });
 
-// Validation for step 1
+// Step 1 validation - Scholars need more required fields
 const canProceedStep1 = computed(() => {
-    return form.first_name && form.last_name;
+    return form.first_name && form.last_name && form.municipality && form.contact_no;
 });
 
-// Tooltip message for missing fields in step 1
 const step1TooltipMessage = computed(() => {
     const missingFields = [];
     if (!form.first_name) missingFields.push('First Name');
     if (!form.last_name) missingFields.push('Last Name');
     if (!form.municipality) missingFields.push('Municipality');
+    if (!form.contact_no) missingFields.push('Contact Number');
 
     if (missingFields.length > 0) {
         return `Missing required fields: ${missingFields.join(', ')}`;
@@ -235,13 +255,13 @@ const step1TooltipMessage = computed(() => {
     return '';
 });
 
-// Handle next step 1 with backend validation
-const handleNextStep1 = async () => {
-    // Validate required fields
+// Handle next step 1
+const handleNextStep1 = () => {
     const missingFields = [];
     if (!form.first_name) missingFields.push('First Name');
     if (!form.last_name) missingFields.push('Last Name');
     if (!form.municipality) missingFields.push('Municipality');
+    if (!form.contact_no) missingFields.push('Contact Number');
 
     if (missingFields.length > 0) {
         validationError.value = `Please fill in the following required fields: ${missingFields.join(', ')}.`;
@@ -251,54 +271,42 @@ const handleNextStep1 = async () => {
         return;
     }
 
-    // Skip duplicate name validation in edit mode
-    if (props.mode === 'edit') {
-        activeStep.value = '2';
-        return;
-    }
-
-    isValidating.value = true;
     validationError.value = '';
-
-    try {
-        const response = await axios.post(route('api.profiles.validate-name'), {
-            first_name: form.first_name,
-            middle_name: form.middle_name || '',
-            last_name: form.last_name
-        });
-
-        if (response.data.exists) {
-            validationError.value = `A record with this exact name (${[form.first_name, form.middle_name, form.last_name].filter(Boolean).join(' ')}) already exists in the system. Please verify if this is a different person before proceeding.`;
-            toast.warning('A record with this name already exists. Please verify before proceeding.', {
-                position: toast.POSITION.TOP_RIGHT,
-            });
-        } else {
-            // Validation passed, proceed to next step
-            activeStep.value = '2';
-        }
-    } catch (error) {
-        console.error('Validation error:', error);
-        validationError.value = 'An error occurred while validating. Please try again.';
-        toast.error('An error occurred while validating. Please try again.', {
-            position: toast.POSITION.TOP_RIGHT,
-        });
-    } finally {
-        isValidating.value = false;
-    }
+    activeStep.value = '2';
 };
+
+// Step 3 validation - ALL academic fields required for scholars
+const canSubmit = computed(() => {
+    return form.program && form.course && form.school &&
+        form.year_level && form.term && form.academic_year;
+});
+
+const submitTooltipMessage = computed(() => {
+    const missingAcademicFields = [];
+    if (!form.program) missingAcademicFields.push('Program');
+    if (!form.school) missingAcademicFields.push('School');
+    if (!form.course) missingAcademicFields.push('Course');
+    if (!form.year_level) missingAcademicFields.push('Year Level');
+    if (!form.term) missingAcademicFields.push('Term');
+    if (!form.academic_year) missingAcademicFields.push('Academic Year');
+
+    if (missingAcademicFields.length > 0) {
+        return `Missing required academic fields: ${missingAcademicFields.join(', ')}`;
+    }
+    return '';
+});
 
 const closeModal = () => {
     emit('update:visible', false);
 };
 
-// Reset form when modal is opened - matching PriorityModal pattern
+// Reset form when modal is opened
 watch(() => props.visible, async (newValue) => {
     if (newValue && props.mode === 'edit' && props.profile) {
-        // console.log('props.profile', props.profile);
-
         // In edit mode, reinitialize form with profile data
         const p = props.profile;
         const grant = p?.scholarship_grant?.[0];
+
         // Personal Information
         form.first_name = p?.first_name || '';
         form.middle_name = p?.middle_name || '';
@@ -314,10 +322,8 @@ watch(() => props.visible, async (newValue) => {
         form.religion = p?.religion || '';
         form.indigenous_group = p?.indigenous_group || '';
         form.municipality = p?.municipality || null;
-
         form.barangay = p?.barangay || null;
         form.address = p?.address || '';
-        // console.log('barangay', form.barangay);
 
         // Family Information
         form.father_name = p?.father_name || '';
@@ -339,24 +345,44 @@ watch(() => props.visible, async (newValue) => {
         form.year_level = grant?.year_level || null;
         form.term = grant?.term || null;
         form.academic_year = grant?.academic_year || null;
-        form.date_filed = formatDateForPicker(grant?.date_filed);
+        form.date_filed = formatDateForPicker(grant?.date_filed) || new Date();
+        form.date_approved = formatDateForPicker(grant?.date_approved) || null;
         form.remarks = grant?.remarks || p?.remarks || '';
 
         form.clearErrors();
         activeStep.value = '1';
         validationError.value = '';
-        isValidating.value = false;
+        academicValidationError.value = '';
     } else if (newValue && props.mode === 'create') {
         // In create mode, reset to empty form
         form.reset();
+        form.date_filed = new Date(); // Set date_filed to today for new scholars
+        form.date_approved = null; // Leave date_approved empty for backlog encoding
         form.clearErrors();
         activeStep.value = '1';
         validationError.value = '';
-        isValidating.value = false;
+        academicValidationError.value = '';
     }
 });
 
 const handleSubmit = () => {
+    // Validate all required academic fields for scholars
+    const missingAcademicFields = [];
+    if (!form.program) missingAcademicFields.push('Program');
+    if (!form.school) missingAcademicFields.push('School');
+    if (!form.course) missingAcademicFields.push('Course');
+    if (!form.year_level) missingAcademicFields.push('Year Level');
+    if (!form.term) missingAcademicFields.push('Term');
+    if (!form.academic_year) missingAcademicFields.push('Academic Year');
+
+    if (missingAcademicFields.length > 0) {
+        academicValidationError.value = `Please fill in all required academic fields: ${missingAcademicFields.join(', ')}.`;
+        toast.error(`Missing required academic fields: ${missingAcademicFields.join(', ')}`, {
+            position: toast.POSITION.TOP_RIGHT,
+        });
+        return;
+    }
+
     // Transform data before submitting
     const submitData = {
         ...form.data(),
@@ -368,30 +394,30 @@ const handleSubmit = () => {
         barangay: form.barangay?.name || form.barangay || null,
         // Extract name from place_of_birth if it's an object
         place_of_birth: form.place_of_birth?.name || form.place_of_birth || null,
-        // Send IDs for course, school, and program (backend expects IDs for scholarship records)
+        // Send IDs for course, school, and program
         course_id: form.course?.id || null,
         school_id: form.school?.id || null,
         program_id: form.program?.id || null,
-        // Also send names for backward compatibility (backend uses these for lookup)
+        // Also send names for backward compatibility
         course: form.course?.shortname || form.course?.name || form.course || null,
         school: form.school?.shortname || form.school?.name || form.school || null,
         program: form.program?.name || form.program || null,
         // Extract value from year_level object if it exists
         year_level: form.year_level?.value || form.year_level || null,
-        // Extract value from term object if it exists (1ST SEM, 2ND SEM, etc.)
+        // Extract value from term object if it exists
         term: form.term?.value || form.term || null,
     };
 
     if (props.mode === 'edit' && props.profile) {
-        // Update existing profile - use profile_id from the profile object
+        // Update existing scholar
         const profileId = props.profile.profile_id;
-        console.log('Updating profile with ID:', profileId);
+        console.log('Updating scholar with ID:', profileId);
         console.log('Submitting data:', submitData);
 
-        form.transform(() => submitData).put(route('waitinglist.update', profileId), {
+        form.transform(() => submitData).put(route('scholars.update', profileId), {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success('Application updated successfully!', {
+                toast.success('Scholar updated successfully!', {
                     position: toast.POSITION.TOP_RIGHT,
                 });
                 emit('success');
@@ -399,20 +425,20 @@ const handleSubmit = () => {
             },
             onError: (errors) => {
                 console.error('Update failed with errors:', errors);
-                const errorMessage = Object.values(errors).flat().join(', ') || 'Failed to update application';
+                const errorMessage = Object.values(errors).flat().join(', ') || 'Failed to update scholar';
                 toast.error(errorMessage, {
                     position: toast.POSITION.TOP_RIGHT,
                 });
             },
         });
     } else {
-        // Create new profile
-        console.log('Creating new profile with data:', submitData);
+        // Create new scholar
+        console.log('Creating new scholar with data:', submitData);
 
-        form.transform(() => submitData).post(route('waitinglist.store'), {
+        form.transform(() => submitData).post(route('scholars.store'), {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success('Application submitted successfully!', {
+                toast.success('Scholar added successfully!', {
                     position: toast.POSITION.TOP_RIGHT,
                 });
                 emit('success');
@@ -420,7 +446,7 @@ const handleSubmit = () => {
             },
             onError: (errors) => {
                 console.error('Create failed with errors:', errors);
-                const errorMessage = Object.values(errors).flat().join(', ') || 'Failed to submit application';
+                const errorMessage = Object.values(errors).flat().join(', ') || 'Failed to add scholar';
                 toast.error(errorMessage, {
                     position: toast.POSITION.TOP_RIGHT,
                 });
@@ -428,8 +454,4 @@ const handleSubmit = () => {
         });
     }
 };
-
-onMounted(() => {
-    console.log('ApplicationFormModal mounted with props:', props);
-});
 </script>
