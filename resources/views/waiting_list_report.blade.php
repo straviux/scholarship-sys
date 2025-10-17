@@ -264,22 +264,59 @@
         </thead>
         <tbody>
             @php
+            // Sort profiles by program, school, course, and date filed
             $sortedProfiles = $profiles->sortBy(function($profile) {
-            $dateFiled = optional($profile->scholarshipGrant->first())->date_filed;
-            return [$dateFiled, $profile->created_at];
+            $grant = optional($profile->scholarshipGrant->first());
+            $programName = optional($grant->program)->shortname ?? optional($grant->program)->name ?? 'zzz_no_program';
+            $schoolName = optional($grant->school)->shortname ?? optional($grant->school)->name ?? 'zzz_no_school';
+            $courseName = optional($grant->course)->shortname ?? optional($grant->course)->name ?? 'zzz_no_course';
+            $dateFiled = $grant->date_filed;
+            return [$programName, $schoolName, $courseName, $dateFiled, $profile->created_at];
             });
+
+            // Initialize sequence counters for different groupings
+            $programSequences = [];
+            $schoolSequences = [];
+            $courseSequences = [];
             $lastDate = null;
             $dateIndex = 1;
             $overallIndex = 1;
             @endphp
             @foreach($sortedProfiles as $profile)
             @php
-            $dateFiled = optional($profile->scholarshipGrant->first())->date_filed;
+            $grant = optional($profile->scholarshipGrant->first());
+            $programName = optional($grant->program)->shortname ?? optional($grant->program)->name ?? 'no_program';
+            $schoolName = optional($grant->school)->shortname ?? optional($grant->school)->name ?? 'no_school';
+            $courseName = optional($grant->course)->shortname ?? optional($grant->course)->name ?? 'no_course';
+
+            // Calculate sequence for Program grouping
+            if (!isset($programSequences[$programName])) {
+            $programSequences[$programName] = 0;
+            }
+            $programSequences[$programName]++;
+            $programSeqNum = $programSequences[$programName];
+
+            // Calculate sequence for School grouping
+            if (!isset($schoolSequences[$schoolName])) {
+            $schoolSequences[$schoolName] = 0;
+            }
+            $schoolSequences[$schoolName]++;
+            $schoolSeqNum = $schoolSequences[$schoolName];
+
+            // Calculate sequence for Course grouping
+            if (!isset($courseSequences[$courseName])) {
+            $courseSequences[$courseName] = 0;
+            }
+            $courseSequences[$courseName]++;
+            $courseSeqNum = $courseSequences[$courseName];
+
+            $dateFiled = $grant->date_filed;
             $dateKey = $dateFiled ? \Carbon\Carbon::parse($dateFiled)->format('Y-m-d') : '';
             if ($dateKey !== $lastDate) {
             $dateIndex = 1;
             $lastDate = $dateKey;
             }
+
             // Check if applicant, parent, or guardian is JPM (only if user has permission)
             $isJpm = ($canViewJpm ?? false) && ($profile->is_jpm_member || $profile->is_father_jpm || $profile->is_mother_jpm || $profile->is_guardian_jpm);
             $bgStyle = $isJpm ? 'background-color: #d1fae5 !important;' : '';
@@ -287,7 +324,12 @@
             <tr>
                 <td style="min-width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;{{ $bgStyle }}">{{ $overallIndex }}</td>
                 <td style="padding-left:0.05cm;padding-right:0.05cm;{{ $bgStyle }}">{{ $dateIndex }}</td>
-                <td style="font-size:12px;{{ $bgStyle }}">{{ $profile->last_name }}, {{ $profile->first_name }}</td>
+                <td style="font-size:12px;{{ $bgStyle }}">
+                    <div>{{ $profile->last_name }}, {{ $profile->first_name }}</div>
+                    <div style="font-size:9px;color:#666;margin-top:2px;line-height:1.4;">
+                        P:{{ $programSeqNum }} | S:{{ $schoolSeqNum }} | C:{{ $courseSeqNum }} | D:{{ $dateIndex }}
+                    </div>
+                </td>
                 <td style="font-size:12px;{{ $bgStyle }}">
                     @php
                     $contacts = array_filter([

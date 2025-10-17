@@ -416,6 +416,7 @@ const handleSubmit = () => {
                     position: toast.POSITION.TOP_RIGHT,
                 });
                 emit('success');
+                resetForm();
                 closeModal();
             },
             onError: (errors) => {
@@ -427,6 +428,14 @@ const handleSubmit = () => {
             },
         });
     }
+};
+
+// Reset form to initial empty state
+const resetForm = () => {
+    form.reset();
+    form.clearErrors();
+    activeStep.value = '1';
+    validationError.value = null;
 };
 
 onMounted(() => {
