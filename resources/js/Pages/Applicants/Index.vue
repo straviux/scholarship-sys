@@ -851,6 +851,16 @@ const formatDate = (date) => {
                         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                         :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
 
+                        <!-- Date Filed Column -->
+                        <Column header="Date Filed" style="min-width: 110px">
+                            <template #body="slotProps">
+                                <div class="text-sm font-medium">
+                                    {{ slotProps.data.date_filed ? moment(slotProps.data.date_filed).format(`MMM DD,
+                                    YYYY`) : '-' }}
+                                </div>
+                            </template>
+                        </Column>
+
                         <!-- Sequence Number & Name Column -->
                         <Column header="Applicant" style="min-width: 300px">
                             <template #body="slotProps">
@@ -858,15 +868,33 @@ const formatDate = (date) => {
                                     <!-- <span class="text-gray-400 text-sm">#{{
                                         slotProps.data.sequence_number_by_school_course || '-' }}</span> -->
                                     <div class="flex gap-2">
-                                        <img v-if="slotProps.data.gender == 'M'" src="/images/male-avatar.png"
-                                            alt="avatar" class="rounded-full w-8 h-8" />
-                                        <img v-if="slotProps.data.gender == 'F'" src="/images/female-avatar.png"
-                                            alt="avatar" class="rounded-full w-8 h-8" />
-                                        <div>
-                                            <div class="font-semibold text-gray-800 text-sm">
-                                                {{ slotProps.data.last_name }}, {{ slotProps.data.first_name }} {{
-                                                    slotProps.data.middle_name || '' }} {{ slotProps.data.extension_name ||
-                                                    '' }}
+
+                                        <div class="flex flex-col gap-1">
+                                            <div class="flex gap-1">
+                                                <div v-if="slotProps.data.gender">
+                                                    <img v-if="slotProps.data.gender == 'M'"
+                                                        src="/images/male-avatar.png" alt="avatar"
+                                                        class="rounded-full w-6 h-6" />
+                                                    <img v-if="slotProps.data.gender == 'F'"
+                                                        src="/images/female-avatar.png" alt="avatar"
+                                                        class="rounded-full w-6 h-6" />
+                                                </div>
+                                                <div v-else>
+                                                    <div
+                                                        class="ml-1 w-5 h-5 rounded-full bg-gray-400 flex items-center justify-center text-xs text-white font-semibold">
+                                                        {{ getApplicantInitials(slotProps.data) }}
+                                                    </div>
+                                                </div>
+                                                <div class="font-semibold text-gray-800 text-sm">
+                                                    {{ slotProps.data.last_name }}, {{ slotProps.data.first_name }} {{
+                                                        slotProps.data.middle_name || '' }} {{ slotProps.data.extension_name
+                                                        ||
+                                                        '' }}
+                                                </div>
+                                            </div>
+                                            <div class="ml-1 text-xs text-gray-500 mt-0.5 flex items-center gap-3 ">
+                                                <i class="pi pi-phone" style="font-size: 0.75rem;"></i>
+                                                <span>{{ slotProps.data.contact_no || 'No contact no.' }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -875,7 +903,7 @@ const formatDate = (date) => {
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Prog. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
@@ -905,8 +933,39 @@ const formatDate = (date) => {
                             </template>
                         </Column>
 
-                        <!-- Parent/Guardian Column -->
-                        <Column header="Parent/Guardian" style="min-width: 200px">
+                        <!-- Education Details Column -->
+                        <Column header="Education Details" style="min-width: 200px">
+                            <template #body="slotProps">
+                                <div v-if="slotProps.data.scholarship_grant[0]" class="flex flex-col gap-0.5">
+                                    <div class="text-sm font-medium" v-if="slotProps.data.scholarship_grant[0]?.school">
+                                        {{ slotProps.data.scholarship_grant[0].school.shortname }}
+                                    </div>
+                                    <div class="text-sm" v-if="slotProps.data.scholarship_grant[0]?.course">
+                                        {{ slotProps.data.scholarship_grant[0].course.shortname }}
+                                    </div>
+                                    <div class="text-xs text-gray-600"
+                                        v-if="slotProps.data.scholarship_grant[0]?.year_level">
+                                        Year {{ slotProps.data.scholarship_grant[0].year_level }}
+                                    </div>
+                                </div>
+                                <span v-else class="text-gray-400">-</span>
+                            </template>
+                        </Column>
+
+                        <!-- Address Column -->
+                        <Column header="Address" style="min-width: 150px">
+                            <template #body="slotProps">
+                                <div class="text-sm font-medium" v-if="slotProps.data.municipality">
+                                    {{ slotProps.data.municipality }}{{ slotProps.data.barangay ? `,
+                                    ${slotProps.data.barangay}` : '' }}
+                                </div>
+                                <span v-else class="text-gray-400">-</span>
+                            </template>
+                        </Column>
+
+                        <!-- Parent/Guardian Column (only visible when showJpmColumns is enabled) -->
+                        <Column header="Parent/Guardian" v-if="hasPermission('can-view-jpm') && showJpmColumns"
+                            style="min-width: 200px">
                             <template #body="slotProps">
                                 <div class="text-sm space-y-1">
                                     <div v-if="slotProps.data.father_name">
@@ -924,51 +983,6 @@ const formatDate = (date) => {
                                     <span
                                         v-if="!slotProps.data.father_name && !slotProps.data.mother_name && !slotProps.data.guardian_name"
                                         class="text-gray-400">-</span>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <!-- Address Column -->
-                        <Column header="Address" style="min-width: 150px">
-                            <template #body="slotProps">
-                                <div class="text-sm font-medium" v-if="slotProps.data.municipality">
-                                    {{ slotProps.data.municipality }}{{ slotProps.data.barangay ? `,
-                                    ${slotProps.data.barangay}` : '' }}
-                                </div>
-                                <span v-else class="text-gray-400">-</span>
-                            </template>
-                        </Column>
-
-                        <!-- School Column -->
-                        <Column header="School" style="min-width: 120px">
-                            <template #body="slotProps">
-                                <div class="text-sm font-medium" v-if="slotProps.data.scholarship_grant[0]?.school">
-                                    {{ slotProps.data.scholarship_grant[0].school.shortname }}
-                                </div>
-                                <span v-else class="text-gray-400">-</span>
-                            </template>
-                        </Column>
-
-                        <!-- Course Column -->
-                        <Column header="Course" style="min-width: 120px">
-                            <template #body="slotProps">
-                                <div v-if="slotProps.data.scholarship_grant[0]?.course">
-                                    <div class="text-sm font-bold">{{
-                                        slotProps.data.scholarship_grant[0].course.shortname }}</div>
-                                    <div v-if="slotProps.data.scholarship_grant[0]?.program"
-                                        class="text-xs text-gray-600">
-                                        [{{ slotProps.data.scholarship_grant[0].program.shortname }}]
-                                    </div>
-                                </div>
-                                <span v-else class="text-gray-400">-</span>
-                            </template>
-                        </Column>
-
-                        <!-- Year Level Column -->
-                        <Column header="Year Level" style="width: 100px">
-                            <template #body="slotProps">
-                                <div class="text-sm font-medium text-center">
-                                    {{ slotProps.data.scholarship_grant[0]?.year_level || '-' }}
                                 </div>
                             </template>
                         </Column>
@@ -993,27 +1007,26 @@ const formatDate = (date) => {
                             </template>
                         </Column>
 
-                        <!-- Contact Number Column (hidden when JPM columns visible) -->
-                        <Column header="Contact #" v-if="!showJpmColumns" style="min-width: 120px">
-                            <template #body="slotProps">
-                                <div class="text-sm font-medium">{{ slotProps.data.contact_no || '-' }}</div>
-                            </template>
-                        </Column>
-
-                        <!-- Date Filed Column (hidden when JPM columns visible) -->
-                        <Column header="Date Filed" v-if="!showJpmColumns" style="min-width: 110px">
-                            <template #body="slotProps">
-                                <div class="text-sm font-medium">
-                                    {{ slotProps.data.date_filed ? moment(slotProps.data.date_filed).format(`MMM DD,
-                                    YYYY`) : '-' }}
-                                </div>
-                            </template>
-                        </Column>
-
                         <!-- Remarks Column (hidden when JPM columns visible) -->
                         <Column header="Remarks" v-if="!showJpmColumns" style="min-width: 150px">
                             <template #body="slotProps">
                                 <div class="text-xs">{{ slotProps.data.remarks || '-' }}</div>
+                            </template>
+                        </Column>
+
+                        <!-- Encoded By Column (only visible for admins) -->
+                        <Column header="Encoded By" v-if="hasRole('administrator')" style="min-width: 180px">
+                            <template #body="slotProps">
+                                <div class="flex flex-col gap-1 text-xs">
+                                    <div v-if="slotProps.data.created_by" class="font-medium text-gray-700">
+                                        {{ slotProps.data.created_by }}
+                                    </div>
+                                    <div v-if="slotProps.data.created_at" class="text-gray-500">
+                                        {{ moment(slotProps.data.created_at).format('MMM DD, YYYY') }}
+                                    </div>
+                                    <span v-if="!slotProps.data.created_by && !slotProps.data.created_at"
+                                        class="text-gray-400">-</span>
+                                </div>
                             </template>
                         </Column>
 
@@ -1067,8 +1080,8 @@ const formatDate = (date) => {
                             <template #body="slotProps">
 
                                 <div class="flex gap-1 justify-center flex-wrap">
-                                    <Button icon="pi pi-check-circle" label="Review" severity="success" size="small"
-                                        rounded outlined v-tooltip.top="'Review Application & View Profile'"
+                                    <Button icon="pi pi-id-card" severity="success" size="small" rounded outlined
+                                        v-tooltip.top="'Review Application & View Profile'"
                                         @click="openProfileReviewModal(slotProps.data)"
                                         v-if="hasPermission('create-scholar-profile')" />
 
