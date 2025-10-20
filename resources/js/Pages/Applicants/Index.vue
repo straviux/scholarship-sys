@@ -799,7 +799,8 @@ const formatDate = (date) => {
                                 <div class="flex flex-col">
                                     <label class="text-xs font-medium text-gray-600 mb-1">School</label>
                                     <SchoolSelect v-model="filter.school" label="shortname"
-                                        custom-placeholder="All Schools" size="small" class="w-full" :multiple="true" />
+                                        custom-placeholder="All Schools" size="small" class="w-full"
+                                        :multiple="false" />
                                 </div>
                                 <div class="flex flex-col">
                                     <label class="text-xs font-medium text-gray-600 mb-1">Municipality</label>
@@ -874,21 +875,21 @@ const formatDate = (date) => {
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Prog. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Cour. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_course || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Sch. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_school_course || '-'
-                                                }}</span>
+                                                    }}</span>
 
                                             </div>
                                         </div>
@@ -1237,7 +1238,7 @@ const formatDate = (date) => {
                                             </div>
                                             <div class="text-xs text-green-700 leading-tight">{{
                                                 selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname
-                                            }}/{{
+                                                }}/{{
                                                     selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname }}
                                             </div>
                                         </div>
