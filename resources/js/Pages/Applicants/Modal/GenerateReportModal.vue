@@ -1,129 +1,142 @@
 <template>
     <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal :closable="true"
-        :style="{ width: '500px' }" header="Generate Report">
+        :style="{ width: '900px' }" header="Generate Report">
 
 
         <form @submit.prevent="generateReport" class="px-4 pb-2">
-            <!-- Filters Section -->
-            <div class="mb-6">
-                <!-- Date Range -->
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-700">Date From</label>
-                        <DatePicker v-model="dateFrom" placeholder="Start date" showButtonBar class="w-full"
-                            dateFormat="M dd, yy" />
-                    </div>
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-700">Date To</label>
-                        <DatePicker v-model="dateTo" placeholder="End date" showButtonBar class="w-full"
-                            dateFormat="M dd, yy" />
+            <!-- Two Column Layout -->
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <!-- LEFT COLUMN: Filters -->
+                <div>
+                    <h4 class="text-base font-semibold text-gray-700 mb-3 pb-2 border-b">Filters</h4>
+
+                    <!-- Date Range -->
+                    <div class="mb-4">
+                        <label class="block mb-2 text-sm font-medium text-gray-700">Date Range</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <DatePicker v-model="dateFrom" placeholder="From" showButtonBar class="w-full"
+                                dateFormat="M dd, yy" size="small" />
+                            <DatePicker v-model="dateTo" placeholder="To" showButtonBar class="w-full"
+                                dateFormat="M dd, yy" size="small" />
+                        </div>
                         <small v-if="dateTo && dateFrom && isDateToInvalid" class="text-red-500 text-xs mt-1">
                             Date To must be after Date From
                         </small>
                     </div>
-                </div>
 
-                <!-- Academic Filters -->
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
+                    <!-- Program -->
+                    <div class="mb-4">
                         <label class="block mb-2 text-sm font-medium text-gray-700">Program</label>
                         <ProgramSelect v-model="selectedProgram" label="shortname" custom-placeholder="All Programs"
                             class="w-full" />
                     </div>
-                    <div>
+
+                    <!-- School -->
+                    <div class="mb-4">
                         <label class="block mb-2 text-sm font-medium text-gray-700">School</label>
                         <SchoolSelect v-model="selectedSchool" label="shortname" custom-placeholder="All Schools"
                             class="w-full" :multiple="true" />
                     </div>
-                </div>
 
-                <!-- Course Selection -->
-                <div class="mb-4">
-                    <label class="block mb-2 text-sm font-medium text-gray-700">Course(s)</label>
-                    <CourseSelect v-model="selectedCourses" :scholarship-program-id="selectedProgram?.id"
-                        label="shortname" custom-placeholder="All Courses" :multiple="true" class="w-full" />
-                </div>
+                    <!-- Course -->
+                    <div class="mb-4">
+                        <label class="block mb-2 text-sm font-medium text-gray-700">Course(s)</label>
+                        <CourseSelect v-model="selectedCourses" :scholarship-program-id="selectedProgram?.id"
+                            label="shortname" custom-placeholder="All Courses" :multiple="true" class="w-full" />
+                    </div>
 
-                <!-- Location & Year Level -->
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
+                    <!-- Municipality -->
+                    <div class="mb-4">
                         <label class="block mb-2 text-sm font-medium text-gray-700">Municipality</label>
                         <MunicipalitySelect v-model="selectedMunicipality" custom-placeholder="All Municipalities"
                             class="w-full" />
                     </div>
-                    <div>
+
+                    <!-- Year Level -->
+                    <div class="mb-4">
                         <label class="block mb-2 text-sm font-medium text-gray-700">Year Level</label>
                         <YearLevelSelect v-model="selectedYearLevel" custom-placeholder="All Year Levels"
                             class="w-full" />
                     </div>
-                </div>
 
-                <!-- Clear Filters Button -->
-                <div v-if="activeFiltersCount > 0" class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">{{ activeFiltersCount }} filter(s) applied</span>
-                    <Button label="Clear All" size="small" text severity="danger" @click="clearAllFilters"
-                        icon="pi pi-times" />
-                </div>
-            </div>
-
-            <!-- Report Options Section -->
-            <div class="mb-6">
-                <h4 class="text-base font-semibold text-gray-700 mb-3 pb-2 border-b">Report Options</h4>
-
-                <!-- Report Type -->
-                <div class="mb-4">
-                    <label class="block mb-2 text-sm font-medium text-gray-700">Report Type</label>
-                    <div class="flex gap-4">
-                        <div class="flex items-center">
-                            <RadioButton v-model="reportType" inputId="list" value="list" />
-                            <label for="list" class="ml-2 text-sm">Detailed List</label>
-                        </div>
-                        <div class="flex items-center">
-                            <RadioButton v-model="reportType" inputId="summary" value="summary" />
-                            <label for="summary" class="ml-2 text-sm">Summary</label>
-                        </div>
+                    <!-- Clear Filters Button -->
+                    <div v-if="activeFiltersCount > 0"
+                        class="flex items-center justify-between text-sm p-2 bg-blue-50 rounded">
+                        <span class="text-gray-600">{{ activeFiltersCount }} filter(s) applied</span>
+                        <Button label="Clear All" size="small" text severity="danger" @click="clearAllFilters"
+                            icon="pi pi-times" />
                     </div>
                 </div>
 
-                <!-- JPM Highlighting Toggle -->
-                <div class="mb-4 mt-2 py-2 px-2 bg-gray-100 rounded">
-                    <div class="flex items-center justify-between">
-                        <label class="text-sm font-medium text-gray-700">Enable JPM Highlighting</label>
-                        <ToggleSwitch v-model="enableJpmHighlighting" />
-                    </div>
-                    <p class="text-xs text-gray-500 mt-1">Highlight JPM members with green background</p>
-                </div>
+                <!-- RIGHT COLUMN: Report Options -->
+                <div>
+                    <h4 class="text-base font-semibold text-gray-700 mb-3 pb-2 border-b">Report Options</h4>
 
-                <!-- JPM Filter -->
-                <div class="mb-4 px-2">
-                    <label class="block mb-2 text-sm font-medium text-gray-700">JPM Filter</label>
-                    <div class="flex gap-4">
-                        <div class="flex items-center">
-                            <RadioButton v-model="jpmFilter" inputId="jpm_all" value="all" />
-                            <label for="jpm_all" class="ml-2 text-sm">Show All</label>
-                        </div>
-                        <div class="flex items-center">
-                            <RadioButton v-model="jpmFilter" inputId="jpm_only" value="jpm_only" />
-                            <label for="jpm_only" class="ml-2 text-sm">JPM Only</label>
-                        </div>
-                        <div class="flex items-center">
-                            <RadioButton v-model="jpmFilter" inputId="hide_jpm" value="hide_jpm" />
-                            <label for="hide_jpm" class="ml-2 text-sm">Hide JPM</label>
+                    <!-- Report Type -->
+                    <div class="mb-4">
+                        <label class="block mb-2 text-sm font-medium text-gray-700">Report Type</label>
+                        <div class="flex gap-4">
+                            <div class="flex items-center">
+                                <RadioButton v-model="reportType" inputId="list" value="list" />
+                                <label for="list" class="ml-2 text-sm">Detailed List</label>
+                            </div>
+                            <div class="flex items-center">
+                                <RadioButton v-model="reportType" inputId="summary" value="summary" />
+                                <label for="summary" class="ml-2 text-sm">Summary</label>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Paper Settings -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-700">Paper Size</label>
-                        <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label" optionValue="value"
-                            placeholder="Select size" class="w-full" />
+                    <!-- Group By Option -->
+                    <div class="mb-4">
+                        <label class="block mb-2 text-sm font-medium text-gray-700">Group By</label>
+                        <Select v-model="groupBy" :options="groupByOptions" optionLabel="label" optionValue="value"
+                            placeholder="Select grouping" class="w-full" />
+                        <small class="text-xs text-gray-500 mt-1">How records should be organized in the report</small>
                     </div>
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-700">Orientation</label>
-                        <Select v-model="orientation" :options="orientationOptions" optionLabel="label"
-                            optionValue="value" placeholder="Select orientation" class="w-full" />
+
+                    <!-- Show Sequence Numbers Toggle -->
+                    <div class="mb-4 py-3 px-3 bg-gray-50 rounded border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-sm font-medium text-gray-700">Show Sequence Numbers</label>
+                            <ToggleSwitch v-model="showSequenceNumbers" />
+                        </div>
+                        <p class="text-xs text-gray-500">Display queue position numbers for Program, School, and Course
+                        </p>
+                    </div>
+
+                    <!-- JPM Highlighting Toggle -->
+                    <div class="mb-4 py-3 px-3 bg-gray-50 rounded border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-sm font-medium text-gray-700">Enable JPM Highlighting</label>
+                            <ToggleSwitch v-model="enableJpmHighlighting" />
+                        </div>
+                        <p class="text-xs text-gray-500">Highlight JPM members with green background</p>
+                    </div>
+
+                    <!-- JPM Filter -->
+                    <div class="mb-4 px-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-700">JPM Filter</label>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center">
+                                <RadioButton v-model="jpmFilter" inputId="jpm_all" value="all"
+                                    :disabled="!enableJpmHighlighting" />
+                                <label for="jpm_all" class="ml-2 text-sm"
+                                    :class="{ 'text-gray-400': !enableJpmHighlighting }">Show All</label>
+                            </div>
+                            <div class="flex items-center">
+                                <RadioButton v-model="jpmFilter" inputId="jpm_only" value="jpm_only"
+                                    :disabled="!enableJpmHighlighting" />
+                                <label for="jpm_only" class="ml-2 text-sm"
+                                    :class="{ 'text-gray-400': !enableJpmHighlighting }">JPM Only</label>
+                            </div>
+                            <div class="flex items-center">
+                                <RadioButton v-model="jpmFilter" inputId="hide_jpm" value="hide_jpm"
+                                    :disabled="!enableJpmHighlighting" />
+                                <label for="hide_jpm" class="ml-2 text-sm"
+                                    :class="{ 'text-gray-400': !enableJpmHighlighting }">Hide JPM</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -186,21 +199,19 @@ const selectedYearLevel = ref(null);
 
 // Report Configuration
 const reportType = ref('list');
-const paperSize = ref('A4');
-const orientation = ref('landscape');
+const groupBy = ref('none');
+const showSequenceNumbers = ref(true);
 const enableJpmHighlighting = ref(true);
 const jpmFilter = ref('all');
 
-// Options
-const paperSizeOptions = [
-    { label: 'A4 (210 × 297 mm)', value: 'A4' },
-    { label: 'Letter (8.5 × 11 in)', value: 'Letter' },
-    { label: 'Legal/Long (8.5 × 13 in)', value: 'Legal' },
-];
-
-const orientationOptions = [
-    { label: 'Portrait (Vertical)', value: 'portrait' },
-    { label: 'Landscape (Horizontal)', value: 'landscape' },
+// Group By Options
+const groupByOptions = [
+    { label: 'No Grouping (By Date Filed)', value: 'none' },
+    { label: 'By School', value: 'school' },
+    { label: 'By Program', value: 'program' },
+    { label: 'By Course', value: 'course' },
+    { label: 'By Year Level', value: 'year_level' },
+    { label: 'By Municipality', value: 'municipality' },
 ];
 
 // Watch for JPM highlighting toggle changes
@@ -243,6 +254,8 @@ function clearAllFilters() {
     selectedCourses.value = [];
     selectedMunicipality.value = null;
     selectedYearLevel.value = null;
+    groupBy.value = 'none';
+    showSequenceNumbers.value = true;
     enableJpmHighlighting.value = true;
     jpmFilter.value = 'all';
 }
@@ -277,8 +290,10 @@ function generateReport() {
         municipality: selectedMunicipality.value?.name || '',
         year_level: selectedYearLevel.value?.value || '',
         report_type: reportType.value,
-        paper_size: paperSize.value,
-        orientation: orientation.value,
+        group_by: groupBy.value,
+        show_sequence_numbers: showSequenceNumbers.value ? 1 : 0,
+        paper_size: 'A4',
+        orientation: 'landscape',
         enable_jpm_highlighting: enableJpmHighlighting.value ? 1 : 0,
         show_jpm_only: (enableJpmHighlighting.value && jpmFilter.value === 'jpm_only') ? 1 : '',
         hide_jpm: (enableJpmHighlighting.value && jpmFilter.value === 'hide_jpm') ? 1 : '',

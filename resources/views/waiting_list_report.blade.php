@@ -6,58 +6,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scholarship Report</title>
     <style>
-        /* Only keep the second definition below for .report-footer and @media print */
-
+        /* Minimalist Material Design */
         body {
-            font-family: 'Inter', Arial, sans-serif;
-            font-size: 13px;
-            color: #222;
-            padding: 0.03rem 0.25rem 0.03rem 0.18rem;
+            font-family: 'Roboto', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 12px;
+            color: #111827;
+            padding: 0.05rem 0.3rem;
             margin: 0;
+            background: #ffffff;
         }
 
         h1 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 0.18rem;
-            color: #2563eb;
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 0.2rem;
+            color: #111827;
+            letter-spacing: -0.02em;
         }
 
         h2 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.15rem;
-            color: #333;
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 0.2rem;
+            color: #111827;
         }
 
         h3 {
-            font-size: 0.95rem;
-            font-weight: 500;
-            margin-bottom: 0.09rem;
-            color: #334155;
+            font-size: 1rem;
+            font-weight: 400;
+            margin-bottom: 0.15rem;
+            color: #374151;
         }
 
+        /* Minimalist Tables */
         table {
             border-collapse: collapse;
             width: 100%;
-            margin-top: 0.12em;
-            background: #fff;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-            border-radius: 0.25rem;
+            margin-top: 0.15em;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
             overflow: hidden;
         }
 
         th,
         td {
-            border: 1px solid #bbbbbb;
-            padding: 0.06rem 0.09rem 0.06rem 0.22rem;
+            border: none;
+            border-bottom: 1px solid #f3f4f6;
+            padding: 0.1rem 0.12rem;
             text-align: left;
             white-space: normal;
             word-wrap: break-word;
             overflow-wrap: break-word;
-            word-break: normal;
             max-width: 180px;
             vertical-align: top;
+        }
+
+        /* Minimalist Table Header */
+        th {
+            background: #f9fafb;
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.88em;
+            padding: 0.12rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* Subtle hover effect */
+        tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .summary-table {
+            margin-bottom: 0.4em;
+        }
+
+        /* Minimalist Filter Badge */
+        .filters {
+            margin-bottom: 0.2rem;
+            padding: 0.2rem 0.3rem;
+            background: #eff6ff;
+            border-radius: 6px;
+            border: 1px solid #dbeafe;
+            color: #1e40af;
+            font-size: 0.85rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #ffffff;
+            color: #111827;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            padding: 0.06rem 0.25rem;
+            margin-right: 0.25rem;
+            font-size: 0.82rem;
+            font-weight: 400;
+        }
+
+        /* Minimalist School Header */
+        .school-header {
+            border-bottom: 2px solid #d1d5db;
+            padding: 8px 0;
+            margin-top: 24px;
+            margin-bottom: 8px;
+        }
+
+        /* Minimalist Report Header */
+        .report-header {
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        /* Minimalist JPM Highlight */
+        .jpm-row {
+            background-color: #ecfdf5 !important;
         }
 
         @media print {
@@ -72,6 +136,10 @@
                 right: 0;
                 padding-right: 0.1cm;
             }
+
+            table {
+                border: 1px solid #e5e7eb;
+            }
         }
 
         @media print and (orientation: portrait) {
@@ -84,37 +152,6 @@
             .report-footer {
                 font-size: 1.2em;
             }
-        }
-
-        th {
-            background: #f1f5f9;
-            font-weight: 600;
-            color: #475569;
-            font-size: 0.95em;
-            padding-left: 0.22rem;
-        }
-
-        .summary-table {
-            margin-bottom: 0.3em;
-        }
-
-        .filters {
-            margin-bottom: 0.12rem;
-            padding: 0.18rem 0.3rem;
-            background: #f1f5f9;
-            border-radius: 0.375rem;
-            color: #333;
-            font-size: 0.9rem;
-        }
-
-        .badge {
-            display: inline-block;
-            background: #f1f5f9;
-            color: #333;
-            border-radius: 0.375rem;
-            padding: 0.08rem 0.3rem;
-            margin-right: 0.3rem;
-            font-size: 0.85rem;
         }
     </style>
 </head>
@@ -154,10 +191,18 @@
         @endforeach
     </div>
 
-    <!-- Grand Total Header -->
-    <div style="background: #1e40af; color: white; padding: 12px 16px; margin-bottom: 1rem; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 15px; font-weight: 600;">{{ $reportType === 'summary' ? 'SUMMARY REPORT' : 'WAITING LIST REPORT' }}</span>
-        <span style="font-size: 14px; font-weight: 500;">GRAND TOTAL: {{ $profiles->count() }} RECORD(S)</span>
+    <!-- Minimalist Report Header -->
+    <div class="report-header">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <div>
+                <h1 style="margin: 0; font-size: 20px; font-weight: 300; color: #111827;">
+                    {{ $reportType === 'summary' ? 'Summary Report' : 'Waiting List' }}
+                </h1>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: #6b7280;">
+                    {{ $profiles->count() }} records
+                </p>
+            </div>
+        </div>
     </div>
 
     @if($reportType === 'summary')
@@ -165,90 +210,119 @@
     <table class="summary-table">
         <tr>
             <th>Total</th>
-            <td>{{ $summary['total'] ?? 0 }}</td>
+            <td colspan="2">{{ $summary['total'] ?? 0 }}</td>
         </tr>
-        @if(isset($summary['by_program']))
+        @php
+        // Determine which summary sections to show based on group_by
+        // Allow school and course to show even when filtered (to show breakdown of selected items)
+        $showProgram = (!isset($groupBy) || $groupBy === 'none' || $groupBy === 'program');
+        $showSchool = (!isset($groupBy) || $groupBy === 'none' || $groupBy === 'school');
+        $showCourse = (!isset($groupBy) || $groupBy === 'none' || $groupBy === 'course');
+        $showYearLevel = (!isset($groupBy) || $groupBy === 'none' || $groupBy === 'year_level');
+
+        $total = $summary['total'] ?? 1; // Avoid division by zero
+        @endphp
+        @if(isset($summary['by_program']) && $showProgram)
         <tr>
-            <th colspan="2">By Program</th>
+            <th colspan="3">By Program</th>
         </tr>
-        @foreach($summary['by_program'] as $name => $count)
-        @if($name !== 'no_program')
+        @php
+        $programData = collect($summary['by_program'])->filter(function($count, $name) {
+        return $name !== 'no_program';
+        })->sortDesc();
+        @endphp
+        @foreach($programData as $name => $count)
         <tr>
             <td>{{ $name }}</td>
             <td>{{ $count }}</td>
+            <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
         </tr>
-        @endif
         @endforeach
         @if(isset($summary['by_program']['no_program']))
         <tr>
             <td><em>No Program</em></td>
             <td>{{ $summary['by_program']['no_program'] }}</td>
+            <td>{{ number_format(($summary['by_program']['no_program'] / $total) * 100, 1) }}%</td>
         </tr>
         @endif
         @endif
-        @if(isset($summary['by_school']))
+        @if(isset($summary['by_school']) && $showSchool)
         <tr>
-            <th colspan="2">By School</th>
+            <th colspan="3">By School</th>
         </tr>
-        @foreach($summary['by_school'] as $name => $count)
-        @if($name !== 'no_school')
+        @php
+        $schoolData = collect($summary['by_school'])->filter(function($count, $name) {
+        return $name !== 'no_school';
+        })->sortDesc();
+        @endphp
+        @foreach($schoolData as $name => $count)
         <tr>
             <td>{{ $name }}</td>
             <td>{{ $count }}</td>
+            <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
         </tr>
-        @endif
         @endforeach
         @if(isset($summary['by_school']['no_school']))
         <tr>
             <td><em>No School</em></td>
             <td>{{ $summary['by_school']['no_school'] }}</td>
+            <td>{{ number_format(($summary['by_school']['no_school'] / $total) * 100, 1) }}%</td>
         </tr>
         @endif
         @endif
-        @if(isset($summary['by_course']))
+        @if(isset($summary['by_course']) && $showCourse)
         <tr>
-            <th colspan="2">By Course</th>
+            <th colspan="3">By Course</th>
         </tr>
-        @foreach($summary['by_course'] as $name => $count)
-        @if($name !== 'no_course')
+        @php
+        $courseData = collect($summary['by_course'])->filter(function($count, $name) {
+        return $name !== 'no_course';
+        })->sortDesc();
+        @endphp
+        @foreach($courseData as $name => $count)
         <tr>
             <td>{{ $name }}</td>
             <td>{{ $count }}</td>
+            <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
         </tr>
-        @endif
         @endforeach
         @if(isset($summary['by_course']['no_course']))
         <tr>
             <td><em>No Course</em></td>
             <td>{{ $summary['by_course']['no_course'] }}</td>
+            <td>{{ number_format(($summary['by_course']['no_course'] / $total) * 100, 1) }}%</td>
         </tr>
         @endif
         @endif
-        @if(isset($summary['by_year_level']))
+        @if(isset($summary['by_year_level']) && $showYearLevel)
         <tr>
-            <th colspan="2">By Year Level</th>
+            <th colspan="3">By Year Level</th>
         </tr>
-        @foreach($summary['by_year_level'] as $name => $count)
-        @if($name !== 'no_year_level')
+        @php
+        $yearLevelData = collect($summary['by_year_level'])->filter(function($count, $name) {
+        return $name !== 'no_year_level';
+        })->sortDesc();
+        @endphp
+        @foreach($yearLevelData as $name => $count)
         <tr>
             <td>{{ $name }}</td>
             <td>{{ $count }}</td>
+            <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
         </tr>
-        @endif
         @endforeach
         @if(isset($summary['by_year_level']['no_year_level']))
         <tr>
             <td><em>No Year Level</em></td>
             <td>{{ $summary['by_year_level']['no_year_level'] }}</td>
+            <td>{{ number_format(($summary['by_year_level']['no_year_level'] / $total) * 100, 1) }}%</td>
         </tr>
         @endif
         @endif
     </table>
     @else
-    <h3>Waiting List</h3>
     @php
     // Use grouped profiles if available, otherwise use original sorting
-    $profilesToIterate = $profilesBySchool ?? collect(['all' => $profiles]);
+    $profilesToIterate = $groupedProfiles ?? collect(['all' => $profiles]);
 
     // Initialize sequence counters for different groupings
     $programSequences = [];
@@ -264,47 +338,51 @@
     $overallIndex = 1;
     @endphp
 
-    @foreach($profilesToIterate as $schoolName => $schoolProfiles)
+    @foreach($profilesToIterate as $groupName => $groupProfiles)
     @php
-    // Sort profiles within each school by date filed (oldest to newest)
-    $sortedProfiles = $schoolProfiles->sortBy(function($profile) {
+    // Sort profiles within each group by date filed (oldest to newest)
+    $sortedProfiles = $groupProfiles->sortBy(function($profile) {
     $grant = optional($profile->scholarshipGrant->first());
     $dateFiled = $grant->date_filed ? \Carbon\Carbon::parse($grant->date_filed)->format('Y-m-d') : '9999-12-31';
     $createdAt = $profile->created_at ? \Carbon\Carbon::parse($profile->created_at)->format('Y-m-d H:i:s') : '9999-12-31 23:59:59';
     return [$dateFiled, $createdAt];
     });
-    $schoolCount = $sortedProfiles->count();
+    $groupCount = $sortedProfiles->count();
     @endphp
 
-    @if($profilesBySchool && $schoolName !== 'all')
-    <!-- School Header -->
-    <div style="background-color: #e0f2fe; border: 2px solid #0284c7; padding: 10px 12px; margin-top: 20px; margin-bottom: 2px; border-radius: 4px 4px 0 0;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 600; font-size: 14px; color: #0c4a6e;">{{ strtoupper($schoolName) }}</span>
-            <span style="font-size: 12px; color: #0369a1; font-weight: 500;">Total: {{ $schoolCount }} record(s)</span>
+    @if($groupedProfiles && $groupBy !== 'none')
+    <!-- Minimalist Group Header -->
+    <div class="school-header">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <h2 style="margin: 0; font-size: 15px; font-weight: 500; color: #111827;">
+                {{ strtoupper($groupName) }}
+            </h2>
+            <span style="font-size: 12px; color: #6b7280;">
+                {{ $groupCount }} records
+            </span>
         </div>
     </div>
     @endif
 
-    <table style="@if($profilesBySchool && $schoolName !== 'all') margin-top: 0; @endif @if(!$loop->last) margin-bottom: 20px; @endif">
+    <table style="@if($groupedProfiles && $groupBy !== 'none') margin-top: 0; @endif @if(!$loop->last) margin-bottom: 20px; @endif">
         <thead>
             <tr>
                 <th style="min-width:30px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">#</th>
                 <th>Name</th>
                 <th>Contact No(s).</th>
-                @if(empty($filters['municipality']))
+                @if(empty($filters['municipality']) && (!isset($groupBy) || $groupBy !== 'municipality'))
                 <th>Municipality</th>
                 @endif
-                @if(empty($filters['program']))
+                @if(empty($filters['program']) && (!isset($groupBy) || $groupBy !== 'program'))
                 <th>Program</th>
                 @endif
-                @if(empty($filters['school']))
+                @if(empty($filters['school']) && (!isset($groupBy) || $groupBy !== 'school'))
                 <th>School</th>
                 @endif
-                @if(empty($filters['course']))
+                @if(empty($filters['course']) && empty($filters['courses']) && (!isset($groupBy) || $groupBy !== 'course'))
                 <th>Course</th>
                 @endif
-                @if(empty($filters['year_level']))
+                @if(empty($filters['year_level']) && (!isset($groupBy) || $groupBy !== 'year_level'))
                 <th style="width:35px">Level</th>
                 @endif
                 <th>Remarks</th>
@@ -378,18 +456,20 @@
 
             // Check if applicant, parent, or guardian is JPM (only if user has permission)
             $isJpm = ($canViewJpm ?? false) && ($profile->is_jpm_member || $profile->is_father_jpm || $profile->is_mother_jpm || $profile->is_guardian_jpm);
-            $bgStyle = $isJpm ? 'background-color: #d1fae5 !important;' : '';
+            $rowClass = $isJpm ? 'jpm-row' : '';
             @endphp
-            <tr>
-                <td style="font-size:10px;min-width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;{{ $bgStyle }}">{{ $overallIndex }}</td>
-                <td style="font-size:11px;{{ $bgStyle }}">
+            <tr class="{{ $rowClass }}">
+                <td style="font-size:10px;min-width:20px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">{{ $overallIndex }}</td>
+                <td style="font-size:11px;">
                     <div>{{ $profile->last_name }}, {{ $profile->first_name }}</div>
+                    @if(isset($showSequenceNumbers) && $showSequenceNumbers == 1)
                     <div style="font-size:9px;color:#666;margin-top:4px;line-height:1.4;">
                         【Prog.<span style="font-weight: bold;">#{{ $programQNum }}</span> | Sch.<span style="font-weight: bold;">#{{ $schoolQNum }}</span> | Course<span style="font-weight: bold;">#{{ $courseQNum }}</span>】
                         　
                     </div>
+                    @endif
                 </td>
-                <td style="font-size:11px;{{ $bgStyle }}">
+                <td style="font-size:11px;">
                     @php
                     $contacts = array_filter([
                     $profile->contact_no ?? null,
@@ -398,23 +478,23 @@
                     @endphp
                     {{ count($contacts) ? implode(' / ', $contacts) : '-' }}
                 </td>
-                @if(empty($filters['municipality']))
-                <td style="font-size:11px;{{ $bgStyle }}">{{ $profile->municipality ?? '-' }}</td>
+                @if(empty($filters['municipality']) && (!isset($groupBy) || $groupBy !== 'municipality'))
+                <td style="font-size:11px;">{{ $profile->municipality ?? '-' }}</td>
                 @endif
-                @if(empty($filters['program']))
-                <td style="font-size:11px;{{ $bgStyle }}">{{ optional(optional($profile->scholarshipGrant->first())->program)->shortname ?? '-' }}</td>
+                @if(empty($filters['program']) && (!isset($groupBy) || $groupBy !== 'program'))
+                <td style="font-size:11px;">{{ optional(optional($profile->scholarshipGrant->first())->program)->shortname ?? '-' }}</td>
                 @endif
-                @if(empty($filters['school']))
-                <td style="font-size:11px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->school->shortname ?? '-' }}</td>
+                @if(empty($filters['school']) && empty($filters['schools']) && (!isset($groupBy) || $groupBy !== 'school'))
+                <td style="font-size:11px;">{{ optional($profile->scholarshipGrant->first())->school->shortname ?? '-' }}</td>
                 @endif
-                @if(empty($filters['course']))
-                <td style="font-size:10px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->course->name ?? '-' }}</td>
+                @if(empty($filters['course']) && empty($filters['courses']) && (!isset($groupBy) || $groupBy !== 'course'))
+                <td style="font-size:10px;">{{ optional($profile->scholarshipGrant->first())->course->name ?? '-' }}</td>
                 @endif
-                @if(empty($filters['year_level']))
-                <td style="font-size:11px;{{ $bgStyle }}">{{ optional($profile->scholarshipGrant->first())->year_level ?? '-' }}</td>
+                @if(empty($filters['year_level']) && (!isset($groupBy) || $groupBy !== 'year_level'))
+                <td style="font-size:11px;">{{ optional($profile->scholarshipGrant->first())->year_level ?? '-' }}</td>
                 @endif
-                <td style="text-transform:lowercase;font-size:11px;{{ $bgStyle }}">{{ $profile->remarks ?? '-' }}</td>
-                <td style="font-size:11px;{{ $bgStyle }}">
+                <td style="text-transform:lowercase;font-size:11px;">{{ $profile->remarks ?? '-' }}</td>
+                <td style="font-size:11px;">
                     {{ $dateFiled ? \Carbon\Carbon::parse($dateFiled)->format('m/d/Y') : '-' }}
                 </td>
             </tr>

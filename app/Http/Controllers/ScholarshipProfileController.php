@@ -785,28 +785,33 @@ class ScholarshipProfileController extends Controller
         ];
 
         if ($reportType === 'summary') {
-            // Only generate summary for parameters not filtered by the request
+            // Generate summary based on filtered results
+            // Only exclude summary if filter has single value (not multiple selections)
             $summary = [
                 'total' => $profiles->count(),
             ];
+
+            // Program summary: exclude only if single program selected
             if (!$request->filled('program')) {
                 $summary['by_program'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                     return ($grant && $grant->program) ? $grant->program->name : 'no_program';
                 })->map(fn($group) => $group->count());
             }
-            if (!$request->filled('school')) {
-                $summary['by_school'] = $profiles->groupBy(function ($p) {
-                    $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
-                    return ($grant && $grant->school) ? $grant->school->name : 'no_school';
-                })->map(fn($group) => $group->count());
-            }
-            if (!$request->filled('course') && !$request->filled('courses')) {
-                $summary['by_course'] = $profiles->groupBy(function ($p) {
-                    $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
-                    return ($grant && $grant->course) ? $grant->course->name : 'no_course';
-                })->map(fn($group) => $group->count());
-            }
+
+            // School summary: always include (even if schools are filtered, show breakdown of selected schools)
+            $summary['by_school'] = $profiles->groupBy(function ($p) {
+                $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
+                return ($grant && $grant->school) ? $grant->school->name : 'no_school';
+            })->map(fn($group) => $group->count());
+
+            // Course summary: always include (even if courses are filtered, show breakdown of selected courses)
+            $summary['by_course'] = $profiles->groupBy(function ($p) {
+                $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
+                return ($grant && $grant->course) ? $grant->course->name : 'no_course';
+            })->map(fn($group) => $group->count());
+
+            // Year level summary: exclude only if single year level selected
             if (!$request->filled('year_level')) {
                 $summary['by_year_level'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
