@@ -243,7 +243,7 @@ const handleNextStep1 = async () => {
     const missingFields = [];
     if (!form.first_name) missingFields.push('First Name');
     if (!form.last_name) missingFields.push('Last Name');
-    if (!form.municipality) missingFields.push('Municipality');
+    // if (!form.municipality) missingFields.push('Municipality');
 
     if (missingFields.length > 0) {
         validationError.value = `Please fill in the following required fields: ${missingFields.join(', ')}.`;

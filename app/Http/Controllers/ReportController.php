@@ -70,8 +70,14 @@ class ReportController extends Controller
             $query->where('municipality', 'like', '%' . $request->municipality . '%');
         }
         if ($request->filled('school')) {
-            $query->whereHas('scholarshipGrant.school', function ($q) use ($request) {
-                $q->where('shortname', 'like', '%' . $request->school . '%')->orWhere('name', 'like', '%' . $request->school . '%');
+            $schools = array_map('trim', explode(',', $request->school));
+            $query->whereHas('scholarshipGrant.school', function ($q) use ($schools) {
+                $q->where(function ($subQuery) use ($schools) {
+                    foreach ($schools as $school) {
+                        $subQuery->orWhere('shortname', 'like', '%' . $school . '%')
+                            ->orWhere('name', 'like', '%' . $school . '%');
+                    }
+                });
             });
         }
         if ($request->filled('courses') || $request->filled('course')) {
@@ -181,13 +187,24 @@ class ReportController extends Controller
         ];
 
         // Check if user has permission to view JPM highlighting
-        // Disable JPM highlighting when show_jpm_only or hide_jpm filter is active
+        // Only enable highlighting if user has permission AND enableJpmHighlighting is true
+        $enableJpmHighlighting = $request->filled('enable_jpm_highlighting') && in_array($request->enable_jpm_highlighting, [1, '1', true, 'true'], true);
         $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only !== '' && in_array($request->show_jpm_only, [1, '1', true, 'true'], true);
         $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm !== '' && in_array($request->hide_jpm, [1, '1', true, 'true'], true);
-        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && !$showJpmOnly && !$hideJpm;
+        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && $enableJpmHighlighting && !$showJpmOnly && !$hideJpm;
+
+        // Group profiles by school for list report
+        $profilesBySchool = null;
+        if ($reportType === 'list') {
+            $profilesBySchool = $profiles->groupBy(function ($p) {
+                $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
+                return ($grant && $grant->school) ? $grant->school->name : 'No School';
+            })->sortKeys(); // Sort alphabetically by school name
+        }
 
         $html = View::make('waiting_list_report', [
             'profiles' => $profiles,
+            'profilesBySchool' => $profilesBySchool,
             'summary' => $summary,
             'reportType' => $reportType,
             'filters' => $filters,
@@ -254,8 +271,14 @@ class ReportController extends Controller
             $query->where('municipality', 'like', '%' . $request->municipality . '%');
         }
         if ($request->filled('school')) {
-            $query->whereHas('scholarshipGrant.school', function ($q) use ($request) {
-                $q->where('shortname', 'like', '%' . $request->school . '%')->orWhere('name', 'like', '%' . $request->school . '%');
+            $schools = array_map('trim', explode(',', $request->school));
+            $query->whereHas('scholarshipGrant.school', function ($q) use ($schools) {
+                $q->where(function ($subQuery) use ($schools) {
+                    foreach ($schools as $school) {
+                        $subQuery->orWhere('shortname', 'like', '%' . $school . '%')
+                            ->orWhere('name', 'like', '%' . $school . '%');
+                    }
+                });
             });
         }
         if ($request->filled('courses') || $request->filled('course')) {

@@ -3,26 +3,15 @@
         <!-- Toolbar -->
         <div class="bg-white border-b border-gray-300 px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-2">
-                <Button label="Close" icon="pi pi-times" @click="goBack" severity="secondary" outlined size="small" />
+                <Button label="Back" icon="pi pi-arrow-left" @click="goBack" severity="secondary" outlined
+                    size="small" />
                 <Button label="Refresh" icon="pi pi-refresh" @click="regenerate" severity="info" outlined size="small"
                     :loading="loading" />
             </div>
 
             <div class="flex items-center gap-4">
-                <!-- Paper Settings -->
-                <div class="flex items-center gap-2 text-sm">
-                    <label class="text-gray-600 font-medium">Paper:</label>
-                    <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label" optionValue="value"
-                        class="w-32" size="small" />
-                </div>
-                <div class="flex items-center gap-2 text-sm">
-                    <label class="text-gray-600 font-medium">Orientation:</label>
-                    <Select v-model="orientation" :options="orientationOptions" optionLabel="label" optionValue="value"
-                        class="w-36" size="small" />
-                </div>
-
                 <!-- Export Buttons -->
-                <div class="flex items-center gap-2 border-l pl-4">
+                <div class="flex items-center gap-2">
                     <Button label="PDF" icon="pi pi-file-pdf" @click="saveAsPdf" severity="danger" size="small" />
                     <Button label="Excel" icon="pi pi-file-excel" @click="saveAsExcel" severity="success"
                         size="small" />
@@ -40,6 +29,19 @@
 
             <!-- Report Content -->
             <div v-else>
+                <!-- Grand Total Header -->
+                <div class="mb-4 p-4 bg-blue-700 text-white rounded-lg shadow-md">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-semibold">
+                            {{ reportType === 'list' ? 'WAITING LIST REPORT' : 'SUMMARY REPORT' }}
+                        </h2>
+                        <div class="text-right">
+                            <p class="text-sm font-medium">GRAND TOTAL</p>
+                            <p class="text-2xl font-bold">{{ report.count || 0 }} RECORD(S)</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Report Info -->
                 <div class="mb-4 pb-3 border-b">
                     <div class="flex items-center justify-between">
@@ -81,57 +83,70 @@
 
                 <!-- List Report -->
                 <div v-if="reportType === 'list'">
-                    <table class="w-full border-collapse border border-gray-300 text-sm">
-                        <thead>
-                            <tr class="bg-gray-100">
-                                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">Name
-                                </th>
-                                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">
-                                    Address</th>
-                                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">
-                                    Program</th>
-                                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">
-                                    School</th>
-                                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">
-                                    Course</th>
-                                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">Year
-                                    Level</th>
-                                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">Date
-                                    Filed</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(item, idx) in report.data" :key="idx"
-                                :style="isJpm(item) ? 'background-color: #d1fae5;' : ''" class="hover:bg-gray-100">
-                                <td class="border border-gray-300 px-3 py-2">
-                                    {{ (item.last_name + ', ' + item.first_name + ' ' + item.middle_name).toUpperCase()
-                                    }}
-                                </td>
-                                <td class="border border-gray-300 px-3 py-2">
-                                    <span v-if="item.municipality">{{ item.municipality.toUpperCase() }}</span>
-                                    <span v-if="item.municipality && item.barangay">, </span>
-                                    <span v-if="item.barangay">{{ item.barangay.toUpperCase() }}</span>
-                                    <span v-if="!item.municipality && !item.barangay" class="text-gray-400">-</span>
-                                </td>
-                                <td class="border border-gray-300 px-3 py-2">
-                                    {{ item.scholarship_grant[0]?.program?.shortname?.toUpperCase() || '-' }}
-                                </td>
-                                <td class="border border-gray-300 px-3 py-2">
-                                    {{ item.scholarship_grant[0]?.school?.shortname?.toUpperCase() || '-' }}
-                                </td>
-                                <td class="border border-gray-300 px-3 py-2 font-semibold">
-                                    {{ item.scholarship_grant[0]?.course?.shortname?.toUpperCase() || '-' }}
-                                </td>
-                                <td class="border border-gray-300 px-3 py-2">
-                                    {{ item.scholarship_grant[0]?.year_level?.toString().toUpperCase() || '-' }}
-                                </td>
-                                <td class="border border-gray-300 px-3 py-2">
-                                    {{ item.scholarship_grant[0]?.date_filed ?
-                                        moment(item.scholarship_grant[0]?.date_filed).format('MMM DD, YYYY') : '-' }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div v-for="(school, schoolIdx) in groupedBySchool" :key="schoolIdx" class="mb-6">
+                        <!-- School Header -->
+                        <div class="bg-sky-100 border-2 border-sky-600 px-4 py-3 mb-0 rounded-t-lg">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold text-sky-900 text-base">{{ school.name.toUpperCase()
+                                }}</span>
+                                <span class="text-sm text-sky-700 font-medium">Total: {{ school.count }}
+                                    record(s)</span>
+                            </div>
+                        </div>
+
+                        <!-- School Table -->
+                        <table class="w-full border-collapse border border-gray-300 text-sm">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">
+                                        Name</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">
+                                        Address</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">
+                                        Program</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">
+                                        School</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">
+                                        Course</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">
+                                        Year Level</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">
+                                        Date Filed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(item, idx) in school.items" :key="`${schoolIdx}-${idx}`"
+                                    :style="isJpm(item) ? 'background-color: #d1fae5;' : ''" class="hover:bg-gray-100">
+                                    <td class="border border-gray-300 px-3 py-2">
+                                        {{ (item.last_name + ', ' + item.first_name + ' ' +
+                                            item.middle_name).toUpperCase() }}
+                                    </td>
+                                    <td class="border border-gray-300 px-3 py-2">
+                                        <span v-if="item.municipality">{{ item.municipality.toUpperCase() }}</span>
+                                        <span v-if="item.municipality && item.barangay">, </span>
+                                        <span v-if="item.barangay">{{ item.barangay.toUpperCase() }}</span>
+                                        <span v-if="!item.municipality && !item.barangay" class="text-gray-400">-</span>
+                                    </td>
+                                    <td class="border border-gray-300 px-3 py-2">
+                                        {{ item.scholarship_grant[0]?.program?.shortname?.toUpperCase() || '-' }}
+                                    </td>
+                                    <td class="border border-gray-300 px-3 py-2">
+                                        {{ item.scholarship_grant[0]?.school?.shortname?.toUpperCase() || '-' }}
+                                    </td>
+                                    <td class="border border-gray-300 px-3 py-2 font-semibold">
+                                        {{ item.scholarship_grant[0]?.course?.shortname?.toUpperCase() || '-' }}
+                                    </td>
+                                    <td class="border border-gray-300 px-3 py-2">
+                                        {{ item.scholarship_grant[0]?.year_level?.toString().toUpperCase() || '-' }}
+                                    </td>
+                                    <td class="border border-gray-300 px-3 py-2">
+                                        {{ item.scholarship_grant[0]?.date_filed ?
+                                            moment(item.scholarship_grant[0]?.date_filed).format('MMM DD, YYYY') : '-' }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- Summary Report -->
@@ -183,7 +198,6 @@ import moment from 'moment';
 
 // PrimeVue Components
 import ProgressSpinner from 'primevue/progressspinner';
-import Select from 'primevue/select';
 
 const props = defineProps({
     params: { type: Object, required: true },
@@ -197,22 +211,7 @@ const report = ref({});
 const reportType = ref(props.params.report_type || 'list');
 const params = reactive({ ...props.params });
 const canViewJpm = ref(false);
-
-// Paper Settings - get from params if available
-const paperSize = ref(props.params.paper_size || 'A4');
-const orientation = ref(props.params.orientation || 'landscape');
-
-// Options for dropdowns
-const paperSizeOptions = [
-    { label: 'A4', value: 'A4' },
-    { label: 'Letter', value: 'Letter' },
-    { label: 'Legal/Long', value: 'Legal' },
-];
-
-const orientationOptions = [
-    { label: 'Portrait', value: 'portrait' },
-    { label: 'Landscape', value: 'landscape' },
-];
+const groupedBySchool = ref([]);
 
 // Summary Groups Configuration
 const summaryGroups = reactive([
@@ -251,6 +250,35 @@ const isJpm = (item) => {
     return canViewJpm.value && (item.is_jpm_member || item.is_father_jpm || item.is_mother_jpm || item.is_guardian_jpm);
 };
 
+// Group data by school
+function groupDataBySchool() {
+    if (!report.value.data || !Array.isArray(report.value.data)) {
+        groupedBySchool.value = [];
+        return;
+    }
+
+    const grouped = {};
+
+    report.value.data.forEach(item => {
+        const schoolName = item.scholarship_grant?.[0]?.school?.name || 'No School';
+
+        if (!grouped[schoolName]) {
+            grouped[schoolName] = [];
+        }
+
+        grouped[schoolName].push(item);
+    });
+
+    // Convert to array and sort by school name
+    groupedBySchool.value = Object.keys(grouped)
+        .sort()
+        .map(schoolName => ({
+            name: schoolName,
+            count: grouped[schoolName].length,
+            items: grouped[schoolName]
+        }));
+}
+
 // Methods
 function goBack() {
     emit('close');
@@ -282,6 +310,9 @@ function fetchReport() {
                     // Sort ascending (oldest first)
                     return moment(dateA).valueOf() - moment(dateB).valueOf();
                 });
+
+                // Group by school for display
+                groupDataBySchool();
             }
 
             // Process summary data if available
@@ -311,21 +342,13 @@ function fetchReport() {
 }
 
 function saveAsPdf() {
-    const queryObj = {
-        ...params,
-        paper_size: paperSize.value,
-        orientation: orientation.value
-    };
+    const queryObj = { ...params };
     const query = new URLSearchParams(queryObj).toString();
     window.open(`/api/report/pdf?${query}`, '_blank');
 }
 
 function saveAsExcel() {
-    const queryObj = {
-        ...params,
-        paper_size: paperSize.value,
-        orientation: orientation.value
-    };
+    const queryObj = { ...params };
     const query = new URLSearchParams(queryObj).toString();
     window.open(`/api/report/excel?${query}`, '_blank');
 }

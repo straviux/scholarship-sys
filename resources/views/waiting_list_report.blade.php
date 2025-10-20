@@ -153,6 +153,13 @@
         @endif
         @endforeach
     </div>
+
+    <!-- Grand Total Header -->
+    <div style="background: #1e40af; color: white; padding: 12px 16px; margin-bottom: 1rem; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 15px; font-weight: 600;">{{ $reportType === 'summary' ? 'SUMMARY REPORT' : 'WAITING LIST REPORT' }}</span>
+        <span style="font-size: 14px; font-weight: 500;">GRAND TOTAL: {{ $profiles->count() }} RECORD(S)</span>
+    </div>
+
     @if($reportType === 'summary')
     <h3>Summary</h3>
     <table class="summary-table">
@@ -239,7 +246,47 @@
     </table>
     @else
     <h3>Waiting List</h3>
-    <table>
+    @php
+    // Use grouped profiles if available, otherwise use original sorting
+    $profilesToIterate = $profilesBySchool ?? collect(['all' => $profiles]);
+
+    // Initialize sequence counters for different groupings
+    $programSequences = [];
+    $schoolSequences = [];
+    $courseSequences = [];
+
+    // Initialize queue number counters (Q#) for program, school, and course
+    // These track position within each group based on date filed order
+    $programQueueNumbers = [];
+    $schoolQueueNumbers = [];
+    $courseQueueNumbers = [];
+
+    $overallIndex = 1;
+    @endphp
+
+    @foreach($profilesToIterate as $schoolName => $schoolProfiles)
+    @php
+    // Sort profiles within each school by date filed (oldest to newest)
+    $sortedProfiles = $schoolProfiles->sortBy(function($profile) {
+    $grant = optional($profile->scholarshipGrant->first());
+    $dateFiled = $grant->date_filed ? \Carbon\Carbon::parse($grant->date_filed)->format('Y-m-d') : '9999-12-31';
+    $createdAt = $profile->created_at ? \Carbon\Carbon::parse($profile->created_at)->format('Y-m-d H:i:s') : '9999-12-31 23:59:59';
+    return [$dateFiled, $createdAt];
+    });
+    $schoolCount = $sortedProfiles->count();
+    @endphp
+
+    @if($profilesBySchool && $schoolName !== 'all')
+    <!-- School Header -->
+    <div style="background-color: #e0f2fe; border: 2px solid #0284c7; padding: 10px 12px; margin-top: 20px; margin-bottom: 2px; border-radius: 4px 4px 0 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 600; font-size: 14px; color: #0c4a6e;">{{ strtoupper($schoolName) }}</span>
+            <span style="font-size: 12px; color: #0369a1; font-weight: 500;">Total: {{ $schoolCount }} record(s)</span>
+        </div>
+    </div>
+    @endif
+
+    <table style="@if($profilesBySchool && $schoolName !== 'all') margin-top: 0; @endif @if(!$loop->last) margin-bottom: 20px; @endif">
         <thead>
             <tr>
                 <th style="min-width:30px;color:#555;padding-left:0.1cm;padding-right:0.1cm;">#</th>
@@ -265,30 +312,6 @@
             </tr>
         </thead>
         <tbody>
-            @php
-            // Sort profiles by date filed only (oldest to newest)
-            $sortedProfiles = $profiles->sortBy(function($profile) {
-            $grant = optional($profile->scholarshipGrant->first());
-            // Ensure date is properly parsed for sorting (oldest first)
-            $dateFiled = $grant->date_filed ? \Carbon\Carbon::parse($grant->date_filed)->format('Y-m-d') : '9999-12-31';
-            $createdAt = $profile->created_at ? \Carbon\Carbon::parse($profile->created_at)->format('Y-m-d H:i:s') : '9999-12-31 23:59:59';
-            // Primary sort: Date Filed → Created At (keep original order for other columns)
-            return [$dateFiled, $createdAt];
-            });
-
-            // Initialize sequence counters for different groupings
-            $programSequences = [];
-            $schoolSequences = [];
-            $courseSequences = [];
-
-            // Initialize queue number counters (Q#) for program, school, and course
-            // These track position within each group based on date filed order
-            $programQueueNumbers = [];
-            $schoolQueueNumbers = [];
-            $courseQueueNumbers = [];
-
-            $overallIndex = 1;
-            @endphp
             @foreach($sortedProfiles as $profile)
             @php
             $grant = optional($profile->scholarshipGrant->first());
@@ -399,6 +422,7 @@
             @endforeach
         </tbody>
     </table>
+    @endforeach
     @endif
     <!-- <div class="report-footer">
         <span>Date generated: {{ now()->format('M d, Y h:i A') }}</span>

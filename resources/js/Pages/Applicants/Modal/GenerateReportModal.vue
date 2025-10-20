@@ -3,7 +3,7 @@
         :style="{ width: '500px' }" header="Generate Report">
 
 
-        <form @submit.prevent="generateReport" class="p-4">
+        <form @submit.prevent="generateReport" class="px-4 pb-2">
             <!-- Filters Section -->
             <div class="mb-6">
                 <!-- Date Range -->
@@ -33,7 +33,7 @@
                     <div>
                         <label class="block mb-2 text-sm font-medium text-gray-700">School</label>
                         <SchoolSelect v-model="selectedSchool" label="shortname" custom-placeholder="All Schools"
-                            class="w-full" />
+                            class="w-full" :multiple="true" />
                     </div>
                 </div>
 
@@ -85,11 +85,32 @@
                     </div>
                 </div>
 
+                <!-- JPM Highlighting Toggle -->
+                <div class="mb-4 mt-2 py-2 px-2 bg-gray-100 rounded">
+                    <div class="flex items-center justify-between">
+                        <label class="text-sm font-medium text-gray-700">Enable JPM Highlighting</label>
+                        <ToggleSwitch v-model="enableJpmHighlighting" />
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Highlight JPM members with green background</p>
+                </div>
+
                 <!-- JPM Filter -->
-                <div class="mb-4">
+                <div class="mb-4 px-2">
                     <label class="block mb-2 text-sm font-medium text-gray-700">JPM Filter</label>
-                    <Select v-model="jpmFilter" :options="jpmFilterOptions" optionLabel="label" optionValue="value"
-                        placeholder="Select JPM filter" class="w-full" />
+                    <div class="flex gap-4">
+                        <div class="flex items-center">
+                            <RadioButton v-model="jpmFilter" inputId="jpm_all" value="all" />
+                            <label for="jpm_all" class="ml-2 text-sm">Show All</label>
+                        </div>
+                        <div class="flex items-center">
+                            <RadioButton v-model="jpmFilter" inputId="jpm_only" value="jpm_only" />
+                            <label for="jpm_only" class="ml-2 text-sm">JPM Only</label>
+                        </div>
+                        <div class="flex items-center">
+                            <RadioButton v-model="jpmFilter" inputId="hide_jpm" value="hide_jpm" />
+                            <label for="hide_jpm" class="ml-2 text-sm">Hide JPM</label>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Paper Settings -->
@@ -126,7 +147,7 @@
 </template>
 
 <script setup>
-import { ref, computed, shallowRef, markRaw } from 'vue';
+import { ref, computed, shallowRef, markRaw, watch } from 'vue';
 import { defineAsyncComponent } from 'vue';
 import moment from 'moment';
 
@@ -134,6 +155,7 @@ import moment from 'moment';
 import RadioButton from 'primevue/radiobutton';
 import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
+import ToggleSwitch from 'primevue/toggleswitch';
 
 // Custom Components
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
@@ -166,6 +188,7 @@ const selectedYearLevel = ref(null);
 const reportType = ref('list');
 const paperSize = ref('A4');
 const orientation = ref('landscape');
+const enableJpmHighlighting = ref(true);
 const jpmFilter = ref('all');
 
 // Options
@@ -180,11 +203,13 @@ const orientationOptions = [
     { label: 'Landscape (Horizontal)', value: 'landscape' },
 ];
 
-const jpmFilterOptions = [
-    { label: 'Show All', value: 'all' },
-    { label: 'Show JPM Only', value: 'jpm_only' },
-    { label: 'Hide JPM', value: 'hide_jpm' }
-];
+// Watch for JPM highlighting toggle changes
+watch(enableJpmHighlighting, (newValue) => {
+    if (!newValue) {
+        // Reset JPM filter to 'all' when highlighting is disabled
+        jpmFilter.value = 'all';
+    }
+});
 
 // Computed Properties
 const isDateToInvalid = computed(() => {
@@ -198,7 +223,7 @@ const activeFiltersCount = computed(() => {
     let count = 0;
     if (dateFrom.value || dateTo.value) count++;
     if (selectedProgram.value) count++;
-    if (selectedSchool.value) count++;
+    if (Array.isArray(selectedSchool.value) ? selectedSchool.value.length > 0 : selectedSchool.value) count++;
     if (selectedCourses.value && selectedCourses.value.length > 0) count++;
     if (selectedMunicipality.value) count++;
     if (selectedYearLevel.value) count++;
@@ -214,10 +239,11 @@ function clearAllFilters() {
     dateFrom.value = null;
     dateTo.value = null;
     selectedProgram.value = null;
-    selectedSchool.value = null;
+    selectedSchool.value = [];
     selectedCourses.value = [];
     selectedMunicipality.value = null;
     selectedYearLevel.value = null;
+    enableJpmHighlighting.value = true;
     jpmFilter.value = 'all';
 }
 
@@ -236,20 +262,26 @@ function generateReport() {
         ? selectedCourses.value.map(course => course.shortname).join(',')
         : '';
 
+    // Convert selected schools array to comma-separated shortnames
+    const schoolShortnames = Array.isArray(selectedSchool.value) && selectedSchool.value.length > 0
+        ? selectedSchool.value.map(school => school.shortname).join(',')
+        : selectedSchool.value?.shortname || '';
+
     // Build params object
     const params = {
         date_from,
         date_to,
         program: selectedProgram.value?.id || '',
-        school: selectedSchool.value?.shortname || '',
+        school: schoolShortnames,
         courses: courseShortnames,
         municipality: selectedMunicipality.value?.name || '',
         year_level: selectedYearLevel.value?.value || '',
         report_type: reportType.value,
         paper_size: paperSize.value,
         orientation: orientation.value,
-        show_jpm_only: jpmFilter.value === 'jpm_only' ? 1 : '',
-        hide_jpm: jpmFilter.value === 'hide_jpm' ? 1 : '',
+        enable_jpm_highlighting: enableJpmHighlighting.value ? 1 : 0,
+        show_jpm_only: (enableJpmHighlighting.value && jpmFilter.value === 'jpm_only') ? 1 : '',
+        hide_jpm: (enableJpmHighlighting.value && jpmFilter.value === 'hide_jpm') ? 1 : '',
     };
 
     // Store params and load report view

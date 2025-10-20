@@ -698,8 +698,14 @@ class ScholarshipProfileController extends Controller
 
         // Filter by school under scholarshipGrant relation
         if ($request->filled('school')) {
-            $query->whereHas('scholarshipGrant.school', function ($q) use ($request) {
-                $q->where('shortname', 'like', '%' . $request->school . '%')->orWhere('name', 'like', '%' . $request->school . '%');
+            $schools = array_map('trim', explode(',', $request->school));
+            $query->whereHas('scholarshipGrant.school', function ($q) use ($schools) {
+                $q->where(function ($subQuery) use ($schools) {
+                    foreach ($schools as $school) {
+                        $subQuery->orWhere('shortname', 'like', '%' . $school . '%')
+                            ->orWhere('name', 'like', '%' . $school . '%');
+                    }
+                });
             });
         }
         if ($request->filled('course')) {
@@ -769,7 +775,7 @@ class ScholarshipProfileController extends Controller
         $filters = [
             'name' => $request->get('name', ''),
             'program' => ScholarshipProgram::find($request->program)->name ?? '',
-            'school' =>  School::find($request->school)->name ?? '',
+            'school' => $request->get('school', ''), // Now handles comma-separated shortnames
             'course' => Course::find($request->course)->name ?? '',
             'courses' => $request->get('courses', ''), // Add support for multiple courses
             'municipality' => $request->get('municipality', ''),
@@ -809,10 +815,11 @@ class ScholarshipProfileController extends Controller
             }
 
             // Check if user has permission to view JPM highlighting
-            // Disable JPM highlighting when show_jpm_only or hide_jpm filter is active
+            // Only enable highlighting if user has permission AND enableJpmHighlighting is true
+            $enableJpmHighlighting = $request->filled('enable_jpm_highlighting') && $request->enable_jpm_highlighting == 1;
             $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
             $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm;
-            $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && !$showJpmOnly && !$hideJpm;
+            $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && $enableJpmHighlighting && !$showJpmOnly && !$hideJpm;
 
             return response()->json([
                 'success' => true,
@@ -823,10 +830,11 @@ class ScholarshipProfileController extends Controller
             ]);
         } else {
             // Check if user has permission to view JPM highlighting
-            // Disable JPM highlighting when show_jpm_only or hide_jpm filter is active
+            // Only enable highlighting if user has permission AND enableJpmHighlighting is true
+            $enableJpmHighlighting = $request->filled('enable_jpm_highlighting') && $request->enable_jpm_highlighting == 1;
             $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
             $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm;
-            $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && !$showJpmOnly && !$hideJpm;
+            $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && $enableJpmHighlighting && !$showJpmOnly && !$hideJpm;
 
             return response()->json([
                 'success' => true,

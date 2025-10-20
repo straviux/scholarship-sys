@@ -69,9 +69,20 @@ class WaitingListController extends Controller
 
         // Filter by school under scholarshipGrant relation
         if ($request->filled('school')) {
-            $query->whereHas('scholarshipGrant.school', function ($q) use ($request) {
-                $q->where('shortname', 'like', '%' . $request->school . '%')->orWhere('name', 'like', '%' . $request->school . '%');
-            });
+            // Handle comma-separated schools (for multiselect)
+            $schools = is_array($request->school) ? $request->school : explode(',', $request->school);
+            $schools = array_filter(array_map('trim', $schools)); // Remove empty values
+
+            if (!empty($schools)) {
+                $query->whereHas('scholarshipGrant.school', function ($q) use ($schools) {
+                    $q->where(function ($subQ) use ($schools) {
+                        foreach ($schools as $school) {
+                            $subQ->orWhere('shortname', 'like', '%' . $school . '%')
+                                ->orWhere('name', 'like', '%' . $school . '%');
+                        }
+                    });
+                });
+            }
         }
 
         // Filter by year_level under scholarshipGrant relation
@@ -614,9 +625,20 @@ class WaitingListController extends Controller
         }
 
         if ($request->filled('school')) {
-            $query->whereHas('scholarshipGrant.school', function ($q) use ($request) {
-                $q->where('shortname', 'like', '%' . $request->school . '%')->orWhere('name', 'like', '%' . $request->school . '%');
-            });
+            // Handle comma-separated schools (for multiselect)
+            $schools = is_array($request->school) ? $request->school : explode(',', $request->school);
+            $schools = array_filter(array_map('trim', $schools)); // Remove empty values
+
+            if (!empty($schools)) {
+                $query->whereHas('scholarshipGrant.school', function ($q) use ($schools) {
+                    $q->where(function ($subQ) use ($schools) {
+                        foreach ($schools as $school) {
+                            $subQ->orWhere('shortname', 'like', '%' . $school . '%')
+                                ->orWhere('name', 'like', '%' . $school . '%');
+                        }
+                    });
+                });
+            }
         }
 
         if ($request->filled('year_level')) {

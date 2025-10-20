@@ -1,6 +1,8 @@
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue';
 import { useApi } from '@/composable/api';
+import Select from 'primevue/select';
+import MultiSelect from 'primevue/multiselect';
 const props = defineProps({
     modelValue: {
         type: [String, Number, Object, Array],
@@ -103,11 +105,34 @@ onMounted(fetchData);
 </script>
 
 <template>
-    <Select v-model="localValue" :options="schoolOptions" filter autoFilterFocus showClear optionLabel="name"
+    <!-- MultiSelect for multiple selection -->
+    <MultiSelect v-if="multiple" v-model="localValue" :options="schoolOptions" filter autoFilterFocus showClear
+        optionLabel="name" :placeholder="customPlaceholder" class="w-full" :filterFields="['name', 'shortname']"
+        :maxSelectedLabels="3" :selectedItemsLabel="'{0} schools selected'" showSelectAll>
+        <template #chip="slotProps">
+            <div class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded uppercase mr-1">
+                {{ slotProps.value.shortname }}
+            </div>
+        </template>
+        <template #option="slotProps">
+            <div class="flex items-start uppercase">
+                <div v-if="slotProps.option.isNullOption">
+                    <span class="text-[12px]">{{ slotProps.option.name }}</span>
+                </div>
+                <div v-else>
+                    <span class="text-[12px]">{{ slotProps.option.name }}</span><br>
+                    <span class="text-[10px] font-bold">[{{ slotProps.option.shortname }}]</span>
+                </div>
+            </div>
+        </template>
+    </MultiSelect>
+
+    <!-- Select for single selection -->
+    <Select v-else v-model="localValue" :options="schoolOptions" filter autoFilterFocus showClear optionLabel="name"
         :placeholder="customPlaceholder" class="w-full" :filterFields="['name', 'shortname']">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
-                <div>{{ slotProps.value.shortname }}</div>
+                {{ slotProps.value.shortname }}
             </div>
             <span v-else>
                 <div class="flex items-start">{{ slotProps.placeholder }}</div>

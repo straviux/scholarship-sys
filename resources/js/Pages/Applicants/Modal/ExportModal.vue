@@ -111,7 +111,10 @@ function exportData() {
         name: props.filters.name || '',
         parent_name: props.filters.parent_name || '',
         program: props.filters.program?.shortname?.toLowerCase() || '',
-        school: props.filters.school?.shortname?.toLowerCase() || '',
+        // Handle school as array (multiselect) or single value
+        school: Array.isArray(props.filters.school)
+            ? props.filters.school.map(s => s.shortname?.toLowerCase() || s).join(',')
+            : (props.filters.school?.shortname?.toLowerCase() || ''),
         course: props.filters.course?.shortname?.toLowerCase() || '',
         municipality: props.filters.municipality?.name?.toLowerCase() || '',
         year_level: props.filters.year_level?.value?.toLowerCase() || '',
