@@ -48,9 +48,6 @@
                             <h1 class="text-3xl font-light text-gray-900 mb-2">
                                 {{ reportType === 'list' ? 'Waiting List' : 'Summary Report' }}
                             </h1>
-                            <p class="text-gray-500 text-base">
-                                {{ report.count || 0 }} records
-                            </p>
                         </div>
                         <div class="text-right text-sm text-gray-500">
                             <p>{{ moment().format('MMM DD, YYYY') }}</p>
@@ -232,9 +229,11 @@
                                             <tr v-for="(item, i) in group.data" :key="i"
                                                 class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                                 <td class="px-4 py-3 text-gray-900">
-                                                    <div class="flex items-center gap-2">
-                                                        <div
-                                                            class="w-1 h-8 rounded-full bg-gradient-to-b from-blue-500 to-blue-600">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="flex items-center gap-2">
+                                                            <span
+                                                                class="text-sm font-bold text-gray-500 min-w-[1.5rem]">{{
+                                                                    i + 1 }}.</span>
                                                         </div>
                                                         <span>{{ item.name }}</span>
                                                     </div>
@@ -274,7 +273,7 @@
                 </div>
 
                 <!-- Minimalist Empty State -->
-                <div v-if="!loading && (!report.data || report.data.length === 0)" class="text-center py-20">
+                <div v-if="!loading && isReportEmpty" class="text-center py-20">
                     <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
                         <i class="pi pi-inbox text-3xl text-gray-400"></i>
                     </div>
@@ -368,6 +367,16 @@ const visibleSummaryGroups = computed(() => {
 });
 
 // Computed Properties
+const isReportEmpty = computed(() => {
+    if (reportType.value === 'list') {
+        // For list reports, check if there's data
+        return !report.value.data || report.value.data.length === 0;
+    } else {
+        // For summary reports, check if there's a total count
+        return !report.value.summary || report.value.summary.total === 0;
+    }
+});
+
 const hasActiveFilters = computed(() => {
     return params.date_from || params.date_to || params.program ||
         params.school || params.courses || params.municipality || params.year_level;

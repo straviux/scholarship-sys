@@ -206,12 +206,7 @@
     </div>
 
     @if($reportType === 'summary')
-    <h3>Summary</h3>
     <table class="summary-table">
-        <tr>
-            <th>Total</th>
-            <td colspan="2">{{ $summary['total'] ?? 0 }}</td>
-        </tr>
         @php
         // Determine which summary sections to show based on group_by
         // Allow school and course to show even when filtered (to show breakdown of selected items)
@@ -230,17 +225,18 @@
         $programData = collect($summary['by_program'])->filter(function($count, $name) {
         return $name !== 'no_program';
         })->sortDesc();
+        $programIndex = 1;
         @endphp
         @foreach($programData as $name => $count)
         <tr>
-            <td>{{ $name }}</td>
+            <td>{{ $programIndex++ }}. {{ $name }}</td>
             <td>{{ $count }}</td>
             <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
         </tr>
         @endforeach
         @if(isset($summary['by_program']['no_program']))
         <tr>
-            <td><em>No Program</em></td>
+            <td><em>{{ $programIndex }}. No Program</em></td>
             <td>{{ $summary['by_program']['no_program'] }}</td>
             <td>{{ number_format(($summary['by_program']['no_program'] / $total) * 100, 1) }}%</td>
         </tr>
@@ -254,17 +250,18 @@
         $schoolData = collect($summary['by_school'])->filter(function($count, $name) {
         return $name !== 'no_school';
         })->sortDesc();
+        $schoolIndex = 1;
         @endphp
         @foreach($schoolData as $name => $count)
         <tr>
-            <td>{{ $name }}</td>
+            <td>{{ $schoolIndex++ }}. {{ $name }}</td>
             <td>{{ $count }}</td>
             <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
         </tr>
         @endforeach
         @if(isset($summary['by_school']['no_school']))
         <tr>
-            <td><em>No School</em></td>
+            <td><em>{{ $schoolIndex }}. No School</em></td>
             <td>{{ $summary['by_school']['no_school'] }}</td>
             <td>{{ number_format(($summary['by_school']['no_school'] / $total) * 100, 1) }}%</td>
         </tr>
@@ -278,17 +275,18 @@
         $courseData = collect($summary['by_course'])->filter(function($count, $name) {
         return $name !== 'no_course';
         })->sortDesc();
+        $courseIndex = 1;
         @endphp
         @foreach($courseData as $name => $count)
         <tr>
-            <td>{{ $name }}</td>
+            <td>{{ $courseIndex++ }}. {{ $name }}</td>
             <td>{{ $count }}</td>
             <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
         </tr>
         @endforeach
         @if(isset($summary['by_course']['no_course']))
         <tr>
-            <td><em>No Course</em></td>
+            <td><em>{{ $courseIndex }}. No Course</em></td>
             <td>{{ $summary['by_course']['no_course'] }}</td>
             <td>{{ number_format(($summary['by_course']['no_course'] / $total) * 100, 1) }}%</td>
         </tr>
@@ -302,17 +300,18 @@
         $yearLevelData = collect($summary['by_year_level'])->filter(function($count, $name) {
         return $name !== 'no_year_level';
         })->sortDesc();
+        $yearLevelIndex = 1;
         @endphp
         @foreach($yearLevelData as $name => $count)
         <tr>
-            <td>{{ $name }}</td>
+            <td>{{ $yearLevelIndex++ }}. {{ $name }}</td>
             <td>{{ $count }}</td>
             <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
         </tr>
         @endforeach
         @if(isset($summary['by_year_level']['no_year_level']))
         <tr>
-            <td><em>No Year Level</em></td>
+            <td><em>{{ $yearLevelIndex }}. No Year Level</em></td>
             <td>{{ $summary['by_year_level']['no_year_level'] }}</td>
             <td>{{ number_format(($summary['by_year_level']['no_year_level'] / $total) * 100, 1) }}%</td>
         </tr>
