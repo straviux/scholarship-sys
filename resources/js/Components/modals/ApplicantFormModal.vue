@@ -237,6 +237,8 @@ const step1TooltipMessage = computed(() => {
 
 // Handle next step 1 with backend validation
 const handleNextStep1 = async () => {
+    console.log('handleNextStep1 called - Mode:', props.mode);
+
     // Validate required fields
     const missingFields = [];
     if (!form.first_name) missingFields.push('First Name');
@@ -253,31 +255,45 @@ const handleNextStep1 = async () => {
 
     // Skip duplicate name validation in edit mode
     if (props.mode === 'edit') {
+        console.log('Edit mode - skipping duplicate validation');
         activeStep.value = '2';
         return;
     }
 
+    console.log('Starting duplicate name validation...');
     isValidating.value = true;
     validationError.value = '';
 
     try {
+        console.log('Calling API with data:', {
+            first_name: form.first_name,
+            middle_name: form.middle_name || '',
+            last_name: form.last_name
+        });
+
         const response = await axios.post(route('api.profiles.validate-name'), {
             first_name: form.first_name,
             middle_name: form.middle_name || '',
             last_name: form.last_name
         });
 
+        console.log('API response:', response.data);
+
         if (response.data.exists) {
-            validationError.value = `A record with this exact name (${[form.first_name, form.middle_name, form.last_name].filter(Boolean).join(' ')}) already exists in the system. Please verify if this is a different person before proceeding.`;
+            console.log('Duplicate name found - blocking progression');
+            validationError.value = `A record with the name "${form.first_name} ${form.last_name}" already exists in the system. Please verify if this is a different person before proceeding.`;
             toast.warning('A record with this name already exists. Please verify before proceeding.', {
                 position: toast.POSITION.TOP_RIGHT,
             });
+            // Do NOT proceed to step 2
         } else {
+            console.log('No duplicate found - proceeding to step 2');
             // Validation passed, proceed to next step
             activeStep.value = '2';
         }
     } catch (error) {
         console.error('Validation error:', error);
+        console.error('Error response:', error.response?.data);
         validationError.value = 'An error occurred while validating. Please try again.';
         toast.error('An error occurred while validating. Please try again.', {
             position: toast.POSITION.TOP_RIGHT,

@@ -602,18 +602,23 @@ class ScholarshipProfileController extends Controller
 
         $firstName = trim($request->input('first_name'));
         $lastName = trim($request->input('last_name'));
-        $middleName = trim($request->input('middle_name', ''));
 
-        // Check if exact name match exists (case-insensitive)
-        $exists = ScholarshipProfile::whereRaw('LOWER(first_name) = ?', [strtolower($firstName)])
-            ->whereRaw('LOWER(last_name) = ?', [strtolower($lastName)])
-            ->whereRaw('LOWER(COALESCE(middle_name, "")) = ?', [strtolower($middleName)])
+        // Check for duplicate based on first name and last name only
+        // Middle names are excluded due to inconsistencies (NULL, empty, abbreviations, etc.)
+        $exists = ScholarshipProfile::whereRaw('LOWER(TRIM(first_name)) = ?', [strtolower($firstName)])
+            ->whereRaw('LOWER(TRIM(last_name)) = ?', [strtolower($lastName)])
             ->exists();
+
+        Log::info('Name validation check', [
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'exists' => $exists
+        ]);
 
         return response()->json([
             'exists' => $exists,
             'message' => $exists
-                ? 'A record with this exact name already exists in the system.'
+                ? 'A record with this name (first and last name) already exists in the system.'
                 : 'Name is available.'
         ]);
     }

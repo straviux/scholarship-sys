@@ -34,13 +34,14 @@ class WaitingListController extends Controller
             'scholarshipGrant.course',
             'priorityAssignedBy'
         ])
+            // Join with scholarship_records to access date_filed directly
+            ->leftJoin('scholarship_records', 'scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
+            ->select('scholarship_profiles.*', 'scholarship_records.date_filed')
             ->where(function ($q) use ($programId) {
                 // Include profiles with scholarship grants (pending status)
                 $q->whereHas('scholarshipGrant', function ($subQ) use ($programId) {
                     $subQ->where('scholarship_status', 0)
-                        ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
-                        ->orderBy('date_filed', 'asc')
-                        ->orderBy('created_at', 'asc');
+                        ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
                     if ($programId) {
                         $subQ->where('program_id', $programId);
                     }
@@ -57,19 +58,13 @@ class WaitingListController extends Controller
                     });
             });
 
-        // Filter by date range (date_filed) from scholarshipGrant relation
+        // Filter by date range (date_filed) directly from scholarship_records
         if ($request->filled('date_from') && $request->filled('date_to')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->whereBetween('date_filed', [$request->date_from, $request->date_to]);
-            });
+            $query->whereBetween('scholarship_records.date_filed', [$request->date_from, $request->date_to]);
         } elseif ($request->filled('date_from')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->whereDate('date_filed', '>=', $request->date_from);
-            });
+            $query->whereDate('scholarship_records.date_filed', '>=', $request->date_from);
         } elseif ($request->filled('date_to')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->whereDate('date_filed', '<=', $request->date_to);
-            });
+            $query->whereDate('scholarship_records.date_filed', '<=', $request->date_to);
         }
 
         // Filter by school under scholarshipGrant relation
@@ -93,35 +88,35 @@ class WaitingListController extends Controller
             });
         }
 
-        // Filter by municipality
+        // Filter by remarks
         if ($request->filled('remarks')) {
             $query->where(function ($q) use ($request) {
-                $q->where('remarks', 'like', '%' . $request->remarks . '%');
+                $q->where('scholarship_profiles.remarks', 'like', '%' . $request->remarks . '%');
             });
         }
 
         // Filter by municipality
         if ($request->filled('municipality')) {
-            $query->where('municipality', 'like', '%' . $request->municipality . '%');
+            $query->where('scholarship_profiles.municipality', 'like', '%' . $request->municipality . '%');
         }
 
         // Filter by name (first_name, last_name, or full name)
         if ($request->filled('name')) {
             $query->where(function ($q) use ($request) {
-                $q->where('first_name', 'like', '%' . $request->name . '%')
-                    ->orWhere('last_name', 'like', '%' . $request->name . '%')
-                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $request->name . '%'])
-                    ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ['%' . $request->name . '%'])
-                    ->orWhereRaw("CONCAT(last_name, ', ', first_name, ' ', middle_name) LIKE ?", ['%' . $request->name . '%']);
+                $q->where('scholarship_profiles.first_name', 'like', '%' . $request->name . '%')
+                    ->orWhere('scholarship_profiles.last_name', 'like', '%' . $request->name . '%')
+                    ->orWhereRaw("CONCAT(scholarship_profiles.first_name, ' ', scholarship_profiles.last_name) LIKE ?", ['%' . $request->name . '%'])
+                    ->orWhereRaw("CONCAT(scholarship_profiles.last_name, ', ', scholarship_profiles.first_name) LIKE ?", ['%' . $request->name . '%'])
+                    ->orWhereRaw("CONCAT(scholarship_profiles.last_name, ', ', scholarship_profiles.first_name, ' ', scholarship_profiles.middle_name) LIKE ?", ['%' . $request->name . '%']);
             });
         }
 
         // Filter by parent_name
         if ($request->filled('parent_name')) {
             $query->where(function ($q) use ($request) {
-                $q->where('father_name', 'like', '%' . $request->parent_name . '%')
-                    ->orWhere('mother_name', 'like', '%' . $request->parent_name . '%')
-                    ->orWhere('guardian_name', 'like', '%' . $request->parent_name . '%');
+                $q->where('scholarship_profiles.father_name', 'like', '%' . $request->parent_name . '%')
+                    ->orWhere('scholarship_profiles.mother_name', 'like', '%' . $request->parent_name . '%')
+                    ->orWhere('scholarship_profiles.guardian_name', 'like', '%' . $request->parent_name . '%');
             });
         }
 
@@ -130,21 +125,21 @@ class WaitingListController extends Controller
             $searchTerm = $request->global_search;
             $query->where(function ($q) use ($searchTerm) {
                 // Search in profile fields
-                $q->where('first_name', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('middle_name', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('extension_name', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('father_name', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('mother_name', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('guardian_name', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('municipality', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('barangay', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('address', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('contact_no', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('contact_no_2', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('email', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('remarks', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('jpm_remarks', 'like', '%' . $searchTerm . '%')
+                $q->where('scholarship_profiles.first_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('scholarship_profiles.last_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('scholarship_profiles.middle_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('scholarship_profiles.extension_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('scholarship_profiles.father_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('scholarship_profiles.mother_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('scholarship_profiles.guardian_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('scholarship_profiles.municipality', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('scholarship_profiles.barangay', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('scholarship_profiles.address', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('scholarship_profiles.contact_no', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('scholarship_profiles.contact_no_2', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('scholarship_profiles.email', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('scholarship_profiles.remarks', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('scholarship_profiles.jpm_remarks', 'like', '%' . $searchTerm . '%')
                     // Search in scholarship grant relations
                     ->orWhereHas('scholarshipGrant.school', function ($schoolQuery) use ($searchTerm) {
                         $schoolQuery->where('schools.name', 'like', '%' . $searchTerm . '%')
@@ -162,10 +157,10 @@ class WaitingListController extends Controller
                         $grantQuery->where('year_level', 'like', '%' . $searchTerm . '%');
                     })
                     // Search for full name combinations
-                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $searchTerm . '%'])
-                    ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ['%' . $searchTerm . '%'])
-                    ->orWhereRaw("CONCAT(last_name, ', ', first_name, ' ', COALESCE(middle_name, '')) LIKE ?", ['%' . $searchTerm . '%'])
-                    ->orWhereRaw("CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name) LIKE ?", ['%' . $searchTerm . '%']);
+                    ->orWhereRaw("CONCAT(scholarship_profiles.first_name, ' ', scholarship_profiles.last_name) LIKE ?", ['%' . $searchTerm . '%'])
+                    ->orWhereRaw("CONCAT(scholarship_profiles.last_name, ', ', scholarship_profiles.first_name) LIKE ?", ['%' . $searchTerm . '%'])
+                    ->orWhereRaw("CONCAT(scholarship_profiles.last_name, ', ', scholarship_profiles.first_name, ' ', COALESCE(scholarship_profiles.middle_name, '')) LIKE ?", ['%' . $searchTerm . '%'])
+                    ->orWhereRaw("CONCAT(scholarship_profiles.first_name, ' ', COALESCE(scholarship_profiles.middle_name, ''), ' ', scholarship_profiles.last_name) LIKE ?", ['%' . $searchTerm . '%']);
             });
         }
 
@@ -200,13 +195,17 @@ class WaitingListController extends Controller
             });
         }
 
-        $query->orderBy('date_filed', $request->sort['date_filed'] ?? 'asc')->orderBy('created_at', 'asc');
+        // Default ordering by date_filed from scholarship_records
+        $query->orderBy('scholarship_records.date_filed', $request->sort['date_filed'] ?? 'asc')
+            ->orderBy('scholarship_profiles.created_at', 'asc');
+
         if ($request->filled('sort')) {
             if (isset($request->sort['date_filed'])) {
-                $query->orderBy('date_filed', $request->sort['date_filed'])->orderBy('created_at', 'asc');
+                $query->orderBy('scholarship_records.date_filed', $request->sort['date_filed'])
+                    ->orderBy('scholarship_profiles.created_at', 'asc');
             }
             if (isset($request->sort['last_name'])) {
-                $query->orderBy('last_name', $request->sort['last_name']);
+                $query->orderBy('scholarship_profiles.last_name', $request->sort['last_name']);
             }
             if (isset($request->sort['school'])) {
                 $query->orderBy('school', $request->sort['school']);
@@ -233,14 +232,16 @@ class WaitingListController extends Controller
             // Get all profile IDs for this program - only if program exists
             if ($program_id) {
                 $programIds = ScholarshipProfile::with(['scholarshipGrant'])
+                    ->leftJoin('scholarship_records', 'scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
+                    ->select('scholarship_profiles.profile_id')
                     ->whereHas('scholarshipGrant', function ($subQ) use ($program_id) {
                         $subQ->where('scholarship_status', 0)
                             ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
                             ->where('program_id', $program_id);
                     })
-                    ->orderBy('date_filed', 'asc')
-                    ->orderBy('created_at', 'asc')
-                    ->pluck('profile_id')->toArray();
+                    ->orderBy('scholarship_records.date_filed', 'asc')
+                    ->orderBy('scholarship_profiles.created_at', 'asc')
+                    ->pluck('scholarship_profiles.profile_id')->toArray();
                 $rowIndex = array_search($profile->profile_id, $programIds);
                 $profile->sequence_number = $rowIndex !== false ? $rowIndex + 1 : null;
             } else {
@@ -258,6 +259,8 @@ class WaitingListController extends Controller
             }
             if ($dateFiled) {
                 $dailyIds = ScholarshipProfile::with(['scholarshipGrant'])
+                    ->leftJoin('scholarship_records', 'scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
+                    ->select('scholarship_profiles.profile_id')
                     ->where(function ($q) use ($dateFiled, $program_id) {
                         $q->whereHas('scholarshipGrant', function ($subQ) use ($dateFiled, $program_id) {
                             $subQ->whereDate('date_filed', $dateFiled)
@@ -269,7 +272,7 @@ class WaitingListController extends Controller
                         })
                             ->orWhere(function ($subQ) use ($dateFiled, $program_id) {
                                 $subQ->where('is_on_waiting_list', true)
-                                    ->whereDate('date_filed', $dateFiled);
+                                    ->whereDate('scholarship_records.date_filed', $dateFiled);
                                 // Also apply program filter to waiting list records
                                 if ($program_id) {
                                     $subQ->whereHas('scholarshipGrant', function ($grantQ) use ($program_id) {
@@ -278,9 +281,9 @@ class WaitingListController extends Controller
                                 }
                             });
                     })
-                    ->orderBy('date_filed', 'asc')
-                    ->orderBy('created_at', 'asc')
-                    ->pluck('profile_id')->toArray();
+                    ->orderBy('scholarship_records.date_filed', 'asc')
+                    ->orderBy('scholarship_profiles.created_at', 'asc')
+                    ->pluck('scholarship_profiles.profile_id')->toArray();
                 $dailyIndex = array_search($profile->profile_id, $dailyIds);
                 $profile->daily_sequence_number = $dailyIndex !== false ? $dailyIndex + 1 : null;
             } else {
@@ -297,19 +300,19 @@ class WaitingListController extends Controller
 
             if ($courseId) {
                 $courseProfiles = ScholarshipProfile::with(['scholarshipGrant'])
+                    ->leftJoin('scholarship_records', 'scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
+                    ->select('scholarship_profiles.profile_id')
                     ->whereHas('scholarshipGrant', function ($q) use ($courseId, $program_id) {
                         $q->where('course_id', $courseId)
                             ->where('scholarship_status', 0)
-                            ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
-                            ->orderBy('date_filed', 'asc')
-                            ->orderBy('created_at', 'asc');
+                            ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
                         if ($program_id) {
                             $q->where('program_id', $program_id);
                         }
                     })
-                    ->orderBy('date_filed', 'asc')
-                    ->orderBy('created_at', 'asc')
-                    ->pluck('profile_id')->toArray();
+                    ->orderBy('scholarship_records.date_filed', 'asc')
+                    ->orderBy('scholarship_profiles.created_at', 'asc')
+                    ->pluck('scholarship_profiles.profile_id')->toArray();
 
                 $courseIndex = array_search($profile->profile_id, $courseProfiles);
                 $profile->sequence_number_by_course = $courseIndex !== false ? $courseIndex + 1 : null;
@@ -320,20 +323,20 @@ class WaitingListController extends Controller
             // Add sequence number by school within course
             if ($courseId && $schoolId) {
                 $courseSchoolProfiles = ScholarshipProfile::with(['scholarshipGrant'])
+                    ->leftJoin('scholarship_records', 'scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
+                    ->select('scholarship_profiles.profile_id')
                     ->whereHas('scholarshipGrant', function ($q) use ($courseId, $schoolId, $program_id) {
                         $q->where('course_id', $courseId)
                             ->where('school_id', $schoolId)
                             ->where('scholarship_status', 0)
-                            ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
-                            ->orderBy('date_filed', 'asc')
-                            ->orderBy('created_at', 'asc');
+                            ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
                         if ($program_id) {
                             $q->where('program_id', $program_id);
                         }
                     })
-                    ->orderBy('date_filed', 'asc')
-                    ->orderBy('created_at', 'asc')
-                    ->pluck('profile_id')->toArray();
+                    ->orderBy('scholarship_records.date_filed', 'asc')
+                    ->orderBy('scholarship_profiles.created_at', 'asc')
+                    ->pluck('scholarship_profiles.profile_id')->toArray();
 
                 $schoolIndex = array_search($profile->profile_id, $courseSchoolProfiles);
                 $profile->sequence_number_by_school_course = $schoolIndex !== false ? $schoolIndex + 1 : null;
