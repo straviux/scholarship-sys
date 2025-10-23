@@ -166,7 +166,7 @@ function getRoleDisplay() {
                                 </li>
                                 <li>
                                     <SidebarLink :href="route('program_requirements.index')"
-                                        :active="route().current('program_requirements.index') ">
+                                        :active="route().current('program_requirements.index')">
                                         <i class="pi pi-list mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Requirements</span>
                                     </SidebarLink>
@@ -250,8 +250,8 @@ function getRoleDisplay() {
                         </SidebarLink>
                     </li>
                     <li>
-                        <SidebarLink :href="route('admin.system-updates') "
-                            :active="route().current('admin.system-updates') "
+                        <SidebarLink :href="route('admin.system-updates')"
+                            :active="route().current('admin.system-updates')"
                             class="flex flex-col justify-center text-center">
 
                             <i class="pi pi-bell text-xl"></i>
@@ -344,8 +344,10 @@ function getRoleDisplay() {
                             <slot name="header" />
                         </h5>
                     </div>
-                    <Button @click="toggleMenu = !toggleMenu" :icon="toggleMenu ? 'pi pi-times' : 'pi pi-bars'" text
-                        rounded size="large" class="w-12 h-16 -mr-2 lg:hidden text-gray-50" />
+                    <button @click="toggleMenu = !toggleMenu"
+                        class="md:hidden text-gray-300 hover:text-white focus:outline-none p-2">
+                        <i class="pi" :class="toggleMenu ? 'pi-times' : 'pi-bars'"></i>
+                    </button>
                     <!-- <div v-if="!toggleMenu" class="h-full w-full">test</div> -->
                     <div class="space-x-6 hidden md:flex items-center justify-center">
                         <!-- Notification Dropdown -->
