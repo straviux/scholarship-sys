@@ -1172,7 +1172,8 @@ const formatDate = (date) => {
 
         <!-- Integrated Profile & Review Modal -->
         <Dialog v-model:visible="showProfileReviewModal" modal header="Application Review & Applicant Profile"
-            :style="{ width: '95vw', maxWidth: '1400px' }" :maximizable="true" class="p-fluid">
+            :style="{ width: '50vw' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }" :maximizable="true"
+            class="p-fluid">
 
             <div v-if="selectedApplicantForReview">
                 <!-- Header Summary -->

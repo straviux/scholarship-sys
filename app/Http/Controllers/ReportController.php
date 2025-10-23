@@ -54,6 +54,7 @@ class ReportController extends Controller
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])
             ->whereHas('scholarshipGrant', function ($q) {
                 $q->where('scholarship_status', 0)
+                    ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
                     ->orderBy('date_filed', 'desc')
                     ->orderBy('created_at', 'desc');
             });
@@ -290,6 +291,7 @@ class ReportController extends Controller
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])
             ->whereHas('scholarshipGrant', function ($q) {
                 $q->where('scholarship_status', 0)
+                    ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
                     ->orderBy('date_filed', 'desc')
                     ->orderBy('created_at', 'desc');
             });

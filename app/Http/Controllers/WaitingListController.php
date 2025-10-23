@@ -47,14 +47,15 @@ class WaitingListController extends Controller
                     }
                 })
                     // OR include profiles marked as on waiting list (even without scholarship grants)
-                    // But still apply program filter if specified
+                    // But still apply program filter if specified AND exclude approved/declined
                     ->orWhere(function ($subQ) use ($programId) {
-                        $subQ->where('is_on_waiting_list', true);
-                        if ($programId) {
-                            $subQ->whereHas('scholarshipGrant', function ($grantQ) use ($programId) {
-                                $grantQ->where('program_id', $programId);
+                        $subQ->where('is_on_waiting_list', true)
+                            ->whereHas('scholarshipGrant', function ($grantQ) use ($programId) {
+                                $grantQ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
+                                if ($programId) {
+                                    $grantQ->where('program_id', $programId);
+                                }
                             });
-                        }
                     });
             });
 
@@ -283,13 +284,14 @@ class WaitingListController extends Controller
                         })
                             ->orWhere(function ($subQ) use ($dateFiled, $program_id) {
                                 $subQ->where('is_on_waiting_list', true)
-                                    ->whereDate('scholarship_records.date_filed', $dateFiled);
-                                // Also apply program filter to waiting list records
-                                if ($program_id) {
-                                    $subQ->whereHas('scholarshipGrant', function ($grantQ) use ($program_id) {
-                                        $grantQ->where('program_id', $program_id);
+                                    ->whereDate('scholarship_records.date_filed', $dateFiled)
+                                    ->whereHas('scholarshipGrant', function ($grantQ) use ($program_id) {
+                                        $grantQ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
+                                        // Also apply program filter to waiting list records
+                                        if ($program_id) {
+                                            $grantQ->where('program_id', $program_id);
+                                        }
                                     });
-                                }
                             });
                     })
                     ->orderBy('scholarship_records.date_filed', 'asc')
