@@ -143,8 +143,13 @@ const filter = useForm({
 const searchInput = ref(null);
 const selectedProfile = ref({});
 
-// View mode: 'table' or 'grid'
-const viewMode = ref('table');
+// View mode: 'table' or 'grid' - persisted in localStorage
+const viewMode = ref(localStorage.getItem('applicants_view_mode') || 'table');
+
+// Watch for viewMode changes and persist to localStorage
+watch(viewMode, (newValue) => {
+    localStorage.setItem('applicants_view_mode', newValue);
+});
 
 // JPM Filter Options
 const jpmFilterOptions = [
@@ -679,18 +684,6 @@ const formatDate = (date) => {
 
                 <template #end>
                     <div class="flex gap-3 items-center">
-                        <!-- View Mode Toggle -->
-                        <div class="flex gap-1 border border-gray-300 rounded-md p-1">
-                            <Button icon="pi pi-list" :severity="viewMode === 'table' ? 'info' : 'secondary'"
-                                :outlined="viewMode !== 'table'" @click="viewMode = 'table'" size="small"
-                                v-tooltip.bottom="'Table View'" />
-                            <Button icon="pi pi-th-large" :severity="viewMode === 'grid' ? 'info' : 'secondary'"
-                                :outlined="viewMode !== 'grid'" @click="viewMode = 'grid'" size="small"
-                                v-tooltip.bottom="'Grid View'" />
-                        </div>
-
-                        <Divider layout="vertical" class="h-6" />
-
                         <!-- JPM Controls -->
                         <div class="flex items-center gap-4" v-if="hasPermission('can-view-jpm')">
                             <div class="flex items-center gap-2">
@@ -814,7 +807,7 @@ const formatDate = (date) => {
             <div class="mt-8">
                 <Panel>
                     <!-- Info Bar -->
-                    <div class="md:grid hidden grid-cols-3 items-center mb-4 bg-gray-50 rounded -mt-2">
+                    <div class="md:grid hidden grid-cols-3 items-center mb-4 bg-gray-50 rounded -mt-2 p-2">
 
                         <div class="flex gap-4 items-center">
                             <IconField iconPosition="left" class="w-full">
@@ -828,6 +821,15 @@ const formatDate = (date) => {
                             <RecordsSelect v-model="filter.records" label="label" class="w-24" size="small" /> of {{
                                 props.profiles_total || 0 }} records
                         </div>
+                        <div class="flex gap-2 justify-end mr-2">
+                            <Button icon="pi pi-list" :severity="viewMode === 'table' ? 'primary' : 'secondary'"
+                                :outlined="viewMode !== 'table'" @click="viewMode = 'table'" size="small"
+                                v-tooltip.bottom="'Table View'" />
+                            <Button icon="pi pi-th-large" :severity="viewMode === 'grid' ? 'primary' : 'secondary'"
+                                :outlined="viewMode !== 'grid'" @click="viewMode = 'grid'" size="small"
+                                v-tooltip.bottom="'Grid View'" />
+                        </div>
+
                     </div>
 
                     <!-- Table View -->
@@ -1173,84 +1175,54 @@ const formatDate = (date) => {
             :style="{ width: '95vw', maxWidth: '1400px' }" :maximizable="true" class="p-fluid">
 
             <div v-if="selectedApplicantForReview">
-                <!-- Header Summary Card -->
-                <Card class="bg-blue-50 border-blue-200 mb-4">
-                    <template #content>
-                        <div class="flex items-center gap-4">
-                            <Avatar :label="getApplicantInitials(selectedApplicantForReview)" size="xlarge"
-                                shape="circle" class="bg-blue-600 text-white" />
-                            <div class="flex-1">
-                                <div class="flex items-center justify-between mb-2">
-                                    <div>
-                                        <h3 class="text-2xl font-bold text-gray-900">{{
-                                            getApplicantFullName(selectedApplicantForReview) }}</h3>
-                                        <div class="flex items-center gap-4 mt-1">
-                                            <span class="text-sm text-gray-600">
-                                                <i class="pi pi-phone mr-1"></i>{{ selectedApplicantForReview.contact_no
-                                                    || 'N/A' }}
-                                            </span>
-                                            <span class="text-sm text-gray-600">
-                                                <i class="pi pi-envelope mr-1"></i>{{ selectedApplicantForReview.email
-                                                    || 'N/A' }}
-                                            </span>
-                                            <span class="text-sm text-gray-600">
-                                                <i class="pi pi-calendar mr-1"></i>Filed: {{
-                                                    formatDate(selectedApplicantForReview.date_filed) }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <!-- Complete Queue Sequencing Information -->
-                                    <div class="flex items-center gap-2">
-                                        <div
-                                            class="text-center px-2 py-1 bg-indigo-100 rounded-md border border-indigo-200">
-                                            <div class="text-sm font-bold text-indigo-600 leading-tight">
-                                                #{{ selectedApplicantForReview.sequence_number || '-' }}
-                                            </div>
-                                            <div class="text-xs text-indigo-700 leading-tight">{{
-                                                selectedApplicantForReview.scholarship_grant?.[0]?.program?.shortname }}
-                                            </div>
-                                        </div>
-                                        <div
-                                            class="text-center px-2 py-1 bg-purple-100 rounded-md border border-purple-200">
-                                            <div class="text-sm font-bold text-purple-600 leading-tight">
-                                                #{{ selectedApplicantForReview.sequence_number_by_course || '-' }}
-                                            </div>
-                                            <div class="text-xs text-purple-700 leading-tight">{{
-                                                selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname }}
-                                            </div>
-                                        </div>
-                                        <div
-                                            class="text-center px-2 py-1 bg-orange-100 rounded-md border border-orange-200">
-                                            <div class="text-sm font-bold text-orange-600 leading-tight">
-                                                #{{ selectedApplicantForReview.daily_sequence_number || '-' }}
-                                            </div>
-                                            <div class="text-xs text-orange-700 leading-tight">{{
-                                                formatDate(selectedApplicantForReview.date_filed) }}</div>
-                                        </div>
-                                        <div
-                                            class="text-center px-2 py-1 bg-green-100 rounded-md border border-green-200">
-                                            <div class="text-sm font-bold text-green-600 leading-tight">
-                                                #{{ selectedApplicantForReview.sequence_number_by_school_course || '-'
-                                                }}
-                                            </div>
-                                            <div class="text-xs text-green-700 leading-tight">{{
-                                                selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname
-                                            }}/{{
-                                                    selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                <!-- Header Summary -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div class="flex items-center gap-4">
+                        <Avatar :label="getApplicantInitials(selectedApplicantForReview)" size="large" shape="circle"
+                            class="bg-blue-600 text-white" />
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-gray-900">{{
+                                getApplicantFullName(selectedApplicantForReview) }}</h3>
+                            <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
+                                <span><i class="pi pi-phone mr-1"></i>{{ selectedApplicantForReview.contact_no || 'N/A'
+                                }}</span>
+                                <span><i class="pi pi-envelope mr-1"></i>{{ selectedApplicantForReview.email || 'N/A'
+                                }}</span>
+                                <span><i class="pi pi-calendar mr-1"></i>{{
+                                    formatDate(selectedApplicantForReview.date_filed)
+                                }}</span>
                             </div>
                         </div>
-                    </template>
-                </Card>
+                        <!-- Queue Numbers -->
+                        <div class="flex items-center gap-2">
+                            <div class="text-center px-2 py-1 bg-indigo-100 rounded border border-indigo-200">
+                                <div class="text-sm font-bold text-indigo-600">#{{
+                                    selectedApplicantForReview.sequence_number ||
+                                    '-' }}</div>
+                                <div class="text-xs text-indigo-700">{{
+                                    selectedApplicantForReview.scholarship_grant?.[0]?.program?.shortname }}</div>
+                            </div>
+                            <div class="text-center px-2 py-1 bg-purple-100 rounded border border-purple-200">
+                                <div class="text-sm font-bold text-purple-600">#{{
+                                    selectedApplicantForReview.sequence_number_by_course || '-' }}</div>
+                                <div class="text-xs text-purple-700">{{
+                                    selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname }}</div>
+                            </div>
+                            <div class="text-center px-2 py-1 bg-green-100 rounded border border-green-200">
+                                <div class="text-sm font-bold text-green-600">#{{
+                                    selectedApplicantForReview.sequence_number_by_school_course || '-' }}</div>
+                                <div class="text-xs text-green-700">{{
+                                    selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Tabbed Content -->
                 <Tabs value="applicationReview">
                     <TabList>
-                        <Tab value="applicationReview">Application Review</Tab>
-                        <Tab value="profileInformation">Profile Information</Tab>
+                        <Tab value="applicationReview">Review</Tab>
+                        <Tab value="profileInformation">Profile</Tab>
                         <Tab value="attachments">Attachments</Tab>
                     </TabList>
                     <TabPanels>
@@ -1264,234 +1236,207 @@ const formatDate = (date) => {
                         </TabPanel>
 
                         <TabPanel value="profileInformation" header="Profile Information">
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Personal & Academic Information -->
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
                                 <!-- Personal Information -->
-                                <Card>
-                                    <template #title>
-                                        <div class="flex items-center gap-2">
-                                            <i class="pi pi-user text-blue-600"></i>
-                                            Personal Information
-                                        </div>
-                                    </template>
-                                    <template #content>
-                                        <div class="space-y-4">
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full
-                                                        Name</label>
-                                                    <InputText :value="getApplicantFullName(selectedApplicantForReview)"
-                                                        readonly class="w-full" />
-                                                </div>
-                                                <div>
-                                                    <label
-                                                        class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-                                                    <InputText
-                                                        :value="selectedApplicantForReview.gender === 'M' ? 'Male' : selectedApplicantForReview.gender === 'F' ? 'Female' : 'N/A'"
-                                                        readonly class="w-full" />
-                                                </div>
-                                            </div>
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Primary
-                                                        Contact</label>
-                                                    <InputText :value="selectedApplicantForReview.contact_no || 'N/A'"
-                                                        readonly class="w-full" />
-                                                </div>
-                                                <div>
-                                                    <label
-                                                        class="block text-sm font-medium text-gray-700 mb-1">Secondary
-                                                        Contact</label>
-                                                    <InputText :value="selectedApplicantForReview.contact_no_2 || 'N/A'"
-                                                        readonly class="w-full" />
+                                <div class="border rounded p-3">
+                                    <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                                        <i class="pi pi-user text-blue-600 text-sm"></i>
+                                        Personal
+                                    </h4>
+                                    <div class="space-y-2 text-xs">
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="text-gray-600">Full Name</label>
+                                                <div class="font-medium">{{
+                                                    getApplicantFullName(selectedApplicantForReview) }}
                                                 </div>
                                             </div>
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Email
-                                                    Address</label>
-                                                <InputText :value="selectedApplicantForReview.email || 'N/A'" readonly
-                                                    class="w-full" />
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Parent's
-                                                    Gross
-                                                    Monthly
-                                                    Income</label>
-                                                <InputText
-                                                    :value="selectedApplicantForReview.gross_monthly_income || 'N/A'"
-                                                    readonly class="w-full" />
-                                            </div>
-                                            <div>
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                                <Textarea :value="getApplicantFullAddress(selectedApplicantForReview)"
-                                                    readonly class="w-full" rows="2" />
+                                                <label class="text-gray-600">Gender</label>
+                                                <div class="font-medium">{{ selectedApplicantForReview.gender === 'M' ?
+                                                    'Male' :
+                                                    selectedApplicantForReview.gender === 'F' ? 'Female' : 'N/A' }}
+                                                </div>
                                             </div>
                                         </div>
-                                    </template>
-                                </Card>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="text-gray-600">Contact</label>
+                                                <div class="font-medium">{{ selectedApplicantForReview.contact_no ||
+                                                    'N/A' }}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="text-gray-600">Email</label>
+                                                <div class="font-medium">{{ selectedApplicantForReview.email || 'N/A' }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="text-gray-600">Income</label>
+                                            <div class="font-medium">{{ selectedApplicantForReview.gross_monthly_income
+                                                || 'N/A'
+                                            }}</div>
+                                        </div>
+                                        <div>
+                                            <label class="text-gray-600">Address</label>
+                                            <div class="font-medium">{{
+                                                getApplicantFullAddress(selectedApplicantForReview) }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <!-- Academic Information -->
-                                <Card>
-                                    <template #title>
-                                        <div class="flex items-center gap-2 p-2">
-                                            <i class="pi pi-graduation-cap text-lg text-green-600"></i>
-                                            <span class="font-medium">Academic Information</span>
-                                        </div>
-                                    </template>
-                                    <template #content>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="border rounded p-3">
+                                    <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                                        <i class="pi pi-graduation-cap text-green-600 text-sm"></i>
+                                        Academic
+                                    </h4>
+                                    <div class="space-y-2 text-xs">
+                                        <div class="grid grid-cols-2 gap-2">
                                             <div>
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 mb-1">Program</label>
-                                                <InputText
-                                                    :value="selectedApplicantForReview.scholarship_grant?.[0]?.program?.shortname || 'N/A'"
-                                                    readonly class="w-full" />
+                                                <label class="text-gray-600">Program</label>
+                                                <div class="font-medium">{{
+                                                    selectedApplicantForReview.scholarship_grant?.[0]?.program?.shortname
+                                                    ||
+                                                    'N/A' }}</div>
                                             </div>
                                             <div>
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 mb-1">School</label>
-                                                <InputText
-                                                    :value="selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname || 'N/A'"
-                                                    readonly class="w-full" />
-                                            </div>
-                                            <div>
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 mb-1">Course</label>
-                                                <InputText
-                                                    :value="selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname || 'N/A'"
-                                                    readonly class="w-full" />
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Year
-                                                    Level</label>
-                                                <InputText
-                                                    :value="selectedApplicantForReview.scholarship_grant?.[0]?.year_level || 'N/A'"
-                                                    readonly class="w-full" />
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Academic
-                                                    Year</label>
-                                                <InputText
-                                                    :value="selectedApplicantForReview.scholarship_grant?.[0]?.academic_year || 'N/A'"
-                                                    readonly class="w-full" />
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
-                                                <InputText
-                                                    :value="selectedApplicantForReview.scholarship_grant?.[0]?.term || 'N/A'"
-                                                    readonly class="w-full" />
+                                                <label class="text-gray-600">School</label>
+                                                <div class="font-medium">{{
+                                                    selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname
+                                                    ||
+                                                    'N/A' }}</div>
                                             </div>
                                         </div>
-                                        <div class="mt-4">
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
-                                            <Textarea
-                                                :value="selectedApplicantForReview.remarks || 'No remarks provided'"
-                                                readonly class="w-full" rows="2" />
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="text-gray-600">Course</label>
+                                                <div class="font-medium">{{
+                                                    selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname
+                                                    ||
+                                                    'N/A' }}</div>
+                                            </div>
+                                            <div>
+                                                <label class="text-gray-600">Year Level</label>
+                                                <div class="font-medium">{{
+                                                    selectedApplicantForReview.scholarship_grant?.[0]?.year_level ||
+                                                    'N/A' }}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </template>
-                                </Card>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="text-gray-600">Academic Year</label>
+                                                <div class="font-medium">{{
+                                                    selectedApplicantForReview.scholarship_grant?.[0]?.academic_year ||
+                                                    'N/A' }}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="text-gray-600">Term</label>
+                                                <div class="font-medium">{{
+                                                    selectedApplicantForReview.scholarship_grant?.[0]?.term || 'N/A' }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="text-gray-600">Remarks</label>
+                                            <div class="font-medium">{{ selectedApplicantForReview.remarks || `No
+                                                remarks` }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Family Information -->
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                                <!-- Father Information -->
-                                <Card>
-                                    <template #title>
-                                        <div class="flex items-center gap-2">
-                                            <i class="pi pi-user text-blue-600"></i>
-                                            Father Information
-                                        </div>
-                                    </template>
-                                    <template #content>
-                                        <div class="space-y-3">
+                            <div class="border rounded p-3 mt-3">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-2">Family</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                                    <!-- Father -->
+                                    <div>
+                                        <h5 class="text-xs font-medium text-blue-600 mb-1 flex items-center gap-1">
+                                            <i class="pi pi-user text-xs"></i> Father
+                                        </h5>
+                                        <div class="space-y-1">
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                                                <InputText :value="selectedApplicantForReview.father_name || 'N/A'"
-                                                    readonly class="w-full" />
+                                                <label class="text-gray-600">Name</label>
+                                                <div class="font-medium">{{ selectedApplicantForReview.father_name ||
+                                                    'N/A' }}
+                                                </div>
                                             </div>
                                             <div>
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
-                                                <InputText
-                                                    :value="selectedApplicantForReview.father_occupation || 'N/A'"
-                                                    readonly class="w-full" />
+                                                <label class="text-gray-600">Occupation</label>
+                                                <div class="font-medium">{{ selectedApplicantForReview.father_occupation
+                                                    ||
+                                                    'N/A' }}</div>
                                             </div>
                                             <div>
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
-                                                <InputText
-                                                    :value="selectedApplicantForReview.father_contact_no || 'N/A'"
-                                                    readonly class="w-full" />
+                                                <label class="text-gray-600">Contact</label>
+                                                <div class="font-medium">{{ selectedApplicantForReview.father_contact_no
+                                                    ||
+                                                    'N/A' }}</div>
                                             </div>
                                         </div>
-                                    </template>
-                                </Card>
+                                    </div>
 
-                                <!-- Mother Information -->
-                                <Card>
-                                    <template #title>
-                                        <div class="flex items-center gap-2">
-                                            <i class="pi pi-user text-pink-600"></i>
-                                            Mother Information
-                                        </div>
-                                    </template>
-                                    <template #content>
-                                        <div class="space-y-3">
+                                    <!-- Mother -->
+                                    <div>
+                                        <h5 class="text-xs font-medium text-pink-600 mb-1 flex items-center gap-1">
+                                            <i class="pi pi-user text-xs"></i> Mother
+                                        </h5>
+                                        <div class="space-y-1">
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                                                <InputText :value="selectedApplicantForReview.mother_name || 'N/A'"
-                                                    readonly class="w-full" />
+                                                <label class="text-gray-600">Name</label>
+                                                <div class="font-medium">{{ selectedApplicantForReview.mother_name ||
+                                                    'N/A' }}
+                                                </div>
                                             </div>
                                             <div>
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
-                                                <InputText
-                                                    :value="selectedApplicantForReview.mother_occupation || 'N/A'"
-                                                    readonly class="w-full" />
+                                                <label class="text-gray-600">Occupation</label>
+                                                <div class="font-medium">{{ selectedApplicantForReview.mother_occupation
+                                                    ||
+                                                    'N/A' }}</div>
                                             </div>
                                             <div>
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
-                                                <InputText
-                                                    :value="selectedApplicantForReview.mother_contact_no || 'N/A'"
-                                                    readonly class="w-full" />
+                                                <label class="text-gray-600">Contact</label>
+                                                <div class="font-medium">{{ selectedApplicantForReview.mother_contact_no
+                                                    ||
+                                                    'N/A' }}</div>
                                             </div>
                                         </div>
-                                    </template>
-                                </Card>
+                                    </div>
 
-                                <!-- Guardian Information -->
-                                <Card>
-                                    <template #title>
-                                        <div class="flex items-center gap-2">
-                                            <i class="pi pi-users text-purple-600"></i>
-                                            Guardian Information
-                                        </div>
-                                    </template>
-                                    <template #content>
-                                        <div class="space-y-3">
+                                    <!-- Guardian -->
+                                    <div>
+                                        <h5 class="text-xs font-medium text-purple-600 mb-1 flex items-center gap-1">
+                                            <i class="pi pi-users text-xs"></i> Guardian
+                                        </h5>
+                                        <div class="space-y-1">
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                                                <InputText :value="selectedApplicantForReview.guardian_name || 'N/A'"
-                                                    readonly class="w-full" />
+                                                <label class="text-gray-600">Name</label>
+                                                <div class="font-medium">{{ selectedApplicantForReview.guardian_name ||
+                                                    'N/A' }}
+                                                </div>
                                             </div>
                                             <div>
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
-                                                <InputText
-                                                    :value="selectedApplicantForReview.guardian_occupation || 'N/A'"
-                                                    readonly class="w-full" />
+                                                <label class="text-gray-600">Occupation</label>
+                                                <div class="font-medium">{{
+                                                    selectedApplicantForReview.guardian_occupation ||
+                                                    'N/A' }}</div>
                                             </div>
                                             <div>
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
-                                                <InputText
-                                                    :value="selectedApplicantForReview.guardian_contact_no || 'N/A'"
-                                                    readonly class="w-full" />
+                                                <label class="text-gray-600">Contact</label>
+                                                <div class="font-medium">{{
+                                                    selectedApplicantForReview.guardian_contact_no ||
+                                                    'N/A' }}</div>
                                             </div>
                                         </div>
-                                    </template>
-                                </Card>
+                                    </div>
+                                </div>
                             </div>
                         </TabPanel>
                     </TabPanels>

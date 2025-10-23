@@ -146,3 +146,8 @@ P-Q#1 (correct - only valid records get numbered)
 - No frontend changes were needed - the fix was purely backend
 - ScholarshipProfileController already had proper checks for course and school
 - Only WaitingListController needed the program_id check added
+
+WIFI
+
+ssid: Scholars
+pw : Scholar2025

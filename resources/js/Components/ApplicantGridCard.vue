@@ -87,8 +87,13 @@ const shouldShowAction = (action) => {
                             class="rounded-full w-24 h-24 border-4 border-white shadow-md" />
                         <img v-else-if="applicant.gender == 'F'" src="/images/female-avatar.png" alt="avatar"
                             class="rounded-full w-24 h-24 border-4 border-white shadow-md" />
-                        <Avatar v-else :label="getApplicantInitials(applicant)" class="w-24 h-24 text-2xl"
-                            shape="circle" />
+                        <!-- <Avatar v-else :label="getApplicantInitials(applicant)" class="w-32 h-32" shape="circle" /> -->
+                        <div v-else>
+                            <div
+                                class="w-24 h-24 rounded-full bg-gray-400 flex items-center justify-center text-xl text-white font-semibold">
+                                {{ getApplicantInitials(applicant) }}
+                            </div>
+                        </div>
                     </div>
 
                     <!-- JPM Badge -->
@@ -129,21 +134,21 @@ const shouldShowAction = (action) => {
                             <div class="text-xs font-semibold text-gray-500">
                                 Prog. <span class="font-bold text-gray-600">#{{
                                     applicant.sequence_number || '-'
-                                }}</span>
+                                    }}</span>
                             </div>
                         </div>
                         <div class="px-1">
                             <div class="text-xs font-semibold text-gray-500">
                                 Cour. <span class="font-bold text-gray-600">#{{
                                     applicant.sequence_number_by_course || '-'
-                                }}</span>
+                                    }}</span>
                             </div>
                         </div>
                         <div class="px-1">
                             <div class="text-xs font-semibold text-gray-500">
                                 Sch. <span class="font-bold text-gray-600">#{{
                                     applicant.sequence_number_by_school_course || '-'
-                                }}</span>
+                                    }}</span>
 
                             </div>
                         </div>
