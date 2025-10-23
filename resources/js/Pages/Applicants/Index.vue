@@ -35,7 +35,6 @@ import Popover from 'primevue/popover';
 import ApplicantFormModal from '@/Components/modals/ApplicantFormModal.vue';
 // import ApplicantProfileModal from '@/Pages/Applicants/Modal/ApplicantProfileModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
-import ExportModal from './Modal/ExportModal.vue';
 import PriorityModal from './Modal/PriorityModal.vue';
 import JpmModal from './Modal/JpmModal.vue';
 import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
@@ -43,8 +42,6 @@ import GridView from '@/Components/GridView.vue';
 import ApplicantGridCard from '@/Components/ApplicantGridCard.vue';
 const showReportModal = ref(false);
 const openReportModal = () => { showReportModal.value = true; };
-const showExportModal = ref(false);
-const openExportModal = () => { showExportModal.value = true; };
 
 // Actions popover
 const actionsPopover = ref();
@@ -714,14 +711,8 @@ const formatDate = (date) => {
                         <Button icon="pi pi-user-plus" @click="openApplicationFormModal"
                             v-if="hasPermission('create-scholar-profile') && !hasRole('user')" severity="success"
                             v-tooltip.bottom="'Add New Applicant'" />
-                        <Button icon="pi pi-print" @click="actionsPopover.toggle($event)" severity="info"
-                            v-tooltip.bottom="'Reports & Export'" />
-                        <Popover ref="actionsPopover">
-                            <div class="flex flex-col gap-2 w-48">
-                                <Button @click="openReportModal(); actionsPopover.hide()" label="Generate Report"
-                                    icon="pi pi-file-pdf" severity="secondary" outlined class="justify-start" />
-                            </div>
-                        </Popover>
+                        <Button icon="pi pi-print" @click="openReportModal" severity="info"
+                            v-tooltip.bottom="'Generate Report'" />
                         <!-- <Button as="a" label="Existing" icon="pi pi-user"
                             v-if="hasPermission('create-scholar-profile') && !hasRole('user')"
                             :href="route('waitinglist.index', { action: 'add-existing' })" severity="secondary"
@@ -837,11 +828,6 @@ const formatDate = (date) => {
                             <RecordsSelect v-model="filter.records" label="label" class="w-24" size="small" /> of {{
                                 props.profiles_total || 0 }} records
                         </div>
-                        <div class="flex items-center gap-3 justify-end">
-                            <Button @click="openExportModal" label="Export" icon="pi pi-download" severity="info"
-                                size="small" outlined />
-                        </div>
-
                     </div>
 
                     <!-- Table View -->
@@ -903,21 +889,21 @@ const formatDate = (date) => {
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Prog. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Cour. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_course || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Sch. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_school_course || '-'
-                                                    }}</span>
+                                                }}</span>
 
                                             </div>
                                         </div>
@@ -1181,8 +1167,6 @@ const formatDate = (date) => {
 
         <!-- Modals -->
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" />
-        <ExportModal :show="showExportModal" @update:show="showExportModal = $event" :filters="filter"
-            :totalRecords="props.profiles_total" />
 
         <!-- Integrated Profile & Review Modal -->
         <Dialog v-model:visible="showProfileReviewModal" modal header="Application Review & Applicant Profile"
@@ -1251,7 +1235,7 @@ const formatDate = (date) => {
                                             </div>
                                             <div class="text-xs text-green-700 leading-tight">{{
                                                 selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname
-                                                }}/{{
+                                            }}/{{
                                                     selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname }}
                                             </div>
                                         </div>

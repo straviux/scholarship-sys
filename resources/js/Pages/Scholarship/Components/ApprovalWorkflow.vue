@@ -43,19 +43,6 @@
                 </template>
             </Card>
 
-            <Card>
-                <template #content>
-                    <div class="text-center">
-                        <div class="flex items-center justify-center gap-2 mb-2">
-                            <i class="pi pi-calendar text-green-600"></i>
-                            <div class="text-sm text-gray-600">Application Date</div>
-                        </div>
-                        <div class="font-medium text-gray-800">
-                            {{ formatDate(application.profile.date_filed) }}
-                        </div>
-                    </div>
-                </template>
-            </Card>
             <Card v-if="!props.showApplicantName">
                 <template #content>
                     <div class="text-center">
@@ -264,10 +251,10 @@
         <!-- Action Buttons -->
         <div class="flex justify-between items-center">
             <div class="flex gap-3">
-                <Button v-if="canApprove(application)" label="Approve Application" icon="pi pi-thumbs-up"
-                    severity="success" @click="showApprovalDialog = true" />
-                <Button v-if="canDecline(application)" label="Decline Application" icon="pi pi-thumbs-down"
-                    severity="danger" outlined @click="showDeclineDialog = true" />
+                <Button v-if="canApprove(application)" label="Approve" icon="pi pi-thumbs-up" severity="success"
+                    @click="showApprovalDialog = true" />
+                <Button v-if="canDecline(application)" label="Decline" icon="pi pi-thumbs-down" severity="danger"
+                    outlined @click="showDeclineDialog = true" />
                 <Button v-if="canSetConditional(application)" label="Conditional Approval"
                     icon="pi pi-exclamation-circle" severity="info" outlined @click="showConditionalDialog = true" />
             </div>

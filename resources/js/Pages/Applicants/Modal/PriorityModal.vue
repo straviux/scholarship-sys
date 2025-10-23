@@ -105,7 +105,6 @@ const props = defineProps({
 const emit = defineEmits(['update:show', 'success']);
 
 const priorityOptions = [
-    { value: 'low', label: 'Low Priority', description: 'Standard processing order' },
     { value: 'normal', label: 'Normal Priority', description: 'Default priority level' },
     { value: 'high', label: 'High Priority', description: 'Faster processing' },
     { value: 'urgent', label: 'Urgent Priority', description: 'Immediate attention required' }
