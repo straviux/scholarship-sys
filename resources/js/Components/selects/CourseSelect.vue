@@ -170,7 +170,13 @@ watch(
         :maxSelectedLabels="3" :selectedItemsLabel="'{0} courses selected'" showSelectAll showClear>
         <template #option="slotProps">
             <div class="flex items-start uppercase">
-                <div>{{ slotProps.option.shortname }}</div>
+                <div v-if="slotProps.option.isNullOption">
+                    <span class="text-[12px]">{{ slotProps.option.name }}</span>
+                </div>
+                <div v-else>
+                    <span class="text-[12px]">{{ slotProps.option.name }}</span><br>
+                    <span class="text-[10px] font-bold">[{{ slotProps.option.shortname }}]</span>
+                </div>
             </div>
         </template>
         <template #chip="slotProps">
@@ -193,7 +199,13 @@ watch(
         </template>
         <template #option="slotProps">
             <div class="flex items-start uppercase">
-                <div>{{ slotProps.option.shortname }}</div>
+                <div v-if="slotProps.option.isNullOption">
+                    <span class="text-[12px]">{{ slotProps.option.name }}</span>
+                </div>
+                <div v-else>
+                    <span class="text-[12px]">{{ slotProps.option.name }}</span><br>
+                    <span class="text-[10px] font-bold">[{{ slotProps.option.shortname }}]</span>
+                </div>
             </div>
         </template>
     </Select>

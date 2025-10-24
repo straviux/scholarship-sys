@@ -58,11 +58,21 @@
 
                 </div>
                 <div class="flex flex-col gap-2">
-                    <FloatLabel>
+                    <FloatLabel v-if="!customPlaceOfBirth">
                         <MunicipalitySelect :modelValue="place_of_birth"
                             @update:modelValue="$emit('update:place_of_birth', $event)" custom-placeholder="&nbsp;" />
                         <label class="text-sm" for="place_of_birth">Place of Birth</label>
                     </FloatLabel>
+                    <FloatLabel v-else>
+                        <InputText :modelValue="typeof place_of_birth === 'string' ? place_of_birth : ''"
+                            @update:modelValue="$emit('update:place_of_birth', $event)" inputId="custom_place_of_birth"
+                            variant="filled" fluid />
+                        <label class="text-sm" for="custom_place_of_birth">Place of Birth (Custom)</label>
+                    </FloatLabel>
+                    <div class="flex items-center gap-2 mt-1">
+                        <Checkbox v-model="customPlaceOfBirth" inputId="customPlaceOfBirth" binary />
+                        <label for="customPlaceOfBirth" class="text-xs text-gray-600 cursor-pointer">Not in list</label>
+                    </div>
                 </div>
 
             </div>
@@ -78,8 +88,8 @@
                 </div>
                 <div>
                     <FloatLabel>
-                        <InputText :modelValue="religion" @update:modelValue="$emit('update:religion', $event)"
-                            inputId="religion" variant="filled" fluid />
+                        <ReligionSelect :modelValue="religion" @update:modelValue="$emit('update:religion', $event)"
+                            placeholder="&nbsp;" inputId="religion" />
                         <label class="text-sm" for="religion">Religion</label>
                     </FloatLabel>
                 </div>
@@ -197,6 +207,7 @@ import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import BarangaySelect from '@/Components/selects/BarangaySelect.vue';
 import GenderSelect from '@/Components/selects/GenderSelect.vue';
 import CivilStatusSelect from '@/Components/selects/CivilStatusSelect.vue';
+import ReligionSelect from '@/Components/selects/ReligionSelect.vue';
 import { DatePicker } from 'primevue';
 
 const props = defineProps({
@@ -271,6 +282,29 @@ const temporaryMunicipalityId = computed(() => {
 
     // If it's already a number or numeric string, use it directly
     return props.temporary_municipality;
+});
+
+// Checkbox state for custom place of birth
+const customPlaceOfBirth = ref(false);
+
+// Watch for changes in place_of_birth to detect if it's a custom string
+watch(() => props.place_of_birth, (newValue) => {
+    if (typeof newValue === 'string' && newValue !== '') {
+        customPlaceOfBirth.value = true;
+    }
+}, { immediate: true });
+
+// Watch for checkbox change to clear place of birth when switching modes
+watch(customPlaceOfBirth, (newValue) => {
+    if (newValue) {
+        // Switching to custom text field - clear if it's an object
+        if (typeof props.place_of_birth === 'object') {
+            emit('update:place_of_birth', '');
+        }
+    } else {
+        // Switching back to dropdown - clear text value
+        emit('update:place_of_birth', null);
+    }
 });
 
 // Checkbox state for "Same as Permanent Address"

@@ -253,7 +253,7 @@ const form = useForm({
     year_level: grant?.year_level || null,
     term: grant?.term || null,
     academic_year: grant?.academic_year || null,
-    date_filed: formatDateForPicker(grant?.date_filed) || new Date(),
+    date_filed: formatDateForPicker(grant?.date_filed) || null,
     date_approved: formatDateForPicker(grant?.date_approved) || null,
     remarks: grant?.remarks || p?.remarks || '',
 });
@@ -380,7 +380,7 @@ watch(() => props.visible, async (newValue) => {
     } else if (newValue && props.mode === 'create') {
         // In create mode, reset to empty form
         form.reset();
-        form.date_filed = new Date(); // Set date_filed to today for new scholars
+        form.date_filed = null; // Leave date_filed blank
         form.date_approved = null; // Leave date_approved empty for backlog encoding
         form.clearErrors();
         activeStep.value = '1';
@@ -471,7 +471,7 @@ const handleSubmit = () => {
                 });
                 // Reset form after successful creation
                 form.reset();
-                form.date_filed = new Date();
+                form.date_filed = null;
                 form.date_approved = null;
                 form.clearErrors();
                 activeStep.value = '1';
