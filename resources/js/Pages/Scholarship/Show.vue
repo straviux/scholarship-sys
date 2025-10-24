@@ -3,7 +3,7 @@
     <Head :title="`${profile.first_name} ${profile.last_name} - Scholar Profile`" />
 
     <AdminLayout>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <!-- Header with Back Button -->
             <div class="mb-6 flex items-center justify-between">
                 <div class="flex items-center gap-4">
@@ -20,8 +20,6 @@
                 <div class="flex gap-2">
                     <Button icon="pi pi-pencil" label="Edit" severity="warning" outlined @click="editProfile"
                         v-tooltip.top="'Edit Profile'" />
-                    <Button icon="pi pi-history" label="History" severity="secondary" outlined @click="viewHistory"
-                        v-tooltip.top="'View History'" />
                 </div>
             </div>
 
@@ -212,57 +210,64 @@
                         <!-- Academic Information Tab -->
                         <TabPanel value="2">
                             <div class="p-6">
-                                <div v-if="currentGrant" class="space-y-6">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label class="text-sm font-medium text-gray-600">Program</label>
-                                            <p class="text-gray-900">{{ currentGrant.program.name || 'N/A' }}</p>
-                                        </div>
+                                <div v-if="scholarshipRecords.length > 0">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Scholarship Records</h3>
+                                    <DataTable :value="scholarshipRecords" stripedRows showGridlines>
+                                        <Column header="Program & School" style="min-width: 250px">
+                                            <template #body="slotProps">
+                                                <div class="space-y-1">
+                                                    <p class="font-semibold text-gray-900">{{
+                                                        slotProps.data.program?.name || 'N/A' }}</p>
+                                                    <p class="text-sm text-gray-600">{{ slotProps.data.school?.name ||
+                                                        'N/A' }}</p>
+                                                </div>
+                                            </template>
+                                        </Column>
 
-                                        <div>
-                                            <label class="text-sm font-medium text-gray-600">School</label>
-                                            <p class="text-gray-900">{{ currentGrant.school.name || 'N/A' }}</p>
-                                        </div>
+                                        <Column header="Course" style="min-width: 200px">
+                                            <template #body="slotProps">
+                                                {{ slotProps.data.course?.name || 'N/A' }}
+                                            </template>
+                                        </Column>
 
-                                        <div>
-                                            <label class="text-sm font-medium text-gray-600">Course</label>
-                                            <p class="text-gray-900">{{ currentGrant.course.name || 'N/A' }}</p>
-                                        </div>
+                                        <Column header="Academic Details" style="min-width: 180px">
+                                            <template #body="slotProps">
+                                                <div class="space-y-1">
+                                                    <p class="text-sm"><span class="font-medium">Year:</span> {{
+                                                        slotProps.data.year_level || 'N/A' }}</p>
+                                                    <p class="text-sm"><span class="font-medium">Term:</span> {{
+                                                        slotProps.data.term || 'N/A' }}</p>
+                                                    <p class="text-sm"><span class="font-medium">AY:</span> {{
+                                                        slotProps.data.academic_year || 'N/A' }}</p>
+                                                </div>
+                                            </template>
+                                        </Column>
 
-                                        <div>
-                                            <label class="text-sm font-medium text-gray-600">Year Level</label>
-                                            <p class="text-gray-900">{{ currentGrant.year_level || 'N/A' }}</p>
-                                        </div>
+                                        <Column header="Dates" style="min-width: 160px">
+                                            <template #body="slotProps">
+                                                <div class="space-y-1">
+                                                    <p class="text-sm"><span class="font-medium">Filed:</span> {{
+                                                        formatDateShort(slotProps.data.date_filed) }}</p>
+                                                    <p class="text-sm"><span class="font-medium">Approved:</span> {{
+                                                        formatDateShort(slotProps.data.date_approved) }}</p>
+                                                </div>
+                                            </template>
+                                        </Column>
 
-                                        <div>
-                                            <label class="text-sm font-medium text-gray-600">Term</label>
-                                            <p class="text-gray-900">{{ currentGrant.term || 'N/A' }}</p>
-                                        </div>
+                                        <Column header="Status" style="min-width: 120px">
+                                            <template #body="slotProps">
+                                                <Chip v-if="slotProps.data.approval_status"
+                                                    :label="slotProps.data.approval_status"
+                                                    :class="getStatusClass(slotProps.data.approval_status)" />
+                                            </template>
+                                        </Column>
 
-                                        <div>
-                                            <label class="text-sm font-medium text-gray-600">Academic Year</label>
-                                            <p class="text-gray-900">{{ currentGrant.academic_year || 'N/A' }}</p>
-                                        </div>
-
-                                        <div>
-                                            <label class="text-sm font-medium text-gray-600">Date Filed</label>
-                                            <p class="text-gray-900">{{ formatDate(currentGrant.date_filed) }}</p>
-                                        </div>
-
-                                        <div>
-                                            <label class="text-sm font-medium text-gray-600">Date Approved</label>
-                                            <p class="text-gray-900">{{ formatDate(currentGrant.date_approved) }}</p>
-                                        </div>
-
-                                        <div class="col-span-full">
-                                            <label class="text-sm font-medium text-gray-600">Remarks</label>
-                                            <p class="text-gray-900">{{ currentGrant.remarks || 'N/A' }}</p>
-                                        </div>
-                                    </div>
+                                        <Column field="remarks" header="Remarks" style="min-width: 200px" />
+                                    </DataTable>
                                 </div>
                                 <div v-else class="text-center py-12">
                                     <i class="pi pi-info-circle text-4xl text-gray-300 mb-4"></i>
-                                    <p class="text-gray-500">No academic information available</p>
+                                    <p class="text-gray-500">No scholarship records available</p>
                                 </div>
                             </div>
                         </TabPanel>
@@ -282,15 +287,7 @@
 
                         <!-- Obligations/Transactions Tab -->
                         <TabPanel value="4">
-                            <div class="p-6">
-                                <div class="text-center py-12">
-                                    <i class="pi pi-money-bill text-4xl text-gray-300 mb-4"></i>
-                                    <p class="text-gray-500 text-lg">Obligations & Transactions Module</p>
-                                    <p class="text-gray-400 text-sm mt-2">Coming soon - Obligation requests and
-                                        transaction
-                                        history</p>
-                                </div>
-                            </div>
+                            <ObligationsTransactions :profileId="profile.profile_id" />
                         </TabPanel>
                     </TabPanels>
                 </Tabs>
@@ -312,7 +309,11 @@ import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Chip from 'primevue/chip';
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
+import ObligationsTransactions from '@/Components/ObligationsTransactions.vue';
 
 const props = defineProps({
     profile: Object,
@@ -328,6 +329,12 @@ const fullName = computed(() => {
 
 const currentGrant = computed(() => {
     return props.profile.scholarship_grant?.[0] || null;
+});
+
+const scholarshipRecords = computed(() => {
+    if (!props.profile.scholarship_grant) return [];
+    // Return all records, already sorted by latest first from backend
+    return props.profile.scholarship_grant;
 });
 
 // Methods
@@ -354,16 +361,28 @@ const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
 };
 
-const editProfile = () => {
-    showEditModal.value = true;
+const formatDateShort = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
 };
 
-const viewHistory = () => {
-    router.visit(route('scholarship.profile.history', props.profile.profile_id));
+const editProfile = () => {
+    showEditModal.value = true;
 };
 
 const handleSuccess = () => {
     showEditModal.value = false;
     router.reload({ only: ['profile'] });
+};
+
+const getStatusClass = (status) => {
+    const classes = {
+        'approved': 'bg-green-100 text-green-800',
+        'pending': 'bg-yellow-100 text-yellow-800',
+        'declined': 'bg-red-100 text-red-800',
+        'conditional': 'bg-orange-100 text-orange-800',
+    };
+    return classes[status?.toLowerCase()] || 'bg-gray-100 text-gray-800';
 };
 </script>

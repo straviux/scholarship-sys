@@ -99,6 +99,11 @@ class ScholarshipProfile extends Model
         )->with(['program', 'course', 'requirements', 'school']);
     }
 
+    public function disbursements()
+    {
+        return $this->hasMany(Disbursement::class, 'profile_id', 'profile_id');
+    }
+
     public function ongoingScholarshipGrant()
     {
         return $this->hasOne(

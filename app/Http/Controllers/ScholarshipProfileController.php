@@ -1084,8 +1084,7 @@ class ScholarshipProfileController extends Controller
         $profile = ScholarshipProfile::with([
             'scholarshipGrant' => function ($q) {
                 $q->with(['program', 'course', 'school'])
-                    ->latest('created_at')
-                    ->limit(1);
+                    ->orderBy('created_at', 'desc');
             }
         ])->findOrFail($profileId);
 

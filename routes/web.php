@@ -121,6 +121,22 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/scholarship/profile/{profile_id}/history', [ScholarshipProfileController::class, 'profileHistory'])
         ->name('scholarship.profile.history');
 
+    // Disbursement and Cheque routes
+    Route::get('/scholarship/profile/{profile_id}/disbursements', [App\Http\Controllers\DisbursementController::class, 'index'])
+        ->name('disbursements.index');
+    Route::post('/disbursements', [App\Http\Controllers\DisbursementController::class, 'store'])
+        ->name('disbursements.store');
+    Route::put('/disbursements/{id}', [App\Http\Controllers\DisbursementController::class, 'update'])
+        ->name('disbursements.update');
+    Route::delete('/disbursements/{id}', [App\Http\Controllers\DisbursementController::class, 'destroy'])
+        ->name('disbursements.destroy');
+    Route::post('/disbursements/{disbursement_id}/cheques', [App\Http\Controllers\DisbursementController::class, 'addCheque'])
+        ->name('disbursements.cheques.store');
+    Route::put('/cheques/{cheque_id}', [App\Http\Controllers\DisbursementController::class, 'updateCheque'])
+        ->name('cheques.update');
+    Route::delete('/cheques/{cheque_id}', [App\Http\Controllers\DisbursementController::class, 'destroyCheque'])
+        ->name('cheques.destroy');
+
     // Approval workflow routes
     Route::post('/scholarship/{record}/approve', [ScholarshipProfileController::class, 'approve'])
         ->name('scholarship.record.approve');
