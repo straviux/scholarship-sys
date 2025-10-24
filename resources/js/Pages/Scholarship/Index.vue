@@ -36,8 +36,8 @@
                             v-tooltip.bottom="'Add New Record'" />
                         <Popover ref="addRecordPopover">
                             <div class="flex flex-col gap-2 w-48">
-                                <Button @click="openAddApplicantModal" label="Add Applicant" icon="pi pi-user-plus"
-                                    severity="success" outlined class="justify-start" />
+                                <!-- <Button @click="openAddApplicantModal" label="Add Applicant" icon="pi pi-user-plus"
+                                    severity="success" outlined class="justify-start" /> -->
                                 <Button @click="openAddExistingModal" label="Add Existing" icon="pi pi-user-edit"
                                     severity="info" outlined class="justify-start" />
                             </div>
