@@ -221,6 +221,8 @@
                                 <div class="flex gap-2">
                                     <Button icon="pi pi-eye" size="small" severity="info" outlined rounded
                                         v-tooltip.top="'View'" @click="viewFullProfile(slotProps.data)" />
+                                    <Button icon="pi pi-pencil" size="small" severity="warning" outlined rounded
+                                        v-tooltip.top="'Edit'" @click="editProfile(slotProps.data)" />
                                     <Button icon="pi pi-history" size="small" severity="secondary" outlined rounded
                                         v-tooltip.top="'History'" @click="viewFullHistory(slotProps.data)" />
                                 </div>
@@ -308,6 +310,8 @@
                                         <div class="flex gap-2">
                                             <Button icon="pi pi-eye" size="small" severity="info" outlined rounded
                                                 v-tooltip.top="'View'" @click="viewFullProfile(item)" />
+                                            <Button icon="pi pi-pencil" size="small" severity="warning" outlined rounded
+                                                v-tooltip.top="'Edit'" @click="editProfile(item)" />
                                             <Button icon="pi pi-history" size="small" severity="secondary" outlined
                                                 rounded v-tooltip.top="'History'" @click="viewFullHistory(item)" />
                                         </div>
@@ -376,6 +380,8 @@
                                         <div class="flex gap-2 w-full">
                                             <Button icon="pi pi-eye" size="small" severity="info" outlined
                                                 class="flex-1" v-tooltip.top="'View'" @click="viewFullProfile(item)" />
+                                            <Button icon="pi pi-pencil" size="small" severity="warning" outlined
+                                                class="flex-1" v-tooltip.top="'Edit'" @click="editProfile(item)" />
                                             <Button icon="pi pi-history" size="small" severity="secondary" outlined
                                                 class="flex-1" v-tooltip.top="'History'"
                                                 @click="viewFullHistory(item)" />
@@ -577,8 +583,12 @@
         <!-- Application Form Modal -->
         <ApplicantFormModal v-model:visible="showAddApplicantModal" :profiles="profiles" @success="refreshData" />
 
-        <!-- Scholar Form Modal -->
+        <!-- Scholar Form Modal (Create) -->
         <ScholarFormModal v-model:visible="showAddExistingModal" mode="create" @success="refreshData" />
+
+        <!-- Scholar Form Modal (Edit) -->
+        <ScholarFormModal v-model:visible="showEditScholarModal" mode="edit" :profile="selectedScholarForEdit"
+            @success="refreshData" />
     </AdminLayout>
 </template>
 
@@ -694,6 +704,8 @@ const showReportModal = ref(false);
 const showExportModal = ref(false);
 const showAddApplicantModal = ref(false);
 const showAddExistingModal = ref(false);
+const showEditScholarModal = ref(false);
+const selectedScholarForEdit = ref(null);
 const addRecordPopover = ref();
 
 // Computed properties
@@ -873,8 +885,9 @@ const reviewApplication = (scholarshipRecord) => {
 };
 
 const editProfile = (profile) => {
-    // Navigate to profile edit page
-    router.visit(route('profile.edit', profile.profile_id));
+    // Open edit modal instead of navigating
+    selectedScholarForEdit.value = profile;
+    showEditScholarModal.value = true;
 };
 
 const handleApprovalAction = (result) => {
