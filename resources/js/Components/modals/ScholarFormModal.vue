@@ -38,7 +38,10 @@
                                     v-model:civil_status="form.civil_status" v-model:religion="form.religion"
                                     v-model:indigenous_group="form.indigenous_group"
                                     v-model:municipality="form.municipality" v-model:barangay="form.barangay"
-                                    v-model:address="form.address" :show-header="false" />
+                                    v-model:address="form.address"
+                                    v-model:temporary_municipality="form.temporary_municipality"
+                                    v-model:temporary_barangay="form.temporary_barangay"
+                                    v-model:temporary_address="form.temporary_address" :show-header="false" />
 
                                 <!-- Validation Messages -->
                                 <div v-if="validationError" class="mt-4 bg-red-50 border border-red-200 rounded p-3">
@@ -106,14 +109,14 @@
                                     </FloatLabel>
                                     <FloatLabel>
                                         <DatePicker v-model="form.date_filed" type="date" inputId="date_filed"
-                                            variant="filled" placeholder="mm/dd/yyyy" showIcon fluid
-                                            iconDisplay="input" />
+                                            variant="filled" placeholder="mm/dd/yyyy" showIcon fluid iconDisplay="input"
+                                            :manualInput="true" @input="formatDateInput" />
                                         <label class="text-sm" for="date_filed">Date Filed</label>
                                     </FloatLabel>
                                     <FloatLabel>
                                         <DatePicker v-model="form.date_approved" type="date" inputId="date_approved"
-                                            variant="filled" placeholder="mm/dd/yyyy" showIcon fluid
-                                            iconDisplay="input" />
+                                            variant="filled" placeholder="mm/dd/yyyy" showIcon fluid iconDisplay="input"
+                                            :manualInput="true" @input="formatDateInput" />
                                         <label class="text-sm" for="date_approved">Date Approved</label>
                                     </FloatLabel>
                                 </div>
@@ -188,6 +191,21 @@ const formatDateForPicker = (dateString) => {
     return isNaN(date.getTime()) ? null : date;
 };
 
+// Format date input as user types (auto-insert slashes)
+const formatDateInput = (event) => {
+    const input = event.target;
+    let value = input.value.replace(/\D/g, ''); // Remove non-digits
+
+    if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2);
+    }
+    if (value.length >= 5) {
+        value = value.substring(0, 5) + '/' + value.substring(5, 9);
+    }
+
+    input.value = value;
+};
+
 // Get profile data if in edit mode
 const p = props.profile;
 const grant = p?.scholarship_grant?.[0];
@@ -210,6 +228,9 @@ const form = useForm({
     municipality: p?.municipality || null,
     barangay: p?.barangay || null,
     address: p?.address || '',
+    temporary_municipality: p?.temporary_municipality || null,
+    temporary_barangay: p?.temporary_barangay || null,
+    temporary_address: p?.temporary_address || '',
 
     // Family Information
     father_name: p?.father_name || '',
@@ -324,6 +345,9 @@ watch(() => props.visible, async (newValue) => {
         form.municipality = p?.municipality || null;
         form.barangay = p?.barangay || null;
         form.address = p?.address || '';
+        form.temporary_municipality = p?.temporary_municipality || null;
+        form.temporary_barangay = p?.temporary_barangay || null;
+        form.temporary_address = p?.temporary_address || '';
 
         // Family Information
         form.father_name = p?.father_name || '';
@@ -392,6 +416,10 @@ const handleSubmit = () => {
         municipality: form.municipality?.name || form.municipality || null,
         // Extract name from barangay object if it exists
         barangay: form.barangay?.name || form.barangay || null,
+        // Extract name from temporary_municipality object if it exists
+        temporary_municipality: form.temporary_municipality?.name || form.temporary_municipality || null,
+        // Extract name from temporary_barangay object if it exists
+        temporary_barangay: form.temporary_barangay?.name || form.temporary_barangay || null,
         // Extract name from place_of_birth if it's an object
         place_of_birth: form.place_of_birth?.name || form.place_of_birth || null,
         // Send IDs for course, school, and program
@@ -441,6 +469,15 @@ const handleSubmit = () => {
                 toast.success('Scholar added successfully!', {
                     position: toast.POSITION.TOP_RIGHT,
                 });
+                // Reset form after successful creation
+                form.reset();
+                form.date_filed = new Date();
+                form.date_approved = null;
+                form.clearErrors();
+                activeStep.value = '1';
+                validationError.value = '';
+                academicValidationError.value = '';
+
                 emit('success');
                 closeModal();
             },

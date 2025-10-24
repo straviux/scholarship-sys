@@ -51,7 +51,8 @@
                     <FloatLabel>
                         <DatePicker :modelValue="date_of_birth" placeholder="mm/dd/yyyy"
                             @update:modelValue="$emit('update:date_of_birth', $event)" type="date"
-                            inputId="date_of_birth" variant="filled" showIcon fluid iconDisplay="input" />
+                            inputId="date_of_birth" variant="filled" showIcon fluid iconDisplay="input"
+                            :manualInput="true" @input="formatDateInput" />
                         <label class="text-sm" for="date_of_birth">Date of Birth</label>
                     </FloatLabel>
 
@@ -120,8 +121,9 @@
 
 
 
-            <!-- Address Row -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
+            <!-- Permanent Address Row -->
+            <h5 class="text-sm font-semibold text-gray-700 mt-6 mb-4">Permanent Address</h5>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <FloatLabel>
                         <MunicipalitySelect :modelValue="municipality"
@@ -144,14 +146,53 @@
                     </FloatLabel>
                 </div>
             </div>
+
+            <!-- Present Address Row -->
+            <div class="flex items-center gap-4 mt-6 mb-4">
+                <h5 class="text-sm font-semibold text-gray-700">Present Address</h5>
+                <div class="flex items-center gap-2">
+                    <Checkbox v-model="sameAsPermanent" inputId="sameAsPermanent" binary
+                        @change="handleSameAsPermanentChange" />
+                    <label for="sameAsPermanent" class="text-sm text-gray-600 cursor-pointer">Same as Permanent
+                        Address</label>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <FloatLabel>
+                        <MunicipalitySelect :modelValue="temporary_municipality"
+                            @update:modelValue="$emit('update:temporary_municipality', $event)"
+                            custom-placeholder="&nbsp;" :disabled="sameAsPermanent" />
+                        <label class="text-sm" for="temporary_municipality">Municipality</label>
+                    </FloatLabel>
+                </div>
+                <div>
+                    <FloatLabel>
+                        <BarangaySelect :modelValue="temporary_barangay"
+                            @update:modelValue="$emit('update:temporary_barangay', $event)"
+                            :municipalityId="temporaryMunicipalityId" custom-placeholder="&nbsp;"
+                            :disabled="sameAsPermanent" />
+                        <label class="text-sm" for="temporary_barangay">Barangay</label>
+                    </FloatLabel>
+                </div>
+                <div>
+                    <FloatLabel>
+                        <InputText :modelValue="temporary_address"
+                            @update:modelValue="$emit('update:temporary_address', $event)" inputId="temporary_address"
+                            variant="filled" fluid :disabled="sameAsPermanent" />
+                        <label class="text-sm" for="temporary_address">Street Address</label>
+                    </FloatLabel>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { onMounted, watch, computed } from 'vue';
+import { onMounted, watch, computed, ref } from 'vue';
 import InputText from 'primevue/inputtext';
 import FloatLabel from 'primevue/floatlabel';
+import Checkbox from 'primevue/checkbox';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import BarangaySelect from '@/Components/selects/BarangaySelect.vue';
 import GenderSelect from '@/Components/selects/GenderSelect.vue';
@@ -175,6 +216,9 @@ const props = defineProps({
     municipality: [String, Object],
     barangay: [String, Object],
     address: String,
+    temporary_municipality: [String, Object],
+    temporary_barangay: [String, Object],
+    temporary_address: String,
     showHeader: {
         type: Boolean,
         default: true
@@ -198,6 +242,9 @@ const emit = defineEmits([
     'update:municipality',
     'update:barangay',
     'update:address',
+    'update:temporary_municipality',
+    'update:temporary_barangay',
+    'update:temporary_address',
 ]);
 
 // Extract municipality ID for BarangaySelect
@@ -212,6 +259,61 @@ const municipalityId = computed(() => {
     // If it's already a number or numeric string, use it directly
     return props.municipality;
 });
+
+// Extract temporary municipality ID for BarangaySelect
+const temporaryMunicipalityId = computed(() => {
+    if (!props.temporary_municipality) return null;
+
+    // If it's an object, extract the ID
+    if (typeof props.temporary_municipality === 'object') {
+        return props.temporary_municipality.id || null;
+    }
+
+    // If it's already a number or numeric string, use it directly
+    return props.temporary_municipality;
+});
+
+// Checkbox state for "Same as Permanent Address"
+const sameAsPermanent = ref(false);
+
+// Handle checkbox change - copy permanent address to present address
+const handleSameAsPermanentChange = () => {
+    if (sameAsPermanent.value) {
+        // Copy permanent address to present address
+        emit('update:temporary_municipality', props.municipality);
+        emit('update:temporary_barangay', props.barangay);
+        emit('update:temporary_address', props.address);
+    } else {
+        // Clear present address when unchecked
+        emit('update:temporary_municipality', null);
+        emit('update:temporary_barangay', null);
+        emit('update:temporary_address', '');
+    }
+};
+
+// Format date input as user types (auto-insert slashes)
+const formatDateInput = (event) => {
+    const input = event.target;
+    let value = input.value.replace(/\D/g, ''); // Remove non-digits
+
+    if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2);
+    }
+    if (value.length >= 5) {
+        value = value.substring(0, 5) + '/' + value.substring(5, 9);
+    }
+
+    input.value = value;
+
+    // Try to parse and emit the date if it's complete
+    if (value.length === 10) {
+        const [month, day, year] = value.split('/');
+        const date = new Date(year, month - 1, day);
+        if (!isNaN(date.getTime())) {
+            emit('update:date_of_birth', date);
+        }
+    }
+};
 
 onMounted(() => {
     console.log('PersonalInformationFields mounted with props:', props);

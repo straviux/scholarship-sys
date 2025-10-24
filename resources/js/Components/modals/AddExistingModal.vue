@@ -74,14 +74,15 @@
                                             <FloatLabel>
                                                 <DatePicker v-model="form.date_filed" type="date" inputId="date_filed"
                                                     variant="filled" placeholder="mm/dd/yyyy" showIcon fluid
-                                                    iconDisplay="input" />
+                                                    iconDisplay="input" :manualInput="true" @input="formatDateInput" />
                                                 <label class="text-sm" for="date_filed">Date Filed</label>
                                             </FloatLabel>
 
                                             <FloatLabel>
                                                 <DatePicker v-model="form.date_approved" type="date"
                                                     inputId="date_approved" variant="filled" placeholder="mm/dd/yyyy"
-                                                    showIcon fluid iconDisplay="input" />
+                                                    showIcon fluid iconDisplay="input" :manualInput="true"
+                                                    @input="formatDateInput" />
                                                 <label class="text-sm" for="date_approved">Date Approved</label>
                                             </FloatLabel>
                                         </div>
@@ -133,6 +134,21 @@ const activeStep = ref('1');
 const isValidating = ref(false);
 const validationError = ref('');
 
+// Format date input as user types (auto-insert slashes)
+const formatDateInput = (event) => {
+    const input = event.target;
+    let value = input.value.replace(/\D/g, ''); // Remove non-digits
+
+    if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2);
+    }
+    if (value.length >= 5) {
+        value = value.substring(0, 5) + '/' + value.substring(5, 9);
+    }
+
+    input.value = value;
+};
+
 const form = useForm({
     first_name: '',
     middle_name: '',
@@ -170,6 +186,9 @@ const form = useForm({
     municipality: null,
     barangay: null,
     address: '',
+    temporary_municipality: null,
+    temporary_barangay: null,
+    temporary_address: '',
 });
 
 // Computed property for two-way binding with PersonalInformationFields
@@ -191,6 +210,9 @@ const personalInfo = computed({
         municipality: form.municipality,
         barangay: form.barangay,
         address: form.address,
+        temporary_municipality: form.temporary_municipality,
+        temporary_barangay: form.temporary_barangay,
+        temporary_address: form.temporary_address,
     }),
     set: (value) => {
         form.first_name = value.first_name;
@@ -209,6 +231,9 @@ const personalInfo = computed({
         form.municipality = value.municipality;
         form.barangay = value.barangay;
         form.address = value.address;
+        form.temporary_municipality = value.temporary_municipality;
+        form.temporary_barangay = value.temporary_barangay;
+        form.temporary_address = value.temporary_address;
     }
 });
 
@@ -352,6 +377,9 @@ const handleSubmit = () => {
         municipality: form.municipality?.name || null,
         barangay: form.barangay?.name || null,
         address: form.address,
+        temporary_municipality: form.temporary_municipality?.name || null,
+        temporary_barangay: form.temporary_barangay?.name || null,
+        temporary_address: form.temporary_address,
 
         // Family Information
         father_name: form.father_name,
