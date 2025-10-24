@@ -871,8 +871,7 @@ const clearFilters = () => {
 
 // Action methods
 const viewFullProfile = (profile) => {
-    selectedProfile.value = profile;
-    showProfileDialog.value = true;
+    router.visit(route('scholarship.profile.show', profile.profile_id));
 };
 
 const viewFullHistory = (profile) => {

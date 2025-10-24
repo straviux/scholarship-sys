@@ -1077,6 +1077,24 @@ class ScholarshipProfileController extends Controller
     }
 
     /**
+     * Display a specific scholar profile
+     */
+    public function show($profileId)
+    {
+        $profile = ScholarshipProfile::with([
+            'scholarshipGrant' => function ($q) {
+                $q->with(['program', 'course', 'school'])
+                    ->latest('created_at')
+                    ->limit(1);
+            }
+        ])->findOrFail($profileId);
+
+        return Inertia::render('Scholarship/Show', [
+            'profile' => $profile,
+        ]);
+    }
+
+    /**
      * Display complete scholarship history for a specific profile
      */
     public function profileHistory(Request $request, $profileId)

@@ -115,6 +115,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/scholarship/profiles', [ScholarshipProfileController::class, 'profiles'])
         ->name('scholarship.profiles');
 
+    Route::get('/scholarship/profile/{profile_id}', [ScholarshipProfileController::class, 'show'])
+        ->name('scholarship.profile.show');
+
     Route::get('/scholarship/profile/{profile_id}/history', [ScholarshipProfileController::class, 'profileHistory'])
         ->name('scholarship.profile.history');
 
