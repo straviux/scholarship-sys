@@ -118,7 +118,7 @@
                                             {{ profile.temporary_address || 'N/A' }}<br>
                                             {{ profile.temporary_barangay || 'N/A' }}, {{ profile.temporary_municipality
                                                 ||
-                                            'N/A' }}
+                                                'N/A' }}
                                         </p>
                                     </div>
                                 </div>
@@ -216,17 +216,17 @@
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
                                             <label class="text-sm font-medium text-gray-600">Program</label>
-                                            <p class="text-gray-900">{{ currentGrant.program || 'N/A' }}</p>
+                                            <p class="text-gray-900">{{ currentGrant.program.name || 'N/A' }}</p>
                                         </div>
 
                                         <div>
                                             <label class="text-sm font-medium text-gray-600">School</label>
-                                            <p class="text-gray-900">{{ currentGrant.school || 'N/A' }}</p>
+                                            <p class="text-gray-900">{{ currentGrant.school.name || 'N/A' }}</p>
                                         </div>
 
                                         <div>
                                             <label class="text-sm font-medium text-gray-600">Course</label>
-                                            <p class="text-gray-900">{{ currentGrant.course || 'N/A' }}</p>
+                                            <p class="text-gray-900">{{ currentGrant.course.name || 'N/A' }}</p>
                                         </div>
 
                                         <div>
