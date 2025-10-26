@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Disbursement;
 use App\Models\Cheque;
+use App\Models\DisbursementAttachment;
 use App\Models\ScholarshipProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class DisbursementController extends Controller
@@ -16,7 +18,7 @@ class DisbursementController extends Controller
      */
     public function index(Request $request, $profileId)
     {
-        $disbursements = Disbursement::with(['cheques', 'creator'])
+        $disbursements = Disbursement::with(['cheques', 'creator', 'attachments'])
             ->where('profile_id', $profileId)
             ->orderBy('date_obligated', 'desc')
             ->orderBy('created_at', 'desc')
@@ -30,16 +32,21 @@ class DisbursementController extends Controller
      */
     public function store(Request $request)
     {
+        // Check if OBR Status exempts Type, Payee, and Amount requirement
+        $exemptStatuses = ['LOA', 'IRREGULAR', 'TRANSFERRED'];
+        $isExempt = in_array($request->obr_status, $exemptStatuses);
+
         $validated = $request->validate([
-            'profile_id' => 'required|exists:scholarship_profiles,profile_id',
-            'disbursement_type' => 'required|in:regular,reimbursement,financial_assistance',
-            'payee' => 'required|string|max:255',
+            'profile_id' => 'required',
+            'disbursement_type' => $isExempt ? 'nullable|in:regular,reimbursement,financial_assistance' : 'required|in:regular,reimbursement,financial_assistance',
+            'payee' => $isExempt ? 'nullable|string|max:255' : 'required|string|max:255',
             'obr_no' => 'nullable|string|max:255',
+            'obr_status' => 'nullable|in:LOA,IRREGULAR,TRANSFERRED,CLAIMED,PAID,ON PROCESS,DENIED',
             'date_obligated' => 'nullable|date',
             'year_level' => 'nullable|string|max:255',
             'semester' => 'nullable|string|max:255',
             'academic_year' => 'nullable|string|max:255',
-            'amount' => 'required|numeric|min:0',
+            'amount' => $isExempt ? 'nullable|numeric|min:0' : 'required|numeric|min:0',
             'remarks' => 'nullable|string',
         ]);
 
@@ -59,15 +66,20 @@ class DisbursementController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Check if OBR Status exempts Type, Payee, and Amount requirement
+        $exemptStatuses = ['LOA', 'IRREGULAR', 'TRANSFERRED'];
+        $isExempt = in_array($request->obr_status, $exemptStatuses);
+
         $validated = $request->validate([
-            'disbursement_type' => 'required|in:regular,reimbursement,financial_assistance',
-            'payee' => 'required|string|max:255',
+            'disbursement_type' => $isExempt ? 'nullable|in:regular,reimbursement,financial_assistance' : 'required|in:regular,reimbursement,financial_assistance',
+            'payee' => $isExempt ? 'nullable|string|max:255' : 'required|string|max:255',
             'obr_no' => 'nullable|string|max:255',
+            'obr_status' => 'nullable|in:LOA,IRREGULAR,TRANSFERRED,CLAIMED,PAID,ON PROCESS,DENIED',
             'date_obligated' => 'nullable|date',
             'year_level' => 'nullable|string|max:255',
             'semester' => 'nullable|string|max:255',
             'academic_year' => 'nullable|string|max:255',
-            'amount' => 'required|numeric|min:0',
+            'amount' => $isExempt ? 'nullable|numeric|min:0' : 'required|numeric|min:0',
             'remarks' => 'nullable|string',
         ]);
 
@@ -102,10 +114,7 @@ class DisbursementController extends Controller
     {
         $validated = $request->validate([
             'cheque_no' => 'required|string|max:255',
-            'status' => 'required|in:pending,released,cleared,cancelled,bounced',
-            'date_issued' => 'nullable|date',
             'date_released' => 'nullable|date',
-            'date_cleared' => 'nullable|date',
             'remarks' => 'nullable|string',
         ]);
 
@@ -128,10 +137,7 @@ class DisbursementController extends Controller
     {
         $validated = $request->validate([
             'cheque_no' => 'required|string|max:255',
-            'status' => 'required|in:pending,released,cleared,cancelled,bounced',
-            'date_issued' => 'nullable|date',
             'date_released' => 'nullable|date',
-            'date_cleared' => 'nullable|date',
             'remarks' => 'nullable|string',
         ]);
 
@@ -156,6 +162,94 @@ class DisbursementController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Cheque deleted successfully'
+        ]);
+    }
+
+    /**
+     * Upload attachment for disbursement
+     */
+    public function uploadAttachment(Request $request, $disbursementId)
+    {
+        $validated = $request->validate([
+            'attachment_type' => 'required|in:voucher,cheque',
+            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240', // 10MB max
+        ]);
+
+        $disbursement = Disbursement::findOrFail($disbursementId);
+
+        $file = $request->file('file');
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $filePath = $file->storeAs('disbursements/attachments', $fileName, 'public');
+
+        $attachment = DisbursementAttachment::create([
+            'disbursement_id' => $disbursementId,
+            'attachment_type' => $validated['attachment_type'],
+            'file_name' => $file->getClientOriginalName(),
+            'file_path' => $filePath,
+            'file_type' => $file->getClientMimeType(),
+            'file_size' => $file->getSize(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Attachment uploaded successfully',
+            'attachment' => $attachment
+        ]);
+    }
+
+    /**
+     * Delete attachment
+     */
+    public function deleteAttachment($attachmentId)
+    {
+        $attachment = DisbursementAttachment::findOrFail($attachmentId);
+
+        // Delete file from storage
+        if (Storage::disk('public')->exists($attachment->file_path)) {
+            Storage::disk('public')->delete($attachment->file_path);
+        }
+
+        $attachment->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Attachment deleted successfully'
+        ]);
+    }
+
+    /**
+     * Download attachment
+     */
+    public function downloadAttachment($attachmentId)
+    {
+        $attachment = DisbursementAttachment::findOrFail($attachmentId);
+
+        if (!Storage::disk('public')->exists($attachment->file_path)) {
+            return response()->json(['error' => 'File not found'], 404);
+        }
+
+        return response()->download(
+            storage_path('app/public/' . $attachment->file_path),
+            $attachment->file_name
+        );
+    }
+
+    /**
+     * View attachment (for inline preview)
+     */
+    public function viewAttachment($attachmentId)
+    {
+        $attachment = DisbursementAttachment::findOrFail($attachmentId);
+
+        if (!Storage::disk('public')->exists($attachment->file_path)) {
+            return response()->json(['error' => 'File not found'], 404);
+        }
+
+        $path = storage_path('app/public/' . $attachment->file_path);
+
+        return response()->file($path, [
+            'Content-Type' => $attachment->file_type,
+            'Content-Disposition' => 'inline; filename="' . $attachment->file_name . '"'
         ]);
     }
 }

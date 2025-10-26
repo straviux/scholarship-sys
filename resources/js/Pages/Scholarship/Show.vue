@@ -25,13 +25,13 @@
 
             <!-- Tab Navigation -->
             <div class="bg-white rounded-lg shadow">
-                <Tabs value="0">
+                <Tabs v-model:value="activeTab">
                     <TabList>
                         <Tab value="0">Personal Information</Tab>
                         <Tab value="1">Family Information</Tab>
                         <Tab value="2">Academic Information</Tab>
-                        <Tab value="3">Attachments</Tab>
-                        <Tab value="4">Obligations & Transactions</Tab>
+                        <Tab value="3">Obligations & Transactions</Tab>
+                        <Tab value="4">Attachments</Tab>
                     </TabList>
                     <TabPanels>
                         <!-- Personal Information Tab -->
@@ -263,6 +263,20 @@
                                         </Column>
 
                                         <Column field="remarks" header="Remarks" style="min-width: 200px" />
+
+                                        <Column header="Attachments" style="min-width: 150px">
+                                            <template #body="slotProps">
+                                                <div class="flex gap-2">
+                                                    <Button icon="pi pi-paperclip" size="small" outlined
+                                                        v-tooltip.top="'Manage Attachments'"
+                                                        @click="manageAttachments(slotProps.data)" />
+                                                    <Chip
+                                                        v-if="slotProps.data.attachments && slotProps.data.attachments.length > 0"
+                                                        :label="slotProps.data.attachments.length.toString()"
+                                                        class="bg-blue-100 text-blue-800" />
+                                                </div>
+                                            </template>
+                                        </Column>
                                     </DataTable>
                                 </div>
                                 <div v-else class="text-center py-12">
@@ -273,21 +287,84 @@
                         </TabPanel>
 
                         <!-- Attachments Tab -->
+                        <!-- Obligations/Transactions Tab -->
                         <TabPanel value="3">
-                            <div class="p-6">
-                                <div class="text-center py-12">
-                                    <i class="pi pi-paperclip text-4xl text-gray-300 mb-4"></i>
-                                    <p class="text-gray-500 text-lg">Attachments Module</p>
-                                    <p class="text-gray-400 text-sm mt-2">Coming soon - File upload and document
-                                        management
-                                    </p>
-                                </div>
-                            </div>
+                            <ObligationsTransactions :profileId="profile.profile_id" />
                         </TabPanel>
 
-                        <!-- Obligations/Transactions Tab -->
+                        <!-- Attachments Tab -->
                         <TabPanel value="4">
-                            <ObligationsTransactions :profileId="profile.profile_id" />
+                            <div class="p-6">
+                                <div v-if="allAttachments.length > 0">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">All Attachments</h3>
+                                    <DataTable :value="allAttachments" stripedRows showGridlines paginator :rows="10">
+                                        <Column header="Source" style="min-width: 150px">
+                                            <template #body="slotProps">
+                                                <Chip :label="slotProps.data.attachment_source"
+                                                    :class="slotProps.data.attachment_source === 'Scholarship Record' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'" />
+                                            </template>
+                                        </Column>
+
+                                        <Column header="Attachment Name" style="min-width: 200px">
+                                            <template #body="slotProps">
+                                                <div class="flex items-center gap-2">
+                                                    <i :class="getFileIcon(slotProps.data.file_type)"
+                                                        class="text-blue-600"></i>
+                                                    <span class="font-medium">{{ slotProps.data.attachment_name
+                                                    }}</span>
+                                                </div>
+                                            </template>
+                                        </Column>
+
+                                        <Column header="Related Record" style="min-width: 250px">
+                                            <template #body="slotProps">
+                                                <div class="space-y-1">
+                                                    <p class="font-semibold text-gray-900">{{
+                                                        slotProps.data.record_info.program }}</p>
+                                                    <p class="text-sm text-gray-600">{{
+                                                        slotProps.data.record_info.academic_year }} - {{
+                                                            slotProps.data.record_info.term }}</p>
+                                                </div>
+                                            </template>
+                                        </Column>
+
+                                        <Column header="File Details" style="min-width: 200px">
+                                            <template #body="slotProps">
+                                                <div class="space-y-1">
+                                                    <p class="text-sm text-gray-700">{{ slotProps.data.file_name }}</p>
+                                                    <p class="text-xs text-gray-500">{{
+                                                        formatFileSize(slotProps.data.file_size) }}</p>
+                                                </div>
+                                            </template>
+                                        </Column>
+
+                                        <Column header="Uploaded" style="min-width: 150px">
+                                            <template #body="slotProps">
+                                                {{ formatDateShort(slotProps.data.created_at) }}
+                                            </template>
+                                        </Column>
+
+                                        <Column header="Actions" style="min-width: 200px">
+                                            <template #body="slotProps">
+                                                <div class="flex gap-2">
+                                                    <Button icon="pi pi-eye" size="small" outlined label="View"
+                                                        @click="viewAttachment(slotProps.data)"
+                                                        v-tooltip.top="'Preview'" />
+                                                    <Button icon="pi pi-download" size="small" outlined
+                                                        @click="downloadAttachment(slotProps.data)"
+                                                        v-tooltip.top="'Download'" />
+                                                </div>
+                                            </template>
+                                        </Column>
+                                    </DataTable>
+                                </div>
+                                <div v-else class="text-center py-12">
+                                    <i class="pi pi-paperclip text-4xl text-gray-300 mb-4"></i>
+                                    <p class="text-gray-500 text-lg">No Attachments Available</p>
+                                    <p class="text-gray-400 text-sm mt-2">Upload attachments from the Academic
+                                        Information tab</p>
+                                </div>
+                            </div>
                         </TabPanel>
                     </TabPanels>
                 </Tabs>
@@ -296,12 +373,111 @@
 
         <!-- Edit Modal -->
         <ScholarFormModal v-model:visible="showEditModal" mode="edit" :profile="profile" @success="handleSuccess" />
+
+        <!-- Manage Attachments Modal -->
+        <Dialog v-model:visible="showAttachmentsModal" modal header="Manage Scholarship Record Attachments"
+            :style="{ width: '60vw' }">
+            <div class="space-y-4">
+                <!-- Record Info -->
+                <div v-if="selectedRecord" class="bg-gray-50 p-3 rounded border border-gray-200">
+                    <p class="text-sm font-semibold text-gray-900">{{ selectedRecord.program?.name || 'N/A' }}</p>
+                    <p class="text-xs text-gray-600">{{ selectedRecord.academic_year }} - {{ selectedRecord.term }}</p>
+                </div>
+
+                <!-- Existing Attachments -->
+                <div v-if="selectedRecord && selectedRecord.attachments && selectedRecord.attachments.length > 0">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Existing Attachments</h4>
+                    <div class="space-y-2">
+                        <div v-for="attachment in selectedRecord.attachments" :key="attachment.attachment_id"
+                            class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
+                            <div class="flex items-center gap-3">
+                                <i :class="getFileIcon(attachment.file_type)" class="text-2xl text-blue-600"></i>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ attachment.attachment_name }}</p>
+                                    <p class="text-xs text-gray-500">{{ attachment.file_name }} • {{
+                                        formatFileSize(attachment.file_size) }}</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <Button icon="pi pi-eye" size="small" outlined label="View"
+                                    @click="viewAttachment(attachment)" />
+                                <Button icon="pi pi-download" size="small" outlined
+                                    @click="downloadAttachment(attachment)" />
+                                <Button icon="pi pi-trash" size="small" severity="danger" outlined
+                                    @click="deleteAttachment(attachment)" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload New Attachment -->
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Upload New Attachment</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Attachment Name *</label>
+                            <InputText v-model="attachmentForm.attachment_name"
+                                placeholder="e.g., Contract, Requirements, Grade Sheet" class="w-full" />
+                            <p class="text-xs text-gray-500 mt-1">Give this attachment a descriptive name</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">File (PDF or Image) *</label>
+                            <input type="file" ref="fileInput" @change="handleFileSelect" accept=".pdf,.jpg,.jpeg,.png"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            <p class="text-xs text-gray-500 mt-1">Accepted formats: PDF, JPG, PNG (Max 10MB)</p>
+                        </div>
+                        <div v-if="attachmentForm.file">
+                            <p class="text-sm text-gray-700">Selected: <span class="font-medium">{{
+                                attachmentForm.file.name }}</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Cancel" severity="secondary" @click="closeAttachmentsModal" />
+                <Button label="Upload" @click="uploadAttachment" :loading="uploading"
+                    :disabled="!attachmentForm.file || !attachmentForm.attachment_name" />
+            </template>
+        </Dialog>
+
+        <!-- View Attachment Modal -->
+        <Dialog v-model:visible="showViewerModal" modal :header="viewerAttachment?.file_name"
+            :style="{ width: '80vw', maxWidth: '1200px' }" :maximizable="true">
+            <div class="flex items-center justify-center bg-gray-100 rounded" style="min-height: 500px;">
+                <!-- PDF Viewer -->
+                <iframe v-if="viewerAttachment && viewerAttachment.file_type?.includes('pdf')"
+                    :src="getAttachmentUrl(viewerAttachment)" class="w-full h-full rounded" style="min-height: 600px;"
+                    frameborder="0">
+                </iframe>
+
+                <!-- Image Viewer -->
+                <img v-else-if="viewerAttachment && viewerAttachment.file_type?.includes('image')"
+                    :src="getAttachmentUrl(viewerAttachment)" :alt="viewerAttachment.file_name"
+                    class="max-w-full max-h-[600px] object-contain rounded" />
+
+                <!-- Fallback -->
+                <div v-else class="text-center p-8">
+                    <i class="pi pi-file text-6xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">Unable to preview this file type</p>
+                    <Button label="Download Instead" icon="pi pi-download" class="mt-4"
+                        @click="downloadAttachment(viewerAttachment)" />
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Download" icon="pi pi-download" @click="downloadAttachment(viewerAttachment)" />
+                <Button label="Close" severity="secondary" @click="showViewerModal = false" />
+            </template>
+        </Dialog>
     </AdminLayout>
 </template>
 
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
+import axios from 'axios';
+import { toast } from 'vue3-toastify';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Button from 'primevue/button';
 import Tabs from 'primevue/tabs';
@@ -312,6 +488,8 @@ import TabPanel from 'primevue/tabpanel';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Chip from 'primevue/chip';
+import Dialog from 'primevue/dialog';
+import InputText from 'primevue/inputtext';
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
 import ObligationsTransactions from '@/Components/ObligationsTransactions.vue';
 
@@ -320,7 +498,23 @@ const props = defineProps({
 });
 
 // State
+const activeTab = ref(localStorage.getItem('scholarProfileActiveTab') || '0');
 const showEditModal = ref(false);
+const showAttachmentsModal = ref(false);
+const showViewerModal = ref(false);
+const selectedRecord = ref(null);
+const viewerAttachment = ref(null);
+const uploading = ref(false);
+const attachmentForm = ref({
+    attachment_name: '',
+    file: null
+});
+const fileInput = ref(null);
+
+// Watch for tab changes and persist to localStorage
+watch(activeTab, (newValue) => {
+    localStorage.setItem('scholarProfileActiveTab', newValue);
+});
 
 // Computed
 const fullName = computed(() => {
@@ -335,6 +529,57 @@ const scholarshipRecords = computed(() => {
     if (!props.profile.scholarship_grant) return [];
     // Return all records, already sorted by latest first from backend
     return props.profile.scholarship_grant;
+});
+
+const allAttachments = computed(() => {
+    const attachments = [];
+
+    // Add scholarship record attachments
+    if (props.profile.scholarship_grant) {
+        props.profile.scholarship_grant.forEach(record => {
+            if (record.attachments && record.attachments.length > 0) {
+                record.attachments.forEach(attachment => {
+                    attachments.push({
+                        ...attachment,
+                        attachment_source: 'Scholarship Record',
+                        record_info: {
+                            program: record.program?.name || 'N/A',
+                            academic_year: record.academic_year || 'N/A',
+                            term: record.term || 'N/A',
+                            year_level: record.year_level || 'N/A'
+                        },
+                        download_route: 'scholarship.records.attachments.download',
+                        view_route: 'scholarship.records.attachments.view'
+                    });
+                });
+            }
+        });
+    }
+
+    // Add disbursement attachments
+    if (props.profile.disbursements) {
+        props.profile.disbursements.forEach(disbursement => {
+            if (disbursement.attachments && disbursement.attachments.length > 0) {
+                disbursement.attachments.forEach(attachment => {
+                    attachments.push({
+                        ...attachment,
+                        attachment_source: 'Disbursement',
+                        attachment_name: attachment.attachment_type, // Use attachment_type as name for disbursements
+                        record_info: {
+                            program: `OBR #${disbursement.obr_no || 'N/A'}`,
+                            academic_year: disbursement.academic_year || 'N/A',
+                            term: disbursement.semester || 'N/A',
+                            year_level: disbursement.year_level || 'N/A'
+                        },
+                        download_route: 'disbursements.attachments.download',
+                        view_route: 'disbursements.attachments.view'
+                    });
+                });
+            }
+        });
+    }
+
+    return attachments;
 });
 
 // Methods
@@ -385,4 +630,96 @@ const getStatusClass = (status) => {
     };
     return classes[status?.toLowerCase()] || 'bg-gray-100 text-gray-800';
 };
+
+// Attachment methods
+const manageAttachments = (record) => {
+    selectedRecord.value = record;
+    showAttachmentsModal.value = true;
+};
+
+const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        if (file.size > 10 * 1024 * 1024) { // 10MB
+            toast.error('File size must not exceed 10MB');
+            event.target.value = '';
+            return;
+        }
+        attachmentForm.value.file = file;
+    }
+};
+
+const uploadAttachment = async () => {
+    if (!attachmentForm.value.attachment_name || !attachmentForm.value.file) {
+        toast.error('Please provide attachment name and select a file');
+        return;
+    }
+
+    uploading.value = true;
+    const formData = new FormData();
+    formData.append('attachment_name', attachmentForm.value.attachment_name);
+    formData.append('file', attachmentForm.value.file);
+
+    try {
+        await axios.post(route('scholarship.records.attachments.upload', selectedRecord.value.id), formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        toast.success('Attachment uploaded successfully');
+        attachmentForm.value = { attachment_name: '', file: null };
+        if (fileInput.value) fileInput.value.value = '';
+        router.reload({ only: ['profile'] });
+    } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to upload attachment');
+    } finally {
+        uploading.value = false;
+    }
+};
+
+const viewAttachment = (attachment) => {
+    viewerAttachment.value = attachment;
+    showViewerModal.value = true;
+};
+
+const downloadAttachment = (attachment) => {
+    const routeName = attachment.download_route || 'scholarship.records.attachments.download';
+    window.open(route(routeName, attachment.attachment_id), '_blank');
+};
+
+const deleteAttachment = async (attachment) => {
+    if (!confirm('Are you sure you want to delete this attachment?')) return;
+
+    try {
+        await axios.delete(route('scholarship.records.attachments.delete', attachment.attachment_id));
+        toast.success('Attachment deleted successfully');
+        router.reload({ only: ['profile'] });
+    } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to delete attachment');
+    }
+};
+
+const closeAttachmentsModal = () => {
+    showAttachmentsModal.value = false;
+    selectedRecord.value = null;
+    attachmentForm.value = { attachment_name: '', file: null };
+    if (fileInput.value) fileInput.value.value = '';
+};
+
+const getFileIcon = (fileType) => {
+    if (fileType?.includes('pdf')) return 'pi-file-pdf';
+    if (fileType?.includes('image')) return 'pi-image';
+    return 'pi-file';
+};
+
+const formatFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+};
+
+const getAttachmentUrl = (attachment) => {
+    const routeName = attachment.view_route || 'scholarship.records.attachments.view';
+    return route(routeName, attachment.attachment_id);
+};
+
 </script>

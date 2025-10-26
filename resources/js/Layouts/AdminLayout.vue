@@ -121,16 +121,9 @@ function getRoleDisplay() {
                                 </li>
                                 <li>
                                     <SidebarLink :href="route('scholarship.profiles')"
-                                        :active="route().current('scholarship.profiles')">
+                                        :active="route().current('scholarship.profiles') || route().current('scholarship.profile.show') || route().current('scholarship.profile.history')">
                                         <i class="pi pi-users mr-2 text-sm"></i>
                                         <span class="-mr-1 font-medium">Profiles</span>
-                                    </SidebarLink>
-                                </li>
-                                <li>
-                                    <SidebarLink :href="route('scholarship.applications')"
-                                        :active="route().current('scholarship.applications')">
-                                        <i class="pi pi-database mr-2 text-sm"></i>
-                                        <span class="-mr-1 font-medium">Records</span>
                                     </SidebarLink>
                                 </li>
                             </ul>
@@ -238,15 +231,6 @@ function getRoleDisplay() {
 
                             <i class="pi pi-clipboard text-xl"></i>
                             <span class="text-xs">waiting list</span>
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('scholarship.applications')"
-                            :active="route().current('scholarship.applications')"
-                            class="flex flex-col justify-center text-center">
-
-                            <i class="pi pi-database text-xl"></i>
-                            <span class="text-xs">records</span>
                         </SidebarLink>
                     </li>
                     <li>

@@ -857,70 +857,6 @@ class ScholarshipProfileController extends Controller
      */
 
     /**
-     * Display all applications with enhanced status tracking
-     */
-    public function applications(Request $request)
-    {
-        $query = ScholarshipRecord::with([
-            'profile:profile_id,first_name,last_name,middle_name',
-            'course:id,name,shortname',
-            'program', // Remove field selection for hasOneThrough relationship
-            'school:id,name,shortname',
-            'approvedBy:id,name',
-            'declinedBy:id,name',
-            'completion',
-            'approvalHistory' => function ($q) {
-                $q->latest('performed_at')->limit(5);
-            }
-        ]);
-
-        // Apply filters
-        if ($request->filled('approval_status')) {
-            $query->where('approval_status', $request->approval_status);
-        }
-
-        if ($request->filled('completion_status')) {
-            $query->where('completion_status', $request->completion_status);
-        }
-
-        if ($request->filled('program_id')) {
-            $query->where('program_id', $request->program_id);
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('profile', function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('middle_name', 'like', "%{$search}%");
-            });
-        }
-
-        $applications = $query->orderBy('created_at', 'desc')
-            ->paginate($request->get('per_page', 15));
-
-        // Get filter options
-        $programs = ScholarshipProgram::select('id', 'name')->get();
-        $approvalStatuses = collect(config('scholarship.approval_statuses'))
-            ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label']])
-            ->values()
-            ->toArray();
-        $completionStatuses = collect(config('scholarship.completion_statuses'))
-            ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label']])
-            ->values()
-            ->toArray();
-
-        return Inertia::render('Scholarship/Applications', [
-            'applications' => $applications,
-            'filters' => $request->only(['approval_status', 'completion_status', 'program_id', 'search']),
-            'programs' => $programs,
-            'approvalStatuses' => $approvalStatuses,
-            'completionStatuses' => $completionStatuses,
-            'declineReasons' => config('scholarship.decline_reasons'),
-        ]);
-    }
-
-    /**
      * Display profiles with their latest scholarship records
      */
     public function profiles(Request $request)
@@ -1083,9 +1019,10 @@ class ScholarshipProfileController extends Controller
     {
         $profile = ScholarshipProfile::with([
             'scholarshipGrant' => function ($q) {
-                $q->with(['program', 'course', 'school'])
+                $q->with(['program', 'course', 'school', 'attachments'])
                     ->orderBy('created_at', 'desc');
-            }
+            },
+            'disbursements.attachments'
         ])->findOrFail($profileId);
 
         return Inertia::render('Scholarship/Show', [

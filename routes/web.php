@@ -107,11 +107,7 @@ Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->gro
 
 // Enhanced Scholarship Workflow Routes
 Route::middleware(['auth'])->group(function () {
-    // Unified applications view (replaces Grant Records and Existing)
-    Route::get('/scholarship/applications', [ScholarshipProfileController::class, 'applications'])
-        ->name('scholarship.applications');
-
-    // New Profiles routes
+    // Profiles routes
     Route::get('/scholarship/profiles', [ScholarshipProfileController::class, 'profiles'])
         ->name('scholarship.profiles');
 
@@ -136,6 +132,26 @@ Route::middleware(['auth'])->group(function () {
         ->name('cheques.update');
     Route::delete('/cheques/{cheque_id}', [App\Http\Controllers\DisbursementController::class, 'destroyCheque'])
         ->name('cheques.destroy');
+
+    // Disbursement attachment routes
+    Route::post('/disbursements/{disbursement_id}/attachments', [App\Http\Controllers\DisbursementController::class, 'uploadAttachment'])
+        ->name('disbursements.attachments.upload');
+    Route::delete('/disbursement-attachments/{attachment_id}', [App\Http\Controllers\DisbursementController::class, 'deleteAttachment'])
+        ->name('disbursements.attachments.delete');
+    Route::get('/disbursement-attachments/{attachment_id}/download', [App\Http\Controllers\DisbursementController::class, 'downloadAttachment'])
+        ->name('disbursements.attachments.download');
+    Route::get('/disbursement-attachments/{attachment_id}/view', [App\Http\Controllers\DisbursementController::class, 'viewAttachment'])
+        ->name('disbursements.attachments.view');
+
+    // Scholarship record attachment routes
+    Route::post('/scholarship-records/{scholarship_record_id}/attachments', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'upload'])
+        ->name('scholarship.records.attachments.upload');
+    Route::delete('/scholarship-attachments/{attachment_id}', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'delete'])
+        ->name('scholarship.records.attachments.delete');
+    Route::get('/scholarship-attachments/{attachment_id}/download', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'download'])
+        ->name('scholarship.records.attachments.download');
+    Route::get('/scholarship-attachments/{attachment_id}/view', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'view'])
+        ->name('scholarship.records.attachments.view');
 
     // Approval workflow routes
     Route::post('/scholarship/{record}/approve', [ScholarshipProfileController::class, 'approve'])

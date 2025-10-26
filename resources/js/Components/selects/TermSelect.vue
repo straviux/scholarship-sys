@@ -16,9 +16,11 @@ const emit = defineEmits(['update:modelValue']);
 const terms = [
     { label: "1ST SEMESTER", value: "1ST SEMESTER" },
     { label: "2ND SEMESTER", value: "2ND SEMESTER" },
+    { label: "3RD SEMESTER", value: "3RD SEMESTER" },
     { label: "1ST TRIMESTER", value: "1ST TRIMESTER" },
     { label: "2ND TRIMESTER", value: "2ND TRIMESTER" },
     { label: "3RD TRIMESTER", value: "3RD TRIMESTER" },
+    { label: "SUMMER", value: "SUMMER" },
 ]
 // Local value for v-model
 const localValue = ref(props.modelValue);

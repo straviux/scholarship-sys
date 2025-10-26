@@ -15,18 +15,13 @@ class Cheque extends Model
     protected $fillable = [
         'disbursement_id',
         'cheque_no',
-        'status',
-        'date_issued',
         'date_released',
-        'date_cleared',
         'remarks',
         'processed_by',
     ];
 
     protected $casts = [
-        'date_issued' => 'date',
         'date_released' => 'date',
-        'date_cleared' => 'date',
     ];
 
     /**

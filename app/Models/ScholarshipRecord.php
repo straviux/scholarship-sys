@@ -148,6 +148,11 @@ class ScholarshipRecord extends Model
         return $this->hasOne(ScholarshipCompletion::class, 'scholarship_record_id', 'id');
     }
 
+    public function attachments()
+    {
+        return $this->hasMany(ScholarshipRecordAttachment::class, 'scholarship_record_id', 'id');
+    }
+
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by');

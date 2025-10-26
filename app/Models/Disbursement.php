@@ -17,6 +17,7 @@ class Disbursement extends Model
         'disbursement_type',
         'payee',
         'obr_no',
+        'obr_status',
         'date_obligated',
         'year_level',
         'semester',
@@ -61,5 +62,13 @@ class Disbursement extends Model
     public function latestCheque()
     {
         return $this->hasOne(Cheque::class, 'disbursement_id', 'disbursement_id')->latest();
+    }
+
+    /**
+     * Get the attachments for the disbursement.
+     */
+    public function attachments()
+    {
+        return $this->hasMany(DisbursementAttachment::class, 'disbursement_id', 'disbursement_id');
     }
 }
