@@ -252,4 +252,21 @@ class DisbursementController extends Controller
             'Content-Disposition' => 'inline; filename="' . $attachment->file_name . '"'
         ]);
     }
+
+    /**
+     * Generate QR code for mobile upload
+     */
+    public function generateQrCode($disbursementId)
+    {
+        $disbursement = Disbursement::findOrFail($disbursementId);
+
+        // Generate or refresh upload token
+        $disbursement->generateUploadToken();
+
+        return response()->json([
+            'qr_code' => $disbursement->getUploadQrCode(250),
+            'url' => $disbursement->getMobileUploadUrl(),
+            'expires_at' => $disbursement->upload_token_expires_at,
+        ]);
+    }
 }

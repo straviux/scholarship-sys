@@ -427,7 +427,7 @@ const confirmDecline = () => {
 };
 
 const viewFullProfile = () => {
-    router.visit(route('profile.show', props.application.profile.profile_id));
+    router.visit(route('scholarship.profile.show', props.application.profile.profile_id));
 };
 
 const printApplication = () => {

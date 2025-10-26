@@ -431,7 +431,7 @@ const closeDeleteModal = () => {
 const deleteApplicant = () => {
     if (!selectedApplicant.value) return;
 
-    router.delete(route('profile.destroy', selectedApplicant.value.profile_id), {
+    router.delete(route('waitinglist.destroy', selectedApplicant.value.profile_id), {
         preserveState: true,
         preserveScroll: true,
         onSuccess: () => {
@@ -891,21 +891,21 @@ const formatDate = (date) => {
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Prog. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Cour. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_course || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Sch. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_school_course || '-'
-                                                }}</span>
+                                                    }}</span>
 
                                             </div>
                                         </div>
@@ -1186,12 +1186,12 @@ const formatDate = (date) => {
                                 getApplicantFullName(selectedApplicantForReview) }}</h3>
                             <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
                                 <span><i class="pi pi-phone mr-1"></i>{{ selectedApplicantForReview.contact_no || 'N/A'
-                                }}</span>
+                                    }}</span>
                                 <span><i class="pi pi-envelope mr-1"></i>{{ selectedApplicantForReview.email || 'N/A'
-                                }}</span>
+                                    }}</span>
                                 <span><i class="pi pi-calendar mr-1"></i>{{
                                     formatDate(selectedApplicantForReview.date_filed)
-                                }}</span>
+                                    }}</span>
                             </div>
                         </div>
                         <!-- Queue Numbers -->
@@ -1278,7 +1278,7 @@ const formatDate = (date) => {
                                             <label class="text-gray-600">Income</label>
                                             <div class="font-medium">{{ selectedApplicantForReview.gross_monthly_income
                                                 || 'N/A'
-                                            }}</div>
+                                                }}</div>
                                         </div>
                                         <div>
                                             <label class="text-gray-600">Address</label>

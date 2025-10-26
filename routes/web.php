@@ -15,7 +15,18 @@ use App\Http\Controllers\ScholarController;
 use App\Http\Controllers\WaitingListController;
 use App\Http\Controllers\SystemReportController;
 use App\Http\Controllers\SystemUpdateController;
+use App\Http\Controllers\MobileUploadController;
 use Illuminate\Support\Facades\Route;
+
+// Mobile upload routes (public, no auth required)
+Route::get('/mobile/upload/disbursement/{token}', [MobileUploadController::class, 'showDisbursementUpload'])
+    ->name('mobile.disbursement.upload');
+Route::post('/mobile/upload/disbursement/{token}', [MobileUploadController::class, 'uploadDisbursementFile'])
+    ->name('mobile.disbursement.upload.submit');
+Route::get('/mobile/upload/scholarship-record/{token}', [MobileUploadController::class, 'showScholarshipRecordUpload'])
+    ->name('mobile.scholarship-record.upload');
+Route::post('/mobile/upload/scholarship-record/{token}', [MobileUploadController::class, 'uploadScholarshipRecordFile'])
+    ->name('mobile.scholarship-record.upload.submit');
 
 // This file is part of the routes/web.php file for the Laravel application.
 Route::middleware('auth')->group(function () {
@@ -53,13 +64,6 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->group(function () {
     Route::get('/profiles/generate-report', 'generateReport')->name('profile.generateReport');
-    // Route::get('/profiles-api/find/{$query?}', 'searchProfileApi')->name('profile-api.findprofile');
-    Route::get('/profiles/{action?}/{id?}/{scholarship_record_id?}', 'index')->name('profile.index');
-    Route::post('/profiles/store', 'store')->name('profile.store');
-    Route::get('/profiles/{profile}', 'show')->name('profile.show');
-    Route::get('/profiles/{profile}/edit', 'edit')->name('profile.edit');
-    Route::put('/profiles/{profile}', 'update')->name('profile.update');
-    Route::delete('/profiles/{profile}', 'destroy')->name('profile.destroy');
     Route::post('/profiles/add-educational-background', 'addEducationBackgroundApi')->name('profile-api.addeducation');
     Route::put('/profiles/update-educational-background/{id}', 'updateEducationBackgroundApi')->name('profile-api.updateeducation');
     Route::delete('/profiles/delete-educational-background/{id}', 'deleteEducationBackgroundApi')->name('profile-api.deleteeducation');
@@ -142,6 +146,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('disbursements.attachments.download');
     Route::get('/disbursement-attachments/{attachment_id}/view', [App\Http\Controllers\DisbursementController::class, 'viewAttachment'])
         ->name('disbursements.attachments.view');
+    Route::post('/disbursements/{disbursement_id}/generate-qr', [App\Http\Controllers\DisbursementController::class, 'generateQrCode'])
+        ->name('disbursements.generate-qr');
 
     // Scholarship record attachment routes
     Route::post('/scholarship-records/{scholarship_record_id}/attachments', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'upload'])
@@ -152,6 +158,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('scholarship.records.attachments.download');
     Route::get('/scholarship-attachments/{attachment_id}/view', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'view'])
         ->name('scholarship.records.attachments.view');
+    Route::post('/scholarship-records/{scholarship_record_id}/generate-qr', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'generateQrCode'])
+        ->name('scholarship.records.generate-qr');
 
     // Approval workflow routes
     Route::post('/scholarship/{record}/approve', [ScholarshipProfileController::class, 'approve'])

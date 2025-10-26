@@ -19,21 +19,74 @@ class DisbursementAttachmentController extends Controller
         ]);
 
         $file = $request->file('file');
-        $fileName = time() . '_' . $file->getClientOriginalName();
-        $filePath = $file->storeAs('disbursements/attachments', $fileName, 'public');
+        $originalFileName = $file->getClientOriginalName();
+        $originalSize = $file->getSize();
+        $mimeType = $file->getMimeType();
+
+        $fileContent = file_get_contents($file->getRealPath());
+        $processedContent = $fileContent;
+        $extension = '';
+
+        // Try to load as image
+        $image = @imagecreatefromstring($fileContent);
+
+        if ($image !== false) {
+            // Successfully loaded as image - optimize it
+            $width = imagesx($image);
+            $height = imagesy($image);
+
+            // Resize if too large (max 1920px width/height)
+            $maxDimension = 1920;
+            if ($width > $maxDimension || $height > $maxDimension) {
+                if ($width > $height) {
+                    $newWidth = $maxDimension;
+                    $newHeight = intval($height * ($maxDimension / $width));
+                } else {
+                    $newHeight = $maxDimension;
+                    $newWidth = intval($width * ($maxDimension / $height));
+                }
+
+                $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
+                imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                imagedestroy($image);
+                $image = $resizedImage;
+            }
+
+            // Always save as JPEG with compression (best size reduction)
+            ob_start();
+            imagejpeg($image, null, 60); // 60% quality for significant size reduction
+            $processedContent = ob_get_clean();
+            imagedestroy($image);
+            $mimeType = 'image/jpeg';
+        } elseif ($mimeType === 'application/pdf') {
+            // Compress PDFs with gzip
+            $processedContent = gzencode($fileContent, 9);
+            $extension = '.gz';
+        }
+
+        // Store processed file
+        $fileName = time() . '_' . $originalFileName . $extension;
+        $filePath = 'disbursements/attachments/' . $fileName;
+        Storage::disk('public')->put($filePath, $processedContent);
+
+        $finalSize = strlen($processedContent);
 
         $attachment = DisbursementAttachment::create([
             'disbursement_id' => $disbursementId,
             'attachment_type' => $request->attachment_type,
-            'file_name' => $file->getClientOriginalName(),
+            'file_name' => $originalFileName,
             'file_path' => $filePath,
-            'file_type' => $file->getMimeType(),
-            'file_size' => $file->getSize(),
+            'file_type' => $mimeType,
+            'file_size' => $finalSize,
         ]);
 
         return response()->json([
             'message' => 'Attachment uploaded successfully',
-            'attachment' => $attachment
+            'attachment' => $attachment,
+            'original_size' => $originalSize,
+            'optimized_size' => $finalSize,
+            'size_reduction' => round((1 - $finalSize / $originalSize) * 100, 2) . '%',
+            'mime_detected' => $file->getMimeType()
         ], 201);
     }
 
@@ -67,7 +120,21 @@ class DisbursementAttachmentController extends Controller
             abort(404, 'File not found');
         }
 
-        return Storage::disk('public')->download($attachment->file_path, $attachment->file_name);
+        $fileContent = Storage::disk('public')->get($attachment->file_path);
+
+        // Check if file is gzip compressed (PDFs)
+        if (str_ends_with($attachment->file_path, '.gz')) {
+            $fileContent = gzdecode($fileContent);
+        }
+
+        // Create temporary file for download
+        $tempPath = storage_path('app/temp/' . $attachment->file_name);
+        if (!file_exists(dirname($tempPath))) {
+            mkdir(dirname($tempPath), 0755, true);
+        }
+        file_put_contents($tempPath, $fileContent);
+
+        return response()->download($tempPath, $attachment->file_name)->deleteFileAfterSend(true);
     }
 
     /**
@@ -81,9 +148,15 @@ class DisbursementAttachmentController extends Controller
             abort(404, 'File not found');
         }
 
-        return response()->file(
-            Storage::disk('public')->path($attachment->file_path),
-            ['Content-Type' => $attachment->file_type]
-        );
+        $fileContent = Storage::disk('public')->get($attachment->file_path);
+
+        // Check if file is gzip compressed (PDFs)
+        if (str_ends_with($attachment->file_path, '.gz')) {
+            $fileContent = gzdecode($fileContent);
+        }
+
+        return response($fileContent)
+            ->header('Content-Type', $attachment->file_type)
+            ->header('Content-Disposition', 'inline; filename="' . $attachment->file_name . '"');
     }
 }

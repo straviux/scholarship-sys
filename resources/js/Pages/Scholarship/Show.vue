@@ -267,6 +267,9 @@
                                         <Column header="Attachments" style="min-width: 150px">
                                             <template #body="slotProps">
                                                 <div class="flex gap-2">
+                                                    <Button icon="pi pi-qrcode" size="small" outlined severity="info"
+                                                        v-tooltip.top="'Show QR Code'"
+                                                        @click="showQrCode(slotProps.data)" />
                                                     <Button icon="pi pi-paperclip" size="small" outlined
                                                         v-tooltip.top="'Manage Attachments'"
                                                         @click="manageAttachments(slotProps.data)" />
@@ -444,17 +447,37 @@
         <!-- View Attachment Modal -->
         <Dialog v-model:visible="showViewerModal" modal :header="viewerAttachment?.file_name"
             :style="{ width: '80vw', maxWidth: '1200px' }" :maximizable="true">
-            <div class="flex items-center justify-center bg-gray-100 rounded" style="min-height: 500px;">
+            <div class="flex items-center justify-center bg-gray-100 rounded relative overflow-hidden"
+                style="min-height: 500px;">
                 <!-- PDF Viewer -->
                 <iframe v-if="viewerAttachment && viewerAttachment.file_type?.includes('pdf')"
                     :src="getAttachmentUrl(viewerAttachment)" class="w-full h-full rounded" style="min-height: 600px;"
                     frameborder="0">
                 </iframe>
 
-                <!-- Image Viewer -->
-                <img v-else-if="viewerAttachment && viewerAttachment.file_type?.includes('image')"
-                    :src="getAttachmentUrl(viewerAttachment)" :alt="viewerAttachment.file_name"
-                    class="max-w-full max-h-[600px] object-contain rounded" />
+                <!-- Image Viewer with Zoom -->
+                <div v-else-if="viewerAttachment && viewerAttachment.file_type?.includes('image')"
+                    class="w-full h-full flex items-center justify-center relative" style="min-height: 600px;"
+                    @wheel="handleWheel" @mousedown="handleMouseDown" @mousemove="handleMouseMove"
+                    @mouseup="handleMouseUp" @mouseleave="handleMouseUp"
+                    :style="{ cursor: imageZoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }">
+                    <img :src="getAttachmentUrl(viewerAttachment)" :alt="viewerAttachment.file_name"
+                        class="max-w-full max-h-[600px] object-contain rounded select-none" draggable="false" :style="{
+                            transform: `scale(${imageZoom}) translate(${imagePosition.x / imageZoom}px, ${imagePosition.y / imageZoom}px)`,
+                            transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+                        }" />
+
+                    <!-- Zoom Controls -->
+                    <div class="absolute bottom-4 right-4 flex gap-2 bg-white rounded-lg shadow-lg p-2">
+                        <Button icon="pi pi-minus" @click="zoomOut" size="small" severity="secondary" rounded
+                            :disabled="imageZoom <= 0.5" />
+                        <span class="px-3 py-2 text-sm font-semibold">{{ Math.round(imageZoom * 100) }}%</span>
+                        <Button icon="pi pi-plus" @click="zoomIn" size="small" severity="secondary" rounded
+                            :disabled="imageZoom >= 5" />
+                        <Button icon="pi pi-refresh" @click="resetZoom" size="small" severity="secondary" rounded
+                            v-tooltip.top="'Reset Zoom'" />
+                    </div>
+                </div>
 
                 <!-- Fallback -->
                 <div v-else class="text-center p-8">
@@ -468,6 +491,53 @@
             <template #footer>
                 <Button label="Download" icon="pi pi-download" @click="downloadAttachment(viewerAttachment)" />
                 <Button label="Close" severity="secondary" @click="showViewerModal = false" />
+            </template>
+        </Dialog>
+
+        <!-- QR Code Modal -->
+        <Dialog v-model:visible="showQrModal" modal header="Mobile Upload QR Code"
+            :style="{ width: '30vw', minWidth: '400px' }">
+            <div v-if="qrCodeData" class="text-center space-y-4">
+                <!-- QR Code -->
+                <div class="bg-white p-6 rounded-lg border-2 border-gray-200 inline-block">
+                    <div v-html="qrCodeData.qrCode"></div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="text-left space-y-3">
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                        <p class="text-sm font-semibold text-gray-900 mb-2">
+                            <i class="pi pi-info-circle mr-2"></i>How to use:
+                        </p>
+                        <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                            <li>Scan this QR code with your mobile device</li>
+                            <li>Take a photo or select from gallery</li>
+                            <li>Upload will be automatically optimized</li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
+                        <p class="text-xs text-yellow-800">
+                            <i class="pi pi-exclamation-triangle mr-2"></i>
+                            <strong>Expires:</strong> {{ new Date(qrCodeData.expiresAt).toLocaleDateString() }}
+                        </p>
+                    </div>
+
+                    <!-- Mobile URL (for copying) -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Or copy this link:</label>
+                        <div class="flex gap-2">
+                            <input type="text" :value="qrCodeData.url" readonly
+                                class="flex-1 px-3 py-2 text-xs border border-gray-300 rounded-md bg-gray-50" />
+                            <Button icon="pi pi-copy" size="small" @click="copyToClipboard(qrCodeData.url)"
+                                v-tooltip.top="'Copy link'" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Close" severity="secondary" @click="showQrModal = false" />
             </template>
         </Dialog>
     </AdminLayout>
@@ -502,6 +572,8 @@ const activeTab = ref(localStorage.getItem('scholarProfileActiveTab') || '0');
 const showEditModal = ref(false);
 const showAttachmentsModal = ref(false);
 const showViewerModal = ref(false);
+const showQrModal = ref(false);
+const qrCodeData = ref(null);
 const selectedRecord = ref(null);
 const viewerAttachment = ref(null);
 const uploading = ref(false);
@@ -511,9 +583,23 @@ const attachmentForm = ref({
 });
 const fileInput = ref(null);
 
+// Image zoom state
+const imageZoom = ref(1);
+const imagePosition = ref({ x: 0, y: 0 });
+const isDragging = ref(false);
+const dragStart = ref({ x: 0, y: 0 });
+
 // Watch for tab changes and persist to localStorage
 watch(activeTab, (newValue) => {
     localStorage.setItem('scholarProfileActiveTab', newValue);
+});
+
+// Reset zoom when modal opens/closes
+watch(showViewerModal, (newValue) => {
+    if (newValue) {
+        imageZoom.value = 1;
+        imagePosition.value = { x: 0, y: 0 };
+    }
 });
 
 // Computed
@@ -705,10 +791,101 @@ const closeAttachmentsModal = () => {
     if (fileInput.value) fileInput.value.value = '';
 };
 
+// QR Code for mobile upload
+const showQrCode = async (record) => {
+    try {
+        const response = await axios.post(route('scholarship.records.generate-qr', record.id));
+        qrCodeData.value = {
+            qrCode: response.data.qr_code,
+            url: response.data.url,
+            expiresAt: response.data.expires_at,
+            record: record
+        };
+        showQrModal.value = true;
+    } catch (error) {
+        toast.error('Failed to generate QR code');
+        console.error(error);
+    }
+};
+
+const copyToClipboard = async (text) => {
+    try {
+        // Try modern clipboard API first
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            toast.success('Link copied to clipboard!');
+        } else {
+            // Fallback for non-HTTPS contexts (like IP addresses)
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            const successful = document.execCommand('copy');
+            textArea.remove();
+            if (successful) {
+                toast.success('Link copied to clipboard!');
+            } else {
+                throw new Error('Copy failed');
+            }
+        }
+    } catch (error) {
+        // If all else fails, show the URL in a prompt
+        toast.error('Failed to copy automatically. Please copy manually:');
+        prompt('Copy this URL:', text);
+    }
+};
+
 const getFileIcon = (fileType) => {
     if (fileType?.includes('pdf')) return 'pi-file-pdf';
     if (fileType?.includes('image')) return 'pi-image';
     return 'pi-file';
+};
+
+// Image zoom functions
+const handleWheel = (event) => {
+    event.preventDefault();
+    const delta = event.deltaY > 0 ? -0.1 : 0.1;
+    imageZoom.value = Math.max(0.5, Math.min(5, imageZoom.value + delta));
+};
+
+const handleMouseDown = (event) => {
+    if (imageZoom.value > 1) {
+        isDragging.value = true;
+        dragStart.value = {
+            x: event.clientX - imagePosition.value.x,
+            y: event.clientY - imagePosition.value.y
+        };
+    }
+};
+
+const handleMouseMove = (event) => {
+    if (isDragging.value) {
+        imagePosition.value = {
+            x: event.clientX - dragStart.value.x,
+            y: event.clientY - dragStart.value.y
+        };
+    }
+};
+
+const handleMouseUp = () => {
+    isDragging.value = false;
+};
+
+const resetZoom = () => {
+    imageZoom.value = 1;
+    imagePosition.value = { x: 0, y: 0 };
+};
+
+const zoomIn = () => {
+    imageZoom.value = Math.min(5, imageZoom.value + 0.25);
+};
+
+const zoomOut = () => {
+    imageZoom.value = Math.max(0.5, imageZoom.value - 0.25);
 };
 
 const formatFileSize = (bytes) => {
