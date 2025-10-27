@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Disbursement;
 use App\Models\DisbursementAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -31,20 +32,42 @@ class DisbursementAttachmentController extends Controller
         $image = @imagecreatefromstring($fileContent);
 
         if ($image !== false) {
+            // Fix image orientation based on EXIF data
+            if (function_exists('exif_read_data')) {
+                $exif = @exif_read_data($file->getRealPath());
+                if ($exif && isset($exif['Orientation'])) {
+                    switch ($exif['Orientation']) {
+                        case 3:
+                            $image = imagerotate($image, 180, 0);
+                            break;
+                        case 6:
+                            $image = imagerotate($image, -90, 0);
+                            break;
+                        case 8:
+                            $image = imagerotate($image, 90, 0);
+                            break;
+                    }
+                }
+            }
+
             // Successfully loaded as image - optimize it
             $width = imagesx($image);
             $height = imagesy($image);
 
-            // Resize if too large (max 1920px width/height)
-            $maxDimension = 1920;
-            if ($width > $maxDimension || $height > $maxDimension) {
-                if ($width > $height) {
-                    $newWidth = $maxDimension;
-                    $newHeight = intval($height * ($maxDimension / $width));
-                } else {
-                    $newHeight = $maxDimension;
-                    $newWidth = intval($width * ($maxDimension / $height));
-                }
+            // Force portrait orientation (height > width)
+            if ($width > $height) {
+                // Rotate landscape to portrait
+                $image = imagerotate($image, 90, 0);
+                $temp = $width;
+                $width = $height;
+                $height = $temp;
+            }
+
+            // Aggressive resize - max 1280px height for high compression
+            $maxDimension = 1280;
+            if ($height > $maxDimension) {
+                $newHeight = $maxDimension;
+                $newWidth = intval($width * ($maxDimension / $height));
 
                 $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
                 imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
@@ -52,9 +75,9 @@ class DisbursementAttachmentController extends Controller
                 $image = $resizedImage;
             }
 
-            // Always save as JPEG with compression (best size reduction)
+            // High compression JPEG - 40% quality for maximum size reduction
             ob_start();
-            imagejpeg($image, null, 60); // 60% quality for significant size reduction
+            imagejpeg($image, null, 40);
             $processedContent = ob_get_clean();
             imagedestroy($image);
             $mimeType = 'image/jpeg';
@@ -80,9 +103,13 @@ class DisbursementAttachmentController extends Controller
             'file_size' => $finalSize,
         ]);
 
+        // Get updated attachments list
+        $disbursement = Disbursement::with('attachments')->findOrFail($disbursementId);
+
         return response()->json([
             'message' => 'Attachment uploaded successfully',
             'attachment' => $attachment,
+            'attachments' => $disbursement->attachments,
             'original_size' => $originalSize,
             'optimized_size' => $finalSize,
             'size_reduction' => round((1 - $finalSize / $originalSize) * 100, 2) . '%',
@@ -96,6 +123,7 @@ class DisbursementAttachmentController extends Controller
     public function delete($attachmentId)
     {
         $attachment = DisbursementAttachment::findOrFail($attachmentId);
+        $disbursementId = $attachment->disbursement_id;
 
         // Delete file from storage
         if (Storage::disk('public')->exists($attachment->file_path)) {
@@ -104,8 +132,12 @@ class DisbursementAttachmentController extends Controller
 
         $attachment->delete();
 
+        // Get updated attachments list
+        $disbursement = Disbursement::with('attachments')->findOrFail($disbursementId);
+
         return response()->json([
-            'message' => 'Attachment deleted successfully'
+            'message' => 'Attachment deleted successfully',
+            'attachments' => $disbursement->attachments
         ]);
     }
 

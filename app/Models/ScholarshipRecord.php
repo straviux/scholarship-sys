@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -422,11 +423,32 @@ class ScholarshipRecord extends Model
     /**
      * Generate a unique upload token for mobile upload
      */
-    public function generateUploadToken($expiresInDays = 30)
+    public function generateUploadToken($expiresInMinutes = 15)
     {
+        $expiryTime = now()->addMinutes($expiresInMinutes);
+
         $this->upload_token = Str::random(64);
-        $this->upload_token_expires_at = now()->addDays($expiresInDays);
+        $this->upload_token_expires_at = $expiryTime;
+
+        Log::info('Generating upload token', [
+            'model' => 'ScholarshipRecord',
+            'id' => $this->id,
+            'expires_in_minutes' => $expiresInMinutes,
+            'now' => now()->toDateTimeString(),
+            'expiry_time' => $expiryTime->toDateTimeString(),
+            'token_preview' => substr($this->upload_token, 0, 10) . '...',
+        ]);
+
         $this->save();
+        $this->refresh(); // Refresh to get exact database value
+
+        Log::info('Upload token saved and refreshed', [
+            'model' => 'ScholarshipRecord',
+            'id' => $this->id,
+            'expires_at_after_save' => $this->upload_token_expires_at->toDateTimeString(),
+            'now' => now()->toDateTimeString(),
+            'seconds_until_expiry' => now()->diffInSeconds($this->upload_token_expires_at, false),
+        ]);
 
         return $this->upload_token;
     }
@@ -440,8 +462,14 @@ class ScholarshipRecord extends Model
             $this->generateUploadToken();
         }
 
-        // Use HTTP with IP address instead of DNS name for mobile access
-        return 'http://192.168.3.2:9001/mobile/upload/scholarship-record/' . $this->upload_token;
+        // Auto-detect base URL from current request, fallback to APP_URL
+        if (request()->getSchemeAndHttpHost()) {
+            $baseUrl = request()->getSchemeAndHttpHost();
+        } else {
+            $baseUrl = config('app.url');
+        }
+
+        return $baseUrl . '/mobile/upload/scholarship-record/' . $this->upload_token;
     }
 
     /**

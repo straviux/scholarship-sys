@@ -7,7 +7,9 @@ use App\Models\DisbursementAttachment;
 use App\Models\ScholarshipRecord;
 use App\Models\ScholarshipRecordAttachment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class MobileUploadController extends Controller
 {
@@ -16,14 +18,28 @@ class MobileUploadController extends Controller
      */
     public function showDisbursementUpload($token)
     {
-        $disbursement = Disbursement::where('upload_token', $token)
-            ->where('upload_token_expires_at', '>', now())
-            ->with('profile')
-            ->first();
+        $disbursement = Disbursement::where('upload_token', $token)->first();
 
         if (!$disbursement) {
+            Log::warning('Disbursement not found for token', ['token' => $token]);
             return view('mobile.upload-expired');
         }
+
+        if (!$disbursement->upload_token_expires_at) {
+            Log::warning('Disbursement has no expiry date', ['disbursement_id' => $disbursement->disbursement_id]);
+            return view('mobile.upload-expired');
+        }
+
+        if ($disbursement->upload_token_expires_at->isPast()) {
+            Log::info('Disbursement token expired', [
+                'disbursement_id' => $disbursement->disbursement_id,
+                'expires_at' => $disbursement->upload_token_expires_at,
+                'now' => now(),
+            ]);
+            return view('mobile.upload-expired');
+        }
+
+        $disbursement->load('profile');
 
         return view('mobile.disbursement-upload', compact('disbursement'));
     }
@@ -33,14 +49,44 @@ class MobileUploadController extends Controller
      */
     public function showScholarshipRecordUpload($token)
     {
-        $scholarshipRecord = ScholarshipRecord::where('upload_token', $token)
-            ->where('upload_token_expires_at', '>', now())
-            ->with('profile')
-            ->first();
+        // Clear any query cache
+        DB::connection()->disableQueryLog();
+
+        $scholarshipRecord = ScholarshipRecord::where('upload_token', $token)->first();
 
         if (!$scholarshipRecord) {
+            Log::warning('Scholarship record not found for token', ['token' => substr($token, 0, 10) . '...']);
             return view('mobile.upload-expired');
         }
+
+        if (!$scholarshipRecord->upload_token_expires_at) {
+            Log::warning('Scholarship record has no expiry date', ['id' => $scholarshipRecord->id]);
+            return view('mobile.upload-expired');
+        }
+
+        // Debug logging
+        Log::info('Mobile upload page accessed', [
+            'id' => $scholarshipRecord->id,
+            'token' => substr($token, 0, 10) . '...',
+            'expires_at' => $scholarshipRecord->upload_token_expires_at->toDateTimeString(),
+            'expires_at_timestamp' => $scholarshipRecord->upload_token_expires_at->timestamp,
+            'now' => now()->toDateTimeString(),
+            'now_timestamp' => now()->timestamp,
+            'diff_seconds' => now()->diffInSeconds($scholarshipRecord->upload_token_expires_at, false),
+            'is_past' => $scholarshipRecord->upload_token_expires_at->isPast(),
+            'is_future' => $scholarshipRecord->upload_token_expires_at->isFuture(),
+        ]);
+
+        if ($scholarshipRecord->upload_token_expires_at->isPast()) {
+            Log::info('Scholarship record token expired', [
+                'id' => $scholarshipRecord->id,
+                'expires_at' => $scholarshipRecord->upload_token_expires_at,
+                'now' => now(),
+            ]);
+            return view('mobile.upload-expired');
+        }
+
+        $scholarshipRecord->load('profile');
 
         return view('mobile.scholarship-record-upload', compact('scholarshipRecord'));
     }
@@ -50,13 +96,19 @@ class MobileUploadController extends Controller
      */
     public function uploadDisbursementFile(Request $request, $token)
     {
-        $disbursement = Disbursement::where('upload_token', $token)
-            ->where('upload_token_expires_at', '>', now())
-            ->first();
+        $disbursement = Disbursement::where('upload_token', $token)->first();
 
-        if (!$disbursement) {
+        if (!$disbursement || $disbursement->upload_token_expires_at->isPast()) {
             return response()->json(['error' => 'Invalid or expired token'], 403);
         }
+
+        // Debug: Log what we're receiving
+        Log::info('Mobile upload request received', [
+            'has_file' => $request->hasFile('file'),
+            'all_files' => $request->allFiles(),
+            'all_input' => $request->except('file'),
+            'content_type' => $request->header('Content-Type'),
+        ]);
 
         try {
             $request->validate([
@@ -64,6 +116,14 @@ class MobileUploadController extends Controller
                 'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:25600', // 25MB max
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Mobile upload validation failed', [
+                'errors' => $e->errors(),
+                'file_info' => $request->hasFile('file') ? [
+                    'size' => $request->file('file')->getSize(),
+                    'mime' => $request->file('file')->getMimeType(),
+                    'original_name' => $request->file('file')->getClientOriginalName(),
+                ] : 'No file uploaded'
+            ]);
             return response()->json([
                 'error' => 'Validation failed',
                 'errors' => $e->errors()
@@ -83,30 +143,54 @@ class MobileUploadController extends Controller
         $image = @imagecreatefromstring($fileContent);
 
         if ($image !== false) {
-            // Successfully loaded as image - optimize it
+            // Fix image orientation based on EXIF data
+            if (function_exists('exif_read_data')) {
+                $exif = @exif_read_data($file->getRealPath());
+                if ($exif && isset($exif['Orientation'])) {
+                    switch ($exif['Orientation']) {
+                        case 3:
+                            $image = imagerotate($image, 180, 0);
+                            break;
+                        case 6:
+                            $image = imagerotate($image, -90, 0);
+                            break;
+                        case 8:
+                            $image = imagerotate($image, 90, 0);
+                            break;
+                    }
+                }
+            }
+
+            // Successfully loaded as image - highly compress it
             $width = imagesx($image);
             $height = imagesy($image);
 
-            // Resize if too large (max 1920px width/height)
-            $maxDimension = 1920;
-            if ($width > $maxDimension || $height > $maxDimension) {
-                if ($width > $height) {
-                    $newWidth = $maxDimension;
-                    $newHeight = intval($height * ($maxDimension / $width));
-                } else {
-                    $newHeight = $maxDimension;
-                    $newWidth = intval($width * ($maxDimension / $height));
-                }
+            // Force portrait orientation (height > width)
+            if ($width > $height) {
+                // Rotate landscape to portrait
+                $image = imagerotate($image, 90, 0);
+                $temp = $width;
+                $width = $height;
+                $height = $temp;
+            }
+
+            // Aggressive resize for mobile uploads - max 1280px height
+            $maxDimension = 1280;
+            if ($height > $maxDimension) {
+                $newHeight = $maxDimension;
+                $newWidth = intval($width * ($maxDimension / $height));
 
                 $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
+
+                // Enable smooth scaling for better quality at lower file size
                 imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
                 imagedestroy($image);
                 $image = $resizedImage;
             }
 
-            // Convert to JPEG with quality 60%
+            // High compression JPEG - quality 40% for smaller file size
             ob_start();
-            imagejpeg($image, null, 60);
+            imagejpeg($image, null, 40);
             $processedContent = ob_get_clean();
             imagedestroy($image);
             $extension = '.jpg';
@@ -116,8 +200,29 @@ class MobileUploadController extends Controller
             $extension = '.gz';
         }
 
-        // Generate file path
-        $fileName = time() . '_' . str_replace([' ', '.'], '_', pathinfo($originalFileName, PATHINFO_FILENAME)) . $extension;
+        // Get scholar name
+        $profile = $disbursement->profile;
+        $scholarName = $profile->first_name . '_' . $profile->last_name;
+        // Clean scholar name (remove spaces, special characters)
+        $scholarName = preg_replace('/[^A-Za-z0-9_]/', '_', $scholarName);
+
+        // Get attachment type
+        $attachmentType = $request->attachment_type;
+
+        // Create short timestamp (YmdHis format)
+        $timestamp = date('YmdHis');
+
+        // Determine file extension
+        if ($extension === '.jpg') {
+            $fileExtension = 'jpg';
+        } elseif ($extension === '.gz') {
+            $fileExtension = 'pdf.gz';
+        } else {
+            $fileExtension = pathinfo($originalFileName, PATHINFO_EXTENSION);
+        }
+
+        // Generate file path: [scholar_name]_[attachment_type]_[timestamp].[extension]
+        $fileName = "{$scholarName}_{$attachmentType}_{$timestamp}.{$fileExtension}";
         $filePath = 'disbursement_attachments/' . $fileName;
 
         // Store the file
@@ -148,20 +253,35 @@ class MobileUploadController extends Controller
      */
     public function uploadScholarshipRecordFile(Request $request, $token)
     {
-        $scholarshipRecord = ScholarshipRecord::where('upload_token', $token)
-            ->where('upload_token_expires_at', '>', now())
-            ->first();
+        $scholarshipRecord = ScholarshipRecord::where('upload_token', $token)->first();
 
-        if (!$scholarshipRecord) {
+        if (!$scholarshipRecord || $scholarshipRecord->upload_token_expires_at->isPast()) {
             return response()->json(['error' => 'Invalid or expired token'], 403);
         }
+
+        // Debug: Log what we're receiving
+        Log::info('Mobile upload request received (scholarship)', [
+            'has_file' => $request->hasFile('file'),
+            'all_files' => $request->allFiles(),
+            'all_input' => $request->except('file'),
+            'content_type' => $request->header('Content-Type'),
+        ]);
 
         try {
             $request->validate([
                 'attachment_name' => 'required|string|max:255',
+                'page_number' => 'nullable|integer|min:1',
                 'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:25600', // 25MB max
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Mobile upload validation failed (scholarship record)', [
+                'errors' => $e->errors(),
+                'file_info' => $request->hasFile('file') ? [
+                    'size' => $request->file('file')->getSize(),
+                    'mime' => $request->file('file')->getMimeType(),
+                    'original_name' => $request->file('file')->getClientOriginalName(),
+                ] : 'No file uploaded'
+            ]);
             return response()->json([
                 'error' => 'Validation failed',
                 'errors' => $e->errors()
@@ -181,42 +301,95 @@ class MobileUploadController extends Controller
         $image = @imagecreatefromstring($fileContent);
 
         if ($image !== false) {
-            // Successfully loaded as image - optimize it
+            // Fix image orientation based on EXIF data
+            if (function_exists('exif_read_data')) {
+                $exif = @exif_read_data($file->getRealPath());
+                if ($exif && isset($exif['Orientation'])) {
+                    switch ($exif['Orientation']) {
+                        case 3:
+                            $image = imagerotate($image, 180, 0);
+                            break;
+                        case 6:
+                            $image = imagerotate($image, -90, 0);
+                            break;
+                        case 8:
+                            $image = imagerotate($image, 90, 0);
+                            break;
+                    }
+                }
+            }
+
+            // Successfully loaded as image - highly compress it
             $width = imagesx($image);
             $height = imagesy($image);
 
-            // Resize if too large (max 1920px width/height)
-            $maxDimension = 1920;
-            if ($width > $maxDimension || $height > $maxDimension) {
-                if ($width > $height) {
-                    $newWidth = $maxDimension;
-                    $newHeight = intval($height * ($maxDimension / $width));
-                } else {
-                    $newHeight = $maxDimension;
-                    $newWidth = intval($width * ($maxDimension / $height));
-                }
+            // Force portrait orientation (height > width)
+            if ($width > $height) {
+                // Rotate landscape to portrait
+                $image = imagerotate($image, 90, 0);
+                $temp = $width;
+                $width = $height;
+                $height = $temp;
+            }
+
+            // Aggressive resize for mobile uploads - max 1280px height
+            $maxDimension = 1280;
+            if ($height > $maxDimension) {
+                $newHeight = $maxDimension;
+                $newWidth = intval($width * ($maxDimension / $height));
 
                 $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
+
+                // Enable smooth scaling for better quality at lower file size
                 imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
                 imagedestroy($image);
                 $image = $resizedImage;
             }
 
-            // Convert to JPEG with quality 60%
+            // High compression JPEG - quality 40% for smaller file size
             ob_start();
-            imagejpeg($image, null, 60);
+            imagejpeg($image, null, 40);
             $processedContent = ob_get_clean();
             imagedestroy($image);
-            $extension = '.jpg';
-        } else {
-            // PDF - use gzip compression
+            $mimeType = 'image/jpeg';
+        } elseif ($mimeType === 'application/pdf') {
+            // Compress PDFs with gzip
             $processedContent = gzencode($fileContent, 9);
             $extension = '.gz';
         }
 
-        // Generate file path
-        $fileName = time() . '_' . str_replace([' ', '.'], '_', pathinfo($originalFileName, PATHINFO_FILENAME)) . $extension;
-        $filePath = 'scholarship_record_attachments/' . $fileName;
+        // Get scholar name
+        $profile = $scholarshipRecord->profile;
+        $scholarName = $profile->first_name . '_' . $profile->last_name;
+        // Clean scholar name (remove spaces, special characters)
+        $scholarName = preg_replace('/[^A-Za-z0-9_]/', '_', $scholarName);
+
+        // Get attachment name (clean it)
+        $attachmentName = preg_replace('/[^A-Za-z0-9_]/', '_', $request->attachment_name);
+
+        // Create short timestamp (YmdHis format)
+        $timestamp = date('YmdHis');
+
+        // Add page number suffix for contracts
+        $pageNumberSuffix = '';
+        if (strtolower($request->attachment_name) === 'contract' && $request->has('page_number')) {
+            $pageNumberSuffix = '_page_' . $request->page_number;
+        }
+
+        // Get file extension from original filename or determine from mime type
+        $fileExtension = pathinfo($originalFileName, PATHINFO_EXTENSION);
+        if (empty($fileExtension)) {
+            // Determine extension from mime type
+            if (strpos($mimeType, 'image/') === 0) {
+                $fileExtension = 'jpg';
+            } elseif ($mimeType === 'application/pdf') {
+                $fileExtension = 'pdf';
+            }
+        }
+
+        // Create new filename: [scholar_name]_[attachment_name]_[timestamp][page_suffix].[extension]
+        $fileName = "{$scholarName}_{$attachmentName}_{$timestamp}{$pageNumberSuffix}" . ($extension ?: ".{$fileExtension}");
+        $filePath = 'scholarship_records/attachments/' . $fileName;
 
         // Store the file
         Storage::disk('public')->put($filePath, $processedContent);

@@ -18,7 +18,13 @@ class DisbursementController extends Controller
      */
     public function index(Request $request, $profileId)
     {
-        $disbursements = Disbursement::with(['cheques', 'creator', 'attachments'])
+        $disbursements = Disbursement::with([
+            'cheques',
+            'creator',
+            'attachments',
+            'profile.scholarshipGrant.course',
+            'profile.scholarshipGrant.school'
+        ])
             ->where('profile_id', $profileId)
             ->orderBy('date_obligated', 'desc')
             ->orderBy('created_at', 'desc')
@@ -171,20 +177,36 @@ class DisbursementController extends Controller
     public function uploadAttachment(Request $request, $disbursementId)
     {
         $validated = $request->validate([
-            'attachment_type' => 'required|in:voucher,cheque',
+            'attachment_type' => 'required|in:voucher,cheque,receipt',
             'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240', // 10MB max
         ]);
 
-        $disbursement = Disbursement::findOrFail($disbursementId);
+        $disbursement = Disbursement::with('profile')->findOrFail($disbursementId);
 
+        // Get scholar name
+        $profile = $disbursement->profile;
+        $scholarName = $profile->first_name . '_' . $profile->last_name;
+        // Clean scholar name (remove spaces, special characters)
+        $scholarName = preg_replace('/[^A-Za-z0-9_]/', '_', $scholarName);
+
+        // Get attachment type
+        $attachmentType = $validated['attachment_type'];
+
+        // Create short timestamp (YmdHis format)
+        $timestamp = date('YmdHis');
+
+        // Get file extension
         $file = $request->file('file');
-        $fileName = time() . '_' . $file->getClientOriginalName();
+        $extension = $file->getClientOriginalExtension();
+
+        // Create new filename: [scholar_name]_[attachment_type]_[timestamp].[extension]
+        $fileName = "{$scholarName}_{$attachmentType}_{$timestamp}.{$extension}";
         $filePath = $file->storeAs('disbursements/attachments', $fileName, 'public');
 
         $attachment = DisbursementAttachment::create([
             'disbursement_id' => $disbursementId,
             'attachment_type' => $validated['attachment_type'],
-            'file_name' => $file->getClientOriginalName(),
+            'file_name' => $fileName,
             'file_path' => $filePath,
             'file_type' => $file->getClientMimeType(),
             'file_size' => $file->getSize(),

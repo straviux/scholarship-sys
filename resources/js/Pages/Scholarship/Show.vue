@@ -314,7 +314,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -418,10 +418,26 @@
                     <h4 class="text-sm font-semibold text-gray-700 mb-3">Upload New Attachment</h4>
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Attachment Name *</label>
-                            <InputText v-model="attachmentForm.attachment_name"
-                                placeholder="e.g., Contract, Requirements, Grade Sheet" class="w-full" />
-                            <p class="text-xs text-gray-500 mt-1">Give this attachment a descriptive name</p>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Attachment Type *</label>
+                            <Select v-model="attachmentForm.attachment_name" :options="attachmentTypeOptions"
+                                optionLabel="label" optionValue="value" placeholder="Select attachment type"
+                                class="w-full" />
+                            <p class="text-xs text-gray-500 mt-1">Select the type of attachment you're uploading</p>
+                        </div>
+                        <div v-if="attachmentForm.attachment_name === 'others'">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Specify Attachment Type
+                                *</label>
+                            <InputText v-model="attachmentForm.custom_attachment_name"
+                                placeholder="e.g., Medical Certificate, ID Photo" class="w-full" />
+                            <p class="text-xs text-gray-500 mt-1">Enter the specific type of attachment</p>
+                        </div>
+                        <div v-if="attachmentForm.attachment_name === 'contract'">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Page Number (Optional)</label>
+                            <InputNumber v-model="attachmentForm.page_number" :min="1" placeholder="e.g., 1, 2, 3"
+                                class="w-full" />
+                            <p class="text-xs text-gray-500 mt-1">Specify the page number if uploading contract pages
+                                separately
+                            </p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">File (PDF or Image) *</label>
@@ -440,7 +456,7 @@
             <template #footer>
                 <Button label="Cancel" severity="secondary" @click="closeAttachmentsModal" />
                 <Button label="Upload" @click="uploadAttachment" :loading="uploading"
-                    :disabled="!attachmentForm.file || !attachmentForm.attachment_name" />
+                    :disabled="!attachmentForm.file || !attachmentForm.attachment_name || (attachmentForm.attachment_name === 'others' && !attachmentForm.custom_attachment_name)" />
             </template>
         </Dialog>
 
@@ -519,7 +535,14 @@
                     <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
                         <p class="text-xs text-yellow-800">
                             <i class="pi pi-exclamation-triangle mr-2"></i>
-                            <strong>Expires:</strong> {{ new Date(qrCodeData.expiresAt).toLocaleDateString() }}
+                            <strong>Expires in:</strong>
+                            <span :class="{
+                                'text-yellow-600': qrCountdown.includes('min') && !qrCountdown.includes('0 min'),
+                                'text-orange-600': qrCountdown.includes('0 min') && parseInt(qrCountdown) >= 5,
+                                'text-red-600 font-bold': qrCountdown.includes('0 min') && parseInt(qrCountdown) < 5 || qrCountdown === 'EXPIRED'
+                            }">
+                                {{ qrCountdown || 'Loading...' }}
+                            </span>
                         </p>
                     </div>
 
@@ -545,7 +568,7 @@
 
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -560,6 +583,8 @@ import Column from 'primevue/column';
 import Chip from 'primevue/chip';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
+import InputNumber from 'primevue/inputnumber';
+import Select from 'primevue/select';
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
 import ObligationsTransactions from '@/Components/ObligationsTransactions.vue';
 
@@ -574,14 +599,27 @@ const showAttachmentsModal = ref(false);
 const showViewerModal = ref(false);
 const showQrModal = ref(false);
 const qrCodeData = ref(null);
+const qrCountdown = ref('');
+const qrCountdownInterval = ref(null);
 const selectedRecord = ref(null);
 const viewerAttachment = ref(null);
 const uploading = ref(false);
 const attachmentForm = ref({
     attachment_name: '',
+    custom_attachment_name: '',
+    page_number: null,
     file: null
 });
 const fileInput = ref(null);
+
+// Attachment type options
+const attachmentTypeOptions = [
+    { label: 'Contract', value: 'contract' },
+    { label: 'Copy of Grades', value: 'copy_of_grades' },
+    { label: 'Certificate of Enrollment', value: 'certificate_of_enrollment' },
+    { label: 'Certificate of Registration', value: 'certificate_of_registration' },
+    { label: 'Others', value: 'others' }
+];
 
 // Image zoom state
 const imageZoom = ref(1);
@@ -741,19 +779,49 @@ const uploadAttachment = async () => {
         return;
     }
 
+    // Validate "others" - requires custom name
+    if (attachmentForm.value.attachment_name === 'others' && !attachmentForm.value.custom_attachment_name) {
+        toast.error('Please specify the attachment type');
+        return;
+    }
+
     uploading.value = true;
     const formData = new FormData();
-    formData.append('attachment_name', attachmentForm.value.attachment_name);
+
+    // Use custom name if "others" is selected, otherwise use the selected value
+    const finalAttachmentName = attachmentForm.value.attachment_name === 'others'
+        ? attachmentForm.value.custom_attachment_name
+        : attachmentForm.value.attachment_name;
+
+    formData.append('attachment_name', finalAttachmentName);
     formData.append('file', attachmentForm.value.file);
 
+    // Add page number for contracts
+    if (attachmentForm.value.attachment_name === 'contract' && attachmentForm.value.page_number) {
+        formData.append('page_number', attachmentForm.value.page_number);
+    }
+
     try {
-        await axios.post(route('scholarship.records.attachments.upload', selectedRecord.value.id), formData, {
+        const response = await axios.post(route('scholarship.records.attachments.upload', selectedRecord.value.id), formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
 
         toast.success('Attachment uploaded successfully');
-        attachmentForm.value = { attachment_name: '', file: null };
+
+        // Update the selected record's attachments
+        if (response.data.attachments) {
+            selectedRecord.value.attachments = response.data.attachments;
+        }
+
+        attachmentForm.value = {
+            attachment_name: '',
+            custom_attachment_name: '',
+            page_number: null,
+            file: null
+        };
         if (fileInput.value) fileInput.value.value = '';
+
+        // Reload the profile data to update all views
         router.reload({ only: ['profile'] });
     } catch (error) {
         toast.error(error.response?.data?.message || 'Failed to upload attachment');
@@ -776,8 +844,15 @@ const deleteAttachment = async (attachment) => {
     if (!confirm('Are you sure you want to delete this attachment?')) return;
 
     try {
-        await axios.delete(route('scholarship.records.attachments.delete', attachment.attachment_id));
+        const response = await axios.delete(route('scholarship.records.attachments.delete', attachment.attachment_id));
         toast.success('Attachment deleted successfully');
+
+        // Update the selected record's attachments immediately
+        if (selectedRecord.value && response.data.attachments) {
+            selectedRecord.value.attachments = response.data.attachments;
+        }
+
+        // Reload the profile data to update all views
         router.reload({ only: ['profile'] });
     } catch (error) {
         toast.error(error.response?.data?.message || 'Failed to delete attachment');
@@ -802,11 +877,55 @@ const showQrCode = async (record) => {
             record: record
         };
         showQrModal.value = true;
+        startCountdown();
     } catch (error) {
         toast.error('Failed to generate QR code');
         console.error(error);
     }
 };
+
+const startCountdown = () => {
+    // Clear any existing interval
+    if (qrCountdownInterval.value) {
+        clearInterval(qrCountdownInterval.value);
+    }
+
+    const updateCountdown = () => {
+        if (!qrCodeData.value) return;
+
+        const now = new Date();
+        const expiresAt = new Date(qrCodeData.value.expiresAt);
+        const diff = expiresAt - now;
+
+        if (diff <= 0) {
+            qrCountdown.value = 'EXPIRED';
+            clearInterval(qrCountdownInterval.value);
+            return;
+        }
+
+        const totalMinutes = Math.floor(diff / 1000 / 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+        qrCountdown.value = `${totalMinutes} min ${seconds} sec`;
+    };
+
+    updateCountdown();
+    qrCountdownInterval.value = setInterval(updateCountdown, 1000);
+};
+
+// Watch for modal close to clear interval
+watch(showQrModal, (newValue) => {
+    if (!newValue && qrCountdownInterval.value) {
+        clearInterval(qrCountdownInterval.value);
+        qrCountdownInterval.value = null;
+    }
+});
+
+// Cleanup on component unmount
+onUnmounted(() => {
+    if (qrCountdownInterval.value) {
+        clearInterval(qrCountdownInterval.value);
+    }
+});
 
 const copyToClipboard = async (text) => {
     try {

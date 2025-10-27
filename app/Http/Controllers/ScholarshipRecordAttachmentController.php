@@ -16,8 +16,30 @@ class ScholarshipRecordAttachmentController extends Controller
     {
         $validated = $request->validate([
             'attachment_name' => 'required|string|max:255',
+            'page_number' => 'nullable|integer|min:1',
             'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:25600', // 25MB max
         ]);
+
+        // Get scholarship record with profile
+        $scholarshipRecord = ScholarshipRecord::with('profile')->findOrFail($scholarshipRecordId);
+
+        // Get scholar name
+        $profile = $scholarshipRecord->profile;
+        $scholarName = $profile->first_name . '_' . $profile->last_name;
+        // Clean scholar name (remove spaces, special characters)
+        $scholarName = preg_replace('/[^A-Za-z0-9_]/', '_', $scholarName);
+
+        // Get attachment name (clean it)
+        $attachmentName = preg_replace('/[^A-Za-z0-9_]/', '_', $validated['attachment_name']);
+
+        // Create short timestamp (YmdHis format)
+        $timestamp = date('YmdHis');
+
+        // Add page number suffix for contracts
+        $pageNumberSuffix = '';
+        if (strtolower($validated['attachment_name']) === 'contract' && isset($validated['page_number'])) {
+            $pageNumberSuffix = '_page_' . $validated['page_number'];
+        }
 
         $file = $request->file('file');
         $originalFileName = $file->getClientOriginalName();
@@ -32,20 +54,39 @@ class ScholarshipRecordAttachmentController extends Controller
         $image = @imagecreatefromstring($fileContent);
 
         if ($image !== false) {
-            // Successfully loaded as image - optimize it
+            // Fix image orientation based on EXIF data
+            if (function_exists('exif_read_data')) {
+                $exif = @exif_read_data($file->getRealPath());
+                if ($exif && isset($exif['Orientation'])) {
+                    switch ($exif['Orientation']) {
+                        case 3:
+                            $image = imagerotate($image, 180, 0);
+                            break;
+                        case 6:
+                            $image = imagerotate($image, -90, 0);
+                            break;
+                        case 8:
+                            $image = imagerotate($image, 90, 0);
+                            break;
+                    }
+                }
+            }
+
+            // Successfully loaded as image - highly compress it
             $width = imagesx($image);
             $height = imagesy($image);
 
-            // Resize if too large (max 1920px width/height)
-            $maxDimension = 1920;
-            if ($width > $maxDimension || $height > $maxDimension) {
-                if ($width > $height) {
-                    $newWidth = $maxDimension;
-                    $newHeight = intval($height * ($maxDimension / $width));
-                } else {
-                    $newHeight = $maxDimension;
-                    $newWidth = intval($width * ($maxDimension / $height));
-                }
+            // Force portrait orientation (height > width)
+            if ($width > $height) {
+                // Rotate landscape to portrait
+                $image = imagerotate($image, 90, 0);
+            }
+
+            // Aggressive resize - max 1280px height for high compression
+            $maxDimension = 1280;
+            if ($height > $maxDimension) {
+                $newHeight = $maxDimension;
+                $newWidth = intval($width * ($maxDimension / $height));
 
                 $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
                 imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
@@ -53,9 +94,9 @@ class ScholarshipRecordAttachmentController extends Controller
                 $image = $resizedImage;
             }
 
-            // Always save as JPEG with compression (best size reduction)
+            // High compression JPEG - 40% quality for maximum size reduction
             ob_start();
-            imagejpeg($image, null, 60); // 60% quality for significant size reduction
+            imagejpeg($image, null, 40);
             $processedContent = ob_get_clean();
             imagedestroy($image);
             $mimeType = 'image/jpeg';
@@ -65,8 +106,19 @@ class ScholarshipRecordAttachmentController extends Controller
             $extension = '.gz';
         }
 
-        // Store processed file
-        $fileName = time() . '_' . $originalFileName . $extension;
+        // Get file extension from original filename or determine from mime type
+        $fileExtension = pathinfo($originalFileName, PATHINFO_EXTENSION);
+        if (empty($fileExtension)) {
+            // Determine extension from mime type
+            if (strpos($mimeType, 'image/') === 0) {
+                $fileExtension = 'jpg';
+            } elseif ($mimeType === 'application/pdf') {
+                $fileExtension = 'pdf';
+            }
+        }
+
+        // Create new filename: [scholar_name]_[attachment_name]_[timestamp][page_suffix].[extension]
+        $fileName = "{$scholarName}_{$attachmentName}_{$timestamp}{$pageNumberSuffix}" . ($extension ?: ".{$fileExtension}");
         $filePath = 'scholarship_records/attachments/' . $fileName;
         Storage::disk('public')->put($filePath, $processedContent);
 
@@ -81,10 +133,14 @@ class ScholarshipRecordAttachmentController extends Controller
             'file_size' => $finalSize,
         ]);
 
+        // Get updated attachments list
+        $scholarshipRecord = ScholarshipRecord::with('attachments')->findOrFail($scholarshipRecordId);
+
         return response()->json([
             'success' => true,
             'message' => 'Attachment uploaded successfully',
             'attachment' => $attachment,
+            'attachments' => $scholarshipRecord->attachments,
             'original_size' => $originalSize,
             'optimized_size' => $finalSize,
             'size_reduction' => round((1 - $finalSize / $originalSize) * 100, 2) . '%',
@@ -97,6 +153,7 @@ class ScholarshipRecordAttachmentController extends Controller
     public function delete($attachmentId)
     {
         $attachment = ScholarshipRecordAttachment::findOrFail($attachmentId);
+        $scholarshipRecordId = $attachment->scholarship_record_id;
 
         // Delete file from storage
         if (Storage::disk('public')->exists($attachment->file_path)) {
@@ -105,9 +162,13 @@ class ScholarshipRecordAttachmentController extends Controller
 
         $attachment->delete();
 
+        // Get updated attachments list
+        $scholarshipRecord = ScholarshipRecord::with('attachments')->findOrFail($scholarshipRecordId);
+
         return response()->json([
             'success' => true,
-            'message' => 'Attachment deleted successfully'
+            'message' => 'Attachment deleted successfully',
+            'attachments' => $scholarshipRecord->attachments
         ]);
     }
 

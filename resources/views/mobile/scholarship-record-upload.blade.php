@@ -36,10 +36,28 @@
     <div class="max-w-2xl mx-auto p-4 pb-20">
         <!-- Header -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div class="flex items-center gap-3 mb-4">
-                <i class="fas fa-cloud-upload-alt text-blue-600 text-3xl"></i>
-                <h1 class="text-2xl font-bold text-gray-800">Upload Attachment</h1>
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-cloud-upload-alt text-blue-600 text-3xl"></i>
+                    <h1 class="text-2xl font-bold text-gray-800">Upload Attachment</h1>
+                </div>
+                <button type="button" onclick="closeTab()"
+                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm transition-all">
+                    <i class="fas fa-times"></i>
+                    <span>Close</span>
+                </button>
             </div>
+
+            <!-- Countdown Timer -->
+            <div id="countdownContainer" class="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded mb-4">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-clock text-yellow-600"></i>
+                    <p class="text-sm font-semibold text-yellow-800">
+                        Session expires in: <span id="countdown" class="text-lg font-bold">15:00</span>
+                    </p>
+                </div>
+            </div>
+
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
                 <p class="text-sm text-gray-700"><strong>Record ID:</strong> {{ $scholarshipRecord->id }}</p>
                 <p class="text-sm text-gray-700"><strong>Academic Year:</strong>
@@ -57,13 +75,39 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <form id="uploadForm" enctype="multipart/form-data">
 
-                <!-- Attachment Name -->
+                <!-- Attachment Type -->
                 <div class="mb-6">
                     <label for="attachment_name" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-tag text-gray-500 mr-1"></i> Attachment Name
+                        <i class="fas fa-tag text-gray-500 mr-1"></i> Attachment Type
                     </label>
-                    <input type="text" id="attachment_name" name="attachment_name" required
-                        placeholder="e.g., Certificate of Grades, Contract, etc."
+                    <select id="attachment_name" name="attachment_name" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select attachment type...</option>
+                        <option value="contract">Contract</option>
+                        <option value="copy_of_grades">Copy of Grades</option>
+                        <option value="certificate_of_enrollment">Certificate of Enrollment</option>
+                        <option value="certificate_of_registration">Certificate of Registration</option>
+                        <option value="others">Others</option>
+                    </select>
+                </div>
+
+                <!-- Custom Attachment Name (for "others") -->
+                <div id="customNameContainer" class="mb-6 hidden">
+                    <label for="custom_attachment_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-edit text-gray-500 mr-1"></i> Custom Attachment Name
+                    </label>
+                    <input type="text" id="custom_attachment_name" name="custom_attachment_name"
+                        placeholder="Enter custom attachment name"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <!-- Page Number (for "contract") -->
+                <div id="pageNumberContainer" class="mb-6 hidden">
+                    <label for="page_number" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-file-alt text-gray-500 mr-1"></i> Page Number (Optional)
+                    </label>
+                    <input type="number" id="page_number" name="page_number" min="1"
+                        placeholder="Enter page number"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
 
@@ -146,16 +190,19 @@
         </div>
 
         <!-- Info -->
-        <div class="mt-6 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg">
-            <p class="text-sm text-yellow-800">
+        <div class="mt-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+            <p class="text-sm text-blue-800">
                 <i class="fas fa-info-circle mr-2"></i>
-                <strong>Note:</strong> Images will be automatically optimized to reduce file size. This link expires
-                in {{ \Carbon\Carbon::parse($scholarshipRecord->upload_token_expires_at)->diffForHumans() }}.
+                <strong>Note:</strong> Images will be automatically optimized to reduce file size.
             </p>
         </div>
     </div>
 
     <script>
+        // Expiry timestamp from server (ISO format for JavaScript)
+        const expiresAt = new Date('{{ $scholarshipRecord->upload_token_expires_at->toIso8601String() }}');
+
+        // Get all DOM elements first
         const fileInput = document.getElementById('file');
         const previewContainer = document.getElementById('previewContainer');
         const previewImage = document.getElementById('previewImage');
@@ -170,7 +217,105 @@
         const errorMessage = document.getElementById('errorMessage');
         const successDetails = document.getElementById('successDetails');
         const errorDetails = document.getElementById('errorDetails');
+        const attachmentNameSelect = document.getElementById('attachment_name');
+        const customNameContainer = document.getElementById('customNameContainer');
+        const customNameInput = document.getElementById('custom_attachment_name');
+        const pageNumberContainer = document.getElementById('pageNumberContainer');
+        const pageNumberInput = document.getElementById('page_number');
+
+        // Close tab function
+        function closeTab() {
+            if (confirm('Are you sure you want to close this tab?')) {
+                window.close();
+                // Fallback if window.close() doesn't work
+                setTimeout(() => {
+                    window.location.href = 'about:blank';
+                }, 100);
+            }
+        }
+
+        // Countdown timer
+        function updateCountdown() {
+            const now = new Date();
+            const timeLeft = expiresAt - now;
+
+            if (timeLeft <= 0) {
+                document.getElementById('countdown').textContent = 'EXPIRED';
+                document.getElementById('countdownContainer').classList.remove('bg-yellow-50', 'border-yellow-500');
+                document.getElementById('countdownContainer').classList.add('bg-red-50', 'border-red-500');
+                document.getElementById('countdownContainer').querySelector('p').classList.remove('text-yellow-800');
+                document.getElementById('countdownContainer').querySelector('p').classList.add('text-red-800');
+                document.getElementById('countdownContainer').querySelector('i').classList.remove('text-yellow-600');
+                document.getElementById('countdownContainer').querySelector('i').classList.add('text-red-600');
+
+                // Disable upload
+                if (submitBtn) submitBtn.disabled = true;
+                if (fileInput) fileInput.disabled = true;
+
+                // Show expired message
+                if (errorMessage && errorDetails) {
+                    errorMessage.classList.remove('hidden');
+                    errorDetails.textContent = 'This upload link has expired. Please request a new one.';
+                }
+
+                return;
+            }
+
+            const minutes = Math.floor(timeLeft / 60000);
+            const seconds = Math.floor((timeLeft % 60000) / 1000);
+
+            document.getElementById('countdown').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            // Change color when less than 5 minutes
+            if (timeLeft < 300000) { // 5 minutes
+                document.getElementById('countdownContainer').classList.remove('bg-yellow-50', 'border-yellow-500');
+                document.getElementById('countdownContainer').classList.add('bg-orange-50', 'border-orange-500');
+                document.getElementById('countdownContainer').querySelector('p').classList.remove('text-yellow-800');
+                document.getElementById('countdownContainer').querySelector('p').classList.add('text-orange-800');
+                document.getElementById('countdownContainer').querySelector('i').classList.remove('text-yellow-600');
+                document.getElementById('countdownContainer').querySelector('i').classList.add('text-orange-600');
+            }
+
+            // Change color when less than 1 minute
+            if (timeLeft < 60000) { // 1 minute
+                document.getElementById('countdownContainer').classList.remove('bg-orange-50', 'border-orange-500');
+                document.getElementById('countdownContainer').classList.add('bg-red-50', 'border-red-500');
+                document.getElementById('countdownContainer').querySelector('p').classList.remove('text-orange-800');
+                document.getElementById('countdownContainer').querySelector('p').classList.add('text-red-800');
+                document.getElementById('countdownContainer').querySelector('i').classList.remove('text-orange-600');
+                document.getElementById('countdownContainer').querySelector('i').classList.add('text-red-600');
+            }
+        }
+
+        // Update countdown every second
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
         const quickCameraBtn = document.getElementById('quickCameraBtn');
+
+        // Handle attachment type change
+        attachmentNameSelect.addEventListener('change', function() {
+            const selectedType = this.value;
+
+            // Show/hide custom name field for "others"
+            if (selectedType === 'others') {
+                customNameContainer.classList.remove('hidden');
+                customNameInput.required = true;
+            } else {
+                customNameContainer.classList.add('hidden');
+                customNameInput.required = false;
+                customNameInput.value = '';
+            }
+
+            // Show/hide page number field for "contract"
+            if (selectedType === 'contract') {
+                pageNumberContainer.classList.remove('hidden');
+            } else {
+                pageNumberContainer.classList.add('hidden');
+                pageNumberInput.value = '';
+            }
+        });
 
         // Quick Camera Button Click Handler
         if (quickCameraBtn) {
@@ -193,8 +338,7 @@
                     };
                     reader.readAsDataURL(file);
                 } else {
-                    previewImage.src =
-                        'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M320 464c8.8 0 16-7.2 16-16V160H256c-17.7 0-32-14.3-32-32V48H64c-8.8 0-16 7.2-16 16V448c0 8.8 7.2 16 16 16H320zM0 64C0 28.7 28.7 0 64 0H229.5c17 0 33.3 6.7 45.3 18.7l90.5 90.5c12 12 18.7 28.3 18.7 45.3V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V64z"/></svg>';
+                    previewImage.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M320 464c8.8 0 16-7.2 16-16V160H256c-17.7 0-32-14.3-32-32V48H64c-8.8 0-16 7.2-16 16V448c0 8.8 7.2 16 16 16H320zM0 64C0 28.7 28.7 0 64 0H229.5c17 0 33.3 6.7 45.3 18.7l90.5 90.5c12 12 18.7 28.3 18.7 45.3V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V64z"/></svg>';
                 }
             }
         });
@@ -208,7 +352,7 @@
         });
 
         // Form submission
-        uploadForm.addEventListener('submit', async function(e) {
+        uploadForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
             // Validate file is selected
@@ -219,87 +363,113 @@
                 return;
             }
 
-            // Validate attachment name
-            const attachmentName = document.getElementById('attachment_name').value;
-            if (!attachmentName) {
+            // Validate attachment type
+            const attachmentType = document.getElementById('attachment_name').value;
+            if (!attachmentType) {
                 errorMessage.classList.remove('hidden');
-                errorDetails.textContent = 'Please enter an attachment name';
+                errorDetails.textContent = 'Please select an attachment type';
                 return;
             }
 
+            // Validate custom name for "others"
+            if (attachmentType === 'others') {
+                const customName = customNameInput.value.trim();
+                if (!customName) {
+                    errorMessage.classList.remove('hidden');
+                    errorDetails.textContent = 'Please enter a custom attachment name';
+                    return;
+                }
+            }
+
+            const selectedFile = fileInput.files[0];
+
+            // Create FormData and append file with explicit blob
             const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            formData.append('attachment_name', attachmentName);
+            formData.append('file', selectedFile, selectedFile.name);
+
+            // Use custom name if "others", otherwise use selected type
+            const finalAttachmentName = attachmentType === 'others' ?
+                customNameInput.value.trim() :
+                attachmentType;
+            formData.append('attachment_name', finalAttachmentName);
+
+            // Add page number if contract type and value is provided
+            if (attachmentType === 'contract' && pageNumberInput.value) {
+                formData.append('page_number', pageNumberInput.value);
+            }
 
             submitBtn.disabled = true;
             uploadProgress.classList.remove('hidden');
             successMessage.classList.add('hidden');
             errorMessage.classList.add('hidden');
 
-            try {
-                // Simulate progress
-                let progress = 0;
-                const progressInterval = setInterval(() => {
-                    progress += 10;
-                    if (progress <= 90) {
-                        progressBar.style.width = progress + '%';
-                        progressText.textContent = progress + '%';
-                    }
-                }, 200);
+            // Use XMLHttpRequest for better mobile compatibility
+            const xhr = new XMLHttpRequest();
 
-                const response = await fetch('{{ route("mobile.scholarship-record.upload.submit", $scholarshipRecord->upload_token) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json'
-                    },
-                    body: formData
-                });
+            // Progress tracking
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                    progressText.textContent = Math.round(percentComplete) + '%';
+                }
+            });
 
-                clearInterval(progressInterval);
+            // Upload complete
+            xhr.addEventListener('load', function() {
                 progressBar.style.width = '100%';
                 progressText.textContent = '100%';
 
-                const data = await response.json();
+                try {
+                    const data = JSON.parse(xhr.responseText);
 
-                if (response.ok && data.success) {
-                    successMessage.classList.remove('hidden');
-                    successDetails.textContent =
-                        `File uploaded successfully! Size reduced by ${data.size_reduction}.`;
-                    uploadForm.reset();
-                    previewContainer.classList.add('hidden');
+                    if (xhr.status === 200 && data.success) {
+                        successMessage.classList.remove('hidden');
+                        successDetails.textContent = `File uploaded successfully! Size reduced by ${data.size_reduction}.`;
+                        uploadForm.reset();
+                        previewContainer.classList.add('hidden');
 
-                    setTimeout(() => {
-                        uploadProgress.classList.add('hidden');
-                        progressBar.style.width = '0%';
-                        submitBtn.disabled = false;
-                    }, 2000);
-                } else {
-                    // Show detailed error message
-                    let errorMsg = data.error || 'Upload failed';
-                    if (data.errors) {
-                        // Show validation errors
-                        errorMsg += '\n\nValidation Errors:\n';
-                        for (const [field, messages] of Object.entries(data.errors)) {
-                            errorMsg += `- ${field}: ${messages.join(', ')}\n`;
+                        setTimeout(() => {
+                            uploadProgress.classList.add('hidden');
+                            progressBar.style.width = '0%';
+                            submitBtn.disabled = false;
+                        }, 2000);
+                    } else {
+                        // Show detailed error message
+                        let errorMsg = data.error || 'Upload failed';
+                        if (data.errors) {
+                            // Show validation errors
+                            errorMsg += '\n\nValidation Errors:\n';
+                            for (const [field, messages] of Object.entries(data.errors)) {
+                                errorMsg += `- ${field}: ${messages.join(', ')}\n`;
+                            }
                         }
+                        errorMessage.classList.remove('hidden');
+                        errorDetails.textContent = errorMsg;
+                        uploadProgress.classList.add('hidden');
+                        submitBtn.disabled = false;
                     }
-                    throw new Error(errorMsg);
+                } catch (error) {
+                    errorMessage.classList.remove('hidden');
+                    errorDetails.textContent = 'Error parsing response: ' + error.message;
+                    uploadProgress.classList.add('hidden');
+                    submitBtn.disabled = false;
                 }
-            } catch (error) {
-                errorMessage.classList.remove('hidden');
-                // Show full error details
-                let errorText = '';
-                if (error.message) {
-                    errorText = error.message;
-                } else {
-                    errorText = 'Upload failed: ' + JSON.stringify(error);
-                }
-                errorDetails.textContent = errorText;
+            });
 
+            // Upload error
+            xhr.addEventListener('error', function() {
+                errorMessage.classList.remove('hidden');
+                errorDetails.textContent = 'Network error occurred during upload';
                 uploadProgress.classList.add('hidden');
                 progressBar.style.width = '0%';
                 submitBtn.disabled = false;
-            }
+            });
+
+            // Open and send request
+            xhr.open('POST', '{{ route("mobile.scholarship-record.upload.submit", $scholarshipRecord->upload_token) }}', true);
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.send(formData);
         });
     </script>
 </body>

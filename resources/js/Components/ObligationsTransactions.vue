@@ -29,13 +29,20 @@
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                 <!-- Left: OBR Number (Prominent) -->
 
-                                <div class="flex flex-wrap items-center gap-6">
+                                <div class="flex flex-wrap items-center gap-8">
+                                    <div class="flex flex-col gap-2">
+                                        <p class="text-xs font-medium">OBR Date</p>
+                                        <p class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
+                                            item.date_obligated ? formatDate(item.date_obligated) : '-'
+                                        }}</p>
+                                    </div>
                                     <div v-if="item.obr_no" class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">OBR No.</p>
-                                        <p class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-slate-100">{{
+                                        <p class="text-normal font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
                                             item.obr_no }}
                                         </p>
                                     </div>
+
                                     <div v-if="item.disbursement_type" class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">Type</p>
                                         <p class="text-sm font-bold px-2 py-1 rounded-lg shadow"
@@ -50,10 +57,18 @@
                                                 formatDisbursementType(item.obr_status)
                                             }}</p>
                                     </div>
+                                    <div class="flex flex-col gap-2">
+                                        <p class="text-xs font-medium">Payee</p>
+                                        <p class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
+                                            item.payee || '-' }}
+                                        </p>
+                                    </div>
+
                                 </div>
 
                                 <!-- Right: Amount -->
-                                <div v-if="item.amount" class="text-right">
+                                <div v-if="item.amount" class="text-right flex flex-col gap-2">
+                                    <p class="text-xs font-medium">Amount</p>
                                     <p class="text-lg font-bold text-gray-900">{{ formatCurrency(item.amount) }}</p>
                                 </div>
                             </div>
@@ -61,88 +76,116 @@
 
                         <!-- Compact Content Section -->
                         <div class="p-4">
-                            <div class="flex flex-col lg:flex-row gap-4">
-                                <!-- Main Details -->
-                                <div class="flex-1 space-y-3">
-                                    <!-- Payee and Date -->
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                                        <div v-if="item.payee" class="flex items-center">
-                                            <i class="pi pi-user text-gray-400 mr-2 text-xs"></i>
-                                            <span class="text-gray-600 mr-2">Payee:</span>
-                                            <span class="font-semibold text-gray-900">{{ item.payee }}</span>
-                                        </div>
-                                        <div v-if="item.date_obligated" class="flex items-center">
-                                            <i class="pi pi-calendar text-gray-400 mr-2 text-xs"></i>
-                                            <span class="text-gray-600 mr-2">Obligated:</span>
-                                            <span class="font-medium text-gray-900">{{ formatDate(item.date_obligated)
-                                            }}</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Academic Information (Compact Inline) -->
-                                    <div v-if="item.year_level || item.semester || item.academic_year"
-                                        class="flex flex-wrap items-center gap-3 text-xs bg-gray-50 rounded px-3 py-2 border border-gray-200">
-                                        <div v-if="item.year_level" class="flex items-center">
-                                            <span class="text-gray-500 mr-1">Year:</span>
-                                            <span class="font-medium text-gray-900">{{ item.year_level }}</span>
-                                        </div>
-                                        <span v-if="item.year_level && item.semester" class="text-gray-300">•</span>
-                                        <div v-if="item.semester" class="flex items-center">
-                                            <span class="text-gray-500 mr-1">Term:</span>
-                                            <span class="font-medium text-gray-900">{{ item.semester }}</span>
-                                        </div>
-                                        <span v-if="item.semester && item.academic_year" class="text-gray-300">•</span>
-                                        <div v-if="item.academic_year" class="flex items-center">
-                                            <span class="text-gray-500 mr-1">AY:</span>
-                                            <span class="font-medium text-gray-900">{{ item.academic_year }}</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Cheque Information (Compact) -->
-                                    <div v-if="item.cheques && item.cheques.length > 0"
-                                        class="flex flex-wrap items-center gap-3 text-xs bg-green-50 rounded px-3 py-2 border border-green-200">
-                                        <i class="pi pi-check-circle text-green-600"></i>
-                                        <div class="flex items-center">
-                                            <span class="text-gray-600 mr-1">Cheque:</span>
-                                            <span class="font-semibold text-gray-900">{{ item.cheques[0].cheque_no
-                                            }}</span>
-                                        </div>
-                                        <span v-if="item.cheques[0].date_released" class="text-gray-300">•</span>
-                                        <div v-if="item.cheques[0].date_released" class="flex items-center">
-                                            <span class="text-gray-600 mr-1">Released:</span>
-                                            <span class="font-medium text-gray-900">{{
-                                                formatDate(item.cheques[0].date_released) }}</span>
+                            <div class="grid grid-cols-1 lg:grid-cols-[2fr_0.5fr_auto] gap-4">
+                                <!-- Column 1: Academic, Cheque, and Remarks (Stacked) -->
+                                <div class="space-y-3">
+                                    <!-- Academic Information -->
+                                    <div>
+                                        <h4 class="text-xs font-semibold text-gray-700 mb-2 flex items-center">
+                                            <i class="pi pi-book text-gray-500 mr-2"></i>
+                                            Academic Information
+                                        </h4>
+                                        <div
+                                            class="flex flex-wrap items-center gap-3 text-xs bg-gray-50 rounded px-3 py-2 border border-gray-200">
+                                            <div class="flex items-center">
+                                                <span class="text-gray-500 mr-1">Year:</span>
+                                                <span class="font-medium text-gray-900">{{ item.year_level || '-'
+                                                    }}</span>
+                                            </div>
+                                            <span class="text-gray-300">•</span>
+                                            <div class="flex items-center">
+                                                <span class="text-gray-500 mr-1">Term:</span>
+                                                <span class="font-medium text-gray-900">{{ item.semester || '-'
+                                                    }}</span>
+                                            </div>
+                                            <span class="text-gray-300">•</span>
+                                            <div class="flex items-center">
+                                                <span class="text-gray-500 mr-1">AY:</span>
+                                                <span class="font-medium text-gray-900">{{ item.academic_year || '-'
+                                                    }}</span>
+                                            </div>
+                                            <span class="text-gray-300">•</span>
+                                            <div class="flex items-center">
+                                                <span class="text-gray-500 mr-1">Course:</span>
+                                                <span class="font-medium text-gray-900">{{
+                                                    item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
+                                                    }}</span>
+                                            </div>
+                                            <span class="text-gray-300">•</span>
+                                            <div class="flex items-center">
+                                                <span class="text-gray-500 mr-1">School:</span>
+                                                <span class="font-medium text-gray-900">{{
+                                                    item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
+                                                    }}</span>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <!-- Remarks (Compact) -->
-                                    <div v-if="item.remarks"
-                                        class="text-xs bg-yellow-50 border-l-2 border-yellow-400 px-3 py-2">
-                                        <span class="font-semibold text-yellow-700">Note: </span>
-                                        <span class="text-gray-700">{{ item.remarks }}</span>
+                                    <!-- Cheque Information -->
+                                    <div>
+                                        <h4 class="text-xs font-semibold text-gray-700 mb-2 flex items-center">
+                                            <i class="pi pi-check-circle text-green-600 mr-2"></i>
+                                            Cheque Information
+                                        </h4>
+                                        <div
+                                            class="flex flex-wrap items-center gap-3 text-xs bg-green-50 rounded px-3 py-2 border border-green-200">
+                                            <div class="flex items-center">
+                                                <span class="text-gray-600 mr-1">Cheque:</span>
+                                                <span class="font-semibold text-gray-900">{{ item.cheques &&
+                                                    item.cheques.length > 0 ? item.cheques[0].cheque_no : '-' }}</span>
+                                            </div>
+                                            <span class="text-gray-300">•</span>
+                                            <div class="flex items-center">
+                                                <span class="text-gray-600 mr-1">Released:</span>
+                                                <span class="font-medium text-gray-900">{{ item.cheques &&
+                                                    item.cheques.length > 0 && item.cheques[0].date_released ?
+                                                    formatDate(item.cheques[0].date_released) : '-' }}</span>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <!-- Attachments (Compact) -->
-                                    <div v-if="item.attachments && item.attachments.length > 0"
-                                        class="flex flex-wrap items-center gap-2 text-xs bg-blue-50 rounded px-3 py-2 border border-blue-200">
-                                        <i class="pi pi-paperclip text-blue-600"></i>
-                                        <span class="text-gray-600 mr-2">Attachments:</span>
-                                        <div v-for="attachment in item.attachments" :key="attachment.attachment_id"
-                                            class="flex items-center gap-1 bg-white px-2 py-1 rounded border border-blue-200">
-                                            <i :class="getFileIcon(attachment.file_type)" class="text-blue-600"></i>
-                                            <span class="font-medium text-gray-900">{{ attachment.attachment_type
-                                                }}</span>
-                                            <Button icon="pi pi-eye" size="small" text rounded v-tooltip.top="'View'"
-                                                @click="viewAttachment(attachment)" />
-                                            <Button icon="pi pi-download" size="small" text rounded
-                                                v-tooltip.top="'Download'" @click="downloadAttachment(attachment)" />
-                                            <Button icon="pi pi-times" size="small" text rounded severity="danger"
-                                                v-tooltip.top="'Delete'" @click="deleteAttachment(attachment)" />
+                                    <!-- Remarks -->
+                                    <div>
+                                        <h4 class="text-xs font-semibold text-gray-700 mb-2 flex items-center">
+                                            <i class="pi pi-comment text-yellow-600 mr-2"></i>
+                                            Remarks
+                                        </h4>
+                                        <div class="text-xs bg-yellow-50 border-l-2 border-yellow-400 px-3 py-2">
+                                            <span class="text-gray-700">{{ item.remarks || '-' }}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Actions Section (Compact) -->
+                                <!-- Column 2: Attachments (Compact) -->
+                                <div>
+                                    <h4 class="text-xs font-semibold text-gray-700 mb-2 flex items-center">
+                                        <i class="pi pi-paperclip text-blue-600 mr-2"></i>
+                                        Attachments ({{ item.attachments ? item.attachments.length : 0 }})
+                                    </h4>
+                                    <div v-if="item.attachments && item.attachments.length > 0"
+                                        class="flex flex-col gap-1 text-xs bg-blue-50 rounded px-2 py-2 border border-blue-200">
+                                        <div v-for="attachment in item.attachments" :key="attachment.attachment_id"
+                                            class="flex items-center gap-1 bg-white px-2 py-1 rounded border border-blue-200">
+                                            <i :class="getFileIcon(attachment.file_type)"
+                                                class="text-blue-600 text-sm"></i>
+                                            <span class="font-medium text-gray-900 flex-1 truncate text-xs">{{
+                                                attachment.attachment_type }}</span>
+                                            <div class="flex gap-1">
+                                                <Button icon="pi pi-eye" size="small" text rounded
+                                                    v-tooltip.top="'View'" @click="viewAttachment(attachment)"
+                                                    class="!w-6 !h-6" />
+                                                <Button icon="pi pi-download" size="small" text rounded
+                                                    v-tooltip.top="'Download'" @click="downloadAttachment(attachment)"
+                                                    class="!w-6 !h-6" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div v-else class="text-xs bg-blue-50 rounded px-3 py-2 border border-blue-200">
+                                        <span class="text-gray-600">-</span>
+                                    </div>
+                                </div>
+
+                                <!-- Column 3: Actions Section -->
                                 <div class="flex lg:flex-col gap-2 lg:border-l lg:border-gray-200 lg:pl-4">
                                     <Button icon="pi pi-qrcode" size="small" severity="info" outlined rounded
                                         v-tooltip.top="'Show QR Code'" @click="showQrCode(item)" />
@@ -406,7 +449,14 @@
                     <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
                         <p class="text-xs text-yellow-800">
                             <i class="pi pi-exclamation-triangle mr-2"></i>
-                            <strong>Expires:</strong> {{ new Date(qrCodeData.expiresAt).toLocaleDateString() }}
+                            <strong>Expires in:</strong>
+                            <span :class="{
+                                'text-yellow-600': qrCountdown.includes('min') && !qrCountdown.includes('0 min'),
+                                'text-orange-600': qrCountdown.includes('0 min') && parseInt(qrCountdown) >= 5,
+                                'text-red-600 font-bold': qrCountdown.includes('0 min') && parseInt(qrCountdown) < 5 || qrCountdown === 'EXPIRED'
+                            }">
+                                {{ qrCountdown || 'Loading...' }}
+                            </span>
                         </p>
                     </div>
 
@@ -431,7 +481,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
@@ -465,6 +515,8 @@ const showAttachmentsModal = ref(false);
 const showViewerModal = ref(false);
 const showQrModal = ref(false);
 const qrCodeData = ref(null);
+const qrCountdown = ref('');
+const qrCountdownInterval = ref(null);
 const editMode = ref(false);
 const chequeEditMode = ref(false);
 const selectedDisbursement = ref(null);
@@ -531,6 +583,12 @@ const loadDisbursements = async () => {
     try {
         const response = await axios.get(route('disbursements.index', props.profileId));
         disbursements.value = response.data;
+        // Debug: Log first disbursement to check data structure
+        if (response.data.length > 0) {
+            console.log('First disbursement:', response.data[0]);
+            console.log('Profile:', response.data[0].profile);
+            console.log('Scholarship Grant:', response.data[0].profile?.scholarship_grant);
+        }
     } catch (error) {
         console.error('Error loading disbursements:', error);
         toast.error('Failed to load disbursements');
@@ -784,7 +842,7 @@ const uploadAttachment = async () => {
         formData.append('attachment_type', attachmentForm.value.attachment_type);
         formData.append('file', attachmentForm.value.file);
 
-        await axios.post(
+        const response = await axios.post(
             route('disbursements.attachments.upload', selectedDisbursement.value.disbursement_id),
             formData,
             {
@@ -795,6 +853,11 @@ const uploadAttachment = async () => {
         );
 
         toast.success('Attachment uploaded successfully');
+
+        // Update the selected disbursement's attachments immediately
+        if (response.data.attachments) {
+            selectedDisbursement.value.attachments = response.data.attachments;
+        }
 
         // Reset form
         attachmentForm.value = {
@@ -840,8 +903,14 @@ const deleteAttachment = async (attachment) => {
     }
 
     try {
-        await axios.delete(route('disbursements.attachments.delete', attachment.attachment_id));
+        const response = await axios.delete(route('disbursements.attachments.delete', attachment.attachment_id));
         toast.success('Attachment deleted successfully');
+
+        // Update the selected disbursement's attachments immediately
+        if (selectedDisbursement.value && response.data.attachments) {
+            selectedDisbursement.value.attachments = response.data.attachments;
+        }
+
         loadDisbursements();
     } catch (error) {
         console.error('Error deleting attachment:', error);
@@ -872,11 +941,55 @@ const showQrCode = async (disbursement) => {
             disbursement: disbursement
         };
         showQrModal.value = true;
+        startCountdown();
     } catch (error) {
         toast.error('Failed to generate QR code');
         console.error(error);
     }
 };
+
+const startCountdown = () => {
+    // Clear any existing interval
+    if (qrCountdownInterval.value) {
+        clearInterval(qrCountdownInterval.value);
+    }
+
+    const updateCountdown = () => {
+        if (!qrCodeData.value) return;
+
+        const now = new Date();
+        const expiresAt = new Date(qrCodeData.value.expiresAt);
+        const diff = expiresAt - now;
+
+        if (diff <= 0) {
+            qrCountdown.value = 'EXPIRED';
+            clearInterval(qrCountdownInterval.value);
+            return;
+        }
+
+        const totalMinutes = Math.floor(diff / 1000 / 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+        qrCountdown.value = `${totalMinutes} min ${seconds} sec`;
+    };
+
+    updateCountdown();
+    qrCountdownInterval.value = setInterval(updateCountdown, 1000);
+};
+
+// Watch for modal close to clear interval
+watch(showQrModal, (newValue) => {
+    if (!newValue && qrCountdownInterval.value) {
+        clearInterval(qrCountdownInterval.value);
+        qrCountdownInterval.value = null;
+    }
+});
+
+// Cleanup on component unmount
+onUnmounted(() => {
+    if (qrCountdownInterval.value) {
+        clearInterval(qrCountdownInterval.value);
+    }
+});
 
 const copyToClipboard = async (text) => {
     try {
