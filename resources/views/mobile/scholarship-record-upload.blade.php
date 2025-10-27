@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Upload Attachment - Scholarship Record</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -57,7 +56,6 @@
         <!-- Upload Form -->
         <div class="bg-white rounded-lg shadow-md p-6">
             <form id="uploadForm" enctype="multipart/form-data">
-                @csrf
 
                 <!-- Attachment Name -->
                 <div class="mb-6">
@@ -233,7 +231,6 @@
                 const response = await fetch('{{ route("mobile.scholarship-record.upload.submit", $scholarshipRecord->upload_token) }}', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Accept': 'application/json'
                     },
                     body: formData
