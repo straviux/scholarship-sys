@@ -214,14 +214,16 @@
             // Validate file is selected
             const fileInput = document.getElementById('file');
             if (!fileInput.files || !fileInput.files[0]) {
-                alert('Please select a file to upload');
+                errorMessage.classList.remove('hidden');
+                errorDetails.textContent = 'Please select a file to upload';
                 return;
             }
 
             // Validate attachment name
             const attachmentName = document.getElementById('attachment_name').value;
             if (!attachmentName) {
-                alert('Please enter an attachment name');
+                errorMessage.classList.remove('hidden');
+                errorDetails.textContent = 'Please enter an attachment name';
                 return;
             }
 
@@ -293,9 +295,6 @@
                     errorText = 'Upload failed: ' + JSON.stringify(error);
                 }
                 errorDetails.textContent = errorText;
-
-                // Also show error in alert for visibility
-                alert('Upload Failed!\n\n' + errorText);
 
                 uploadProgress.classList.add('hidden');
                 progressBar.style.width = '0%';

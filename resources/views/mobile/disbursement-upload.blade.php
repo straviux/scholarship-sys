@@ -216,14 +216,16 @@
             // Validate file is selected
             const fileInput = document.getElementById('file');
             if (!fileInput.files || !fileInput.files[0]) {
-                alert('Please select a file to upload');
+                errorMessage.classList.remove('hidden');
+                errorDetails.textContent = 'Please select a file to upload';
                 return;
             }
 
             // Validate attachment type
             const attachmentType = document.getElementById('attachment_type').value;
             if (!attachmentType) {
-                alert('Please select an attachment type');
+                errorMessage.classList.remove('hidden');
+                errorDetails.textContent = 'Please select an attachment type';
                 return;
             }
 
@@ -295,13 +297,9 @@
                 }
                 errorDetails.textContent = errorText;
 
-                // Also show error in alert for visibility
-                alert('Upload Failed!\n\n' + errorText);
-
                 uploadProgress.classList.add('hidden');
                 progressBar.style.width = '0%';
                 submitBtn.disabled = false;
-                console.error('Upload error:', error);
             }
         });
     </script>
