@@ -20,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
             // 'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             // 'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+        // Exclude mobile upload routes from CSRF verification
+        $middleware->validateCsrfTokens(except: [
+            'mobile/upload/disbursement/*',
+            'mobile/upload/scholarship-record/*',
+        ]);
         //
     })
     ->withExceptions(function (Exceptions $exceptions) {
