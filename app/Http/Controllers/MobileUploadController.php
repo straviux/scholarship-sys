@@ -61,7 +61,7 @@ class MobileUploadController extends Controller
         try {
             $request->validate([
                 'attachment_type' => 'required|string|max:255',
-                'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240', // 10MB max
+                'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:25600', // 25MB max
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -159,7 +159,7 @@ class MobileUploadController extends Controller
         try {
             $request->validate([
                 'attachment_name' => 'required|string|max:255',
-                'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240', // 10MB max
+                'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:25600', // 25MB max
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([

@@ -165,7 +165,10 @@
                                     <Avatar :label="getInitials(slotProps.data)" size="normal" shape="circle"
                                         class="bg-gradient-to-br from-blue-500 to-blue-600 text-white" />
                                     <div>
-                                        <div class="font-bold text-sm">{{ getFullName(slotProps.data) }}</div>
+                                        <div as="button"
+                                            class="font-bold text-sm text-sky-700 underline underline-offset-2 cursor-pointer"
+                                            @click="viewFullProfile(slotProps.data)">{{
+                                                getFullName(slotProps.data) }}</div>
                                         <div class="text-xs text-gray-500">{{ slotProps.data.unique_id || 'N/A' }}</div>
                                     </div>
                                 </div>
@@ -223,8 +226,6 @@
                                         v-tooltip.top="'View'" @click="viewFullProfile(slotProps.data)" />
                                     <Button icon="pi pi-pencil" size="small" severity="warning" outlined rounded
                                         v-tooltip.top="'Edit'" @click="editProfile(slotProps.data)" />
-                                    <Button icon="pi pi-history" size="small" severity="secondary" outlined rounded
-                                        v-tooltip.top="'History'" @click="viewFullHistory(slotProps.data)" />
                                 </div>
                             </template>
                         </Column>
@@ -312,8 +313,6 @@
                                                 v-tooltip.top="'View'" @click="viewFullProfile(item)" />
                                             <Button icon="pi pi-pencil" size="small" severity="warning" outlined rounded
                                                 v-tooltip.top="'Edit'" @click="editProfile(item)" />
-                                            <Button icon="pi pi-history" size="small" severity="secondary" outlined
-                                                rounded v-tooltip.top="'History'" @click="viewFullHistory(item)" />
                                         </div>
                                     </div>
                                 </div>
@@ -382,9 +381,6 @@
                                                 class="flex-1" v-tooltip.top="'View'" @click="viewFullProfile(item)" />
                                             <Button icon="pi pi-pencil" size="small" severity="warning" outlined
                                                 class="flex-1" v-tooltip.top="'Edit'" @click="editProfile(item)" />
-                                            <Button icon="pi pi-history" size="small" severity="secondary" outlined
-                                                class="flex-1" v-tooltip.top="'History'"
-                                                @click="viewFullHistory(item)" />
                                         </div>
                                     </div>
                                 </div>
@@ -551,8 +547,6 @@
 
             <template #footer>
                 <div class="flex justify-end gap-2">
-                    <Button label="View Full History" icon="pi pi-history" severity="info" outlined
-                        @click="viewFullHistory(selectedProfile)" />
                     <Button label="Close" icon="pi pi-times" severity="secondary" @click="showProfileDialog = false" />
                 </div>
             </template>
@@ -872,10 +866,6 @@ const clearFilters = () => {
 // Action methods
 const viewFullProfile = (profile) => {
     router.visit(route('scholarship.profile.show', profile.profile_id));
-};
-
-const viewFullHistory = (profile) => {
-    router.visit(route('scholarship.profile.history', profile.profile_id));
 };
 
 const reviewApplication = (scholarshipRecord) => {

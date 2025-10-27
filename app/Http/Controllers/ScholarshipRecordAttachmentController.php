@@ -16,7 +16,7 @@ class ScholarshipRecordAttachmentController extends Controller
     {
         $validated = $request->validate([
             'attachment_name' => 'required|string|max:255',
-            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240', // 10MB max
+            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:25600', // 25MB max
         ]);
 
         $file = $request->file('file');

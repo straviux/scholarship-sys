@@ -75,7 +75,7 @@
                                             <i class="pi pi-calendar text-gray-400 mr-2 text-xs"></i>
                                             <span class="text-gray-600 mr-2">Obligated:</span>
                                             <span class="font-medium text-gray-900">{{ formatDate(item.date_obligated)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                     </div>
 
@@ -105,7 +105,7 @@
                                         <div class="flex items-center">
                                             <span class="text-gray-600 mr-1">Cheque:</span>
                                             <span class="font-semibold text-gray-900">{{ item.cheques[0].cheque_no
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <span v-if="item.cheques[0].date_released" class="text-gray-300">•</span>
                                         <div v-if="item.cheques[0].date_released" class="flex items-center">
@@ -131,7 +131,7 @@
                                             class="flex items-center gap-1 bg-white px-2 py-1 rounded border border-blue-200">
                                             <i :class="getFileIcon(attachment.file_type)" class="text-blue-600"></i>
                                             <span class="font-medium text-gray-900">{{ attachment.attachment_type
-                                            }}</span>
+                                                }}</span>
                                             <Button icon="pi pi-eye" size="small" text rounded v-tooltip.top="'View'"
                                                 @click="viewAttachment(attachment)" />
                                             <Button icon="pi pi-download" size="small" text rounded
@@ -313,7 +313,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">File (PDF or Image) *</label>
                             <input type="file" ref="fileInput" @change="handleFileSelect" accept=".pdf,.jpg,.jpeg,.png"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            <p class="text-xs text-gray-500 mt-1">Accepted formats: PDF, JPG, PNG (Max 10MB)</p>
+                            <p class="text-xs text-gray-500 mt-1">Accepted formats: PDF, JPG, PNG (Max 25MB)</p>
                         </div>
                         <div v-if="attachmentForm.file">
                             <p class="text-sm text-gray-700">Selected: <span class="font-medium">{{

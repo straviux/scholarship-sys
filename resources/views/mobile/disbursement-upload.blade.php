@@ -91,7 +91,7 @@
                             <i class="fas fa-camera text-4xl text-gray-400 mb-2"></i>
                             <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Tap to take photo</span>
                                 or browse</p>
-                            <p class="text-xs text-gray-500">PNG, JPG or PDF (MAX. 10MB)</p>
+                            <p class="text-xs text-gray-500">PNG, JPG or PDF (MAX. 25MB)</p>
                         </div>
                         <input id="file" name="file" type="file" accept="image/*,application/pdf"
                             capture="environment" class="hidden" required>
