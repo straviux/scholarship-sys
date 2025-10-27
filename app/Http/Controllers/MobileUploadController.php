@@ -58,10 +58,17 @@ class MobileUploadController extends Controller
             return response()->json(['error' => 'Invalid or expired token'], 403);
         }
 
-        $request->validate([
-            'attachment_type' => 'required|string|max:255',
-            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240', // 10MB max
-        ]);
+        try {
+            $request->validate([
+                'attachment_type' => 'required|string|max:255',
+                'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240', // 10MB max
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        }
 
         $file = $request->file('file');
         $originalFileName = $file->getClientOriginalName();
@@ -149,10 +156,17 @@ class MobileUploadController extends Controller
             return response()->json(['error' => 'Invalid or expired token'], 403);
         }
 
-        $request->validate([
-            'attachment_name' => 'required|string|max:255',
-            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240', // 10MB max
-        ]);
+        try {
+            $request->validate([
+                'attachment_name' => 'required|string|max:255',
+                'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240', // 10MB max
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        }
 
         $file = $request->file('file');
         $originalFileName = $file->getClientOriginalName();

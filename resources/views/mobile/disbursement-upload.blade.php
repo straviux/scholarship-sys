@@ -235,7 +235,8 @@
                 const response = await fetch('{{ route("mobile.disbursement.upload.submit", $disbursement->upload_token) }}', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
                     },
                     body: formData
                 });

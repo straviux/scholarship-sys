@@ -98,7 +98,8 @@ class Disbursement extends Model
             $this->generateUploadToken();
         }
 
-        return route('mobile.disbursement.upload', ['token' => $this->upload_token]);
+        // Use HTTP with IP address instead of DNS name for mobile access
+        return 'http://192.168.3.2:9001/mobile/upload/disbursement/' . $this->upload_token;
     }
 
     /**
