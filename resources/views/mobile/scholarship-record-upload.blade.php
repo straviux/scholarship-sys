@@ -211,7 +211,24 @@
         uploadForm.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const formData = new FormData(this);
+            // Validate file is selected
+            const fileInput = document.getElementById('file');
+            if (!fileInput.files || !fileInput.files[0]) {
+                alert('Please select a file to upload');
+                return;
+            }
+
+            // Validate attachment name
+            const attachmentName = document.getElementById('attachment_name').value;
+            if (!attachmentName) {
+                alert('Please enter an attachment name');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('attachment_name', attachmentName);
+
             submitBtn.disabled = true;
             uploadProgress.classList.remove('hidden');
             successMessage.classList.add('hidden');

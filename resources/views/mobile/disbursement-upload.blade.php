@@ -213,7 +213,24 @@
         uploadForm.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const formData = new FormData(this);
+            // Validate file is selected
+            const fileInput = document.getElementById('file');
+            if (!fileInput.files || !fileInput.files[0]) {
+                alert('Please select a file to upload');
+                return;
+            }
+
+            // Validate attachment type
+            const attachmentType = document.getElementById('attachment_type').value;
+            if (!attachmentType) {
+                alert('Please select an attachment type');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('attachment_type', attachmentType);
+
             submitBtn.disabled = true;
             uploadProgress.classList.remove('hidden');
             successMessage.classList.add('hidden');
