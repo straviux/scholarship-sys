@@ -256,14 +256,35 @@
                         submitBtn.disabled = false;
                     }, 2000);
                 } else {
-                    throw new Error(data.error || 'Upload failed');
+                    // Show detailed error message
+                    let errorMsg = data.error || 'Upload failed';
+                    if (data.errors) {
+                        // Show validation errors
+                        errorMsg += '\n\nValidation Errors:\n';
+                        for (const [field, messages] of Object.entries(data.errors)) {
+                            errorMsg += `- ${field}: ${messages.join(', ')}\n`;
+                        }
+                    }
+                    throw new Error(errorMsg);
                 }
             } catch (error) {
                 errorMessage.classList.remove('hidden');
-                errorDetails.textContent = error.message;
+                // Show full error details
+                let errorText = '';
+                if (error.message) {
+                    errorText = error.message;
+                } else {
+                    errorText = 'Upload failed: ' + JSON.stringify(error);
+                }
+                errorDetails.textContent = errorText;
+
+                // Also show error in alert for visibility
+                alert('Upload Failed!\n\n' + errorText);
+
                 uploadProgress.classList.add('hidden');
                 progressBar.style.width = '0%';
                 submitBtn.disabled = false;
+                console.error('Upload error:', error);
             }
         });
     </script>
