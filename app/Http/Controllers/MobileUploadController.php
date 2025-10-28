@@ -232,7 +232,7 @@ class MobileUploadController extends Controller
         $attachment = DisbursementAttachment::create([
             'disbursement_id' => $disbursement->disbursement_id,
             'attachment_type' => $request->attachment_type,
-            'file_name' => $originalFileName,
+            'file_name' => $fileName, // Use formatted filename instead of original
             'file_path' => $filePath,
             'file_type' => $mimeType,
             'file_size' => strlen($processedContent),
@@ -398,7 +398,7 @@ class MobileUploadController extends Controller
         $attachment = ScholarshipRecordAttachment::create([
             'scholarship_record_id' => $scholarshipRecord->id,
             'attachment_name' => $request->attachment_name,
-            'file_name' => $originalFileName,
+            'file_name' => $fileName, // Use formatted filename instead of original
             'file_path' => $filePath,
             'file_type' => $mimeType,
             'file_size' => strlen($processedContent),
