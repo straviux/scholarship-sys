@@ -1,5 +1,8 @@
 <template>
-    <div class="p-6">
+    <div class="p-6 relative">
+        <!-- Backdrop overlay when viewer modal is open -->
+        <div v-if="showViewerModal" class="fixed inset-0 bg-black/30 z-[999]" style="margin: -1.5rem;"></div>
+
         <!-- Header with Add Button -->
         <div class="flex justify-between items-center mb-6">
             <div>
@@ -90,19 +93,19 @@
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Year:</span>
                                                 <span class="font-medium text-gray-900">{{ item.year_level || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Term:</span>
                                                 <span class="font-medium text-gray-900">{{ item.semester || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">AY:</span>
                                                 <span class="font-medium text-gray-900">{{ item.academic_year || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
@@ -116,7 +119,7 @@
                                                 <span class="text-gray-500 mr-1">School:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -188,15 +191,20 @@
                                 <!-- Column 3: Actions Section -->
                                 <div class="flex lg:flex-col gap-2 lg:border-l lg:border-gray-200 lg:pl-4">
                                     <Button icon="pi pi-qrcode" size="small" severity="info" outlined rounded
-                                        v-tooltip.top="'Show QR Code'" @click="showQrCode(item)" />
+                                        v-tooltip.top="'Show QR Code'" @click="showQrCode(item)"
+                                        :disabled="showViewerModal" />
                                     <Button icon="pi pi-paperclip" size="small" severity="secondary" outlined rounded
-                                        v-tooltip.top="'Manage Attachments'" @click="manageAttachments(item)" />
+                                        v-tooltip.top="'Manage Attachments'" @click="manageAttachments(item)"
+                                        :disabled="showViewerModal" />
                                     <Button icon="pi pi-file" size="small" severity="info" outlined rounded
-                                        v-tooltip.top="'Manage Cheque'" @click="manageCheque(item)" />
+                                        v-tooltip.top="'Manage Cheque'" @click="manageCheque(item)"
+                                        style="pointer-events: auto; position: relative; z-index: 1200;" />
                                     <Button icon="pi pi-pencil" size="small" severity="warning" outlined rounded
-                                        v-tooltip.top="'Edit'" @click="editDisbursement(item)" />
+                                        v-tooltip.top="'Edit'" @click="editDisbursement(item)"
+                                        :disabled="showViewerModal" />
                                     <Button icon="pi pi-trash" size="small" severity="danger" outlined rounded
-                                        v-tooltip.top="'Delete'" @click="confirmDelete(item)" />
+                                        v-tooltip.top="'Delete'" @click="confirmDelete(item)"
+                                        :disabled="showViewerModal" />
                                 </div>
                             </div>
                         </div>
@@ -280,7 +288,8 @@
         </Dialog>
 
         <!-- Manage Cheque Modal -->
-        <Dialog v-model:visible="showChequeModal" modal header="Manage Cheque" :style="{ width: '40vw' }">
+        <Dialog v-model:visible="showChequeModal" header="Manage Cheque" :style="{ width: '40vw', zIndex: 1100 }"
+            appendTo="body">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Cheque No. *</label>
@@ -377,9 +386,12 @@
         </Dialog>
 
         <!-- View Attachment Modal -->
-        <Dialog v-model:visible="showViewerModal" modal :header="viewerAttachment?.file_name"
+        <Dialog v-model:visible="showViewerModal" :header="viewerAttachment?.file_name"
             :breakpoints="{ '1199px': '90vw', '575px': '98vw' }" :style="{ width: '85vw', maxWidth: '1200px' }"
-            :maximizable="true">
+            :maximizable="true" :pt="{
+                mask: { style: 'pointer-events: none' },
+                root: { style: 'pointer-events: auto' }
+            }">
             <div class="flex items-center justify-center bg-gray-100 rounded relative overflow-hidden min-h-[70vh]">
                 <!-- PDF Viewer -->
                 <iframe v-if="viewerAttachment && viewerAttachment.file_type?.includes('pdf')"
@@ -669,6 +681,11 @@ const editDisbursement = (disbursement) => {
 };
 
 const manageCheque = (disbursement) => {
+    // Don't close View Attachment modal - allow both to be open
+    // Only close other modals that might conflict
+    showAttachmentsModal.value = false;
+    showQrModal.value = false;
+
     selectedDisbursement.value = disbursement;
     if (disbursement.cheques && disbursement.cheques.length > 0) {
         const cheque = disbursement.cheques[0];
