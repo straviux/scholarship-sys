@@ -238,8 +238,9 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Date Obligated</label>
-                        <DatePicker v-model="form.date_obligated" dateFormat="mm/dd/yy" placeholder="Select date"
-                            class="w-full" />
+                        <DatePicker v-model="form.date_obligated" dateFormat="mm/dd/yy"
+                            placeholder="Select date (MM/DD/YYYY or YYYY-MM-DD)" class="w-full" :manualInput="true"
+                            @date-select="handleDateSelect" @blur="parseDateInput($event, 'date_obligated')" />
                     </div>
 
                     <div>
@@ -288,8 +289,9 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Date Released</label>
-                    <DatePicker v-model="chequeForm.date_released" dateFormat="mm/dd/yy" placeholder="Select date"
-                        class="w-full" />
+                    <DatePicker v-model="chequeForm.date_released" dateFormat="mm/dd/yy"
+                        placeholder="Select date (MM/DD/YYYY or YYYY-MM-DD)" class="w-full" :manualInput="true"
+                        @blur="parseDateInput($event, 'date_released', true)" />
                 </div>
 
                 <div>
@@ -615,6 +617,8 @@ const saveDisbursement = async () => {
         const data = {
             ...form.value,
             profile_id: props.profileId,
+            // Format date to YYYY-MM-DD to avoid timezone issues
+            date_obligated: formatDateForBackend(form.value.date_obligated),
             // Extract string values from select components if they return objects
             year_level: typeof form.value.year_level === 'object' ? form.value.year_level?.value : form.value.year_level,
             semester: typeof form.value.semester === 'object' ? form.value.semester?.value : form.value.semester,
@@ -685,12 +689,18 @@ const saveCheque = async () => {
 
     saving.value = true;
     try {
+        // Format date to avoid timezone issues
+        const data = {
+            ...chequeForm.value,
+            date_released: formatDateForBackend(chequeForm.value.date_released),
+        };
+
         if (chequeEditMode.value) {
             const chequeId = selectedDisbursement.value.cheques[0].cheque_id;
-            await axios.put(route('cheques.update', chequeId), chequeForm.value);
+            await axios.put(route('cheques.update', chequeId), data);
             toast.success('Cheque updated successfully');
         } else {
-            await axios.post(route('disbursements.cheques.store', selectedDisbursement.value.disbursement_id), chequeForm.value);
+            await axios.post(route('disbursements.cheques.store', selectedDisbursement.value.disbursement_id), data);
             toast.success('Cheque added successfully');
         }
 
@@ -745,6 +755,69 @@ const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+};
+
+// Helper function to format date for backend (YYYY-MM-DD)
+const formatDateForBackend = (date) => {
+    if (!date) return null;
+    if (!(date instanceof Date)) return date;
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+// Helper function to parse manual date input (supports MM/DD/YYYY and YYYY-MM-DD)
+const parseDateInput = (event, field, isCheque = false) => {
+    const input = event.target.value?.trim();
+    if (!input) return;
+
+    // Try parsing YYYY-MM-DD format
+    const isoMatch = input.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (isoMatch) {
+        const [, year, month, day] = isoMatch;
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        if (!isNaN(date.getTime())) {
+            if (isCheque) {
+                chequeForm.value[field] = date;
+            } else {
+                form.value[field] = date;
+            }
+            return;
+        }
+    }
+
+    // Try parsing MM/DD/YYYY format
+    const usMatch = input.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (usMatch) {
+        const [, month, day, year] = usMatch;
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        if (!isNaN(date.getTime())) {
+            if (isCheque) {
+                chequeForm.value[field] = date;
+            } else {
+                form.value[field] = date;
+            }
+            return;
+        }
+    }
+
+    // Try parsing M/D/YY format (short year)
+    const shortMatch = input.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+    if (shortMatch) {
+        const [, month, day, shortYear] = shortMatch;
+        const year = parseInt(shortYear) < 50 ? 2000 + parseInt(shortYear) : 1900 + parseInt(shortYear);
+        const date = new Date(year, parseInt(month) - 1, parseInt(day));
+        if (!isNaN(date.getTime())) {
+            if (isCheque) {
+                chequeForm.value[field] = date;
+            } else {
+                form.value[field] = date;
+            }
+            return;
+        }
+    }
 };
 
 const formatCurrency = (amount) => {
