@@ -314,7 +314,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -764,8 +764,8 @@ const manageAttachments = (record) => {
 const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file) {
-        if (file.size > 10 * 1024 * 1024) { // 10MB
-            toast.error('File size must not exceed 10MB');
+        if (file.size > 25 * 1024 * 1024) { // 25MB
+            toast.error('File size must not exceed 25MB');
             event.target.value = '';
             return;
         }

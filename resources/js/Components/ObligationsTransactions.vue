@@ -34,7 +34,7 @@
                                         <p class="text-xs font-medium">OBR Date</p>
                                         <p class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
                                             item.date_obligated ? formatDate(item.date_obligated) : '-'
-                                        }}</p>
+                                            }}</p>
                                     </div>
                                     <div v-if="item.obr_no" class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">OBR No.</p>
@@ -90,33 +90,33 @@
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Year:</span>
                                                 <span class="font-medium text-gray-900">{{ item.year_level || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Term:</span>
                                                 <span class="font-medium text-gray-900">{{ item.semester || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">AY:</span>
                                                 <span class="font-medium text-gray-900">{{ item.academic_year || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Course:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">School:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -820,9 +820,9 @@ const manageAttachments = (disbursement) => {
 const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file) {
-        // Validate file size (10MB max)
-        if (file.size > 10 * 1024 * 1024) {
-            toast.error('File size must be less than 10MB');
+        // Validate file size (25MB max)
+        if (file.size > 25 * 1024 * 1024) {
+            toast.error('File size must be less than 25MB');
             event.target.value = '';
             return;
         }
