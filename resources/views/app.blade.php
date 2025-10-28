@@ -19,6 +19,9 @@
 
 <body class="font-sans antialiased">
     @inertia
+
+    <!-- SSL Certificate Auto-Detection -->
+    <script src="{{ asset('js/ssl-cert-checker.js') }}"></script>
 </body>
 
 </html>
