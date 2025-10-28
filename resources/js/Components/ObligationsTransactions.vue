@@ -239,8 +239,8 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Date Obligated</label>
                         <DatePicker v-model="form.date_obligated" dateFormat="mm/dd/yy"
-                            placeholder="Select date (MM/DD/YYYY or YYYY-MM-DD)" class="w-full" :manualInput="true"
-                            @date-select="handleDateSelect" @blur="parseDateInput($event, 'date_obligated')" />
+                            placeholder="MM/DD/YYYY or YYYY-MM-DD" class="w-full" :manualInput="true"
+                            @input="handleDateInput($event, 'date_obligated')" />
                     </div>
 
                     <div>
@@ -290,8 +290,8 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Date Released</label>
                     <DatePicker v-model="chequeForm.date_released" dateFormat="mm/dd/yy"
-                        placeholder="Select date (MM/DD/YYYY or YYYY-MM-DD)" class="w-full" :manualInput="true"
-                        @blur="parseDateInput($event, 'date_released', true)" />
+                        placeholder="MM/DD/YYYY or YYYY-MM-DD" class="w-full" :manualInput="true"
+                        @input="handleDateInput($event, 'date_released', true)" />
                 </div>
 
                 <div>
@@ -768,55 +768,38 @@ const formatDateForBackend = (date) => {
     return `${year}-${month}-${day}`;
 };
 
-// Helper function to parse manual date input (supports MM/DD/YYYY and YYYY-MM-DD)
-const parseDateInput = (event, field, isCheque = false) => {
-    const input = event.target.value?.trim();
+// Helper function to handle manual date input (supports YYYY-MM-DD and MM/DD/YYYY only)
+const handleDateInput = (event, field, isCheque = false) => {
+    const input = event.target?.value?.trim();
     if (!input) return;
 
-    // Try parsing YYYY-MM-DD format
+    let parsedDate = null;
+
+    // Try parsing YYYY-MM-DD format (e.g., 2025-10-28)
     const isoMatch = input.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
     if (isoMatch) {
         const [, year, month, day] = isoMatch;
-        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        if (!isNaN(date.getTime())) {
-            if (isCheque) {
-                chequeForm.value[field] = date;
-            } else {
-                form.value[field] = date;
-            }
-            return;
+        parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }
+
+    // Try parsing MM/DD/YYYY format (e.g., 10/28/2025)
+    if (!parsedDate) {
+        const usMatch = input.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (usMatch) {
+            const [, month, day, year] = usMatch;
+            parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         }
     }
 
-    // Try parsing MM/DD/YYYY format
-    const usMatch = input.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if (usMatch) {
-        const [, month, day, year] = usMatch;
-        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        if (!isNaN(date.getTime())) {
+    // If we successfully parsed a valid date, update the form
+    if (parsedDate && !isNaN(parsedDate.getTime())) {
+        setTimeout(() => {
             if (isCheque) {
-                chequeForm.value[field] = date;
+                chequeForm.value[field] = parsedDate;
             } else {
-                form.value[field] = date;
+                form.value[field] = parsedDate;
             }
-            return;
-        }
-    }
-
-    // Try parsing M/D/YY format (short year)
-    const shortMatch = input.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
-    if (shortMatch) {
-        const [, month, day, shortYear] = shortMatch;
-        const year = parseInt(shortYear) < 50 ? 2000 + parseInt(shortYear) : 1900 + parseInt(shortYear);
-        const date = new Date(year, parseInt(month) - 1, parseInt(day));
-        if (!isNaN(date.getTime())) {
-            if (isCheque) {
-                chequeForm.value[field] = date;
-            } else {
-                form.value[field] = date;
-            }
-            return;
-        }
+        }, 0);
     }
 };
 
