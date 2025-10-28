@@ -34,7 +34,7 @@
                                         <p class="text-xs font-medium">OBR Date</p>
                                         <p class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
                                             item.date_obligated ? formatDate(item.date_obligated) : '-'
-                                            }}</p>
+                                        }}</p>
                                     </div>
                                     <div v-if="item.obr_no" class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">OBR No.</p>
@@ -90,33 +90,33 @@
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Year:</span>
                                                 <span class="font-medium text-gray-900">{{ item.year_level || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Term:</span>
                                                 <span class="font-medium text-gray-900">{{ item.semester || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">AY:</span>
                                                 <span class="font-medium text-gray-900">{{ item.academic_year || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Course:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">School:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -239,7 +239,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Date Obligated</label>
                         <DatePicker v-model="form.date_obligated" dateFormat="mm/dd/yy"
-                            placeholder="MM/DD/YYYY or YYYY-MM-DD" class="w-full" :manualInput="true"
+                            placeholder="MM/DD/YYYY, YYYY-MM-DD, or Oct. 22, 2025" class="w-full" :manualInput="true"
                             @input="handleDateInput($event, 'date_obligated')" />
                     </div>
 
@@ -290,7 +290,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Date Released</label>
                     <DatePicker v-model="chequeForm.date_released" dateFormat="mm/dd/yy"
-                        placeholder="MM/DD/YYYY or YYYY-MM-DD" class="w-full" :manualInput="true"
+                        placeholder="MM/DD/YYYY, YYYY-MM-DD, or Oct. 22, 2025" class="w-full" :manualInput="true"
                         @input="handleDateInput($event, 'date_released', true)" />
                 </div>
 
@@ -768,7 +768,7 @@ const formatDateForBackend = (date) => {
     return `${year}-${month}-${day}`;
 };
 
-// Helper function to handle manual date input (supports YYYY-MM-DD and MM/DD/YYYY only)
+// Helper function to handle manual date input (supports YYYY-MM-DD, MM/DD/YYYY, and "Oct. 22, 2025" formats)
 const handleDateInput = (event, field, isCheque = false) => {
     const input = event.target?.value?.trim();
     if (!input) return;
@@ -788,6 +788,34 @@ const handleDateInput = (event, field, isCheque = false) => {
         if (usMatch) {
             const [, month, day, year] = usMatch;
             parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        }
+    }
+
+    // Try parsing "Oct. 22, 2025" or "October 22, 2025" format
+    if (!parsedDate) {
+        const monthNames = {
+            'jan': 0, 'january': 0,
+            'feb': 1, 'february': 1,
+            'mar': 2, 'march': 2,
+            'apr': 3, 'april': 3,
+            'may': 4,
+            'jun': 5, 'june': 5,
+            'jul': 6, 'july': 6,
+            'aug': 7, 'august': 7,
+            'sep': 8, 'september': 8,
+            'oct': 9, 'october': 9,
+            'nov': 10, 'november': 10,
+            'dec': 11, 'december': 11
+        };
+
+        // Match patterns like "Oct. 22, 2025", "October 22, 2025", "Oct 22, 2025"
+        const textMatch = input.match(/^([a-z]+)\.?\s+(\d{1,2}),?\s+(\d{4})$/i);
+        if (textMatch) {
+            const [, monthStr, day, year] = textMatch;
+            const monthIndex = monthNames[monthStr.toLowerCase()];
+            if (monthIndex !== undefined) {
+                parsedDate = new Date(parseInt(year), monthIndex, parseInt(day));
+            }
         }
     }
 
