@@ -6,17 +6,32 @@ param(
     [switch]$Silent = $false
 )
 
-# If no server URL provided, try to detect from browser or use current server
+# If no server URL provided, try to detect it
 if (-not $ServerUrl) {
+    # Try environment variable first
     $ServerUrl = $env:CERT_SERVER_URL
+    
+    # Try to detect from script location (Zone.Identifier alternate data stream)
     if (-not $ServerUrl) {
-        # Try to get from referrer or use localhost as fallback
-        $ServerUrl = "http://localhost"
+        try {
+            $zoneId = Get-Content -Path "$PSCommandPath`:Zone.Identifier" -ErrorAction SilentlyContinue
+            if ($zoneId -match 'HostUrl=(.+)') {
+                $ServerUrl = $matches[1] -replace '(https?://[^/]+).*', '$1'
+            }
+        }
+        catch { }
+    }
+    
+    # Default to your server IP
+    if (-not $ServerUrl) {
+        $ServerUrl = "http://192.168.3.2:9001"
     }
 }
 
 # Ensure we have just the base URL
 $ServerUrl = $ServerUrl -replace '(https?://[^/]+).*', '$1'
+
+Write-Host "Using server URL: $ServerUrl" -ForegroundColor Cyan
 
 $ErrorActionPreference = "Stop"
 

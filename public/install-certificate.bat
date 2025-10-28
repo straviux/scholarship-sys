@@ -32,8 +32,8 @@ if exist "%SCRIPT_DIR%install-certificate-auto.ps1" (
     echo [*] Requesting administrator privileges...
     echo.
     
-    REM Run PowerShell script with admin rights
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Start-Process powershell.exe -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File \"%SCRIPT_DIR%install-certificate-auto.ps1\"' -Verb RunAs"
+    REM Run PowerShell script with admin rights, passing server URL
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Start-Process powershell.exe -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File \"%SCRIPT_DIR%install-certificate-auto.ps1\" -ServerUrl \"http://192.168.3.2:9001\"' -Verb RunAs"
     
     echo.
     echo [*] Installation launched!
@@ -47,13 +47,13 @@ if exist "%SCRIPT_DIR%install-certificate-auto.ps1" (
     set "TEMP_DIR=%TEMP%\ScholarshipCert"
     if not exist "%TEMP_DIR%" mkdir "%TEMP_DIR%"
     
-    REM Download PowerShell script
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -Uri 'http://localhost/install-certificate-auto.ps1' -OutFile '%TEMP_DIR%\install-certificate-auto.ps1' -UseBasicParsing; exit 0 } catch { exit 1 }"
+    REM Download PowerShell script from correct server
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -Uri 'http://192.168.3.2:9001/install-certificate-auto.ps1' -OutFile '%TEMP_DIR%\install-certificate-auto.ps1' -UseBasicParsing; exit 0 } catch { exit 1 }"
     
     if %ERRORLEVEL% EQU 0 (
         echo [*] Download complete
         echo [*] Starting installation...
-        powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Start-Process powershell.exe -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File \"%TEMP_DIR%\install-certificate-auto.ps1\"' -Verb RunAs"
+        powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Start-Process powershell.exe -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File \"%TEMP_DIR%\install-certificate-auto.ps1\" -ServerUrl \"http://192.168.3.2:9001\"' -Verb RunAs"
     ) else (
         echo.
         echo [ERROR] Could not download installer.
@@ -64,7 +64,7 @@ if exist "%SCRIPT_DIR%install-certificate-auto.ps1" (
         echo  3. You have internet access
         echo.
         echo Alternatively, download the installer manually from:
-        echo http://your-server/install-certificate-auto.ps1
+        echo http://192.168.3.2:9001/install-certificate-auto.ps1
         echo.
         pause
         exit /b 1
