@@ -200,8 +200,11 @@ class MobileUploadController extends Controller
             $extension = '.gz';
         }
 
-        // Get scholar name
+        // Get scholar unique_id
         $profile = $disbursement->profile;
+        $uniqueId = $profile->unique_id;
+
+        // Get scholar name for filename
         $scholarName = $profile->first_name . '_' . $profile->last_name;
         // Clean scholar name (remove spaces, special characters)
         $scholarName = preg_replace('/[^A-Za-z0-9_]/', '_', $scholarName);
@@ -221,9 +224,11 @@ class MobileUploadController extends Controller
             $fileExtension = pathinfo($originalFileName, PATHINFO_EXTENSION);
         }
 
-        // Generate file path: [scholar_name]_[attachment_type]_[timestamp].[extension]
-        $fileName = "{$scholarName}_{$attachmentType}_{$timestamp}.{$fileExtension}";
-        $filePath = 'disbursement_attachments/' . $fileName;
+        // Generate file path: disbursement_[scholar_name]_[attachment_type]_[timestamp].[extension]
+        $fileName = "disbursement_{$scholarName}_{$attachmentType}_{$timestamp}.{$fileExtension}";
+
+        // Store file in: attachments/[unique_id]/
+        $filePath = "attachments/{$uniqueId}/" . $fileName;
 
         // Store the file
         Storage::disk('public')->put($filePath, $processedContent);
@@ -358,8 +363,11 @@ class MobileUploadController extends Controller
             $extension = '.gz';
         }
 
-        // Get scholar name
+        // Get scholar unique_id
         $profile = $scholarshipRecord->profile;
+        $uniqueId = $profile->unique_id;
+
+        // Get scholar name for filename
         $scholarName = $profile->first_name . '_' . $profile->last_name;
         // Clean scholar name (remove spaces, special characters)
         $scholarName = preg_replace('/[^A-Za-z0-9_]/', '_', $scholarName);
@@ -387,9 +395,11 @@ class MobileUploadController extends Controller
             }
         }
 
-        // Create new filename: [scholar_name]_[attachment_name]_[timestamp][page_suffix].[extension]
-        $fileName = "{$scholarName}_{$attachmentName}_{$timestamp}{$pageNumberSuffix}" . ($extension ?: ".{$fileExtension}");
-        $filePath = 'scholarship_records/attachments/' . $fileName;
+        // Create new filename: scholarship_record_[scholar_name]_[attachment_name]_[timestamp][page_suffix].[extension]
+        $fileName = "scholarship_record_{$scholarName}_{$attachmentName}_{$timestamp}{$pageNumberSuffix}" . ($extension ?: ".{$fileExtension}");
+
+        // Store file in: attachments/[unique_id]/
+        $filePath = "attachments/{$uniqueId}/" . $fileName;
 
         // Store the file
         Storage::disk('public')->put($filePath, $processedContent);

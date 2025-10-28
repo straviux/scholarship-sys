@@ -183,8 +183,11 @@ class DisbursementController extends Controller
 
         $disbursement = Disbursement::with('profile')->findOrFail($disbursementId);
 
-        // Get scholar name
+        // Get scholar unique_id
         $profile = $disbursement->profile;
+        $uniqueId = $profile->unique_id;
+
+        // Get scholar name for filename
         $scholarName = $profile->first_name . '_' . $profile->last_name;
         // Clean scholar name (remove spaces, special characters)
         $scholarName = preg_replace('/[^A-Za-z0-9_]/', '_', $scholarName);
@@ -199,9 +202,11 @@ class DisbursementController extends Controller
         $file = $request->file('file');
         $extension = $file->getClientOriginalExtension();
 
-        // Create new filename: [scholar_name]_[attachment_type]_[timestamp].[extension]
-        $fileName = "{$scholarName}_{$attachmentType}_{$timestamp}.{$extension}";
-        $filePath = $file->storeAs('disbursements/attachments', $fileName, 'public');
+        // Create new filename: disbursement_[scholar_name]_[attachment_type]_[timestamp].[extension]
+        $fileName = "disbursement_{$scholarName}_{$attachmentType}_{$timestamp}.{$extension}";
+
+        // Store file in: attachments/[unique_id]/
+        $filePath = $file->storeAs("attachments/{$uniqueId}", $fileName, 'public');
 
         $attachment = DisbursementAttachment::create([
             'disbursement_id' => $disbursementId,
