@@ -90,33 +90,33 @@
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Year:</span>
                                                 <span class="font-medium text-gray-900">{{ item.year_level || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Term:</span>
                                                 <span class="font-medium text-gray-900">{{ item.semester || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">AY:</span>
                                                 <span class="font-medium text-gray-900">{{ item.academic_year || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Course:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">School:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -378,51 +378,59 @@
 
         <!-- View Attachment Modal -->
         <Dialog v-model:visible="showViewerModal" modal :header="viewerAttachment?.file_name"
-            :style="{ width: '80vw', maxWidth: '1200px' }" :maximizable="true">
-            <div class="flex items-center justify-center bg-gray-100 rounded relative overflow-hidden"
-                style="min-height: 500px;">
+            :breakpoints="{ '1199px': '90vw', '575px': '98vw' }" :style="{ width: '85vw', maxWidth: '1200px' }"
+            :maximizable="true">
+            <div class="flex items-center justify-center bg-gray-100 rounded relative overflow-hidden min-h-[70vh]">
                 <!-- PDF Viewer -->
                 <iframe v-if="viewerAttachment && viewerAttachment.file_type?.includes('pdf')"
-                    :src="getAttachmentUrl(viewerAttachment)" class="w-full h-full rounded" style="min-height: 600px;"
-                    frameborder="0">
+                    :src="getAttachmentUrl(viewerAttachment)" class="w-full h-full rounded" frameborder="0">
                 </iframe>
 
                 <!-- Image Viewer with Zoom -->
                 <div v-else-if="viewerAttachment && viewerAttachment.file_type?.includes('image')"
-                    class="w-full h-full flex items-center justify-center relative" style="min-height: 600px;"
-                    @wheel="handleWheel" @mousedown="handleMouseDown" @mousemove="handleMouseMove"
-                    @mouseup="handleMouseUp" @mouseleave="handleMouseUp"
+                    class="w-full h-full flex items-center justify-center relative overflow-auto" @wheel="handleWheel"
+                    @mousedown="handleMouseDown" @mousemove="handleMouseMove" @mouseup="handleMouseUp"
+                    @mouseleave="handleMouseUp"
                     :style="{ cursor: imageZoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }">
                     <img :src="getAttachmentUrl(viewerAttachment)" :alt="viewerAttachment.file_name"
-                        class="max-w-full max-h-[600px] object-contain rounded select-none" draggable="false" :style="{
+                        class="max-w-full max-h-full object-contain rounded select-none" draggable="false" :style="{
                             transform: `scale(${imageZoom}) translate(${imagePosition.x / imageZoom}px, ${imagePosition.y / imageZoom}px)`,
                             transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                         }" />
-
-                    <!-- Zoom Controls -->
-                    <div class="absolute bottom-4 right-4 flex gap-2 bg-white rounded-lg shadow-lg p-2">
-                        <Button icon="pi pi-minus" @click="zoomOut" size="small" severity="secondary" rounded
-                            :disabled="imageZoom <= 0.5" />
-                        <span class="px-3 py-2 text-sm font-semibold">{{ Math.round(imageZoom * 100) }}%</span>
-                        <Button icon="pi pi-plus" @click="zoomIn" size="small" severity="secondary" rounded
-                            :disabled="imageZoom >= 5" />
-                        <Button icon="pi pi-refresh" @click="resetZoom" size="small" severity="secondary" rounded
-                            v-tooltip.top="'Reset Zoom'" />
-                    </div>
                 </div>
 
                 <!-- Fallback -->
-                <div v-else class="text-center p-8">
-                    <i class="pi pi-file text-6xl text-gray-400 mb-4"></i>
-                    <p class="text-gray-600">Unable to preview this file type</p>
-                    <Button label="Download Instead" icon="pi pi-download" class="mt-4"
+                <div v-else class="text-center p-4 sm:p-8">
+                    <i class="pi pi-file text-4xl sm:text-6xl text-gray-400 mb-4"></i>
+                    <p class="text-sm sm:text-base text-gray-600">Unable to preview this file type</p>
+                    <Button label="Download Instead" icon="pi pi-download" class="mt-4" size="small"
                         @click="downloadAttachment(viewerAttachment)" />
                 </div>
             </div>
 
             <template #footer>
-                <Button label="Download" icon="pi pi-download" @click="downloadAttachment(viewerAttachment)" />
-                <Button label="Close" severity="secondary" @click="showViewerModal = false" />
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 w-full pt-4">
+                    <!-- Zoom Controls (only show for images) -->
+                    <div v-if="viewerAttachment && viewerAttachment.file_type?.includes('image')"
+                        class="flex items-center gap-2">
+                        <Button icon="pi pi-minus" @click="zoomOut" size="small" severity="secondary" rounded
+                            :disabled="imageZoom <= 0.5" />
+                        <span class="px-3 py-2 text-sm font-semibold min-w-[60px] text-center">{{ Math.round(imageZoom *
+                            100) }}%</span>
+                        <Button icon="pi pi-plus" @click="zoomIn" size="small" severity="secondary" rounded
+                            :disabled="imageZoom >= 5" />
+                        <Button icon="pi pi-refresh" @click="resetZoom" size="small" severity="secondary" rounded
+                            v-tooltip.top="'Reset Zoom'" />
+                    </div>
+                    <div v-else></div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-2">
+                        <Button label="Download" icon="pi pi-download" @click="downloadAttachment(viewerAttachment)"
+                            size="small" />
+                        <Button label="Close" severity="secondary" @click="showViewerModal = false" size="small" />
+                    </div>
+                </div>
             </template>
         </Dialog>
 
