@@ -29,6 +29,67 @@
         .file-input-label:hover {
             transform: scale(1.02);
         }
+
+        /* Image Editor Styles */
+        .editor-canvas {
+            touch-action: none;
+            border-radius: 50%;
+            max-width: 100%;
+        }
+
+        .zoom-controls {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .zoom-btn {
+            padding: 0.5rem 1rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background 0.2s;
+        }
+
+        .zoom-btn:hover {
+            background: #2563eb;
+        }
+
+        .zoom-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        #editorModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        #editorModal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .editor-content {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            max-width: 500px;
+            width: 100%;
+        }
     </style>
 </head>
 
@@ -97,10 +158,16 @@
                 <!-- Preview -->
                 <div id="previewContainer" class="preview-container hidden">
                     <div class="relative">
-                        <img id="previewImage" src="" alt="Preview" class="preview-image">
+                        <div class="w-48 h-48 mx-auto border-2 border-gray-300 rounded-full overflow-hidden">
+                            <img id="previewImage" src="" alt="Preview" class="w-full h-full object-cover">
+                        </div>
+                        <button type="button" id="editPhotoBtn"
+                            class="mt-4 w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600">
+                            <i class="fas fa-edit mr-2"></i> Adjust Photo
+                        </button>
                         <button type="button" id="removeFile"
-                            class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 shadow-lg">
-                            <i class="fas fa-times"></i>
+                            class="mt-2 w-full bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600">
+                            <i class="fas fa-times mr-2"></i> Remove Photo
                         </button>
                     </div>
                     <p id="fileName" class="text-sm text-gray-600 mt-2 text-center"></p>
@@ -147,6 +214,50 @@
         </div>
     </div>
 
+    <!-- Image Editor Modal -->
+    <div id="editorModal">
+        <div class="editor-content">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Adjust Your Photo</h2>
+
+            <p class="text-sm text-gray-600 mb-4">Zoom and drag to position your photo perfectly</p>
+
+            <!-- Canvas Container -->
+            <div class="flex justify-center mb-4">
+                <div class="relative inline-block border-4 border-gray-300 rounded-full overflow-hidden">
+                    <canvas id="editorCanvas" class="editor-canvas cursor-move"></canvas>
+                </div>
+            </div>
+
+            <!-- Zoom Controls -->
+            <div class="zoom-controls mb-4">
+                <button type="button" id="zoomOutBtn" class="zoom-btn">
+                    <i class="fas fa-minus"></i> Zoom Out
+                </button>
+                <span class="text-sm text-gray-600">Zoom: <span id="zoomLevel">100%</span></span>
+                <button type="button" id="zoomInBtn" class="zoom-btn">
+                    <i class="fas fa-plus"></i> Zoom In
+                </button>
+            </div>
+
+            <p class="text-xs text-gray-500 text-center mb-6">
+                <i class="fas fa-info-circle mr-1"></i>
+                Pinch to zoom, drag to move the image
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-2">
+                <button type="button" id="cancelEditBtn"
+                    class="flex-1 bg-gray-500 text-white py-3 px-4 rounded-lg hover:bg-gray-600">
+                    Cancel
+                </button>
+                <button type="button" id="confirmEditBtn"
+                    class="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700">
+                    Use This Photo
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const token = '{{ $token }}';
         const expiresAt = new Date('{{ $expiresAt }}');
@@ -157,6 +268,7 @@
         const previewImage = document.getElementById('previewImage');
         const fileName = document.getElementById('fileName');
         const removeFileBtn = document.getElementById('removeFile');
+        const editPhotoBtn = document.getElementById('editPhotoBtn');
         const uploadForm = document.getElementById('uploadForm');
         const submitBtn = document.getElementById('submitBtn');
         const uploadProgress = document.getElementById('uploadProgress');
@@ -167,6 +279,33 @@
         const errorText = document.getElementById('errorText');
         const quickCameraBtn = document.getElementById('quickCameraBtn');
 
+        // Image Editor
+        const editorModal = document.getElementById('editorModal');
+        const editorCanvas = document.getElementById('editorCanvas');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        const zoomLevel = document.getElementById('zoomLevel');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const confirmEditBtn = document.getElementById('confirmEditBtn');
+
+        let ctx;
+        let editorImage = null;
+        let selectedFile = null;
+        let processedFile = null;
+        let imageScale = 1;
+        let imagePosition = {
+            x: 0,
+            y: 0
+        };
+        let isDragging = false;
+        let dragStart = {
+            x: 0,
+            y: 0
+        };
+        const canvasSize = 300;
+        const minScale = 0.5;
+        const maxScale = 3;
+
         // Quick camera button
         quickCameraBtn.addEventListener('click', () => {
             fileInput.click();
@@ -176,45 +315,279 @@
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
-                previewFile(file);
+                selectedFile = file;
+                loadImageEditor(file);
+            }
+        });
+
+        // Edit photo button
+        editPhotoBtn.addEventListener('click', () => {
+            if (selectedFile) {
+                loadImageEditor(selectedFile);
             }
         });
 
         // Remove file
         removeFileBtn.addEventListener('click', () => {
             fileInput.value = '';
+            selectedFile = null;
+            processedFile = null;
             previewContainer.classList.add('hidden');
             submitBtn.disabled = false;
         });
 
-        // Preview file
-        function previewFile(file) {
+        // Load Image Editor
+        function loadImageEditor(file) {
+            fileName.textContent = file.name;
+
             const reader = new FileReader();
-
             reader.onload = (e) => {
-                if (file.type.startsWith('image/')) {
-                    previewImage.src = e.target.result;
-                    previewContainer.classList.remove('hidden');
-                    fileName.textContent = file.name;
-                }
-            };
+                const img = new Image();
+                img.onload = () => {
+                    editorImage = img;
 
+                    // Set canvas size
+                    editorCanvas.width = canvasSize;
+                    editorCanvas.height = canvasSize;
+                    ctx = editorCanvas.getContext('2d');
+
+                    // Calculate initial scale to fit image
+                    const scaleX = canvasSize / img.width;
+                    const scaleY = canvasSize / img.height;
+                    imageScale = Math.min(scaleX, scaleY);
+
+                    // Center the image
+                    imagePosition = {
+                        x: (canvasSize - img.width * imageScale) / 2,
+                        y: (canvasSize - img.height * imageScale) / 2
+                    };
+
+                    drawCanvas();
+                    updateZoomLevel();
+                    editorModal.classList.add('active');
+                };
+                img.src = e.target.result;
+            };
             reader.readAsDataURL(file);
         }
+
+        // Draw Canvas
+        function drawCanvas() {
+            if (!ctx || !editorImage) return;
+
+            const centerX = canvasSize / 2;
+            const centerY = canvasSize / 2;
+            const radius = canvasSize / 2;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+            // Save context for clipping
+            ctx.save();
+
+            // Create circular clipping path
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.clip();
+
+            // Fill with white background
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+
+            // Draw image
+            ctx.drawImage(
+                editorImage,
+                imagePosition.x,
+                imagePosition.y,
+                editorImage.width * imageScale,
+                editorImage.height * imageScale
+            );
+
+            // Restore context
+            ctx.restore();
+        }
+
+        // Zoom In
+        zoomInBtn.addEventListener('click', () => {
+            if (imageScale < maxScale) {
+                const oldScale = imageScale;
+                imageScale = Math.min(imageScale * 1.1, maxScale);
+
+                // Adjust position to zoom towards center
+                const scaleDiff = imageScale / oldScale;
+                imagePosition.x = canvasSize / 2 - (canvasSize / 2 - imagePosition.x) * scaleDiff;
+                imagePosition.y = canvasSize / 2 - (canvasSize / 2 - imagePosition.y) * scaleDiff;
+
+                drawCanvas();
+                updateZoomLevel();
+            }
+        });
+
+        // Zoom Out
+        zoomOutBtn.addEventListener('click', () => {
+            if (imageScale > minScale) {
+                const oldScale = imageScale;
+                imageScale = Math.max(imageScale / 1.1, minScale);
+
+                // Adjust position to zoom towards center
+                const scaleDiff = imageScale / oldScale;
+                imagePosition.x = canvasSize / 2 - (canvasSize / 2 - imagePosition.x) * scaleDiff;
+                imagePosition.y = canvasSize / 2 - (canvasSize / 2 - imagePosition.y) * scaleDiff;
+
+                drawCanvas();
+                updateZoomLevel();
+            }
+        });
+
+        // Update zoom level display
+        function updateZoomLevel() {
+            const percent = Math.round(imageScale * 100);
+            zoomLevel.textContent = percent + '%';
+            zoomInBtn.disabled = imageScale >= maxScale;
+            zoomOutBtn.disabled = imageScale <= minScale;
+        }
+
+        // Mouse/Touch Events for Dragging
+        let startX, startY;
+
+        editorCanvas.addEventListener('mousedown', handleDragStart);
+        editorCanvas.addEventListener('touchstart', handleDragStart);
+
+        editorCanvas.addEventListener('mousemove', handleDragMove);
+        editorCanvas.addEventListener('touchmove', handleDragMove);
+
+        editorCanvas.addEventListener('mouseup', handleDragEnd);
+        editorCanvas.addEventListener('touchend', handleDragEnd);
+        editorCanvas.addEventListener('mouseleave', handleDragEnd);
+
+        function handleDragStart(e) {
+            isDragging = true;
+            const pos = getEventPosition(e);
+            dragStart = {
+                x: pos.x - imagePosition.x,
+                y: pos.y - imagePosition.y
+            };
+            e.preventDefault();
+        }
+
+        function handleDragMove(e) {
+            if (!isDragging) return;
+
+            const pos = getEventPosition(e);
+            imagePosition.x = pos.x - dragStart.x;
+            imagePosition.y = pos.y - dragStart.y;
+
+            drawCanvas();
+            e.preventDefault();
+        }
+
+        function handleDragEnd() {
+            isDragging = false;
+        }
+
+        function getEventPosition(e) {
+            const rect = editorCanvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            return {
+                x: (clientX - rect.left) * (canvasSize / rect.width),
+                y: (clientY - rect.top) * (canvasSize / rect.height)
+            };
+        }
+
+        // Pinch to Zoom (Touch)
+        let lastDistance = 0;
+        editorCanvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const distance = Math.hypot(
+                    touch2.clientX - touch1.clientX,
+                    touch2.clientY - touch1.clientY
+                );
+
+                if (lastDistance > 0) {
+                    const delta = distance - lastDistance;
+                    const oldScale = imageScale;
+                    imageScale = Math.max(minScale, Math.min(maxScale, imageScale * (1 + delta * 0.01)));
+
+                    // Adjust position
+                    const scaleDiff = imageScale / oldScale;
+                    imagePosition.x = canvasSize / 2 - (canvasSize / 2 - imagePosition.x) * scaleDiff;
+                    imagePosition.y = canvasSize / 2 - (canvasSize / 2 - imagePosition.y) * scaleDiff;
+
+                    drawCanvas();
+                    updateZoomLevel();
+                }
+
+                lastDistance = distance;
+            }
+        });
+
+        editorCanvas.addEventListener('touchend', () => {
+            lastDistance = 0;
+        });
+
+        // Mouse Wheel Zoom
+        editorCanvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            const oldScale = imageScale;
+            imageScale = Math.max(minScale, Math.min(maxScale, imageScale * delta));
+
+            // Zoom towards mouse position
+            const rect = editorCanvas.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left) * (canvasSize / rect.width);
+            const mouseY = (e.clientY - rect.top) * (canvasSize / rect.height);
+
+            const scaleDiff = imageScale / oldScale;
+            imagePosition.x = mouseX - (mouseX - imagePosition.x) * scaleDiff;
+            imagePosition.y = mouseY - (mouseY - imagePosition.y) * scaleDiff;
+
+            drawCanvas();
+            updateZoomLevel();
+        });
+
+        // Cancel Edit
+        cancelEditBtn.addEventListener('click', () => {
+            editorModal.classList.remove('active');
+        });
+
+        // Confirm Edit
+        confirmEditBtn.addEventListener('click', () => {
+            // Convert canvas to blob
+            editorCanvas.toBlob((blob) => {
+                processedFile = new File([blob], selectedFile.name, {
+                    type: 'image/jpeg',
+                    lastModified: Date.now()
+                });
+
+                // Update preview
+                const url = URL.createObjectURL(blob);
+                previewImage.src = url;
+                previewContainer.classList.remove('hidden');
+
+                editorModal.classList.remove('active');
+            }, 'image/jpeg', 0.95);
+        });
 
         // Form submit
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const formData = new FormData();
-            const file = fileInput.files[0];
+            const fileToUpload = processedFile || selectedFile;
 
-            if (!file) {
+            if (!fileToUpload) {
                 showError('Please select a photo to upload');
                 return;
             }
 
-            formData.append('photo', file);
+            formData.append('photo', fileToUpload);
 
             // Show progress
             uploadProgress.classList.remove('hidden');
@@ -271,6 +644,13 @@
         function showSuccess() {
             successMessage.classList.remove('hidden');
             errorMessage.classList.add('hidden');
+            uploadProgress.classList.add('hidden');
+            previewContainer.classList.add('hidden');
+
+            // Clear all file references
+            fileInput.value = '';
+            selectedFile = null;
+            processedFile = null;
 
             // Auto-close after 3 seconds
             setTimeout(() => {
