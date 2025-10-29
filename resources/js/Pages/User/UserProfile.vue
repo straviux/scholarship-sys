@@ -866,7 +866,7 @@ const confirmImageEdit = () => {
                 <div class="w-full flex items-center justify-center">
                     <img v-if="reportData?.has_profile_photo" :src="reportData.profile_photo_url"
                         :alt="reportData?.user_name || 'Profile Photo'"
-                        class="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg" />
+                        class="max-w-full max-h-[70vh] object-contain rounded-lg border-2 border-gray-300" />
                 </div>
             </div>
 
