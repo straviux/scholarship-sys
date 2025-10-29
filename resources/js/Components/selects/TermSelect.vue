@@ -21,6 +21,8 @@ const terms = [
     { label: "2ND TRIMESTER", value: "2ND TRIMESTER" },
     { label: "3RD TRIMESTER", value: "3RD TRIMESTER" },
     { label: "SUMMER", value: "SUMMER" },
+    { label: "REVIEW", value: "REVIEW" },
+    { label: "N/A", value: "N/A" },
 ]
 // Local value for v-model
 const localValue = ref(props.modelValue);

@@ -173,6 +173,21 @@ const formatDateForPicker = (dateString) => {
     return isNaN(date.getTime()) ? null : date;
 };
 
+// Helper function to format date for backend (YYYY-MM-DD)
+const formatDateForBackend = (date) => {
+    if (!date) return null;
+    if (!(date instanceof Date)) {
+        date = new Date(date);
+    }
+    if (isNaN(date.getTime())) return null;
+
+    // Format as YYYY-MM-DD in local timezone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 // Format date input as user types (auto-insert slashes)
 const formatDateInput = (event) => {
     const input = event.target;
@@ -400,6 +415,9 @@ const handleSubmit = () => {
     // Transform data before submitting
     const submitData = {
         ...form.data(),
+        // Format dates properly to avoid timezone issues
+        date_of_birth: formatDateForBackend(form.date_of_birth),
+        date_filed: formatDateForBackend(form.date_filed),
         // Extract value from academic_year object if it exists
         academic_year: form.academic_year?.value || form.academic_year || null,
         // Extract name from municipality object if it exists
