@@ -11,6 +11,7 @@ import { useForm } from '@inertiajs/vue3';
 import InputLabel from '@/Components/ui/inputs/InputLabel.vue';
 import InputError from '@/Components/ui/inputs/InputError.vue';
 import { toast } from 'vue3-toastify';
+import axios from 'axios';
 
 const { formatDate } = useDateUtils();
 
@@ -264,22 +265,10 @@ const submitPhotoUpdate = () => {
 // QR Code methods
 const openQrCodeModal = async () => {
     try {
-        const response = await fetch(route('profile.generate-qr'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-            }
-        });
+        const response = await axios.post(route('profile.generate-qr'));
 
-        if (!response.ok) {
-            throw new Error('Failed to generate QR code');
-        }
-
-        const data = await response.json();
-
-        if (data.success) {
-            qrCodeData.value = data;
+        if (response.data.success) {
+            qrCodeData.value = response.data;
             showQrCodeModal.value = true;
         } else {
             toast.error('Failed to generate QR code');
