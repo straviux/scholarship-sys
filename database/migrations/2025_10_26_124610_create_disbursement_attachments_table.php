@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('disbursement_attachments', function (Blueprint $table) {
             $table->id('attachment_id');
             $table->unsignedBigInteger('disbursement_id');
-            $table->enum('attachment_type', ['voucher', 'cheque'])->comment('Type of attachment');
+            $table->enum('attachment_type', ['voucher', 'cheque', 'receipt'])->comment('Type of attachment');
             $table->string('file_name');
             $table->string('file_path');
             $table->string('file_type')->nullable()->comment('MIME type');

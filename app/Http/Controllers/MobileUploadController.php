@@ -112,7 +112,7 @@ class MobileUploadController extends Controller
 
         try {
             $request->validate([
-                'attachment_type' => 'required|string|max:255',
+                'attachment_type' => 'required|in:voucher,cheque,receipt',
                 'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:25600', // 25MB max
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
