@@ -366,10 +366,14 @@ const drawCanvas = () => {
     if (!editorCanvas.value || !editorImage.value) return;
 
     const canvas = editorCanvas.value;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
     const radius = canvasSize / 2;
     const centerX = radius;
     const centerY = radius;
+
+    // Enable anti-aliasing for smoother edges
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     // Clear canvas
     ctx.clearRect(0, 0, canvasSize, canvasSize);
@@ -377,14 +381,15 @@ const drawCanvas = () => {
     // Save context for clipping
     ctx.save();
 
-    // Create circular clipping path
+    // Create circular clipping path with anti-aliasing
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.closePath();
     ctx.clip();
 
     // Fill with white background
     ctx.fillStyle = '#ffffff';
-    ctx.fill();
+    ctx.fillRect(0, 0, canvasSize, canvasSize);
 
     // Draw image within the circular clip
     ctx.drawImage(
@@ -396,6 +401,15 @@ const drawCanvas = () => {
     );
 
     // Restore context
+    ctx.restore();
+
+    // Draw a smooth anti-aliased border on top
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius - 0.5, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(229, 231, 235, 0.5)'; // Light gray border
+    ctx.lineWidth = 1;
+    ctx.stroke();
     ctx.restore();
 };
 
@@ -863,10 +877,10 @@ const confirmImageEdit = () => {
             :style="{ width: '90vw', maxWidth: '600px' }">
             <div class="flex flex-col items-center justify-center space-y-4">
                 <!-- Full Size Photo -->
-                <div class="w-full flex items-center justify-center">
+                <div class="flex items-center justify-center rounded-full border-6 border-sky-500">
                     <img v-if="reportData?.has_profile_photo" :src="reportData.profile_photo_url"
                         :alt="reportData?.user_name || 'Profile Photo'"
-                        class="max-w-full max-h-[70vh] object-contain rounded-lg border-2 border-gray-300" />
+                        class="max-w-full max-h-[70vh] object-contain rounded-full shadow-lg" />
                 </div>
             </div>
 

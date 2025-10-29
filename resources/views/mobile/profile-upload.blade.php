@@ -379,20 +379,25 @@
             const centerY = canvasSize / 2;
             const radius = canvasSize / 2;
 
+            // Enable anti-aliasing for smoother edges
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
             // Clear canvas
             ctx.clearRect(0, 0, canvasSize, canvasSize);
 
             // Save context for clipping
             ctx.save();
 
-            // Create circular clipping path
+            // Create circular clipping path with anti-aliasing
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.closePath();
             ctx.clip();
 
             // Fill with white background
             ctx.fillStyle = '#ffffff';
-            ctx.fill();
+            ctx.fillRect(0, 0, canvasSize, canvasSize);
 
             // Draw image
             ctx.drawImage(
@@ -404,6 +409,15 @@
             );
 
             // Restore context
+            ctx.restore();
+
+            // Draw a smooth anti-aliased border on top
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 0.5, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(229, 231, 235, 0.5)'; // Light gray border
+            ctx.lineWidth = 1;
+            ctx.stroke();
             ctx.restore();
         }
 
