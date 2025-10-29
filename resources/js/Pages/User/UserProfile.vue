@@ -5,7 +5,7 @@ import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import FileUpload from 'primevue/fileupload';
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, watch, onUnmounted } from 'vue';
 import { useDateUtils } from '@/composables/dateUtils.js';
 import { useForm } from '@inertiajs/vue3';
 import InputLabel from '@/Components/ui/inputs/InputLabel.vue';
@@ -24,8 +24,10 @@ const showCurrentMonthOnly = ref(false);
 const showChangePasswordModal = ref(false);
 const showEditProfileModal = ref(false);
 const showProfilePhotoModal = ref(false);
-const showQrCodeModal = ref(false);
+const showQrModal = ref(false);
 const qrCodeData = ref(null);
+const qrCountdown = ref('');
+const qrCountdownInterval = ref(null);
 const photoPreviewUrl = ref(null);
 const fileInput = ref(null);
 
@@ -263,31 +265,89 @@ const submitPhotoUpdate = () => {
 };
 
 // QR Code methods
-const openQrCodeModal = async () => {
+const showQrCode = async () => {
     try {
         const response = await axios.post(route('profile.generate-qr'));
-
-        if (response.data.success) {
-            qrCodeData.value = response.data;
-            showQrCodeModal.value = true;
-        } else {
-            toast.error('Failed to generate QR code');
-        }
+        qrCodeData.value = {
+            qrCode: response.data.qr_code_svg,
+            url: response.data.url,
+            expiresAt: response.data.expires_at
+        };
+        showQrModal.value = true;
+        startCountdown();
     } catch (error) {
         console.error('QR code generation error:', error);
-        toast.error('Failed to generate QR code. Please try again.');
+        toast.error('Failed to generate QR code');
     }
 };
 
-const closeQrCodeModal = () => {
-    showQrCodeModal.value = false;
-    qrCodeData.value = null;
+const startCountdown = () => {
+    // Clear any existing interval
+    if (qrCountdownInterval.value) {
+        clearInterval(qrCountdownInterval.value);
+    }
+
+    const updateCountdown = () => {
+        if (!qrCodeData.value) return;
+
+        const now = new Date();
+        const expiresAt = new Date(qrCodeData.value.expiresAt);
+        const diff = expiresAt - now;
+
+        if (diff <= 0) {
+            qrCountdown.value = 'EXPIRED';
+            clearInterval(qrCountdownInterval.value);
+            return;
+        }
+
+        const totalMinutes = Math.floor(diff / 1000 / 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+        qrCountdown.value = `${totalMinutes} min ${seconds} sec`;
+    };
+
+    updateCountdown();
+    qrCountdownInterval.value = setInterval(updateCountdown, 1000);
 };
 
-const copyQrUrl = () => {
-    if (qrCodeData.value?.url) {
-        navigator.clipboard.writeText(qrCodeData.value.url);
-        toast.success('URL copied to clipboard!');
+// Watch for modal close to clear interval
+watch(showQrModal, (newValue) => {
+    if (!newValue && qrCountdownInterval.value) {
+        clearInterval(qrCountdownInterval.value);
+        qrCountdownInterval.value = null;
+    }
+});
+
+// Cleanup on component unmount
+onUnmounted(() => {
+    if (qrCountdownInterval.value) {
+        clearInterval(qrCountdownInterval.value);
+    }
+});
+
+const copyToClipboard = async (text) => {
+    try {
+        // Try modern clipboard API first
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            toast.success('Link copied to clipboard!');
+        } else {
+            // Fallback for non-HTTPS contexts (like IP addresses)
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                toast.success('Link copied to clipboard!');
+            } catch (err) {
+                toast.error('Failed to copy link');
+            }
+            document.body.removeChild(textArea);
+        }
+    } catch (error) {
+        toast.error('Failed to copy to clipboard');
     }
 };
 
@@ -741,7 +801,7 @@ const confirmImageEdit = () => {
                 <div class="space-y-2">
                     <!-- QR Code Upload Button -->
                     <div class="w-full">
-                        <button @click="openQrCodeModal" type="button"
+                        <button @click="showQrCode" type="button"
                             class="w-full inline-flex justify-center items-center px-4 py-2 border border-blue-300 rounded-md shadow-sm bg-blue-50 text-sm font-medium text-blue-700 hover:bg-blue-100">
                             <i class="pi pi-qrcode mr-2"></i>
                             Upload via Mobile (QR Code)
@@ -789,56 +849,56 @@ const confirmImageEdit = () => {
         </Dialog>
 
         <!-- QR Code Modal -->
-        <Dialog v-model:visible="showQrCodeModal" modal header="Mobile Upload - QR Code" class="w-96">
-            <div v-if="qrCodeData" class="space-y-4">
-                <div class="text-center">
-                    <p class="text-sm text-gray-600 mb-4">
-                        Scan this QR code with your mobile device to upload a profile photo
-                    </p>
+        <Dialog v-model:visible="showQrModal" modal header="Mobile Upload QR Code"
+            :style="{ width: '30vw', minWidth: '400px' }">
+            <div v-if="qrCodeData" class="text-center space-y-4">
+                <!-- QR Code -->
+                <div class="bg-white p-6 rounded-lg border-2 border-gray-200 inline-block">
+                    <div v-html="qrCodeData.qrCode"></div>
+                </div>
 
-                    <!-- QR Code Display -->
-                    <div class="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
-                        <div v-html="qrCodeData.qr_code_svg"></div>
+                <!-- Instructions -->
+                <div class="text-left space-y-3">
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                        <p class="text-sm font-semibold text-gray-900 mb-2">
+                            <i class="pi pi-info-circle mr-2"></i>How to use:
+                        </p>
+                        <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                            <li>Scan this QR code with your mobile device</li>
+                            <li>Take a photo or select from gallery</li>
+                            <li>Photo will be automatically optimized and updated</li>
+                        </ol>
                     </div>
 
-                    <!-- Upload URL -->
-                    <div class="mt-4 p-3 bg-gray-50 rounded-lg">
-                        <p class="text-xs text-gray-500 mb-2">Upload URL:</p>
-                        <div class="flex items-center gap-2">
-                            <input type="text" :value="qrCodeData.url" readonly
-                                class="flex-1 text-xs px-2 py-1 border border-gray-300 rounded bg-white" />
-                            <button @click="copyQrUrl" type="button"
-                                class="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600">
-                                <i class="pi pi-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Expiration Info -->
-                    <div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
                         <p class="text-xs text-yellow-800">
-                            <i class="pi pi-clock mr-1"></i>
-                            This QR code expires in 30 days
+                            <i class="pi pi-exclamation-triangle mr-2"></i>
+                            <strong>Expires in:</strong>
+                            <span :class="{
+                                'text-yellow-600': qrCountdown.includes('min') && !qrCountdown.includes('0 min'),
+                                'text-orange-600': qrCountdown.includes('0 min') && parseInt(qrCountdown) >= 5,
+                                'text-red-600 font-bold': qrCountdown.includes('0 min') && parseInt(qrCountdown) < 5 || qrCountdown === 'EXPIRED'
+                            }">
+                                {{ qrCountdown || 'Loading...' }}
+                            </span>
                         </p>
                     </div>
 
-                    <!-- Instructions -->
-                    <div class="mt-4 text-left space-y-2">
-                        <p class="text-sm font-semibold text-gray-700">How to upload:</p>
-                        <ol class="text-xs text-gray-600 space-y-1 list-decimal list-inside">
-                            <li>Scan the QR code with your mobile camera</li>
-                            <li>Open the link in your mobile browser</li>
-                            <li>Take or select a photo</li>
-                            <li>Upload and your profile photo will be updated</li>
-                        </ol>
+                    <!-- Mobile URL (for copying) -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Or copy this link:</label>
+                        <div class="flex gap-2">
+                            <input type="text" :value="qrCodeData.url" readonly
+                                class="flex-1 px-3 py-2 text-xs border border-gray-300 rounded-md bg-gray-50" />
+                            <Button icon="pi pi-copy" size="small" @click="copyToClipboard(qrCodeData.url)"
+                                v-tooltip.top="'Copy link'" />
+                        </div>
                     </div>
                 </div>
             </div>
 
             <template #footer>
-                <div class="flex justify-end">
-                    <Button label="Close" @click="closeQrCodeModal" outlined />
-                </div>
+                <Button label="Close" severity="secondary" @click="showQrModal = false" />
             </template>
         </Dialog>
 

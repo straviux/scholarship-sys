@@ -245,15 +245,12 @@ class ProfileController extends Controller
             $user = $request->user();
 
             // Generate upload token (30 days expiry)
-            $token = $user->generateUploadToken(43200);
+            $user->generateUploadToken(43200);
 
             return response()->json([
-                'success' => true,
-                'token' => $token,
+                'qr_code_svg' => $user->getUploadQrCode(250),
                 'url' => $user->getMobileUploadUrl(),
-                'qr_code_svg' => $user->getUploadQrCode(300),
-                'qr_code_data_uri' => $user->getUploadQrCodeDataUri(300),
-                'expires_at' => $user->upload_token_expires_at->toIso8601String(),
+                'expires_at' => $user->upload_token_expires_at,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to generate QR code for profile upload', [
