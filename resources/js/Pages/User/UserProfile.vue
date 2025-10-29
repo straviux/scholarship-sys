@@ -24,6 +24,7 @@ const showCurrentMonthOnly = ref(false);
 const showChangePasswordModal = ref(false);
 const showEditProfileModal = ref(false);
 const showProfilePhotoModal = ref(false);
+const showViewPhotoModal = ref(false);
 const showQrModal = ref(false);
 const qrCodeData = ref(null);
 const qrCountdown = ref('');
@@ -172,6 +173,15 @@ const openProfilePhotoModal = () => {
     profilePhotoForm.clearErrors();
     showProfilePhotoModal.value = true;
     console.log('Photo modal opened');
+};
+
+const openViewPhotoModal = () => {
+    if (props.reportData?.has_profile_photo) {
+        showViewPhotoModal.value = true;
+    } else {
+        // If no photo exists, open upload modal instead
+        openProfilePhotoModal();
+    }
 };
 
 const closeProfilePhotoModal = () => {
@@ -504,7 +514,7 @@ const confirmImageEdit = () => {
                         <div class="relative">
                             <div class="w-20 h-20 rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:opacity-80 transition-opacity overflow-hidden"
                                 :class="{ 'bg-gradient-to-br from-indigo-500 to-purple-600': !reportData?.has_profile_photo }"
-                                @click="openProfilePhotoModal">
+                                @click="openViewPhotoModal">
                                 <!-- Profile Photo -->
                                 <img v-if="reportData?.has_profile_photo" :src="reportData.profile_photo_url"
                                     :alt="reportData?.user_name || 'Profile Photo'"
@@ -844,6 +854,27 @@ const confirmImageEdit = () => {
                     <Button label="Cancel" severity="secondary" @click="closeProfilePhotoModal" outlined />
                     <Button label="Upload Photo" @click="submitPhotoUpdate" :loading="profilePhotoForm.processing"
                         :disabled="!profilePhotoForm.photo || profilePhotoForm.processing" />
+                </div>
+            </template>
+        </Dialog>
+
+        <!-- View Profile Photo Modal -->
+        <Dialog v-model:visible="showViewPhotoModal" modal header="Profile Photo"
+            :style="{ width: '90vw', maxWidth: '600px' }">
+            <div class="flex flex-col items-center justify-center space-y-4">
+                <!-- Full Size Photo -->
+                <div class="w-full flex items-center justify-center">
+                    <img v-if="reportData?.has_profile_photo" :src="reportData.profile_photo_url"
+                        :alt="reportData?.user_name || 'Profile Photo'"
+                        class="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg" />
+                </div>
+            </div>
+
+            <template #footer>
+                <div class="flex justify-between w-full">
+                    <Button label="Change Photo" severity="secondary"
+                        @click="showViewPhotoModal = false; openProfilePhotoModal()" outlined />
+                    <Button label="Close" @click="showViewPhotoModal = false" />
                 </div>
             </template>
         </Dialog>
