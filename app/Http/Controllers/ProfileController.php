@@ -232,4 +232,161 @@ class ProfileController extends Controller
                 return false;
         }
     }
+
+    /**
+     * Generate QR code for mobile profile photo upload.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function generateQrCode(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            // Generate upload token (30 days expiry)
+            $token = $user->generateUploadToken(43200);
+
+            return response()->json([
+                'success' => true,
+                'token' => $token,
+                'url' => $user->getMobileUploadUrl(),
+                'qr_code_svg' => $user->getUploadQrCode(300),
+                'qr_code_data_uri' => $user->getUploadQrCodeDataUri(300),
+                'expires_at' => $user->upload_token_expires_at->toIso8601String(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to generate QR code for profile upload', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate QR code'
+            ], 500);
+        }
+    }
+
+    /**
+     * Show mobile upload page for profile photo.
+     *
+     * @param string $token
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+     */
+    public function showMobileUpload($token)
+    {
+        // Find user by upload token
+        $user = \App\Models\User::where('upload_token', $token)->first();
+
+        if (!$user) {
+            return view('mobile.upload-error', [
+                'message' => 'Invalid upload link. Please request a new QR code.'
+            ]);
+        }
+
+        // Check if token has expired
+        if ($user->upload_token_expires_at < now()) {
+            return view('mobile.upload-error', [
+                'message' => 'Upload link has expired. Please request a new QR code.'
+            ]);
+        }
+
+        return view('mobile.profile-upload', [
+            'token' => $token,
+            'user' => $user,
+            'expiresAt' => $user->upload_token_expires_at,
+        ]);
+    }
+
+    /**
+     * Process mobile profile photo upload.
+     *
+     * @param Request $request
+     * @param string $token
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function processMobileUpload(Request $request, $token)
+    {
+        try {
+            // Find user by upload token
+            $user = \App\Models\User::where('upload_token', $token)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid upload token'
+                ], 404);
+            }
+
+            // Check if token has expired
+            if ($user->upload_token_expires_at < now()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Upload token has expired'
+                ], 401);
+            }
+
+            // Validate the uploaded file
+            $request->validate([
+                'photo' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:10240'],
+            ]);
+
+            // Process the upload
+            $photo = $request->file('photo');
+            $originalSize = $photo->getSize();
+
+            // Delete old profile photo if exists
+            if ($user->profile_photo && Storage::disk('public')->exists($user->profile_photo)) {
+                Storage::disk('public')->delete($user->profile_photo);
+                Log::info('Deleted old profile photo: ' . $user->profile_photo);
+            }
+
+            // Generate unique filename
+            $filename = 'profile-' . $user->id . '-' . time() . '.jpg';
+
+            // Process and compress the image
+            $processedImagePath = $this->processAndCompressImage($photo, $filename);
+
+            // Update user record
+            $user->update(['profile_photo' => $processedImagePath]);
+
+            // Get the final file size for logging
+            $finalSize = Storage::disk('public')->size($processedImagePath);
+            $compressionRatio = round((1 - ($finalSize / $originalSize)) * 100, 2);
+
+            Log::info('Mobile photo upload successful', [
+                'user_id' => $user->id,
+                'filename' => $filename,
+                'path' => $processedImagePath,
+                'original_size' => $originalSize,
+                'final_size' => $finalSize,
+                'compression_ratio' => $compressionRatio . '%',
+                'original_mime_type' => $photo->getMimeType()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile photo uploaded successfully',
+                'photo_url' => asset('storage/' . $processedImagePath)
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid file',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Mobile photo upload failed', [
+                'token' => $token,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload photo. Please try again.'
+            ], 500);
+        }
+    }
 }

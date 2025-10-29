@@ -27,6 +27,10 @@ Route::get('/mobile/upload/scholarship-record/{token}', [MobileUploadController:
     ->name('mobile.scholarship-record.upload');
 Route::post('/mobile/upload/scholarship-record/{token}', [MobileUploadController::class, 'uploadScholarshipRecordFile'])
     ->name('mobile.scholarship-record.upload.submit');
+Route::get('/mobile/upload/profile/{token}', [ProfileController::class, 'showMobileUpload'])
+    ->name('mobile.profile.upload');
+Route::post('/mobile/upload/profile/{token}', [ProfileController::class, 'processMobileUpload'])
+    ->name('mobile.profile.upload.submit');
 
 // This file is part of the routes/web.php file for the Laravel application.
 Route::middleware('auth')->group(function () {
@@ -60,6 +64,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/user/profile', [SystemReportController::class, 'getUserSummaryReport'])->name('user.profile');
     Route::put('/user/profile', [ProfileController::class, 'updateProfile'])->name('user.profile.update');
     Route::post('/user/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
+    Route::post('/user/profile/generate-qr', [ProfileController::class, 'generateQrCode'])->name('profile.generate-qr');
 });
 
 Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->group(function () {

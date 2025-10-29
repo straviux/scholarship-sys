@@ -23,6 +23,8 @@ const showCurrentMonthOnly = ref(false);
 const showChangePasswordModal = ref(false);
 const showEditProfileModal = ref(false);
 const showProfilePhotoModal = ref(false);
+const showQrCodeModal = ref(false);
+const qrCodeData = ref(null);
 const photoPreviewUrl = ref(null);
 const fileInput = ref(null);
 
@@ -257,6 +259,47 @@ const submitPhotoUpdate = () => {
             toast.error('Photo upload failed. Please try again.');
         }
     });
+};
+
+// QR Code methods
+const openQrCodeModal = async () => {
+    try {
+        const response = await fetch(route('profile.generate-qr'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to generate QR code');
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            qrCodeData.value = data;
+            showQrCodeModal.value = true;
+        } else {
+            toast.error('Failed to generate QR code');
+        }
+    } catch (error) {
+        console.error('QR code generation error:', error);
+        toast.error('Failed to generate QR code. Please try again.');
+    }
+};
+
+const closeQrCodeModal = () => {
+    showQrCodeModal.value = false;
+    qrCodeData.value = null;
+};
+
+const copyQrUrl = () => {
+    if (qrCodeData.value?.url) {
+        navigator.clipboard.writeText(qrCodeData.value.url);
+        toast.success('URL copied to clipboard!');
+    }
 };
 
 // Image Editor Functions
@@ -707,6 +750,22 @@ const confirmImageEdit = () => {
                 </div>
 
                 <div class="space-y-2">
+                    <!-- QR Code Upload Button -->
+                    <div class="w-full">
+                        <button @click="openQrCodeModal" type="button"
+                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-blue-300 rounded-md shadow-sm bg-blue-50 text-sm font-medium text-blue-700 hover:bg-blue-100">
+                            <i class="pi pi-qrcode mr-2"></i>
+                            Upload via Mobile (QR Code)
+                        </button>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1 border-t border-gray-300"></div>
+                        <span class="text-xs text-gray-500">OR</span>
+                        <div class="flex-1 border-t border-gray-300"></div>
+                    </div>
+
                     <!-- Custom File Input -->
                     <div class="w-full">
                         <input type="file" accept="image/*" @change="onPhotoSelect" ref="fileInput" class="hidden"
@@ -736,6 +795,60 @@ const confirmImageEdit = () => {
                     <Button label="Cancel" severity="secondary" @click="closeProfilePhotoModal" outlined />
                     <Button label="Upload Photo" @click="submitPhotoUpdate" :loading="profilePhotoForm.processing"
                         :disabled="!profilePhotoForm.photo || profilePhotoForm.processing" />
+                </div>
+            </template>
+        </Dialog>
+
+        <!-- QR Code Modal -->
+        <Dialog v-model:visible="showQrCodeModal" modal header="Mobile Upload - QR Code" class="w-96">
+            <div v-if="qrCodeData" class="space-y-4">
+                <div class="text-center">
+                    <p class="text-sm text-gray-600 mb-4">
+                        Scan this QR code with your mobile device to upload a profile photo
+                    </p>
+
+                    <!-- QR Code Display -->
+                    <div class="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
+                        <div v-html="qrCodeData.qr_code_svg"></div>
+                    </div>
+
+                    <!-- Upload URL -->
+                    <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                        <p class="text-xs text-gray-500 mb-2">Upload URL:</p>
+                        <div class="flex items-center gap-2">
+                            <input type="text" :value="qrCodeData.url" readonly
+                                class="flex-1 text-xs px-2 py-1 border border-gray-300 rounded bg-white" />
+                            <button @click="copyQrUrl" type="button"
+                                class="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600">
+                                <i class="pi pi-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Expiration Info -->
+                    <div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                        <p class="text-xs text-yellow-800">
+                            <i class="pi pi-clock mr-1"></i>
+                            This QR code expires in 30 days
+                        </p>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="mt-4 text-left space-y-2">
+                        <p class="text-sm font-semibold text-gray-700">How to upload:</p>
+                        <ol class="text-xs text-gray-600 space-y-1 list-decimal list-inside">
+                            <li>Scan the QR code with your mobile camera</li>
+                            <li>Open the link in your mobile browser</li>
+                            <li>Take or select a photo</li>
+                            <li>Upload and your profile photo will be updated</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <template #footer>
+                <div class="flex justify-end">
+                    <Button label="Close" @click="closeQrCodeModal" outlined />
                 </div>
             </template>
         </Dialog>

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Support\Str;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class User extends Authenticatable
 {
@@ -22,6 +24,8 @@ class User extends Authenticatable
         'username',
         'password',
         'profile_photo',
+        'upload_token',
+        'upload_token_expires_at',
     ];
 
     /**
@@ -44,6 +48,7 @@ class User extends Authenticatable
         return [
             'user_verified_at' => 'datetime',
             'password' => 'hashed',
+            'upload_token_expires_at' => 'datetime',
         ];
     }
 
@@ -90,5 +95,64 @@ class User extends Authenticatable
             \Illuminate\Support\Facades\Log::error('Error getting unread notifications count: ' . $e->getMessage());
             return 0;
         }
+    }
+
+    /**
+     * Generate a new upload token for mobile profile photo upload.
+     *
+     * @param int $expiresInMinutes Token expiration time in minutes (default: 43200 = 30 days)
+     * @return string The generated token
+     */
+    public function generateUploadToken($expiresInMinutes = 43200): string
+    {
+        $this->upload_token = Str::random(64);
+        $this->upload_token_expires_at = now()->addMinutes($expiresInMinutes);
+        $this->save();
+
+        return $this->upload_token;
+    }
+
+    /**
+     * Get the mobile upload URL for this user's profile photo.
+     *
+     * @return string
+     */
+    public function getMobileUploadUrl(): string
+    {
+        // Generate token if it doesn't exist or has expired
+        if (!$this->upload_token || $this->upload_token_expires_at < now()) {
+            $this->generateUploadToken();
+        }
+
+        $baseUrl = request()->getSchemeAndHttpHost() ?: config('app.url');
+        return $baseUrl . '/mobile/upload/profile/' . $this->upload_token;
+    }
+
+    /**
+     * Generate QR code for mobile profile photo upload.
+     *
+     * @param int $size QR code size in pixels
+     * @return string SVG QR code
+     */
+    public function getUploadQrCode($size = 200): string
+    {
+        $url = $this->getMobileUploadUrl();
+        $qrCode = QrCode::size($size)->generate($url);
+
+        return (string) $qrCode;
+    }
+
+    /**
+     * Generate QR code as base64 data URI for mobile profile photo upload.
+     *
+     * @param int $size QR code size in pixels
+     * @return string Base64 data URI
+     */
+    public function getUploadQrCodeDataUri($size = 200): string
+    {
+        $url = $this->getMobileUploadUrl();
+        $qrCode = QrCode::size($size)->format('png')->generate($url);
+
+        return 'data:image/png;base64,' . base64_encode($qrCode);
     }
 }
