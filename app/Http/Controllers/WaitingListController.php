@@ -38,7 +38,7 @@ class WaitingListController extends Controller
             ->leftJoin('scholarship_records', 'scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
             ->select('scholarship_profiles.*', 'scholarship_records.date_filed')
             ->where(function ($q) use ($programId) {
-                // Include profiles with scholarship grants (pending status)
+                // Condition 1: Has scholarship grant with pending status
                 $q->whereHas('scholarshipGrant', function ($subQ) use ($programId) {
                     $subQ->where('scholarship_status', 0)
                         ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
@@ -46,16 +46,22 @@ class WaitingListController extends Controller
                         $subQ->where('program_id', $programId);
                     }
                 })
-                    // OR include profiles marked as on waiting list (even without scholarship grants)
-                    // But still apply program filter if specified AND exclude approved/declined
+                    // Condition 2: Marked as on waiting list (with or without scholarship grant)
                     ->orWhere(function ($subQ) use ($programId) {
-                        $subQ->where('is_on_waiting_list', true)
-                            ->whereHas('scholarshipGrant', function ($grantQ) use ($programId) {
-                                $grantQ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
-                                if ($programId) {
-                                    $grantQ->where('program_id', $programId);
-                                }
-                            });
+                        $subQ->where('is_on_waiting_list', true);
+
+                        // If has grant, exclude approved/declined AND apply program filter
+                        $subQ->where(function ($grantCheck) use ($programId) {
+                            // Either has no grant at all
+                            $grantCheck->whereDoesntHave('scholarshipGrant')
+                                // OR has grant but not approved/declined (and matching program if specified)
+                                ->orWhereHas('scholarshipGrant', function ($grantQ) use ($programId) {
+                                    $grantQ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
+                                    if ($programId) {
+                                        $grantQ->where('program_id', $programId);
+                                    }
+                                });
+                        });
                     });
             });
 
