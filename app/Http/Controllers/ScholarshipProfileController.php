@@ -559,6 +559,11 @@ class ScholarshipProfileController extends Controller
         $query = ScholarshipProfile::with([
             'scholarshipGrant' => function ($q) {
                 $q->with(['program', 'course', 'school'])
+                    ->orderByRaw('CASE 
+                        WHEN scholarship_status = 1 THEN 0
+                        WHEN scholarship_status = 0 THEN 1
+                        ELSE 2
+                    END')
                     ->latest('created_at')
                     ->limit(1);
             }
@@ -634,6 +639,13 @@ class ScholarshipProfileController extends Controller
             });
         }
 
+        // Filter by grant provision
+        if ($request->filled('grant_provision')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('grant_provision', $request->grant_provision);
+            });
+        }
+
         // Global search across multiple fields
         if ($request->filled('global_search')) {
             $searchTerm = $request->global_search;
@@ -704,6 +716,24 @@ class ScholarshipProfileController extends Controller
             'declineReasons' => config('scholarship.decline_reasons'),
             'profiles_total' => $profiles->total(),
         ]);
+    }
+
+    /**
+     * Get all scholarship records for a profile
+     */
+    public function getScholarshipRecords($profileId)
+    {
+        $records = ScholarshipRecord::where('profile_id', $profileId)
+            ->with(['program', 'course', 'school'])
+            ->orderByRaw('CASE 
+                WHEN scholarship_status = 1 THEN 0
+                WHEN scholarship_status = 0 THEN 1
+                ELSE 2
+            END')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($records);
     }
 
     /**

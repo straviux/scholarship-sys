@@ -109,6 +109,7 @@ Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->gro
     // API's
     Route::post('/scholarship-records/{id}/approve', 'approveScholarshipRecord')->name('scholarship-record.approve');
     Route::post('/scholarship-records/{id}/decline', 'declineScholarshipRecord')->name('scholarship-record.decline');
+    Route::put('/scholarship-records/{id}/grant-provision', 'updateGrantProvision')->name('scholarship-record.update-grant-provision');
     Route::put('/scholarship_records.update-status/{scholarship_records}', 'updateScholarshipStatusApi')->name('scholarship_records-api.updatestatus');
     Route::put('/scholarship_records.update-remarks/{scholarship_records}', 'updateRemarks')->name('scholarship_records-api.updateremarks');
     Route::post('/scholarship_records/{record}/requirements/upload', 'uploadRequirement')->name('scholarship.requirements.upload');
@@ -122,6 +123,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/scholarship/profile/{profile_id}', [ScholarshipProfileController::class, 'show'])
         ->name('scholarship.profile.show');
+
+    Route::get('/scholarship/profile/{profile_id}/records', [ScholarshipProfileController::class, 'getScholarshipRecords'])
+        ->name('scholarship.profile.records');
 
     Route::get('/scholarship/profile/{profile_id}/history', [ScholarshipProfileController::class, 'profileHistory'])
         ->name('scholarship.profile.history');

@@ -30,6 +30,7 @@ class ScholarshipRecord extends Model
         'academic_status',
         'scholarship_status',
         'scholarship_status_remarks',
+        'grant_provision',
         'scholarship_status_date',
         'is_active',
         'created_by',

@@ -121,6 +121,11 @@
                                     <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
                                         size="small" class="w-full" />
                                 </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Grant Provision</label>
+                                    <Select v-model="filter.grant_provision" :options="grantProvisionOptions"
+                                        placeholder="All Provisions" size="small" class="w-full" showClear />
+                                </div>
                             </div>
                         </template>
                     </div>
@@ -216,6 +221,19 @@
                                     :severity="getScholarshipStatusSeverity(slotProps.data.latest_scholarship_record.scholarship_status)"
                                     size="small" class="font-medium" />
                                 <Chip v-else label="No Record" severity="secondary" size="small" />
+                            </template>
+                        </Column>
+
+                        <Column field="grant_provision" header="Grant Provision" style="min-width: 160px;">
+                            <template #body="slotProps">
+                                <div v-if="slotProps.data.latest_scholarship_record">
+                                    <Chip v-if="slotProps.data.latest_scholarship_record.grant_provision"
+                                        :label="slotProps.data.latest_scholarship_record.grant_provision" size="small"
+                                        class="font-medium" />
+                                    <Button v-else icon="pi pi-plus" label="Set" size="small" severity="secondary" text
+                                        @click="openGrantProvisionDialog(slotProps.data)" />
+                                </div>
+                                <span v-else class="text-sm text-gray-400">N/A</span>
                             </template>
                         </Column>
 
@@ -574,6 +592,33 @@
             </template>
         </Dialog>
 
+        <!-- Grant Provision Update Dialog -->
+        <Dialog v-model:visible="showGrantProvisionDialog" modal header="Update Grant Provision"
+            :style="{ width: '500px' }">
+            <div class="space-y-4" v-if="selectedProfileForGrant">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Scholar Name</label>
+                    <p class="text-base font-semibold">{{ selectedProfileForGrant.full_name }}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Scholarship Record</label>
+                    <Select v-model="grantProvisionForm.scholarship_record_id" :options="scholarshipRecordOptions"
+                        optionLabel="label" optionValue="value" placeholder="Select scholarship record" class="w-full"
+                        @change="onScholarshipRecordChange" />
+                </div>
+                <div v-if="grantProvisionForm.scholarship_record_id">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Grant Provision</label>
+                    <Select v-model="grantProvisionForm.grant_provision" :options="grantProvisionOptions"
+                        placeholder="Select provision type" class="w-full" showClear />
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Cancel" severity="secondary" @click="showGrantProvisionDialog = false" outlined />
+                <Button label="Update" @click="updateGrantProvision" :loading="grantProvisionForm.processing"
+                    :disabled="!grantProvisionForm.scholarship_record_id" />
+            </template>
+        </Dialog>
+
         <!-- Application Form Modal -->
         <ApplicantFormModal v-model:visible="showAddApplicantModal" :profiles="profiles" @success="refreshData" />
 
@@ -657,6 +702,7 @@ const filter = useForm({
     course: props.filters?.course || "",
     municipality: props.filters?.municipality || "",
     year_level: props.filters?.year_level || "",
+    grant_provision: props.filters?.grant_provision || null,
     approval_status: props.filters?.approval_status || null,
     global_search: props.filters?.global_search || "",
     page: props.filters?.page || 1,
@@ -670,6 +716,9 @@ const rows = ref(props.filters?.records ? parseInt(props.filters.records) : 10);
 const layout = ref('table'); // Default to table view
 const actionsPopover = ref();
 const profileType = ref(getInitialProfileType());
+
+// Grant Provision Options
+const grantProvisionOptions = ref(['Matriculation', 'RLE', 'Tuition']);
 
 // Profile Type Options
 const profileTypeOptions = ref([
@@ -701,6 +750,15 @@ const showAddExistingModal = ref(false);
 const showEditScholarModal = ref(false);
 const selectedScholarForEdit = ref(null);
 const addRecordPopover = ref();
+
+// Grant Provision Dialog
+const showGrantProvisionDialog = ref(false);
+const selectedProfileForGrant = ref(null);
+const scholarshipRecordOptions = ref([]);
+const grantProvisionForm = useForm({
+    scholarship_record_id: null,
+    grant_provision: null,
+});
 
 // Computed properties
 const approvalStatusOptions = computed(() => [
@@ -820,6 +878,7 @@ const filterList = (resetToPage1 = false) => {
     if (name) params.name = name;
     if (year_level) params.year_level = year_level;
     if (global_search) params.global_search = global_search;
+    if (filter.grant_provision) params.grant_provision = filter.grant_provision;
 
     // Handle profile type - only add approval_status if profileType is 'all'
     if (profileType.value === 'existing') {
@@ -850,6 +909,7 @@ const clearFilters = () => {
     filter.course = "";
     filter.municipality = "";
     filter.year_level = "";
+    filter.grant_provision = null;
     filter.approval_status = null;
     filter.records = 10;
     filter.global_search = '';
@@ -885,6 +945,65 @@ const handleApprovalAction = (result) => {
         selectedApplication.value = null;
         refreshData();
     }
+};
+
+const openGrantProvisionDialog = (profile) => {
+    selectedProfileForGrant.value = profile;
+
+    // Fetch all scholarship records for this profile
+    axios.get(route('scholarship.profile.records', profile.profile_id))
+        .then(response => {
+            const records = response.data;
+            scholarshipRecordOptions.value = records.map(record => ({
+                value: record.id,
+                label: `${record.program?.shortname || 'N/A'} - ${record.course?.shortname || 'N/A'} (${getScholarshipStatusLabel(record.scholarship_status)})${record.grant_provision ? ' - ' + record.grant_provision : ''}`,
+                grant_provision: record.grant_provision
+            }));
+
+            // Pre-select the latest record
+            if (records.length > 0) {
+                const latestRecord = records[0];
+                grantProvisionForm.scholarship_record_id = latestRecord.id;
+                grantProvisionForm.grant_provision = latestRecord.grant_provision;
+            }
+        })
+        .catch(error => {
+            console.error('Failed to fetch scholarship records:', error);
+        });
+
+    showGrantProvisionDialog.value = true;
+};
+
+const onScholarshipRecordChange = () => {
+    // Update grant provision when record changes
+    const selected = scholarshipRecordOptions.value.find(
+        opt => opt.value === grantProvisionForm.scholarship_record_id
+    );
+    if (selected) {
+        grantProvisionForm.grant_provision = selected.grant_provision;
+    }
+};
+
+const updateGrantProvision = () => {
+    if (!grantProvisionForm.scholarship_record_id) return;
+
+    grantProvisionForm.put(
+        route('scholarship-record.update-grant-provision', grantProvisionForm.scholarship_record_id),
+        {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                showGrantProvisionDialog.value = false;
+                selectedProfileForGrant.value = null;
+                scholarshipRecordOptions.value = [];
+                grantProvisionForm.reset();
+                refreshData();
+            },
+            onError: (errors) => {
+                console.error('Failed to update grant provision:', errors);
+            }
+        }
+    );
 };
 
 const openReportModal = () => {
@@ -938,6 +1057,7 @@ watch(() => ({
     course: filter.course,
     municipality: filter.municipality,
     year_level: filter.year_level,
+    grant_provision: filter.grant_provision,
     approval_status: filter.approval_status,
     records: filter.records
 }), (newFilter, oldFilter) => {

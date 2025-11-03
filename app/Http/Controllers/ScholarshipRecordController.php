@@ -87,6 +87,11 @@ class ScholarshipRecordController extends Controller
             });
         }
 
+        // Filter by grant provision
+        if ($request->filled('grant_provision')) {
+            $query->where('grant_provision', $request->grant_provision);
+        }
+
         if ($request->filled('sort')) {
             // $query->orderBy('last_name', $request->sort['last_name'] ?? "asc");
             if (isset($request->sort['date_filed'])) {
@@ -279,6 +284,22 @@ class ScholarshipRecordController extends Controller
         // $record->date_declined = $request->date_declined ?? null;
         $record->save();
         return redirect()->back()->with('success', 'Scholarship record declined.');
+    }
+
+    /**
+     * Update grant provision for a scholarship record.
+     */
+    public function updateGrantProvision(Request $request, $id)
+    {
+        $request->validate([
+            'grant_provision' => 'required|in:Matriculation,RLE,Tuition',
+        ]);
+
+        $record = ScholarshipRecord::findOrFail($id);
+        $record->grant_provision = $request->grant_provision;
+        $record->save();
+
+        return redirect()->back()->with('success', 'Grant provision updated successfully.');
     }
 
     /**
