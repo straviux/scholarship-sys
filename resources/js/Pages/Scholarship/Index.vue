@@ -718,7 +718,7 @@ const actionsPopover = ref();
 const profileType = ref(getInitialProfileType());
 
 // Grant Provision Options
-const grantProvisionOptions = ref(['Matriculation', 'RLE', 'Tuition']);
+const grantProvisionOptions = ref(['Matriculation', 'RLE', 'Tuition', 'RLE and Tuition']);
 
 // Profile Type Options
 const profileTypeOptions = ref([

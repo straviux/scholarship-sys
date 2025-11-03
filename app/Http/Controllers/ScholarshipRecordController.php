@@ -292,7 +292,7 @@ class ScholarshipRecordController extends Controller
     public function updateGrantProvision(Request $request, $id)
     {
         $request->validate([
-            'grant_provision' => 'required|in:Matriculation,RLE,Tuition',
+            'grant_provision' => 'required|in:Matriculation,RLE,Tuition,RLE and Tuition',
         ]);
 
         $record = ScholarshipRecord::findOrFail($id);
