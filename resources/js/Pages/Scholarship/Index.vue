@@ -784,13 +784,26 @@ const dataViewRows = computed(() => {
 // Helper functions
 const getFullName = (profile) => {
     if (!profile) return 'N/A';
-    const parts = [
-        profile.first_name,
-        profile.middle_name,
-        profile.last_name,
-        profile.extension_name
-    ].filter(Boolean);
-    return parts.join(' ');
+
+    // Format: Last, First Middle Extension
+    const lastName = profile.last_name || '';
+    const firstName = profile.first_name || '';
+    const middleName = profile.middle_name || '';
+    const extensionName = profile.extension_name || '';
+
+    // Build the first part (first middle extension)
+    const firstPart = [firstName, middleName, extensionName].filter(Boolean).join(' ');
+
+    // Combine with last name
+    if (lastName && firstPart) {
+        return `${lastName}, ${firstPart}`;
+    } else if (lastName) {
+        return lastName;
+    } else if (firstPart) {
+        return firstPart;
+    }
+
+    return 'N/A';
 };
 
 const getInitials = (profile) => {
