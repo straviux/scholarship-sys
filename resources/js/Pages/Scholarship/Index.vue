@@ -208,6 +208,10 @@
                                     <div class="text-xs text-gray-500 truncate">
                                         {{ slotProps.data.latest_scholarship_record.school?.shortname || 'N/A' }}
                                     </div>
+                                    <div class="text-xs text-gray-600 truncate"
+                                        v-if="slotProps.data.latest_scholarship_record.year_level">
+                                        {{ slotProps.data.latest_scholarship_record.year_level }} Year
+                                    </div>
                                 </div>
                                 <div v-else class="text-sm text-gray-400">N/A</div>
                             </template>
@@ -602,7 +606,7 @@
             <div class="space-y-4" v-if="selectedProfileForGrant">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Scholar Name</label>
-                    <p class="text-base font-semibold">{{ selectedProfileForGrant.full_name }}</p>
+                    <p class="text-base font-semibold">{{ getFullName(selectedProfileForGrant) }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Scholarship Record</label>
@@ -973,7 +977,7 @@ const openGrantProvisionDialog = (profile) => {
             const records = response.data;
             scholarshipRecordOptions.value = records.map(record => ({
                 value: record.id,
-                label: `${record.program?.shortname || 'N/A'} - ${record.course?.shortname || 'N/A'} (${getScholarshipStatusLabel(record.scholarship_status)})${record.grant_provision ? ' - ' + record.grant_provision : ''}`,
+                label: `${record.program?.shortname || 'N/A'} - ${record.course?.shortname || 'N/A'} - ${record.year_level ? record.year_level + ' Year' : 'N/A'} (${getScholarshipStatusLabel(record.scholarship_status)})${record.grant_provision ? ' - ' + record.grant_provision : ''}`,
                 grant_provision: record.grant_provision
             }));
 
