@@ -291,12 +291,18 @@ class ScholarshipRecordController extends Controller
      */
     public function updateGrantProvision(Request $request, $id)
     {
-        $request->validate([
-            'grant_provision' => 'required|in:Matriculation,RLE,Tuition,RLE and Tuition',
-        ]);
+        $grantProvision = trim($request->grant_provision);
+
+        $validOptions = ['Matriculation', 'RLE', 'Tuition', 'RLE and Tuition'];
+
+        if (!in_array($grantProvision, $validOptions)) {
+            return back()->withErrors([
+                'grant_provision' => 'Invalid grant provision value: ' . $grantProvision
+            ]);
+        }
 
         $record = ScholarshipRecord::findOrFail($id);
-        $record->grant_provision = $request->grant_provision;
+        $record->grant_provision = $grantProvision;
         $record->save();
 
         return redirect()->back()->with('success', 'Grant provision updated successfully.');

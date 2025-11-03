@@ -226,12 +226,16 @@
 
                         <Column field="grant_provision" header="Grant Provision" style="min-width: 160px;">
                             <template #body="slotProps">
-                                <div v-if="slotProps.data.latest_scholarship_record">
+                                <div v-if="slotProps.data.latest_scholarship_record" class="flex items-center gap-2">
                                     <Chip v-if="slotProps.data.latest_scholarship_record.grant_provision"
                                         :label="slotProps.data.latest_scholarship_record.grant_provision" size="small"
-                                        class="font-medium" />
+                                        class="font-medium cursor-pointer"
+                                        @click="openGrantProvisionDialog(slotProps.data)" />
                                     <Button v-else icon="pi pi-plus" label="Set" size="small" severity="secondary" text
                                         @click="openGrantProvisionDialog(slotProps.data)" />
+                                    <Button v-if="slotProps.data.latest_scholarship_record.grant_provision"
+                                        icon="pi pi-pencil" size="small" severity="secondary" text rounded
+                                        @click="openGrantProvisionDialog(slotProps.data)" v-tooltip.top="'Edit'" />
                                 </div>
                                 <span v-else class="text-sm text-gray-400">N/A</span>
                             </template>

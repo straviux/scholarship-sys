@@ -12,9 +12,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // For PostgreSQL, we need to alter the enum type
-        DB::statement("ALTER TABLE scholarship_records DROP CONSTRAINT IF EXISTS scholarship_records_grant_provision_check");
-        DB::statement("ALTER TABLE scholarship_records ADD CONSTRAINT scholarship_records_grant_provision_check CHECK (grant_provision IN ('Matriculation', 'RLE', 'Tuition', 'RLE and Tuition'))");
+        // For MySQL, we need to alter the enum column
+        DB::statement("ALTER TABLE scholarship_records MODIFY COLUMN grant_provision ENUM('Matriculation', 'RLE', 'Tuition', 'RLE and Tuition') NULL");
     }
 
     /**
@@ -23,7 +22,6 @@ return new class extends Migration
     public function down(): void
     {
         // Revert back to original enum values
-        DB::statement("ALTER TABLE scholarship_records DROP CONSTRAINT IF EXISTS scholarship_records_grant_provision_check");
-        DB::statement("ALTER TABLE scholarship_records ADD CONSTRAINT scholarship_records_grant_provision_check CHECK (grant_provision IN ('Matriculation', 'RLE', 'Tuition'))");
+        DB::statement("ALTER TABLE scholarship_records MODIFY COLUMN grant_provision ENUM('Matriculation', 'RLE', 'Tuition') NULL");
     }
 };
