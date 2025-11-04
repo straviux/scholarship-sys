@@ -234,7 +234,7 @@
                                     <Chip v-if="slotProps.data.latest_scholarship_record.grant_provision"
                                         :label="slotProps.data.latest_scholarship_record.grant_provision" size="small"
                                         class="font-medium cursor-pointer"
-                                        @click="openGrantProvisionDialog(slotProps.data)" />
+                                        @click="`openGrantProvisionDialog(slotProps.data)" />
                                     <Button v-else icon="pi pi-plus" label="Set" size="small" severity="secondary" text
                                         @click="openGrantProvisionDialog(slotProps.data)" />
                                     <Button v-if="slotProps.data.latest_scholarship_record.grant_provision"
@@ -578,16 +578,8 @@
             </template>
         </Dialog>
 
-        <!-- Report Modal Placeholder -->
-        <Dialog v-model:visible="showReportModal" modal header="Generate Report" :style="{ width: '600px' }">
-            <div class="text-center py-8">
-                <i class="pi pi-file-pdf text-6xl text-gray-300 mb-4"></i>
-                <p class="text-gray-600">Report generation functionality coming soon...</p>
-            </div>
-            <template #footer>
-                <Button label="Close" @click="showReportModal = false" />
-            </template>
-        </Dialog>
+        <!-- Generate Report Modal -->
+        <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" />
 
         <!-- Export Modal Placeholder -->
         <Dialog v-model:visible="showExportModal" modal header="Export Data" :style="{ width: '600px' }">
@@ -676,6 +668,7 @@ import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 // Modal Components
 import ApplicantFormModal from '@/Components/modals/ApplicantFormModal.vue';
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
+import GenerateReportModal from './Modal/GenerateReportModal.vue';
 
 // Props
 const props = defineProps({
