@@ -491,7 +491,7 @@
                 <th style="width:130px">Course</th>
                 @endif
                 @if(empty($filters['year_level']) && (!isset($groupBy) || $groupBy !== 'year_level'))
-                <th style="width:40px">Level</th>
+                <th style="width:50px">Level</th>
                 @endif
                 @if(empty($filters['approval_status']) && (!isset($groupBy) || $groupBy !== 'approval_status'))
                 <th style="width:85px">Status</th>
