@@ -59,26 +59,51 @@
     @endphp
 
     <!-- Filters -->
-    <div class="filters" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: flex-start; margin-bottom: 1rem; background: #f1f5f9;">
-        <span class="badge" style="color:#444;">Report type: {{ ucfirst($reportType) }}</span>
+    <div class="filters" style="display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-bottom: 0.5rem; font-size: 11px; color: #6b7280;">
+        <span>{{ ucfirst($reportType) }}</span>
         @foreach($filters as $key => $value)
-        @if($value && !in_array($key, ['paper_size', 'orientation']))
-        <span style="font-size:1.5em;color:#c2c2c2;vertical-align:middle;margin:0 0.2em;">|</span>
+        @if($value && !in_array($key, ['paper_size', 'orientation', 'date_filed']))
+        <span style="color:#d1d5db;">•</span>
         @if($key === 'approval_status')
-        <span class="badge" style="color:#444;">Status: {{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
+        <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
         @elseif($key === 'grant_provision')
-        <span class="badge" style="color:#444;">Grant: {{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
+        <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
         @elseif($key === 'program' && isset($profiles) && count($profiles) && optional($profiles->first()->scholarshipGrant->first())->program)
-        <span class="badge" style="color:#444;">Program: {{ optional($profiles->first()->scholarshipGrant->first())->program->name }}</span>
+        <span>{{ optional($profiles->first()->scholarshipGrant->first())->program->name }}</span>
+        @elseif(in_array($key, ['course', 'courses']) && isset($profiles) && count($profiles) && optional($profiles->first()->scholarshipGrant->first())->course)
+        <span>{{ optional($profiles->first()->scholarshipGrant->first())->course->name }}</span>
         @elseif($key === 'show_jpm_only' && $value)
-        <span class="badge" style="color:#444;">JPM Filter: Show JPM Only</span>
+        <span>JPM Members</span>
         @elseif($key === 'hide_jpm' && $value)
-        <span class="badge" style="color:#444;">JPM Filter: Hide JPM</span>
+        <span>Hide JPM</span>
         @else
-        <span class="badge" style="color:#444;">{{ ucfirst(str_replace('_', ' ', $key)) }}: {{ $value }}</span>
+        <span>{{ $value }}</span>
         @endif
         @endif
         @endforeach
+        @php
+        // Calculate date range from the profiles
+        $dates = $profiles->map(function($profile) {
+        $grant = optional($profile->scholarshipGrant->first());
+        return $grant->date_filed ?? $grant->date_approved ?? $grant->created_at;
+        })->filter()->map(function($date) {
+        return \Carbon\Carbon::parse($date);
+        })->sortBy(function($date) {
+        return $date->timestamp;
+        });
+
+        if ($dates->isNotEmpty()) {
+        $oldestDate = $dates->first()->format('M d, Y');
+        $latestDate = $dates->last()->format('M d, Y');
+        }
+        @endphp
+        @if(isset($oldestDate) && isset($latestDate))
+        <span style="color:#d1d5db;">•</span>
+        <span>{{ $oldestDate }} to {{ $latestDate }}</span>
+        @endif
+    </div>
+    <div style="font-size: 10px; color: #9ca3af; margin-bottom: 1rem;">
+        Generated: {{ now()->timezone('Asia/Manila')->format('F d, Y h:i A') }}
     </div>
 
     @if($reportType === 'summary')
@@ -259,7 +284,7 @@
             <tr>
                 <th style="width: 30px;">#</th>
                 <th style="width: 200px;">Name</th>
-                <th style="width: 120px;">Contact No(s).</th>
+                <th style="width: 90px;">Contact No(s).</th>
                 @if(empty($filters['municipality']))
                 <th style="width: 120px;">Municipality</th>
                 @endif
@@ -267,7 +292,7 @@
                 <th style="width: 80px;">Program</th>
                 @endif
                 @if(empty($filters['school']))
-                <th style="width: 150px;">School</th>
+                <th style="width: 160px;">School</th>
                 @endif
                 @if(empty($filters['course']))
                 <th style="width: 180px;">Course</th>
@@ -281,7 +306,7 @@
                 @if(empty($filters['grant_provision']))
                 <th style="width: 100px;">Grant</th>
                 @endif
-                <th style="width: 100px;">{{ $showingApproved ? 'Date Approved' : 'Date Filed' }}</th>
+                <th style="width: 120px;">{{ $showingApproved ? 'Date Approved' : 'Date Filed' }}</th>
             </tr>
         </thead>
         <tbody>
@@ -292,7 +317,7 @@
 
             // For approved status, sort alphabetically by school then year level
             if (in_array($approvalStatus, ['approved', 'auto_approved'])) {
-            $school = optional($grant->school)->shortname ?? optional($grant->school)->name ?? 'ZZZZ';
+            $school = optional($grant->school)->name ?? 'ZZZZ';
             $yearLevel = $grant->year_level ?? 'ZZZZ';
             return [$school, $yearLevel, $profile->last_name, $profile->first_name];
             }
@@ -328,13 +353,13 @@
                 <td>{{ $profile->last_name }}, {{ $profile->first_name }}</td>
                 <td>{{ count($contacts) ? implode(' / ', $contacts) : '-' }}</td>
                 @if(empty($filters['municipality']))
-                <td>{{ $profile->municipality ?? '-' }}</td>
+                <td>{{ strtoupper($profile->municipality ?? '-') }}</td>
                 @endif
                 @if(empty($filters['program']))
                 <td>{{ optional($grant->program)->shortname ?? '-' }}</td>
                 @endif
                 @if(empty($filters['school']))
-                <td>{{ $grant->school->shortname ?? '-' }}</td>
+                <td>{{ $grant->school->name ?? '-' }}</td>
                 @endif
                 @if(empty($filters['course']))
                 <td>{{ $grant->course->name ?? '-' }}</td>
