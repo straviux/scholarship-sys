@@ -472,32 +472,32 @@
     </div>
     @endif
 
-    <table style="@if($groupedProfiles && $groupBy !== 'none') margin-top: 0; @endif @if(!$loop->last) margin-bottom: 20px; @endif">
+    <table style="@if($groupedProfiles && $groupBy !== 'none') margin-top: 0; @endif @if(!$loop->last) margin-bottom: 20px; @endif table-layout: fixed; width: 100%;">
         <thead>
             <tr>
                 <th style="min-width:20px;width:20px;color:#555;padding-left:0.05cm;padding-right:0.05cm;">#</th>
-                <th>Name</th>
+                <th style="width:180px">Name</th>
                 <th style="width:70px">Contact No(s).</th>
                 @if(empty($filters['municipality']) && (!isset($groupBy) || $groupBy !== 'municipality'))
-                <th>Municipality</th>
+                <th style="width:100px">Municipality</th>
                 @endif
                 @if(empty($filters['program']) && (!isset($groupBy) || $groupBy !== 'program'))
-                <th>Program</th>
+                <th style="width:80px">Program</th>
                 @endif
                 @if(empty($filters['school']) && (!isset($groupBy) || $groupBy !== 'school'))
                 <th style="width:140px">School</th>
                 @endif
                 @if(empty($filters['course']) && empty($filters['courses']) && (!isset($groupBy) || $groupBy !== 'course'))
-                <th>Course</th>
+                <th style="width:120px">Course</th>
                 @endif
                 @if(empty($filters['year_level']) && (!isset($groupBy) || $groupBy !== 'year_level'))
                 <th style="width:35px">Level</th>
                 @endif
                 @if(empty($filters['approval_status']) && (!isset($groupBy) || $groupBy !== 'approval_status'))
-                <th>Status</th>
+                <th style="width:80px">Status</th>
                 @endif
                 @if(empty($filters['grant_provision']) && (!isset($groupBy) || $groupBy !== 'grant_provision'))
-                <th>Grant</th>
+                <th style="width:80px">Grant</th>
                 @endif
                 <th style="width:90px">
                     @php

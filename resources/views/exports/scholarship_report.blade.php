@@ -250,7 +250,7 @@
     $showingApproved = in_array('approved', $statusFilter) || in_array('auto_approved', $statusFilter);
     }
     @endphp
-    <table style="table-layout: auto;">
+    <table style="table-layout: fixed; width: 100%;">
         <thead>
             <tr>
                 <th colspan="{{ $colCount }}" style="text-align: center;">
@@ -274,7 +274,7 @@
             </tr>
         </thead>
     </table>
-    <table class="data-table" border="1">
+    <table class="data-table" border="1" style="table-layout: fixed; width: 100%;">
         <thead>
             <tr>
                 <th colspan="{{ $colCount }}">
