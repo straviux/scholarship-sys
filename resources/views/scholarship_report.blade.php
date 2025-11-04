@@ -497,7 +497,7 @@
                 <th style="width:85px">Status</th>
                 @endif
                 @if(empty($filters['grant_provision']) && (!isset($groupBy) || $groupBy !== 'grant_provision'))
-                <th style="width:85px">Grant</th>
+                <th style="width:85px">Grant Provision</th>
                 @endif
                 <th style="width:70px">
                     @php

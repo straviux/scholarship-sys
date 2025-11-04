@@ -304,7 +304,7 @@
                 <th style="width: 110px;">Status</th>
                 @endif
                 @if(empty($filters['grant_provision']))
-                <th style="width: 110px;">Grant</th>
+                <th style="width: 110px;">Grant Provision</th>
                 @endif
                 <th style="width: 70px;">{{ $showingApproved ? 'Date Approved' : 'Date Filed' }}</th>
             </tr>
