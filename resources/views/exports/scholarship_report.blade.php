@@ -350,7 +350,7 @@
             @endphp
             <tr @if($isJpm) style="background-color: #d1fae5;" @endif>
                 <td>{{ $overallIndex }}</td>
-                <td>{{ $profile->last_name }}, {{ $profile->first_name }}</td>
+                <td>{{ $profile->last_name }}, {{ $profile->first_name }} {{ $profile->middle_name }}</td>
                 <td>{{ count($contacts) ? implode(' / ', $contacts) : '-' }}</td>
                 @if(empty($filters['municipality']))
                 <td>{{ strtoupper($profile->municipality ?? '-') }}</td>

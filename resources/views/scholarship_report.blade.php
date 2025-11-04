@@ -544,7 +544,7 @@
             @endphp
             <tr class="{{ $rowClass }}">
                 <td style="font-size:10px;min-width:20px;width:20px;color:#555;padding-left:0.05cm;padding-right:0.05cm;">{{ $overallIndex }}</td>
-                <td style="font-size:11px;">{{ $profile->last_name }}, {{ $profile->first_name }}</td>
+                <td style="font-size:11px;">{{ $profile->last_name }}, {{ $profile->first_name }} {{ $profile->middle_name }}</td>
                 <td style="font-size:11px;">
                     @php
                     $contacts = array_filter([
