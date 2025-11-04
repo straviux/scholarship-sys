@@ -34,8 +34,12 @@ class ScholarshipProfileController extends Controller
         // Set is_on_waiting_list to true by default if not explicitly set
         $validated['is_on_waiting_list'] = $validated['is_on_waiting_list'] ?? true;
         $new_profile = ScholarshipProfile::create($validated);
-        if ($new_profile && ($request->course || $request->course_id)) {
-            // Only create scholarship record if academic information is provided
+
+        // Create scholarship record if ANY academic information is provided
+        $hasAcademicInfo = $request->course || $request->course_id || $request->school || $request->school_id
+            || $request->year_level || $request->term || $request->academic_year || $request->program_id;
+
+        if ($new_profile && $hasAcademicInfo) {
             // Check for ongoing or pending scholarship record
             $hasActive = ScholarshipRecord::where('profile_id', $new_profile->profile_id)
                 ->whereIn('scholarship_status', [0, 1]) // 0: Pending, 1: Ongoing/Active
@@ -92,8 +96,11 @@ class ScholarshipProfileController extends Controller
     {
         $profile = ScholarshipProfile::findOrFail($id);
 
-        // Only create/update scholarship record if academic information is provided
-        if ($request->course || $request->course_id) {
+        // Create or update scholarship record if ANY academic information is provided
+        $hasAcademicInfo = $request->course || $request->course_id || $request->school || $request->school_id
+            || $request->year_level || $request->term || $request->academic_year || $request->program_id;
+
+        if ($hasAcademicInfo) {
             // Get course - prefer ID, fallback to name lookup
             $course = null;
             if ($request->course_id) {
