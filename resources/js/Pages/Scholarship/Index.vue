@@ -234,7 +234,7 @@
                                     <Chip v-if="slotProps.data.latest_scholarship_record.grant_provision"
                                         :label="slotProps.data.latest_scholarship_record.grant_provision" size="small"
                                         class="font-medium cursor-pointer"
-                                        @click="`openGrantProvisionDialog(slotProps.data)" />
+                                        @click="openGrantProvisionDialog(slotProps.data)" />
                                     <Button v-else icon="pi pi-plus" label="Set" size="small" severity="secondary" text
                                         @click="openGrantProvisionDialog(slotProps.data)" />
                                     <Button v-if="slotProps.data.latest_scholarship_record.grant_provision"
