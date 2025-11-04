@@ -283,30 +283,30 @@
             </tr>
             <tr>
                 <th style="width: 30px;">#</th>
-                <th style="width: 200px;">Name</th>
-                <th style="width: 90px;">Contact No(s).</th>
+                <th style="width: 210px;">Name</th>
+                <th style="width: 100px;">Contact No(s).</th>
                 @if(empty($filters['municipality']))
-                <th style="width: 120px;">Municipality</th>
+                <th style="width: 130px;">Municipality</th>
                 @endif
                 @if(empty($filters['program']))
-                <th style="width: 80px;">Program</th>
+                <th style="width: 90px;">Program</th>
                 @endif
                 @if(empty($filters['school']))
-                <th style="width: 160px;">School</th>
+                <th style="width: 170px;">School</th>
                 @endif
                 @if(empty($filters['course']))
-                <th style="width: 180px;">Course</th>
+                <th style="width: 150px;">Course</th>
                 @endif
                 @if(empty($filters['year_level']))
                 <th style="width: 50px;">Level</th>
                 @endif
                 @if(empty($filters['approval_status']))
-                <th style="width: 100px;">Status</th>
+                <th style="width: 110px;">Status</th>
                 @endif
                 @if(empty($filters['grant_provision']))
-                <th style="width: 100px;">Grant</th>
+                <th style="width: 110px;">Grant</th>
                 @endif
-                <th style="width: 120px;">{{ $showingApproved ? 'Date Approved' : 'Date Filed' }}</th>
+                <th style="width: 70px;">{{ $showingApproved ? 'Date Approved' : 'Date Filed' }}</th>
             </tr>
         </thead>
         <tbody>

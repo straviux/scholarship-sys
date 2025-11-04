@@ -476,30 +476,30 @@
         <thead>
             <tr>
                 <th style="min-width:20px;width:20px;color:#555;padding-left:0.05cm;padding-right:0.05cm;">#</th>
-                <th style="width:180px">Name</th>
-                <th style="width:70px">Contact No(s).</th>
+                <th style="width:200px">Name</th>
+                <th style="width:80px">Contact No(s).</th>
                 @if(empty($filters['municipality']) && (!isset($groupBy) || $groupBy !== 'municipality'))
-                <th style="width:100px">Municipality</th>
+                <th style="width:110px">Municipality</th>
                 @endif
                 @if(empty($filters['program']) && (!isset($groupBy) || $groupBy !== 'program'))
-                <th style="width:80px">Program</th>
+                <th style="width:85px">Program</th>
                 @endif
                 @if(empty($filters['school']) && (!isset($groupBy) || $groupBy !== 'school'))
-                <th style="width:140px">School</th>
+                <th style="width:150px">School</th>
                 @endif
                 @if(empty($filters['course']) && empty($filters['courses']) && (!isset($groupBy) || $groupBy !== 'course'))
-                <th style="width:120px">Course</th>
+                <th style="width:130px">Course</th>
                 @endif
                 @if(empty($filters['year_level']) && (!isset($groupBy) || $groupBy !== 'year_level'))
-                <th style="width:35px">Level</th>
+                <th style="width:40px">Level</th>
                 @endif
                 @if(empty($filters['approval_status']) && (!isset($groupBy) || $groupBy !== 'approval_status'))
-                <th style="width:80px">Status</th>
+                <th style="width:85px">Status</th>
                 @endif
                 @if(empty($filters['grant_provision']) && (!isset($groupBy) || $groupBy !== 'grant_provision'))
-                <th style="width:80px">Grant</th>
+                <th style="width:85px">Grant</th>
                 @endif
-                <th style="width:90px">
+                <th style="width:70px">
                     @php
                     $showingApproved = false;
                     if (isset($filters['approval_status'])) {
