@@ -20,6 +20,7 @@ const terms = [
     { label: "1ST TRIMESTER", value: "1ST TRIMESTER" },
     { label: "2ND TRIMESTER", value: "2ND TRIMESTER" },
     { label: "3RD TRIMESTER", value: "3RD TRIMESTER" },
+    { label: "MID YEAR", value: "MID YEAR" },
     { label: "SUMMER", value: "SUMMER" },
     { label: "REVIEW", value: "REVIEW" },
     { label: "N/A", value: "N/A" },
