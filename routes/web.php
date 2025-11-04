@@ -317,15 +317,4 @@ Route::middleware(['auth'])->get('/test-notifications', function () {
 Route::get('/api/municipalities', [\App\Http\Controllers\Api\MunicipalityController::class, 'index'])->name('api.municipalities.index');
 Route::get('/api/municipalities/{municipality}/barangays', [\App\Http\Controllers\Api\MunicipalityController::class, 'getBarangays'])->name('api.municipalities.barangays');
 
-// Chat Routes
-Route::middleware(['auth'])->prefix('chat')->group(function () {
-    Route::get('/conversations', [\App\Http\Controllers\ConversationController::class, 'index'])->name('chat.conversations.index');
-    Route::get('/conversations/{userId}', [\App\Http\Controllers\ConversationController::class, 'show'])->name('chat.conversations.show');
-    Route::delete('/conversations/{conversationId}', [\App\Http\Controllers\ConversationController::class, 'destroy'])->name('chat.conversations.destroy');
-    Route::post('/conversations/{conversationId}/messages', [\App\Http\Controllers\MessageController::class, 'store'])->name('chat.messages.store');
-    Route::delete('/conversations/{conversationId}/messages/{messageId}', [\App\Http\Controllers\MessageController::class, 'destroy'])->name('chat.messages.destroy');
-    Route::post('/conversations/{conversationId}/mark-read', [\App\Http\Controllers\MessageController::class, 'markAsRead'])->name('chat.messages.mark-read');
-    Route::get('/users/search', [\App\Http\Controllers\ConversationController::class, 'searchUsers'])->name('chat.users.search');
-});
-
 require __DIR__ . '/auth.php';
