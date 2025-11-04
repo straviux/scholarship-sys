@@ -84,8 +84,8 @@ class WaitingListController extends Controller
                 $query->whereHas('scholarshipGrant.school', function ($q) use ($schools) {
                     $q->where(function ($subQ) use ($schools) {
                         foreach ($schools as $school) {
-                            $subQ->orWhere('shortname', 'like', '%' . $school . '%')
-                                ->orWhere('name', 'like', '%' . $school . '%');
+                            $subQ->orWhere('schools.shortname', 'like', '%' . $school . '%')
+                                ->orWhere('schools.name', 'like', '%' . $school . '%');
                         }
                     });
                 });
@@ -102,7 +102,7 @@ class WaitingListController extends Controller
         // Filter by course under scholarshipGrant relation
         if ($request->filled('course')) {
             $query->whereHas('scholarshipGrant.course', function ($q) use ($request) {
-                $q->where('shortname', 'like', '%' . $request->course . '%')->orWhere('name', 'like', '%' . $request->course . '%');
+                $q->where('courses.shortname', 'like', '%' . $request->course . '%')->orWhere('courses.name', 'like', '%' . $request->course . '%');
             });
         }
 
@@ -641,8 +641,8 @@ class WaitingListController extends Controller
                 $query->whereHas('scholarshipGrant.school', function ($q) use ($schools) {
                     $q->where(function ($subQ) use ($schools) {
                         foreach ($schools as $school) {
-                            $subQ->orWhere('shortname', 'like', '%' . $school . '%')
-                                ->orWhere('name', 'like', '%' . $school . '%');
+                            $subQ->orWhere('schools.shortname', 'like', '%' . $school . '%')
+                                ->orWhere('schools.name', 'like', '%' . $school . '%');
                         }
                     });
                 });
@@ -657,7 +657,7 @@ class WaitingListController extends Controller
 
         if ($request->filled('course')) {
             $query->whereHas('scholarshipGrant.course', function ($q) use ($request) {
-                $q->where('shortname', 'like', '%' . $request->course . '%')->orWhere('name', 'like', '%' . $request->course . '%');
+                $q->where('courses.shortname', 'like', '%' . $request->course . '%')->orWhere('courses.name', 'like', '%' . $request->course . '%');
             });
         }
 

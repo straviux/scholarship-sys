@@ -17,6 +17,7 @@ use App\Http\Controllers\SystemReportController;
 use App\Http\Controllers\SystemUpdateController;
 use App\Http\Controllers\MobileUploadController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Broadcast;
 
 // Mobile upload routes (public, no auth required)
 Route::get('/mobile/upload/disbursement/{token}', [MobileUploadController::class, 'showDisbursementUpload'])
@@ -31,6 +32,9 @@ Route::get('/mobile/upload/profile/{token}', [ProfileController::class, 'showMob
     ->name('mobile.profile.upload');
 Route::post('/mobile/upload/profile/{token}', [ProfileController::class, 'processMobileUpload'])
     ->name('mobile.profile.upload.submit');
+
+// Broadcasting Authentication
+Broadcast::routes(['middleware' => ['auth']]);
 
 // This file is part of the routes/web.php file for the Laravel application.
 Route::middleware('auth')->group(function () {
@@ -260,10 +264,15 @@ Route::middleware(['auth'])->controller(App\Http\Controllers\SchoolController::c
 });
 
 // Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ScholarshipProfileController::class, 'generateReportPdf']);
-// Report PDF generation route
+// Report PDF generation route (Waiting List / Applicants)
 Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ReportController::class, 'generateWaitinglist'])->name('report.generatePdf');
-// Report Excel generation route
+// Report Excel generation route (Waiting List / Applicants)
 Route::middleware(['auth'])->get('/api/report/excel', [App\Http\Controllers\ReportController::class, 'generateExcelWaitingList'])->name('report.generateExcelWaitingList');
+
+// Scholarship Report PDF generation route
+Route::middleware(['auth'])->get('/api/report/scholarship/pdf', [App\Http\Controllers\ReportController::class, 'generateScholarshipPdf'])->name('report.scholarship.pdf');
+// Scholarship Report Excel generation route
+Route::middleware(['auth'])->get('/api/report/scholarship/excel', [App\Http\Controllers\ReportController::class, 'generateScholarshipExcel'])->name('report.scholarship.excel');
 
 // System Updates API Routes
 Route::middleware(['auth'])->group(function () {
@@ -307,5 +316,16 @@ Route::middleware(['auth'])->get('/test-notifications', function () {
 // API Routes for Municipalities and Barangays
 Route::get('/api/municipalities', [\App\Http\Controllers\Api\MunicipalityController::class, 'index'])->name('api.municipalities.index');
 Route::get('/api/municipalities/{municipality}/barangays', [\App\Http\Controllers\Api\MunicipalityController::class, 'getBarangays'])->name('api.municipalities.barangays');
+
+// Chat Routes
+Route::middleware(['auth'])->prefix('chat')->group(function () {
+    Route::get('/conversations', [\App\Http\Controllers\ConversationController::class, 'index'])->name('chat.conversations.index');
+    Route::get('/conversations/{userId}', [\App\Http\Controllers\ConversationController::class, 'show'])->name('chat.conversations.show');
+    Route::delete('/conversations/{conversationId}', [\App\Http\Controllers\ConversationController::class, 'destroy'])->name('chat.conversations.destroy');
+    Route::post('/conversations/{conversationId}/messages', [\App\Http\Controllers\MessageController::class, 'store'])->name('chat.messages.store');
+    Route::delete('/conversations/{conversationId}/messages/{messageId}', [\App\Http\Controllers\MessageController::class, 'destroy'])->name('chat.messages.destroy');
+    Route::post('/conversations/{conversationId}/mark-read', [\App\Http\Controllers\MessageController::class, 'markAsRead'])->name('chat.messages.mark-read');
+    Route::get('/users/search', [\App\Http\Controllers\ConversationController::class, 'searchUsers'])->name('chat.users.search');
+});
 
 require __DIR__ . '/auth.php';
