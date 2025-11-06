@@ -83,6 +83,13 @@ class PermissionSeeder extends Seeder
             // Priority Management
             ['name' => 'priority.view', 'description' => 'View priority levels'],
             ['name' => 'priority.manage', 'description' => 'Manage priority levels'],
+
+            // Forms & Templates
+            ['name' => 'forms-templates.view', 'description' => 'View forms and templates'],
+            ['name' => 'forms-templates.download', 'description' => 'Download forms and templates'],
+            ['name' => 'forms-templates.upload', 'description' => 'Upload new forms and templates'],
+            ['name' => 'forms-templates.edit', 'description' => 'Edit forms and templates'],
+            ['name' => 'forms-templates.delete', 'description' => 'Delete forms and templates'],
         ];
 
         foreach ($permissions as $permission) {
@@ -117,6 +124,8 @@ class PermissionSeeder extends Seeder
             'requirements.view',
             'reports.view',
             'reports.generate',
+            'forms-templates.view',
+            'forms-templates.download',
         ];
         $moderatorRole->syncPermissions($moderatorPermissions);
 
@@ -132,6 +141,8 @@ class PermissionSeeder extends Seeder
             'schools.view',
             'requirements.view',
             'reports.view',
+            'forms-templates.view',
+            'forms-templates.download',
         ];
         $userRole->syncPermissions($userPermissions);
 

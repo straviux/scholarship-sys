@@ -28,103 +28,115 @@
             <!-- Tabs for Categories -->
             <Card>
                 <template #content>
-                    <TabView v-model:activeIndex="activeTabIndex">
-                        <TabPanel v-for="(label, category) in categories" :key="category" :header="label">
-                            <div class="space-y-4">
-                                <!-- Category Description -->
-                                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                                    <div class="flex items-start gap-3">
-                                        <i class="pi pi-info-circle text-blue-600 mt-1"></i>
-                                        <div>
-                                            <h3 class="font-semibold text-blue-900">{{ label }}</h3>
-                                            <p class="text-sm text-blue-700 mt-1">
-                                                {{ getCategoryDescription(category) }}
-                                            </p>
+                    <Tabs v-model:value="activeTab">
+                        <TabList>
+                            <Tab v-for="(label, category) in categories" :key="`tab-${category}`" :value="category">
+                                {{ label }}
+                            </Tab>
+                        </TabList>
+
+                        <TabPanels>
+                            <TabPanel v-for="(label, category) in categories" :key="`panel-${category}`"
+                                :value="category">
+                                <div class="space-y-4">
+                                    <!-- Category Description -->
+                                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                        <div class="flex items-start gap-3">
+                                            <i class="pi pi-info-circle text-blue-600 mt-1"></i>
+                                            <div>
+                                                <h3 class="font-semibold text-blue-900">{{ label }}</h3>
+                                                <p class="text-sm text-blue-700 mt-1">
+                                                    {{ getCategoryDescription(category) }}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
+
+                                    <!-- Options DataTable -->
+                                    <DataTable :value="getOptionsForCategory(category)" :rows="10" :rowHover="true"
+                                        stripedRows showGridlines class="mt-4">
+                                        <Column header="Order" style="width: 80px">
+                                            <template #body="slotProps">
+                                                <div class="flex items-center gap-2">
+                                                    <Button icon="pi pi-chevron-up" severity="secondary" text
+                                                        size="small" @click="moveUp(slotProps.data, category)"
+                                                        :disabled="slotProps.index === 0" />
+                                                    <Button icon="pi pi-chevron-down" severity="secondary" text
+                                                        size="small" @click="moveDown(slotProps.data, category)"
+                                                        :disabled="slotProps.index === getOptionsForCategory(category).length - 1" />
+                                                </div>
+                                            </template>
+                                        </Column>
+
+                                        <Column field="value" header="Value" style="min-width: 200px">
+                                            <template #body="slotProps">
+                                                <span class="font-mono text-sm">{{ slotProps.data.value }}</span>
+                                            </template>
+                                        </Column>
+
+                                        <Column field="label" header="Label" style="min-width: 200px">
+                                            <template #body="slotProps">
+                                                {{ slotProps.data.label || '-' }}
+                                            </template>
+                                        </Column>
+
+                                        <Column field="color" header="Color" style="width: 120px">
+                                            <template #body="slotProps">
+                                                <div v-if="slotProps.data.color" class="flex items-center gap-2">
+                                                    <div class="w-6 h-6 rounded border border-gray-300"
+                                                        :style="{ backgroundColor: slotProps.data.color }"></div>
+                                                    <span class="text-xs text-gray-600">{{ slotProps.data.color
+                                                        }}</span>
+                                                </div>
+                                                <span v-else class="text-gray-400">-</span>
+                                            </template>
+                                        </Column>
+
+                                        <Column field="is_active" header="Status" style="width: 100px">
+                                            <template #body="slotProps">
+                                                <Tag :value="slotProps.data.is_active ? 'Active' : 'Inactive'"
+                                                    :severity="slotProps.data.is_active ? 'success' : 'danger'" />
+                                            </template>
+                                        </Column>
+
+                                        <Column field="description" header="Description" style="min-width: 250px">
+                                            <template #body="slotProps">
+                                                <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
+                                                    }}</span>
+                                            </template>
+                                        </Column>
+
+                                        <Column header="Actions" style="width: 180px">
+                                            <template #body="slotProps">
+                                                <div class="flex gap-2">
+                                                    <Button icon="pi pi-pencil" severity="info" text size="small"
+                                                        @click="openEditDialog(slotProps.data)"
+                                                        v-tooltip.top="'Edit'" />
+                                                    <Button
+                                                        :icon="slotProps.data.is_active ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                                                        :severity="slotProps.data.is_active ? 'warning' : 'success'"
+                                                        text size="small" @click="toggleActive(slotProps.data)"
+                                                        v-tooltip.top="slotProps.data.is_active ? 'Deactivate' : 'Activate'" />
+                                                    <Button icon="pi pi-trash" severity="danger" text size="small"
+                                                        @click="confirmDelete(slotProps.data)"
+                                                        v-tooltip.top="'Delete'" />
+                                                </div>
+                                            </template>
+                                        </Column>
+
+                                        <template #empty>
+                                            <div class="text-center py-8 text-gray-500">
+                                                <i class="pi pi-inbox text-4xl mb-3"></i>
+                                                <p>No options found for this category.</p>
+                                                <Button label="Add First Option" icon="pi pi-plus" severity="secondary"
+                                                    outlined class="mt-3" @click="openAddDialog(category)" />
+                                            </div>
+                                        </template>
+                                    </DataTable>
                                 </div>
-
-                                <!-- Options DataTable -->
-                                <DataTable :value="getOptionsForCategory(category)" :rows="10" :rowHover="true"
-                                    stripedRows showGridlines class="mt-4">
-                                    <Column header="Order" style="width: 80px">
-                                        <template #body="slotProps">
-                                            <div class="flex items-center gap-2">
-                                                <Button icon="pi pi-chevron-up" severity="secondary" text size="small"
-                                                    @click="moveUp(slotProps.data, category)"
-                                                    :disabled="slotProps.index === 0" />
-                                                <Button icon="pi pi-chevron-down" severity="secondary" text size="small"
-                                                    @click="moveDown(slotProps.data, category)"
-                                                    :disabled="slotProps.index === getOptionsForCategory(category).length - 1" />
-                                            </div>
-                                        </template>
-                                    </Column>
-
-                                    <Column field="value" header="Value" style="min-width: 200px">
-                                        <template #body="slotProps">
-                                            <span class="font-mono text-sm">{{ slotProps.data.value }}</span>
-                                        </template>
-                                    </Column>
-
-                                    <Column field="label" header="Label" style="min-width: 200px">
-                                        <template #body="slotProps">
-                                            {{ slotProps.data.label || '-' }}
-                                        </template>
-                                    </Column>
-
-                                    <Column field="color" header="Color" style="width: 120px">
-                                        <template #body="slotProps">
-                                            <div v-if="slotProps.data.color" class="flex items-center gap-2">
-                                                <div class="w-6 h-6 rounded border border-gray-300"
-                                                    :style="{ backgroundColor: slotProps.data.color }"></div>
-                                                <span class="text-xs text-gray-600">{{ slotProps.data.color }}</span>
-                                            </div>
-                                            <span v-else class="text-gray-400">-</span>
-                                        </template>
-                                    </Column>
-
-                                    <Column field="is_active" header="Status" style="width: 100px">
-                                        <template #body="slotProps">
-                                            <Tag :value="slotProps.data.is_active ? 'Active' : 'Inactive'"
-                                                :severity="slotProps.data.is_active ? 'success' : 'danger'" />
-                                        </template>
-                                    </Column>
-
-                                    <Column field="description" header="Description" style="min-width: 250px">
-                                        <template #body="slotProps">
-                                            <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                                }}</span>
-                                        </template>
-                                    </Column>
-
-                                    <Column header="Actions" style="width: 180px">
-                                        <template #body="slotProps">
-                                            <div class="flex gap-2">
-                                                <Button icon="pi pi-pencil" severity="info" text size="small"
-                                                    @click="openEditDialog(slotProps.data)" v-tooltip.top="'Edit'" />
-                                                <Button
-                                                    :icon="slotProps.data.is_active ? 'pi pi-eye-slash' : 'pi pi-eye'"
-                                                    :severity="slotProps.data.is_active ? 'warning' : 'success'" text
-                                                    size="small" @click="toggleActive(slotProps.data)"
-                                                    v-tooltip.top="slotProps.data.is_active ? 'Deactivate' : 'Activate'" />
-                                                <Button icon="pi pi-trash" severity="danger" text size="small"
-                                                    @click="confirmDelete(slotProps.data)" v-tooltip.top="'Delete'" />
-                                            </div>
-                                        </template>
-                                    </Column>
-
-                                    <template #empty>
-                                        <div class="text-center py-8 text-gray-500">
-                                            <i class="pi pi-inbox text-4xl mb-3"></i>
-                                            <p>No options found for this category.</p>
-                                            <Button label="Add First Option" icon="pi pi-plus" severity="secondary"
-                                                outlined class="mt-3" @click="openAddDialog(category)" />
-                                        </div>
-                                    </template>
-                                </DataTable>
-                            </div>
-                        </TabPanel>
-                    </TabView>
+                            </TabPanel>
+                        </TabPanels>
+                    </Tabs>
                 </template>
             </Card>
         </div>
@@ -213,7 +225,10 @@ import { Head, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Panel from 'primevue/panel';
 import Card from 'primevue/card';
-import TabView from 'primevue/tabview';
+import Tabs from 'primevue/tabs';
+import TabList from 'primevue/tablist';
+import Tab from 'primevue/tab';
+import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -231,7 +246,8 @@ const props = defineProps({
     categories: Object,
 });
 
-const activeTabIndex = ref(0);
+// Initialize activeTab with the first category key
+const activeTab = ref(Object.keys(props.categories)[0] || 'status');
 const showDialog = ref(false);
 const showDeleteDialog = ref(false);
 const dialogMode = ref('add');

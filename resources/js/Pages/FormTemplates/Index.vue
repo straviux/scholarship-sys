@@ -21,8 +21,8 @@
                     <div class="text-gray-600">
                         Upload and manage downloadable forms and template files
                     </div>
-                    <Button icon="pi pi-upload" label="Upload File" severity="success" raised
-                        @click="openUploadDialog" />
+                    <Button v-if="hasPermission('forms-templates.upload')" icon="pi pi-upload" label="Upload File"
+                        severity="success" raised @click="openUploadDialog" />
                 </div>
             </Panel>
 
@@ -45,7 +45,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                            }}</span>
+                                        }}</span>
                                     </template>
                                 </Column>
 
@@ -82,11 +82,14 @@
                                 <Column header="Actions" style="width: 200px">
                                     <template #body="slotProps">
                                         <div class="flex gap-2">
-                                            <Button icon="pi pi-download" severity="info" text size="small"
+                                            <Button v-if="hasPermission('forms-templates.download')"
+                                                icon="pi pi-download" severity="info" text size="small"
                                                 @click="downloadTemplate(slotProps.data)" v-tooltip.top="'Download'" />
-                                            <Button icon="pi pi-pencil" severity="warning" text size="small"
+                                            <Button v-if="hasPermission('forms-templates.edit')" icon="pi pi-pencil"
+                                                severity="warning" text size="small"
                                                 @click="openEditDialog(slotProps.data)" v-tooltip.top="'Edit'" />
-                                            <Button icon="pi pi-trash" severity="danger" text size="small"
+                                            <Button v-if="hasPermission('forms-templates.delete')" icon="pi pi-trash"
+                                                severity="danger" text size="small"
                                                 @click="confirmDelete(slotProps.data)" v-tooltip.top="'Delete'" />
                                         </div>
                                     </template>
@@ -110,7 +113,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                            }}</span>
+                                        }}</span>
                                     </template>
                                 </Column>
 
@@ -139,11 +142,14 @@
                                 <Column header="Actions" style="width: 200px">
                                     <template #body="slotProps">
                                         <div class="flex gap-2">
-                                            <Button icon="pi pi-download" severity="info" text size="small"
+                                            <Button v-if="hasPermission('forms-templates.download')"
+                                                icon="pi pi-download" severity="info" text size="small"
                                                 @click="downloadTemplate(slotProps.data)" v-tooltip.top="'Download'" />
-                                            <Button icon="pi pi-pencil" severity="warning" text size="small"
+                                            <Button v-if="hasPermission('forms-templates.edit')" icon="pi pi-pencil"
+                                                severity="warning" text size="small"
                                                 @click="openEditDialog(slotProps.data)" v-tooltip.top="'Edit'" />
-                                            <Button icon="pi pi-trash" severity="danger" text size="small"
+                                            <Button v-if="hasPermission('forms-templates.delete')" icon="pi pi-trash"
+                                                severity="danger" text size="small"
                                                 @click="confirmDelete(slotProps.data)" v-tooltip.top="'Delete'" />
                                         </div>
                                     </template>
@@ -260,12 +266,14 @@ import Textarea from 'primevue/textarea';
 import Select from 'primevue/select';
 import Checkbox from 'primevue/checkbox';
 import Tag from 'primevue/tag';
+import { usePermission } from '@/composable/permissions';
 
 const props = defineProps({
     templates: Object,
     categories: Array,
 });
 
+const { hasPermission } = usePermission();
 const activeTabIndex = ref(0);
 const showDialog = ref(false);
 const showDeleteDialog = ref(false);

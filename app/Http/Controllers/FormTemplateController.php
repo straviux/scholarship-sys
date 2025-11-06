@@ -6,6 +6,7 @@ use App\Models\FormTemplate;
 use App\Models\SystemOption;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class FormTemplateController extends Controller
@@ -15,6 +16,8 @@ class FormTemplateController extends Controller
      */
     public function index()
     {
+        Gate::authorize('forms-templates.view');
+
         $templates = FormTemplate::with(['creator', 'updater'])
             ->ordered()
             ->get()
@@ -36,6 +39,8 @@ class FormTemplateController extends Controller
      */
     public function store(Request $request)
     {
+        Gate::authorize('forms-templates.upload');
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -69,6 +74,8 @@ class FormTemplateController extends Controller
      */
     public function update(Request $request, FormTemplate $formTemplate)
     {
+        Gate::authorize('forms-templates.edit');
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -107,6 +114,8 @@ class FormTemplateController extends Controller
      */
     public function destroy(FormTemplate $formTemplate)
     {
+        Gate::authorize('forms-templates.delete');
+
         // Delete the file
         if ($formTemplate->file_path && Storage::disk('public')->exists($formTemplate->file_path)) {
             Storage::disk('public')->delete($formTemplate->file_path);
@@ -122,6 +131,8 @@ class FormTemplateController extends Controller
      */
     public function download(FormTemplate $formTemplate)
     {
+        Gate::authorize('forms-templates.download');
+
         if (!$formTemplate->file_path || !Storage::disk('public')->exists($formTemplate->file_path)) {
             return back()->withErrors(['file' => 'File not found.']);
         }
