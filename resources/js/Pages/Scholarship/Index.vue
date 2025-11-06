@@ -33,7 +33,7 @@
                 <template #end>
                     <div class="flex gap-3 items-center">
                         <Button icon="pi pi-plus" @click="addRecordPopover.toggle($event)" severity="success"
-                            v-tooltip.bottom="'Add New Record'" />
+                            v-tooltip.bottom="'Add New Record'" v-if="hasPermission('applicants.create')" />
                         <Popover ref="addRecordPopover">
                             <div class="flex flex-col gap-2 w-48">
                                 <!-- <Button @click="openAddApplicantModal" label="Add Applicant" icon="pi pi-user-plus"
@@ -45,13 +45,15 @@
                         <Button icon="pi pi-refresh" @click="refreshData" severity="secondary" outlined
                             v-tooltip.bottom="'Refresh'" />
                         <Button icon="pi pi-print" @click="actionsPopover.toggle($event)" severity="info"
-                            v-tooltip.bottom="'Reports & Export'" />
+                            v-tooltip.bottom="'Reports & Export'" v-if="hasPermission('reports.view')" />
                         <Popover ref="actionsPopover">
                             <div class="flex flex-col gap-2 w-48">
                                 <Button @click="openReportModal" label="Generate Report" icon="pi pi-file-pdf"
-                                    severity="secondary" outlined class="justify-start" />
+                                    severity="secondary" outlined class="justify-start"
+                                    v-if="hasPermission('reports.generate')" />
                                 <Button @click="openExportModal" label="Export Data" icon="pi pi-download"
-                                    severity="secondary" outlined class="justify-start" />
+                                    severity="secondary" outlined class="justify-start"
+                                    v-if="hasPermission('reports.generate')" />
                             </div>
                         </Popover>
                     </div>
@@ -234,10 +236,12 @@
                                     <Chip v-if="slotProps.data.latest_scholarship_record.grant_provision"
                                         :label="slotProps.data.latest_scholarship_record.grant_provision" size="small"
                                         class="font-medium cursor-pointer"
+                                        @click="hasPermission('applicants.edit') && openGrantProvisionDialog(slotProps.data)" />
+                                    <Button v-else-if="hasPermission('applicants.edit')" icon="pi pi-plus" label="Set"
+                                        size="small" severity="secondary" text
                                         @click="openGrantProvisionDialog(slotProps.data)" />
-                                    <Button v-else icon="pi pi-plus" label="Set" size="small" severity="secondary" text
-                                        @click="openGrantProvisionDialog(slotProps.data)" />
-                                    <Button v-if="slotProps.data.latest_scholarship_record.grant_provision"
+                                    <Button
+                                        v-if="slotProps.data.latest_scholarship_record.grant_provision && hasPermission('applicants.edit')"
                                         icon="pi pi-pencil" size="small" severity="secondary" text rounded
                                         @click="openGrantProvisionDialog(slotProps.data)" v-tooltip.top="'Edit'" />
                                 </div>
@@ -251,7 +255,8 @@
                                     <Button icon="pi pi-eye" size="small" severity="info" outlined rounded
                                         v-tooltip.top="'View'" @click="viewFullProfile(slotProps.data)" />
                                     <Button icon="pi pi-pencil" size="small" severity="warning" outlined rounded
-                                        v-tooltip.top="'Edit'" @click="editProfile(slotProps.data)" />
+                                        v-tooltip.top="'Edit'" @click="editProfile(slotProps.data)"
+                                        v-if="hasPermission('applicants.edit')" />
                                 </div>
                             </template>
                         </Column>
@@ -338,7 +343,8 @@
                                             <Button icon="pi pi-eye" size="small" severity="info" outlined rounded
                                                 v-tooltip.top="'View'" @click="viewFullProfile(item)" />
                                             <Button icon="pi pi-pencil" size="small" severity="warning" outlined rounded
-                                                v-tooltip.top="'Edit'" @click="editProfile(item)" />
+                                                v-tooltip.top="'Edit'" @click="editProfile(item)"
+                                                v-if="hasPermission('applicants.edit')" />
                                         </div>
                                     </div>
                                 </div>
@@ -406,7 +412,8 @@
                                             <Button icon="pi pi-eye" size="small" severity="info" outlined
                                                 class="flex-1" v-tooltip.top="'View'" @click="viewFullProfile(item)" />
                                             <Button icon="pi pi-pencil" size="small" severity="warning" outlined
-                                                class="flex-1" v-tooltip.top="'Edit'" @click="editProfile(item)" />
+                                                class="flex-1" v-tooltip.top="'Edit'" @click="editProfile(item)"
+                                                v-if="hasPermission('applicants.edit')" />
                                         </div>
                                     </div>
                                 </div>
@@ -637,6 +644,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
 import moment from 'moment';
+import { usePermission } from '@/composable/permissions';
 
 // PrimeVue Components
 import Button from 'primevue/button';
@@ -717,6 +725,9 @@ const rows = ref(props.filters?.records ? parseInt(props.filters.records) : 10);
 const layout = ref('table'); // Default to table view
 const actionsPopover = ref();
 const profileType = ref(getInitialProfileType());
+
+// Permission composable
+const { hasPermission } = usePermission();
 
 // Grant Provision Options
 const grantProvisionOptions = ref(['Matriculation', 'RLE', 'Tuition', 'RLE and Tuition']);

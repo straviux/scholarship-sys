@@ -1,17 +1,28 @@
 <template>
     <AdminLayout>
         <template #header>
-            System Updates Management
+            Manage Updates
         </template>
 
         <div class="py-6">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Header with Create Button -->
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">System Updates</h2>
-                    <Button v-if="hasRole('administrator')" @click="showCreateModal = true" label="Create Update"
-                        icon="pi pi-plus" severity="info" size="small" />
-                </div>
+                <!-- Header Panel -->
+                <Panel class="mb-6">
+                    <template #header>
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-megaphone text-xl"></i>
+                            <span class="font-semibold text-lg">System Updates Management</span>
+                        </div>
+                    </template>
+
+                    <div class="flex justify-between items-center">
+                        <div class="text-gray-600">
+                            Create and manage system-wide updates and announcements
+                        </div>
+                        <Button v-if="hasRole('administrator')" @click="showCreateModal = true" label="Create Update"
+                            icon="pi pi-plus" severity="success" raised />
+                    </div>
+                </Panel>
 
                 <!-- Updates List -->
                 <Panel header="System Updates" class="w-full">
@@ -22,7 +33,9 @@
                     </div>
 
                     <div v-else class="space-y-4">
-                        <Card v-for="update in updates" :key="update.id" class="w-full">
+                        <Card v-for="update in updates" :key="update.id"
+                            class="w-full cursor-pointer hover:shadow-lg transition-shadow"
+                            @click="viewUpdate(update.id)">
                             <template #content>
                                 <div class="flex justify-between items-start">
                                     <div class="flex-1">
@@ -35,13 +48,19 @@
                                             <Tag v-if="update.is_markdown" value="Markdown" severity="info"
                                                 icon="pi pi-file-edit" class="text-xs" />
                                         </div>
-                                        <p class="text-gray-600 mb-3">{{ update.content }}</p>
+                                        <!-- Content Preview (truncated) -->
+                                        <div v-if="update.is_markdown && update.markdown_content"
+                                            class="text-gray-600 mb-3 line-clamp-2">
+                                            {{ stripMarkdown(update.markdown_content) }}
+                                        </div>
+                                        <p v-else class="text-gray-600 mb-3 line-clamp-2">{{ update.content }}</p>
                                         <div class="text-sm text-gray-500">
                                             Created {{ update.created_at }} by {{ update.created_by_name }}
                                         </div>
+                                        <p class="text-sm text-blue-600 mt-2 font-medium">Click to view details →</p>
                                     </div>
 
-                                    <div class="flex items-center space-x-2 ml-4">
+                                    <div class="flex items-center space-x-2 ml-4" @click.stop>
                                         <Tag :value="update.is_active ? 'Active' : 'Inactive'"
                                             :severity="update.is_active ? 'success' : 'danger'" />
                                         <div v-if="hasRole('administrator')" class="flex items-center space-x-1">
@@ -213,6 +232,15 @@ import Tag from 'primevue/tag'
 import Message from 'primevue/message'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
+import { marked } from 'marked'
+
+// Configure marked options for security
+marked.setOptions({
+    breaks: true,
+    gfm: true,
+    headerIds: false,
+    mangle: false
+})
 
 // Composables
 const { hasRole, hasPermission } = usePermission()
@@ -258,6 +286,10 @@ const priorityOptions = ref([
 ])
 
 // Methods
+const viewUpdate = (id) => {
+    router.visit(route('admin.system-updates.show', { id }))
+}
+
 const onMarkdownToggle = () => {
     // When toggling markdown mode, preserve content between formats
     if (form.value.is_markdown) {
@@ -273,17 +305,23 @@ const onMarkdownToggle = () => {
     }
 }
 
+const stripMarkdown = (markdown) => {
+    if (!markdown) return ''
+    // Remove markdown formatting for preview
+    return markdown
+        .replace(/#{1,6}\s/g, '') // headers
+        .replace(/\*\*(.+?)\*\*/g, '$1') // bold
+        .replace(/\*(.+?)\*/g, '$1') // italic
+        .replace(/\[(.+?)\]\(.+?\)/g, '$1') // links
+        .replace(/`(.+?)`/g, '$1') // inline code
+        .replace(/```[\s\S]*?```/g, '') // code blocks
+        .trim()
+}
+
 const fetchUpdates = async () => {
     try {
-        const response = await axios.get('/api/system-updates')
-
-        // Since is_active field is undefined from backend, set all updates as active by default
-        // TODO: Backend needs to include is_active field in the response
-        updates.value = response.data.updates.map(update => ({
-            ...update,
-            is_active: true // Default to active since backend doesn't provide this field
-        }))
-
+        const response = await axios.get('/api/admin/system-updates')
+        updates.value = response.data.updates
     } catch (error) {
         console.error('Error fetching updates:', error)
     }
@@ -316,8 +354,8 @@ const createUpdate = async () => {
 
         if (form.value.is_markdown) {
             payload.markdown_content = form.value.markdown_content
-            // Optionally provide a plain text summary
-            payload.content = form.value.content || form.value.markdown_content.substring(0, 200)
+            // Only send plain text summary, not the full markdown
+            payload.content = form.value.markdown_content.replace(/[#*`\[\]()]/g, '').substring(0, 200) + '...'
         } else {
             payload.content = form.value.content
         }
@@ -436,6 +474,11 @@ const getTypeSeverity = (type) => {
     return severities[type] || 'info'
 }
 
+const renderMarkdown = (markdown) => {
+    if (!markdown) return ''
+    return marked.parse(markdown)
+}
+
 // Lifecycle
 onMounted(() => {
     fetchUpdates()
@@ -475,6 +518,108 @@ onMounted(() => {
 }
 
 /* Line clamp utility */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Markdown prose styling */
+.prose {
+    color: #374151;
+    max-width: 65ch;
+}
+
+.prose :deep(h1),
+.prose :deep(h2),
+.prose :deep(h3),
+.prose :deep(h4) {
+    color: #111827;
+    font-weight: 600;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
+.prose :deep(h1) {
+    font-size: 1.5em;
+}
+
+.prose :deep(h2) {
+    font-size: 1.25em;
+}
+
+.prose :deep(h3) {
+    font-size: 1.125em;
+}
+
+.prose :deep(p) {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.prose :deep(ul),
+.prose :deep(ol) {
+    padding-left: 1.5em;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.prose :deep(li) {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+}
+
+.prose :deep(code) {
+    background-color: #f3f4f6;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+    font-family: ui-monospace, monospace;
+}
+
+.prose :deep(pre) {
+    background-color: #1f2937;
+    color: #f9fafb;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    overflow-x: auto;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.prose :deep(pre code) {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+}
+
+.prose :deep(blockquote) {
+    border-left: 4px solid #d1d5db;
+    padding-left: 1em;
+    font-style: italic;
+    color: #6b7280;
+}
+
+.prose :deep(a) {
+    color: #3b82f6;
+    text-decoration: underline;
+}
+
+.prose :deep(a:hover) {
+    color: #2563eb;
+}
+
+.prose :deep(strong) {
+    font-weight: 600;
+    color: #111827;
+}
+
+.prose :deep(em) {
+    font-style: italic;
+}
+
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;

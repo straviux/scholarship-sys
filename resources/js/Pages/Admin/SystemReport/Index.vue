@@ -1,18 +1,38 @@
 <template>
 
-    <Head title="System Status" />
-    <AdminLayout title="System Status Report">
+    <Head title="System Stats" />
+
+    <AdminLayout>
+        <template #header>
+            System Stats
+        </template>
+
         <div class="p-6 space-y-6">
-            <!-- Header -->
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900">System Status Report</h1>
-                    <p class="text-gray-600 mt-1">Generated on {{ report.generated_at }}</p>
+            <!-- Header Panel -->
+            <Panel class="mb-6">
+                <template #header>
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-chart-bar text-xl"></i>
+                        <span class="font-semibold text-lg">System Statistics Report</span>
+                    </div>
+                </template>
+
+                <div class="flex justify-between items-center">
+                    <div class="text-gray-600">
+                        View comprehensive system statistics and performance metrics
+                    </div>
+                    <div class="flex gap-3">
+                        <Button @click="refreshReport" :loading="loading" icon="pi pi-refresh" label="Refresh"
+                            severity="secondary" raised />
+                        <Button @click="exportReport" icon="pi pi-download" label="Export JSON" severity="success"
+                            raised />
+                    </div>
                 </div>
-                <div class="flex gap-3">
-                    <Button @click="refreshReport" :loading="loading" icon="pi pi-refresh" label="Refresh" />
-                    <Button @click="exportReport" icon="pi pi-download" label="Export JSON" severity="secondary" />
-                </div>
+            </Panel>
+
+            <!-- Report Info -->
+            <div class="text-sm text-gray-600">
+                Generated on {{ report.generated_at }}
             </div>
 
             <!-- Executive Summary Cards -->

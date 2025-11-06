@@ -41,6 +41,7 @@
         "dompurify": "^3.3.0",
         "lodash": "^4.17.21",
         "markdown-it": "^14.1.0",
+        "marked": "^16.4.1",
         "md-editor-v3": "^6.1.0",
         "moment": "^2.30.1",
         "primeicons": "^7.0.0",

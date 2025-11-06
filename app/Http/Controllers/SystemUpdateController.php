@@ -142,8 +142,8 @@ class SystemUpdateController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'content' => 'required_without:markdown_content|string',
-            'markdown_content' => 'required_without:content|string',
+            'content' => 'nullable|string',
+            'markdown_content' => 'nullable|string',
             'is_markdown' => 'boolean',
             'type' => 'in:info,warning,success,error',
             'priority' => 'in:low,normal,high,urgent',
@@ -152,9 +152,16 @@ class SystemUpdateController extends Controller
             'expires_at' => 'nullable|date|after:now',
         ]);
 
+        // Ensure at least one content field is provided
+        if (!$request->content && !$request->markdown_content) {
+            return response()->json([
+                'message' => 'Either content or markdown_content must be provided'
+            ], 422);
+        }
+
         $update = SystemUpdate::create([
             'title' => $request->title,
-            'content' => $request->content,
+            'content' => $request->content ?? '',
             'markdown_content' => $request->markdown_content,
             'is_markdown' => $request->is_markdown ?? false,
             'type' => $request->type ?? 'info',

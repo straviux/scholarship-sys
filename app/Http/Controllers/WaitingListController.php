@@ -496,10 +496,15 @@ class WaitingListController extends Controller
     }
 
     /**
-     * Update JPM status and remarks for an applicant
+     * Update JPM status for an applicant
      */
     public function updateJpmStatus($id, Request $request)
     {
+        // Check permission to edit applicants
+        if (!Gate::allows('applicants.edit')) {
+            abort(403, 'You do not have permission to update JPM status.');
+        }
+
         try {
             Log::info('Updating JPM data for profile: ' . $id, $request->all());
 
@@ -541,6 +546,11 @@ class WaitingListController extends Controller
      */
     public function updateJpmRemarks($id, Request $request)
     {
+        // Check permission to edit applicants
+        if (!Gate::allows('applicants.edit')) {
+            abort(403, 'You do not have permission to update JPM remarks.');
+        }
+
         $profile = ScholarshipProfile::findOrFail($id);
         if ($request->has('jpm_remarks')) {
             $profile->jpm_remarks = $request->input('jpm_remarks');
@@ -821,6 +831,11 @@ class WaitingListController extends Controller
      */
     public function destroy($id)
     {
+        // Check permission to delete applicants
+        if (!Gate::allows('applicants.delete')) {
+            abort(403, 'You do not have permission to delete applicants.');
+        }
+
         try {
             $profile = ScholarshipProfile::findOrFail($id);
 

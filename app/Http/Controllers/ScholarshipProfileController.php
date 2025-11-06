@@ -30,6 +30,11 @@ class ScholarshipProfileController extends Controller
      */
     public function storeApplicant(CreateScholarshipProfileRequest $request): Response
     {
+        // Check permission to create applicants
+        if (!Gate::allows('applicants.create')) {
+            abort(403, 'You do not have permission to create applicants.');
+        }
+
         $validated = $request->validated();
         // Set is_on_waiting_list to true by default if not explicitly set
         $validated['is_on_waiting_list'] = $validated['is_on_waiting_list'] ?? true;
@@ -94,6 +99,11 @@ class ScholarshipProfileController extends Controller
      */
     public function updateApplicant(UpdateScholarshipProfileRequest $request, $id)
     {
+        // Check permission to edit applicants
+        if (!Gate::allows('applicants.edit')) {
+            abort(403, 'You do not have permission to edit applicants.');
+        }
+
         $profile = ScholarshipProfile::findOrFail($id);
 
         // Create or update scholarship record if ANY academic information is provided
@@ -865,6 +875,10 @@ class ScholarshipProfileController extends Controller
      */
     public function approve(Request $request, ScholarshipRecord $record)
     {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $request->validate([
             'date_approved' => 'nullable|date',
             'remarks' => 'nullable|string|max:500'
@@ -894,6 +908,10 @@ class ScholarshipProfileController extends Controller
      */
     public function decline(Request $request, ScholarshipRecord $record)
     {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $request->validate([
             'reason' => 'required|string',
             'details' => 'required|string|max:1000'
@@ -1006,6 +1024,10 @@ class ScholarshipProfileController extends Controller
      */
     public function approveEnhanced(Request $request, ScholarshipRecord $record)
     {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $request->validate([
             'type' => 'required|in:full,conditional',
             'remarks' => 'nullable|string|max:1000',
@@ -1039,6 +1061,10 @@ class ScholarshipProfileController extends Controller
      */
     public function declineEnhanced(Request $request, ScholarshipRecord $record)
     {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validReasons = array_keys(config('scholarship.decline_reasons'));
 
         $request->validate([

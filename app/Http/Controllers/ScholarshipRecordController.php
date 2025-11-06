@@ -262,6 +262,10 @@ class ScholarshipRecordController extends Controller
      */
     public function approveScholarshipRecord(Request $request, $id)
     {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $record = ScholarshipRecord::findOrFail($id);
         // Status 1 means 'approved and ongoing' per ScholarshipRecord model
         $record->updateScholarshipStatus(1);
@@ -276,6 +280,10 @@ class ScholarshipRecordController extends Controller
      */
     public function declineScholarshipRecord(Request $request, $id)
     {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $record = ScholarshipRecord::findOrFail($id);
         // Status 2 means 'declined' per ScholarshipRecord model
         $record->updateScholarshipStatus(5);

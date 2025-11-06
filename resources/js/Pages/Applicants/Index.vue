@@ -685,7 +685,7 @@ const formatDate = (date) => {
                 <template #end>
                     <div class="flex gap-3 items-center">
                         <!-- JPM Controls -->
-                        <div class="flex items-center gap-4" v-if="hasPermission('can-view-jpm')">
+                        <div class="flex items-center gap-4" v-if="hasPermission('jpm.view')">
                             <div class="flex items-center gap-2">
                                 <Checkbox v-model="showJpmColumns" inputId="showJpmToggle" binary />
                                 <label for="showJpmToggle" class="text-sm text-gray-600 cursor-pointer">Enable JPM
@@ -699,13 +699,13 @@ const formatDate = (date) => {
                             </div>
                         </div>
 
-                        <Divider layout="vertical" class="h-6" v-if="hasPermission('can-view-jpm')" />
+                        <Divider layout="vertical" class="h-6" v-if="hasPermission('jpm.view')" />
 
                         <Button icon="pi pi-user-plus" @click="openApplicationFormModal"
-                            v-if="hasPermission('create-scholar-profile') && !hasRole('user')" severity="success"
+                            v-if="hasPermission('applicants.create')" severity="success"
                             v-tooltip.bottom="'Add New Applicant'" />
                         <Button icon="pi pi-print" @click="openReportModal" severity="info"
-                            v-tooltip.bottom="'Generate Report'" />
+                            v-tooltip.bottom="'Generate Report'" v-if="hasPermission('reports.generate')" />
                         <!-- <Button as="a" label="Existing" icon="pi pi-user"
                             v-if="hasPermission('create-scholar-profile') && !hasRole('user')"
                             :href="route('waitinglist.index', { action: 'add-existing' })" severity="secondary"
@@ -952,7 +952,7 @@ const formatDate = (date) => {
                         </Column>
 
                         <!-- Parent/Guardian Column (only visible when showJpmColumns is enabled) -->
-                        <Column header="Parent/Guardian" v-if="hasPermission('can-view-jpm') && showJpmColumns"
+                        <Column header="Parent/Guardian" v-if="hasPermission('jpm.view') && showJpmColumns"
                             style="min-width: 200px">
                             <template #body="slotProps">
                                 <div class="text-sm space-y-1">
@@ -976,7 +976,7 @@ const formatDate = (date) => {
                         </Column>
 
                         <!-- JPM Status Column (only visible when showJpmColumns is enabled) -->
-                        <Column header="JPM Status" v-if="hasPermission('can-view-jpm') && showJpmColumns"
+                        <Column header="JPM Status" v-if="hasPermission('jpm.view') && showJpmColumns"
                             style="min-width: 180px">
                             <template #body="slotProps">
                                 <div class="flex flex-col gap-1">
@@ -1019,12 +1019,12 @@ const formatDate = (date) => {
                         </Column>
 
                         <!-- JPM Actions Column (visible when JPM columns enabled) -->
-                        <Column header="Tagging" v-if="hasPermission('can-view-jpm') && showJpmColumns"
+                        <Column header="Tagging" v-if="hasPermission('jpm.view') && showJpmColumns"
                             style="min-width: 150px">
                             <template #body="slotProps">
                                 <div class="flex flex-col gap-2 items-center">
                                     <Button @click="openJpmModal(slotProps.data)" rounded icon="pi pi-tags"
-                                        severity="info" size="small" outlined :disabled="hasRole('user')"
+                                        severity="info" size="small" outlined :disabled="!hasPermission('jpm.manage')"
                                         v-tooltip.top="'Edit JPM tagging and remarks'" />
 
                                     <!-- Quick preview of remarks if exists -->
@@ -1037,7 +1037,7 @@ const formatDate = (date) => {
                         </Column>
 
                         <!-- Priority Column -->
-                        <Column header="Priority" style="width: 180px" v-if="hasPermission('can-manage-priority')">
+                        <Column header="Priority" style="width: 180px" v-if="hasPermission('priority.manage')">
                             <template #body="slotProps">
                                 <div class="flex items-center gap-2 justify-between">
                                     <div
@@ -1071,15 +1071,16 @@ const formatDate = (date) => {
                                     <Button icon="pi pi-id-card" severity="success" size="small" rounded outlined
                                         v-tooltip.top="'Review Application & View Profile'"
                                         @click="openProfileReviewModal(slotProps.data)"
-                                        v-if="hasPermission('create-scholar-profile')" />
+                                        v-if="hasPermission('applicants.view')" />
 
                                     <Button icon="pi pi-user-edit" severity="help" size="small" rounded outlined
-                                        v-tooltip.top="'Edit Applicant'" @click="editApplicant(slotProps.data)" />
+                                        v-tooltip.top="'Edit Applicant'" @click="editApplicant(slotProps.data)"
+                                        v-if="hasPermission('applicants.edit')" />
 
                                     <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
                                         v-tooltip.top="'Delete Applicant'"
                                         @click="confirmDeleteApplicant(slotProps.data)"
-                                        v-if="hasPermission('delete-scholar-profile') && !hasRole('user')" />
+                                        v-if="hasPermission('applicants.delete')" />
                                 </div>
                             </template>
                         </Column>
@@ -1098,7 +1099,7 @@ const formatDate = (date) => {
                                         icon: 'pi pi-check-circle',
                                         label: 'Review',
                                         severity: 'success',
-                                        condition: () => hasPermission('create-scholar-profile')
+                                        condition: () => hasPermission('applicants.view')
                                     },
                                     {
                                         name: 'jpm-tag',
@@ -1106,7 +1107,7 @@ const formatDate = (date) => {
                                         severity: 'info',
                                         tooltip: 'JPM Tagging',
                                         outlined: true,
-                                        condition: () => hasPermission('can-view-jpm') && showJpmColumns && !hasRole('user')
+                                        condition: () => hasPermission('jpm.view') && showJpmColumns && hasPermission('jpm.manage')
                                     },
                                     {
                                         name: 'assign-priority',
@@ -1114,20 +1115,21 @@ const formatDate = (date) => {
                                         severity: 'warn',
                                         tooltip: 'Assign Priority',
                                         outlined: true,
-                                        condition: () => hasPermission('can-manage-priority')
+                                        condition: () => hasPermission('priority.manage')
                                     },
                                     {
                                         name: 'edit',
                                         icon: 'pi pi-user-edit',
                                         severity: 'help',
-                                        tooltip: 'Edit'
+                                        tooltip: 'Edit',
+                                        condition: () => hasPermission('applicants.edit')
                                     },
                                     {
                                         name: 'delete',
                                         icon: 'pi pi-trash',
                                         severity: 'danger',
                                         tooltip: 'Delete',
-                                        condition: () => hasPermission('delete-scholar-profile') && !hasRole('user')
+                                        condition: () => hasPermission('applicants.delete')
                                     }
                                 ]" @action="handleCardAction" />
                         </template>

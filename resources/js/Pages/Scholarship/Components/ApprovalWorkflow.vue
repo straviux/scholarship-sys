@@ -116,10 +116,10 @@
         <!-- Action Buttons -->
         <div class="flex justify-between items-center pt-2">
             <div class="flex gap-2">
-                <Button v-if="canApprove(application)" label="Approve" icon="pi pi-thumbs-up" severity="success"
-                    @click="showApprovalDialog = true" />
-                <Button v-if="canDecline(application)" label="Decline" icon="pi pi-thumbs-down" severity="danger"
-                    outlined @click="showDeclineDialog = true" />
+                <Button v-if="canApprove(application) && hasPermission('applicants.approve')" label="Approve"
+                    icon="pi pi-thumbs-up" severity="success" @click="showApprovalDialog = true" />
+                <Button v-if="canDecline(application) && hasPermission('applicants.approve')" label="Decline"
+                    icon="pi pi-thumbs-down" severity="danger" outlined @click="showDeclineDialog = true" />
             </div>
 
             <div class="flex gap-2">
@@ -239,6 +239,7 @@
 import { ref, computed } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
 import moment from 'moment';
+import { usePermission } from '@/composable/permissions';
 
 // PrimeVue Components
 import Panel from 'primevue/panel';
@@ -277,6 +278,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['approved', 'declined', 'refresh']);
+
+// Permission composable
+const { hasPermission } = usePermission();
 
 // Dialog state
 const showApprovalDialog = ref(false);

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import SidebarLink from "@/Components/ui/navigation/SidebarLink.vue";
 import NotificationDropdown from "@/Components/ui/navigation/NotificationDropdown.vue";
 import { Link, usePage } from "@inertiajs/vue3";
@@ -8,12 +8,14 @@ import { usePermission } from "@/composable/permissions";
 // PrimeVue Components
 import Button from 'primevue/button';
 import Avatar from 'primevue/avatar';
+import Badge from 'primevue/badge';
 
 const { hasRole, hasPermission } = usePermission();
 const $page = usePage();
 const toggleMenu = ref(false);
 const sidebarMinimized = ref(localStorage.getItem('sidebarMinimized') === 'true');
 const userMenuRef = ref(null);
+const unreadUpdatesCount = ref(0);
 
 function toggleSidebarMinimized() {
     sidebarMinimized.value = !sidebarMinimized.value;
@@ -47,6 +49,32 @@ function getRoleDisplay() {
 
     return 'User';
 }
+
+// Fetch unread updates count
+async function fetchUnreadCount() {
+    try {
+        const response = await fetch('/api/system-updates/unread-count');
+        const data = await response.json();
+        unreadUpdatesCount.value = data.unread_count;
+    } catch (error) {
+        console.error('Error fetching unread count:', error);
+    }
+}
+
+// Fetch on mount and set interval to refresh
+let intervalId = null;
+
+onMounted(() => {
+    fetchUnreadCount();
+    // Refresh every 30 seconds
+    intervalId = setInterval(fetchUnreadCount, 30000);
+});
+
+onUnmounted(() => {
+    if (intervalId) {
+        clearInterval(intervalId);
+    }
+});
 </script>
 
 <template>
@@ -105,6 +133,13 @@ function getRoleDisplay() {
                             <span class="font-medium">Dashboard</span>
                         </SidebarLink>
                     </li>
+                    <li v-if="hasRole('administrator')">
+                        <SidebarLink :href="route('form-templates.index')"
+                            :active="route().current('form-templates.index')">
+                            <i class="pi pi-file mr-2"></i>
+                            <span class="font-medium">Forms & Templates</span>
+                        </SidebarLink>
+                    </li>
                     <li>
                         <details open>
                             <summary class="cursor-pointer">
@@ -130,10 +165,12 @@ function getRoleDisplay() {
                         </details>
                     </li>
                     <li>
-                        <SidebarLink :href="route('admin.system-updates')"
-                            :active="route().current('admin.system-updates')">
+                        <SidebarLink :href="route('system-updates.index')"
+                            :active="route().current('system-updates.index')">
                             <i class="pi pi-bell mr-2"></i>
                             <span class="font-medium">System Updates</span>
+                            <Badge v-if="unreadUpdatesCount > 0" :value="unreadUpdatesCount" severity="danger"
+                                class="ml-auto" />
                         </SidebarLink>
                     </li>
                     <li v-if="hasRole('administrator') || hasRole('moderator')">
@@ -171,6 +208,13 @@ function getRoleDisplay() {
                                         <span class="-mr-1 font-medium indent-3">Schools</span>
                                     </SidebarLink>
                                 </li>
+                                <li v-if="hasRole('administrator')">
+                                    <SidebarLink :href="route('system-options.index')"
+                                        :active="route().current('system-options.index')">
+                                        <i class="pi pi-sliders-h mr-2"></i>
+                                        <span class="-mr-1 font-medium indent-3">Option Values</span>
+                                    </SidebarLink>
+                                </li>
                             </ul>
                         </details>
                     </li>
@@ -182,24 +226,17 @@ function getRoleDisplay() {
                             </summary>
                             <ul class="space-y-1 mt-2">
                                 <li>
-                                    <SidebarLink v-if="hasRole('administrator')" :href="route('users.index')"
-                                        :active="route().current('users.index')">
-                                        <i class="pi pi-users mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Users</span>
-                                    </SidebarLink>
-                                </li>
-                                <li>
-                                    <SidebarLink v-if="hasRole('administrator')" :href="route('roles.index')"
-                                        :active="route().current('roles.index') || route().current('roles.create')">
-                                        <i class="pi pi-cog mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Roles</span>
-                                    </SidebarLink>
-                                </li>
-                                <li>
-                                    <SidebarLink v-if="hasRole('administrator')" :href="route('permissions.index')"
-                                        :active="route().current('permissions.index') || route().current('permissions.create')">
+                                    <SidebarLink v-if="hasRole('administrator')" :href="route('access-control.index')"
+                                        :active="route().current('access-control.index') || route().current('users.index') || route().current('roles.index') || route().current('permissions.index')">
                                         <i class="pi pi-lock mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Permissions</span>
+                                        <span class="-mr-1 font-medium indent-3">Access Control</span>
+                                    </SidebarLink>
+                                </li>
+                                <li>
+                                    <SidebarLink v-if="hasRole('administrator')" :href="route('permissions.management')"
+                                        :active="route().current('permissions.management')">
+                                        <i class="pi pi-shield mr-2"></i>
+                                        <span class="-mr-1 font-medium indent-3">Role Permissions</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
@@ -207,6 +244,13 @@ function getRoleDisplay() {
                                         :active="route().current('admin.system-report')">
                                         <i class="pi pi-chart-bar mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">System Stats</span>
+                                    </SidebarLink>
+                                </li>
+                                <li>
+                                    <SidebarLink v-if="hasRole('administrator')" :href="route('admin.system-updates')"
+                                        :active="route().current('admin.system-updates')">
+                                        <i class="pi pi-megaphone mr-2"></i>
+                                        <span class="-mr-1 font-medium indent-3">Manage Updates</span>
                                     </SidebarLink>
                                 </li>
                             </ul>
@@ -217,97 +261,114 @@ function getRoleDisplay() {
                     class="menu space-y-3 mt-2 px-2 pb-4 w-full text-gray-300 hover:text-gray-50 items-center min-h-0 min-w-0 block flex-1 overflow-y-auto overflow-x-hidden">
                     <li>
                         <SidebarLink :href="route('dashboard')"
-                            :active="route().current('dashboard') || route().current('index')"
+                            :active="route().current('dashboard') || route().current('home') || route().current('index')"
                             class="flex flex-col justify-center text-center">
-
                             <i class="pi pi-home text-xl"></i>
                             <span class="text-xs">dashboard</span>
-
+                        </SidebarLink>
+                    </li>
+                    <li v-if="hasRole('administrator')">
+                        <SidebarLink :href="route('form-templates.index')"
+                            :active="route().current('form-templates.index')"
+                            class="flex flex-col justify-center text-center">
+                            <i class="pi pi-file text-xl"></i>
+                            <span class="text-xs">forms</span>
                         </SidebarLink>
                     </li>
                     <li>
                         <SidebarLink :href="route('waitinglist.index')" :active="route().current('waitinglist.index')"
                             class="flex flex-col justify-center text-center">
-
                             <i class="pi pi-clipboard text-xl"></i>
                             <span class="text-xs">waiting list</span>
                         </SidebarLink>
                     </li>
                     <li>
-                        <SidebarLink :href="route('admin.system-updates')"
-                            :active="route().current('admin.system-updates')"
+                        <SidebarLink :href="route('scholarship.profiles')"
+                            :active="route().current('scholarship.profiles') || route().current('scholarship.profile.show') || route().current('scholarship.profile.history')"
                             class="flex flex-col justify-center text-center">
-
+                            <i class="pi pi-users text-xl"></i>
+                            <span class="text-xs">profiles</span>
+                        </SidebarLink>
+                    </li>
+                    <li>
+                        <SidebarLink :href="route('system-updates.index')"
+                            :active="route().current('system-updates.index')"
+                            class="flex flex-col justify-center text-center relative">
                             <i class="pi pi-bell text-xl"></i>
-                            <span class="text-xs">system updates</span>
-
+                            <span class="text-xs">updates</span>
+                            <Badge v-if="unreadUpdatesCount > 0" :value="unreadUpdatesCount" severity="danger"
+                                class="absolute -top-1 -right-1"
+                                style="min-width: 1.25rem; height: 1.25rem; font-size: 0.625rem;" />
                         </SidebarLink>
                     </li>
                     <li v-if="hasPermission('manage-scholarship-programs')">
                         <SidebarLink :href="route('scholarshipprograms.index')"
                             :active="route().current('scholarshipprograms.index')"
                             class="flex flex-col justify-center text-center">
-
                             <i class="pi pi-book text-xl"></i>
                             <span class="text-xs">programs</span>
-
                         </SidebarLink>
                     </li>
                     <li v-if="hasPermission('manage-program-courses')">
                         <SidebarLink :href="route('courses.index')" :active="route().current('courses.index')"
                             class="flex flex-col justify-center text-center">
-
                             <i class="pi pi-graduation-cap text-xl"></i>
                             <span class="text-xs">courses</span>
-
                         </SidebarLink>
                     </li>
                     <li>
                         <SidebarLink :href="route('program_requirements.index')"
                             :active="route().current('program_requirements.index')"
                             class="flex flex-col items-center justify-center text-center">
-
                             <i class="pi pi-list text-xl"></i>
                             <span class="text-xs">reqs</span>
-
                         </SidebarLink>
                     </li>
                     <li>
                         <SidebarLink :href="route('school.index')" :active="route().current('school.index')"
                             class="flex flex-col justify-center text-center">
-
                             <i class="pi pi-building text-xl"></i>
                             <span class="text-xs">schools</span>
-
                         </SidebarLink>
                     </li>
                     <li v-if="hasRole('administrator')">
-                        <SidebarLink :href="route('users.index')" :active="route().current('users.index')"
+                        <SidebarLink :href="route('system-options.index')"
+                            :active="route().current('system-options.index')"
                             class="flex flex-col justify-center text-center">
-
-                            <i class="pi pi-users text-xl"></i>
-                            <span class="text-xs">users</span>
-
+                            <i class="pi pi-sliders-h text-xl"></i>
+                            <span class="text-xs">options</span>
                         </SidebarLink>
                     </li>
                     <li v-if="hasRole('administrator')">
-                        <SidebarLink :href="route('roles.index')"
-                            :active="route().current('roles.index') || route().current('roles.create')"
+                        <SidebarLink :href="route('access-control.index')"
+                            :active="route().current('access-control.index') || route().current('users.index') || route().current('roles.index') || route().current('permissions.index')"
                             class="flex flex-col justify-center text-center">
-
-                            <i class="pi pi-cog text-xl"></i>
-                            <span class="text-xs">roles</span>
-
-                        </SidebarLink>
-                    </li>
-                    <li v-if="hasRole('administrator')">
-                        <SidebarLink :href="route('permissions.index')"
-                            :active="route().current('permissions.index') || route().current('permissions.create')"
-                            class="flex flex-col justify-center text-center">
-
                             <i class="pi pi-lock text-xl"></i>
-                            <span class="text-xs">permissions</span>
-
+                            <span class="text-xs">access</span>
+                        </SidebarLink>
+                    </li>
+                    <li v-if="hasRole('administrator')">
+                        <SidebarLink :href="route('permissions.management')"
+                            :active="route().current('permissions.management')"
+                            class="flex flex-col justify-center text-center">
+                            <i class="pi pi-shield text-xl"></i>
+                            <span class="text-xs">perms</span>
+                        </SidebarLink>
+                    </li>
+                    <li v-if="hasRole('administrator')">
+                        <SidebarLink :href="route('admin.system-report')"
+                            :active="route().current('admin.system-report')"
+                            class="flex flex-col justify-center text-center">
+                            <i class="pi pi-chart-bar text-xl"></i>
+                            <span class="text-xs">stats</span>
+                        </SidebarLink>
+                    </li>
+                    <li v-if="hasRole('administrator')">
+                        <SidebarLink :href="route('admin.system-updates')"
+                            :active="route().current('admin.system-updates')"
+                            class="flex flex-col justify-center text-center">
+                            <i class="pi pi-megaphone text-xl"></i>
+                            <span class="text-xs">manage</span>
                         </SidebarLink>
                     </li>
                 </ul>

@@ -37,7 +37,7 @@ const submit = () => {
 
 <template>
     <AdminLayout>
-        <template #header>Users</template>
+        <template #header>Create User</template>
 
         <div class="max-w-md mx-auto p-6">
             <div class="flex justify-between items-center">

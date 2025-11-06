@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\AccessControlController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PermissionManagementController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RevokePermissionFromRoleController;
 use App\Http\Controllers\RoleController;
@@ -15,6 +17,7 @@ use App\Http\Controllers\ScholarController;
 use App\Http\Controllers\WaitingListController;
 use App\Http\Controllers\SystemReportController;
 use App\Http\Controllers\SystemUpdateController;
+use App\Http\Controllers\SystemOptionController;
 use App\Http\Controllers\MobileUploadController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
@@ -44,6 +47,10 @@ Route::middleware('auth')->group(function () {
 
 
 Route::middleware(['auth', 'role:administrator'])->group(function () {
+    // Unified Access Control Page
+    Route::get('/access-control', [AccessControlController::class, 'index'])->name('access-control.index');
+
+    // Individual resource routes (kept for create/edit/delete operations)
     Route::resource('/users', UserController::class);
     Route::post('/users/{user}/change-password', [UserController::class, 'changePassword'])->name('users.changePassword');
     Route::resource('/roles', RoleController::class);
@@ -54,13 +61,56 @@ Route::middleware(['auth', 'role:administrator'])->group(function () {
     // System Report Routes - Administrator Only
     Route::get('/admin/system-report', [SystemReportController::class, 'index'])->name('admin.system-report');
     Route::get('/admin/system-report/export-json', [SystemReportController::class, 'exportJson'])->name('admin.system-report.export-json');
+
+    // Role Permissions Routes - Administrator Only
+    Route::get('/permission-management', [PermissionManagementController::class, 'index'])->name('permissions.management');
+    Route::post('/permission-management/update-role', [PermissionManagementController::class, 'updateRolePermissions'])->name('permissions.update-role');
+    Route::post('/permission-management/toggle', [PermissionManagementController::class, 'togglePermission'])->name('permissions.toggle');
+
+    // System Options Routes - Administrator Only
+    Route::get('/system-options', [SystemOptionController::class, 'index'])->name('system-options.index');
+    Route::post('/system-options', [SystemOptionController::class, 'store'])->name('system-options.store');
+    Route::put('/system-options/{systemOption}', [SystemOptionController::class, 'update'])->name('system-options.update');
+    Route::delete('/system-options/{systemOption}', [SystemOptionController::class, 'destroy'])->name('system-options.destroy');
+    Route::post('/system-options/{systemOption}/toggle-active', [SystemOptionController::class, 'toggleActive'])->name('system-options.toggle-active');
+    Route::post('/system-options/reorder', [SystemOptionController::class, 'reorder'])->name('system-options.reorder');
+
+    // Form Templates Routes - Administrator Only
+    Route::get('/form-templates', [\App\Http\Controllers\FormTemplateController::class, 'index'])->name('form-templates.index');
+    Route::post('/form-templates', [\App\Http\Controllers\FormTemplateController::class, 'store'])->name('form-templates.store');
+    Route::put('/form-templates/{formTemplate}', [\App\Http\Controllers\FormTemplateController::class, 'update'])->name('form-templates.update');
+    Route::delete('/form-templates/{formTemplate}', [\App\Http\Controllers\FormTemplateController::class, 'destroy'])->name('form-templates.destroy');
+});
+
+// System Options API - Available to authenticated users
+Route::middleware(['auth'])->group(function () {
+    Route::get('/api/system-options/{category}', [SystemOptionController::class, 'getByCategory'])->name('api.system-options.category');
+
+    // Form Template Download - Available to all authenticated users
+    Route::get('/form-templates/{formTemplate}/download', [\App\Http\Controllers\FormTemplateController::class, 'download'])->name('form-templates.download');
 });
 
 // System Updates Management - Available to All Users
 Route::middleware(['auth'])->group(function () {
+    // Admin page for managing system updates
     Route::get('/admin/system-updates', function () {
         return inertia('Admin/SystemUpdates');
     })->name('admin.system-updates');
+
+    // Admin page for viewing single update details
+    Route::get('/admin/system-updates/{id}', function ($id) {
+        return inertia('Admin/SystemUpdateShow', ['id' => $id]);
+    })->name('admin.system-updates.show')->middleware('role:administrator');
+
+    // User-facing page to view all system updates
+    Route::get('/system-updates', function () {
+        return inertia('SystemUpdates/Index');
+    })->name('system-updates.index');
+
+    // User-facing page to view single update details
+    Route::get('/system-updates/{id}', function ($id) {
+        return inertia('SystemUpdates/Show', ['id' => $id]);
+    })->name('system-updates.show');
 });
 
 // User Profile Route - Display user account information

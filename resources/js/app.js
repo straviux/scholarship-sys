@@ -13,6 +13,7 @@ import VueDeviceDetect from '@basitcodeenv/vue3-device-detect';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import 'primeicons/primeicons.css';
+import permissionDirective from './directives/permission';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Scholarship Management System';
 
@@ -85,6 +86,7 @@ createInertiaApp({
 				},
 			})
 			.component('VueDatePicker', VueDatePicker)
+			.directive('can', permissionDirective)
 			.mount(el);
 	},
 	progress: {

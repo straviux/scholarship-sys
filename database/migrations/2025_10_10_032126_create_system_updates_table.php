@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('system_updates', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->text('content');
+            $table->longText('content');
             $table->string('type')->default('info'); // info, warning, success, error
             $table->string('priority')->default('normal'); // low, normal, high, urgent
             $table->boolean('is_global')->default(true); // visible to all users

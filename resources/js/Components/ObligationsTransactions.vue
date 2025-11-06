@@ -9,7 +9,8 @@
                 <h3 class="text-xl font-semibold text-gray-900">Disbursements & Cheques</h3>
                 <p class="text-sm text-gray-500 mt-1">Manage disbursements and cheque processing</p>
             </div>
-            <Button icon="pi pi-plus" label="Add Disbursement" @click="showAddModal = true" />
+            <Button v-if="hasPermission('applicants.edit')" icon="pi pi-plus" label="Add Disbursement"
+                @click="showAddModal = true" />
         </div>
 
         <!-- Disbursements List -->
@@ -18,7 +19,8 @@
                 <div class="text-center py-12">
                     <i class="pi pi-money-bill text-4xl text-gray-300 mb-4"></i>
                     <p class="text-gray-500">No disbursements found</p>
-                    <Button label="Add First Disbursement" class="mt-4" @click="showAddModal = true" />
+                    <Button v-if="hasPermission('applicants.edit')" label="Add First Disbursement" class="mt-4"
+                        @click="showAddModal = true" />
                 </div>
             </template>
 
@@ -37,7 +39,7 @@
                                         <p class="text-xs font-medium">OBR Date</p>
                                         <p class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
                                             item.date_obligated ? formatDate(item.date_obligated) : '-'
-                                        }}</p>
+                                            }}</p>
                                     </div>
                                     <div v-if="item.obr_no" class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">OBR No.</p>
@@ -93,33 +95,33 @@
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Year:</span>
                                                 <span class="font-medium text-gray-900">{{ item.year_level || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Term:</span>
                                                 <span class="font-medium text-gray-900">{{ item.semester || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">AY:</span>
                                                 <span class="font-medium text-gray-900">{{ item.academic_year || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Course:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">School:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -190,21 +192,22 @@
 
                                 <!-- Column 3: Actions Section -->
                                 <div class="flex lg:flex-col gap-2 lg:border-l lg:border-gray-200 lg:pl-4">
-                                    <Button icon="pi pi-qrcode" size="small" severity="info" outlined rounded
-                                        v-tooltip.top="'Show QR Code'" @click="showQrCode(item)"
-                                        :disabled="showViewerModal" />
-                                    <Button icon="pi pi-paperclip" size="small" severity="secondary" outlined rounded
-                                        v-tooltip.top="'Manage Attachments'" @click="manageAttachments(item)"
-                                        :disabled="showViewerModal" />
-                                    <Button icon="pi pi-file" size="small" severity="info" outlined rounded
-                                        v-tooltip.top="'Manage Cheque'" @click="manageCheque(item)"
+                                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-qrcode" size="small"
+                                        severity="info" outlined rounded v-tooltip.top="'Show QR Code'"
+                                        @click="showQrCode(item)" :disabled="showViewerModal" />
+                                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-paperclip" size="small"
+                                        severity="secondary" outlined rounded v-tooltip.top="'Manage Attachments'"
+                                        @click="manageAttachments(item)" :disabled="showViewerModal" />
+                                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-file" size="small"
+                                        severity="info" outlined rounded v-tooltip.top="'Manage Cheque'"
+                                        @click="manageCheque(item)"
                                         style="pointer-events: auto; position: relative; z-index: 1200;" />
-                                    <Button icon="pi pi-pencil" size="small" severity="warning" outlined rounded
-                                        v-tooltip.top="'Edit'" @click="editDisbursement(item)"
-                                        :disabled="showViewerModal" />
-                                    <Button icon="pi pi-trash" size="small" severity="danger" outlined rounded
-                                        v-tooltip.top="'Delete'" @click="confirmDelete(item)"
-                                        :disabled="showViewerModal" />
+                                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-pencil" size="small"
+                                        severity="warning" outlined rounded v-tooltip.top="'Edit'"
+                                        @click="editDisbursement(item)" :disabled="showViewerModal" />
+                                    <Button v-if="hasPermission('applicants.delete')" icon="pi pi-trash" size="small"
+                                        severity="danger" outlined rounded v-tooltip.top="'Delete'"
+                                        @click="confirmDelete(item)" :disabled="showViewerModal" />
                                 </div>
                             </div>
                         </div>
@@ -347,15 +350,15 @@
                                     @click="viewAttachment(attachment)" />
                                 <Button icon="pi pi-download" size="small" outlined
                                     @click="downloadAttachment(attachment)" />
-                                <Button icon="pi pi-trash" size="small" severity="danger" outlined
-                                    @click="deleteAttachment(attachment)" />
+                                <Button v-if="hasPermission('applicants.edit')" icon="pi pi-trash" size="small"
+                                    severity="danger" outlined @click="deleteAttachment(attachment)" />
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Upload New Attachment -->
-                <div>
+                <div v-if="hasPermission('applicants.edit')">
                     <h4 class="text-sm font-semibold text-gray-700 mb-3">Upload New Attachment</h4>
                     <div class="space-y-3">
                         <div>
@@ -380,8 +383,8 @@
 
             <template #footer>
                 <Button label="Cancel" severity="secondary" @click="closeAttachmentsModal" />
-                <Button label="Upload" @click="uploadAttachment" :loading="uploading"
-                    :disabled="!attachmentForm.file || !attachmentForm.attachment_type" />
+                <Button v-if="hasPermission('applicants.edit')" label="Upload" @click="uploadAttachment"
+                    :loading="uploading" :disabled="!attachmentForm.file || !attachmentForm.attachment_type" />
             </template>
         </Dialog>
 
@@ -507,6 +510,7 @@ import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
+import { usePermission } from '@/composable/permissions';
 import Button from 'primevue/button';
 import DataView from 'primevue/dataview';
 import Dialog from 'primevue/dialog';
@@ -523,6 +527,9 @@ import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
 const props = defineProps({
     profileId: [Number, String],
 });
+
+// Permission composable
+const { hasPermission } = usePermission();
 
 // State
 const loading = ref(false);

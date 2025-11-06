@@ -38,7 +38,7 @@ watch(
     <Head title="Update role" />
 
     <AdminLayout>
-        <template #header>Roles</template>
+        <template #header>Edit Role</template>
 
         <div class="max-w-md mx-auto py-4">
             <div class="flex justify-between items-center">
@@ -96,7 +96,7 @@ watch(
                             <TableDataCell>{{ index + 1 }}</TableDataCell>
                             <TableDataCell>{{
                                 rolePermission.name
-                                }}</TableDataCell>
+                            }}</TableDataCell>
                             <TableDataCell class="space-x-6">
                                 <Link :href="route('roles.permission.destroy', [
                                     role.id,

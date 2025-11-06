@@ -10,46 +10,34 @@ const form = useForm({ name: "" });
 </script>
 
 <template>
+
     <Head title="Create new permission" />
 
     <AdminLayout>
-        <template #header>Permissions</template>
+        <template #header>Create Permission</template>
 
         <div class="max-w-md mx-auto py-4">
             <div class="flex justify-between items-center">
                 <h1 class="text-2xl font-semibold text-indigo-700">
                     Create New Permission
                 </h1>
-                <Link
-                    :href="route('permissions.index')"
-                    class="text-slate-500 underline font-bold px-3 py-2 bg-none rounded-sm flex items-center justify-center gap-1"
-                    ><ArrowUturnLeftIcon class="h-5 w-5" /> Back</Link
-                >
+                <Link :href="route('permissions.index')"
+                    class="text-slate-500 underline font-bold px-3 py-2 bg-none rounded-sm flex items-center justify-center gap-1">
+                <ArrowUturnLeftIcon class="h-5 w-5" /> Back</Link>
             </div>
-            <div
-                class="mt-6 max-w-md mx-auto bg-gray-100 shadow-lg rounded-lg p-6"
-            >
+            <div class="mt-6 max-w-md mx-auto bg-gray-100 shadow-lg rounded-lg p-6">
                 <form @submit.prevent="form.post(route('permissions.store'))">
                     <div>
                         <InputLabel for="name" value="Name" />
 
-                        <TextInput
-                            id="name"
-                            type="text"
-                            class="mt-1 block w-full"
-                            v-model="form.name"
-                            autofocus
-                            autocomplete="username"
-                        />
+                        <TextInput id="name" type="text" class="mt-1 block w-full" v-model="form.name" autofocus
+                            autocomplete="username" />
 
                         <InputError class="mt-2" :message="form.errors.name" />
                     </div>
 
                     <div class="flex justify-end items-center mt-4">
-                        <PrimaryButton
-                            :class="{ 'opacity-25': form.processing }"
-                            :disabled="form.processing"
-                        >
+                        <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                             Create
                         </PrimaryButton>
                     </div>

@@ -18,8 +18,8 @@
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <Button icon="pi pi-pencil" label="Edit" severity="warning" outlined @click="editProfile"
-                        v-tooltip.top="'Edit Profile'" />
+                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-pencil" label="Edit" severity="warning"
+                        outlined @click="editProfile" v-tooltip.top="'Edit Profile'" />
                 </div>
             </div>
 
@@ -267,10 +267,12 @@
                                         <Column header="Attachments" style="min-width: 150px">
                                             <template #body="slotProps">
                                                 <div class="flex gap-2">
-                                                    <Button icon="pi pi-qrcode" size="small" outlined severity="info"
+                                                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-qrcode"
+                                                        size="small" outlined severity="info"
                                                         v-tooltip.top="'Show QR Code'"
                                                         @click="showQrCode(slotProps.data)" />
-                                                    <Button icon="pi pi-paperclip" size="small" outlined
+                                                    <Button v-if="hasPermission('applicants.edit')"
+                                                        icon="pi pi-paperclip" size="small" outlined
                                                         v-tooltip.top="'Manage Attachments'"
                                                         @click="manageAttachments(slotProps.data)" />
                                                     <Chip
@@ -314,7 +316,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -406,15 +408,15 @@
                                     @click="viewAttachment(attachment)" />
                                 <Button icon="pi pi-download" size="small" outlined
                                     @click="downloadAttachment(attachment)" />
-                                <Button icon="pi pi-trash" size="small" severity="danger" outlined
-                                    @click="deleteAttachment(attachment)" />
+                                <Button v-if="hasPermission('applicants.edit')" icon="pi pi-trash" size="small"
+                                    severity="danger" outlined @click="deleteAttachment(attachment)" />
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Upload New Attachment -->
-                <div>
+                <div v-if="hasPermission('applicants.edit')">
                     <h4 class="text-sm font-semibold text-gray-700 mb-3">Upload New Attachment</h4>
                     <div class="space-y-3">
                         <div>
@@ -455,7 +457,8 @@
 
             <template #footer>
                 <Button label="Cancel" severity="secondary" @click="closeAttachmentsModal" />
-                <Button label="Upload" @click="uploadAttachment" :loading="uploading"
+                <Button v-if="hasPermission('applicants.edit')" label="Upload" @click="uploadAttachment"
+                    :loading="uploading"
                     :disabled="!attachmentForm.file || !attachmentForm.attachment_name || (attachmentForm.attachment_name === 'others' && !attachmentForm.custom_attachment_name)" />
             </template>
         </Dialog>
@@ -571,6 +574,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { ref, computed, watch, onUnmounted } from 'vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
+import { usePermission } from '@/composable/permissions';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Button from 'primevue/button';
 import Tabs from 'primevue/tabs';
@@ -591,6 +595,9 @@ import ObligationsTransactions from '@/Components/ObligationsTransactions.vue';
 const props = defineProps({
     profile: Object,
 });
+
+// Permission composable
+const { hasPermission } = usePermission();
 
 // State
 const activeTab = ref(localStorage.getItem('scholarProfileActiveTab') || '0');
