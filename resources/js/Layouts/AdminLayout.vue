@@ -133,7 +133,7 @@ onUnmounted(() => {
                             <span class="font-medium">Dashboard</span>
                         </SidebarLink>
                     </li>
-                    <li v-if="hasRole('administrator')">
+                    <li v-if="hasPermission('forms-templates.view')">
                         <SidebarLink :href="route('form-templates.index')"
                             :active="route().current('form-templates.index')">
                             <i class="pi pi-file mr-2"></i>
@@ -267,7 +267,7 @@ onUnmounted(() => {
                             <span class="text-xs">dashboard</span>
                         </SidebarLink>
                     </li>
-                    <li v-if="hasRole('administrator')">
+                    <li v-if="hasPermission('forms-templates.view')">
                         <SidebarLink :href="route('form-templates.index')"
                             :active="route().current('form-templates.index')"
                             class="flex flex-col justify-center text-center">
