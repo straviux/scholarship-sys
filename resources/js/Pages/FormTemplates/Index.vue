@@ -45,7 +45,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                            }}</span>
+                                        }}</span>
                                     </template>
                                 </Column>
 
@@ -116,7 +116,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                            }}</span>
+                                        }}</span>
                                     </template>
                                 </Column>
 
@@ -270,7 +270,7 @@
                                     <span><i class="pi pi-file mr-1"></i>{{ viewingTemplate.file_name }}</span>
                                     <span><i class="pi pi-database mr-1"></i>{{
                                         formatFileSize(viewingTemplate.file_size)
-                                        }}</span>
+                                    }}</span>
                                     <span v-if="viewingTemplate.category">
                                         <i class="pi pi-tag mr-1"></i>{{ viewingTemplate.category }}
                                     </span>
@@ -298,10 +298,16 @@
                 </div>
 
                 <!-- File Preview -->
-                <div class="flex-1 border rounded-lg overflow-auto bg-white min-h-0 flex items-center justify-center">
+                <div ref="imageContainerRef"
+                    class="flex-1 border rounded-lg overflow-auto bg-white min-h-0 flex items-center justify-center"
+                    :class="{ 'select-none': isDragging }"
+                    :style="{ cursor: viewingTemplate.file_type?.includes('image') && zoomLevel > 100 ? 'grab' : 'default' }"
+                    @wheel="handleWheel" @mousedown="handleMouseDown" @mousemove="handleMouseMove"
+                    @mouseup="handleMouseUp" @mouseleave="handleMouseUp">
                     <!-- Image Preview -->
                     <img v-if="viewingTemplate.file_type?.includes('image')" :src="getFileUrl(viewingTemplate)"
-                        :alt="viewingTemplate.title" class="object-contain transition-transform duration-200" :style="{
+                        :alt="viewingTemplate.title"
+                        class="object-contain transition-transform duration-200 pointer-events-none" :style="{
                             width: zoomLevel === 100 ? 'auto' : `${zoomLevel}%`,
                             height: zoomLevel === 100 ? 'auto' : `${zoomLevel}%`,
                             maxWidth: zoomLevel === 100 ? '100%' : 'none',
@@ -367,6 +373,12 @@ const viewingTemplate = ref(null);
 const zoomLevel = ref(100);
 const minZoom = 10;
 const maxZoom = 300;
+
+// Dragging state
+const isDragging = ref(false);
+const dragStart = ref({ x: 0, y: 0 });
+const scrollStart = ref({ left: 0, top: 0 });
+const imageContainerRef = ref(null);
 
 const form = useForm({
     title: '',
@@ -463,6 +475,50 @@ const zoomOut = () => {
 
 const resetZoom = () => {
     zoomLevel.value = 100;
+};
+
+// Scroll to zoom
+const handleWheel = (event) => {
+    if (!viewingTemplate.value?.file_type?.includes('image')) return;
+
+    event.preventDefault();
+    const delta = event.deltaY > 0 ? -25 : 25;
+    const newZoom = Math.max(minZoom, Math.min(maxZoom, zoomLevel.value + delta));
+    zoomLevel.value = newZoom;
+};
+
+// Drag to pan
+const handleMouseDown = (event) => {
+    if (!viewingTemplate.value?.file_type?.includes('image')) return;
+    if (zoomLevel.value <= 100) return; // Only enable dragging when zoomed in
+
+    isDragging.value = true;
+    dragStart.value = { x: event.clientX, y: event.clientY };
+
+    if (imageContainerRef.value) {
+        scrollStart.value = {
+            left: imageContainerRef.value.scrollLeft,
+            top: imageContainerRef.value.scrollTop
+        };
+        imageContainerRef.value.style.cursor = 'grabbing';
+    }
+};
+
+const handleMouseMove = (event) => {
+    if (!isDragging.value || !imageContainerRef.value) return;
+
+    const dx = event.clientX - dragStart.value.x;
+    const dy = event.clientY - dragStart.value.y;
+
+    imageContainerRef.value.scrollLeft = scrollStart.value.left - dx;
+    imageContainerRef.value.scrollTop = scrollStart.value.top - dy;
+};
+
+const handleMouseUp = () => {
+    if (isDragging.value && imageContainerRef.value) {
+        imageContainerRef.value.style.cursor = zoomLevel.value > 100 ? 'grab' : 'default';
+    }
+    isDragging.value = false;
 };
 
 const deleteTemplate = () => {
