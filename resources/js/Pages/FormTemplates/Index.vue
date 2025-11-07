@@ -45,7 +45,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                        }}</span>
+                                            }}</span>
                                     </template>
                                 </Column>
 
@@ -116,7 +116,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                        }}</span>
+                                            }}</span>
                                     </template>
                                 </Column>
 
@@ -270,7 +270,7 @@
                                     <span><i class="pi pi-file mr-1"></i>{{ viewingTemplate.file_name }}</span>
                                     <span><i class="pi pi-database mr-1"></i>{{
                                         formatFileSize(viewingTemplate.file_size)
-                                    }}</span>
+                                        }}</span>
                                     <span v-if="viewingTemplate.category">
                                         <i class="pi pi-tag mr-1"></i>{{ viewingTemplate.category }}
                                     </span>
@@ -279,53 +279,55 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <!-- Zoom Controls (for images only) -->
-                            <div v-if="viewingTemplate.file_type?.includes('image')"
-                                class="flex items-center gap-2 mr-4 border rounded-lg p-1">
-                                <Button icon="pi pi-minus" size="small" outlined @click="zoomOut"
-                                    :disabled="zoomLevel <= minZoom" />
-                                <span class="text-sm font-medium px-2 min-w-[60px] text-center">{{ zoomLevel }}%</span>
-                                <Button icon="pi pi-plus" size="small" outlined @click="zoomIn"
-                                    :disabled="zoomLevel >= maxZoom" />
-                                <Button icon="pi pi-refresh" size="small" outlined @click="resetZoom"
-                                    :disabled="zoomLevel === 100" />
-                            </div>
-                            <Button v-if="hasPermission('forms-templates.download')" icon="pi pi-download"
-                                label="Download" severity="info" @click="downloadTemplate(viewingTemplate)" />
-                        </div>
+                        <Button v-if="hasPermission('forms-templates.download')" icon="pi pi-download" label="Download"
+                            severity="info" @click="downloadTemplate(viewingTemplate)" />
                     </div>
                 </div>
 
                 <!-- File Preview -->
-                <div ref="imageContainerRef"
-                    class="flex-1 border rounded-lg overflow-auto bg-white min-h-0 flex items-center justify-center"
-                    :class="{ 'select-none': isDragging }"
-                    :style="{ cursor: viewingTemplate.file_type?.includes('image') && zoomLevel > 100 ? 'grab' : 'default' }"
-                    @wheel="handleWheel" @mousedown="handleMouseDown" @mousemove="handleMouseMove"
-                    @mouseup="handleMouseUp" @mouseleave="handleMouseUp">
-                    <!-- Image Preview -->
-                    <img v-if="viewingTemplate.file_type?.includes('image')" :src="getFileUrl(viewingTemplate)"
-                        :alt="viewingTemplate.title"
-                        class="object-contain transition-transform duration-200 pointer-events-none" :style="{
-                            width: zoomLevel === 100 ? 'auto' : `${zoomLevel}%`,
-                            height: zoomLevel === 100 ? 'auto' : `${zoomLevel}%`,
-                            maxWidth: zoomLevel === 100 ? '100%' : 'none',
-                            maxHeight: zoomLevel === 100 ? '100%' : 'none'
-                        }">
-
-                    <!-- PDF and Text Preview -->
-                    <iframe v-else-if="canPreview(viewingTemplate.file_type)" :src="getFileUrl(viewingTemplate)"
-                        class="w-full h-full" frameborder="0">
+                <div class="flex-1 flex items-center justify-center bg-gray-100 rounded relative overflow-hidden"
+                    style="min-height: 500px;">
+                    <!-- PDF Viewer -->
+                    <iframe v-if="viewingTemplate.file_type?.includes('pdf')" :src="getFileUrl(viewingTemplate)"
+                        class="w-full h-full rounded" style="min-height: 600px;" frameborder="0">
                     </iframe>
 
-                    <!-- No Preview Available -->
-                    <div v-else class="flex flex-col items-center justify-center h-full text-gray-500 p-8">
-                        <i class="pi pi-eye-slash text-6xl mb-4"></i>
-                        <p class="text-lg font-semibold">Preview not available</p>
-                        <p class="text-sm mb-4">This file type cannot be previewed in the browser</p>
-                        <Button v-if="hasPermission('forms-templates.download')" icon="pi pi-download"
-                            label="Download to View" severity="info" @click="downloadTemplate(viewingTemplate)" />
+                    <!-- Image Viewer with Zoom (same as disbursement viewer) -->
+                    <div v-else-if="viewingTemplate.file_type?.includes('image')"
+                        class="w-full h-full flex items-center justify-center relative" style="min-height: 600px;"
+                        @wheel="handleWheel" @mousedown="handleMouseDown" @mousemove="handleMouseMove"
+                        @mouseup="handleMouseUp" @mouseleave="handleMouseUp"
+                        :style="{ cursor: imageZoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }">
+                        <img :src="getFileUrl(viewingTemplate)" :alt="viewingTemplate.title"
+                            class="max-w-full max-h-[600px] object-contain rounded select-none" draggable="false"
+                            :style="{
+                                transform: `scale(${imageZoom}) translate(${imagePosition.x / imageZoom}px, ${imagePosition.y / imageZoom}px)`,
+                                transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+                            }" />
+
+                        <!-- Zoom Controls -->
+                        <div class="absolute bottom-4 right-4 flex gap-2 bg-white rounded-lg shadow-lg p-2">
+                            <Button icon="pi pi-minus" @click="zoomOut" size="small" severity="secondary" rounded
+                                :disabled="imageZoom <= 0.5" />
+                            <span class="px-3 py-2 text-sm font-semibold">{{ Math.round(imageZoom * 100) }}%</span>
+                            <Button icon="pi pi-plus" @click="zoomIn" size="small" severity="secondary" rounded
+                                :disabled="imageZoom >= 5" />
+                            <Button icon="pi pi-refresh" @click="resetZoom" size="small" severity="secondary" rounded
+                                v-tooltip.top="'Reset Zoom'" />
+                        </div>
+                    </div>
+
+                    <!-- Text File Preview -->
+                    <iframe v-else-if="viewingTemplate.file_type?.includes('text')" :src="getFileUrl(viewingTemplate)"
+                        class="w-full h-full rounded" style="min-height: 600px;" frameborder="0">
+                    </iframe>
+
+                    <!-- Fallback -->
+                    <div v-else class="text-center p-8">
+                        <i class="pi pi-file text-6xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-600">Unable to preview this file type</p>
+                        <Button label="Download Instead" icon="pi pi-download" class="mt-4"
+                            @click="downloadTemplate(viewingTemplate)" />
                     </div>
                 </div>
             </div>
@@ -370,15 +372,12 @@ const dialogMode = ref('upload');
 const templateToDelete = ref(null);
 const editingTemplate = ref(null);
 const viewingTemplate = ref(null);
-const zoomLevel = ref(100);
-const minZoom = 10;
-const maxZoom = 300;
 
-// Dragging state
+// Image zoom state (same as disbursement viewer)
+const imageZoom = ref(1);
+const imagePosition = ref({ x: 0, y: 0 });
 const isDragging = ref(false);
 const dragStart = ref({ x: 0, y: 0 });
-const scrollStart = ref({ left: 0, top: 0 });
-const imageContainerRef = ref(null);
 
 const form = useForm({
     title: '',
@@ -458,70 +457,54 @@ const confirmDelete = (template) => {
 const viewTemplate = (template) => {
     viewingTemplate.value = template;
     showViewDialog.value = true;
-    zoomLevel.value = 100; // Reset zoom when opening
+    imageZoom.value = 1;
+    imagePosition.value = { x: 0, y: 0 };
 };
 
-const zoomIn = () => {
-    if (zoomLevel.value < maxZoom) {
-        zoomLevel.value = Math.min(zoomLevel.value + 25, maxZoom);
-    }
-};
-
-const zoomOut = () => {
-    if (zoomLevel.value > minZoom) {
-        zoomLevel.value = Math.max(zoomLevel.value - 25, minZoom);
-    }
-};
-
-const resetZoom = () => {
-    zoomLevel.value = 100;
-};
-
-// Scroll to zoom
+// Image zoom functions (same as disbursement viewer)
 const handleWheel = (event) => {
     if (!viewingTemplate.value?.file_type?.includes('image')) return;
-
     event.preventDefault();
-    const delta = event.deltaY > 0 ? -25 : 25;
-    const newZoom = Math.max(minZoom, Math.min(maxZoom, zoomLevel.value + delta));
-    zoomLevel.value = newZoom;
+    const delta = event.deltaY > 0 ? -0.1 : 0.1;
+    imageZoom.value = Math.max(0.5, Math.min(5, imageZoom.value + delta));
 };
 
-// Drag to pan
 const handleMouseDown = (event) => {
     if (!viewingTemplate.value?.file_type?.includes('image')) return;
-    if (zoomLevel.value <= 100) return; // Only enable dragging when zoomed in
-
-    isDragging.value = true;
-    dragStart.value = { x: event.clientX, y: event.clientY };
-
-    if (imageContainerRef.value) {
-        scrollStart.value = {
-            left: imageContainerRef.value.scrollLeft,
-            top: imageContainerRef.value.scrollTop
+    if (imageZoom.value > 1) {
+        isDragging.value = true;
+        dragStart.value = {
+            x: event.clientX - imagePosition.value.x,
+            y: event.clientY - imagePosition.value.y
         };
-        imageContainerRef.value.style.cursor = 'grabbing';
     }
 };
 
 const handleMouseMove = (event) => {
-    if (!isDragging.value || !imageContainerRef.value) return;
-
-    const dx = event.clientX - dragStart.value.x;
-    const dy = event.clientY - dragStart.value.y;
-
-    imageContainerRef.value.scrollLeft = scrollStart.value.left - dx;
-    imageContainerRef.value.scrollTop = scrollStart.value.top - dy;
+    if (isDragging.value) {
+        imagePosition.value = {
+            x: event.clientX - dragStart.value.x,
+            y: event.clientY - dragStart.value.y
+        };
+    }
 };
 
 const handleMouseUp = () => {
-    if (isDragging.value && imageContainerRef.value) {
-        imageContainerRef.value.style.cursor = zoomLevel.value > 100 ? 'grab' : 'default';
-    }
     isDragging.value = false;
 };
 
-const deleteTemplate = () => {
+const resetZoom = () => {
+    imageZoom.value = 1;
+    imagePosition.value = { x: 0, y: 0 };
+};
+
+const zoomIn = () => {
+    imageZoom.value = Math.min(5, imageZoom.value + 0.25);
+};
+
+const zoomOut = () => {
+    imageZoom.value = Math.max(0.5, imageZoom.value - 0.25);
+}; const deleteTemplate = () => {
     deleteForm.delete(route('form-templates.destroy', templateToDelete.value.id), {
         onSuccess: () => {
             showDeleteDialog.value = false;
