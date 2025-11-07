@@ -45,7 +45,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                            }}</span>
+                                        }}</span>
                                     </template>
                                 </Column>
 
@@ -116,7 +116,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                            }}</span>
+                                        }}</span>
                                     </template>
                                 </Column>
 
@@ -254,10 +254,11 @@
 
         <!-- View Dialog -->
         <Dialog v-model:visible="showViewDialog" header="View File" :modal="true"
-            :style="{ width: '90vw', height: '90vh' }" :maximizable="true">
-            <div v-if="viewingTemplate" class="h-full flex flex-col">
+            :style="{ width: '90vw', maxHeight: '90vh' }" :maximizable="true"
+            :contentStyle="{ height: '75vh', overflow: 'hidden' }">
+            <div v-if="viewingTemplate" class="h-full flex flex-col overflow-hidden">
                 <!-- File Info Header -->
-                <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 flex-shrink-0">
                     <div class="flex items-start justify-between">
                         <div class="flex items-center gap-3">
                             <i :class="getFileIcon(viewingTemplate.file_type)" class="text-3xl"></i>
@@ -269,7 +270,7 @@
                                     <span><i class="pi pi-file mr-1"></i>{{ viewingTemplate.file_name }}</span>
                                     <span><i class="pi pi-database mr-1"></i>{{
                                         formatFileSize(viewingTemplate.file_size)
-                                        }}</span>
+                                    }}</span>
                                     <span v-if="viewingTemplate.category">
                                         <i class="pi pi-tag mr-1"></i>{{ viewingTemplate.category }}
                                     </span>
@@ -284,11 +285,19 @@
                 </div>
 
                 <!-- File Preview -->
-                <div class="flex-1 border rounded-lg overflow-hidden bg-white">
-                    <iframe v-if="canPreview(viewingTemplate.file_type)" :src="getFileUrl(viewingTemplate)"
+                <div class="flex-1 border rounded-lg overflow-hidden bg-white min-h-0 flex items-center justify-center">
+                    <!-- Image Preview -->
+                    <img v-if="viewingTemplate.file_type?.includes('image')" :src="getFileUrl(viewingTemplate)"
+                        :alt="viewingTemplate.title" class="max-w-full max-h-full object-contain"
+                        style="width: auto; height: auto;">
+
+                    <!-- PDF and Text Preview -->
+                    <iframe v-else-if="canPreview(viewingTemplate.file_type)" :src="getFileUrl(viewingTemplate)"
                         class="w-full h-full" frameborder="0">
                     </iframe>
-                    <div v-else class="flex flex-col items-center justify-center h-full text-gray-500">
+
+                    <!-- No Preview Available -->
+                    <div v-else class="flex flex-col items-center justify-center h-full text-gray-500 p-8">
                         <i class="pi pi-eye-slash text-6xl mb-4"></i>
                         <p class="text-lg font-semibold">Preview not available</p>
                         <p class="text-sm mb-4">This file type cannot be previewed in the browser</p>
