@@ -45,7 +45,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                        }}</span>
+                                            }}</span>
                                     </template>
                                 </Column>
 
@@ -116,7 +116,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                        }}</span>
+                                            }}</span>
                                     </template>
                                 </Column>
 
@@ -270,7 +270,7 @@
                                     <span><i class="pi pi-file mr-1"></i>{{ viewingTemplate.file_name }}</span>
                                     <span><i class="pi pi-database mr-1"></i>{{
                                         formatFileSize(viewingTemplate.file_size)
-                                    }}</span>
+                                        }}</span>
                                     <span v-if="viewingTemplate.category">
                                         <i class="pi pi-tag mr-1"></i>{{ viewingTemplate.category }}
                                     </span>
@@ -279,17 +279,34 @@
                                 </div>
                             </div>
                         </div>
-                        <Button v-if="hasPermission('forms-templates.download')" icon="pi pi-download" label="Download"
-                            severity="info" @click="downloadTemplate(viewingTemplate)" />
+                        <div class="flex items-center gap-2">
+                            <!-- Zoom Controls (for images only) -->
+                            <div v-if="viewingTemplate.file_type?.includes('image')"
+                                class="flex items-center gap-2 mr-4 border rounded-lg p-1">
+                                <Button icon="pi pi-minus" size="small" outlined @click="zoomOut"
+                                    :disabled="zoomLevel <= minZoom" />
+                                <span class="text-sm font-medium px-2 min-w-[60px] text-center">{{ zoomLevel }}%</span>
+                                <Button icon="pi pi-plus" size="small" outlined @click="zoomIn"
+                                    :disabled="zoomLevel >= maxZoom" />
+                                <Button icon="pi pi-refresh" size="small" outlined @click="resetZoom"
+                                    :disabled="zoomLevel === 100" />
+                            </div>
+                            <Button v-if="hasPermission('forms-templates.download')" icon="pi pi-download"
+                                label="Download" severity="info" @click="downloadTemplate(viewingTemplate)" />
+                        </div>
                     </div>
                 </div>
 
                 <!-- File Preview -->
-                <div class="flex-1 border rounded-lg overflow-hidden bg-white min-h-0 flex items-center justify-center">
+                <div class="flex-1 border rounded-lg overflow-auto bg-white min-h-0 flex items-center justify-center">
                     <!-- Image Preview -->
                     <img v-if="viewingTemplate.file_type?.includes('image')" :src="getFileUrl(viewingTemplate)"
-                        :alt="viewingTemplate.title" class="max-w-full max-h-full object-contain"
-                        style="width: auto; height: auto;">
+                        :alt="viewingTemplate.title" class="object-contain transition-transform duration-200" :style="{
+                            width: zoomLevel === 100 ? 'auto' : `${zoomLevel}%`,
+                            height: zoomLevel === 100 ? 'auto' : `${zoomLevel}%`,
+                            maxWidth: zoomLevel === 100 ? '100%' : 'none',
+                            maxHeight: zoomLevel === 100 ? '100%' : 'none'
+                        }">
 
                     <!-- PDF and Text Preview -->
                     <iframe v-else-if="canPreview(viewingTemplate.file_type)" :src="getFileUrl(viewingTemplate)"
@@ -347,6 +364,9 @@ const dialogMode = ref('upload');
 const templateToDelete = ref(null);
 const editingTemplate = ref(null);
 const viewingTemplate = ref(null);
+const zoomLevel = ref(100);
+const minZoom = 10;
+const maxZoom = 300;
 
 const form = useForm({
     title: '',
@@ -426,6 +446,23 @@ const confirmDelete = (template) => {
 const viewTemplate = (template) => {
     viewingTemplate.value = template;
     showViewDialog.value = true;
+    zoomLevel.value = 100; // Reset zoom when opening
+};
+
+const zoomIn = () => {
+    if (zoomLevel.value < maxZoom) {
+        zoomLevel.value = Math.min(zoomLevel.value + 25, maxZoom);
+    }
+};
+
+const zoomOut = () => {
+    if (zoomLevel.value > minZoom) {
+        zoomLevel.value = Math.max(zoomLevel.value - 25, minZoom);
+    }
+};
+
+const resetZoom = () => {
+    zoomLevel.value = 100;
 };
 
 const deleteTemplate = () => {
