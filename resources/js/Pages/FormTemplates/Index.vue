@@ -45,7 +45,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                        }}</span>
+                                            }}</span>
                                     </template>
                                 </Column>
 
@@ -79,9 +79,12 @@
                                     </template>
                                 </Column>
 
-                                <Column header="Actions" style="width: 200px">
+                                <Column header="Actions" style="width: 250px">
                                     <template #body="slotProps">
                                         <div class="flex gap-2">
+                                            <Button v-if="hasPermission('forms-templates.view')" icon="pi pi-eye"
+                                                severity="secondary" text size="small"
+                                                @click="viewTemplate(slotProps.data)" v-tooltip.top="'View'" />
                                             <Button v-if="hasPermission('forms-templates.download')"
                                                 icon="pi pi-download" severity="info" text size="small"
                                                 @click="downloadTemplate(slotProps.data)" v-tooltip.top="'Download'" />
@@ -113,7 +116,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                        }}</span>
+                                            }}</span>
                                     </template>
                                 </Column>
 
@@ -139,9 +142,12 @@
                                     </template>
                                 </Column>
 
-                                <Column header="Actions" style="width: 200px">
+                                <Column header="Actions" style="width: 250px">
                                     <template #body="slotProps">
                                         <div class="flex gap-2">
+                                            <Button v-if="hasPermission('forms-templates.view')" icon="pi pi-eye"
+                                                severity="secondary" text size="small"
+                                                @click="viewTemplate(slotProps.data)" v-tooltip.top="'View'" />
                                             <Button v-if="hasPermission('forms-templates.download')"
                                                 icon="pi pi-download" severity="info" text size="small"
                                                 @click="downloadTemplate(slotProps.data)" v-tooltip.top="'Download'" />
@@ -245,6 +251,56 @@
                 <Button label="Delete" severity="danger" @click="deleteTemplate" :loading="deleteForm.processing" />
             </template>
         </Dialog>
+
+        <!-- View Dialog -->
+        <Dialog v-model:visible="showViewDialog" header="View File" :modal="true"
+            :style="{ width: '90vw', height: '90vh' }" :maximizable="true">
+            <div v-if="viewingTemplate" class="h-full flex flex-col">
+                <!-- File Info Header -->
+                <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center gap-3">
+                            <i :class="getFileIcon(viewingTemplate.file_type)" class="text-3xl"></i>
+                            <div>
+                                <h3 class="font-semibold text-lg">{{ viewingTemplate.title }}</h3>
+                                <p class="text-sm text-gray-600" v-if="viewingTemplate.description">{{
+                                    viewingTemplate.description }}</p>
+                                <div class="flex gap-4 mt-2 text-sm text-gray-500">
+                                    <span><i class="pi pi-file mr-1"></i>{{ viewingTemplate.file_name }}</span>
+                                    <span><i class="pi pi-database mr-1"></i>{{
+                                        formatFileSize(viewingTemplate.file_size)
+                                        }}</span>
+                                    <span v-if="viewingTemplate.category">
+                                        <i class="pi pi-tag mr-1"></i>{{ viewingTemplate.category }}
+                                    </span>
+                                    <span><i class="pi pi-download mr-1"></i>{{ viewingTemplate.download_count }}
+                                        downloads</span>
+                                </div>
+                            </div>
+                        </div>
+                        <Button v-if="hasPermission('forms-templates.download')" icon="pi pi-download" label="Download"
+                            severity="info" @click="downloadTemplate(viewingTemplate)" />
+                    </div>
+                </div>
+
+                <!-- File Preview -->
+                <div class="flex-1 border rounded-lg overflow-hidden bg-white">
+                    <iframe v-if="canPreview(viewingTemplate.file_type)" :src="getFileUrl(viewingTemplate)"
+                        class="w-full h-full" frameborder="0">
+                    </iframe>
+                    <div v-else class="flex flex-col items-center justify-center h-full text-gray-500">
+                        <i class="pi pi-eye-slash text-6xl mb-4"></i>
+                        <p class="text-lg font-semibold">Preview not available</p>
+                        <p class="text-sm mb-4">This file type cannot be previewed in the browser</p>
+                        <Button v-if="hasPermission('forms-templates.download')" icon="pi pi-download"
+                            label="Download to View" severity="info" @click="downloadTemplate(viewingTemplate)" />
+                    </div>
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Close" severity="secondary" @click="showViewDialog = false" />
+            </template>
+        </Dialog>
     </AdminLayout>
 </template>
 
@@ -277,9 +333,11 @@ const { hasPermission } = usePermission();
 const activeTabIndex = ref(0);
 const showDialog = ref(false);
 const showDeleteDialog = ref(false);
+const showViewDialog = ref(false);
 const dialogMode = ref('upload');
 const templateToDelete = ref(null);
 const editingTemplate = ref(null);
+const viewingTemplate = ref(null);
 
 const form = useForm({
     title: '',
@@ -356,6 +414,11 @@ const confirmDelete = (template) => {
     showDeleteDialog.value = true;
 };
 
+const viewTemplate = (template) => {
+    viewingTemplate.value = template;
+    showViewDialog.value = true;
+};
+
 const deleteTemplate = () => {
     deleteForm.delete(route('form-templates.destroy', templateToDelete.value.id), {
         onSuccess: () => {
@@ -391,5 +454,24 @@ const getFileIcon = (mimeType) => {
     if (mimeType.includes('zip') || mimeType.includes('compressed')) return 'pi pi-file-arrow-down';
 
     return 'pi pi-file';
+};
+
+const canPreview = (mimeType) => {
+    if (!mimeType) return false;
+
+    // PDF files can be previewed
+    if (mimeType.includes('pdf')) return true;
+
+    // Images can be previewed
+    if (mimeType.includes('image')) return true;
+
+    // Text files can be previewed
+    if (mimeType.includes('text')) return true;
+
+    return false;
+};
+
+const getFileUrl = (template) => {
+    return `/storage/${template.file_path}`;
 };
 </script>
