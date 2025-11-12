@@ -1,10 +1,10 @@
 <template>
 
-    <Head title="Forms and Templates" />
+    <Head title="Forms and Letters" />
 
     <AdminLayout>
         <template #header>
-            Forms and Templates
+            Forms and Letters
         </template>
 
         <div class="space-y-6">
@@ -13,13 +13,13 @@
                 <template #header>
                     <div class="flex items-center gap-2">
                         <i class="pi pi-file text-xl"></i>
-                        <span class="font-semibold text-lg">Forms and Templates Management</span>
+                        <span class="font-semibold text-lg">Forms and Letters Management</span>
                     </div>
                 </template>
 
                 <div class="flex justify-between items-center">
                     <div class="text-gray-600">
-                        Upload and manage downloadable forms and template files
+                        Upload and manage downloadable forms and letter files
                     </div>
                     <Button v-if="hasPermission('forms-templates.upload')" icon="pi pi-upload" label="Upload File"
                         severity="success" raised @click="openUploadDialog" />
@@ -45,7 +45,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                            }}</span>
+                                        }}</span>
                                     </template>
                                 </Column>
 
@@ -116,7 +116,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                            }}</span>
+                                        }}</span>
                                     </template>
                                 </Column>
 
@@ -169,7 +169,7 @@
 
         <!-- Upload/Edit Dialog -->
         <Dialog v-model:visible="showDialog"
-            :header="dialogMode === 'upload' ? 'Upload Form/Template' : 'Edit Form/Template'" :modal="true"
+            :header="dialogMode === 'upload' ? 'Upload Form/Letter' : 'Edit Form/Letter'" :modal="true"
             :style="{ width: '600px' }">
             <div class="space-y-4 pt-4">
                 <div>
@@ -270,7 +270,7 @@
                                     <span><i class="pi pi-file mr-1"></i>{{ viewingTemplate.file_name }}</span>
                                     <span><i class="pi pi-database mr-1"></i>{{
                                         formatFileSize(viewingTemplate.file_size)
-                                        }}</span>
+                                    }}</span>
                                     <span v-if="viewingTemplate.category">
                                         <i class="pi pi-tag mr-1"></i>{{ viewingTemplate.category }}
                                     </span>

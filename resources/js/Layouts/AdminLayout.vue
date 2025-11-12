@@ -137,7 +137,7 @@ onUnmounted(() => {
                         <SidebarLink :href="route('form-templates.index')"
                             :active="route().current('form-templates.index')">
                             <i class="pi pi-file mr-2"></i>
-                            <span class="font-medium">Forms & Templates</span>
+                            <span class="font-medium">Forms & Letters</span>
                         </SidebarLink>
                     </li>
                     <li>
@@ -272,7 +272,7 @@ onUnmounted(() => {
                             :active="route().current('form-templates.index')"
                             class="flex flex-col justify-center text-center">
                             <i class="pi pi-file text-xl"></i>
-                            <span class="text-xs">forms</span>
+                            <span class="text-xs">letters</span>
                         </SidebarLink>
                     </li>
                     <li>

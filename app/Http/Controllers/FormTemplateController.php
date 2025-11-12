@@ -66,7 +66,7 @@ class FormTemplateController extends Controller
 
         FormTemplate::create($validated);
 
-        return back()->with('success', 'Form template uploaded successfully.');
+        return back()->with('success', 'Form/letter uploaded successfully.');
     }
 
     /**
@@ -106,7 +106,7 @@ class FormTemplateController extends Controller
 
         $formTemplate->update($validated);
 
-        return back()->with('success', 'Form template updated successfully.');
+        return back()->with('success', 'Form/letter updated successfully.');
     }
 
     /**
