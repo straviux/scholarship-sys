@@ -1,7 +1,8 @@
 <script setup>
-import { ref, watch } from 'vue';
-const props = defineProps({
+import { ref, watch, onMounted } from 'vue';
+import axios from 'axios';
 
+const props = defineProps({
     modelValue: {
         type: [String, Number, Object, Array],
         default: null,
@@ -13,18 +14,33 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue']);
-const terms = [
-    { label: "1ST SEMESTER", value: "1ST SEMESTER" },
-    { label: "2ND SEMESTER", value: "2ND SEMESTER" },
-    { label: "3RD SEMESTER", value: "3RD SEMESTER" },
-    { label: "1ST TRIMESTER", value: "1ST TRIMESTER" },
-    { label: "2ND TRIMESTER", value: "2ND TRIMESTER" },
-    { label: "3RD TRIMESTER", value: "3RD TRIMESTER" },
-    { label: "MID YEAR", value: "MID YEAR" },
-    { label: "SUMMER", value: "SUMMER" },
-    { label: "REVIEW", value: "REVIEW" },
-    { label: "N/A", value: "N/A" },
-]
+const terms = ref([]);
+const loading = ref(false);
+
+// Fetch term options from backend
+const fetchTermOptions = async () => {
+    loading.value = true;
+    try {
+        const response = await axios.get(route('api.system-options.category', 'term'));
+
+        if (response.data && response.data.length > 0) {
+            terms.value = response.data.map(option => ({
+                label: option.label,
+                value: option.value
+            }));
+        }
+    } catch (error) {
+        console.error('Failed to fetch term options:', error);
+        terms.value = [];
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(() => {
+    fetchTermOptions();
+});
+
 // Local value for v-model
 const localValue = ref(props.modelValue);
 
@@ -33,26 +49,23 @@ watch(() => props.modelValue, (val) => {
     localValue.value = val;
 });
 
-// Sync localValue with parent prop
-// watch(() => props.preselect, (val) => {
-//     localValue.value = val;
-// });
 // Emit changes to parent
 watch(localValue, (val) => {
-    if (localValue.value) {
+    if (localValue.value && terms.value.length) {
         if (props.multiple && Array.isArray(localValue.value)) {
-            localValue.value = terms.filter(m =>
+            localValue.value = terms.value.filter(m =>
                 localValue.value.some(val => val === m.value || val === m)
             );
         } else {
-            const selected = terms.find(m => m.value === localValue.value);
+            const selected = terms.value.find(m => m.value === localValue.value);
             if (selected) localValue.value = selected;
         }
     }
     emit('update:modelValue', val);
 });
+
 watch(
-    () => terms,
+    () => terms.value,
     (newOptions) => {
         if (localValue.value && newOptions.length) {
             if (props.multiple && Array.isArray(localValue.value)) {
@@ -72,7 +85,7 @@ watch(
 
 <template>
     <Select v-model="localValue" :options="terms" filter :filterFields="['label', 'value']" autoFilterFocus showClear
-        optionLabel="label" placeholder="Select Term" class="w-full">
+        optionLabel="label" placeholder="Select Term" class="w-full" :loading="loading">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.label }}</div>
