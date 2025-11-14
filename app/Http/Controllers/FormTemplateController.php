@@ -16,7 +16,9 @@ class FormTemplateController extends Controller
      */
     public function index()
     {
-        Gate::authorize('forms-templates.view');
+        if (!Gate::allows('forms-templates.view')) {
+            abort(403, 'User does not have the right permissions');
+        }
 
         $templates = FormTemplate::with(['creator', 'updater'])
             ->ordered()
@@ -39,7 +41,9 @@ class FormTemplateController extends Controller
      */
     public function store(Request $request)
     {
-        Gate::authorize('forms-templates.upload');
+        if (!Gate::allows('forms-templates.upload')) {
+            abort(403, 'User does not have the right permissions');
+        }
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -74,7 +78,9 @@ class FormTemplateController extends Controller
      */
     public function update(Request $request, FormTemplate $formTemplate)
     {
-        Gate::authorize('forms-templates.edit');
+        if (!Gate::allows('forms-templates.edit')) {
+            abort(403, 'User does not have the right permissions');
+        }
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -114,7 +120,9 @@ class FormTemplateController extends Controller
      */
     public function destroy(FormTemplate $formTemplate)
     {
-        Gate::authorize('forms-templates.delete');
+        if (!Gate::allows('forms-templates.delete')) {
+            abort(403, 'User does not have the right permissions');
+        }
 
         // Delete the file
         if ($formTemplate->file_path && Storage::disk('public')->exists($formTemplate->file_path)) {
@@ -131,7 +139,9 @@ class FormTemplateController extends Controller
      */
     public function download(FormTemplate $formTemplate)
     {
-        Gate::authorize('forms-templates.download');
+        if (!Gate::allows('forms-templates.download')) {
+            abort(403, 'User does not have the right permissions');
+        }
 
         if (!$formTemplate->file_path || !Storage::disk('public')->exists($formTemplate->file_path)) {
             return back()->withErrors(['file' => 'File not found.']);
