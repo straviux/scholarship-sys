@@ -36,14 +36,19 @@ class AppServiceProvider extends ServiceProvider
     {
         JsonResource::withoutWrapping();
 
+        // Automatically check permissions using Spatie Permission package
+        Gate::before(function ($user, $ability) {
+            return $user->hasPermissionTo($ability) ? true : null;
+        });
+
         // Define Gates
         Gate::define('admin', function ($user) {
             return $user->hasRole('administrator');
         });
 
-        Gate::define('create-scholar-profile', function ($user) {
-            return $user->hasRole('administrator') || $user->hasRole('moderator');
-        });
+        // Gate::define('create-scholar-profile', function ($user) {
+        //     return $user->hasRole('administrator') || $user->hasRole('moderator');
+        // });
 
         try {
             Storage::extend('google', function ($app, $config) {
