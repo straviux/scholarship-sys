@@ -38,7 +38,14 @@ class AppServiceProvider extends ServiceProvider
 
         // Automatically check permissions using Spatie Permission package
         Gate::before(function ($user, $ability) {
-            return $user->hasPermissionTo($ability) ? true : null;
+            try {
+                if ($user->hasPermissionTo($ability)) {
+                    return true;
+                }
+            } catch (\Exception $e) {
+                // Permission doesn't exist, let other gates handle it
+            }
+            return null;
         });
 
         // Define Gates
