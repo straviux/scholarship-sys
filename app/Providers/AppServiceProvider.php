@@ -44,13 +44,10 @@ class AppServiceProvider extends ServiceProvider
             }
 
             // Check if user has the specific permission
-            try {
-                if ($user->hasPermissionTo($ability)) {
-                    return true;
-                }
-            } catch (\Exception $e) {
-                // Permission doesn't exist, let other gates handle it
+            if ($user->can($ability)) {
+                return true;
             }
+
             return null;
         });
 
