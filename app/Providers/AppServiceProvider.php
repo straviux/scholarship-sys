@@ -38,6 +38,12 @@ class AppServiceProvider extends ServiceProvider
 
         // Automatically check permissions using Spatie Permission package
         Gate::before(function ($user, $ability) {
+            // Administrator has access to everything
+            if ($user->hasRole('administrator')) {
+                return true;
+            }
+
+            // Check if user has the specific permission
             try {
                 if ($user->hasPermissionTo($ability)) {
                     return true;

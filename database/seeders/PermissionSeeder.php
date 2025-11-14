@@ -157,6 +157,8 @@ class PermissionSeeder extends Seeder
             'priority.manage',
             'reports.view',
             'reports.generate',
+            'forms-templates.view',
+            'forms-templates.download',
         ];
         $jpmRole->syncPermissions($jpmPermissions);
 
