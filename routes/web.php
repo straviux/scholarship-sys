@@ -74,20 +74,20 @@ Route::middleware(['auth', 'role:administrator'])->group(function () {
     Route::delete('/system-options/{systemOption}', [SystemOptionController::class, 'destroy'])->name('system-options.destroy');
     Route::post('/system-options/{systemOption}/toggle-active', [SystemOptionController::class, 'toggleActive'])->name('system-options.toggle-active');
     Route::post('/system-options/reorder', [SystemOptionController::class, 'reorder'])->name('system-options.reorder');
+});
 
-    // Form Templates Routes - Administrator Only
+// Form Templates Routes - Available to all authenticated users
+Route::middleware(['auth'])->group(function () {
     Route::get('/form-templates', [\App\Http\Controllers\FormTemplateController::class, 'index'])->name('form-templates.index');
     Route::post('/form-templates', [\App\Http\Controllers\FormTemplateController::class, 'store'])->name('form-templates.store');
     Route::put('/form-templates/{formTemplate}', [\App\Http\Controllers\FormTemplateController::class, 'update'])->name('form-templates.update');
     Route::delete('/form-templates/{formTemplate}', [\App\Http\Controllers\FormTemplateController::class, 'destroy'])->name('form-templates.destroy');
+    Route::get('/form-templates/{formTemplate}/download', [\App\Http\Controllers\FormTemplateController::class, 'download'])->name('form-templates.download');
 });
 
 // System Options API - Available to authenticated users
 Route::middleware(['auth'])->group(function () {
     Route::get('/api/system-options/{category}', [SystemOptionController::class, 'getByCategory'])->name('api.system-options.category');
-
-    // Form Template Download - Available to all authenticated users
-    Route::get('/form-templates/{formTemplate}/download', [\App\Http\Controllers\FormTemplateController::class, 'download'])->name('form-templates.download');
 });
 
 // System Updates Management - Available to All Users
