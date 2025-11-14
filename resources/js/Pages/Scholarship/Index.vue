@@ -169,8 +169,10 @@
                         <Column field="unique_id" header="ID" style="min-width: 120px;">
                             <template #body="slotProps">
                                 <div class="flex items-center gap-3">
-                                    <Avatar :label="getInitials(slotProps.data)" size="normal" shape="circle"
-                                        class="bg-gradient-to-br from-blue-500 to-blue-600 text-white" />
+                                    <div class="w-[40px]">
+                                        <Avatar :label="getInitials(slotProps.data)" size="normal" shape="circle"
+                                            class="bg-gradient-to-br from-blue-500 to-blue-600 text-white" />
+                                    </div>
                                     <div>
                                         <div as="button"
                                             class="font-bold text-sm text-sky-700 underline underline-offset-2 cursor-pointer"

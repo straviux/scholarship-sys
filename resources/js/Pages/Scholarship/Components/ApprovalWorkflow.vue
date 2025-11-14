@@ -25,38 +25,35 @@
                 <i class="pi pi-graduation-cap text-green-600 text-sm"></i>
                 Academic
             </h4>
+
+            <!-- <pre>{{ application }}</pre> -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                 <div>
                     <label class="text-gray-600">Program</label>
-                    <div class="font-medium">{{ application.program?.shortname || 'N/A' }}</div>
+                    <div class="font-medium">{{ application.profile.scholarship_grant[0].program?.shortname || 'N/A' }}
+                    </div>
                 </div>
                 <div>
                     <label class="text-gray-600">School</label>
-                    <div class="font-medium">{{ application.school?.shortname || 'N/A' }}</div>
+                    <div class="font-medium">{{ application.profile.scholarship_grant[0].school?.shortname || 'N/A' }}
+                    </div>
                 </div>
                 <div>
                     <label class="text-gray-600">Course</label>
-                    <div class="font-medium">{{ application.course?.shortname || 'N/A' }}</div>
+                    <div class="font-medium">{{ application.profile.scholarship_grant[0].course?.shortname || 'N/A' }}
+                    </div>
                 </div>
                 <div>
                     <label class="text-gray-600">Year Level</label>
-                    <div class="font-medium">{{ application.year_level || 'N/A' }}</div>
+                    <div class="font-medium">{{ application.profile.scholarship_grant[0].year_level || 'N/A' }}</div>
                 </div>
                 <div>
                     <label class="text-gray-600">Academic Year</label>
-                    <div class="font-medium">{{ application.academic_year || 'N/A' }}</div>
+                    <div class="font-medium">{{ application.profile.scholarship_grant[0].academic_year || 'N/A' }}</div>
                 </div>
                 <div>
                     <label class="text-gray-600">Term</label>
-                    <div class="font-medium">{{ application.term || 'N/A' }}</div>
-                </div>
-                <div v-if="application.gwa">
-                    <label class="text-gray-600">GWA</label>
-                    <div class="font-medium">
-                        {{ application.gwa }}
-                        <Tag v-if="isEligibleForAutoApproval(application.gwa)" value="Auto" severity="success"
-                            class="ml-1 text-xs" />
-                    </div>
+                    <div class="font-medium">{{ application.profile.scholarship_grant[0].term || 'N/A' }}</div>
                 </div>
             </div>
         </div>
