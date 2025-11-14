@@ -173,7 +173,7 @@ onUnmounted(() => {
                                 class="ml-auto" />
                         </SidebarLink>
                     </li>
-                    <li v-if="hasRole('administrator') || hasRole('moderator')">
+                    <li v-if="hasRole('administrator') || hasRole('moderator') || hasRole('jpm_admin')">
                         <details open>
                             <summary>
                                 <i class="pi pi-table mr-2"></i>
@@ -194,14 +194,14 @@ onUnmounted(() => {
                                         <span class="-mr-1 font-medium indent-3">Courses</span>
                                     </SidebarLink>
                                 </li>
-                                <li>
+                                <li v-if="hasPermission('requirements.manage')">
                                     <SidebarLink :href="route('program_requirements.index')"
                                         :active="route().current('program_requirements.index')">
                                         <i class="pi pi-list mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Requirements</span>
                                     </SidebarLink>
                                 </li>
-                                <li>
+                                <li v-if="hasPermission('schools.manage')">
                                     <SidebarLink :href="route('school.index')"
                                         :active="route().current('school.index')">
                                         <i class="pi pi-building mr-2"></i>
