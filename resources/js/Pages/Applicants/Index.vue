@@ -1,51 +1,36 @@
 <script setup>
 
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { debounce } from 'lodash';
 import moment from 'moment'
-import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
-import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
+import { Head, useForm, router, usePage } from '@inertiajs/vue3';
+import { ref, onBeforeUnmount, watch, computed } from 'vue';
 import { usePermission } from '@/composable/permissions';
 
 // PrimeVue Components
-import Button from 'primevue/button';
-import Toolbar from 'primevue/toolbar';
-import Chip from 'primevue/chip';
-import DatePicker from 'primevue/datepicker';
-import FloatLabel from 'primevue/floatlabel';
-import Divider from 'primevue/divider';
-import InputText from 'primevue/inputtext';
-import Select from 'primevue/select';
-import IftaLabel from 'primevue/iftalabel';
-import Checkbox from 'primevue/checkbox';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Panel from 'primevue/panel';
-import Tag from 'primevue/tag';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import Dialog from 'primevue/dialog';
-import Textarea from 'primevue/textarea';
-import TabView from 'primevue/tabview';
-import TabPanel from 'primevue/tabpanel';
-import Card from 'primevue/card';
-import Avatar from 'primevue/avatar';
-import Popover from 'primevue/popover';
+// import Button from 'primevue/button';
+// import Toolbar from 'primevue/toolbar';
+// import DatePicker from 'primevue/datepicker';
+// import Divider from 'primevue/divider';
+// import InputText from 'primevue/inputtext';
+// import Select from 'primevue/select';
+// import Checkbox from 'primevue/checkbox';
+// import DataTable from 'primevue/datatable';
+// import Column from 'primevue/column';
+// import Panel from 'primevue/panel';
+// import Tag from 'primevue/tag';
+// import IconField from 'primevue/iconfield';
+// import InputIcon from 'primevue/inputicon';
+// import Dialog from 'primevue/dialog';
+// import TabPanel from 'primevue/tabpanel';
+// import Avatar from 'primevue/avatar';
 
 import ApplicantFormModal from '@/Components/modals/ApplicantFormModal.vue';
-// import ApplicantProfileModal from '@/Pages/Applicants/Modal/ApplicantProfileModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
 import PriorityModal from './Modal/PriorityModal.vue';
 import JpmModal from './Modal/JpmModal.vue';
 import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
 import GridView from '@/Components/GridView.vue';
 import ApplicantGridCard from '@/Components/ApplicantGridCard.vue';
-const showReportModal = ref(false);
-const openReportModal = () => { showReportModal.value = true; };
-
-// Actions popover
-const actionsPopover = ref();
-
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import RecordsSelect from '@/Components/selects/RecordsSelect.vue';
@@ -54,6 +39,10 @@ import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
+
+const showReportModal = ref(false);
+const openReportModal = () => { showReportModal.value = true; };
+
 
 const { hasPermission, hasRole } = usePermission();
 
@@ -141,8 +130,6 @@ const filter = useForm({
 })
 
 const searchInput = ref(null);
-const selectedProfile = ref({});
-
 // View mode: 'table' or 'grid' - persisted in localStorage
 const viewMode = ref(localStorage.getItem('applicants_view_mode') || 'table');
 
@@ -167,7 +154,6 @@ const applicationFormMode = ref('create');
 const modalProfile = ref(null);
 
 const editApplicant = (profile) => {
-    console.log(profile)
     modalProfile.value = profile;
     applicationFormMode.value = 'edit';
     showApplicationFormModal.value = true;
@@ -278,20 +264,6 @@ const handleKeydown = (e) => {
     }
 }
 
-const userEncodedCount = ref({ total: 0, today: 0 });
-
-onMounted(async () => {
-    window.addEventListener('keydown', handleKeydown);
-    // Fetch user encoded records count
-    try {
-        const res = await fetch(route('waitinglist.getUserEncodedRecords'));
-        if (res.ok) {
-            userEncodedCount.value = await res.json();
-        }
-    } catch (e) {
-        userEncodedCount.value = { total: 0, today: 0 };
-    }
-});
 
 onBeforeUnmount(() => {
     window.removeEventListener('keydown', handleKeydown);
