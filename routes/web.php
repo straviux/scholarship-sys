@@ -19,6 +19,7 @@ use App\Http\Controllers\SystemReportController;
 use App\Http\Controllers\SystemUpdateController;
 use App\Http\Controllers\SystemOptionController;
 use App\Http\Controllers\MobileUploadController;
+use App\Http\Controllers\DataExportController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -366,5 +367,12 @@ Route::middleware(['auth'])->get('/test-notifications', function () {
 // API Routes for Municipalities and Barangays
 Route::get('/api/municipalities', [\App\Http\Controllers\Api\MunicipalityController::class, 'index'])->name('api.municipalities.index');
 Route::get('/api/municipalities/{municipality}/barangays', [\App\Http\Controllers\Api\MunicipalityController::class, 'getBarangays'])->name('api.municipalities.barangays');
+
+// Data Export Routes - For migrating data to standalone app
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/data-export', [\App\Http\Controllers\DataExportController::class, 'index'])->name('data-export.index');
+    Route::get('/admin/data-export/summary', [\App\Http\Controllers\DataExportController::class, 'getExportSummary'])->name('data-export.summary');
+    Route::get('/admin/data-export/download', [\App\Http\Controllers\DataExportController::class, 'exportToJson'])->name('data-export.download');
+});
 
 require __DIR__ . '/auth.php';

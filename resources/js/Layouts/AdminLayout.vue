@@ -247,6 +247,13 @@ onUnmounted(() => {
                                     </SidebarLink>
                                 </li>
                                 <li>
+                                    <SidebarLink v-if="hasRole('administrator')" :href="route('data-export.index')"
+                                        :active="route().current('data-export.index')">
+                                        <i class="pi pi-download mr-2"></i>
+                                        <span class="-mr-1 font-medium indent-3">Data Export</span>
+                                    </SidebarLink>
+                                </li>
+                                <li>
                                     <SidebarLink v-if="hasRole('administrator')" :href="route('admin.system-updates')"
                                         :active="route().current('admin.system-updates')">
                                         <i class="pi pi-megaphone mr-2"></i>
@@ -361,6 +368,13 @@ onUnmounted(() => {
                             class="flex flex-col justify-center text-center">
                             <i class="pi pi-chart-bar text-xl"></i>
                             <span class="text-xs">stats</span>
+                        </SidebarLink>
+                    </li>
+                    <li v-if="hasRole('administrator')">
+                        <SidebarLink :href="route('data-export.index')" :active="route().current('data-export.index')"
+                            class="flex flex-col justify-center text-center">
+                            <i class="pi pi-download text-xl"></i>
+                            <span class="text-xs">export</span>
                         </SidebarLink>
                     </li>
                     <li v-if="hasRole('administrator')">
