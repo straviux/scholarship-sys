@@ -212,9 +212,8 @@ class DataExportController extends Controller
                 'course_name' => $record->course->name ?? null,
                 'approval_status' => $record->approval_status,
                 'year_level' => $record->year_level,
-                'semester' => $record->semester,
                 'term' => $record->term,
-                'date_applied' => $record->created_at,
+                'date_applied' => $record->date_filed,
             ];
 
             // Include queue info for pending applications using pre-calculated values (use profile_id)
@@ -292,9 +291,9 @@ class DataExportController extends Controller
                 'school_name' => $schoolName !== 'no_school' ? $schoolName : null,
                 'course_name' => $courseName !== 'no_course' ? $courseName : null,
                 'year_level' => $grant?->year_level,
-                'semester' => $grant?->semester,
                 'term' => $grant?->term,
                 'date_filed' => $profile->date_filed,
+                'date_applied' => $grant?->date_filed,
                 'application_status' => $profile->application_status,
                 'jpm_remarks' => $profile->jpm_remarks,
             ];
