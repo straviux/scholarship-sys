@@ -207,12 +207,13 @@ class DataExportController extends Controller
                 'address' => $record->profile->address,
                 'municipality' => $record->profile->municipality,
                 'barangay' => $record->profile->barangay,
-                'program_name' => $record->program->name ?? null,
+                'program_name' => $record->program->shortname ?? $record->program->name ?? null,
                 'school_name' => $record->school->name ?? null,
                 'course_name' => $record->course->name ?? null,
                 'approval_status' => $record->approval_status,
                 'year_level' => $record->year_level,
                 'semester' => $record->semester,
+                'term' => $record->term,
                 'date_applied' => $record->created_at,
             ];
 
@@ -269,7 +270,7 @@ class DataExportController extends Controller
 
         $applicants = $applicantsQuery->get()->map(function ($profile) use ($recordQueueMap) {
             $grant = $profile->scholarshipGrant->first();
-            $programName = $grant?->program?->name ?? 'no_program';
+            $programName = $grant?->program?->shortname ?? $grant?->program?->name ?? 'no_program';
             $schoolName = $grant?->school?->name ?? 'no_school';
             $courseName = $grant?->course?->name ?? 'no_course';
 
@@ -290,6 +291,9 @@ class DataExportController extends Controller
                 'program_name' => $programName !== 'no_program' ? $programName : null,
                 'school_name' => $schoolName !== 'no_school' ? $schoolName : null,
                 'course_name' => $courseName !== 'no_course' ? $courseName : null,
+                'year_level' => $grant?->year_level,
+                'semester' => $grant?->semester,
+                'term' => $grant?->term,
                 'date_filed' => $profile->date_filed,
                 'application_status' => $profile->application_status,
                 'jpm_remarks' => $profile->jpm_remarks,
