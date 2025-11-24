@@ -253,7 +253,7 @@
     <div class="report-header">
         <div style="display: flex; justify-content: space-between; align-items: baseline;">
             <div>
-                <h1 style="margin: 0; font-size: 20px; font-weight: 300; color: #111827;">
+                <h1 style="margin: 0; font-size: 14px; font-weight: 300; color: #111827;">
                     {{ $reportType === 'summary' ? 'Summary Report' : 'Scholarship Report' }}
                 </h1>
                 <p style="margin: 4px 0 0 0; font-size: 13px; color: #6b7280;">

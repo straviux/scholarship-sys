@@ -97,7 +97,7 @@
             background: #ffffff;
             color: #111827;
             border: 1px solid #e5e7eb;
-            border-radius: 20px;
+            border-radius: 4px;
             padding: 0.06rem 0.25rem;
             margin-right: 0.25rem;
             font-size: 0.82rem;
@@ -173,30 +173,60 @@
         </div>
         <img src="data:image/svg+xml;base64,<?php echo $yakapLogoBase64; ?>" alt="Yakap Logo" style="height: 72px; width: auto; margin-right: 0.5rem;">
     </div>
-    <div class="filters" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: flex-start; margin-bottom: 1rem; background: #f1f5f9;">
-        <span class="badge" style="color:#444;">Report type: {{ ucfirst($reportType) }}</span>
+    <div class="filters" style="display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-bottom: 0.5rem; font-size: 11px; color: #6b7280;">
+        <span>{{ ucfirst($reportType) }}</span>
         @foreach($filters as $key => $value)
-        @if($value && !in_array($key, ['paper_size', 'orientation']))
-        <span style="font-size:1.5em;color:#c2c2c2;vertical-align:middle;margin:0 0.2em;">|</span>
-        @if($key === 'program' && isset($profiles) && count($profiles) && optional($profiles->first()->scholarshipGrant->first())->program)
-        <span class="badge" style="color:#444;">Program: {{ optional($profiles->first()->scholarshipGrant->first())->program->name }}</span>
+        @if($value && !in_array($key, ['paper_size', 'orientation', 'date_filed']))
+        <span style="color:#d1d5db;">•</span>
+        @if($key === 'approval_status')
+        <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
+        @if($key === 'grant_provision')
+        <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
+        @elseif($key === 'program' && isset($profiles) && count($profiles) && optional($profiles->first()->scholarshipGrant->first())->program)
+        <span>{{ optional($profiles->first()->scholarshipGrant->first())->program->name }}</span>
+        @elseif(in_array($key, ['course', 'courses']) && isset($profiles) && count($profiles) && optional($profiles->first()->scholarshipGrant->first())->course)
+        <span>{{ optional($profiles->first()->scholarshipGrant->first())->course->name }}</span>
         @elseif($key === 'show_jpm_only' && $value)
-        <span class="badge" style="color:#444;">JPM Members</span>
+        <span>JPM Members</span>
         @elseif($key === 'hide_jpm' && $value)
         <span></span>
         @else
-        <span class="badge" style="color:#444;">{{ ucfirst(str_replace('_', ' ', $key)) }}: {{ $value }}</span>
+        <span>{{ $value }}</span>
+        @endif
         @endif
         @endif
         @endforeach
+        @php
+        // Calculate date range from the profiles
+        $dates = $profiles->map(function($profile) {
+        $grant = optional($profile->scholarshipGrant->first());
+        return $grant->date_filed ?? $grant->date_approved ?? $grant->created_at;
+        })->filter()->map(function($date) {
+        return \Carbon\Carbon::parse($date);
+        })->sortBy(function($date) {
+        return $date->timestamp;
+        });
+
+        if ($dates->isNotEmpty()) {
+        $oldestDate = $dates->first()->format('M d, Y');
+        $latestDate = $dates->last()->format('M d, Y');
+        }
+        @endphp
+        @if(isset($oldestDate) && isset($latestDate))
+        <span style="color:#d1d5db;">•</span>
+        <span>{{ $oldestDate }} to {{ $latestDate }}</span>
+        @endif
+    </div>
+    <div style="font-size: 10px; color: #9ca3af; margin-bottom: 1rem;">
+        Generated: {{ now()->timezone('Asia/Manila')->format('F d, Y h:i A') }}
     </div>
 
     <!-- Minimalist Report Header -->
     <div class="report-header">
         <div style="display: flex; justify-content: space-between; align-items: baseline;">
             <div>
-                <h1 style="margin: 0; font-size: 20px; font-weight: 300; color: #111827;">
-                    {{ $reportType === 'summary' ? 'Summary Report' : 'Waiting List' }}
+                <h1 style="margin: 0; font-size: 14px; font-weight: 300; color: #111827;">
+                    Pending Applications
                 </h1>
                 <p style="margin: 4px 0 0 0; font-size: 13px; color: #6b7280;">
                     {{ $profiles->count() }} records
