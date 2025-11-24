@@ -48,18 +48,19 @@
             </div>
 
             <!-- YAKAP Category and Location Row -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-10">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-10">
                 <FloatLabel>
-                    <Select :modelValue="yakap_category" @update:modelValue="$emit('update:yakap_category', $event)"
-                        :options="yakapCategoryOptions" optionLabel="label" optionValue="value" placeholder="&nbsp;"
-                        inputId="yakap_category" />
+                    <Select :key="yakap_category" :modelValue="yakap_category"
+                        @update:modelValue="$emit('update:yakap_category', $event)" :options="yakapCategoryOptions"
+                        optionLabel="label" optionValue="value" placeholder="&nbsp;" inputId="yakap_category"
+                        class="w-full" />
                     <label class="text-sm" for="yakap_category">YAKAP Category</label>
                 </FloatLabel>
 
-                <FloatLabel v-if="yakap_category !== 'yakap-capitol'">
+                <FloatLabel v-if="showYakapLocationField" :key="'location-' + yakap_category">
                     <InputText :modelValue="yakap_location" @update:modelValue="$emit('update:yakap_location', $event)"
                         :placeholder="yakap_category === 'yakap-school' ? 'School name' : 'Field location'"
-                        inputId="yakap_location" />
+                        inputId="yakap_location" class="w-full" />
                     <label class="text-sm" for="yakap_location">Location</label>
                 </FloatLabel>
             </div>
@@ -81,6 +82,7 @@ import FloatLabel from 'primevue/floatlabel';
 import Textarea from 'primevue/textarea';
 import Select from 'primevue/select';
 import InputText from 'primevue/inputtext';
+import { computed, watch } from 'vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
@@ -102,8 +104,14 @@ const props = defineProps({
     term: [String, Object],
     academic_year: [String, Object],
     remarks: String,
-    yakap_category: String,
-    yakap_location: String,
+    yakap_category: {
+        type: String,
+        default: 'yakap-capitol'
+    },
+    yakap_location: {
+        type: String,
+        default: ''
+    },
     showHeader: {
         type: Boolean,
         default: true
@@ -121,6 +129,17 @@ const emit = defineEmits([
     'update:yakap_category',
     'update:yakap_location'
 ]);
+
+// Computed property to check if location field should be shown
+const showYakapLocationField = computed(() => {
+    console.log('Computing showYakapLocationField with yakap_category:', props.yakap_category);
+    return props.yakap_category !== 'yakap-capitol';
+});
+
+// Watch yakap_category for debugging
+watch(() => props.yakap_category, (newVal, oldVal) => {
+    console.log('yakap_category changed from', oldVal, 'to', newVal);
+});
 </script>
 
 <style>

@@ -98,15 +98,10 @@
                                 <AcademicInformationFields v-model:program="form.program" v-model:school="form.school"
                                     v-model:course="form.course" v-model:year_level="form.year_level"
                                     v-model:term="form.term" v-model:academic_year="form.academic_year"
-                                    :show-header="false" />
+                                    v-model:remarks="form.remarks" :show-header="false" />
 
-                                <!-- Date Fields and Remarks (for backlog encoding) -->
+                                <!-- Date Fields (for backlog encoding) -->
                                 <div class="grid grid-cols-1 md:grid-cols-6 gap-3 mt-6">
-                                    <FloatLabel class="md:col-span-4">
-                                        <Textarea v-model="form.remarks" inputId="remarks" variant="filled"
-                                            placeholder="&nbsp;" rows="1" fluid autoResize />
-                                        <label class="text-sm" for="remarks">Remarks</label>
-                                    </FloatLabel>
                                     <FloatLabel>
                                         <DatePicker v-model="form.date_filed" type="date" inputId="date_filed"
                                             variant="filled" placeholder="mm/dd/yyyy" showIcon fluid iconDisplay="input"

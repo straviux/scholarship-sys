@@ -106,25 +106,6 @@
                                             </FloatLabel>
                                         </div>
 
-                                        <!-- YAKAP Category and Location -->
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label class="text-gray-600">YAKAP Category</label>
-                                                <select v-model="form.yakap_category"
-                                                    class="p-inputtext p-component w-full">
-                                                    <option v-for="opt in yakapCategoryOptions" :key="opt.value"
-                                                        :value="opt.value">{{ opt.label }}</option>
-                                                </select>
-                                            </div>
-                                            <div
-                                                v-if="form.yakap_category === 'yakap-school' || form.yakap_category === 'yakap-field'">
-                                                <label class="text-gray-600">YAKAP Location</label>
-                                                <input v-model="form.yakap_location" type="text"
-                                                    class="p-inputtext p-component w-full"
-                                                    placeholder="Enter YAKAP Location" />
-                                            </div>
-                                        </div>
-
                                         <div class="bg-blue-50 border border-blue-200 rounded p-3">
                                             <p class="text-sm text-blue-800">
                                                 <i class="pi pi-info-circle mr-2"></i>
