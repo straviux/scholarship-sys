@@ -25,6 +25,7 @@ import { usePermission } from '@/composable/permissions';
 // import Avatar from 'primevue/avatar';
 
 import ApplicantFormModal from '@/Components/modals/ApplicantFormModal.vue';
+import YakapCategoryModal from '@/Components/modals/YakapCategoryModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
 import PriorityModal from './Modal/PriorityModal.vue';
 import JpmModal from './Modal/JpmModal.vue';
@@ -121,6 +122,7 @@ const filter = useForm({
     course: props.filter.course || "",
     municipality: props.filter.municipality || "",
     year_level: props.filter.year_level || "",
+    yakap_category: props.filter.yakap_category || "",
     date_from: props.filter.date_from ? toDate(props.filter.date_from) : null,
     date_to: props.filter.date_to ? toDate(props.filter.date_to) : null,
     remarks: props.filter.remarks || "",
@@ -146,12 +148,24 @@ const jpmFilterOptions = [
     { label: 'Hide All Tagged', value: 'hide_all_tagged' }
 ];
 
+// YAKAP Category Filter Options
+const yakapCategoryOptions = [
+    { label: 'All Categories', value: '' },
+    { label: 'YAKAP Capitol', value: 'yakap-capitol' },
+    { label: 'YAKAP School', value: 'yakap-school' },
+    { label: 'YAKAP Field', value: 'yakap-field' }
+];
+
 // Applicant Modal state
 // const showApplicantModal = ref(false);
 const showApplicationFormModal = ref(false);
 const applicationFormMode = ref('create');
 // const modalAction = ref('');
 const modalProfile = ref(null);
+
+// YAKAP Category Modal state
+const showYakapCategoryModal = ref(false);
+const selectedYakapCategory = ref('yakap-capitol');
 
 const editApplicant = (profile) => {
     modalProfile.value = profile;
@@ -172,6 +186,17 @@ const openApplicationFormModal = () => {
     showApplicationFormModal.value = true;
 }
 
+const openYakapCategoryModal = () => {
+    showYakapCategoryModal.value = true;
+}
+
+const handleYakapCategorySelected = (category) => {
+    selectedYakapCategory.value = category;
+    showYakapCategoryModal.value = false;
+    // Now open the applicant form modal
+    openApplicationFormModal();
+}
+
 // const closeApplicantModal = () => {
 //     showApplicantModal.value = false;
 //     modalProfile.value = null;
@@ -187,6 +212,7 @@ const filterList = (resetToPage1 = false) => {
     const name = filter.name.toLowerCase() || "";
     const school = filter.school?.shortname?.toLowerCase() || "";
     const year_level = filter.year_level?.value?.toLowerCase() || "";
+    const yakap_category = filter.yakap_category || "";
     const remarks = filter.remarks.toLowerCase() || "";
     const global_search = globalFilter.value.toLowerCase() || "";
     const records = filter.records;
@@ -207,6 +233,7 @@ const filterList = (resetToPage1 = false) => {
     if (name) params.name = name;
     if (parent_name) params.parent_name = parent_name;
     if (year_level) params.year_level = year_level;
+    if (yakap_category) params.yakap_category = yakap_category;
     if (date_from) params.date_from = date_from;
     if (date_to) params.date_to = date_to;
     if (remarks) params.remarks = remarks;
@@ -240,6 +267,7 @@ const clearFilter = () => {
     filter.course = null;
     filter.municipality = null;
     filter.year_level = null;
+    filter.yakap_category = null;
     filter.remarks = null;
     filter.date_from = null;
     filter.date_to = null;
@@ -673,7 +701,7 @@ const formatDate = (date) => {
 
                         <Divider layout="vertical" class="h-6" v-if="hasPermission('jpm.view')" />
 
-                        <Button icon="pi pi-user-plus" @click="openApplicationFormModal"
+                        <Button icon="pi pi-user-plus" @click="openYakapCategoryModal"
                             v-if="hasPermission('applicants.create')" severity="success"
                             v-tooltip.bottom="'Add New Applicant'" />
                         <Button icon="pi pi-print" @click="openReportModal" severity="info"
@@ -767,6 +795,12 @@ const formatDate = (date) => {
                                 <div class="flex flex-col">
                                     <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
                                     <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
+                                        size="small" class="w-full" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">YAKAP Category</label>
+                                    <Select v-model="filter.yakap_category" :options="yakapCategoryOptions"
+                                        optionLabel="label" optionValue="value" placeholder="All Categories"
                                         size="small" class="w-full" />
                                 </div>
                             </div>
@@ -1419,9 +1453,12 @@ const formatDate = (date) => {
             </div>
         </Dialog>
 
+        <!-- YAKAP Category Modal - for selecting category when creating new applicant -->
+        <YakapCategoryModal v-model:visible="showYakapCategoryModal" @selected="handleYakapCategorySelected" />
+
         <!-- Application Form Modal - for creating/editing applicants -->
         <ApplicantFormModal v-model:visible="showApplicationFormModal" :mode="applicationFormMode"
-            :profile="modalProfile" @success="closeModal" />
+            :profile="modalProfile" :yakap-category="selectedYakapCategory" @success="closeModal" />
 
         <!-- Applicant Profile Modal - for editing existing applicants (keeping for backward compatibility) -->
         <!-- <ApplicantProfileModal v-if="(props.action == 'update') || showApplicantModal"

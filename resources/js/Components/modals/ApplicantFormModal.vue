@@ -105,6 +105,25 @@
                                             </FloatLabel>
                                         </div>
 
+                                        <!-- YAKAP Category and Location -->
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="text-gray-600">YAKAP Category</label>
+                                                <select v-model="form.yakap_category"
+                                                    class="p-inputtext p-component w-full">
+                                                    <option v-for="opt in yakapCategoryOptions" :key="opt.value"
+                                                        :value="opt.value">{{ opt.label }}</option>
+                                                </select>
+                                            </div>
+                                            <div
+                                                v-if="form.yakap_category === 'yakap-school' || form.yakap_category === 'yakap-field'">
+                                                <label class="text-gray-600">YAKAP Location</label>
+                                                <input v-model="form.yakap_location" type="text"
+                                                    class="p-inputtext p-component w-full"
+                                                    placeholder="Enter YAKAP Location" />
+                                            </div>
+                                        </div>
+
                                         <div class="bg-blue-50 border border-blue-200 rounded p-3">
                                             <p class="text-sm text-blue-800">
                                                 <i class="pi pi-info-circle mr-2"></i>
@@ -154,6 +173,10 @@ const props = defineProps({
         type: String,
         default: 'create', // 'create' or 'edit'
         validator: (value) => ['create', 'edit'].includes(value)
+    },
+    yakapCategory: {
+        type: String,
+        default: 'yakap-capitol'
     }
 });
 
@@ -251,6 +274,8 @@ const form = useForm({
     academic_year: grant?.academic_year || null,
     date_filed: formatDateForPicker(grant?.date_filed),
     remarks: grant?.remarks || p?.remarks || '',
+    yakap_category: props.mode === 'create' ? props.yakapCategory : (grant?.yakap_category || 'yakap-capitol'),
+    yakap_location: grant?.yakap_location || '',
 });
 
 // Validation for step 1
@@ -397,6 +422,9 @@ watch(() => props.visible, async (newValue) => {
         form.date_filed = formatDateForPicker(grant?.date_filed);
         form.remarks = grant?.remarks || p?.remarks || '';
 
+        form.yakap_category = grant?.yakap_category || 'yakap-capitol';
+        form.yakap_location = grant?.yakap_location || '';
+
         form.clearErrors();
         activeStep.value = '1';
         validationError.value = '';
@@ -442,6 +470,9 @@ const handleSubmit = () => {
         year_level: form.year_level?.value || form.year_level || null,
         // Extract value from term object if it exists (1ST SEM, 2ND SEM, etc.)
         term: form.term?.value || form.term || null,
+        // YAKAP fields
+        yakap_category: form.yakap_category || 'yakap-capitol',
+        yakap_location: form.yakap_location || '',
     };
 
     if (props.mode === 'edit' && props.profile) {
@@ -536,6 +567,8 @@ const emptyFormState = {
     academic_year: null,
     date_filed: null,
     remarks: '',
+    yakap_category: 'yakap-capitol',
+    yakap_location: '',
 };
 
 // Reset form to initial empty state
@@ -562,4 +595,14 @@ watch(() => props.visible, (newVal, oldVal) => {
 onMounted(() => {
     console.log('ApplicantFormModal mounted with props:', props);
 });
+
+// Add to form state
+const yakapCategoryOptions = [
+    { value: 'yakap-capitol', label: 'YAKAP Capitol' },
+    { value: 'yakap-school', label: 'YAKAP School' },
+    { value: 'yakap-field', label: 'YAKAP Field' }
+];
+
+if (!form.yakap_category) form.yakap_category = 'yakap-capitol';
+if (!form.yakap_location) form.yakap_location = '';
 </script>

@@ -20,6 +20,8 @@ class ScholarshipRecord extends Model
         'program_id',
         'school_id',
         'term',
+        'yakap_category',
+        'yakap_location',
         'year_level',
         'academic_year',
         'school_name',

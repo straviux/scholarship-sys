@@ -99,6 +99,13 @@ class WaitingListController extends Controller
             });
         }
 
+        // Filter by yakap_category under scholarshipGrant relation
+        if ($request->filled('yakap_category')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('yakap_category', $request->yakap_category);
+            });
+        }
+
         // Filter by course under scholarshipGrant relation
         if ($request->filled('course')) {
             $query->whereHas('scholarshipGrant.course', function ($q) use ($request) {
@@ -409,6 +416,7 @@ class WaitingListController extends Controller
                 'course' => $request->get('course', ''),
                 'municipality' => $request->get('municipality', ''),
                 'year_level' => $request->get('year_level', ''),
+                'yakap_category' => $request->get('yakap_category', ''),
                 'parent_name' => $request->get('parent_name', ''),
                 'date_from' => $request->get('date_from', ''),
                 'date_to' => $request->get('date_to', ''),

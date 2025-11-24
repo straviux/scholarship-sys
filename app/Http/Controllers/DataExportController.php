@@ -213,6 +213,8 @@ class DataExportController extends Controller
                 'approval_status' => $record->approval_status,
                 'year_level' => $record->year_level,
                 'term' => $record->term,
+                'yakap_category' => $record->yakap_category ?? 'yakap-capitol',
+                'yakap_location' => $record->yakap_location,
                 'date_applied' => $record->date_filed,
             ];
 
@@ -292,6 +294,8 @@ class DataExportController extends Controller
                 'course_name' => $courseName !== 'no_course' ? $courseName : null,
                 'year_level' => $grant?->year_level,
                 'term' => $grant?->term,
+                'yakap_category' => $grant?->yakap_category ?? 'yakap-capitol',
+                'yakap_location' => $grant?->yakap_location,
                 'date_filed' => $profile->date_filed,
                 'date_applied' => $grant?->date_filed,
                 'application_status' => $profile->application_status,

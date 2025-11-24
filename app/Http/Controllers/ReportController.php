@@ -105,6 +105,11 @@ class ReportController extends Controller
                     ->whereNotNull('year_level');
             });
         }
+        if ($request->filled('yakap_category')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('yakap_category', $request->yakap_category);
+            });
+        }
         if ($request->filled('date_from') && $request->filled('date_to')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
                 $q->whereBetween('date_filed', [$request->date_from, $request->date_to]);
@@ -342,6 +347,11 @@ class ReportController extends Controller
                     ->whereNotNull('year_level');
             });
         }
+        if ($request->filled('yakap_category')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('yakap_category', $request->yakap_category);
+            });
+        }
         if ($request->filled('date_from') && $request->filled('date_to')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
                 $q->whereBetween('date_filed', [$request->date_from, $request->date_to]);
@@ -529,6 +539,12 @@ class ReportController extends Controller
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
                 $q->where('year_level', 'like', '%' . $request->year_level . '%')
                     ->whereNotNull('year_level');
+            });
+        }
+
+        if ($request->filled('yakap_category')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('yakap_category', $request->yakap_category);
             });
         }
 
@@ -798,6 +814,12 @@ class ReportController extends Controller
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
                 $q->where('year_level', 'like', '%' . $request->year_level . '%')
                     ->whereNotNull('year_level');
+            });
+        }
+
+        if ($request->filled('yakap_category')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('yakap_category', $request->yakap_category);
             });
         }
 
