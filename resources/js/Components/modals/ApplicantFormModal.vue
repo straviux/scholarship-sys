@@ -93,7 +93,8 @@
                                             v-model:school="form.school" v-model:course="form.course"
                                             v-model:year_level="form.year_level" v-model:term="form.term"
                                             v-model:academic_year="form.academic_year" v-model:remarks="form.remarks"
-                                            :show-header="false" />
+                                            v-model:yakap_category="form.yakap_category"
+                                            v-model:yakap_location="form.yakap_location" :show-header="false" />
 
                                         <!-- Date Filed -->
                                         <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-10">
@@ -177,6 +178,10 @@ const props = defineProps({
     yakapCategory: {
         type: String,
         default: 'yakap-capitol'
+    },
+    yakapLocation: {
+        type: String,
+        default: ''
     }
 });
 
@@ -275,7 +280,7 @@ const form = useForm({
     date_filed: formatDateForPicker(grant?.date_filed),
     remarks: grant?.remarks || p?.remarks || '',
     yakap_category: props.mode === 'create' ? props.yakapCategory : (grant?.yakap_category || 'yakap-capitol'),
-    yakap_location: grant?.yakap_location || '',
+    yakap_location: props.mode === 'create' ? props.yakapLocation : (grant?.yakap_location || ''),
 });
 
 // Validation for step 1
@@ -575,11 +580,22 @@ const emptyFormState = {
 const resetForm = () => {
     // Reset to empty values for create mode
     Object.keys(emptyFormState).forEach(key => {
-        form[key] = emptyFormState[key];
+        // Use props for yakap fields instead of empty state defaults
+        if (key === 'yakap_category') {
+            form[key] = props.yakapCategory || 'yakap-capitol';
+        } else if (key === 'yakap_location') {
+            form[key] = props.yakapLocation || '';
+        } else {
+            form[key] = emptyFormState[key];
+        }
     });
     form.clearErrors();
     activeStep.value = '1';
     validationError.value = null;
+    console.log('Form reset with yakap values from props:', {
+        yakap_category: form.yakap_category,
+        yakap_location: form.yakap_location
+    });
 };
 
 // Watch for modal visibility changes - reset form when opening in create mode

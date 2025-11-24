@@ -47,6 +47,23 @@
                 </FloatLabel>
             </div>
 
+            <!-- YAKAP Category and Location Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-10">
+                <FloatLabel>
+                    <Select :modelValue="yakap_category" @update:modelValue="$emit('update:yakap_category', $event)"
+                        :options="yakapCategoryOptions" optionLabel="label" optionValue="value" placeholder="&nbsp;"
+                        inputId="yakap_category" />
+                    <label class="text-sm" for="yakap_category">YAKAP Category</label>
+                </FloatLabel>
+
+                <FloatLabel v-if="yakap_category !== 'yakap-capitol'">
+                    <InputText :modelValue="yakap_location" @update:modelValue="$emit('update:yakap_location', $event)"
+                        :placeholder="yakap_category === 'yakap-school' ? 'School name' : 'Field location'"
+                        inputId="yakap_location" />
+                    <label class="text-sm" for="yakap_location">Location</label>
+                </FloatLabel>
+            </div>
+
             <!-- Remarks Field -->
             <div class="grid grid-cols-1 gap-3 mt-10">
                 <FloatLabel>
@@ -62,12 +79,20 @@
 <script setup>
 import FloatLabel from 'primevue/floatlabel';
 import Textarea from 'primevue/textarea';
+import Select from 'primevue/select';
+import InputText from 'primevue/inputtext';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
+
+const yakapCategoryOptions = [
+    { label: 'YAKAP Capitol', value: 'yakap-capitol' },
+    { label: 'YAKAP School', value: 'yakap-school' },
+    { label: 'YAKAP Field', value: 'yakap-field' }
+];
 
 const props = defineProps({
     program: [Object, String],
@@ -77,6 +102,8 @@ const props = defineProps({
     term: [String, Object],
     academic_year: [String, Object],
     remarks: String,
+    yakap_category: String,
+    yakap_location: String,
     showHeader: {
         type: Boolean,
         default: true
@@ -90,7 +117,9 @@ const emit = defineEmits([
     'update:year_level',
     'update:term',
     'update:academic_year',
-    'update:remarks'
+    'update:remarks',
+    'update:yakap_category',
+    'update:yakap_location'
 ]);
 </script>
 

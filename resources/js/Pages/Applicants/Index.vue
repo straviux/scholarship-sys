@@ -163,9 +163,24 @@ const applicationFormMode = ref('create');
 // const modalAction = ref('');
 const modalProfile = ref(null);
 
-// YAKAP Category Modal state
+// YAKAP Category Modal state - restore from localStorage
 const showYakapCategoryModal = ref(false);
-const selectedYakapCategory = ref('yakap-capitol');
+const selectedYakapCategory = ref(localStorage.getItem('selectedYakapCategory') || 'yakap-capitol');
+const selectedYakapLocation = ref(localStorage.getItem('selectedYakapLocation') || '');
+
+// Watch for changes to selectedYakapCategory and persist to localStorage
+watch(selectedYakapCategory, (newValue) => {
+    localStorage.setItem('selectedYakapCategory', newValue);
+    // Clear location if category is yakap-capitol
+    if (newValue === 'yakap-capitol') {
+        selectedYakapLocation.value = '';
+    }
+});
+
+// Watch for changes to selectedYakapLocation and persist to localStorage
+watch(selectedYakapLocation, (newValue) => {
+    localStorage.setItem('selectedYakapLocation', newValue);
+});
 
 const editApplicant = (profile) => {
     modalProfile.value = profile;
@@ -176,6 +191,7 @@ const editApplicant = (profile) => {
 const closeModal = () => {
     showApplicationFormModal.value = false;
     modalProfile.value = null;
+    // Don't reset yakap values - they persist for next new applicant
     // Refresh the applicants list after modal closes
     refreshApplicationList();
 }
@@ -190,8 +206,9 @@ const openYakapCategoryModal = () => {
     showYakapCategoryModal.value = true;
 }
 
-const handleYakapCategorySelected = (category) => {
-    selectedYakapCategory.value = category;
+const handleYakapCategorySelected = (data) => {
+    selectedYakapCategory.value = data.category;
+    selectedYakapLocation.value = data.location;
     showYakapCategoryModal.value = false;
     // Now open the applicant form modal
     openApplicationFormModal();
@@ -1458,7 +1475,8 @@ const formatDate = (date) => {
 
         <!-- Application Form Modal - for creating/editing applicants -->
         <ApplicantFormModal v-model:visible="showApplicationFormModal" :mode="applicationFormMode"
-            :profile="modalProfile" :yakap-category="selectedYakapCategory" @success="closeModal" />
+            :profile="modalProfile" :yakap-category="selectedYakapCategory" :yakap-location="selectedYakapLocation"
+            @success="closeModal" />
 
         <!-- Applicant Profile Modal - for editing existing applicants (keeping for backward compatibility) -->
         <!-- <ApplicantProfileModal v-if="(props.action == 'update') || showApplicantModal"
