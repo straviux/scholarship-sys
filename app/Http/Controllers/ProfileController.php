@@ -15,6 +15,35 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+
+
+    /**
+     * Display encoded summary report for logged-in user
+     */
+    public function getUserSummaryReport(Request $request): Response
+    {
+        $user = $request->user();
+
+        // Generate user-specific summary
+        $userSummary = $this->generateUserSummaryData($user);
+
+        // Encode the summary (base64 for simplicity, could use other encoding methods)
+        $encodedSummary = base64_encode(json_encode($userSummary));
+
+        $reportData = [
+            'user_summary' => $userSummary,
+            'encoded_summary' => $encodedSummary,
+            'generated_at' => now()->toDateTimeString(),
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'profile_photo_url' => $user->profile_photo_url,
+            'has_profile_photo' => $user->hasProfilePhoto()
+        ];
+
+        return Inertia::render('User/UserProfile', [
+            'reportData' => $reportData
+        ]);
+    }
     /**
      * Display the user's profile form.
      */

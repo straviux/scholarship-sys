@@ -116,7 +116,7 @@ Route::middleware(['auth'])->group(function () {
 
 // User Profile Route - Display user account information
 Route::middleware(['auth'])->group(function () {
-    Route::get('/user/profile', [SystemReportController::class, 'getUserSummaryReport'])->name('user.profile');
+    Route::get('/user/profile', [ProfileController::class, 'getUserSummaryReport'])->name('user.profile');
     Route::put('/user/profile', [ProfileController::class, 'updateProfile'])->name('user.profile.update');
     Route::post('/user/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
     Route::post('/user/profile/generate-qr', [ProfileController::class, 'generateQrCode'])->name('profile.generate-qr');
