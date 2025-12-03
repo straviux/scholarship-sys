@@ -446,6 +446,13 @@ class ScholarshipProfileController extends Controller
             });
         }
 
+        // Filter by yakap_category under scholarshipGrant relation
+        if ($request->filled('yakap_category')) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('yakap_category', $request->yakap_category);
+            });
+        }
+
         // Filter by date range (date_filed) from scholarshipGrant relation
         if ($request->filled('date_from') && $request->filled('date_to')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
@@ -491,6 +498,7 @@ class ScholarshipProfileController extends Controller
             'courses' => $request->get('courses', ''), // Add support for multiple courses
             'municipality' => $request->get('municipality', ''),
             'year_level' => $request->get('year_level', ''),
+            'yakap_category' => $request->get('yakap_category', ''),
             'date_from' => $request->get('date_from', ''),
             'date_to' => $request->get('date_to', ''),
         ];

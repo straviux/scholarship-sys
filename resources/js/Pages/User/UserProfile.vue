@@ -5,6 +5,9 @@ import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import FileUpload from 'primevue/fileupload';
+import DatePicker from 'primevue/datepicker';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
 import { ref, computed, nextTick, watch, onUnmounted } from 'vue';
 import { useDateUtils } from '@/composables/dateUtils.js';
 import { useForm } from '@inertiajs/vue3';
@@ -21,6 +24,11 @@ const props = defineProps({
 
 // Reactive data
 const showCurrentMonthOnly = ref(false);
+const showEncodingCalendarModal = ref(false);
+const selectedCalendarDate = ref(null);
+const calendarRecords = ref([]);
+const recordsByDate = ref({});
+const loadingRecords = ref(false);
 const showChangePasswordModal = ref(false);
 const showEditProfileModal = ref(false);
 const showProfilePhotoModal = ref(false);
@@ -114,6 +122,10 @@ const activityLabel = computed(() => {
 
 const encodedToday = computed(() => {
     return userApplications.value?.today || 0;
+});
+
+const encodedExistingApproved = computed(() => {
+    return userApplications.value?.existing_approved || 0;
 });
 
 // Change password methods
@@ -509,6 +521,66 @@ const confirmImageEdit = () => {
         }
     }, 'image/jpeg', 0.9);
 };
+
+// Calendar methods
+const openEncodingCalendarModal = async () => {
+    showEncodingCalendarModal.value = true;
+    selectedCalendarDate.value = new Date();
+    await loadRecordsSummaryForMonth();
+};
+
+const closeEncodingCalendarModal = () => {
+    showEncodingCalendarModal.value = false;
+    calendarRecords.value = [];
+    recordsByDate.value = {};
+};
+
+const onCalendarDateSelect = async (date) => {
+    if (!date) return;
+
+    selectedCalendarDate.value = date;
+    await fetchRecordsForDate(date);
+};
+
+const fetchRecordsForDate = async (date) => {
+    if (!date) return;
+
+    loadingRecords.value = true;
+    try {
+        const dateStr = new Date(date).toISOString().split('T')[0];
+        const response = await axios.get(route('api.records.bydate'), {
+            params: { date: dateStr }
+        });
+
+        calendarRecords.value = response.data.records;
+    } catch (error) {
+        console.error('Error fetching records for date:', error);
+        toast.error('Failed to load records for this date');
+        calendarRecords.value = [];
+    } finally {
+        loadingRecords.value = false;
+    }
+};
+
+const loadRecordsSummaryForMonth = async () => {
+    if (!selectedCalendarDate.value) return;
+
+    try {
+        const date = new Date(selectedCalendarDate.value);
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+
+        const response = await axios.get(route('api.records.summary-month'), {
+            params: { year, month }
+        });
+
+        recordsByDate.value = response.data.records_by_date;
+    } catch (error) {
+        console.error('Error loading records summary:', error);
+    }
+};
+
+
 </script>
 
 <template>
@@ -540,7 +612,7 @@ const confirmImageEdit = () => {
                                 </span>
                             </div>
                             <button @click="openProfilePhotoModal"
-                                class="absolute -bottom-1 -right-1 w-6 h-6 bg-indigo-600 hover:bg-indigo-700 rounded-full flex items-center justify-center shadow-lg transition-colors">
+                                class="absolute -bottom-1 -right-1 w-6 h-6 bg-indigo-600 hover:bg-indigo-700 rounded-full flex items-center justify-center shadow-lg transition-colors cursor-pointer">
                                 <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
@@ -549,20 +621,16 @@ const confirmImageEdit = () => {
                                         d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 </svg>
                             </button>
+                            <!-- <div class="absolute -bottom-1 -right-1 w-6 h-6">
+                                <Button @click="openProfilePhotoModal" icon="pi pi-user" severity="info" rounded
+                                    size="small" />
+                            </div> -->
                         </div>
 
                         <!-- User Info -->
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-1">
                                 <h2 class="text-2xl font-bold text-gray-900">{{ reportData?.user_name || 'User' }}</h2>
-                                <button @click="openEditProfileModal"
-                                    class="p-1 text-gray-400 hover:text-indigo-600 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                        </path>
-                                    </svg>
-                                </button>
                             </div>
                             <p class="text-gray-600 mb-2">@{{ reportData?.user_summary?.basic_info?.username ||
                                 'username' }}
@@ -576,21 +644,36 @@ const confirmImageEdit = () => {
                             </div>
                         </div>
 
-                        <!-- Status Badge -->
-                        <div class="text-right">
-                            <span
-                                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                <svg class="w-2 h-2 mr-1.5 fill-current" viewBox="0 0 8 8">
-                                    <circle cx="4" cy="4" r="3" />
-                                </svg>
-                                Active
-                            </span>
+                        <!-- Profile Action Buttons -->
+                        <div class="flex items-center gap-2">
+                            <Button @click="openEncodingCalendarModal" icon="pi pi-calendar" size="small"
+                                label="Encoding Records" class="w-full md:w-auto" severity="info" />
+                            <Button @click="openEditProfileModal" icon="pi pi-pen-to-square" size="small"
+                                label="Update Name" class="w-full md:w-auto" variant="outlined" />
+
+                            <Button @click="openChangePasswordModal" icon="pi pi-key" size="small"
+                                label="Change Password" class="w-full md:w-auto" variant="outlined" />
+
+
+                            <!-- <form method="POST" :action="route('logout')" class="inline">
+                                <input type="hidden" name="_token" :value="$page.props.csrf_token">
+                                <button type="submit"
+                                    class="px-3 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2 cursor-pointer"
+                                    title="Logout">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    <span class="hidden md:inline">Logout</span>
+                                </button>
+                            </form> -->
                         </div>
                     </div>
                 </div>
 
+
                 <!-- Statistics Dashboard -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
 
                     <!-- Encoded Today -->
                     <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
@@ -671,6 +754,25 @@ const confirmImageEdit = () => {
                         </div>
                     </div>
 
+                    <!-- Encoded Existing/Approved Profiles -->
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Approved Profiles</p>
+                                <p class="text-3xl font-bold text-rose-600">
+                                    {{ encodedExistingApproved }}
+                                </p>
+                            </div>
+                            <div
+                                class="w-12 h-12 bg-gradient-to-r from-rose-500 to-pink-600 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Latest Activity -->
                     <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
                         <div class="flex items-center justify-between">
@@ -719,14 +821,24 @@ const confirmImageEdit = () => {
                             <h4 class="font-medium text-gray-700 text-center">By Program</h4>
                             <div class="space-y-2 max-h-64 overflow-y-auto">
                                 <div v-for="program in filteredProgramData" :key="program.program_name"
-                                    class="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                    <span class="text-sm text-gray-700 font-medium">
-                                        {{ program.program_name || 'No Program' }}
-                                    </span>
-                                    <span
-                                        class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs font-semibold">
-                                        {{ program.count }}
-                                    </span>
+                                    class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-sm text-gray-700 font-medium">
+                                            {{ program.program_name || 'No Program' }}
+                                        </span>
+                                        <span
+                                            class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs font-semibold">
+                                            {{ program.count }}
+                                        </span>
+                                    </div>
+                                    <div class="flex gap-2 text-xs">
+                                        <span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">
+                                            Pending: {{ program.pending }}
+                                        </span>
+                                        <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                                            Approved: {{ program.approved }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -736,14 +848,24 @@ const confirmImageEdit = () => {
                             <h4 class="font-medium text-gray-700 text-center">By Course</h4>
                             <div class="space-y-2 max-h-64 overflow-y-auto">
                                 <div v-for="course in filteredCourseData" :key="course.course_name"
-                                    class="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                    <span class="text-sm text-gray-700 font-medium">
-                                        {{ course.course_name || 'No Course' }}
-                                    </span>
-                                    <span
-                                        class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-xs font-semibold">
-                                        {{ course.count }}
-                                    </span>
+                                    class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-sm text-gray-700 font-medium">
+                                            {{ course.course_name || 'No Course' }}
+                                        </span>
+                                        <span
+                                            class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-xs font-semibold">
+                                            {{ course.count }}
+                                        </span>
+                                    </div>
+                                    <div class="flex gap-2 text-xs">
+                                        <span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">
+                                            Pending: {{ course.pending }}
+                                        </span>
+                                        <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                                            Approved: {{ course.approved }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -753,31 +875,27 @@ const confirmImageEdit = () => {
                             <h4 class="font-medium text-gray-700 text-center">By School</h4>
                             <div class="space-y-2 max-h-64 overflow-y-auto">
                                 <div v-for="school in filteredSchoolData" :key="school.school_name"
-                                    class="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                    <span class="text-sm text-gray-700 font-medium">
-                                        {{ school.school_name || 'No School' }}
-                                    </span>
-                                    <span
-                                        class="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs font-semibold">
-                                        {{ school.count }}
-                                    </span>
+                                    class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-sm text-gray-700 font-medium">
+                                            {{ school.school_name || 'No School' }}
+                                        </span>
+                                        <span
+                                            class="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs font-semibold">
+                                            {{ school.count }}
+                                        </span>
+                                    </div>
+                                    <div class="flex gap-2 text-xs">
+                                        <span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">
+                                            Pending: {{ school.pending }}
+                                        </span>
+                                        <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                                            Approved: {{ school.approved }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Account Settings -->
-                <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Account Settings</h3>
-                    <div class="space-y-3">
-                        <Button @click="openChangePasswordModal" icon="pi pi-lock" label="Change Password"
-                            class="w-full" severity="secondary" outlined />
-                        <form method="POST" :action="route('logout')" class="w-full">
-                            <input type="hidden" name="_token" :value="$page.props.csrf_token">
-                            <Button type="submit" icon="pi pi-sign-out" label="Logout" class="w-full" severity="danger"
-                                outlined />
-                        </form>
                     </div>
                 </div>
             </div>
@@ -1013,6 +1131,74 @@ const confirmImageEdit = () => {
                     <Button label="Change Password" @click="submitPasswordChange"
                         :loading="changePasswordForm.processing" />
                 </div>
+            </template>
+        </Dialog>
+
+        <!-- Encoding Records Calendar Dialog -->
+        <Dialog v-model:visible="showEncodingCalendarModal" modal header="Encoding Records by Date" maximizable
+            :style="{ width: '60vw' }">
+            <div class="space-y-6">
+                <!-- Calendar -->
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <DatePicker v-model="selectedCalendarDate" inline date-format="yy-mm-dd"
+                        @date-select="onCalendarDateSelect" class="w-full" />
+                </div>
+
+                <!-- Records for Selected Date -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            Records for {{ selectedCalendarDate ? new Date(selectedCalendarDate).toDateString() :
+                                `Select a Date` }}
+                        </h3>
+                        <span v-if="selectedCalendarDate"
+                            class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                            {{ calendarRecords.length }} record(s)
+                        </span>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div v-if="loadingRecords" class="flex items-center justify-center p-8">
+                        <div class="text-center">
+                            <div class="inline-flex items-center space-x-2">
+                                <i class="pi pi-spin pi-spinner text-2xl text-indigo-600"></i>
+                                <span class="text-gray-600">Loading records...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Records Table -->
+                    <DataTable v-else :value="calendarRecords" class="w-full" :rows="10" paginator
+                        responsive-layout="scroll" striped-rows>
+                        <Column field="applicant_name" header="Applicant Name" class="min-w-48" />
+                        <Column field="program_name" header="Program" class="min-w-40" />
+                        <Column field="record_type" header="Record Type" class="min-w-32">
+                            <template #body="{ data }">
+                                <span :class="[
+                                    'px-3 py-1 rounded-full text-xs font-semibold',
+                                    data.record_type === 'Created' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                                ]">
+                                    {{ data.record_type }}
+                                </span>
+                            </template>
+                        </Column>
+                        <Column field="created_time" header="Time" class="min-w-24">
+                            <template #body="{ data }">
+                                <span class="text-sm text-gray-600">{{ data.created_time }}</span>
+                            </template>
+                        </Column>
+                        <template #empty>
+                            <div class="text-center py-8">
+                                <i class="pi pi-calendar text-4xl text-gray-300 mb-3"></i>
+                                <p class="text-gray-500">No records found for this date</p>
+                            </div>
+                        </template>
+                    </DataTable>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Close" @click="closeEncodingCalendarModal" />
             </template>
         </Dialog>
     </AdminLayout>

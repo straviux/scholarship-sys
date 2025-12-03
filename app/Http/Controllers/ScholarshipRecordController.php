@@ -317,6 +317,49 @@ class ScholarshipRecordController extends Controller
     }
 
     /**
+     * Update YAKAP category for a scholarship record
+     */
+    public function updateYakapCategory(Request $request, $id)
+    {
+        $request->validate([
+            'yakap_category' => 'required|string|in:yakap-capitol,yakap-school,yakap-field',
+            'yakap_location' => 'nullable|string|max:255'
+        ]);
+
+        try {
+            $record = ScholarshipRecord::findOrFail($id);
+            $record->yakap_category = $request->yakap_category;
+
+            // Only update location if not capitol
+            if ($request->yakap_category !== 'yakap-capitol') {
+                $record->yakap_location = $request->yakap_location;
+            } else {
+                $record->yakap_location = null;
+            }
+
+            $record->save();
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'YAKAP category updated successfully',
+                    'yakap_category' => $record->yakap_category,
+                    'yakap_location' => $record->yakap_location
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'YAKAP category updated successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Error updating YAKAP category: ' . $e->getMessage());
+
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Failed to update YAKAP category'], 500);
+            }
+
+            return redirect()->back()->withErrors(['error' => 'Failed to update YAKAP category']);
+        }
+    }
+
+    /**
      * Remove the specified scholarship record from storage.
      */
     public function destroy($id)
@@ -327,5 +370,91 @@ class ScholarshipRecordController extends Controller
             return response()->json(['message' => 'Scholarship record deleted successfully.']);
         }
         return redirect()->back()->with('message', 'Scholarship record deleted successfully.');
+    }
+
+    /**
+     * Get or create a scholarship record for a profile.
+     * Used for applicants who might not have a scholarship record yet.
+     */
+    public function getOrCreateForProfile($profile_id)
+    {
+        $profile = ScholarshipProfile::findOrFail($profile_id);
+
+        // Try to get existing scholarship record
+        $record = ScholarshipRecord::where('profile_id', $profile_id)
+            ->with(['program', 'course', 'school'])
+            ->first();
+
+        if (!$record) {
+            // Create a new record with defaults for pending/waiting applicants
+            $record = ScholarshipRecord::create([
+                'profile_id' => $profile_id,
+                'scholarship_status' => 0, // Pending
+                'approval_status' => 'pending',
+                'yakap_category' => 'yakap-capitol',
+                'yakap_location' => null,
+                'date_filed' => now()
+            ]);
+            $record->load(['program', 'course', 'school']);
+        }
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'id' => $record->id,
+                'profile_id' => $record->profile_id,
+                'yakap_category' => $record->yakap_category,
+                'yakap_location' => $record->yakap_location,
+                'scholarship_status' => $record->scholarship_status,
+                'approval_status' => $record->approval_status
+            ]);
+        }
+
+        return redirect()->back();
+    }
+
+    /**
+     * Batch update YAKAP category for multiple profiles.
+     * Used for bulk updating YAKAP categories for selected applicants.
+     */
+    public function batchUpdateYakapCategory(Request $request)
+    {
+        $request->validate([
+            'profile_ids' => 'required|array|min:1',
+            'profile_ids.*' => 'required|string',
+            'yakap_category' => 'required|string|in:yakap-capitol,yakap-school,yakap-field',
+            'yakap_location' => 'nullable|string|max:255'
+        ]);
+
+        try {
+            $profileIds = $request->profile_ids;
+            $yakapCategory = $request->yakap_category;
+            $yakapLocation = $request->yakap_location;
+
+            // Update all scholarship records for the given profiles
+            $updated = ScholarshipRecord::whereIn('profile_id', $profileIds)
+                ->update([
+                    'yakap_category' => $yakapCategory,
+                    'yakap_location' => $yakapCategory !== 'yakap-capitol' ? $yakapLocation : null
+                ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => "YAKAP category updated for {$updated} record(s)",
+                    'updated_count' => $updated,
+                    'yakap_category' => $yakapCategory,
+                    'yakap_location' => $yakapLocation
+                ]);
+            }
+
+            return redirect()->back()->with('success', "YAKAP category updated for {$updated} record(s)");
+        } catch (\Exception $e) {
+            \Log::error('Error batch updating YAKAP category: ' . $e->getMessage());
+
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Failed to batch update YAKAP categories'], 500);
+            }
+
+            return redirect()->back()->withErrors(['error' => 'Failed to batch update YAKAP categories']);
+        }
     }
 }

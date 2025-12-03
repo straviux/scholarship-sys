@@ -3,6 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\ScholarshipRecord;
+use App\Models\ScholarshipProfile;
+use App\Models\ScholarshipProgram;
+use App\Models\Course;
+use App\Models\School;
+use App\Models\User;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -10,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -384,6 +391,370 @@ class ProfileController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to upload photo. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Display encoded summary report for logged-in user
+     */
+    public function getUserSummaryReport(Request $request): Response
+    {
+        $user = $request->user();
+
+        // Get all scholarship records created by user
+        $allRecords = ScholarshipRecord::where('created_by', $user->id)
+            ->with(['profile', 'program', 'course', 'school'])
+            ->get();
+
+        // Build encoding statistics with profile status breakdown
+        $programBreakdown = [];
+        $courseBreakdown = [];
+        $schoolBreakdown = [];
+        $profileStatusBreakdown = [];
+        $today = now()->toDateString();
+        $thisMonthStart = now()->startOfMonth()->toDateString();
+        $thisMonthEnd = now()->endOfMonth()->toDateString();
+
+        $todayCount = 0;
+        $totalCreated = 0;
+        $totalUpdated = 0;
+        $existingApproved = 0;
+        $latestActivityDate = null;
+
+        foreach ($allRecords as $record) {
+            // Count today's records
+            if ($record->created_at->toDateString() === $today) {
+                $todayCount++;
+            }
+
+            // Track total created
+            $totalCreated++;
+
+            // Get profile status (pending = 0, approved = 1)
+            $profileStatus = $record->scholarship_status == 1 ? 'Approved' : 'Pending';
+
+            // Count approved existing profiles
+            if ($record->scholarship_status == 1 && $record->profile && !is_null($record->profile->profile_id)) {
+                $existingApproved++;
+            }
+
+            // Latest activity
+            if (!$latestActivityDate || $record->created_at > \Carbon\Carbon::parse($latestActivityDate)) {
+                $latestActivityDate = $record->created_at->toDateTimeString();
+            }
+
+            // Program breakdown with status
+            $programKey = $record->program ? $record->program->name : 'No Program';
+            if (!isset($programBreakdown[$programKey])) {
+                $programBreakdown[$programKey] = ['pending' => 0, 'approved' => 0, 'total' => 0];
+            }
+            if ($profileStatus === 'Approved') {
+                $programBreakdown[$programKey]['approved']++;
+            } else {
+                $programBreakdown[$programKey]['pending']++;
+            }
+            $programBreakdown[$programKey]['total']++;
+
+            // Course breakdown with status
+            $courseKey = $record->course ? $record->course->name : 'No Course';
+            if (!isset($courseBreakdown[$courseKey])) {
+                $courseBreakdown[$courseKey] = ['pending' => 0, 'approved' => 0, 'total' => 0];
+            }
+            if ($profileStatus === 'Approved') {
+                $courseBreakdown[$courseKey]['approved']++;
+            } else {
+                $courseBreakdown[$courseKey]['pending']++;
+            }
+            $courseBreakdown[$courseKey]['total']++;
+
+            // School breakdown with status
+            $schoolKey = $record->school ? $record->school->name : 'No School';
+            if (!isset($schoolBreakdown[$schoolKey])) {
+                $schoolBreakdown[$schoolKey] = ['pending' => 0, 'approved' => 0, 'total' => 0];
+            }
+            if ($profileStatus === 'Approved') {
+                $schoolBreakdown[$schoolKey]['approved']++;
+            } else {
+                $schoolBreakdown[$schoolKey]['pending']++;
+            }
+            $schoolBreakdown[$schoolKey]['total']++;
+
+            // Overall profile status breakdown
+            if (!isset($profileStatusBreakdown[$profileStatus])) {
+                $profileStatusBreakdown[$profileStatus] = 0;
+            }
+            $profileStatusBreakdown[$profileStatus]++;
+        }
+
+        // Get current month records for breakdown
+        $currentMonthRecords = ScholarshipRecord::where('created_by', $user->id)
+            ->whereBetween(DB::raw('DATE(created_at)'), [$thisMonthStart, $thisMonthEnd])
+            ->with(['profile', 'program', 'course', 'school'])
+            ->get();
+
+        $programBreakdownCurrentMonth = [];
+        $courseBreakdownCurrentMonth = [];
+        $schoolBreakdownCurrentMonth = [];
+
+        foreach ($currentMonthRecords as $record) {
+            // Program breakdown - current month
+            $programKey = $record->program ? $record->program->name : 'No Program';
+            if (!isset($programBreakdownCurrentMonth[$programKey])) {
+                $programBreakdownCurrentMonth[$programKey] = ['pending' => 0, 'approved' => 0, 'total' => 0];
+            }
+            $profileStatus = $record->scholarship_status == 1 ? 'Approved' : 'Pending';
+            if ($profileStatus === 'Approved') {
+                $programBreakdownCurrentMonth[$programKey]['approved']++;
+            } else {
+                $programBreakdownCurrentMonth[$programKey]['pending']++;
+            }
+            $programBreakdownCurrentMonth[$programKey]['total']++;
+
+            // Course breakdown - current month
+            $courseKey = $record->course ? $record->course->name : 'No Course';
+            if (!isset($courseBreakdownCurrentMonth[$courseKey])) {
+                $courseBreakdownCurrentMonth[$courseKey] = ['pending' => 0, 'approved' => 0, 'total' => 0];
+            }
+            if ($profileStatus === 'Approved') {
+                $courseBreakdownCurrentMonth[$courseKey]['approved']++;
+            } else {
+                $courseBreakdownCurrentMonth[$courseKey]['pending']++;
+            }
+            $courseBreakdownCurrentMonth[$courseKey]['total']++;
+
+            // School breakdown - current month
+            $schoolKey = $record->school ? $record->school->name : 'No School';
+            if (!isset($schoolBreakdownCurrentMonth[$schoolKey])) {
+                $schoolBreakdownCurrentMonth[$schoolKey] = ['pending' => 0, 'approved' => 0, 'total' => 0];
+            }
+            if ($profileStatus === 'Approved') {
+                $schoolBreakdownCurrentMonth[$schoolKey]['approved']++;
+            } else {
+                $schoolBreakdownCurrentMonth[$schoolKey]['pending']++;
+            }
+            $schoolBreakdownCurrentMonth[$schoolKey]['total']++;
+        }
+
+        // Format breakdowns for frontend consumption
+        $programData = array_map(function ($name, $stats) {
+            return [
+                'program_name' => $name,
+                'count' => $stats['total'],
+                'pending' => $stats['pending'],
+                'approved' => $stats['approved']
+            ];
+        }, array_keys($programBreakdown), array_values($programBreakdown));
+
+        $courseData = array_map(function ($name, $stats) {
+            return [
+                'course_name' => $name,
+                'count' => $stats['total'],
+                'pending' => $stats['pending'],
+                'approved' => $stats['approved']
+            ];
+        }, array_keys($courseBreakdown), array_values($courseBreakdown));
+
+        $schoolData = array_map(function ($name, $stats) {
+            return [
+                'school_name' => $name,
+                'count' => $stats['total'],
+                'pending' => $stats['pending'],
+                'approved' => $stats['approved']
+            ];
+        }, array_keys($schoolBreakdown), array_values($schoolBreakdown));
+
+        $programDataCurrentMonth = array_map(function ($name, $stats) {
+            return [
+                'program_name' => $name,
+                'count' => $stats['total'],
+                'pending' => $stats['pending'],
+                'approved' => $stats['approved']
+            ];
+        }, array_keys($programBreakdownCurrentMonth), array_values($programBreakdownCurrentMonth));
+
+        $courseDataCurrentMonth = array_map(function ($name, $stats) {
+            return [
+                'course_name' => $name,
+                'count' => $stats['total'],
+                'pending' => $stats['pending'],
+                'approved' => $stats['approved']
+            ];
+        }, array_keys($courseBreakdownCurrentMonth), array_values($courseBreakdownCurrentMonth));
+
+        $schoolDataCurrentMonth = array_map(function ($name, $stats) {
+            return [
+                'school_name' => $name,
+                'count' => $stats['total'],
+                'pending' => $stats['pending'],
+                'approved' => $stats['approved']
+            ];
+        }, array_keys($schoolBreakdownCurrentMonth), array_values($schoolBreakdownCurrentMonth));
+
+        // Ultra-minimal profile - just basic user info
+        $reportData = [
+            'user_summary' => [
+                'basic_info' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'created_at' => $user->created_at->toDateTimeString(),
+                ],
+                'encoding_statistics' => [
+                    'applications' => [
+                        'today' => $todayCount,
+                        'total_created' => $totalCreated,
+                        'total_updated' => $totalUpdated,
+                        'existing_approved' => $existingApproved,
+                    ],
+                    'summary' => $profileStatusBreakdown,
+                    'latest_activity_date' => $latestActivityDate,
+                    'breakdowns' => [
+                        'by_program' => $programData,
+                        'by_course' => $courseData,
+                        'by_school' => $schoolData,
+                        'by_program_current_month' => $programDataCurrentMonth,
+                        'by_course_current_month' => $courseDataCurrentMonth,
+                        'by_school_current_month' => $schoolDataCurrentMonth,
+                    ]
+                ]
+            ],
+            'generated_at' => now()->toDateTimeString(),
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'profile_photo_url' => $user->profile_photo_url,
+            'has_profile_photo' => $user->hasProfilePhoto()
+        ];
+
+        return Inertia::render('User/UserProfile', [
+            'reportData' => $reportData
+        ]);
+    }
+
+    /**
+     * Get encoding records for a specific date grouped by date.
+     */
+    public function getRecordsByDate(Request $request)
+    {
+        try {
+            $request->validate([
+                'date' => ['nullable', 'date'],
+            ]);
+
+            $user = $request->user();
+            $date = $request->query('date') ? \Carbon\Carbon::parse($request->query('date')) : now();
+
+            // Get all records created by the user on the specified date
+            $records = ScholarshipRecord::where('created_by', $user->id)
+                ->whereDate('created_at', $date->toDateString())
+                ->with('profile')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($record) {
+                    $applicantName = 'Unknown';
+                    if ($record->profile) {
+                        $parts = array_filter([
+                            $record->profile->first_name,
+                            $record->profile->middle_name,
+                            $record->profile->last_name
+                        ]);
+                        $applicantName = implode(' ', $parts) ?: 'Unknown';
+                    }
+
+                    $programName = 'Unknown';
+                    if ($record->program_id) {
+                        try {
+                            $program = ScholarshipProgram::find($record->program_id);
+                            if ($program) {
+                                $programName = $program->name;
+                            }
+                        } catch (\Exception $e) {
+                            Log::warning('Error loading program for record ' . $record->id . ': ' . $e->getMessage());
+                        }
+                    }
+
+                    return [
+                        'id' => $record->id,
+                        'applicant_name' => $applicantName,
+                        'program_name' => $programName,
+                        'academic_year' => $record->academic_year,
+                        'term' => $record->term,
+                        'created_at' => $record->created_at->toDateTimeString(),
+                        'created_time' => $record->created_at->format('H:i:s'),
+                    ];
+                });
+
+            // Get all dates that have records for calendar marking
+            $recordDates = ScholarshipRecord::where('created_by', $user->id)
+                ->select(DB::raw('DATE(created_at) as record_date'))
+                ->distinct()
+                ->pluck('record_date');
+
+            return response()->json([
+                'date' => $date->toDateString(),
+                'records' => $records,
+                'record_count' => count($records),
+                'all_record_dates' => $recordDates,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching records by date: ' . $e->getMessage(), [
+                'user_id' => auth()->id(),
+                'date' => $request->query('date'),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Error fetching records',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get summary of records grouped by date for calendar view.
+     */
+    public function getRecordsSummaryByMonth(Request $request)
+    {
+        try {
+            $request->validate([
+                'year' => ['nullable', 'integer', 'min:2000', 'max:2100'],
+                'month' => ['nullable', 'integer', 'min:1', 'max:12'],
+            ]);
+
+            $user = $request->user();
+            $year = $request->query('year') ? (int)$request->query('year') : now()->year;
+            $month = $request->query('month') ? (int)$request->query('month') : now()->month;
+
+            // Get records count grouped by date for the specified month
+            $recordsByDate = ScholarshipRecord::where('created_by', $user->id)
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->select(
+                    DB::raw('DATE(created_at) as date'),
+                    DB::raw('COUNT(*) as count')
+                )
+                ->groupBy(DB::raw('DATE(created_at)'))
+                ->get()
+                ->mapWithKeys(function ($item) {
+                    return [$item->date => $item->count];
+                });
+
+            return response()->json([
+                'year' => $year,
+                'month' => $month,
+                'records_by_date' => $recordsByDate,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching records summary by month: ' . $e->getMessage(), [
+                'user_id' => auth()->id(),
+                'year' => $request->query('year'),
+                'month' => $request->query('month')
+            ]);
+
+            return response()->json([
+                'message' => 'Error fetching records summary',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

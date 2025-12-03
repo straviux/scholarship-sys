@@ -5,6 +5,7 @@ import moment from 'moment'
 import { Head, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref, onBeforeUnmount, watch, computed } from 'vue';
 import { usePermission } from '@/composable/permissions';
+import axios from 'axios';
 
 // PrimeVue Components
 // import Button from 'primevue/button';
@@ -27,6 +28,7 @@ import { usePermission } from '@/composable/permissions';
 import ApplicantFormModal from '@/Components/modals/ApplicantFormModal.vue';
 import YakapCategoryModal from '@/Components/modals/YakapCategoryModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
+import ExportSelectedModal from './Modal/ExportSelectedModal.vue';
 import PriorityModal from './Modal/PriorityModal.vue';
 import JpmModal from './Modal/JpmModal.vue';
 import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
@@ -122,7 +124,7 @@ const filter = useForm({
     course: props.filter.course || "",
     municipality: props.filter.municipality || "",
     year_level: props.filter.year_level || "",
-    yakap_category: props.filter.yakap_category || "",
+    yakap_category: props.filter.yakap_category === "All Categories" ? "" : (props.filter.yakap_category || ""),
     date_from: props.filter.date_from ? toDate(props.filter.date_from) : null,
     date_to: props.filter.date_to ? toDate(props.filter.date_to) : null,
     remarks: props.filter.remarks || "",
@@ -150,7 +152,6 @@ const jpmFilterOptions = [
 
 // YAKAP Category Filter Options
 const yakapCategoryOptions = [
-    { label: 'All Categories', value: '' },
     { label: 'YAKAP Capitol', value: 'yakap-capitol' },
     { label: 'YAKAP School', value: 'yakap-school' },
     { label: 'YAKAP Field', value: 'yakap-field' }
@@ -181,6 +182,145 @@ watch(selectedYakapCategory, (newValue) => {
 watch(selectedYakapLocation, (newValue) => {
     localStorage.setItem('selectedYakapLocation', newValue);
 });
+
+// Update YAKAP Category Modal state
+const showUpdateYakapModal = ref(false);
+const selectedProfileForYakap = ref(null);
+const updateYakapForm = useForm({
+    yakap_category: '',
+    yakap_location: ''
+});
+
+const openUpdateYakapModal = (profile) => {
+    selectedProfileForYakap.value = profile;
+    const grants = Array.isArray(profile.scholarshipGrant) ? profile.scholarshipGrant : [];
+    const grant = grants.length > 0 ? grants[0] : null;
+
+    if (!grant) {
+        // No scholarship record exists, fetch or create one
+        axios.get(route('scholarship-record.get-or-create', profile.profile_id))
+            .then(response => {
+                const createdGrant = response.data;
+                // Update the profile with the new grant
+                if (!selectedProfileForYakap.value.scholarshipGrant) {
+                    selectedProfileForYakap.value.scholarshipGrant = [];
+                }
+                selectedProfileForYakap.value.scholarshipGrant = [createdGrant];
+
+                updateYakapForm.yakap_category = createdGrant.yakap_category || 'yakap-capitol';
+                updateYakapForm.yakap_location = createdGrant.yakap_location || '';
+                showUpdateYakapModal.value = true;
+                toast.info('Scholarship record created with default YAKAP category.');
+            })
+            .catch(error => {
+                toast.error('Failed to create scholarship record');
+                console.error(error);
+            });
+    } else {
+        updateYakapForm.yakap_category = grant.yakap_category || 'yakap-capitol';
+        updateYakapForm.yakap_location = grant.yakap_location || '';
+        showUpdateYakapModal.value = true;
+    }
+};
+
+const closeUpdateYakapModal = () => {
+    showUpdateYakapModal.value = false;
+    selectedProfileForYakap.value = null;
+    updateYakapForm.reset();
+};
+
+const submitUpdateYakap = () => {
+    if (!selectedProfileForYakap.value) return;
+
+    const profile = selectedProfileForYakap.value;
+    const grants = Array.isArray(profile.scholarshipGrant) ? profile.scholarshipGrant : [];
+    const grant = grants.length > 0 ? grants[0] : null;
+
+    if (!grant || !grant.id) {
+        // If no grant exists, we need to create one first
+        // For now, show error with instruction to create record first
+        toast.error('Unable to update: No scholarship record exists. Please create one first.');
+        return;
+    }
+
+    // Convert yakap_location object to string (municipality name or school name)
+    let yakapLocation = updateYakapForm.yakap_location;
+    if (yakapLocation && typeof yakapLocation === 'object') {
+        yakapLocation = yakapLocation.name || '';
+    }
+
+    // Create a fresh form submission with proper data types
+    axios.put(route('scholarship-record.update-yakap', grant.id), {
+        yakap_category: updateYakapForm.yakap_category,
+        yakap_location: yakapLocation || null
+    }).then(response => {
+        closeUpdateYakapModal();
+        toast.success('YAKAP category updated successfully!');
+        refreshApplicationList();
+    }).catch(error => {
+        toast.error('Failed to update YAKAP category');
+        console.error(error.response?.data || error);
+    });
+}; const handleYakapCategoryChange = () => {
+    // Clear location when yakap category is changed
+    updateYakapForm.yakap_location = null;
+};
+
+const handleBatchYakapCategoryChange = () => {
+    // Clear location when yakap category is changed in batch form
+    batchYakapForm.yakap_location = null;
+};
+
+const openBatchYakapModal = () => {
+    if (selectedRows.value.length === 0) {
+        toast.warn('Please select at least one applicant');
+        return;
+    }
+    batchYakapForm.yakap_category = '';
+    batchYakapForm.yakap_location = '';
+    showBatchYakapModal.value = true;
+};
+
+const closeBatchYakapModal = () => {
+    showBatchYakapModal.value = false;
+    selectedRows.value = [];
+    batchYakapForm.reset();
+};
+
+const submitBatchYakapUpdate = () => {
+    if (selectedRows.value.length === 0) {
+        toast.error('No applicants selected');
+        return;
+    }
+
+    if (!batchYakapForm.yakap_category) {
+        toast.error('Please select a YAKAP category');
+        return;
+    }
+
+    // Convert yakap_location object to string if needed
+    let yakapLocation = batchYakapForm.yakap_location;
+    if (yakapLocation && typeof yakapLocation === 'object') {
+        yakapLocation = yakapLocation.name || '';
+    }
+
+    // Prepare profile IDs for batch update
+    const profileIds = selectedRows.value.map(row => row.profile_id);
+
+    // Send batch update request
+    axios.post(route('scholarship-record.batch-update-yakap'), {
+        profile_ids: profileIds,
+        yakap_category: batchYakapForm.yakap_category,
+        yakap_location: yakapLocation || null
+    }).then(response => {
+        closeBatchYakapModal();
+        toast.success(`YAKAP category updated for ${profileIds.length} applicant(s)!`);
+        refreshApplicationList();
+    }).catch(error => {
+        toast.error('Failed to update YAKAP categories');
+        console.error(error.response?.data || error);
+    });
+};
 
 const editApplicant = (profile) => {
     modalProfile.value = profile;
@@ -229,7 +369,8 @@ const filterList = (resetToPage1 = false) => {
     const name = filter.name.toLowerCase() || "";
     const school = filter.school?.shortname?.toLowerCase() || "";
     const year_level = filter.year_level?.value?.toLowerCase() || "";
-    const yakap_category = filter.yakap_category || "";
+    // Note: yakap_category can be an empty string (meaning "All Categories"), only filter if it has a non-empty value
+    const yakap_category = filter.yakap_category && filter.yakap_category !== '' ? filter.yakap_category : "";
     const remarks = filter.remarks.toLowerCase() || "";
     const global_search = globalFilter.value.toLowerCase() || "";
     const records = filter.records;
@@ -250,7 +391,10 @@ const filterList = (resetToPage1 = false) => {
     if (name) params.name = name;
     if (parent_name) params.parent_name = parent_name;
     if (year_level) params.year_level = year_level;
-    if (yakap_category) params.yakap_category = yakap_category;
+    // Only add yakap_category if it's not empty (empty means "All Categories")
+    if (yakap_category && yakap_category.trim() !== '') {
+        params.yakap_category = yakap_category;
+    }
     if (date_from) params.date_from = date_from;
     if (date_to) params.date_to = date_to;
     if (remarks) params.remarks = remarks;
@@ -273,6 +417,7 @@ const filterList = (resetToPage1 = false) => {
     router.get(route('waitinglist.index'), params, {
         preserveState: true,
         preserveScroll: true,
+        replace: true, // Replace URL without adding to history
     });
 }
 
@@ -326,6 +471,7 @@ watch(() => ({
     course: filter.course,
     municipality: filter.municipality,
     year_level: filter.year_level,
+    yakap_category: filter.yakap_category,
     remarks: filter.remarks,
     date_from: filter.date_from ? filter.date_from.toString() : null,
     date_to: filter.date_to ? filter.date_to.toString() : null,
@@ -365,6 +511,14 @@ const showAllFilters = ref(false);
 const globalFilter = ref(props.filter.global_search || '');
 const first = ref(0);
 const rows = ref(parseInt(props.records) || 10);
+
+// Row selection state
+const selectedRows = ref([]);
+const showBatchYakapModal = ref(false);
+const batchYakapForm = useForm({
+    yakap_category: '',
+    yakap_location: ''
+});
 
 // Watch for changes in globalFilter and trigger backend search only
 watch(globalFilter, (newValue) => {
@@ -561,6 +715,65 @@ const handleCardAction = ({ action, applicant }) => {
         default:
             console.warn('Unknown action:', action);
     }
+};
+
+// Export Selected Rows Modal state
+const showExportModal = ref(false);
+const exportPaperSize = ref('A4');
+const exportOrientation = ref('landscape');
+const exportReportType = ref('list');
+
+const paperSizeOptions = [
+    { label: 'A4', value: 'A4' },
+    { label: 'Letter', value: 'Letter' },
+    { label: 'Legal/Long', value: 'Legal' },
+];
+
+const orientationOptions = [
+    { label: 'Portrait', value: 'portrait' },
+    { label: 'Landscape', value: 'landscape' },
+];
+
+const reportTypeOptions = [
+    { label: 'Detailed List', value: 'list' },
+    { label: 'Summary', value: 'summary' }
+];
+
+const openExportModal = () => {
+    if (selectedRows.value.length === 0) {
+        toast.warn('Please select at least one applicant');
+        return;
+    }
+    showExportModal.value = true;
+};
+
+const closeExportModal = () => {
+    showExportModal.value = false;
+};
+
+const exportSelectedRows = (format) => {
+    if (selectedRows.value.length === 0) {
+        toast.error('No applicants selected');
+        return;
+    }
+
+    // Build query parameters with selected profile IDs
+    const profileIds = selectedRows.value.map(row => row.profile_id).join(',');
+    const params = new URLSearchParams({
+        profile_ids: profileIds,
+        report_type: exportReportType.value,
+        paper_size: exportPaperSize.value,
+        orientation: exportOrientation.value
+    });
+
+    if (format === 'pdf') {
+        window.open(`/api/export-selected/pdf?${params.toString()}`, '_blank');
+    } else if (format === 'excel') {
+        window.open(`/api/export-selected/excel?${params.toString()}`, '_blank');
+    }
+
+    closeExportModal();
+    toast.success(`Exporting ${selectedRows.value.length} applicant(s) as ${format.toUpperCase()}...`);
 };
 
 // Utility functions for applicant data formatting
@@ -817,8 +1030,8 @@ const formatDate = (date) => {
                                 <div class="flex flex-col">
                                     <label class="text-xs font-medium text-gray-600 mb-1">YAKAP Category</label>
                                     <Select v-model="filter.yakap_category" :options="yakapCategoryOptions"
-                                        optionLabel="label" optionValue="value" placeholder="All Categories"
-                                        size="small" class="w-full" />
+                                        optionLabel="label" optionValue="value" placeholder="All Categories" showClear
+                                        :clearable="true" size="small" class="w-full" />
                                 </div>
                             </div>
                         </template>
@@ -828,6 +1041,27 @@ const formatDate = (date) => {
 
             <!-- Applicants DataTable -->
             <div class="mt-8">
+                <!-- Batch Update Section -->
+                <div v-if="selectedRows.length > 0"
+                    class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <i class="pi pi-exclamation-circle text-yellow-600 text-xl"></i>
+                        <div>
+                            <div class="font-semibold text-yellow-900">{{ selectedRows.length }} applicant(s) selected
+                            </div>
+                            <div class="text-sm text-yellow-700">Use batch update to change YAKAP category for all
+                                selected
+                                applicants</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <Button icon="pi pi-download" @click="openExportModal" severity="info" label="Export Selected"
+                            outlined />
+                        <Button icon="pi pi-pencil" @click="openBatchYakapModal" severity="warning"
+                            label="Batch Update YAKAP" />
+                    </div>
+                </div>
+
                 <Panel>
                     <!-- Info Bar -->
                     <div class="md:grid hidden grid-cols-3 items-center mb-4 bg-gray-50 rounded -mt-2 p-2">
@@ -860,7 +1094,11 @@ const formatDate = (date) => {
                         responsiveLayout="scroll" :emptyMessage="'No applicants to display'" :lazy="true" paginator
                         :rows="rows" :totalRecords="totalRecords" :first="first" @page="onPageChange"
                         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                        :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
+                        :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
+                        v-model:selection="selectedRows" dataKey="profile_id">
+
+                        <!-- Selection Column -->
+                        <Column selectionMode="multiple" :exportable="false" style="width: 3rem"></Column>
 
                         <!-- Date Filed Column -->
                         <Column header="Date Filed" style="min-width: 110px">
@@ -1087,7 +1325,7 @@ const formatDate = (date) => {
                         </Column>
 
                         <!-- Actions Column -->
-                        <Column header="Actions" style="width: 200px">
+                        <Column header="Actions" style="width: 250px">
                             <template #body="slotProps">
 
                                 <div class="flex gap-1 justify-center flex-wrap">
@@ -1098,6 +1336,11 @@ const formatDate = (date) => {
 
                                     <Button icon="pi pi-user-edit" severity="help" size="small" rounded outlined
                                         v-tooltip.top="'Edit Applicant'" @click="editApplicant(slotProps.data)"
+                                        v-if="hasPermission('applicants.edit')" />
+
+                                    <Button icon="pi pi-heart" severity="success" size="small" rounded outlined
+                                        v-tooltip.top="'Update YAKAP Category'"
+                                        @click="openUpdateYakapModal(slotProps.data)"
                                         v-if="hasPermission('applicants.edit')" />
 
                                     <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
@@ -1473,6 +1716,136 @@ const formatDate = (date) => {
         <!-- YAKAP Category Modal - for selecting category when creating new applicant -->
         <YakapCategoryModal v-model:visible="showYakapCategoryModal" @selected="handleYakapCategorySelected" />
 
+        <!-- Update YAKAP Category Modal -->
+        <Dialog v-model:visible="showUpdateYakapModal" modal header="Update YAKAP Category" :style="{ width: '50vw' }"
+            @hide="closeUpdateYakapModal">
+            <div class="space-y-4" v-if="selectedProfileForYakap">
+                <div class="bg-blue-50 p-3 rounded border-l-4 border-blue-500 mb-4">
+                    <div class="font-semibold text-blue-900">
+                        {{ selectedProfileForYakap.last_name }}, {{ selectedProfileForYakap.first_name }}
+                    </div>
+                    <div class="text-sm text-gray-600">{{ selectedProfileForYakap.contact_no }}</div>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <label for="yakap-category-update" class="font-medium text-gray-700">YAKAP Category:</label>
+                    <Select v-model="updateYakapForm.yakap_category" :options="yakapCategoryOptions" optionLabel="label"
+                        optionValue="value" placeholder="Select YAKAP Category" class="w-full"
+                        inputId="yakap-category-update" @change="handleYakapCategoryChange" />
+                </div>
+
+                <!-- Municipality Selection for YAKAP Field -->
+                <div v-if="updateYakapForm.yakap_category === 'yakap-field'" class="flex flex-col gap-3">
+                    <label for="yakap-municipality" class="font-medium text-gray-700">Municipality:</label>
+                    <MunicipalitySelect v-model="updateYakapForm.yakap_location" placeholder="Select Municipality"
+                        class="w-full" :clearable="false" inputId="yakap-municipality" />
+                </div>
+
+                <!-- School Selection for YAKAP School -->
+                <div v-if="updateYakapForm.yakap_category === 'yakap-school'" class="flex flex-col gap-3">
+                    <label for="yakap-school" class="font-medium text-gray-700">School:</label>
+                    <SchoolSelect v-model="updateYakapForm.yakap_location" placeholder="Select School" class="w-full"
+                        :clearable="false" inputId="yakap-school" />
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Cancel" icon="pi pi-times" @click="closeUpdateYakapModal" class="p-button-text" />
+                <Button label="Update" icon="pi pi-check" @click="submitUpdateYakap" severity="success"
+                    :loading="updateYakapForm.processing" />
+            </template>
+        </Dialog>
+
+        <!-- Batch Update YAKAP Category Modal -->
+        <Dialog v-model:visible="showBatchYakapModal" modal header="Batch Update YAKAP Category"
+            :style="{ width: '900px' }" @hide="closeBatchYakapModal">
+
+            <form @submit.prevent="submitBatchYakapUpdate" class="px-4 pb-2">
+                <!-- Two Column Layout -->
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <!-- LEFT COLUMN: Summary & Location -->
+                    <div>
+                        <h4 class="text-base font-semibold text-gray-700 mb-3 pb-2 border-b">Selection Summary</h4>
+
+                        <!-- Selection Count -->
+                        <div class="mb-4 p-3 bg-blue-50 rounded border border-blue-200">
+                            <div class="font-semibold text-blue-900">{{ selectedRows.length }} applicant(s) selected
+                            </div>
+                            <div class="text-sm text-blue-700 mt-1">Batch update will apply YAKAP category to all
+                                selected
+                                applicants</div>
+                        </div>
+
+
+
+                        <!-- Selected Applicants Preview -->
+                        <div class="mb-4">
+                            <h5 class="text-sm font-medium text-gray-700 mb-2">Selected Applicants</h5>
+                            <div class="bg-gray-50 rounded p-3 max-h-64 overflow-y-auto">
+                                <div v-if="selectedRows.length > 0" class="space-y-2">
+                                    <div v-for="(row, idx) in selectedRows.slice(0, 10)" :key="idx"
+                                        class="text-xs text-gray-600 py-1 px-2 bg-white rounded border">
+                                        {{ row.last_name }}, {{ row.first_name }}
+                                    </div>
+                                    <div v-if="selectedRows.length > 10" class="text-xs text-gray-500 italic px-2">
+                                        ... and {{ selectedRows.length - 10 }} more
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: YAKAP Category Selection -->
+                    <div>
+                        <h4 class="text-base font-semibold text-gray-700 mb-3 pb-2 border-b">Update Options</h4>
+
+                        <!-- YAKAP Category -->
+                        <div class="mb-4">
+                            <label class="block mb-2 text-sm font-medium text-gray-700">YAKAP Category</label>
+                            <Select v-model="batchYakapForm.yakap_category" :options="yakapCategoryOptions"
+                                optionLabel="label" optionValue="value" placeholder="Select YAKAP Category"
+                                class="w-full" @change="handleBatchYakapCategoryChange" />
+                            <small class="text-xs text-gray-500 mt-1">Select the YAKAP category to apply to all selected
+                                applicants</small>
+                        </div>
+
+                        <!-- Category Description -->
+                        <div class="mb-4 p-3 bg-gray-50 rounded border border-gray-200">
+                            <div v-if="batchYakapForm.yakap_category === 'yakap-capitol'" class="text-sm">
+                                <span class="font-medium text-gray-700">YAKAP Capitol:</span>
+                                <p class="text-gray-600 text-xs mt-1">No specific location required</p>
+                            </div>
+                            <!-- Location Selection (shown based on category) -->
+                            <div v-if="batchYakapForm.yakap_category === 'yakap-field'" class="mb-4">
+                                <label class="block mb-2 text-sm font-medium text-gray-700">Municipality</label>
+                                <MunicipalitySelect v-model="batchYakapForm.yakap_location"
+                                    placeholder="Select Municipality" class="w-full" :clearable="false" />
+                            </div>
+
+                            <div v-if="batchYakapForm.yakap_category === 'yakap-school'" class="mb-4">
+                                <label class="block mb-2 text-sm font-medium text-gray-700">School</label>
+                                <SchoolSelect v-model="batchYakapForm.yakap_location" placeholder="Select School"
+                                    class="w-full" :clearable="false" />
+                            </div>
+                        </div>
+
+                        <!-- Clear Button -->
+                        <div class="flex justify-end">
+                            <Button type="button" label="Clear Selection" severity="secondary"
+                                @click="selectedRows = []" outlined text size="small" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-2 pt-4 border-t">
+                    <Button type="button" label="Cancel" severity="secondary" @click="closeBatchYakapModal" outlined />
+                    <Button type="submit" label="Update All" icon="pi pi-check" severity="success"
+                        :disabled="!batchYakapForm.yakap_category" />
+                </div>
+            </form>
+        </Dialog>
+
         <!-- Application Form Modal - for creating/editing applicants -->
         <ApplicantFormModal v-model:visible="showApplicationFormModal" :mode="applicationFormMode"
             :profile="modalProfile" :yakap-category="selectedYakapCategory" :yakap-location="selectedYakapLocation"
@@ -1487,5 +1860,9 @@ const formatDate = (date) => {
         <!-- Priority Modal -->
         <PriorityModal :show="showPriorityModal" :applicant="selectedApplicantForPriority"
             @update:show="showPriorityModal = $event" @success="handlePrioritySuccess" />
+
+        <!-- Export Selected Rows Modal -->
+        <ExportSelectedModal :show="showExportModal" :selected-rows="selectedRows"
+            @update:show="showExportModal = $event" />
     </AdminLayout>
 </template>

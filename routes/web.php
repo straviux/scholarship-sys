@@ -116,10 +116,14 @@ Route::middleware(['auth'])->group(function () {
 
 // User Profile Route - Display user account information
 Route::middleware(['auth'])->group(function () {
-    Route::get('/user/profile', [SystemReportController::class, 'getUserSummaryReport'])->name('user.profile');
+    Route::get('/user/profile', [ProfileController::class, 'getUserSummaryReport'])->name('user.profile');
     Route::put('/user/profile', [ProfileController::class, 'updateProfile'])->name('user.profile.update');
     Route::post('/user/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
     Route::post('/user/profile/generate-qr', [ProfileController::class, 'generateQrCode'])->name('profile.generate-qr');
+
+    // Calendar and encoding records routes
+    Route::get('/api/user/records-by-date', [ProfileController::class, 'getRecordsByDate'])->name('api.records.bydate');
+    Route::get('/api/user/records-summary-month', [ProfileController::class, 'getRecordsSummaryByMonth'])->name('api.records.summary-month');
 });
 
 Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->group(function () {
@@ -165,6 +169,9 @@ Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->gro
     Route::post('/scholarship-records/{id}/approve', 'approveScholarshipRecord')->name('scholarship-record.approve');
     Route::post('/scholarship-records/{id}/decline', 'declineScholarshipRecord')->name('scholarship-record.decline');
     Route::put('/scholarship-records/{id}/grant-provision', 'updateGrantProvision')->name('scholarship-record.update-grant-provision');
+    Route::put('/scholarship-records/{id}/yakap', 'updateYakapCategory')->name('scholarship-record.update-yakap');
+    Route::get('/scholarship-records/profile/{profile_id}/get-or-create', 'getOrCreateForProfile')->name('scholarship-record.get-or-create');
+    Route::post('/scholarship-records/batch/yakap', 'batchUpdateYakapCategory')->name('scholarship-record.batch-update-yakap');
     Route::put('/scholarship_records.update-status/{scholarship_records}', 'updateScholarshipStatusApi')->name('scholarship_records-api.updatestatus');
     Route::put('/scholarship_records.update-remarks/{scholarship_records}', 'updateRemarks')->name('scholarship_records-api.updateremarks');
     Route::post('/scholarship_records/{record}/requirements/upload', 'uploadRequirement')->name('scholarship.requirements.upload');
@@ -319,6 +326,10 @@ Route::middleware(['auth'])->controller(App\Http\Controllers\SchoolController::c
 Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ReportController::class, 'generateWaitinglist'])->name('report.generatePdf');
 // Report Excel generation route (Waiting List / Applicants)
 Route::middleware(['auth'])->get('/api/report/excel', [App\Http\Controllers\ReportController::class, 'generateExcelWaitingList'])->name('report.generateExcelWaitingList');
+
+// Export Selected Rows PDF/Excel generation routes
+Route::middleware(['auth'])->get('/api/export-selected/pdf', [App\Http\Controllers\ReportController::class, 'exportSelectedPdf'])->name('export-selected.pdf');
+Route::middleware(['auth'])->get('/api/export-selected/excel', [App\Http\Controllers\ReportController::class, 'exportSelectedExcel'])->name('export-selected.excel');
 
 // Scholarship Report PDF generation route
 Route::middleware(['auth'])->get('/api/report/scholarship/pdf', [App\Http\Controllers\ReportController::class, 'generateScholarshipPdf'])->name('report.scholarship.pdf');

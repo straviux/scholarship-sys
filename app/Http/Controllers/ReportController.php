@@ -7,6 +7,7 @@ use App\Exports\ScholarshipReportExport;
 use Illuminate\Http\Request;
 use App\Models\ScholarshipProfile;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Browsershot\Browsershot;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -938,5 +939,133 @@ class ReportController extends Controller
         $filename = "scholarship_report_{$currentDateTime}.xlsx";
 
         return Excel::download(new ScholarshipReportExport($profiles, $summary, $filters, $reportType, $canViewJpm), $filename);
+    }
+
+    /**
+     * Export selected applicants as PDF
+     */
+    public function exportSelectedPdf(Request $request)
+    {
+        // Get profile IDs from request
+        $profileIds = array_filter(array_map('trim', explode(',', $request->input('profile_ids', ''))));
+
+        if (empty($profileIds)) {
+            return response()->json(['error' => 'No profiles selected'], 400);
+        }
+
+        // Fetch selected profiles
+        $profiles = ScholarshipProfile::with(['scholarshipGrant'])
+            ->whereIn('profile_id', $profileIds)
+            ->get();
+
+        if ($profiles->isEmpty()) {
+            return response()->json(['error' => 'No profiles found'], 404);
+        }
+
+        $paperSize = $request->input('paper_size', 'A4');
+        $orientation = $request->input('orientation', 'landscape');
+
+        // Build filters array (empty for selected applicants)
+        $filters = [];
+
+        // Check if user has permission to view JPM highlighting
+        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm');
+
+        // Always use list report type for selected applicants (no summary)
+        $reportType = 'list';
+
+        // Render HTML view for PDF
+        $html = View::make('exports.selected-applicants', [
+            'profiles' => $profiles,
+            'reportType' => $reportType,
+            'summary' => null,
+            'filters' => $filters,
+            'canViewJpm' => $canViewJpm,
+            'paperSize' => $paperSize,
+            'orientation' => $orientation,
+        ])->render();
+
+        try {
+            $browsershot = Browsershot::html($html)
+                ->setChromePath($this->getChromePath())
+                ->showBackground()
+                ->showBrowserHeaderAndFooter()
+                ->footerHtml('<div class="report-footer" style="font-size: 9px; color: #444;position:fixed;right:0.5cm;bottom:0.1cm;">
+                    <span>Generated on <span class="date "></span></span>
+                    <span> - Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+                </div>')
+                ->margins(4, 4, 4, 4);
+
+            if ($orientation === 'landscape') {
+                $browsershot->landscape();
+            }
+
+            // Handle PH Long custom size
+            if ($paperSize === 'Legal') {
+                $browsershot->setPaperSize(215.9, 330.2);
+            } else {
+                $browsershot->format($paperSize);
+            }
+
+            $pdf = $browsershot->pdf();
+
+            return response($pdf)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="selected-applicants.pdf"');
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to generate PDF: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Export selected applicants as Excel
+     */
+    public function exportSelectedExcel(Request $request)
+    {
+        // Get profile IDs from request
+        $profileIds = array_filter(array_map('trim', explode(',', $request->input('profile_ids', ''))));
+
+        if (empty($profileIds)) {
+            return response()->json(['error' => 'No profiles selected'], 400);
+        }
+
+        // Fetch selected profiles
+        $profiles = ScholarshipProfile::with(['scholarshipGrant'])
+            ->whereIn('profile_id', $profileIds)
+            ->get();
+
+        if ($profiles->isEmpty()) {
+            return response()->json(['error' => 'No profiles found'], 404);
+        }
+
+        // Always use list report type for selected applicants (no summary)
+        $reportType = 'list';
+
+        // Build filters array (empty for selected applicants)
+        $filters = [];
+
+        // Check if user has permission to view JPM highlighting
+        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm');
+
+        $currentDateTime = \Carbon\Carbon::now()->format('Y-m-d_H-i-s');
+        $filename = "selected-applicants_{$currentDateTime}.xlsx";
+
+        // Store the file temporarily
+        $path = 'exports/' . $filename;
+        Excel::store(
+            new ScholarshipReportExport($profiles, null, $filters, $reportType, $canViewJpm),
+            $path,
+            'local'
+        );
+
+        // Read and return the file with inline disposition (view in browser)
+        $file = \Storage::disk('local')->get($path);
+
+        // Clean up the temporary file
+        \Storage::disk('local')->delete($path);
+
+        return response($file)
+            ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
     }
 }
