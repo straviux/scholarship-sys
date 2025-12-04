@@ -1,6 +1,11 @@
 import './bootstrap';
 import '../css/app.css';
 
+// Normalize display scaling by detecting device pixel ratio
+// This accounts for Windows DPI scaling (125%, 150%, etc.)
+const dpr = window.devicePixelRatio || 1;
+document.documentElement.style.setProperty('--device-pixel-ratio', dpr);
+
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
