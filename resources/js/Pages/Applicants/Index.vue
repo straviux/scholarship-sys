@@ -586,22 +586,13 @@ watch(() => rows.value, () => {
     first.value = (filter.page - 1) * rows.value;
 });
 
-// Computed for DataTable data
+// Memoization cache for expensive computations
+const jpmStatusCache = new Map();
+const formatMemoCache = new Map();
+
+// Pass raw data directly - transformations happen only on render
 const applicants = computed(() => {
-    const data = props.profiles.data || [];
-
-    // Data is already filtered in the backend to exclude approved and declined applications
-    const filteredData = data;
-
-    // Ensure JPM boolean fields are properly converted to boolean values
-    return filteredData.map(profile => ({
-        ...profile,
-        is_jpm_member: Boolean(profile.is_jpm_member),
-        is_father_jpm: Boolean(profile.is_father_jpm),
-        is_mother_jpm: Boolean(profile.is_mother_jpm),
-        is_guardian_jpm: Boolean(profile.is_guardian_jpm),
-        is_not_jpm: Boolean(profile.is_not_jpm),
-    }));
+    return props.profiles.data || [];
 });
 
 // Delete confirmation propertiesr
@@ -683,6 +674,11 @@ const handleApprovalAction = () => {
 };
 
 const refreshApplicationList = () => {
+    // Clear memoization caches before refresh
+    applicantMemoCache.clear();
+    jpmStatusMemoCache.clear();
+    formatMemoCache.clear();
+
     router.reload({
         only: ['profiles'],
         preserveState: true,
@@ -804,16 +800,31 @@ const exportSelectedRows = (format) => {
     toast.success(`Exporting ${selectedRows.value.length} applicant(s) as ${format.toUpperCase()}...`);
 };
 
-// Utility functions for applicant data formatting
+// Utility functions for applicant data formatting (memoized)
 const getApplicantInitials = (applicant) => {
     if (!applicant) return '';
+
+    const cacheKey = `initials_${applicant.profile_id}`;
+    if (formatMemoCache.has(cacheKey)) {
+        return formatMemoCache.get(cacheKey);
+    }
+
     const firstInitial = applicant.first_name?.charAt(0) || '';
     const lastInitial = applicant.last_name?.charAt(0) || '';
-    return `${firstInitial}${lastInitial}`.toUpperCase();
+    const result = `${firstInitial}${lastInitial}`.toUpperCase();
+
+    formatMemoCache.set(cacheKey, result);
+    return result;
 };
 
 const getApplicantFullName = (applicant) => {
     if (!applicant) return '';
+
+    const cacheKey = `fullname_${applicant.profile_id}`;
+    if (formatMemoCache.has(cacheKey)) {
+        return formatMemoCache.get(cacheKey);
+    }
+
     const parts = [
         applicant.last_name,
         ',',
@@ -822,12 +833,21 @@ const getApplicantFullName = (applicant) => {
         applicant.extension_name
     ].filter(Boolean);
 
-    return parts.join(' ').replace(' ,', ',');
+    const result = parts.join(' ').replace(' ,', ',');
+    formatMemoCache.set(cacheKey, result);
+    return result;
 };
 
-// Get JPM status for tag display with member details
+// Get JPM status for tag display with member details (memoized)
+const jpmStatusMemoCache = new Map();
 const getJpmStatus = (profile) => {
     if (!profile) return null;
+
+    // Use profile_id as cache key
+    const cacheKey = profile.profile_id;
+    if (jpmStatusMemoCache.has(cacheKey)) {
+        return jpmStatusMemoCache.get(cacheKey);
+    }
 
     const members = [];
     if (profile.is_jpm_member) members.push('Applicant');
@@ -835,31 +855,26 @@ const getJpmStatus = (profile) => {
     if (profile.is_mother_jpm) members.push('Mother');
     if (profile.is_guardian_jpm) members.push('Guardian');
 
+    let result = null;
     if (members.length > 0) {
-        return {
+        result = {
             status: 'member',
             members: members
         };
-    }
-
-    // Check if explicitly marked as "Not JPM"
-    if (profile.is_not_jpm) {
-        return {
+    } else if (profile.is_not_jpm) {
+        result = {
+            status: 'not_member',
+            members: []
+        };
+    } else if (profile.jpm_remarks && profile.jpm_remarks.trim() !== '') {
+        result = {
             status: 'not_member',
             members: []
         };
     }
 
-    // If jpm_remarks exists, it means they've been checked but not a member
-    if (profile.jpm_remarks && profile.jpm_remarks.trim() !== '') {
-        return {
-            status: 'not_member',
-            members: []
-        };
-    }
-
-    // Return null if no JPM status has been tagged
-    return null;
+    jpmStatusMemoCache.set(cacheKey, result);
+    return result;
 };
 
 // Get tag severity for JPM status
@@ -886,6 +901,17 @@ const getJpmTagLabel = (statusObj) => {
 const getJpmMemberDetails = (statusObj) => {
     if (!statusObj || statusObj.status !== 'member' || !statusObj.members.length) return '';
     return statusObj.members.join(', ');
+};
+
+// Memoized date formatter to avoid moment() calls on every render
+const dateFormatterCache = new Map();
+const formatDateFiled = (date) => {
+    if (!date) return '-';
+    const cacheKey = date.toString();
+    if (!dateFormatterCache.has(cacheKey)) {
+        dateFormatterCache.set(cacheKey, moment(date).format('MMM DD, YYYY'));
+    }
+    return dateFormatterCache.get(cacheKey);
 };
 
 const getApplicantFullAddress = (applicant) => {
@@ -1123,7 +1149,8 @@ const formatDate = (date) => {
                         :rows="rows" :totalRecords="totalRecords" :first="first" @page="onPageChange"
                         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                         :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
-                        v-model:selection="selectedRows" dataKey="profile_id">
+                        v-model:selection="selectedRows" dataKey="profile_id"
+                        :rowsPerPageOptions="[10, 25, 50, 100, 250, 500]" :scrollable="true" scrollHeight="600px">
 
                         <!-- Selection Column -->
                         <Column selectionMode="multiple" :exportable="false" style="width: 3rem"></Column>
@@ -1132,8 +1159,7 @@ const formatDate = (date) => {
                         <Column header="Date Filed" style="min-width: 110px">
                             <template #body="slotProps">
                                 <div class="text-sm font-medium">
-                                    {{ slotProps.data.date_filed ? moment(slotProps.data.date_filed).format(`MMM DD,
-                                    YYYY`) : '-' }}
+                                    {{ formatDateFiled(slotProps.data.date_filed) }}
                                 </div>
                             </template>
                         </Column>
@@ -1180,21 +1206,21 @@ const formatDate = (date) => {
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Prog. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Cour. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_course || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Sch. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_school_course || '-'
-                                                }}</span>
+                                                    }}</span>
 
                                             </div>
                                         </div>
@@ -1296,10 +1322,10 @@ const formatDate = (date) => {
                             <template #body="slotProps">
                                 <div class="flex flex-col gap-1 text-xs">
                                     <div v-if="slotProps.data.created_by" class="font-medium text-gray-700">
-                                        {{ slotProps.data.created_by }}
+                                        {{ slotProps.data.created_by.name }}
                                     </div>
                                     <div v-if="slotProps.data.created_at" class="text-gray-500">
-                                        {{ moment(slotProps.data.created_at).format('MMM DD, YYYY') }}
+                                        {{ formatDateFiled(slotProps.data.created_at) }}
                                     </div>
                                     <span v-if="!slotProps.data.created_by && !slotProps.data.created_at"
                                         class="text-gray-400">-</span>
@@ -1482,12 +1508,12 @@ const formatDate = (date) => {
                                 getApplicantFullName(selectedApplicantForReview) }}</h3>
                             <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
                                 <span><i class="pi pi-phone mr-1"></i>{{ selectedApplicantForReview.contact_no || 'N/A'
-                                }}</span>
+                                    }}</span>
                                 <span><i class="pi pi-envelope mr-1"></i>{{ selectedApplicantForReview.email || 'N/A'
-                                }}</span>
+                                    }}</span>
                                 <span><i class="pi pi-calendar mr-1"></i>{{
                                     formatDate(selectedApplicantForReview.date_filed)
-                                }}</span>
+                                    }}</span>
                             </div>
                         </div>
                         <!-- Queue Numbers -->
@@ -1574,7 +1600,7 @@ const formatDate = (date) => {
                                             <label class="text-gray-600">Income</label>
                                             <div class="font-medium">{{ selectedApplicantForReview.gross_monthly_income
                                                 || 'N/A'
-                                            }}</div>
+                                                }}</div>
                                         </div>
                                         <div>
                                             <label class="text-gray-600">Address</label>

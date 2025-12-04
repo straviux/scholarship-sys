@@ -24,16 +24,16 @@ class Course extends Model
 
     public function createdBy()
     {
-        return $this->belongsTo(User::class, 'created_by')->select(['id', 'name']);
+        return $this->belongsTo(User::class, 'created_by');
     }
     public function updatedBy()
     {
-        return $this->belongsTo(User::class, 'updated_by')->select(['id', 'name']);
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function scholarshipProgram()
     {
-        return $this->belongsTo(ScholarshipProgram::class, 'scholarship_program_id')->select(['id', 'name']);
+        return $this->belongsTo(ScholarshipProgram::class, 'scholarship_program_id');
     }
 
     public function scholars()

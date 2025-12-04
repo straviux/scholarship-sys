@@ -123,16 +123,16 @@ class ScholarshipProfile extends Model
 
     public function createdBy()
     {
-        return $this->belongsTo(User::class, 'created_by')->select(['id', 'name']);
+        return $this->belongsTo(User::class, 'created_by');
     }
     public function updatedBy()
     {
-        return $this->belongsTo(User::class, 'updated_by')->select(['id', 'name']);
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function priorityAssignedBy()
     {
-        return $this->belongsTo(User::class, 'priority_assigned_by')->select(['id', 'name']);
+        return $this->belongsTo(User::class, 'priority_assigned_by');
     }
 
     public static function boot()

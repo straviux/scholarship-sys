@@ -106,12 +106,12 @@ class ScholarshipRecord extends Model
 
     public function course()
     {
-        return $this->hasOne(Course::class, 'id', 'course_id')->select('courses.id', 'courses.name', 'courses.shortname');
+        return $this->hasOne(Course::class, 'id', 'course_id');
     }
 
     public function school()
     {
-        return $this->hasOne(School::class, 'id', 'school_id')->select('schools.id', 'schools.name', 'schools.shortname');
+        return $this->hasOne(School::class, 'id', 'school_id');
     }
 
     public function program()
@@ -123,7 +123,7 @@ class ScholarshipRecord extends Model
             'id',           // Foreign key on programs table
             'course_id',    // Local key on scholars table
             'scholarship_program_id'    // Local key on courses table
-        )->with('requirements')->select('scholarship_programs.id', 'scholarship_programs.name', 'scholarship_programs.shortname');
+        );
     }
 
     public function requirements()
@@ -138,7 +138,7 @@ class ScholarshipRecord extends Model
 
     public function profile()
     {
-        return $this->belongsTo(ScholarshipProfile::class, 'profile_id')->select('profile_id', 'first_name', 'last_name', 'middle_name', 'extension_name', 'gender');
+        return $this->belongsTo(ScholarshipProfile::class, 'profile_id');
     }
 
     // Enhanced workflow relationships

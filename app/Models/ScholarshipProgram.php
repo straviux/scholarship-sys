@@ -23,11 +23,11 @@ class ScholarshipProgram extends Model
 
     public function courses()
     {
-        return $this->hasMany(Course::class, 'scholarship_program_id')->select(['id', 'name', 'shortname']);
+        return $this->hasMany(Course::class, 'scholarship_program_id');
     }
     public function createdBy()
     {
-        return $this->belongsTo(User::class, 'created_by')->select(['id', 'name']);
+        return $this->belongsTo(User::class, 'created_by');
     }
     public function updatedBy()
     {
@@ -36,12 +36,19 @@ class ScholarshipProgram extends Model
 
     public function requirements()
     {
-        return $this->belongsToMany(Requirement::class, 'program_requirements', 'program_id', 'requirement_id')->select('*');
+        return $this->belongsToMany(Requirement::class, 'program_requirements', 'program_id', 'requirement_id');
     }
 
     public function scholarshipRecords()
     {
-        return $this->hasManyThrough(ScholarshipRecord::class, Course::class);
+        return $this->hasManyThrough(
+            ScholarshipRecord::class,
+            Course::class,
+            'scholarship_program_id', // Foreign key on courses table
+            'course_id', // Foreign key on scholarship_records table
+            'id', // Local key on scholarship_programs table
+            'id'  // Local key on courses table
+        );
     }
 
 
