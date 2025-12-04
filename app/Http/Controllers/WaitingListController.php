@@ -53,6 +53,7 @@ class WaitingListController extends Controller
                 'scholarship_profiles.priority_level',
                 'scholarship_profiles.created_by',
                 'scholarship_profiles.priority_assigned_by',
+                'scholarship_profiles.remarks',
                 'scholarship_records.date_filed'
             )
             ->where(function ($q) use ($programId) {
@@ -154,6 +155,7 @@ class WaitingListController extends Controller
                     ->orWhere('scholarship_profiles.contact_no', 'like', $searchTerm)
                     ->orWhere('scholarship_profiles.email', 'like', $searchTerm)
                     ->orWhere('scholarship_profiles.municipality', 'like', $searchTerm)
+                    ->orWhere('scholarship_profiles.remarks', 'like', $searchTerm)
                     ->orWhereRaw("CONCAT(scholarship_profiles.first_name, ' ', scholarship_profiles.last_name) LIKE ?", [$searchTerm])
                     ->orWhereRaw("CONCAT(scholarship_profiles.last_name, ', ', scholarship_profiles.first_name) LIKE ?", [$searchTerm]);
             });
