@@ -166,7 +166,7 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['update:visible', 'success']);
+const emit = defineEmits(['update:visible', 'success', 'applicant-created']);
 
 const activeStep = ref('1');
 const isValidating = ref(false);
@@ -456,9 +456,20 @@ const handleSubmit = () => {
         year_level: form.year_level?.value || form.year_level || null,
         // Extract value from term object if it exists (1ST SEM, 2ND SEM, etc.)
         term: form.term?.value || form.term || null,
-        // YAKAP fields
+        // YAKAP fields - convert location to string if it's a JSON string
         yakap_category: form.yakap_category || 'yakap-capitol',
-        yakap_location: form.yakap_location || '',
+        yakap_location: (() => {
+            if (!form.yakap_location) return '';
+            // If it's a JSON string, keep it as-is (backend will parse)
+            if (typeof form.yakap_location === 'string') {
+                return form.yakap_location;
+            }
+            // If it's an object, convert to JSON string
+            if (typeof form.yakap_location === 'object') {
+                return JSON.stringify(form.yakap_location);
+            }
+            return '';
+        })(),
     };
 
     if (props.mode === 'edit' && props.profile) {
@@ -490,10 +501,15 @@ const handleSubmit = () => {
 
         form.transform(() => submitData).post(route('waitinglist.store'), {
             preserveScroll: true,
-            onSuccess: () => {
+            onSuccess: (response) => {
                 toast.success('Application submitted successfully!', {
                     position: toast.POSITION.TOP_RIGHT,
                 });
+                // Get the created profile from the response
+                const createdProfile = response.props.profile || response.props.newProfile;
+                if (createdProfile) {
+                    emit('applicant-created', createdProfile);
+                }
                 emit('success');
                 resetForm();
                 closeModal();

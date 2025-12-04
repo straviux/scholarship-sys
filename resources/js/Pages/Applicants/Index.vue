@@ -186,12 +186,14 @@ watch(selectedYakapLocation, (newValue) => {
 // Update YAKAP Category Modal state
 const showUpdateYakapModal = ref(false);
 const selectedProfileForYakap = ref(null);
+const originalYakapCategory = ref('');
+const originalYakapLocation = ref('');
 const updateYakapForm = useForm({
     yakap_category: '',
     yakap_location: ''
 });
 
-const openUpdateYakapModal = (profile) => {
+const openUpdateYakapModal = (profile, isNewApplicant = false) => {
     selectedProfileForYakap.value = profile;
     const grants = Array.isArray(profile.scholarshipGrant) ? profile.scholarshipGrant : [];
     const grant = grants.length > 0 ? grants[0] : null;
@@ -207,16 +209,24 @@ const openUpdateYakapModal = (profile) => {
                 }
                 selectedProfileForYakap.value.scholarshipGrant = [createdGrant];
 
+                // Store original values to detect changes
+                originalYakapCategory.value = createdGrant.yakap_category || 'yakap-capitol';
+                originalYakapLocation.value = createdGrant.yakap_location || '';
                 updateYakapForm.yakap_category = createdGrant.yakap_category || 'yakap-capitol';
                 updateYakapForm.yakap_location = createdGrant.yakap_location || '';
                 showUpdateYakapModal.value = true;
-                toast.info('Scholarship record created with default YAKAP category.');
+                if (isNewApplicant) {
+                    toast.info('Please set YAKAP category for this applicant.');
+                }
             })
             .catch(error => {
                 toast.error('Failed to create scholarship record');
                 console.error(error);
             });
     } else {
+        // Store original values to detect changes
+        originalYakapCategory.value = grant.yakap_category || 'yakap-capitol';
+        originalYakapLocation.value = grant.yakap_location || '';
         updateYakapForm.yakap_category = grant.yakap_category || 'yakap-capitol';
         updateYakapForm.yakap_location = grant.yakap_location || '';
         showUpdateYakapModal.value = true;
@@ -240,6 +250,15 @@ const submitUpdateYakap = () => {
         // If no grant exists, we need to create one first
         // For now, show error with instruction to create record first
         toast.error('Unable to update: No scholarship record exists. Please create one first.');
+        return;
+    }
+
+    // Check if values have actually changed
+    const categoryChanged = updateYakapForm.yakap_category !== originalYakapCategory.value;
+    const locationChanged = updateYakapForm.yakap_location !== originalYakapLocation.value;
+
+    if (!categoryChanged && !locationChanged) {
+        closeUpdateYakapModal();
         return;
     }
 
@@ -334,6 +353,15 @@ const closeModal = () => {
     // Don't reset yakap values - they persist for next new applicant
     // Refresh the applicants list after modal closes
     refreshApplicationList();
+}
+
+const handleApplicantCreated = (newProfile) => {
+    // Open YAKAP modal for newly created applicant
+    if (newProfile) {
+        setTimeout(() => {
+            openUpdateYakapModal(newProfile, true);
+        }, 500);
+    }
 }
 
 const openApplicationFormModal = () => {
@@ -1152,21 +1180,21 @@ const formatDate = (date) => {
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Prog. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Cour. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_course || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Sch. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_school_course || '-'
-                                                    }}</span>
+                                                }}</span>
 
                                             </div>
                                         </div>
@@ -1454,12 +1482,12 @@ const formatDate = (date) => {
                                 getApplicantFullName(selectedApplicantForReview) }}</h3>
                             <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
                                 <span><i class="pi pi-phone mr-1"></i>{{ selectedApplicantForReview.contact_no || 'N/A'
-                                    }}</span>
+                                }}</span>
                                 <span><i class="pi pi-envelope mr-1"></i>{{ selectedApplicantForReview.email || 'N/A'
-                                    }}</span>
+                                }}</span>
                                 <span><i class="pi pi-calendar mr-1"></i>{{
                                     formatDate(selectedApplicantForReview.date_filed)
-                                    }}</span>
+                                }}</span>
                             </div>
                         </div>
                         <!-- Queue Numbers -->
@@ -1546,7 +1574,7 @@ const formatDate = (date) => {
                                             <label class="text-gray-600">Income</label>
                                             <div class="font-medium">{{ selectedApplicantForReview.gross_monthly_income
                                                 || 'N/A'
-                                                }}</div>
+                                            }}</div>
                                         </div>
                                         <div>
                                             <label class="text-gray-600">Address</label>
@@ -1849,7 +1877,7 @@ const formatDate = (date) => {
         <!-- Application Form Modal - for creating/editing applicants -->
         <ApplicantFormModal v-model:visible="showApplicationFormModal" :mode="applicationFormMode"
             :profile="modalProfile" :yakap-category="selectedYakapCategory" :yakap-location="selectedYakapLocation"
-            @success="closeModal" />
+            @success="closeModal" @applicant-created="handleApplicantCreated" />
 
         <!-- Applicant Profile Modal - for editing existing applicants (keeping for backward compatibility) -->
         <!-- <ApplicantProfileModal v-if="(props.action == 'update') || showApplicantModal"

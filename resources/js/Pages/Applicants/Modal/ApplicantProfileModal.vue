@@ -293,15 +293,11 @@
                                         </StepPanel>
                                         <StepPanel v-slot="{ activateCallback }" value="3">
                                             <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
-                                                <AcademicInformationFields v-model="academicInfo" />
-                                            </div>
-                                            <div class="flex items-end gap-3 mt-4">
-                                                <div class="flex-1">
-                                                    <InputLabel class="mb-1" for="remarks" value="Remarks" />
-                                                    <TextInput id="remarks" type="text" class="w-full block uppercase"
-                                                        v-model="form.remarks" />
-                                                    <InputError class="mt-1" :message="form.errors.remarks" />
-                                                </div>
+                                                <AcademicInformationFields v-model:program="form.program"
+                                                    v-model:school="form.school" v-model:course="form.course"
+                                                    v-model:year_level="form.year_level" v-model:term="form.term"
+                                                    v-model:academic_year="form.academic_year"
+                                                    v-model:remarks="form.remarks" />
                                             </div>
                                             <div class="mt-12 flex justify-between">
                                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
@@ -347,6 +343,8 @@ import AcademicInformationFields from '@/Components/forms/fields/AcademicInforma
 import ProfileSelect from "@/Components/selects/ProfileSelect.vue";
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import BarangaySelect from '@/Components/selects/BarangaySelect.vue';
+import Select from 'primevue/select';
+import Button from 'primevue/button';
 
 const props = defineProps({
     profile: Object,
@@ -426,26 +424,6 @@ const hasPendingOrOngoing = computed(() => {
         return profile.scholarship_grant.some(r => r.scholarship_status === 0 || r.scholarship_status === 1);
     }
     return false;
-});
-
-// Computed property for two-way binding with AcademicInformationFields
-const academicInfo = computed({
-    get: () => ({
-        program: form.program,
-        school: form.school,
-        course: form.course,
-        year_level: form.year_level,
-        term: form.term,
-        academic_year: form.academic_year,
-    }),
-    set: (value) => {
-        form.program = value.program;
-        form.school = value.school;
-        form.course = value.course;
-        form.year_level = value.year_level;
-        form.term = value.term;
-        form.academic_year = value.academic_year;
-    }
 });
 
 const errorMessage = ref("");

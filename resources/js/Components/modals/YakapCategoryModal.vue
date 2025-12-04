@@ -3,7 +3,8 @@ import { ref, watch } from 'vue';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
-import InputText from 'primevue/inputtext';
+import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
+import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 
 const props = defineProps({
     visible: {
@@ -15,7 +16,7 @@ const props = defineProps({
 const emit = defineEmits(['update:visible', 'selected']);
 
 const selectedCategory = ref('yakap-capitol');
-const selectedLocation = ref('');
+const selectedLocation = ref(null);
 
 const yakapCategoryOptions = [
     { label: 'YAKAP Capitol', value: 'yakap-capitol' },
@@ -26,14 +27,20 @@ const yakapCategoryOptions = [
 // Clear location when category is yakap-capitol
 watch(selectedCategory, (newCategory) => {
     if (newCategory === 'yakap-capitol') {
-        selectedLocation.value = '';
+        selectedLocation.value = null;
     }
 });
 
 const handleConfirm = () => {
+    // Convert selected object to string if needed
+    let locationValue = selectedLocation.value;
+    if (locationValue && typeof locationValue === 'object') {
+        locationValue = JSON.stringify(locationValue);
+    }
+
     emit('selected', {
         category: selectedCategory.value,
-        location: selectedLocation.value || ''
+        location: locationValue || ''
     });
     emit('update:visible', false);
     resetForm();
@@ -46,7 +53,7 @@ const handleCancel = () => {
 
 const resetForm = () => {
     selectedCategory.value = 'yakap-capitol';
-    selectedLocation.value = '';
+    selectedLocation.value = null;
 };
 </script>
 
@@ -62,12 +69,18 @@ const resetForm = () => {
                     optionValue="value" placeholder="Select YAKAP Category" class="w-full" inputId="yakap-select" />
             </div>
 
-            <!-- Location Field - shown for School and Field categories -->
-            <div v-if="selectedCategory !== 'yakap-capitol'" class="flex flex-col gap-3">
-                <label for="yakap-location" class="font-medium text-gray-700">Location:</label>
-                <InputText v-model="selectedLocation"
-                    :placeholder="selectedCategory === 'yakap-school' ? 'Enter school name' : 'Enter field location'"
-                    inputId="yakap-location" class="w-full" />
+            <!-- Municipality Selection for YAKAP Field -->
+            <div v-if="selectedCategory === 'yakap-field'" class="flex flex-col gap-3">
+                <label for="yakap-municipality" class="font-medium text-gray-700">Municipality:</label>
+                <MunicipalitySelect v-model="selectedLocation" placeholder="Select Municipality" class="w-full"
+                    :clearable="false" inputId="yakap-municipality" />
+            </div>
+
+            <!-- School Selection for YAKAP School -->
+            <div v-if="selectedCategory === 'yakap-school'" class="flex flex-col gap-3">
+                <label for="yakap-school" class="font-medium text-gray-700">School:</label>
+                <SchoolSelect v-model="selectedLocation" placeholder="Select School" class="w-full" :clearable="false"
+                    inputId="yakap-school" />
             </div>
         </div>
 

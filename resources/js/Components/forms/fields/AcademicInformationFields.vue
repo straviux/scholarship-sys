@@ -47,24 +47,6 @@
                 </FloatLabel>
             </div>
 
-            <!-- YAKAP Category and Location Row -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-10">
-                <FloatLabel>
-                    <Select :key="yakap_category" :modelValue="yakap_category"
-                        @update:modelValue="$emit('update:yakap_category', $event)" :options="yakapCategoryOptions"
-                        optionLabel="label" optionValue="value" placeholder="&nbsp;" inputId="yakap_category"
-                        class="w-full" />
-                    <label class="text-sm" for="yakap_category">YAKAP Category</label>
-                </FloatLabel>
-
-                <FloatLabel v-if="showYakapLocationField" :key="'location-' + yakap_category">
-                    <InputText :modelValue="yakap_location" @update:modelValue="$emit('update:yakap_location', $event)"
-                        :placeholder="yakap_category === 'yakap-school' ? 'School name' : 'Field location'"
-                        inputId="yakap_location" class="w-full" />
-                    <label class="text-sm" for="yakap_location">Location</label>
-                </FloatLabel>
-            </div>
-
             <!-- Remarks Field -->
             <div class="grid grid-cols-1 gap-3 mt-10">
                 <FloatLabel>
@@ -80,21 +62,14 @@
 <script setup>
 import FloatLabel from 'primevue/floatlabel';
 import Textarea from 'primevue/textarea';
-import Select from 'primevue/select';
 import InputText from 'primevue/inputtext';
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
-
-const yakapCategoryOptions = [
-    { label: 'YAKAP Capitol', value: 'yakap-capitol' },
-    { label: 'YAKAP School', value: 'yakap-school' },
-    { label: 'YAKAP Field', value: 'yakap-field' }
-];
 
 const props = defineProps({
     program: [Object, String],
@@ -104,14 +79,6 @@ const props = defineProps({
     term: [String, Object],
     academic_year: [String, Object],
     remarks: String,
-    yakap_category: {
-        type: String,
-        default: 'yakap-capitol'
-    },
-    yakap_location: {
-        type: String,
-        default: ''
-    },
     showHeader: {
         type: Boolean,
         default: true
@@ -125,21 +92,10 @@ const emit = defineEmits([
     'update:year_level',
     'update:term',
     'update:academic_year',
-    'update:remarks',
-    'update:yakap_category',
-    'update:yakap_location'
+    'update:remarks'
 ]);
 
-// Computed property to check if location field should be shown
-const showYakapLocationField = computed(() => {
-    console.log('Computing showYakapLocationField with yakap_category:', props.yakap_category);
-    return props.yakap_category !== 'yakap-capitol';
-});
 
-// Watch yakap_category for debugging
-watch(() => props.yakap_category, (newVal, oldVal) => {
-    console.log('yakap_category changed from', oldVal, 'to', newVal);
-});
 </script>
 
 <style>
