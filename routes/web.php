@@ -183,8 +183,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/scholarship/profiles', [ScholarshipProfileController::class, 'profiles'])
         ->name('scholarship.profiles');
 
-    Route::get('/scholarship/profile/{profile_id}', [ScholarshipProfileController::class, 'show'])
+    Route::get('/scholarship/profile/{profile}', [ScholarshipProfileController::class, 'show'])
         ->name('scholarship.profile.show');
+
+    Route::put('/scholarship-profiles/{profile}', [ScholarshipProfileController::class, 'update'])
+        ->name('scholarship-profiles.update');
 
     Route::get('/scholarship/profile/{profile_id}/records', [ScholarshipProfileController::class, 'getScholarshipRecords'])
         ->name('scholarship.profile.records');

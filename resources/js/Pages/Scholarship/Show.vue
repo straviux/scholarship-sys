@@ -18,8 +18,12 @@
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-pencil" label="Edit" severity="warning"
-                        outlined @click="editProfile" v-tooltip.top="'Edit Profile'" />
+                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-user" label="Edit Personal Info"
+                        severity="warning" size="small" @click="showPersonalInfoModal = true"
+                        v-tooltip.top="'Edit Personal Information'" />
+                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-home" label="Edit Family Info"
+                        severity="info" size="small" @click="showFamilyInfoModal = true"
+                        v-tooltip.top="'Edit Family Information'" />
                 </div>
             </div>
 
@@ -210,8 +214,12 @@
                         <!-- Academic Information Tab -->
                         <TabPanel value="2">
                             <div class="p-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-900">Scholarship Records</h3>
+                                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-plus" label="Add Record"
+                                        @click="openAddRecordModal" severity="success" size="small" />
+                                </div>
                                 <div v-if="scholarshipRecords.length > 0">
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Scholarship Records</h3>
                                     <DataTable :value="scholarshipRecords" stripedRows showGridlines>
                                         <Column header="Program & School" style="min-width: 250px">
                                             <template #body="slotProps">
@@ -279,6 +287,20 @@
                                                         v-if="slotProps.data.attachments && slotProps.data.attachments.length > 0"
                                                         :label="slotProps.data.attachments.length.toString()"
                                                         class="bg-blue-100 text-blue-800" />
+                                                </div>
+                                            </template>
+                                        </Column>
+
+                                        <Column header="Actions" style="min-width: 150px"
+                                            v-if="hasPermission('applicants.edit')">
+                                            <template #body="slotProps">
+                                                <div class="flex gap-1">
+                                                    <Button icon="pi pi-pencil" size="small" outlined severity="warning"
+                                                        v-tooltip.top="'Edit Record'"
+                                                        @click="openEditRecordModal(slotProps.data)" />
+                                                    <Button icon="pi pi-trash" size="small" outlined severity="danger"
+                                                        v-tooltip.top="'Delete Record'"
+                                                        @click="confirmDeleteRecord(slotProps.data)" />
                                                 </div>
                                             </template>
                                         </Column>
@@ -376,8 +398,11 @@
             </div>
         </div>
 
-        <!-- Edit Modal -->
-        <ScholarFormModal v-model:visible="showEditModal" mode="edit" :profile="profile" @success="handleSuccess" />
+        <!-- Personal Information Modal -->
+        <PersonalInformationModal v-model:visible="showPersonalInfoModal" :profile="profile" @success="handleSuccess" />
+
+        <!-- Family Information Modal -->
+        <FamilyInformationModal v-model:visible="showFamilyInfoModal" :profile="profile" @success="handleSuccess" />
 
         <!-- Manage Attachments Modal -->
         <Dialog v-model:visible="showAttachmentsModal" modal header="Manage Scholarship Record Attachments"
@@ -566,14 +591,107 @@
                 <Button label="Close" severity="secondary" @click="showQrModal = false" />
             </template>
         </Dialog>
+
+        <!-- Add/Edit Scholarship Record Modal -->
+        <Dialog v-model:visible="showRecordModal" modal
+            :header="recordModalMode === 'add' ? 'Add Scholarship Record' : 'Edit Scholarship Record'"
+            :style="{ width: '700px' }">
+            <div class="space-y-4 py-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Program *</label>
+                        <ProgramSelect v-model="recordForm.program_id" :clearable="false" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">School *</label>
+                        <SchoolSelect v-model="recordForm.school_id" :clearable="false" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Course *</label>
+                        <CourseSelect v-model="recordForm.course_id"
+                            :scholarship-program-id="typeof recordForm.program_id === 'object' ? recordForm.program_id?.id : recordForm.program_id"
+                            :clearable="false" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Year Level *</label>
+                        <YearLevelSelect v-model="recordForm.year_level" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Academic Year *</label>
+                        <AcademicYearSelect v-model="recordForm.academic_year" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Term *</label>
+                        <TermSelect v-model="recordForm.term" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date Filed</label>
+                        <DatePicker v-model="recordForm.date_filed" dateFormat="yy-mm-dd" showIcon fluid />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date Approved</label>
+                        <DatePicker v-model="recordForm.date_approved" dateFormat="yy-mm-dd" showIcon fluid />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Approval Status</label>
+                    <Select v-model="recordForm.approval_status" :options="approvalStatusOptions" optionLabel="label"
+                        optionValue="value" placeholder="Select Status" fluid />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
+                    <InputText v-model="recordForm.remarks" placeholder="Enter remarks" fluid />
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Cancel" severity="secondary" @click="closeRecordModal" outlined size="small" />
+                <Button :label="recordModalMode === 'add' ? 'Add Record' : 'Update Record'" @click="submitRecord"
+                    :loading="recordForm.processing" size="small" />
+            </template>
+        </Dialog>
+
+        <!-- Delete Confirmation Dialog -->
+        <Dialog v-model:visible="showDeleteConfirm" modal header="Confirm Deletion" :style="{ width: '450px' }">
+            <div class="flex items-center gap-4">
+                <i class="pi pi-exclamation-triangle text-4xl text-red-500"></i>
+                <div>
+                    <p class="text-gray-900 font-semibold mb-2">Are you sure you want to delete this scholarship record?
+                    </p>
+                    <div v-if="recordToDelete" class="bg-gray-100 p-3 rounded border-l-4 border-red-500">
+                        <p class="text-sm font-medium text-gray-900">{{ recordToDelete.program?.name || 'N/A' }}</p>
+                        <p class="text-xs text-gray-600">{{ recordToDelete.academic_year }} - {{ recordToDelete.term }}
+                        </p>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-2">This action cannot be undone.</p>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Cancel" severity="secondary" @click="showDeleteConfirm = false" outlined size="small" />
+                <Button label="Delete" severity="danger" @click="deleteRecord" :loading="deleting" size="small" />
+            </template>
+        </Dialog>
     </AdminLayout>
 </template>
 
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed, watch, onUnmounted } from 'vue';
+import { ref, computed, watch, onUnmounted, nextTick } from 'vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
 import { usePermission } from '@/composable/permissions';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Button from 'primevue/button';
@@ -589,7 +707,15 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Select from 'primevue/select';
-import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
+import DatePicker from 'primevue/datepicker';
+import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
+import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
+import CourseSelect from '@/Components/selects/CourseSelect.vue';
+import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
+import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
+import TermSelect from '@/Components/selects/TermSelect.vue';
+import PersonalInformationModal from '@/Components/modals/PersonalInformationModal.vue';
+import FamilyInformationModal from '@/Components/modals/FamilyInformationModal.vue';
 import ObligationsTransactions from '@/Components/ObligationsTransactions.vue';
 
 const props = defineProps({
@@ -601,16 +727,36 @@ const { hasPermission } = usePermission();
 
 // State
 const activeTab = ref(localStorage.getItem('scholarProfileActiveTab') || '0');
-const showEditModal = ref(false);
+const showPersonalInfoModal = ref(false);
+const showFamilyInfoModal = ref(false);
 const showAttachmentsModal = ref(false);
 const showViewerModal = ref(false);
 const showQrModal = ref(false);
+const showRecordModal = ref(false);
+const showDeleteConfirm = ref(false);
+const recordModalMode = ref('add'); // 'add' or 'edit'
+const recordToDelete = ref(null);
+const deleting = ref(false);
 const qrCodeData = ref(null);
 const qrCountdown = ref('');
 const qrCountdownInterval = ref(null);
 const selectedRecord = ref(null);
 const viewerAttachment = ref(null);
 const uploading = ref(false);
+const recordForm = ref({
+    grant_id: null,
+    program_id: null,
+    school_id: null,
+    course_id: null,
+    year_level: null,
+    academic_year: null,
+    term: null,
+    date_filed: null,
+    date_approved: null,
+    approval_status: 'approved',
+    remarks: null,
+    processing: false
+});
 const attachmentForm = ref({
     attachment_name: '',
     custom_attachment_name: '',
@@ -626,6 +772,14 @@ const attachmentTypeOptions = [
     { label: 'Certificate of Enrollment', value: 'certificate_of_enrollment' },
     { label: 'Certificate of Registration', value: 'certificate_of_registration' },
     { label: 'Others', value: 'others' }
+];
+
+// Approval status options
+const approvalStatusOptions = [
+    { label: 'Approved', value: 'approved' },
+    { label: 'Pending', value: 'pending' },
+    { label: 'Conditionally Approved', value: 'conditionally-approved' },
+    { label: 'Declined', value: 'declined' }
 ];
 
 // Image zoom state
@@ -743,13 +897,144 @@ const formatDateShort = (dateString) => {
     return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
 };
 
-const editProfile = () => {
-    showEditModal.value = true;
+const handleSuccess = () => {
+    showPersonalInfoModal.value = false;
+    showFamilyInfoModal.value = false;
+    setTimeout(() => {
+        router.reload({ only: ['profile'] });
+    }, 1500);
 };
 
-const handleSuccess = () => {
-    showEditModal.value = false;
-    router.reload({ only: ['profile'] });
+// Scholarship Record CRUD Methods
+const openAddRecordModal = () => {
+    recordModalMode.value = 'add';
+    recordForm.value = {
+        grant_id: null,
+        program_id: null,
+        school_id: null,
+        course_id: null,
+        year_level: null,
+        academic_year: null,
+        term: null,
+        date_filed: new Date(),
+        date_approved: null,
+        approval_status: 'approved',
+        remarks: null,
+        processing: false
+    };
+    showRecordModal.value = true;
+};
+
+const openEditRecordModal = async (record) => {
+    recordModalMode.value = 'edit';
+    recordForm.value = {
+        grant_id: record.grant_id,
+        // Use full objects for select components if available, otherwise use IDs
+        program_id: record.program || record.program_id,
+        school_id: record.school || record.school_id,
+        course_id: record.course || record.course_id,
+        year_level: record.year_level,
+        academic_year: record.academic_year,
+        term: record.term,
+        date_filed: record.date_filed ? new Date(record.date_filed) : null,
+        date_approved: record.date_approved ? new Date(record.date_approved) : null,
+        approval_status: record.approval_status || 'approved',
+        remarks: record.remarks,
+        processing: false
+    };
+    showRecordModal.value = true;
+
+    // Wait for modal to render and select components to initialize
+    await nextTick();
+};
+
+const closeRecordModal = () => {
+    showRecordModal.value = false;
+    recordForm.value = {
+        grant_id: null,
+        program_id: null,
+        school_id: null,
+        course_id: null,
+        year_level: null,
+        academic_year: null,
+        term: null,
+        date_filed: null,
+        date_approved: null,
+        approval_status: 'approved',
+        remarks: null,
+        processing: false
+    };
+};
+
+const submitRecord = async () => {
+    recordForm.value.processing = true;
+
+    try {
+        const formData = {
+            profile_id: props.profile.profile_id,
+            program_id: typeof recordForm.value.program_id === 'object' ? recordForm.value.program_id?.id : recordForm.value.program_id,
+            school_id: typeof recordForm.value.school_id === 'object' ? recordForm.value.school_id?.id : recordForm.value.school_id,
+            course_id: typeof recordForm.value.course_id === 'object' ? recordForm.value.course_id?.id : recordForm.value.course_id,
+            year_level: typeof recordForm.value.year_level === 'object' ? recordForm.value.year_level?.value : recordForm.value.year_level,
+            academic_year: typeof recordForm.value.academic_year === 'object' ? recordForm.value.academic_year?.value : recordForm.value.academic_year,
+            term: typeof recordForm.value.term === 'object' ? recordForm.value.term?.value : recordForm.value.term,
+            date_filed: recordForm.value.date_filed ? new Date(recordForm.value.date_filed).toISOString().split('T')[0] : null,
+            date_approved: recordForm.value.date_approved ? new Date(recordForm.value.date_approved).toISOString().split('T')[0] : null,
+            approval_status: recordForm.value.approval_status,
+            remarks: recordForm.value.remarks
+        };
+
+        let response;
+        if (recordModalMode.value === 'add') {
+            response = await axios.post(route('scholarship_records.store'), formData);
+            toast.success('Scholarship record added successfully');
+        } else {
+            response = await axios.put(route('scholarship_records.update', recordForm.value.grant_id), formData);
+            toast.success('Scholarship record updated successfully');
+        }
+
+        closeRecordModal();
+        router.reload({ only: ['profile'] });
+    } catch (error) {
+        console.error('Error submitting scholarship record:', error);
+        toast.error(error.response?.data?.message || 'Failed to save scholarship record');
+    } finally {
+        recordForm.value.processing = false;
+    }
+};
+
+const confirmDeleteRecord = (record) => {
+    recordToDelete.value = record;
+    showDeleteConfirm.value = true;
+};
+
+const deleteRecord = async () => {
+    deleting.value = true;
+
+    try {
+        if (!recordToDelete.value) {
+            throw new Error('No record selected for deletion');
+        }
+
+        const recordId = recordToDelete.value.id || recordToDelete.value.grant_id;
+        console.log('Deleting record with id:', recordId);
+        console.log('Full record object:', recordToDelete.value);
+
+        if (!recordId) {
+            throw new Error('Record does not have a valid ID');
+        }
+
+        await axios.delete(route('scholarship_records.destroy', recordId));
+        toast.success('Scholarship record deleted successfully');
+        showDeleteConfirm.value = false;
+        recordToDelete.value = null;
+        router.reload({ only: ['profile'] });
+    } catch (error) {
+        console.error('Error deleting scholarship record:', error);
+        toast.error(error.response?.data?.message || 'Failed to delete scholarship record');
+    } finally {
+        deleting.value = false;
+    }
 };
 
 const getStatusClass = (status) => {

@@ -26,12 +26,12 @@ class UpdateScholarshipProfileRequest extends FormRequest
         // $id = $this->route('applicants') ?? null;
         return [
             "first_name" => [
-                'required',
+                'nullable',
                 'string',
                 'max:255',
             ],
             "last_name" => [
-                'required',
+                'nullable',
                 'string',
                 'max:255',
             ],

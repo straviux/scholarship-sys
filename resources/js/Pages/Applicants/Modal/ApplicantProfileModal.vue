@@ -323,6 +323,7 @@
 
 import { ref, computed, watch } from "vue";
 import { Link, useForm, router, usePage } from "@inertiajs/vue3";
+import axios from "axios";
 import {
     TransitionRoot,
     TransitionChild,
@@ -415,6 +416,16 @@ const form = useForm({
     guardian_contact_no: props.profile?.guardian_contact_no || "",
     guardian_occupation: props.profile?.guardian_occupation || "",
     parents_guardian_gross_monthly_income: props.profile?.parents_guardian_gross_monthly_income || "",
+    date_of_birth: props.profile?.date_of_birth || "",
+    place_of_birth: props.profile?.place_of_birth || "",
+    civil_status: props.profile?.civil_status || "",
+    religion: props.profile?.religion || "",
+    indigenous_group: props.profile?.indigenous_group || "",
+    temporary_municipality: props.profile?.temporary_municipality || null,
+    temporary_barangay: props.profile?.temporary_barangay || null,
+    temporary_address: props.profile?.temporary_address || "",
+    father_birthdate: props.profile?.father_birthdate || "",
+    mother_birthdate: props.profile?.mother_birthdate || "",
 });
 
 
@@ -463,16 +474,54 @@ watch(() => form.selectedProfile, (profile) => {
 const page = usePage();
 const prevPage = ref(page.props.urlPrev);
 
+// Set up axios with CSRF token
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || page.props.csrf_token;
+if (csrfToken) {
+    axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+    axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+}
+
 const submit = (closeAfter = false) => {
-    form.last_name = form.last_name.toUpperCase();
-    form.first_name = form.first_name.toUpperCase();
-    form.middle_name = form.middle_name.toUpperCase();
-    form.extension_name = form.extension_name.toUpperCase();
-    // Municipality and barangay are already objects from the select components
-    // Extract the name property if they are objects
+    console.log('=== SUBMIT FUNCTION START ===');
+    console.log('Form data at start:', form.data());
+
+    // First, convert all empty/falsy values to null
+    const fields = [
+        'last_name', 'first_name', 'middle_name', 'extension_name',
+        'father_name', 'father_occupation', 'father_contact_no', 'father_birthdate',
+        'mother_name', 'mother_occupation', 'mother_contact_no', 'mother_birthdate',
+        'guardian_name', 'guardian_relationship', 'guardian_contact_no', 'guardian_occupation',
+        'parents_guardian_gross_monthly_income',
+        'address', 'temporary_address', 'contact_no', 'contact_no_2', 'email',
+        'date_of_birth', 'date_filed', 'place_of_birth',
+        'gender', 'civil_status', 'religion', 'indigenous_group',
+        'municipality', 'barangay', 'temporary_municipality', 'temporary_barangay',
+        'remarks'
+    ];
+
+    fields.forEach(field => {
+        if (!form[field] || form[field] === '') {
+            form[field] = null;
+        }
+    });
+
+    console.log('Form data after null conversion:', form.data());
+
+    // Then apply uppercase to name fields that are not null
+    if (form.last_name) form.last_name = form.last_name.toUpperCase();
+    if (form.first_name) form.first_name = form.first_name.toUpperCase();
+    if (form.middle_name) form.middle_name = form.middle_name.toUpperCase();
+    if (form.extension_name) form.extension_name = form.extension_name.toUpperCase();
+    if (form.father_name) form.father_name = form.father_name.toUpperCase();
+    if (form.mother_name) form.mother_name = form.mother_name.toUpperCase();
+    if (form.guardian_name) form.guardian_name = form.guardian_name.toUpperCase();
+    if (form.address) form.address = form.address.toUpperCase();
+    if (form.temporary_address) form.temporary_address = form.temporary_address.toUpperCase();
+
+    // Handle municipality and barangay extraction from objects
     if (typeof form.municipality === 'object' && form.municipality?.name) {
         form.municipality = form.municipality.name.toUpperCase();
-    } else if (typeof form.municipality === 'string') {
+    } else if (typeof form.municipality === 'string' && form.municipality) {
         form.municipality = form.municipality.toUpperCase();
     }
 
@@ -480,12 +529,28 @@ const submit = (closeAfter = false) => {
         form.barangay = form.barangay.name.toUpperCase();
     } else if (typeof form.barangay === 'string' && form.barangay) {
         form.barangay = form.barangay.toUpperCase();
-    } else {
-        form.barangay = '';
     }
 
-    form.father_name = form.father_name.toUpperCase();
-    form.mother_name = form.mother_name.toUpperCase();
+    // Handle temporary municipality and barangay
+    if (typeof form.temporary_municipality === 'object' && form.temporary_municipality?.name) {
+        form.temporary_municipality = form.temporary_municipality.name.toUpperCase();
+    } else if (typeof form.temporary_municipality === 'string' && form.temporary_municipality) {
+        form.temporary_municipality = form.temporary_municipality.toUpperCase();
+    }
+
+    if (typeof form.temporary_barangay === 'object' && form.temporary_barangay?.name) {
+        form.temporary_barangay = form.temporary_barangay.name.toUpperCase();
+    } else if (typeof form.temporary_barangay === 'string' && form.temporary_barangay) {
+        form.temporary_barangay = form.temporary_barangay.toUpperCase();
+    }
+
+    // Handle place_of_birth if it's an object
+    if (typeof form.place_of_birth === 'object' && form.place_of_birth?.name) {
+        form.place_of_birth = form.place_of_birth.name.toUpperCase();
+    } else if (typeof form.place_of_birth === 'string' && form.place_of_birth) {
+        form.place_of_birth = form.place_of_birth.toUpperCase();
+    }
+
     // Handle empty academic info - only set if values exist
     form.year_level = form.year_level?.value || null;
     form.school = form.school?.name || null;
@@ -493,10 +558,75 @@ const submit = (closeAfter = false) => {
     form.term = form.term?.value || null;
     form.course = form.course?.shortname || null;
 
+    // Debug: log form data before submission
+    console.log('Form data before defaults reset:', {
+        father_name: form.father_name,
+        mother_name: form.mother_name,
+        guardian_name: form.guardian_name,
+        guardian_relationship: form.guardian_relationship,
+        guardian_contact_no: form.guardian_contact_no,
+        guardian_occupation: form.guardian_occupation,
+        parents_guardian_gross_monthly_income: form.parents_guardian_gross_monthly_income,
+        father_occupation: form.father_occupation,
+        mother_occupation: form.mother_occupation,
+        father_contact_no: form.father_contact_no,
+        mother_contact_no: form.mother_contact_no
+    });
+
     if (props.action == 'create') {
         form.is_on_waiting_list = 1;
-        form.post(route("waitinglist.store"), {
-            onSuccess: (response) => {
+
+        // Explicitly build the data object with all fields
+        const submitData = {
+            scholarship_grant_id: form.scholarship_grant_id,
+            program: form.program,
+            school: form.school,
+            course: form.course,
+            year_level: form.year_level,
+            term: form.term,
+            academic_year: form.academic_year,
+            first_name: form.first_name,
+            last_name: form.last_name,
+            middle_name: form.middle_name,
+            extension_name: form.extension_name,
+            father_name: form.father_name,
+            father_occupation: form.father_occupation,
+            father_contact_no: form.father_contact_no,
+            father_birthdate: form.father_birthdate,
+            mother_name: form.mother_name,
+            mother_occupation: form.mother_occupation,
+            mother_contact_no: form.mother_contact_no,
+            mother_birthdate: form.mother_birthdate,
+            guardian_name: form.guardian_name,
+            guardian_relationship: form.guardian_relationship,
+            guardian_contact_no: form.guardian_contact_no,
+            guardian_occupation: form.guardian_occupation,
+            parents_guardian_gross_monthly_income: form.parents_guardian_gross_monthly_income,
+            municipality: form.municipality,
+            barangay: form.barangay,
+            address: form.address,
+            temporary_municipality: form.temporary_municipality,
+            temporary_barangay: form.temporary_barangay,
+            temporary_address: form.temporary_address,
+            contact_no: form.contact_no,
+            contact_no_2: form.contact_no_2,
+            email: form.email,
+            date_of_birth: form.date_of_birth,
+            gender: form.gender,
+            place_of_birth: form.place_of_birth,
+            civil_status: form.civil_status,
+            religion: form.religion,
+            indigenous_group: form.indigenous_group,
+            remarks: form.remarks,
+            date_filed: form.date_filed,
+            is_on_waiting_list: 1,
+        };
+
+        console.log('Final data being sent to backend (CREATE):', submitData);
+
+        // Use axios directly to ensure all fields are sent
+        axios.post(route("waitinglist.store"), submitData)
+            .then((response) => {
                 form.reset();
                 toast.success("Application has been submitted", {
                     position: toast.POSITION.TOP_RIGHT,
@@ -504,34 +634,91 @@ const submit = (closeAfter = false) => {
                 setTimeout(() => {
                     router.visit(route('waitinglist.index', { page: props.page }), { preserveState: true, preserveScroll: true });
                 }, 1200);
-            },
-            onError: (err) => {
-                form.errors = err;
-            }
-        });
+            })
+            .catch((err) => {
+                console.error('Error submitting application:', err);
+                if (err.response?.status === 422) {
+                    form.errors = err.response.data.errors || {};
+                } else {
+                    form.errors = { form: err.response?.data?.message || 'An error occurred' };
+                }
+            });
     }
     if (props.action == 'update' || props.action == 'add-existing') {
         const profile_id = form.selectedProfile.profile_id || props.profile.profile_id;
-        form.put(route("waitinglist.update", profile_id), {
-            onSuccess: (response) => {
+
+        // Explicitly build the data object with all fields to ensure nothing is missed
+        const submitData = {
+            scholarship_grant_id: form.scholarship_grant_id,
+            program: form.program,
+            school: form.school,
+            course: form.course,
+            year_level: form.year_level,
+            term: form.term,
+            academic_year: form.academic_year,
+            first_name: form.first_name,
+            last_name: form.last_name,
+            middle_name: form.middle_name,
+            extension_name: form.extension_name,
+            father_name: form.father_name,
+            father_occupation: form.father_occupation,
+            father_contact_no: form.father_contact_no,
+            father_birthdate: form.father_birthdate,
+            mother_name: form.mother_name,
+            mother_occupation: form.mother_occupation,
+            mother_contact_no: form.mother_contact_no,
+            mother_birthdate: form.mother_birthdate,
+            guardian_name: form.guardian_name,
+            guardian_relationship: form.guardian_relationship,
+            guardian_contact_no: form.guardian_contact_no,
+            guardian_occupation: form.guardian_occupation,
+            parents_guardian_gross_monthly_income: form.parents_guardian_gross_monthly_income,
+            municipality: form.municipality,
+            barangay: form.barangay,
+            address: form.address,
+            temporary_municipality: form.temporary_municipality,
+            temporary_barangay: form.temporary_barangay,
+            temporary_address: form.temporary_address,
+            contact_no: form.contact_no,
+            contact_no_2: form.contact_no_2,
+            email: form.email,
+            date_of_birth: form.date_of_birth,
+            gender: form.gender,
+            place_of_birth: form.place_of_birth,
+            civil_status: form.civil_status,
+            religion: form.religion,
+            indigenous_group: form.indigenous_group,
+            remarks: form.remarks,
+            date_filed: form.date_filed,
+            is_on_waiting_list: form.is_on_waiting_list,
+        };
+
+        console.log('Final data being sent to backend:', submitData);
+
+        // Use axios directly to send all fields
+        axios.put(route("waitinglist.update", profile_id), submitData)
+            .then((response) => {
                 toast.success("Profile has been updated", {
                     position: toast.POSITION.TOP_RIGHT,
                 });
                 setTimeout(() => {
                     if (props.isInlineModal) {
                         emit('close');
-                        // Refresh the current page to show updated data
                         router.reload();
                     } else {
                         router.visit(route('waitinglist.index', { id: profile_id, action: props.action }), { preserveState: true });
                         if (closeAfter) router.visit(JSON.parse(JSON.stringify(prevPage.value)));
                     }
                 }, 1200);
-            },
-            onError: (err) => {
-                form.errors = err;
-            }
-        });
+            })
+            .catch((err) => {
+                console.error('Error updating profile:', err);
+                if (err.response?.status === 422) {
+                    form.errors = err.response.data.errors || {};
+                } else {
+                    form.errors = { form: err.response?.data?.message || 'An error occurred' };
+                }
+            });
     }
 };
 

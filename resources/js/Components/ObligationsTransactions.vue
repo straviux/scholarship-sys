@@ -10,7 +10,7 @@
                 <p class="text-sm text-gray-500 mt-1">Manage disbursements and cheque processing</p>
             </div>
             <Button v-if="hasPermission('applicants.edit')" icon="pi pi-plus" label="Add Disbursement"
-                @click="showAddModal = true" />
+                @click="showAddModal = true" severity="success" size="small" raised />
         </div>
 
         <!-- Disbursements List -->
@@ -20,7 +20,7 @@
                     <i class="pi pi-money-bill text-4xl text-gray-300 mb-4"></i>
                     <p class="text-gray-500">No disbursements found</p>
                     <Button v-if="hasPermission('applicants.edit')" label="Add First Disbursement" class="mt-4"
-                        @click="showAddModal = true" />
+                        @click="showAddModal = true" severity="success" size="small" raised />
                 </div>
             </template>
 
@@ -39,7 +39,7 @@
                                         <p class="text-xs font-medium">OBR Date</p>
                                         <p class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
                                             item.date_obligated ? formatDate(item.date_obligated) : '-'
-                                            }}</p>
+                                        }}</p>
                                     </div>
                                     <div v-if="item.obr_no" class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">OBR No.</p>
@@ -95,33 +95,33 @@
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Year:</span>
                                                 <span class="font-medium text-gray-900">{{ item.year_level || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Term:</span>
                                                 <span class="font-medium text-gray-900">{{ item.semester || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">AY:</span>
                                                 <span class="font-medium text-gray-900">{{ item.academic_year || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Course:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">School:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -285,8 +285,9 @@
             </div>
 
             <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeModal" />
-                <Button :label="editMode ? 'Update' : 'Create'" @click="saveDisbursement" :loading="saving" />
+                <Button label="Cancel" severity="secondary" @click="closeModal" outlined size="small" />
+                <Button :label="editMode ? 'Update' : 'Create'" @click="saveDisbursement" :loading="saving"
+                    size="small" />
             </template>
         </Dialog>
 
@@ -313,8 +314,9 @@
             </div>
 
             <template #footer>
-                <Button label="Cancel" severity="secondary" @click="showChequeModal = false" />
-                <Button :label="chequeEditMode ? 'Update' : 'Add Cheque'" @click="saveCheque" :loading="saving" />
+                <Button label="Cancel" severity="secondary" @click="showChequeModal = false" outlined size="small" />
+                <Button :label="chequeEditMode ? 'Update' : 'Add Cheque'" @click="saveCheque" :loading="saving"
+                    size="small" />
             </template>
         </Dialog>
 
@@ -322,8 +324,8 @@
         <Dialog v-model:visible="showDeleteDialog" modal header="Confirm Delete" :style="{ width: '30vw' }">
             <p>Are you sure you want to delete this disbursement?</p>
             <template #footer>
-                <Button label="Cancel" severity="secondary" @click="showDeleteDialog = false" />
-                <Button label="Delete" severity="danger" @click="deleteDisbursement" :loading="deleting" />
+                <Button label="Cancel" severity="secondary" @click="showDeleteDialog = false" outlined size="small" />
+                <Button label="Delete" severity="danger" @click="deleteDisbursement" :loading="deleting" size="small" />
             </template>
         </Dialog>
 
@@ -382,9 +384,10 @@
             </div>
 
             <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeAttachmentsModal" />
+                <Button label="Cancel" severity="secondary" @click="closeAttachmentsModal" outlined size="small" />
                 <Button v-if="hasPermission('applicants.edit')" label="Upload" @click="uploadAttachment"
-                    :loading="uploading" :disabled="!attachmentForm.file || !attachmentForm.attachment_type" />
+                    :loading="uploading" :disabled="!attachmentForm.file || !attachmentForm.attachment_type"
+                    size="small" />
             </template>
         </Dialog>
 

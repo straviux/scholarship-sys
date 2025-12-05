@@ -148,21 +148,23 @@
                                 <RecordsSelect v-model="filter.records" label="label" class="w-28" size="small" />
                                 <span>/ <strong>{{ totalRecords }}</strong></span>
                             </div>
-                            <SelectButton v-model="layout" :options="layoutOptions" optionLabel="icon" dataKey="value"
-                                aria-labelledby="custom" size="small">
-                                <template #option="slotProps">
-                                    <i :class="slotProps.option.icon" v-tooltip.bottom="slotProps.option.tooltip"></i>
-                                </template>
-                            </SelectButton>
+                            <div class="flex items-center gap-2">
+                                <Checkbox v-model="simpleView" inputId="simpleViewToggle" binary />
+                                <label for="simpleViewToggle" class="text-xs text-gray-600 cursor-pointer"
+                                    @click="toggleSimpleView">Simple
+                                    View</label>
+                            </div>
                         </div>
                     </div>
 
                     <!-- DataTable View -->
-                    <DataTable v-if="layout === 'table'" :value="profilesData" paginator :rows="dataViewRows"
-                        :totalRecords="totalRecords" :first="first" @page="onPageChange" :lazy="true"
+                    <DataTable :value="profilesData" paginator :rows="dataViewRows" :totalRecords="totalRecords"
+                        :first="first" @page="onPageChange" :lazy="true"
                         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                         :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
-                        :rowHover="true" stripedRows class="compact-table">
+                        :rowHover="true" stripedRows class="compact-table"
+                        @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu
+                        :globalFilter="globalFilter">
 
                         <Column field="unique_id" header="ID" style="min-width: 120px;">
                             <template #body="slotProps">
@@ -173,14 +175,16 @@
                                     </div>
                                     <div>
                                         <div as="button"
-                                            class="font-bold text-sm text-sky-700 underline underline-offset-2 cursor-pointer"
-                                            @click="viewFullProfile(slotProps.data)">{{
+                                            class="font-bold text-sm text-sky-700 underline underline-offset-2 cursor-pointer hover:text-blue-800"
+                                            @click="viewFullProfile(slotProps.data)"
+                                            @contextmenu.prevent="openContextMenu($event, slotProps.data)">{{
                                                 getFullName(slotProps.data) }}</div>
                                         <div class="text-xs text-gray-500">{{ slotProps.data.unique_id || 'N/A' }}</div>
                                     </div>
                                 </div>
                             </template>
                         </Column>
+
 
                         <Column field="contact_no" header="Contact" style="min-width: 130px;">
                             <template #body="slotProps">
@@ -230,7 +234,8 @@
                             </template>
                         </Column>
 
-                        <Column field="grant_provision" header="Grant Provision" style="min-width: 160px;">
+                        <Column field="grant_provision" header="Grant Provision" style="min-width: 160px;"
+                            v-if="!simpleView">
                             <template #body="slotProps">
                                 <div v-if="slotProps.data.latest_scholarship_record" class="flex items-center gap-2">
                                     <Chip v-if="slotProps.data.latest_scholarship_record.grant_provision"
@@ -249,14 +254,14 @@
                             </template>
                         </Column>
 
-                        <Column header="Actions" style="min-width: 120px;">
+                        <Column header="Actions" style="min-width: 120px;" v-if="!simpleView">
                             <template #body="slotProps">
                                 <div class="flex gap-2">
                                     <Button icon="pi pi-eye" size="small" severity="info" outlined rounded
                                         v-tooltip.top="'View'" @click="viewFullProfile(slotProps.data)" />
-                                    <Button icon="pi pi-pencil" size="small" severity="warning" outlined rounded
-                                        v-tooltip.top="'Edit'" @click="editProfile(slotProps.data)"
-                                        v-if="hasPermission('applicants.edit')" />
+                                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-pencil" size="small"
+                                        severity="warning" outlined rounded v-tooltip.top="'Edit'"
+                                        @click="editProfile(slotProps.data)" />
                                 </div>
                             </template>
                         </Column>
@@ -269,191 +274,9 @@
                             </div>
                         </template>
                     </DataTable>
-
-                    <!-- DataView (List/Grid) -->
-                    <DataView v-else :value="profilesData" :layout="layout" paginator :rows="dataViewRows"
-                        :totalRecords="totalRecords" :first="first" @page="onPageChange" :lazy="true"
-                        paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                        :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
-
-                        <!-- List Layout -->
-                        <template #list="slotProps">
-                            <div class="grid grid-cols-1 gap-3">
-                                <div v-for="(item, index) in slotProps.items" :key="index"
-                                    class="flex flex-col md:flex-row gap-4 p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-blue-300 transition-all duration-200 bg-white">
-                                    <!-- Avatar and Basic Info -->
-                                    <div class="flex items-center gap-3 md:min-w-[260px]">
-                                        <Avatar :label="getInitials(item)" size="large" shape="circle"
-                                            class="bg-gradient-to-br from-blue-500 to-blue-600 text-white" />
-                                        <div class="flex-1 min-w-0">
-                                            <div class="font-bold text-base text-gray-900 truncate"
-                                                :title="getFullName(item)">
-                                                {{ getFullName(item) }}
-                                            </div>
-                                            <div class="text-xs text-gray-500 mt-0.5">{{ item.unique_id || 'N/A' }}
-                                            </div>
-                                            <div class="text-xs text-gray-600 mt-1 flex items-center gap-1.5">
-                                                <i class="pi pi-phone text-[10px]"></i>
-                                                {{ item.contact_no || 'N/A' }}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Academic Info -->
-                                    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 min-w-0">
-                                        <div v-if="item.latest_scholarship_record">
-                                            <div class="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">
-                                                Program</div>
-                                            <div class="font-semibold text-sm text-gray-900 truncate"
-                                                :title="item.latest_scholarship_record.program?.name">
-                                                {{ item.latest_scholarship_record.program?.shortname || 'N/A' }}
-                                            </div>
-                                        </div>
-                                        <div v-if="item.latest_scholarship_record">
-                                            <div class="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">Course
-                                            </div>
-                                            <div class="font-medium text-sm text-gray-900 truncate"
-                                                :title="item.latest_scholarship_record.course?.name">
-                                                {{ item.latest_scholarship_record.course?.shortname || 'N/A' }}
-                                            </div>
-                                            <div class="text-xs text-gray-600 truncate"
-                                                :title="item.latest_scholarship_record.school?.name">
-                                                {{ item.latest_scholarship_record.school?.shortname || 'N/A' }}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Status and Actions -->
-                                    <div
-                                        class="flex flex-row md:flex-col justify-between md:justify-start items-center md:items-end gap-2 md:min-w-[140px]">
-                                        <!-- Scholarship Status -->
-                                        <div v-if="item.latest_scholarship_record && item.latest_scholarship_record.scholarship_status !== null"
-                                            class="text-right">
-                                            <Chip
-                                                :label="getScholarshipStatusLabel(item.latest_scholarship_record.scholarship_status)"
-                                                :severity="getScholarshipStatusSeverity(item.latest_scholarship_record.scholarship_status)"
-                                                size="small" class="font-medium" />
-                                        </div>
-                                        <div v-else>
-                                            <Chip label="No Record" severity="secondary" size="small" />
-                                        </div>
-
-                                        <!-- Actions -->
-                                        <div class="flex gap-2">
-                                            <Button icon="pi pi-eye" size="small" severity="info" outlined rounded
-                                                v-tooltip.top="'View'" @click="viewFullProfile(item)" />
-                                            <Button icon="pi pi-pencil" size="small" severity="warning" outlined rounded
-                                                v-tooltip.top="'Edit'" @click="editProfile(item)"
-                                                v-if="hasPermission('applicants.edit')" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-
-                        <!-- Grid Layout -->
-                        <template #grid="slotProps">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                <div v-for="(item, index) in slotProps.items" :key="index"
-                                    class="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all duration-200 bg-white">
-                                    <div class="flex flex-col items-center text-center space-y-3">
-                                        <!-- Avatar -->
-                                        <Avatar :label="getInitials(item)" size="xlarge" shape="circle"
-                                            class="bg-gradient-to-br from-blue-500 to-blue-600 text-white" />
-
-                                        <!-- Name & ID -->
-                                        <div class="w-full">
-                                            <div class="font-bold text-sm text-gray-900 truncate"
-                                                :title="getFullName(item)">
-                                                {{ getFullName(item) }}
-                                            </div>
-                                            <div class="text-xs text-gray-500 mt-0.5">{{ item.unique_id || 'N/A' }}
-                                            </div>
-                                        </div>
-
-                                        <Divider class="my-1" />
-
-                                        <!-- Academic Info -->
-                                        <div class="w-full space-y-2 text-sm">
-                                            <div v-if="item.latest_scholarship_record">
-                                                <div class="text-[10px] text-gray-500 uppercase tracking-wide">Program
-                                                </div>
-                                                <div class="font-semibold text-gray-900 truncate"
-                                                    :title="item.latest_scholarship_record.program?.name">
-                                                    {{ item.latest_scholarship_record.program?.shortname || 'N/A' }}
-                                                </div>
-                                            </div>
-                                            <div v-if="item.latest_scholarship_record">
-                                                <div class="text-[10px] text-gray-500 uppercase tracking-wide">Course
-                                                </div>
-                                                <div class="font-medium text-gray-900 truncate"
-                                                    :title="item.latest_scholarship_record.course?.name">
-                                                    {{ item.latest_scholarship_record.course?.shortname || 'N/A' }}
-                                                </div>
-                                            </div>
-
-                                            <!-- Status -->
-                                            <div class="pt-1">
-                                                <div
-                                                    v-if="item.latest_scholarship_record && item.latest_scholarship_record.scholarship_status !== null">
-                                                    <Chip
-                                                        :label="getScholarshipStatusLabel(item.latest_scholarship_record.scholarship_status)"
-                                                        :severity="getScholarshipStatusSeverity(item.latest_scholarship_record.scholarship_status)"
-                                                        size="small" class="font-medium" />
-                                                </div>
-                                                <Chip v-else label="No Record" severity="secondary" size="small" />
-                                            </div>
-                                        </div>
-
-                                        <Divider class="my-1" />
-
-                                        <!-- Actions -->
-                                        <div class="flex gap-2 w-full">
-                                            <Button icon="pi pi-eye" size="small" severity="info" outlined
-                                                class="flex-1" v-tooltip.top="'View'" @click="viewFullProfile(item)" />
-                                            <Button icon="pi pi-pencil" size="small" severity="warning" outlined
-                                                class="flex-1" v-tooltip.top="'Edit'" @click="editProfile(item)"
-                                                v-if="hasPermission('applicants.edit')" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-
-                        <!-- Empty State -->
-                        <template #empty>
-                            <div class="text-center py-12">
-                                <i class="pi pi-users text-6xl text-gray-300 mb-4"></i>
-                                <p class="text-gray-500 text-lg">No profiles found</p>
-                                <p class="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
-                            </div>
-                        </template>
-                    </DataView>
                 </Panel>
             </div>
         </div>
-
-        <!-- Approval Workflow Dialog -->
-        <Dialog v-model:visible="showApprovalDialog" modal header="Application Review & Approval"
-            :style="{ width: '90vw', maxWidth: '1200px' }" class="p-fluid" :closable="true" :dismissableMask="false">
-            <template #header>
-                <div class="flex items-center justify-between w-full">
-                    <div class="flex items-center gap-2">
-                        <i class="pi pi-clipboard-check text-lg text-blue-600"></i>
-                        <span class="font-semibold">Application Review & Approval</span>
-                    </div>
-                    <div v-if="selectedApplication" class="text-sm text-gray-600">
-                        {{ getFullName(selectedApplication.profile || selectedApplication) }} - {{
-                            selectedApplication.program?.shortname }}
-                    </div>
-                </div>
-            </template>
-
-            <ApprovalWorkflow v-if="selectedApplication" :application="selectedApplication"
-                :approval-statuses="approvalStatuses || []" :decline-reasons="declineReasons || {}"
-                :show-applicant-name="true" @approved="handleApprovalAction" @declined="handleApprovalAction"
-                @conditionalApproval="handleApprovalAction" @refresh="refreshData" />
-        </Dialog>
 
         <!-- Full Profile View Dialog -->
         <Dialog v-model:visible="showProfileDialog" modal header="Profile Details"
@@ -635,6 +458,9 @@
         <!-- Scholar Form Modal (Edit) -->
         <ScholarFormModal v-model:visible="showEditScholarModal" mode="edit" :profile="selectedScholarForEdit"
             @success="refreshData" />
+
+        <!-- Context Menu -->
+        <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
     </AdminLayout>
 </template>
 
@@ -642,7 +468,6 @@
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
 import moment from 'moment';
 import { usePermission } from '@/composable/permissions';
 
@@ -659,6 +484,8 @@ import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import ApplicantFormModal from '@/Components/modals/ApplicantFormModal.vue';
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
+import ContextMenu from 'primevue/contextmenu';
+import Checkbox from 'primevue/checkbox';
 
 // Props
 const props = defineProps({
@@ -704,9 +531,11 @@ const showAllFilters = ref(false);
 const globalFilter = ref(props.filters?.global_search || '');
 const first = ref(0);
 const rows = ref(props.filters?.records ? parseInt(props.filters.records) : 10);
-const layout = ref('table'); // Default to table view
 const actionsPopover = ref();
 const profileType = ref(getInitialProfileType());
+const simpleView = ref(localStorage.getItem('scholarProfileSimpleView') === 'true' || false);
+const contextMenu = ref();
+const selectedProfileForContext = ref(null);
 
 // Permission composable
 const { hasPermission } = usePermission();
@@ -720,19 +549,6 @@ const profileTypeOptions = ref([
     { label: 'Existing', value: 'existing', icon: 'pi pi-check-circle' },
     { label: 'Declined', value: 'declined', icon: 'pi pi-times-circle' }
 ]);
-
-
-
-// Layout options
-const layoutOptions = ref([
-    { icon: 'pi pi-table', value: 'table', tooltip: 'Table View' },
-    { icon: 'pi pi-list', value: 'list', tooltip: 'List View' },
-    { icon: 'pi pi-th-large', value: 'grid', tooltip: 'Grid View' }
-]);
-
-// Approval workflow state
-const showApprovalDialog = ref(false);
-const selectedApplication = ref(null);
 
 // Profile view state
 const showProfileDialog = ref(false);
@@ -772,6 +588,42 @@ const profilesData = computed(() => {
 const dataViewRows = computed(() => {
     return rows.value || 10;
 });
+
+const contextMenuItems = computed(() => [
+    {
+        label: 'View Profile',
+        icon: 'pi pi-eye',
+        command: () => {
+            if (selectedProfileForContext.value) {
+                viewFullProfile(selectedProfileForContext.value);
+            }
+        }
+    },
+    {
+        label: 'Edit Profile',
+        icon: 'pi pi-pencil',
+        command: () => {
+            if (selectedProfileForContext.value && hasPermission('applicants.edit')) {
+                editProfile(selectedProfileForContext.value);
+            }
+        },
+        visible: () => hasPermission('applicants.edit')
+    },
+    {
+        separator: true,
+        visible: () => hasPermission('applicants.edit')
+    },
+    {
+        label: 'Grant Provision',
+        icon: 'pi pi-bookmark',
+        command: () => {
+            if (selectedProfileForContext.value && hasPermission('applicants.edit')) {
+                openGrantProvisionDialog(selectedProfileForContext.value);
+            }
+        },
+        visible: () => hasPermission('applicants.edit') && selectedProfileForContext.value?.latest_scholarship_record
+    }
+]);
 
 // Helper functions
 const getFullName = (profile) => {
@@ -942,23 +794,10 @@ const viewFullProfile = (profile) => {
     router.visit(route('scholarship.profile.show', profile.profile_id));
 };
 
-const reviewApplication = (scholarshipRecord) => {
-    selectedApplication.value = scholarshipRecord;
-    showApprovalDialog.value = true;
-};
-
 const editProfile = (profile) => {
     // Open edit modal instead of navigating
     selectedScholarForEdit.value = profile;
     showEditScholarModal.value = true;
-};
-
-const handleApprovalAction = (result) => {
-    if (result.success) {
-        showApprovalDialog.value = false;
-        selectedApplication.value = null;
-        refreshData();
-    }
 };
 
 const openGrantProvisionDialog = (profile) => {
@@ -1048,6 +887,15 @@ const refreshData = () => {
     });
 };
 
+const toggleSimpleView = () => {
+    simpleView.value = !simpleView.value;
+};
+
+const openContextMenu = (event, profile) => {
+    selectedProfileForContext.value = profile;
+    contextMenu.value.show(event);
+};
+
 // Pagination
 const onPageChange = (event) => {
     const page = event.page + 1; // PrimeVue uses 0-based indexing, backend uses 1-based
@@ -1113,6 +961,10 @@ watch(() => filter.page, (newPage) => {
 
 watch(() => dataViewRows.value, () => {
     first.value = (filter.page - 1) * dataViewRows.value;
+});
+
+watch(simpleView, (newValue) => {
+    localStorage.setItem('scholarProfileSimpleView', newValue.toString());
 });
 
 // Lifecycle

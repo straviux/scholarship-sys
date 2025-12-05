@@ -106,6 +106,14 @@ class ScholarshipProfileController extends Controller
 
         $profile = ScholarshipProfile::findOrFail($id);
 
+        // Debug: Log incoming request data
+        \Log::info('Update Applicant Request Data:', [
+            'father_name' => $request->father_name,
+            'mother_name' => $request->mother_name,
+            'guardian_name' => $request->guardian_name,
+            'all_data' => $request->all()
+        ]);
+
         // Create or update scholarship record if ANY academic information is provided
         $hasAcademicInfo = $request->course || $request->course_id || $request->school || $request->school_id
             || $request->year_level || $request->term || $request->academic_year || $request->program_id;
@@ -178,7 +186,19 @@ class ScholarshipProfileController extends Controller
             }
         }
 
-        $profile->update($request->validated());
+        $validated = $request->validated();
+        \Log::info('Validated data to update:', $validated);
+
+        $profile->update($validated);
+
+        // Refresh from database to check what was actually saved
+        $profile->refresh();
+        \Log::info('Profile after update:', [
+            'father_name' => $profile->father_name,
+            'mother_name' => $profile->mother_name,
+            'guardian_name' => $profile->guardian_name,
+        ]);
+
         return redirect()->back()->with('success', 'Profile status updated successfully.');
     }
 
@@ -187,9 +207,13 @@ class ScholarshipProfileController extends Controller
      */
     public function update(UpdateScholarshipProfileRequest $request, ScholarshipProfile $profile)
     {
-        $profile = ScholarshipProfile::findOrFail($profile->profile_id);
         $validated = $request->validated();
         $profile->update($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Profile updated successfully.'], 200);
+        }
+
         return redirect()->back()->with('success', 'Profile updated successfully.');
     }
 

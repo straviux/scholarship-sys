@@ -9,7 +9,7 @@ import DatePicker from 'primevue/datepicker';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import { ref, computed, nextTick, watch, onUnmounted } from 'vue';
-import { useDateUtils } from '@/composables/dateUtils.js';
+import { useDateUtils } from '@/composable/dateUtils.js';
 import { useForm } from '@inertiajs/vue3';
 import InputLabel from '@/Components/ui/inputs/InputLabel.vue';
 import InputError from '@/Components/ui/inputs/InputError.vue';
