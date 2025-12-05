@@ -115,6 +115,9 @@ watch(
     { immediate: true }
 );
 
+// Fetch data immediately to ensure it's available when component is used in modals
+fetchMunicipalities();
+
 onMounted(fetchMunicipalities);</script>
 
 <template>

@@ -92,6 +92,9 @@ const fetchReligionOptions = async () => {
     }
 };
 
+// Fetch data immediately to ensure it's available when component is used in modals
+fetchReligionOptions();
+
 onMounted(() => {
     fetchReligionOptions();
 });
