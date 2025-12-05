@@ -78,10 +78,6 @@
 @layer base {
 	html {
 		color-scheme: light !important;
-		/* Adjust for Windows display scaling (DPI scaling like 125%, 150%, etc.) */
-		/* This accounts for devicePixelRatio to normalize display size across devices */
-		zoom: calc(1 / var(--device-pixel-ratio, 1));
-		transform-origin: top left;
 	}
 
 	/* Ensure fixed sizing for critical elements */

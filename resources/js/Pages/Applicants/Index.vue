@@ -532,6 +532,98 @@ watch(showJpmColumns, (newValue) => {
     localStorage.setItem('showJpmColumns', newValue.toString());
 });
 
+// Simple view toggle - hide action buttons for easier viewing
+const simpleView = ref(localStorage.getItem('simpleView') !== null ? localStorage.getItem('simpleView') === 'true' : true);
+
+// Watch for changes in simpleView and persist to localStorage
+watch(simpleView, (newValue) => {
+    localStorage.setItem('simpleView', newValue.toString());
+});
+
+// Context menu
+const contextMenu = ref();
+const selectedContextRow = ref(null);
+const contextMenuItems = ref([]);
+
+// Build context menu items based on permissions
+const buildContextMenu = (rowData) => {
+    selectedContextRow.value = rowData;
+    const items = [];
+
+    if (hasPermission('applicants.view')) {
+        items.push({
+            label: 'Review Application',
+            icon: 'pi pi-id-card',
+            command: () => openProfileReviewModal(rowData)
+        });
+    }
+
+    if (hasPermission('applicants.edit')) {
+        items.push(
+            {
+                label: 'Edit Applicant',
+                icon: 'pi pi-user-edit',
+                command: () => editApplicant(rowData)
+            },
+            {
+                label: 'Update YAKAP Category',
+                icon: 'pi pi-heart',
+                command: () => openUpdateYakapModal(rowData)
+            }
+        );
+    }
+
+    if (hasPermission('priority.manage')) {
+        items.push({
+            separator: true
+        });
+        items.push({
+            label: 'Assign Priority',
+            icon: 'pi pi-star',
+            command: () => openPriorityModal(rowData)
+        });
+        if (rowData.priority_level && rowData.priority_level !== 'normal') {
+            items.push({
+                label: 'Remove Priority',
+                icon: 'pi pi-star-fill',
+                command: () => removePriority(rowData)
+            });
+        }
+    }
+
+    if (hasPermission('jpm.view') && showJpmColumns.value) {
+        items.push({
+            separator: true
+        });
+        items.push({
+            label: 'Edit JPM Tagging',
+            icon: 'pi pi-tags',
+            command: () => openJpmModal(rowData),
+            disabled: !hasPermission('jpm.manage')
+        });
+    }
+
+    if (hasPermission('applicants.delete')) {
+        items.push(
+            {
+                separator: true
+            },
+            {
+                label: 'Delete Applicant',
+                icon: 'pi pi-trash',
+                command: () => confirmDeleteApplicant(rowData)
+            }
+        );
+    }
+
+    return items;
+};
+
+const onRowContextMenu = (event) => {
+    contextMenuItems.value = buildContextMenu(event.data);
+    contextMenu.value.show(event.originalEvent);
+};
+
 // Filter state
 const showAllFilters = ref(false);
 
@@ -931,7 +1023,6 @@ const getPrioritySeverity = (priority) => {
         case 'urgent': return 'danger';
         case 'high': return 'warn';
         case 'normal': return 'info';
-        case 'low': return 'secondary';
         default: return 'secondary';
     }
 };
@@ -1132,7 +1223,12 @@ const formatDate = (date) => {
                             <RecordsSelect v-model="filter.records" label="label" class="w-24" size="small" /> of {{
                                 props.profiles_total || 0 }} records
                         </div>
-                        <div class="flex gap-2 justify-end mr-2">
+                        <div class="flex gap-2 justify-end mr-2 items-center">
+                            <div class="flex items-center gap-2 mr-3" v-if="viewMode === 'table'">
+                                <Checkbox v-model="simpleView" inputId="simpleViewToggle" binary />
+                                <label for="simpleViewToggle" class="text-xs text-gray-600 cursor-pointer">Simple
+                                    View</label>
+                            </div>
                             <Button icon="pi pi-list" :severity="viewMode === 'table' ? 'primary' : 'secondary'"
                                 :outlined="viewMode !== 'table'" @click="viewMode = 'table'" size="small"
                                 v-tooltip.bottom="'Table View'" />
@@ -1143,6 +1239,9 @@ const formatDate = (date) => {
 
                     </div>
 
+                    <!-- Context Menu -->
+                    <ContextMenu ref="contextMenu" :model="contextMenuItems" />
+
                     <!-- Table View -->
                     <DataTable v-if="viewMode === 'table'" :value="applicants" stripedRows showGridlines
                         responsiveLayout="scroll" :emptyMessage="'No applicants to display'" :lazy="true" paginator
@@ -1150,13 +1249,14 @@ const formatDate = (date) => {
                         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                         :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
                         v-model:selection="selectedRows" dataKey="profile_id"
-                        :rowsPerPageOptions="[10, 25, 50, 100, 250, 500]" :scrollable="true" scrollHeight="600px">
+                        :rowsPerPageOptions="[10, 25, 50, 100, 250, 500]" :scrollable="true" scrollHeight="600px"
+                        @row-contextmenu="onRowContextMenu" contextMenu>
 
                         <!-- Selection Column -->
                         <Column selectionMode="multiple" :exportable="false" style="width: 3rem"></Column>
 
                         <!-- Date Filed Column -->
-                        <Column header="Date Filed" style="min-width: 110px">
+                        <Column header="Date Filed" style="min-width: 90px">
                             <template #body="slotProps">
                                 <div class="text-sm font-medium">
                                     {{ formatDateFiled(slotProps.data.date_filed) }}
@@ -1170,11 +1270,11 @@ const formatDate = (date) => {
                                 <div class="flex flex-col gap-2">
                                     <!-- <span class="text-gray-400 text-sm">#{{
                                         slotProps.data.sequence_number_by_school_course || '-' }}</span> -->
-                                    <div class="flex gap-2">
+                                    <div class="flex gap-2 items-start w-full">
 
-                                        <div class="flex flex-col gap-1">
-                                            <div class="flex gap-1">
-                                                <div v-if="slotProps.data.gender">
+                                        <div class="flex flex-col gap-1 flex-1 min-w-0">
+                                            <div class="flex gap-1 items-center w-full">
+                                                <div v-if="slotProps.data.gender" class="flex-shrink-0">
                                                     <img v-if="slotProps.data.gender == 'M'"
                                                         src="/images/male-avatar.png" alt="avatar"
                                                         class="rounded-full w-6 h-6" />
@@ -1182,17 +1282,31 @@ const formatDate = (date) => {
                                                         src="/images/female-avatar.png" alt="avatar"
                                                         class="rounded-full w-6 h-6" />
                                                 </div>
-                                                <div v-else>
+                                                <div v-else class="flex-shrink-0">
                                                     <div
                                                         class="ml-1 w-5 h-5 rounded-full bg-gray-400 flex items-center justify-center text-xs text-white font-semibold">
                                                         {{ getApplicantInitials(slotProps.data) }}
                                                     </div>
                                                 </div>
-                                                <div class="font-semibold text-gray-800 text-sm">
+                                                <div class="font-semibold text-sky-700 text-sm flex-1 min-w-0 cursor-pointer hover:text-sky-800 underline underline-offset-4 transition-all"
+                                                    @click="openProfileReviewModal(slotProps.data)">
                                                     {{ slotProps.data.last_name }}, {{ slotProps.data.first_name }} {{
-                                                        slotProps.data.middle_name || '' }} {{ slotProps.data.extension_name
-                                                        ||
-                                                        '' }}
+                                                        slotProps.data.middle_name || '' }} {{
+                                                        slotProps.data.extension_name || '' }}
+                                                </div>
+                                                <!-- Priority Badge (visible in simple view) - Fixed position on the right -->
+                                                <div v-if="simpleView && slotProps.data.priority_level"
+                                                    class="flex-shrink-0 ml-2 flex items-center justify-center"
+                                                    v-tooltip.top="formatPriorityName(slotProps.data.priority_level) + (slotProps.data.priority_reason ? ': ' + slotProps.data.priority_reason : '')">
+                                                    <!-- Star for High and Urgent -->
+                                                    <i v-if="slotProps.data.priority_level === 'urgent' || slotProps.data.priority_level === 'high'"
+                                                        class="pi pi-star-fill" :class="{
+                                                            'text-red-500': slotProps.data.priority_level === 'urgent',
+                                                            'text-orange-500': slotProps.data.priority_level === 'high'
+                                                        }" style="font-size: 0.85rem;"></i>
+                                                    <!-- Circle for Normal -->
+                                                    <div v-else-if="slotProps.data.priority_level === 'normal'"
+                                                        class="w-3 h-3 rounded-full bg-blue-500"></div>
                                                 </div>
                                             </div>
                                             <div class="ml-1 text-xs text-gray-500 mt-0.5 flex items-center gap-3 ">
@@ -1206,21 +1320,21 @@ const formatDate = (date) => {
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Prog. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Cour. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_course || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Sch. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_school_course || '-'
-                                                    }}</span>
+                                                }}</span>
 
                                             </div>
                                         </div>
@@ -1352,7 +1466,8 @@ const formatDate = (date) => {
                         </Column>
 
                         <!-- Priority Column -->
-                        <Column header="Priority" style="width: 180px" v-if="hasPermission('priority.manage')">
+                        <Column header="Priority" style="width: 180px"
+                            v-if="hasPermission('priority.manage') && !simpleView">
                             <template #body="slotProps">
                                 <div class="flex items-center gap-2 justify-between">
                                     <div
@@ -1379,7 +1494,7 @@ const formatDate = (date) => {
                         </Column>
 
                         <!-- Actions Column -->
-                        <Column header="Actions" style="width: 250px">
+                        <Column header="Actions" style="width: 250px" v-if="!simpleView">
                             <template #body="slotProps">
 
                                 <div class="flex gap-1 justify-center flex-wrap">
@@ -1508,12 +1623,12 @@ const formatDate = (date) => {
                                 getApplicantFullName(selectedApplicantForReview) }}</h3>
                             <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
                                 <span><i class="pi pi-phone mr-1"></i>{{ selectedApplicantForReview.contact_no || 'N/A'
-                                    }}</span>
+                                }}</span>
                                 <span><i class="pi pi-envelope mr-1"></i>{{ selectedApplicantForReview.email || 'N/A'
-                                    }}</span>
+                                }}</span>
                                 <span><i class="pi pi-calendar mr-1"></i>{{
                                     formatDate(selectedApplicantForReview.date_filed)
-                                    }}</span>
+                                }}</span>
                             </div>
                         </div>
                         <!-- Queue Numbers -->
@@ -1600,7 +1715,7 @@ const formatDate = (date) => {
                                             <label class="text-gray-600">Income</label>
                                             <div class="font-medium">{{ selectedApplicantForReview.gross_monthly_income
                                                 || 'N/A'
-                                                }}</div>
+                                            }}</div>
                                         </div>
                                         <div>
                                             <label class="text-gray-600">Address</label>

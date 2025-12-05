@@ -18,18 +18,16 @@
 
                 <template #center>
                     <div class="flex items-center justify-center">
-                        <SelectButton v-model="profileType" :options="profileTypeOptions" optionLabel="label"
-                            optionValue="value" aria-labelledby="profile-type">
-                            <template #option="slotProps">
-                                <div class="flex items-center gap-2">
-                                    <i :class="slotProps.option.icon"></i>
-                                    <span>{{ slotProps.option.label }}</span>
-                                </div>
-                            </template>
-                        </SelectButton>
+                        <div class="join border border-gray-300 rounded-lg">
+                            <button v-for="option in profileTypeOptions" :key="option.value"
+                                :class="['join-item btn btn-sm', profileType === option.value ? 'btn-active' : 'btn-ghost']"
+                                @click="profileType = option.value">
+                                <i :class="option.icon" class="mr-1"></i>
+                                {{ option.label }}
+                            </button>
+                        </div>
                     </div>
                 </template>
-
                 <template #end>
                     <div class="flex gap-3 items-center">
                         <Button icon="pi pi-plus" @click="addRecordPopover.toggle($event)" severity="success"
@@ -648,24 +646,6 @@ import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vu
 import moment from 'moment';
 import { usePermission } from '@/composable/permissions';
 
-// PrimeVue Components
-import Button from 'primevue/button';
-import Panel from 'primevue/panel';
-import DataView from 'primevue/dataview';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import InputText from 'primevue/inputtext';
-import Select from 'primevue/select';
-import SelectButton from 'primevue/selectbutton';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import Tag from 'primevue/tag';
-import Chip from 'primevue/chip';
-import Dialog from 'primevue/dialog';
-import Toolbar from 'primevue/toolbar';
-import Avatar from 'primevue/avatar';
-import Divider from 'primevue/divider';
-import Popover from 'primevue/popover';
 
 // Custom Select Components
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
@@ -740,6 +720,8 @@ const profileTypeOptions = ref([
     { label: 'Existing', value: 'existing', icon: 'pi pi-check-circle' },
     { label: 'Declined', value: 'declined', icon: 'pi pi-times-circle' }
 ]);
+
+
 
 // Layout options
 const layoutOptions = ref([
@@ -821,6 +803,11 @@ const getInitials = (profile) => {
     const firstInitial = profile.first_name?.charAt(0) || '';
     const lastInitial = profile.last_name?.charAt(0) || '';
     return (firstInitial + lastInitial).toUpperCase() || '?';
+};
+
+const getProfileTypeLabel = (type) => {
+    const option = profileTypeOptions.value.find(opt => opt.value === type);
+    return option?.label || 'All';
 };
 
 const getApprovalStatusLabel = (status) => {
@@ -1132,6 +1119,9 @@ watch(() => dataViewRows.value, () => {
 onMounted(() => {
     window.addEventListener('keydown', handleKeydown);
     globalFilter.value = props.filters?.global_search || '';
+    // Initialize profileType from URL or props
+    const initialType = getInitialProfileType();
+    profileType.value = initialType;
 });
 
 onBeforeUnmount(() => {
