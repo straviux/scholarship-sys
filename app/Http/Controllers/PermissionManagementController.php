@@ -47,6 +47,11 @@ class PermissionManagementController extends Controller
         // Clear permission cache
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
+        // If the current user is affected by this change, refresh their session permissions
+        if ($request->user()->hasRole($request->role_name)) {
+            auth()->setUser(auth()->user()->refresh());
+        }
+
         return back()->with('success', 'Permissions updated successfully for ' . $role->name);
     }
 
@@ -68,6 +73,11 @@ class PermissionManagementController extends Controller
 
         // Clear permission cache
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // If the current user is affected by this change, refresh their session permissions
+        if ($request->user()->hasRole($request->role_name)) {
+            auth()->setUser(auth()->user()->refresh());
+        }
 
         return back()->with('success', 'Permission updated successfully');
     }

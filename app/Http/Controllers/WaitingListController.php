@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\ScholarshipProfileResource;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipProgram;
+use App\Services\SequenceNumberCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -273,17 +274,9 @@ class WaitingListController extends Controller
             }
         ]);
 
-        // OPTIMIZATION: Skip expensive sequence number calculations
-        // These are now computed on-demand client-side only when needed
-        // Removing sequence number calculation loop eliminates 2000+ queries per page load
-        $profiles->getCollection()->transform(function ($profile) {
-            // Set defaults - sequence numbers will be calculated only when displayed
-            $profile->sequence_number = null;
-            $profile->daily_sequence_number = null;
-            $profile->sequence_number_by_course = null;
-            $profile->sequence_number_by_school_course = null;
-            return $profile;
-        });
+        // Calculate sequence numbers for the current page
+        // This is done after pagination to only calculate for visible records
+        SequenceNumberCalculator::calculateSequenceNumbers($profiles->getCollection());
 
         if (in_array($action, ['edit', 'update']) && $id) {
             $profile = ScholarshipProfile::with([

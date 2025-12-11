@@ -339,6 +339,22 @@ Route::middleware(['auth'])->get('/api/report/scholarship/pdf', [App\Http\Contro
 // Scholarship Report Excel generation route
 Route::middleware(['auth'])->get('/api/report/scholarship/excel', [App\Http\Controllers\ReportController::class, 'generateScholarshipExcel'])->name('report.scholarship.excel');
 
+// JasperReports Routes
+Route::middleware(['auth'])->group(function () {
+    // Certificate generation
+    Route::post('/api/jasper/certificate', [App\Http\Controllers\ReportController::class, 'generateCertificate'])->name('jasper.certificate');
+
+    // Disbursement form generation
+    Route::post('/api/jasper/disbursement-form', [App\Http\Controllers\ReportController::class, 'generateDisbursementForm'])->name('jasper.disbursement-form');
+
+    // Generic report generation
+    Route::post('/api/jasper/report', [App\Http\Controllers\ReportController::class, 'generateJasperReport'])->name('jasper.report');
+
+    // List and download generated reports
+    Route::get('/api/jasper/reports', [App\Http\Controllers\ReportController::class, 'listGeneratedReports'])->name('jasper.list-reports');
+    Route::post('/api/jasper/reports/download', [App\Http\Controllers\ReportController::class, 'downloadGeneratedReport'])->name('jasper.download-report');
+});
+
 // System Updates API Routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/api/system-updates', [SystemUpdateController::class, 'index']);
