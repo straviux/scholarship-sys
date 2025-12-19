@@ -639,8 +639,13 @@ class ScholarshipProfileController extends Controller
                     $q->where('approval_status', $request->approval_status);
                 });
             } else {
-                // If no approval_status filter specified in 'all' mode, only show profiles with records
-                $query->whereHas('scholarshipGrant');
+                // If no approval_status filter specified in 'all' mode, show:
+                // - Profiles with scholarship records, OR
+                // - Profiles with is_on_waiting_list=0 (approved/declined without records)
+                $query->where(function ($q) {
+                    $q->whereHas('scholarshipGrant')
+                        ->orWhere('is_on_waiting_list', 0);
+                });
             }
         }
 
