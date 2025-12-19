@@ -392,7 +392,7 @@ const filterList = (resetToPage1 = false) => {
     // Prepare filter values
     const program = filter.program?.shortname?.toLowerCase() || "";
     const parent_name = filter.parent_name.toLowerCase() || "";
-    const course = filter.course?.shortname?.toLowerCase() || "";
+    const course = filter.course?.name?.toLowerCase() || "";
     const municipality = filter.municipality?.name?.toLowerCase() || "";
     const name = filter.name.toLowerCase() || "";
     const school = filter.school?.shortname?.toLowerCase() || "";
@@ -490,29 +490,13 @@ onBeforeUnmount(() => {
 // Only trigger filterList from filter changes, not both form and filter
 let filterListTimeout = null;
 
-// Watch for filter changes but exclude page and global_search changes to avoid pagination conflicts
-watch(() => ({
-    name: filter.name,
-    parent_name: filter.parent_name,
-    program: filter.program,
-    school: filter.school,
-    course: filter.course,
-    municipality: filter.municipality,
-    year_level: filter.year_level,
-    yakap_category: filter.yakap_category,
-    remarks: filter.remarks,
-    date_from: filter.date_from ? filter.date_from.toString() : null,
-    date_to: filter.date_to ? filter.date_to.toString() : null,
-    jpm_filter: filter.jpm_filter,
-    records: filter.records
-}), (newFilter, oldFilter) => {
-    if (filterListTimeout) clearTimeout(filterListTimeout);
-    filterListTimeout = setTimeout(() => {
-        // Always reset to page 1 when any filter changes to search through all records
-        filterList(true);
-        filterListTimeout = null;
-    }, 500);
-}, { deep: true });
+// Removed auto-trigger watcher for filter changes - manual search button required
+// This prevents auto-filtering while typing
+
+// Manual search trigger function
+const triggerSearch = () => {
+    filterList(true); // Reset to page 1 when searching
+};
 
 // Combined JPM Tagging & Remarks functionality
 const showJpmModal = ref(false);
@@ -681,7 +665,6 @@ watch(() => rows.value, () => {
 // Memoization cache for expensive computations
 const jpmStatusCache = new Map();
 const formatMemoCache = new Map();
-const applicantMemoCache = new Map();
 
 // Pass raw data directly - transformations happen only on render
 const applicants = computed(() => {
@@ -1101,6 +1084,8 @@ const formatDate = (date) => {
                             <Button :label="showAllFilters ? 'Show Basic Filters' : 'Show All Filters'"
                                 icon="pi pi-filter" severity="secondary" size="small" outlined
                                 @click="showAllFilters = !showAllFilters" />
+                            <Button label="Search" icon="pi pi-search" severity="primary" size="small"
+                                @click="triggerSearch" v-tooltip.bottom="'Apply filters and search'" />
                         </div>
                         <div class="flex items-center gap-3">
                             <Button severity="secondary" outlined size="small" icon="pi pi-history" @click="clearFilter"
@@ -1124,7 +1109,7 @@ const formatDate = (date) => {
                             </div>
                             <div class="flex flex-col">
                                 <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
-                                <CourseSelect v-model="filter.course" label="shortname" custom-placeholder="All Courses"
+                                <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses"
                                     size="small" class="w-full" />
                             </div>
                             <div class="flex flex-col">

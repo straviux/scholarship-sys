@@ -616,7 +616,7 @@ class ScholarshipProfileController extends Controller
                     ->latest('created_at')
                     ->limit(1);
             }
-        ])->whereHas('scholarshipGrant'); // Only profiles that have scholarship records
+        ]);
 
         // Handle profile_type filter
         $profileType = $request->get('profile_type', 'all');
@@ -638,6 +638,9 @@ class ScholarshipProfileController extends Controller
                 $query->whereHas('scholarshipGrant', function ($q) use ($request) {
                     $q->where('approval_status', $request->approval_status);
                 });
+            } else {
+                // If no approval_status filter specified in 'all' mode, only show profiles with records
+                $query->whereHas('scholarshipGrant');
             }
         }
 

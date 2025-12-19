@@ -40,9 +40,9 @@
                                     severity="info" outlined class="justify-start" />
                             </div>
                         </Popover>
-                        <Button icon="pi pi-refresh" @click="refreshData" severity="secondary" outlined
-                            v-tooltip.bottom="'Refresh'" />
-                        <Button icon="pi pi-print" @click="actionsPopover.toggle($event)" severity="info"
+                        <!-- <Button icon="pi pi-refresh" @click="refreshData" severity="secondary" outlined
+                            v-tooltip.bottom="'Refresh'" /> -->
+                        <Button icon="pi pi-print" @click="actionsPopover.toggle($event)" severity="secondary"
                             v-tooltip.bottom="'Reports & Export'" v-if="hasPermission('reports.view')" />
                         <Popover ref="actionsPopover">
                             <div class="flex flex-col gap-2 w-48">
@@ -67,11 +67,18 @@
                             <Button :label="showAllFilters ? 'Show Basic Filters' : 'Show All Filters'"
                                 icon="pi pi-filter" severity="secondary" size="small" outlined
                                 @click="showAllFilters = !showAllFilters" />
+                            <!-- <Button label="Search" icon="pi pi-search" severity="primary" size="small"
+                                @click="triggerSearch" v-tooltip.bottom="'Apply filters and search'" /> -->
                         </div>
                         <div class="flex items-center gap-3">
-                            <Tag :value="`${totalRecords} profiles`" severity="info" />
-                            <Button severity="secondary" outlined size="small" icon="pi pi-times" @click="clearFilters"
-                                v-tooltip.bottom="'Clear Filters'" />
+                            <span class="opacity-60 text-sm">Click Apply Filter after changing any filter</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <!-- <Tag :value="`${totalRecords} profiles`" severity="info" /> -->
+                            <Button severity="secondary" outlined size="small" icon="pi pi-history"
+                                @click="clearFilters" v-tooltip.bottom="'Clear Filters'" />
+                            <Button label="Apply Filter" icon="pi pi-filter-fill" severity="info" size="small"
+                                @click="triggerSearch" v-tooltip.bottom="'Apply filters and search'" />
                         </div>
                     </div>
 
@@ -91,7 +98,7 @@
                             </div>
                             <div class="flex flex-col">
                                 <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
-                                <CourseSelect v-model="filter.course" label="shortname" custom-placeholder="All Courses"
+                                <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses"
                                     size="small" class="w-full" />
                             </div>
                             <!-- Only show Approval Status filter when profileType is 'all' -->
@@ -142,6 +149,11 @@
                                 <InputIcon class="pi pi-search text-gray-400" />
                                 <InputText v-model="globalFilter" placeholder="Search..." class="w-full" size="small" />
                             </IconField>
+                        </div>
+                        <div class="flex">
+                            <span class="text-sm opacity-60" v-if="simpleView">Right click on profile row to show
+                                context
+                                menu</span>
                         </div>
                         <div class="flex items-center justify-center gap-4">
                             <div class="text-sm text-gray-600 flex items-center justify-center gap-2">
@@ -724,7 +736,7 @@ let filterListTimeout = null;
 const filterList = (resetToPage1 = false) => {
     // Prepare filter values
     const program = filter.program?.shortname?.toLowerCase() || "";
-    const course = filter.course?.shortname?.toLowerCase() || "";
+    const course = filter.course?.name?.toLowerCase() || "";
     const municipality = filter.municipality?.name?.toLowerCase() || "";
     const name = filter.name.toLowerCase() || "";
     const school = filter.school?.shortname?.toLowerCase() || "";
@@ -912,23 +924,13 @@ const handleKeydown = (e) => {
 };
 
 // Watchers
-watch(() => ({
-    name: filter.name,
-    program: filter.program,
-    school: filter.school,
-    course: filter.course,
-    municipality: filter.municipality,
-    year_level: filter.year_level,
-    grant_provision: filter.grant_provision,
-    approval_status: filter.approval_status,
-    records: filter.records
-}), (newFilter, oldFilter) => {
-    if (filterListTimeout) clearTimeout(filterListTimeout);
-    filterListTimeout = setTimeout(() => {
-        filterList(true); // Reset to page 1 when any filter changes
-        filterListTimeout = null;
-    }, 500);
-}, { deep: true });
+// Removed auto-trigger watcher for filter changes - manual search button required
+// This prevents auto-filtering while typing
+
+// Manual search trigger function
+const triggerSearch = () => {
+    filterList(true); // Reset to page 1 when searching
+};
 
 // Watch for profile type changes
 watch(profileType, (newValue, oldValue) => {
