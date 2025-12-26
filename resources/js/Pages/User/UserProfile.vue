@@ -560,7 +560,7 @@ const fetchRecordsForDate = async (date) => {
             const day = String(date.getDate()).padStart(2, '0');
             dateStr = `${year}-${month}-${day}`;
         }
-        
+
         const response = await axios.get(route('api.records.bydate'), {
             params: { date: dateStr }
         });
@@ -1163,20 +1163,25 @@ const loadRecordsSummaryForMonth = async () => {
                     <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                         <p class="text-sm text-blue-800">
                             <i class="pi pi-info-circle mr-2"></i>
-                            {{ Object.keys(recordsByDate).length > 0 ? `Found records on ${Object.keys(recordsByDate).length} dates this month. Click on a date to view records.` : 'Loading dates with records...' }}
+                            {{ Object.keys(recordsByDate).length > 0 ? `Found records on
+                            ${Object.keys(recordsByDate).length}
+                            dates this month. Click on a date to view records.` : 'Loading dates with records...' }}
                         </p>
                     </div>
                     <DatePicker v-model="selectedCalendarDate" inline date-format="yy-mm-dd"
                         @date-select="onCalendarDateSelect" class="w-full" />
-                    
+
                     <!-- Legend for dates with records -->
-                    <div v-if="Object.keys(recordsByDate).length > 0" class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div v-if="Object.keys(recordsByDate).length > 0"
+                        class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
                         <p class="text-xs font-semibold text-gray-600 mb-2">Dates with records:</p>
                         <div class="flex flex-wrap gap-2">
-                            <div v-for="(count, date) in recordsByDate" :key="date" 
-                                 class="px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-xs font-medium cursor-pointer hover:bg-indigo-200 transition"
-                                 @click="selectDateFromList(date)">
-                                {{ new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }}: {{ count }}
+                            <div v-for="(count, date) in recordsByDate" :key="date"
+                                class="px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-xs font-medium cursor-pointer hover:bg-indigo-200 transition"
+                                @click="selectDateFromList(date)">
+                                {{ new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }}: {{
+                                count
+                                }}
                             </div>
                         </div>
                     </div>
