@@ -1084,12 +1084,14 @@ const formatDate = (date) => {
                             <Button :label="showAllFilters ? 'Show Basic Filters' : 'Show All Filters'"
                                 icon="pi pi-filter" severity="secondary" size="small" outlined
                                 @click="showAllFilters = !showAllFilters" />
-                            <Button label="Search" icon="pi pi-search" severity="primary" size="small"
-                                @click="triggerSearch" v-tooltip.bottom="'Apply filters and search'" />
+                            <!-- <Button label="Search" icon="pi pi-search" severity="primary" size="small"
+                                @click="triggerSearch" v-tooltip.bottom="'Apply filters and search'" /> -->
                         </div>
                         <div class="flex items-center gap-3">
                             <Button severity="secondary" outlined size="small" icon="pi pi-history" @click="clearFilter"
                                 v-tooltip.bottom="'Clear Filters'" />
+                            <Button label="Apply Filter" icon="pi pi-filter-fill" severity="info" size="small"
+                                @click="triggerSearch" v-tooltip.bottom="'Apply filters and search'" />
                         </div>
                     </div>
 

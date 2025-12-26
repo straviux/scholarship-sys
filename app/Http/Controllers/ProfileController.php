@@ -643,10 +643,21 @@ class ProfileController extends Controller
             ]);
 
             $user = $request->user();
+
+            // Defensive check: ensure user is authenticated
+            if (!$user) {
+                Log::warning('User is not authenticated in getRecordsByDate');
+                return response()->json([
+                    'message' => 'Unauthenticated user',
+                    'error' => 'User is not properly authenticated'
+                ], 401);
+            }
+
+            $userId = $user->id ?? Auth::id();
             $date = $request->query('date') ? \Carbon\Carbon::parse($request->query('date')) : now();
 
             // Get all records created by the user on the specified date
-            $records = ScholarshipRecord::where('created_by', $user->id)
+            $records = ScholarshipRecord::where('created_by', $userId)
                 ->whereDate('created_at', $date->toDateString())
                 ->with('profile')
                 ->orderBy('created_at', 'desc')
@@ -686,7 +697,7 @@ class ProfileController extends Controller
                 });
 
             // Get all dates that have records for calendar marking
-            $recordDates = ScholarshipRecord::where('created_by', $user->id)
+            $recordDates = ScholarshipRecord::where('created_by', $userId)
                 ->select(DB::raw('DATE(created_at) as record_date'))
                 ->distinct()
                 ->pluck('record_date');
@@ -723,11 +734,22 @@ class ProfileController extends Controller
             ]);
 
             $user = $request->user();
+
+            // Defensive check: ensure user is authenticated
+            if (!$user) {
+                Log::warning('User is not authenticated in getRecordsSummaryByMonth');
+                return response()->json([
+                    'message' => 'Unauthenticated user',
+                    'error' => 'User is not properly authenticated'
+                ], 401);
+            }
+
+            $userId = $user->id ?? Auth::id();
             $year = $request->query('year') ? (int)$request->query('year') : now()->year;
             $month = $request->query('month') ? (int)$request->query('month') : now()->month;
 
             // Get records count grouped by date for the specified month
-            $recordsByDate = ScholarshipRecord::where('created_by', $user->id)
+            $recordsByDate = ScholarshipRecord::where('created_by', $userId)
                 ->whereYear('created_at', $year)
                 ->whereMonth('created_at', $month)
                 ->select(
