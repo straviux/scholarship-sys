@@ -402,6 +402,15 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        // Defensive check: ensure user is authenticated
+        if (!$user) {
+            Log::warning('User is not authenticated in getUserSummaryReport');
+            return Inertia::render('User/UserProfile', [
+                'status' => 'Error: User not authenticated',
+                'error' => 'User is not properly authenticated'
+            ]);
+        }
+
         // Get all scholarship records created by user
         $allRecords = ScholarshipRecord::where('created_by', $user->id)
             ->with(['profile', 'program', 'course', 'school'])
@@ -655,46 +664,64 @@ class ProfileController extends Controller
 
             $userId = $user->id ?? Auth::id();
             $date = $request->query('date') ? \Carbon\Carbon::parse($request->query('date')) : now();
+            $dateString = $date->toDateString();
+
+            // Log the query parameters for debugging
+            Log::debug('getRecordsByDate called', [
+                'user_id' => $userId,
+                'date_string' => $dateString,
+                'app_timezone' => config('app.timezone')
+            ]);
 
             // Get all records created by the user on the specified date
+            // whereDate() works correctly now that APP_TIMEZONE is set properly
             $records = ScholarshipRecord::where('created_by', $userId)
-                ->whereDate('created_at', $date->toDateString())
+                ->whereDate('created_at', $dateString)
                 ->with('profile')
                 ->orderBy('created_at', 'desc')
-                ->get()
-                ->map(function ($record) {
-                    $applicantName = 'Unknown';
-                    if ($record->profile) {
-                        $parts = array_filter([
-                            $record->profile->first_name,
-                            $record->profile->middle_name,
-                            $record->profile->last_name
-                        ]);
-                        $applicantName = implode(' ', $parts) ?: 'Unknown';
-                    }
+                ->get();
 
-                    $programName = 'Unknown';
-                    if ($record->program_id) {
-                        try {
-                            $program = ScholarshipProgram::find($record->program_id);
-                            if ($program) {
-                                $programName = $program->name;
-                            }
-                        } catch (\Exception $e) {
-                            Log::warning('Error loading program for record ' . $record->id . ': ' . $e->getMessage());
+            // Log results for debugging
+            Log::debug('getRecordsByDate results', [
+                'user_id' => $userId,
+                'date_string' => $dateString,
+                'record_count' => count($records),
+                'records' => $records->pluck('id')->toArray()
+            ]);
+
+            $records = $records->map(function ($record) {
+                $applicantName = 'Unknown';
+                if ($record->profile) {
+                    $parts = array_filter([
+                        $record->profile->first_name,
+                        $record->profile->middle_name,
+                        $record->profile->last_name
+                    ]);
+                    $applicantName = implode(' ', $parts) ?: 'Unknown';
+                }
+
+                $programName = 'Unknown';
+                if ($record->program_id) {
+                    try {
+                        $program = ScholarshipProgram::find($record->program_id);
+                        if ($program) {
+                            $programName = $program->name;
                         }
+                    } catch (\Exception $e) {
+                        Log::warning('Error loading program for record ' . $record->id . ': ' . $e->getMessage());
                     }
+                }
 
-                    return [
-                        'id' => $record->id,
-                        'applicant_name' => $applicantName,
-                        'program_name' => $programName,
-                        'academic_year' => $record->academic_year,
-                        'term' => $record->term,
-                        'created_at' => $record->created_at->toDateTimeString(),
-                        'created_time' => $record->created_at->format('H:i:s'),
-                    ];
-                });
+                return [
+                    'id' => $record->id,
+                    'applicant_name' => $applicantName,
+                    'program_name' => $programName,
+                    'academic_year' => $record->academic_year,
+                    'term' => $record->term,
+                    'created_at' => $record->created_at->toDateTimeString(),
+                    'created_time' => $record->created_at->format('H:i:s'),
+                ];
+            });
 
             // Get all dates that have records for calendar marking
             $recordDates = ScholarshipRecord::where('created_by', $userId)
