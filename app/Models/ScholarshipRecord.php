@@ -89,11 +89,92 @@ class ScholarshipRecord extends Model
         'upload_token_expires_at' => 'datetime',
     ];
 
+    /**
+     * Boot the model
+     * Automatically update scholarship_status when approval_status changes
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Automatically sync scholarship_status based on approval_status
+        static::saving(function ($model) {
+            if ($model->isDirty('approval_status')) {
+                $model->scholarship_status = self::getScholarshipStatusFromApprovalStatus(
+                    $model->approval_status
+                );
+            }
+        });
+    }
+
+    /**
+     * Get scholarship_status value based on approval_status
+     * Maps approval workflow status to scholarship status code
+     * 
+     * @param string|null $approvalStatus
+     * @return int
+     */
+    public static function getScholarshipStatusFromApprovalStatus(?string $approvalStatus): int
+    {
+        return match ($approvalStatus) {
+            'pending' => 0,           // Waiting list / Pending review
+            'approved' => 1,          // Active / Approved
+            'auto_approved' => 1,     // Active / Auto-approved
+            'declined' => 2,          // Denied / Declined
+            'conditional' => 0,       // Waiting list / Conditional approval (pending conditions)
+            null => 0,                // No status yet
+            default => 0,             // Default to waiting list
+        };
+    }
+
+    /**
+     * Check if scholarship is on waiting list
+     * @return bool
+     */
+    public function isOnWaitingList(): bool
+    {
+        return $this->scholarship_status === 0;
+    }
+
+    /**
+     * Check if scholarship is active
+     * @return bool
+     */
+    public function isActive(): bool
+    {
+        return $this->scholarship_status === 1;
+    }
+
+    /**
+     * Check if scholarship is denied
+     * @return bool
+     */
+    public function isDenied(): bool
+    {
+        return $this->scholarship_status === 2;
+    }
+
+    /**
+     * Get human-readable approval status name
+     * @return string
+     */
+    public function getStatusDisplayName(): string
+    {
+        return match ($this->approval_status) {
+            'pending' => 'Pending Review',
+            'approved' => 'Approved',
+            'auto_approved' => 'Auto-Approved',
+            'declined' => 'Declined',
+            'conditional' => 'Conditional Approval',
+            default => 'Unknown',
+        };
+    }
 
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by')->select(['id', 'name']);
     }
+
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by')->select(['id', 'name']);
@@ -237,11 +318,6 @@ class ScholarshipRecord extends Model
     public function isResubmitted()
     {
         return $this->approval_status === 'resubmitted';
-    }
-
-    public function isActive()
-    {
-        return $this->completion_status === 'active';
     }
 
     public function isCompleted()
@@ -407,20 +483,6 @@ class ScholarshipRecord extends Model
     {
         $this->remarks = $remarks;
         return $this->save();
-    }
-
-    public static function boot()
-    {
-        parent::boot();
-        static::creating(function ($model) {
-            $user = Auth::user();
-            $model->created_by = $user->id;
-            $model->updated_by = $user->id;
-        });
-        static::updating(function ($model) {
-            $user = Auth::user();
-            $model->updated_by = $user->id;
-        });
     }
 
     /**

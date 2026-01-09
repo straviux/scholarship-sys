@@ -82,25 +82,30 @@ class WaitingListController extends Controller
                 'scholarship_profiles.temporary_municipality',
                 'scholarship_profiles.temporary_barangay',
                 'scholarship_profiles.temporary_address',
-                // application_status, application_status_remarks, application_status_date now in scholarship_records
+                // Status fields now based on approval_status
                 'scholarship_profiles.is_jpm_member',
                 'scholarship_profiles.is_father_jpm',
                 'scholarship_profiles.is_mother_jpm',
                 'scholarship_profiles.is_guardian_jpm',
                 'scholarship_profiles.is_not_jpm',
                 'scholarship_profiles.jpm_remarks',
-                'scholarship_records.date_filed'
+                'scholarship_records.date_filed',
+                'scholarship_records.approval_status'
             )
             ->where(function ($q) use ($programId) {
-                // Condition 1: Has scholarship record with pending status
+                // Display all PENDING applications (based on approval_status)
+                // This replaces the old scholarship_status = 0 filter
                 $q->where(function ($subQ) use ($programId) {
-                    $subQ->where('scholarship_records.scholarship_status', 0)
-                        ->whereNotIn('scholarship_records.approval_status', ['approved', 'auto_approved', 'declined']);
+                    $subQ->where(function ($innerQ) {
+                        // Has pending approval status (not in final states: approved, auto_approved, declined)
+                        $innerQ->whereNotIn('scholarship_records.approval_status', ['approved', 'auto_approved', 'declined'])
+                            ->whereNotNull('scholarship_records.profile_id');
+                    });
                     if ($programId) {
                         $subQ->where('scholarship_records.program_id', $programId);
                     }
                 })
-                    // Condition 2: OR has no scholarship records at all
+                    // OR has no scholarship records at all
                     ->orWhereNull('scholarship_records.profile_id');
             });
 
