@@ -104,6 +104,15 @@ class CreateScholarshipRecordRequest extends FormRequest
                 'required',
                 'exists:scholarship_programs,id'
             ],
+            "school_id" => [
+                'required',
+                'exists:schools,id'
+            ],
+            "approval_status" => [
+                'nullable',
+                'string',
+                'max:50'
+            ],
 
         ];
     }

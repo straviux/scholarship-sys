@@ -53,7 +53,6 @@ class WaitingListController extends Controller
                 'scholarship_profiles.contact_no_2',
                 'scholarship_profiles.email',
                 'scholarship_profiles.created_at',
-                'scholarship_profiles.is_on_waiting_list',
                 'scholarship_profiles.priority_level',
                 'scholarship_profiles.created_by',
                 'scholarship_profiles.priority_assigned_by',
@@ -83,9 +82,7 @@ class WaitingListController extends Controller
                 'scholarship_profiles.temporary_municipality',
                 'scholarship_profiles.temporary_barangay',
                 'scholarship_profiles.temporary_address',
-                'scholarship_profiles.application_status',
-                'scholarship_profiles.application_status_remarks',
-                'scholarship_profiles.application_status_date',
+                // application_status, application_status_remarks, application_status_date now in scholarship_records
                 'scholarship_profiles.is_jpm_member',
                 'scholarship_profiles.is_father_jpm',
                 'scholarship_profiles.is_mother_jpm',
@@ -103,17 +100,26 @@ class WaitingListController extends Controller
                         $subQ->where('scholarship_records.program_id', $programId);
                     }
                 })
-                    // Condition 2: Marked as on waiting list
-                    ->orWhere('scholarship_profiles.is_on_waiting_list', true);
+                    // Condition 2: OR has no scholarship records at all
+                    ->orWhereNull('scholarship_records.profile_id');
             });
 
-        // Filter by date range (date_filed) directly from scholarship_records
+        // Filter by date range (date_filed) - use scholarship_records.date_filed if available, otherwise profile created_at
         if ($request->filled('date_from') && $request->filled('date_to')) {
-            $query->whereBetween('scholarship_records.date_filed', [$request->date_from, $request->date_to]);
+            $query->where(function ($q) use ($request) {
+                $q->whereBetween('scholarship_records.date_filed', [$request->date_from, $request->date_to])
+                    ->orWhereBetween('scholarship_profiles.created_at', [$request->date_from, $request->date_to]);
+            });
         } elseif ($request->filled('date_from')) {
-            $query->whereDate('scholarship_records.date_filed', '>=', $request->date_from);
+            $query->where(function ($q) use ($request) {
+                $q->whereDate('scholarship_records.date_filed', '>=', $request->date_from)
+                    ->orWhereDate('scholarship_profiles.created_at', '>=', $request->date_from);
+            });
         } elseif ($request->filled('date_to')) {
-            $query->whereDate('scholarship_records.date_filed', '<=', $request->date_to);
+            $query->where(function ($q) use ($request) {
+                $q->whereDate('scholarship_records.date_filed', '<=', $request->date_to)
+                    ->orWhereDate('scholarship_profiles.created_at', '<=', $request->date_to);
+            });
         }
 
         // Filter by school - use leftJoin to avoid duplicate rows
@@ -132,14 +138,20 @@ class WaitingListController extends Controller
             }
         }
 
-        // Filter by year_level
+        // Filter by year_level (only applies if profile has scholarship records)
         if ($request->filled('year_level')) {
-            $query->where('scholarship_records.year_level', 'like', '%' . $request->year_level . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('scholarship_records.year_level', 'like', '%' . $request->year_level . '%')
+                    ->orWhereNull('scholarship_records.profile_id'); // Include profiles without records
+            });
         }
 
-        // Filter by yakap_category
+        // Filter by yakap_category (only applies if profile has scholarship records)
         if ($request->filled('yakap_category')) {
-            $query->where('scholarship_records.yakap_category', $request->yakap_category);
+            $query->where(function ($q) use ($request) {
+                $q->where('scholarship_records.yakap_category', $request->yakap_category)
+                    ->orWhereNull('scholarship_records.profile_id'); // Include profiles without records
+            });
         }
 
         // Filter by course - use leftJoin to avoid duplicate rows
@@ -230,7 +242,7 @@ class WaitingListController extends Controller
             });
         }
 
-        // Default ordering by date_filed from scholarship_records
+        // Default ordering by date_filed from scholarship_records (or created_at if no records)
         $query->orderBy('scholarship_records.date_filed', $request->sort['date_filed'] ?? 'asc')
             ->orderBy('scholarship_profiles.created_at', 'asc');
 
@@ -283,7 +295,7 @@ class WaitingListController extends Controller
                 'scholarshipGrant.program',
                 'scholarshipGrant.school',
                 'scholarshipGrant.course'
-            ])->where('is_on_waiting_list', '=', 1)->find($id);
+            ])->find($id);
 
             // Transform municipality and barangay strings to objects for select components
             if ($profile) {

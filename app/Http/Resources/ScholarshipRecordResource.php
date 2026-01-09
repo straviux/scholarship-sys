@@ -41,7 +41,7 @@ class ScholarshipRecordResource extends JsonResource
             'applied_course' => $this->applied_course,
             'applied_school' => $this->applied_school,
             'is_active' => $this->is_active,
-            'is_on_waiting_list' => $this->is_on_waiting_list,
+            'application_status' => $this->application_status, // 0=Waiting List, 1=Active, 2=Denied
             'date_filed' => $this->date_filed,
             'date_approved' => $this->date_approved,
             'created_by' => $this->createdBy ? [

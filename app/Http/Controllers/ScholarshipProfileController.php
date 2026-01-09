@@ -36,8 +36,7 @@ class ScholarshipProfileController extends Controller
         }
 
         $validated = $request->validated();
-        // Set is_on_waiting_list to true by default if not explicitly set
-        $validated['is_on_waiting_list'] = $validated['is_on_waiting_list'] ?? true;
+        // is_on_waiting_list is now managed through scholarship_records.application_status
         $new_profile = ScholarshipProfile::create($validated);
 
         // Create scholarship record if ANY academic information is provided
@@ -269,7 +268,7 @@ class ScholarshipProfileController extends Controller
                     ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%$query%"])
                     ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ["%$query%"]);
             })
-            ->where('is_on_waiting_list', 0)
+            // Filter removed - is_on_waiting_list is now in scholarship_records
             ->limit(20)
             ->get();
 
@@ -420,7 +419,7 @@ class ScholarshipProfileController extends Controller
 
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) {
             $q->where('scholarship_status', 0)->latest('created_at'); // return scholarship grant with pending status
-        }])->where('is_on_waiting_list', '=', 1);
+        }])->with('scholarshipGrant');
 
         if ($request->filled('program')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
@@ -639,13 +638,9 @@ class ScholarshipProfileController extends Controller
                     $q->where('approval_status', $request->approval_status);
                 });
             } else {
-                // If no approval_status filter specified in 'all' mode, show:
-                // - Profiles with scholarship records, OR
-                // - Profiles with is_on_waiting_list=0 (approved/declined without records)
-                $query->where(function ($q) {
-                    $q->whereHas('scholarshipGrant')
-                        ->orWhere('is_on_waiting_list', 0);
-                });
+                // If no approval_status filter specified in 'all' mode, show all profiles
+                // Profiles are accessed through scholarshipGrant relationship
+                $query->with('scholarshipGrant');
             }
         }
 

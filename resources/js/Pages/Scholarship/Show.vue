@@ -657,7 +657,7 @@
 
             <template #footer>
                 <Button label="Cancel" severity="secondary" @click="closeRecordModal" outlined size="small" />
-                <Button :label="recordModalMode === 'add' ? 'Add Record' : 'Update Record'" @click="submitRecord"
+                <Button :label="recordModalMode === 'add' ? 'Add Record' : 'Update Record'" @click.stop="submitRecord"
                     :loading="recordForm.processing" size="small" />
             </template>
         </Dialog>
@@ -926,9 +926,11 @@ const openAddRecordModal = () => {
 };
 
 const openEditRecordModal = async (record) => {
+    // console.log(record)
     recordModalMode.value = 'edit';
     recordForm.value = {
-        grant_id: record.grant_id,
+        // Use record.id as grant_id
+        grant_id: record.id,
         // Use full objects for select components if available, otherwise use IDs
         program_id: record.program || record.program_id,
         school_id: record.school || record.school_id,
@@ -983,12 +985,13 @@ const submitRecord = async () => {
             approval_status: recordForm.value.approval_status,
             remarks: recordForm.value.remarks
         };
-
+        console.log('Form data being sent:', formData);
         let response;
         if (recordModalMode.value === 'add') {
             response = await axios.post(route('scholarship_records.store'), formData);
             toast.success('Scholarship record added successfully');
         } else {
+            console.log('Updating record with ID:', recordForm.value.grant_id);
             response = await axios.put(route('scholarship_records.update', recordForm.value.grant_id), formData);
             toast.success('Scholarship record updated successfully');
         }
@@ -997,7 +1000,9 @@ const submitRecord = async () => {
         router.reload({ only: ['profile'] });
     } catch (error) {
         console.error('Error submitting scholarship record:', error);
-        toast.error(error.response?.data?.message || 'Failed to save scholarship record');
+        console.error('Error response:', error.response?.data);
+        const errorMsg = error.response?.data?.message || error.response?.data?.errors || 'Failed to save scholarship record';
+        toast.error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
     } finally {
         recordForm.value.processing = false;
     }

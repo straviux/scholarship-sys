@@ -54,8 +54,7 @@ class ScholarController extends Controller
         try {
             $validated = $request->validated();
 
-            // Scholars are NOT on waiting list - they are already approved
-            $validated['is_on_waiting_list'] = false;
+            // is_on_waiting_list is now managed through scholarship_records.application_status
 
             // Create the scholarship profile
             $new_profile = ScholarshipProfile::create($validated);
@@ -158,7 +157,7 @@ class ScholarController extends Controller
 
             // Update profile information
             $validated = $request->validated();
-            $validated['is_on_waiting_list'] = false; // Ensure scholars are not on waiting list
+            // is_on_waiting_list is now managed through scholarship_records.application_status
             $profile->update($validated);
 
             // Get course - prefer ID, fallback to name lookup

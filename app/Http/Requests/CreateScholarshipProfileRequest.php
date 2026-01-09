@@ -177,9 +177,7 @@ class CreateScholarshipProfileRequest extends FormRequest
             "is_active" => [
                 'boolean'
             ],
-            "is_on_waiting_list" => [
-                'boolean'
-            ],
+            // is_on_waiting_list is now managed through scholarship_records.application_status
             "remarks" => [
                 'nullable',
                 'string',
@@ -193,18 +191,7 @@ class CreateScholarshipProfileRequest extends FormRequest
                 'nullable',
                 'date',
             ],
-            "application_status" => [
-                'integer'
-            ],
-            "application_status_date" => [
-                'nullable',
-                'date',
-            ],
-            "application_status_remarks" => [
-                'nullable',
-                'string',
-                'max:100'
-            ],
+            // application_status, application_status_remarks, application_status_date are now in scholarship_records
             "guardian_name" => [
                 'nullable',
                 'string',

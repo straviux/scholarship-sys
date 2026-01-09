@@ -100,12 +100,6 @@ class ScholarshipRecordController extends Controller
             if (isset($request->sort['last_name'])) {
                 $query->orderBy('last_name', $request->sort['last_name']);
             }
-            if (isset($request->sort['applied_course'])) {
-                $query->orderBy('applied_course', $request->sort['applied_course']);
-            }
-            if (isset($request->sort['applied_year_level'])) {
-                $query->orderBy('applied_year_level', $request->sort['applied_year_level']);
-            }
         }
 
         $perPage = $request->get('per_page', 10);
@@ -191,7 +185,7 @@ class ScholarshipRecordController extends Controller
         $validated = $request->validated();
         $validated['date_approved'] = $request->date_approved ?? $record->date_approved;
         $record->update($validated);
-        return redirect()->back()->with('message', 'Scholarship record updated successfully.');
+        return response()->json(['message' => 'Scholarship record updated successfully.', 'data' => $record]);
     }
 
     public function updateScholarshipStatusApi($id, Request $request): JsonResponse

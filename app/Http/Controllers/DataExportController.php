@@ -381,14 +381,17 @@ class DataExportController extends Controller
         }
 
         // Count applicants
-        $applicantsQuery = ScholarshipProfile::where('is_on_waiting_list', true);
+        // is_on_waiting_list is now managed through scholarship_records.application_status
+        $applicantsQuery = ScholarshipProfile::whereHas('scholarshipGrant', function ($q) {
+            $q->where('application_status', 0); // 0 = Waiting List
+        });
 
         if ($request->filled('date_from')) {
-            $applicantsQuery->whereDate('date_filed', '>=', $request->date_from);
+            $applicantsQuery->whereDate('created_at', '>=', $request->date_from);
         }
 
         if ($request->filled('date_to')) {
-            $applicantsQuery->whereDate('date_filed', '<=', $request->date_to);
+            $applicantsQuery->whereDate('created_at', '<=', $request->date_to);
         }
 
         $scholarsCount = $query->count();

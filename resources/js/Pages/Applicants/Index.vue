@@ -60,8 +60,6 @@ const props = defineProps({
     sort: {
         date_filed: { type: String },
         last_name: { type: String },
-        course: { type: String },
-        applied_year_level: { type: String },
     },
     // Approval workflow props
     approvalStatuses: {
@@ -665,6 +663,8 @@ watch(() => rows.value, () => {
 // Memoization cache for expensive computations
 const jpmStatusCache = new Map();
 const formatMemoCache = new Map();
+const applicantMemoCache = new Map();
+const jpmStatusMemoCache = new Map();
 
 // Pass raw data directly - transformations happen only on render
 const applicants = computed(() => {
@@ -915,7 +915,6 @@ const getApplicantFullName = (applicant) => {
 };
 
 // Get JPM status for tag display with member details (memoized)
-const jpmStatusMemoCache = new Map();
 const getJpmStatus = (profile) => {
     if (!profile) return null;
 
@@ -1112,7 +1111,7 @@ const formatDate = (date) => {
                             <div class="flex flex-col">
                                 <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
                                 <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses"
-                                    size="small" class="w-full" />
+                                    size="small" class="w-full" :scholarship-program-id="filter.program?.id" />
                             </div>
                             <div class="flex flex-col">
                                 <label class="text-xs font-medium text-gray-600 mb-1">Date Filed</label>

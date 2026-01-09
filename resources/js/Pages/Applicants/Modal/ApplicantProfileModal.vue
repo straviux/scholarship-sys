@@ -24,7 +24,7 @@
                                     <XMarkIcon class="h-6 w-6 text-red-500" />
                                 </button>
                                 <Link v-else class="-mr-2" :href="prevPage">
-                                <XMarkIcon class="h-6 w-6 text-red-500" />
+                                    <XMarkIcon class="h-6 w-6 text-red-500" />
                                 </Link>
                             </DialogTitle>
                             <div class="p-6 bg-white">
@@ -406,7 +406,6 @@ const form = useForm({
     email: props.profile?.email || "",
     gender: props.profile?.gender || "",
     remarks: props.profile?.remarks || "",
-    is_on_waiting_list: true,
     date_filed: formatDateForInput(props.profile?.date_filed) || "", // Changed: format date properly
     date_approved: formatDateForInput(props.profile?.scholarship_grant[0]?.date_approved) || "",
     selectedProfile: "",
@@ -574,8 +573,6 @@ const submit = (closeAfter = false) => {
     });
 
     if (props.action == 'create') {
-        form.is_on_waiting_list = 1;
-
         // Explicitly build the data object with all fields
         const submitData = {
             scholarship_grant_id: form.scholarship_grant_id,
@@ -619,7 +616,6 @@ const submit = (closeAfter = false) => {
             indigenous_group: form.indigenous_group,
             remarks: form.remarks,
             date_filed: form.date_filed,
-            is_on_waiting_list: 1,
         };
 
         console.log('Final data being sent to backend (CREATE):', submitData);
@@ -690,7 +686,6 @@ const submit = (closeAfter = false) => {
             indigenous_group: form.indigenous_group,
             remarks: form.remarks,
             date_filed: form.date_filed,
-            is_on_waiting_list: form.is_on_waiting_list,
         };
 
         console.log('Final data being sent to backend:', submitData);
