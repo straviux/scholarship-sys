@@ -164,7 +164,13 @@ class ScholarshipRecordController extends Controller
         // $validatedData['date_approved'] = $request->date_approved ?? null;
         $validatedData['created_by'] = $request->user() ? $request->user()->id : null;
         $validatedData['scholarship_status_date'] = Carbon::now();
-        $validatedData['scholarship_status_remarks'] = $validatedData['scholarship_status'] == 0 ? 'Scholarship application pending approval' : ($validatedData['scholarship_status'] == 1 ? 'Scholarship application approved' : 'Scholarship application status unknown');
+
+        // If scholarship_status is not provided, calculate it from approval_status or default to pending (0)
+        $approval_status = $validatedData['approval_status'] ?? 'pending';
+        $scholarship_status = $validatedData['scholarship_status'] ?? ScholarshipRecord::getScholarshipStatusFromApprovalStatus($approval_status);
+
+        $validatedData['scholarship_status'] = $scholarship_status;
+        $validatedData['scholarship_status_remarks'] = $scholarship_status == 0 ? 'Scholarship application pending approval' : ($scholarship_status == 1 ? 'Scholarship application approved' : 'Scholarship application status unknown');
 
         $newScholar = ScholarshipRecord::create($validatedData);
         if ($newScholar) {
@@ -184,6 +190,16 @@ class ScholarshipRecordController extends Controller
         $record = ScholarshipRecord::findOrFail($id);
         $validated = $request->validated();
         $validated['date_approved'] = $request->date_approved ?? $record->date_approved;
+
+        // If scholarship_status is not provided, keep existing or calculate from approval_status
+        if (!isset($validated['scholarship_status']) || $validated['scholarship_status'] === null) {
+            if (isset($validated['approval_status'])) {
+                $validated['scholarship_status'] = ScholarshipRecord::getScholarshipStatusFromApprovalStatus($validated['approval_status']);
+            } else {
+                $validated['scholarship_status'] = $record->scholarship_status;
+            }
+        }
+
         $record->update($validated);
         return response()->json(['message' => 'Scholarship record updated successfully.', 'data' => $record]);
     }

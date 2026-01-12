@@ -18,6 +18,16 @@
                 <small v-if="form.errors.username" class="p-error">{{ form.errors.username }}</small>
             </div>
 
+            <!-- Office Designation Field -->
+            <div class="field">
+                <label for="office_designation" class="block text-sm font-medium text-gray-700 mb-2">Office
+                    Designation</label>
+                <InputText id="office_designation" v-model="form.office_designation" class="w-full"
+                    :class="{ 'p-invalid': form.errors.office_designation }" />
+                <small v-if="form.errors.office_designation" class="p-error">{{ form.errors.office_designation
+                    }}</small>
+            </div>
+
             <!-- Role Selection -->
             <div class="field">
                 <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role</label>
@@ -99,6 +109,7 @@ const availableRoles = computed(() => {
 const form = useForm({
     name: "",
     username: "",
+    office_designation: "",
     roles: null,
 });
 
@@ -107,6 +118,7 @@ watch(() => props.user, (newUser) => {
     if (newUser) {
         form.name = newUser.name || "";
         form.username = newUser.username || "";
+        form.office_designation = newUser.office_designation || "";
         form.roles = newUser.roles?.[0] || null;
         form.clearErrors();
     }
@@ -117,6 +129,7 @@ watch(() => props.show, (newValue) => {
     if (newValue && props.user) {
         form.name = props.user.name || "";
         form.username = props.user.username || "";
+        form.office_designation = props.user.office_designation || "";
         form.roles = props.user.roles?.[0] || null;
         form.clearErrors();
     }

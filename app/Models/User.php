@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name',
         'username',
         'password',
+        'office_designation',
         'profile_photo',
         'upload_token',
         'upload_token_expires_at',

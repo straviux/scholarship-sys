@@ -31,6 +31,7 @@ const availableRoles = computed(() => {
 const form = useForm({
     name: props.user?.name,
     username: props.user?.username,
+    office_designation: props.user?.office_designation,
     roles: [],
 });
 
@@ -55,8 +56,9 @@ const submit = () => {
                 </h1>
                 <Link :href="route('users.index')"
                     class="text-slate-500 underline font-bold px-3 py-2 bg-none rounded-sm flex items-center justify-center gap-1">
-                <ArrowUturnLeftIcon class="h-4 w-4" />
-                <span>Back</span></Link>
+                    <ArrowUturnLeftIcon class="h-4 w-4" />
+                    <span>Back</span>
+                </Link>
             </div>
             <div class="mt-6 max-w-md mx-auto bg-gray-100 shadow-lg rounded-lg p-6">
                 <form @submit.prevent="submit">
@@ -77,6 +79,16 @@ const submit = () => {
 
                         <InputError class="mt-2" :message="form.errors.username" />
                     </div>
+
+                    <div class="mt-4">
+                        <InputLabel for="office_designation" value="Office Designation" />
+
+                        <TextInput id="office_designation" type="text" class="mt-1 block w-full"
+                            v-model="form.office_designation" autocomplete="off" />
+
+                        <InputError class="mt-2" :message="form.errors.office_designation" />
+                    </div>
+
                     <div class="mt-4">
                         <InputLabel for="roles" value="Role" />
                         <VueMultiselect v-model="form.roles" :options="availableRoles" :close-on-select="true"

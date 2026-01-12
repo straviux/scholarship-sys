@@ -50,6 +50,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'username' => 'required|string|lowercase|max:255|unique:' . User::class,
+            'office_designation' => 'nullable|string|max:255',
             'password' => ['required', 'confirmed', Rules\Password::min(4)],
             'roles' => ['required', 'array']
         ]);
@@ -59,8 +60,8 @@ class UserController extends Controller
         $user = User::create([
             'name' => $request->name,
             'username' => $request->username,
+            'office_designation' => $request->office_designation,
             'password' => Hash::make($request->password),
-
         ]);
 
         $user->syncRoles($getRole['name']);
@@ -91,6 +92,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'username' => 'required|string|lowercase|max:255| ' .
                 Rule::unique('users', 'username')->ignore($user),
+            'office_designation' => 'nullable|string|max:255',
             'roles' => ['required', 'array']
         ]);
 
@@ -98,7 +100,8 @@ class UserController extends Controller
         $role = Role::findById($getRole['id']);
         $user->update([
             'name' => $request->name,
-            'username' => $request->username
+            'username' => $request->username,
+            'office_designation' => $request->office_designation
         ]);
 
         $user->syncRoles($getRole['name']);

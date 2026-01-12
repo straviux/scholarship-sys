@@ -18,6 +18,16 @@
                 <small v-if="form.errors.username" class="p-error">{{ form.errors.username }}</small>
             </div>
 
+            <!-- Office Designation Field -->
+            <div class="field">
+                <label for="office_designation" class="block text-sm font-medium text-gray-700 mb-2">Office
+                    Designation</label>
+                <InputText id="office_designation" v-model="form.office_designation" class="w-full"
+                    :class="{ 'p-invalid': form.errors.office_designation }" />
+                <small v-if="form.errors.office_designation" class="p-error">{{ form.errors.office_designation
+                    }}</small>
+            </div>
+
             <!-- Role Selection -->
             <div class="field">
                 <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role</label>
@@ -59,7 +69,7 @@
                 <Password v-model="form.password_confirmation" placeholder="Confirm password" toggleMask class="w-full"
                     :class="{ 'p-invalid': form.errors.password_confirmation }" :feedback="false" />
                 <small v-if="form.errors.password_confirmation" class="p-error">{{ form.errors.password_confirmation
-                    }}</small>
+                }}</small>
             </div>
         </form>
 
@@ -98,6 +108,7 @@ const availableRoles = computed(() => {
 const form = useForm({
     name: "",
     username: "",
+    office_designation: "",
     password: "",
     password_confirmation: "",
     roles: null,
