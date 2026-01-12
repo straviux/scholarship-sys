@@ -94,19 +94,14 @@ class WaitingListController extends Controller
             )
             ->where(function ($q) use ($programId) {
                 // Display all PENDING applications (based on approval_status)
-                // This replaces the old scholarship_status = 0 filter
-                $q->where(function ($subQ) use ($programId) {
-                    $subQ->where(function ($innerQ) {
-                        // Has pending approval status (not in final states: approved, auto_approved, declined)
-                        $innerQ->whereNotIn('scholarship_records.approval_status', ['approved', 'auto_approved', 'declined'])
-                            ->whereNotNull('scholarship_records.profile_id');
-                    });
-                    if ($programId) {
-                        $subQ->where('scholarship_records.program_id', $programId);
-                    }
-                })
-                    // OR has no scholarship records at all
-                    ->orWhereNull('scholarship_records.profile_id');
+                // Only show profiles with scholarship records that have pending approval status
+                $q->whereNotIn('scholarship_records.approval_status', ['approved', 'auto_approved', 'declined'])
+                    ->whereNotNull('scholarship_records.profile_id');
+
+                // Filter by program if specified
+                if ($programId) {
+                    $q->where('scholarship_records.program_id', $programId);
+                }
             });
 
         // Filter by date range (date_filed) - use scholarship_records.date_filed if available, otherwise profile created_at
@@ -271,30 +266,90 @@ class WaitingListController extends Controller
         }
 
         $records = $request->get('records', 10);
+
+        // IMPORTANT: Calculate sequence numbers based on the ENTIRE waiting list
+        // This ensures queue numbers reflect actual position in the complete waiting list,
+        // not just the filtered or paginated results.
+        // Build a base query for ALL pending applications (without other filters, but respects program filter)
+        $baseQuery = ScholarshipProfile::query()
+            ->with([
+                'scholarshipGrant' => function ($q) use ($programId) {
+                    $q->with(['program', 'school', 'course'])
+                        ->where('scholarship_status', 0)
+                        ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
+                        ->orderBy('created_at', 'desc')
+                        ->select('id', 'profile_id', 'program_id', 'school_id', 'course_id', 'scholarship_status', 'approval_status', 'year_level', 'yakap_category', 'date_filed');
+
+                    // Filter by program if specified
+                    if ($programId) {
+                        $q->where('program_id', $programId);
+                    }
+                }
+            ])
+            ->whereHas('scholarshipGrant', function ($recordQ) use ($programId) {
+                // Include profiles with pending approval status
+                $recordQ->where('scholarship_status', 0)
+                    ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
+                // Filter by program if specified
+                if ($programId) {
+                    $recordQ->where('program_id', $programId);
+                }
+            });
+
+        // Sort by scholarship record date_filed, getting the most recent record's date_filed per profile
+        $baseQuery->leftJoin('scholarship_records as sr_sort', function ($join) use ($programId) {
+            $join->on('scholarship_profiles.profile_id', '=', 'sr_sort.profile_id')
+                ->where('sr_sort.scholarship_status', 0)
+                ->whereNotIn('sr_sort.approval_status', ['approved', 'auto_approved', 'declined']);
+            if ($programId) {
+                $join->where('sr_sort.program_id', $programId);
+            }
+        })
+            ->orderBy('sr_sort.date_filed', 'asc')
+            ->orderBy('scholarship_profiles.created_at', 'asc')
+            ->distinct('scholarship_profiles.profile_id');
+
+        // Get ALL profiles for sequence number calculation
+        $allProfiles = (clone $baseQuery)->get();
+
+        // Calculate sequence numbers on the ENTIRE waiting list
+        SequenceNumberCalculator::calculateSequenceNumbers($allProfiles);
+
+        // Create a map of profile_id -> sequence numbers for quick lookup
+        $sequenceMap = $allProfiles->mapWithKeys(function ($profile) {
+            return [
+                $profile->profile_id => [
+                    'sequence_number' => $profile->sequence_number,
+                    'sequence_number_by_course' => $profile->sequence_number_by_course,
+                    'sequence_number_by_school_course' => $profile->sequence_number_by_school_course,
+                    'daily_sequence_number' => $profile->daily_sequence_number,
+                ]
+            ];
+        });
         
-        // OPTIMIZATION: Paginate BEFORE eager loading relations
-        // This ensures we only load relations for the current page (typically 10-50 records)
-        // instead of loading all filtered records into memory first
+        // Now apply filters and pagination to the main query
         /** @disregard UndefinedMethod withQueryString */
         $profiles = $query->paginate($records)->withQueryString();
 
-        // OPTIMIZATION: Eager load relationships AFTER pagination
-        // This is much more efficient than doing it before pagination
-        // Only loads relations for 10-50 records per page instead of 1000s
-        // REMOVED: createdBy and priorityAssignedBy (not used in frontend) - saves 1000+ queries
+        // Restore sequence numbers from the complete waiting list calculation
+        $profiles->getCollection()->each(function ($profile) use ($sequenceMap) {
+            if (isset($sequenceMap[$profile->profile_id])) {
+                $numbers = $sequenceMap[$profile->profile_id];
+                $profile->sequence_number = $numbers['sequence_number'];
+                $profile->sequence_number_by_course = $numbers['sequence_number_by_course'];
+                $profile->sequence_number_by_school_course = $numbers['sequence_number_by_school_course'];
+                $profile->daily_sequence_number = $numbers['daily_sequence_number'];
+            }
+        });
+
+        // Eager load relationships for paginated results
         $profiles->load([
             'scholarshipGrant' => function ($q) {
-                // Optimize scholarshipGrant loading by only selecting needed records
                 $q->with(['program', 'school', 'course'])
-                    ->select('profile_id', 'program_id', 'school_id', 'course_id', 'scholarship_status', 'approval_status', 'year_level', 'yakap_category', 'date_filed')
+                    ->select('id', 'profile_id', 'program_id', 'school_id', 'course_id', 'scholarship_status', 'approval_status', 'year_level', 'yakap_category', 'date_filed')
                     ->orderBy('created_at', 'desc');
             }
         ]);
-
-        // Calculate sequence numbers for the current page
-        // This is done after pagination to only calculate for visible records
-        SequenceNumberCalculator::calculateSequenceNumbers($profiles->getCollection());
-
         if (in_array($action, ['edit', 'update']) && $id) {
             $profile = ScholarshipProfile::with([
                 'scholarshipGrant.program',
