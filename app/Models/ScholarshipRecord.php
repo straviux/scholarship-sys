@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Carbon\Carbon;
 
 class ScholarshipRecord extends Model
 {
@@ -185,6 +186,50 @@ class ScholarshipRecord extends Model
             'conditional' => 'Conditional Approval',
             default => 'Unknown',
         };
+    }
+
+    /**
+     * Set date_filed - Handle timezone properly
+     * When a date string is received from the frontend (e.g., "2026-01-12"),
+     * it's in the user's local timezone (Asia/Manila).
+     * We need to ensure it's stored correctly without timezone conversion.
+     */
+    public function setDateFiledAttribute($value)
+    {
+        if ($value) {
+            // If it's a string date (YYYY-MM-DD format from frontend)
+            if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                // Store as-is to preserve the date without timezone conversion
+                $this->attributes['date_filed'] = $value;
+            } else {
+                // If it's a DateTime object or another format, convert to YYYY-MM-DD
+                $this->attributes['date_filed'] = Carbon::parse($value)->format('Y-m-d');
+            }
+        } else {
+            $this->attributes['date_filed'] = null;
+        }
+    }
+
+    /**
+     * Set date_approved - Handle timezone properly
+     * When a date string is received from the frontend (e.g., "2026-01-12"),
+     * it's in the user's local timezone (Asia/Manila).
+     * We need to ensure it's stored correctly without timezone conversion.
+     */
+    public function setDateApprovedAttribute($value)
+    {
+        if ($value) {
+            // If it's a string date (YYYY-MM-DD format from frontend)
+            if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                // Store as-is to preserve the date without timezone conversion
+                $this->attributes['date_approved'] = $value;
+            } else {
+                // If it's a DateTime object or another format, convert to YYYY-MM-DD
+                $this->attributes['date_approved'] = Carbon::parse($value)->format('Y-m-d');
+            }
+        } else {
+            $this->attributes['date_approved'] = null;
+        }
     }
 
     public function createdBy()
