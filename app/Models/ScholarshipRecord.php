@@ -92,10 +92,27 @@ class ScholarshipRecord extends Model
     /**
      * Boot the model
      * Automatically update scholarship_status when approval_status changes
+     * Automatically set created_by and updated_by on create/update
      */
     protected static function boot()
     {
         parent::boot();
+
+        // Automatically set created_by and updated_by
+        static::creating(function ($model) {
+            $user = Auth::user();
+            if ($user) {
+                $model->created_by = $user->id;
+                $model->updated_by = $user->id;
+            }
+        });
+
+        static::updating(function ($model) {
+            $user = Auth::user();
+            if ($user) {
+                $model->updated_by = $user->id;
+            }
+        });
 
         // Automatically sync scholarship_status based on approval_status
         static::saving(function ($model) {
