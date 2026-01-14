@@ -505,6 +505,37 @@ const openJpmModal = (profile) => {
     showJpmModal.value = true;
 };
 
+// Remarks Modal functionality
+const showRemarksModal = ref(false);
+const selectedProfileForRemarks = ref(null);
+const remarksForm = useForm({
+    remarks: ''
+});
+
+const openRemarksModal = (profile) => {
+    selectedProfileForRemarks.value = profile;
+    remarksForm.remarks = profile.remarks || '';
+    showRemarksModal.value = true;
+};
+
+const closeRemarksModal = () => {
+    showRemarksModal.value = false;
+    remarksForm.reset();
+};
+
+const submitRemarks = () => {
+    remarksForm.post(route('applicants.update-remarks', selectedProfileForRemarks.value.profile_id), {
+        onSuccess: () => {
+            toast.success('Remarks updated successfully!');
+            closeRemarksModal();
+            refreshApplicationList();
+        },
+        onError: () => {
+            toast.error('Failed to update remarks');
+        }
+    });
+};
+
 
 // Persist showJpmColumns state in localStorage
 const showJpmColumns = ref(localStorage.getItem('showJpmColumns') === 'true');
@@ -582,6 +613,17 @@ const buildContextMenu = (rowData) => {
             icon: 'pi pi-tags',
             command: () => openJpmModal(rowData),
             disabled: !hasPermission('jpm.manage')
+        });
+    }
+
+    if (hasPermission('applicants.edit')) {
+        items.push({
+            separator: true
+        });
+        items.push({
+            label: 'Add/Edit Remarks',
+            icon: 'pi pi-comment',
+            command: () => openRemarksModal(rowData)
         });
     }
 
@@ -1307,21 +1349,21 @@ const formatDate = (date) => {
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Prog. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Cour. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_course || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Sch. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_school_course || '-'
-                                                    }}</span>
+                                                }}</span>
 
                                             </div>
                                         </div>
@@ -1564,6 +1606,34 @@ const formatDate = (date) => {
         <!-- JPM Modal -->
         <JpmModal :show="showJpmModal" :profile="selectedProfileForJpm" @update:show="showJpmModal = $event" />
 
+        <!-- Remarks Modal -->
+        <Dialog v-model:visible="showRemarksModal" modal header="Add/Edit Remarks" :style="{ width: '50vw' }"
+            @hide="closeRemarksModal">
+            <div class="space-y-4" v-if="selectedProfileForRemarks">
+                <div class="bg-blue-50 p-3 rounded border-l-4 border-blue-500 mb-4">
+                    <div class="font-semibold text-blue-900">
+                        {{ selectedProfileForRemarks.last_name }}, {{ selectedProfileForRemarks.first_name }}
+                    </div>
+                    <div class="text-sm text-gray-600">{{ selectedProfileForRemarks.contact_no }}</div>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <label for="remarks-textarea" class="font-medium text-gray-700">Remarks:</label>
+                    <textarea v-model="remarksForm.remarks" id="remarks-textarea"
+                        class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows="6" placeholder="Enter remarks here..." />
+                    <small v-if="remarksForm.errors.remarks" class="text-red-500">{{ remarksForm.errors.remarks
+                        }}</small>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Cancel" icon="pi pi-times" @click="closeRemarksModal" class="p-button-text" />
+                <Button label="Save Remarks" icon="pi pi-check" @click="submitRemarks" severity="success"
+                    :loading="remarksForm.processing" />
+            </template>
+        </Dialog>
+
         <!-- Delete Confirmation Dialog -->
         <Dialog v-model:visible="showConfirmDeleteModal" :style="{ width: '450px' }" header="Confirm Deletion"
             :modal="true">
@@ -1610,12 +1680,12 @@ const formatDate = (date) => {
                                 getApplicantFullName(selectedApplicantForReview) }}</h3>
                             <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
                                 <span><i class="pi pi-phone mr-1"></i>{{ selectedApplicantForReview.contact_no || 'N/A'
-                                    }}</span>
+                                }}</span>
                                 <span><i class="pi pi-envelope mr-1"></i>{{ selectedApplicantForReview.email || 'N/A'
-                                    }}</span>
+                                }}</span>
                                 <span><i class="pi pi-calendar mr-1"></i>{{
                                     formatDate(selectedApplicantForReview.date_filed)
-                                    }}</span>
+                                }}</span>
                             </div>
                         </div>
                         <!-- Queue Numbers -->
@@ -1702,7 +1772,7 @@ const formatDate = (date) => {
                                             <label class="text-gray-600">Income</label>
                                             <div class="font-medium">{{ selectedApplicantForReview.gross_monthly_income
                                                 || 'N/A'
-                                                }}</div>
+                                            }}</div>
                                         </div>
                                         <div>
                                             <label class="text-gray-600">Address</label>

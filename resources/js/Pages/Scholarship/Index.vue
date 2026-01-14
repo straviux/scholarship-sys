@@ -133,6 +133,18 @@
                                     <Select v-model="filter.grant_provision" :options="grantProvisionOptions"
                                         placeholder="All Provisions" size="small" class="w-full" showClear />
                                 </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Contract</label>
+                                    <Select v-model="filter.contract_status" :options="attachmentStatusOptions"
+                                        placeholder="All" size="small" class="w-full" showClear optionLabel="label"
+                                        optionValue="value" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Voucher</label>
+                                    <Select v-model="filter.voucher_status" :options="attachmentStatusOptions"
+                                        placeholder="All" size="small" class="w-full" showClear optionLabel="label"
+                                        optionValue="value" />
+                                </div>
                             </div>
                         </template>
                     </div>
@@ -191,7 +203,18 @@
                                             @click="viewFullProfile(slotProps.data)"
                                             @contextmenu.prevent="openContextMenu($event, slotProps.data)">{{
                                                 getFullName(slotProps.data) }}</div>
-                                        <div class="text-xs text-gray-500">{{ slotProps.data.unique_id || 'N/A' }}</div>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <div class="text-xs text-gray-500">{{ slotProps.data.unique_id || 'N/A' }}
+                                            </div>
+                                            <Badge v-if="slotProps.data.has_contract"
+                                                :value="`Contract (${slotProps.data.contract_count})`"
+                                                severity="success" size="small"
+                                                v-tooltip.bottom="'Contract attachment uploaded'" />
+                                            <Badge v-if="slotProps.data.has_voucher"
+                                                :value="`Voucher (${slotProps.data.voucher_count})`" severity="info"
+                                                size="small"
+                                                v-tooltip.bottom="'Disbursement/Voucher attachment uploaded'" />
+                                        </div>
                                     </div>
                                 </div>
                             </template>
@@ -498,6 +521,7 @@ import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
 import ContextMenu from 'primevue/contextmenu';
 import Checkbox from 'primevue/checkbox';
+import Badge from 'primevue/badge';
 
 // Props
 const props = defineProps({
@@ -535,6 +559,8 @@ const filter = useForm({
     grant_provision: props.filters?.grant_provision || null,
     approval_status: props.filters?.approval_status || null,
     global_search: props.filters?.global_search || "",
+    contract_status: props.filters?.contract_status || null,
+    voucher_status: props.filters?.voucher_status || null,
     page: props.filters?.page || 1,
 });
 
@@ -588,6 +614,12 @@ const grantProvisionForm = useForm({
 const approvalStatusOptions = computed(() => [
     { label: 'All Statuses', value: null },
     ...(Array.isArray(props.approvalStatuses) ? props.approvalStatuses : [])
+]);
+
+const attachmentStatusOptions = computed(() => [
+    { label: 'All', value: null },
+    { label: 'With Attachment', value: 'with' },
+    { label: 'Without Attachment', value: 'without' }
 ]);
 
 const totalRecords = computed(() => props.profiles_total || 0);
@@ -758,6 +790,22 @@ const filterList = (resetToPage1 = false) => {
     if (global_search) params.global_search = global_search;
     if (filter.grant_provision) params.grant_provision = filter.grant_provision;
 
+    // Handle attachment filters - three-state: null (all), 'with', 'without'
+    if (filter.contract_status) {
+        if (filter.contract_status === 'with') {
+            params.contract_status = 'with';
+        } else if (filter.contract_status === 'without') {
+            params.contract_status = 'without';
+        }
+    }
+    if (filter.voucher_status) {
+        if (filter.voucher_status === 'with') {
+            params.voucher_status = 'with';
+        } else if (filter.voucher_status === 'without') {
+            params.voucher_status = 'without';
+        }
+    }
+
     // Handle profile type - only add approval_status if profileType is 'all'
     if (profileType.value === 'existing') {
         params.profile_type = 'existing';
@@ -789,6 +837,8 @@ const clearFilters = () => {
     filter.year_level = "";
     filter.grant_provision = null;
     filter.approval_status = null;
+    filter.contract_status = null;
+    filter.voucher_status = null;
     filter.records = 10;
     filter.global_search = '';
     filter.page = 1;

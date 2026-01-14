@@ -54,14 +54,7 @@ return [
         'cache_path' => storage_path('jasper-cache'),
 
         // Report-specific template locations
-        'reports' => [
-            'waiting_list' => 'reports/waiting-list.jrxml',
-            'scholarship_profile' => 'reports/scholarship-profile.jrxml',
-            'approval_certificate' => 'certificates/approval-certificate.jrxml',
-            'disbursement_voucher' => 'forms/disbursement-voucher.jrxml',
-            'batch_form' => 'forms/batch-form.jrxml',
-            'scholarship_summary' => 'reports/scholarship-summary.jrxml',
-        ],
+        'reports' => [],
     ],
 
     /*

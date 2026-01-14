@@ -279,6 +279,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::delete('/applicants/{id}/remove-priority', [ScholarshipProfileController::class, 'removePriority'])
         ->name('applicants.remove-priority');
+
+    // Applicant remarks route
+    Route::post('/applicants/{profile_id}/update-remarks', [ScholarshipProfileController::class, 'updateApplicantRemarks'])
+        ->name('applicants.update-remarks');
 });
 Route::middleware(['auth'])->controller(ScholarshipProgramController::class)->group(function () {
     Route::get('/scholarshipprograms/get-active-list', 'getActiveProgramsApi')->name('scholarshipprograms.getactivelist');

@@ -606,7 +606,7 @@ class ScholarshipProfileController extends Controller
         // Get all scholarship profiles with their latest scholarship record
         $query = ScholarshipProfile::with([
             'scholarshipGrant' => function ($q) {
-                $q->with(['program', 'course', 'school'])
+                $q->with(['program', 'course', 'school', 'attachments'])
                     ->orderByRaw('CASE 
                         WHEN scholarship_status = 1 THEN 0
                         WHEN scholarship_status = 0 THEN 1
@@ -614,6 +614,9 @@ class ScholarshipProfileController extends Controller
                     END')
                     ->latest('created_at')
                     ->limit(1);
+            },
+            'disbursements' => function ($q) {
+                $q->with('attachments');
             }
         ]);
 
@@ -698,6 +701,24 @@ class ScholarshipProfileController extends Controller
             });
         }
 
+        // Filter by contract attachment - three states: null (all), 'with', 'without'
+        if ($request->filled('contract_status')) {
+            if ($request->contract_status === 'with') {
+                $query->whereHas('scholarshipGrant.attachments');
+            } elseif ($request->contract_status === 'without') {
+                $query->whereDoesntHave('scholarshipGrant.attachments');
+            }
+        }
+
+        // Filter by voucher/disbursement attachment - three states: null (all), 'with', 'without'
+        if ($request->filled('voucher_status')) {
+            if ($request->voucher_status === 'with') {
+                $query->whereHas('disbursements.attachments');
+            } elseif ($request->voucher_status === 'without') {
+                $query->whereDoesntHave('disbursements.attachments');
+            }
+        }
+
         // Global search across multiple fields
         if ($request->filled('global_search')) {
             $searchTerm = $request->global_search;
@@ -738,6 +759,25 @@ class ScholarshipProfileController extends Controller
             $latestRecord = $profile->scholarshipGrant->first();
             $profile->latest_scholarship_record = $latestRecord;
             $profile->total_scholarships = $profile->scholarshipGrant()->count();
+
+            // Count contract attachments (scholarship record attachments)
+            $contractCount = $latestRecord && $latestRecord->attachments ? $latestRecord->attachments->count() : 0;
+
+            // Count voucher/disbursement attachments
+            $voucherCount = 0;
+            if ($profile->disbursements) {
+                foreach ($profile->disbursements as $disbursement) {
+                    if ($disbursement->attachments) {
+                        $voucherCount += $disbursement->attachments->count();
+                    }
+                }
+            }
+
+            $profile->contract_count = $contractCount;
+            $profile->voucher_count = $voucherCount;
+            $profile->has_contract = $contractCount > 0;
+            $profile->has_voucher = $voucherCount > 0;
+
             return $profile;
         });
 
@@ -1229,6 +1269,34 @@ class ScholarshipProfileController extends Controller
         return back()->with('message', [
             'type' => 'success',
             'content' => 'Priority level removed successfully!'
+        ]);
+    }
+
+    /**
+     * Update remarks for an applicant
+     */
+    public function updateApplicantRemarks($profile_id, Request $request)
+    {
+        // Check permissions
+        if (!Gate::allows('applicants.edit')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Validate the request
+        $validated = $request->validate([
+            'remarks' => 'nullable|string|max:1000'
+        ]);
+
+        $profile = ScholarshipProfile::findOrFail($profile_id);
+
+        // Update the remarks
+        $profile->update([
+            'remarks' => $validated['remarks'] ?? null
+        ]);
+
+        return back()->with('message', [
+            'type' => 'success',
+            'content' => 'Remarks updated successfully!'
         ]);
     }
 }
