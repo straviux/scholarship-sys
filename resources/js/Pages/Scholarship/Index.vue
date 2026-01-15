@@ -261,9 +261,9 @@
                         <Column field="status" header="Status" style="min-width: 140px;">
                             <template #body="slotProps">
                                 <Chip
-                                    v-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.scholarship_status !== null"
-                                    :label="getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.scholarship_status)"
-                                    :severity="getScholarshipStatusSeverity(slotProps.data.latest_scholarship_record.scholarship_status)"
+                                    v-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status"
+                                    :label="getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)"
+                                    :severity="getScholarshipStatusSeverity(slotProps.data.latest_scholarship_record.unified_status)"
                                     size="small" class="font-medium" />
                                 <Chip v-else label="No Record" severity="secondary" size="small" />
                             </template>
@@ -372,11 +372,10 @@
                         </div>
                         <div>
                             <label class="text-xs font-medium text-gray-600">Status</label>
-                            <div class="mt-1"
-                                v-if="selectedProfile.latest_scholarship_record.scholarship_status !== null">
+                            <div class="mt-1" v-if="selectedProfile.latest_scholarship_record.unified_status">
                                 <Chip
-                                    :label="getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.scholarship_status)"
-                                    :severity="getScholarshipStatusSeverity(selectedProfile.latest_scholarship_record.scholarship_status)" />
+                                    :label="getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.unified_status)"
+                                    :severity="getScholarshipStatusSeverity(selectedProfile.latest_scholarship_record.unified_status)" />
                             </div>
                             <p v-else class="text-sm font-medium text-gray-500">N/A</p>
                         </div>
@@ -847,7 +846,7 @@ const openGrantProvisionDialog = (profile) => {
             const records = response.data;
             scholarshipRecordOptions.value = records.map(record => ({
                 value: record.id,
-                label: `${record.program?.shortname || 'N/A'} - ${record.course?.shortname || 'N/A'} - ${record.year_level ? record.year_level + ' Year' : 'N/A'} (${getScholarshipStatusLabel(record.scholarship_status)})${record.grant_provision ? ' - ' + record.grant_provision : ''}`,
+                label: `${record.program?.shortname || 'N/A'} - ${record.course?.shortname || 'N/A'} - ${record.year_level ? record.year_level + ' Year' : 'N/A'} (${getScholarshipStatusLabel(record.unified_status)})${record.grant_provision ? ' - ' + record.grant_provision : ''}`,
                 grant_provision: record.grant_provision
             }));
 
