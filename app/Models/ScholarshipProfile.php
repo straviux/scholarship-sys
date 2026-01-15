@@ -114,6 +114,19 @@ class ScholarshipProfile extends Model
         )->with(['program', 'course'])->where('scholarship_status', 0);
     }
 
+    public function latestScholarshipRecord()
+    {
+        return $this->hasOne(
+            ScholarshipRecord::class,
+            'profile_id'
+        )->with(['program', 'course', 'school', 'attachments'])
+            ->orderByRaw('CASE 
+                WHEN date_approved IS NOT NULL THEN date_approved
+                WHEN date_filed IS NOT NULL THEN date_filed
+                ELSE created_at
+            END DESC')
+            ->limit(1);
+    }
 
     public function createdBy()
     {

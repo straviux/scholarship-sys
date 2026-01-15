@@ -113,6 +113,17 @@ class CreateScholarshipRecordRequest extends FormRequest
                 'string',
                 'max:50'
             ],
+            "grant_provision" => [
+                'nullable',
+                'string',
+                'max:50'
+            ],
+            "unified_status" => [
+                'nullable',
+                'string',
+                'max:50',
+                'in:pending_approval,active_scholar,completed,declined,withdrawn'
+            ],
 
         ];
     }

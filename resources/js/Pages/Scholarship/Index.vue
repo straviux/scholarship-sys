@@ -101,10 +101,10 @@
                                 <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses"
                                     size="small" class="w-full" />
                             </div>
-                            <!-- Only show Approval Status filter when profileType is 'all' -->
+                            <!-- Only show Unified Status filter when profileType is 'all' -->
                             <div class="flex flex-col" v-if="profileType === 'all'">
-                                <label class="text-xs font-medium text-gray-600 mb-1">Approval Status</label>
-                                <Select v-model="filter.approval_status" :options="approvalStatusOptions"
+                                <label class="text-xs font-medium text-gray-600 mb-1">Status</label>
+                                <Select v-model="filter.unified_status" :options="unifiedStatusOptions"
                                     optionLabel="label" optionValue="value" placeholder="All Statuses" showClear
                                     class="w-full" size="small" />
                             </div>
@@ -294,9 +294,6 @@
                                 <div class="flex gap-2">
                                     <Button icon="pi pi-eye" size="small" severity="info" outlined rounded
                                         v-tooltip.top="'View'" @click="viewFullProfile(slotProps.data)" />
-                                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-pencil" size="small"
-                                        severity="warning" outlined rounded v-tooltip.top="'Edit'"
-                                        @click="editProfile(slotProps.data)" />
                                 </div>
                             </template>
                         </Column>
@@ -490,10 +487,6 @@
         <!-- Scholar Form Modal (Create) -->
         <ScholarFormModal v-model:visible="showAddExistingModal" mode="create" @success="refreshData" />
 
-        <!-- Scholar Form Modal (Edit) -->
-        <ScholarFormModal v-model:visible="showEditScholarModal" mode="edit" :profile="selectedScholarForEdit"
-            @success="refreshData" />
-
         <!-- Context Menu -->
         <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
     </AdminLayout>
@@ -505,6 +498,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import moment from 'moment';
 import { usePermission } from '@/composable/permissions';
+import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 
 
 // Custom Select Components
@@ -557,7 +551,7 @@ const filter = useForm({
     municipality: props.filters?.municipality || "",
     year_level: props.filters?.year_level || "",
     grant_provision: props.filters?.grant_provision || null,
-    approval_status: props.filters?.approval_status || null,
+    unified_status: props.filters?.unified_status || null,
     global_search: props.filters?.global_search || "",
     contract_status: props.filters?.contract_status || null,
     voucher_status: props.filters?.voucher_status || null,
@@ -597,8 +591,6 @@ const showReportModal = ref(false);
 const showExportModal = ref(false);
 const showAddApplicantModal = ref(false);
 const showAddExistingModal = ref(false);
-const showEditScholarModal = ref(false);
-const selectedScholarForEdit = ref(null);
 const addRecordPopover = ref();
 
 // Grant Provision Dialog
@@ -611,9 +603,11 @@ const grantProvisionForm = useForm({
 });
 
 // Computed properties
-const approvalStatusOptions = computed(() => [
+const { statusOptions, getStatusLabel, getStatusSeverity } = useScholarshipStatus();
+
+const unifiedStatusOptions = computed(() => [
     { label: 'All Statuses', value: null },
-    ...(Array.isArray(props.approvalStatuses) ? props.approvalStatuses : [])
+    ...statusOptions.value
 ]);
 
 const attachmentStatusOptions = computed(() => [
@@ -642,16 +636,6 @@ const contextMenuItems = computed(() => [
                 viewFullProfile(selectedProfileForContext.value);
             }
         }
-    },
-    {
-        label: 'Edit Profile',
-        icon: 'pi pi-pencil',
-        command: () => {
-            if (selectedProfileForContext.value && hasPermission('applicants.edit')) {
-                editProfile(selectedProfileForContext.value);
-            }
-        },
-        visible: () => hasPermission('applicants.edit')
     },
     {
         separator: true,
@@ -730,31 +714,11 @@ const getApprovalStatusSeverity = (status) => {
 };
 
 const getScholarshipStatusLabel = (status) => {
-    const statusMap = {
-        0: 'Pending',
-        1: 'Active Scholar',
-        2: 'Completed',
-        3: 'Suspended',
-        4: 'Cancelled'
-    };
-    return statusMap[status] || 'Unknown';
+    return getStatusLabel(status);
 };
 
 const getScholarshipStatusSeverity = (status) => {
-    switch (parseInt(status)) {
-        case 0:
-            return 'secondary'; // Pending
-        case 1:
-            return 'success'; // Active Scholar
-        case 2:
-            return 'info'; // Completed
-        case 3:
-            return 'warn'; // Suspended
-        case 4:
-            return 'danger'; // Cancelled
-        default:
-            return 'secondary';
-    }
+    return getStatusSeverity(status);
 };
 
 const formatDate = (date) => {
@@ -775,7 +739,7 @@ const filterList = (resetToPage1 = false) => {
     const year_level = filter.year_level?.value?.toLowerCase() || "";
     const global_search = globalFilter.value.toLowerCase() || "";
     const records = filter.records;
-    const approval_status = filter.approval_status || "";
+    const unified_status = filter.unified_status || "";
 
     // Reset to page 1 only when filtering/searching, otherwise use current page
     let currentPage = resetToPage1 ? 1 : filter.page;
@@ -806,17 +770,17 @@ const filterList = (resetToPage1 = false) => {
         }
     }
 
-    // Handle profile type - only add approval_status if profileType is 'all'
+    // Handle profile type - only add unified_status if profileType is 'all'
     if (profileType.value === 'existing') {
         params.profile_type = 'existing';
-        // Filter for approved statuses (approved, auto_approved, conditionally_approved)
+        // Filter for approved statuses
     } else if (profileType.value === 'declined') {
         params.profile_type = 'declined';
         // Filter for declined status
     } else {
         // profileType is 'all'
         params.profile_type = 'all';
-        if (approval_status) params.approval_status = approval_status;
+        if (unified_status) params.unified_status = unified_status;
     }
 
     params.records = records; // Always include records to persist pagination
@@ -836,7 +800,7 @@ const clearFilters = () => {
     filter.municipality = "";
     filter.year_level = "";
     filter.grant_provision = null;
-    filter.approval_status = null;
+    filter.unified_status = null;
     filter.contract_status = null;
     filter.voucher_status = null;
     filter.records = 10;
@@ -853,13 +817,25 @@ const clearFilters = () => {
 
 // Action methods
 const viewFullProfile = (profile) => {
+    // Save current filters to localStorage before navigating
+    const filters = {
+        unified_status: route().params?.unified_status || null,
+        profile_type: route().params?.profile_type || null,
+        name: route().params?.name || null,
+        program: route().params?.program || null,
+        school: route().params?.school || null,
+        course: route().params?.course || null,
+        municipality: route().params?.municipality || null,
+        year_level: route().params?.year_level || null,
+        global_search: route().params?.global_search || null,
+        grant_provision: route().params?.grant_provision || null,
+        contract_status: route().params?.contract_status || null,
+        voucher_status: route().params?.voucher_status || null,
+        records: route().params?.records || 10,
+        page: route().params?.page || 1
+    };
+    localStorage.setItem('scholarshipProfileFilters', JSON.stringify(filters));
     router.visit(route('scholarship.profile.show', profile.profile_id));
-};
-
-const editProfile = (profile) => {
-    // Open edit modal instead of navigating
-    selectedScholarForEdit.value = profile;
-    showEditScholarModal.value = true;
 };
 
 const openGrantProvisionDialog = (profile) => {

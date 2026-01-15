@@ -44,6 +44,15 @@ class JasperReportDataService
     {
         $query = ScholarshipProfile::query();
 
+        // Filter for waiting list (pending status only)
+        // For waiting list reports, only show records with scholarship_status = 0 and not in final approval states
+        $query->whereHas('scholarshipGrant', function ($q) {
+            $q->where('scholarship_status', 0)
+                ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
+                ->orderBy('date_filed', 'desc')
+                ->orderBy('created_at', 'desc');
+        });
+
         // Apply date filtering
         if (!empty($filters['date_from'])) {
             $query->whereDate('date_filed', '>=', $filters['date_from']);
@@ -95,7 +104,7 @@ class JasperReportDataService
             // Query still returns the records but JPM columns won't be exposed
         }
 
-        // Apply approval status filtering
+        // Apply approval status filtering (overrides default if provided)
         if (!empty($filters['approval_statuses'])) {
             $query->whereHas('scholarship_grant', function ($q) use ($filters) {
                 $q->whereIn('approval_status', (array)$filters['approval_statuses']);

@@ -7,7 +7,7 @@
             <!-- Header with Back Button -->
             <div class="mb-6 flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <Button icon="pi pi-arrow-left" text rounded @click="router.visit(route('scholarship.profiles'))"
+                    <Button icon="pi pi-arrow-left" text rounded @click="goBackToProfiles()"
                         v-tooltip.top="'Back to Profiles'" />
                     <div>
                         <h1 class="text-3xl font-bold text-gray-900">
@@ -644,9 +644,15 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Approval Status</label>
-                    <Select v-model="recordForm.approval_status" :options="approvalStatusOptions" optionLabel="label"
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <Select v-model="recordForm.unified_status" :options="unifiedStatusOptions" optionLabel="label"
                         optionValue="value" placeholder="Select Status" fluid />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Grant Provision</label>
+                    <Select v-model="recordForm.grant_provision" :options="grantProvisionOptions" optionLabel="label"
+                        optionValue="value" placeholder="Select Grant Provision" fluid showClear />
                 </div>
 
                 <div>
@@ -693,6 +699,7 @@ import axios from 'axios';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 import { usePermission } from '@/composable/permissions';
+import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Button from 'primevue/button';
 import Tabs from 'primevue/tabs';
@@ -753,7 +760,8 @@ const recordForm = ref({
     term: null,
     date_filed: null,
     date_approved: null,
-    approval_status: 'approved',
+    unified_status: 'approved_pending',
+    grant_provision: null,
     remarks: null,
     processing: false
 });
@@ -774,12 +782,18 @@ const attachmentTypeOptions = [
     { label: 'Others', value: 'others' }
 ];
 
-// Approval status options
-const approvalStatusOptions = [
-    { label: 'Approved', value: 'approved' },
-    { label: 'Pending', value: 'pending' },
-    { label: 'Conditionally Approved', value: 'conditionally-approved' },
-    { label: 'Declined', value: 'declined' }
+// Status composable
+const { statusOptions, getStatusLabel, getStatusSeverity } = useScholarshipStatus();
+
+// Unified status options for form (exclude 'unknown' from dropdown)
+const unifiedStatusOptions = computed(() => statusOptions.value.filter(status => status.value !== 'unknown'));
+
+// Grant provision options
+const grantProvisionOptions = [
+    { label: 'Matriculation', value: 'Matriculation' },
+    { label: 'RLE', value: 'RLE' },
+    { label: 'Tuition', value: 'Tuition' },
+    { label: 'RLE and Tuition', value: 'RLE and Tuition' }
 ];
 
 // Image zoom state
@@ -905,6 +919,16 @@ const handleSuccess = () => {
     }, 1500);
 };
 
+const goBackToProfiles = () => {
+    const savedFilters = localStorage.getItem('scholarshipProfileFilters');
+    if (savedFilters) {
+        const filters = JSON.parse(savedFilters);
+        router.visit(route('scholarship.profiles', filters));
+    } else {
+        router.visit(route('scholarship.profiles'));
+    }
+};
+
 // Scholarship Record CRUD Methods
 const openAddRecordModal = () => {
     recordModalMode.value = 'add';
@@ -919,6 +943,7 @@ const openAddRecordModal = () => {
         date_filed: new Date(),
         date_approved: null,
         approval_status: 'approved',
+        grant_provision: null,
         remarks: null,
         processing: false
     };
@@ -940,7 +965,8 @@ const openEditRecordModal = async (record) => {
         term: record.term,
         date_filed: record.date_filed ? new Date(record.date_filed) : null,
         date_approved: record.date_approved ? new Date(record.date_approved) : null,
-        approval_status: record.approval_status || 'approved',
+        unified_status: record.unified_status || 'approved_pending',
+        grant_provision: record.grant_provision || null,
         remarks: record.remarks,
         processing: false
     };
@@ -962,7 +988,8 @@ const closeRecordModal = () => {
         term: null,
         date_filed: null,
         date_approved: null,
-        approval_status: 'approved',
+        unified_status: 'approved_pending',
+        grant_provision: null,
         remarks: null,
         processing: false
     };
@@ -980,9 +1007,10 @@ const submitRecord = async () => {
             year_level: typeof recordForm.value.year_level === 'object' ? recordForm.value.year_level?.value : recordForm.value.year_level,
             academic_year: typeof recordForm.value.academic_year === 'object' ? recordForm.value.academic_year?.value : recordForm.value.academic_year,
             term: typeof recordForm.value.term === 'object' ? recordForm.value.term?.value : recordForm.value.term,
-            date_filed: recordForm.value.date_filed ? new Date(recordForm.value.date_filed).toISOString().split('T')[0] : null,
-            date_approved: recordForm.value.date_approved ? new Date(recordForm.value.date_approved).toISOString().split('T')[0] : null,
-            approval_status: recordForm.value.approval_status,
+            date_filed: formatDateForAPI(recordForm.value.date_filed),
+            date_approved: formatDateForAPI(recordForm.value.date_approved),
+            unified_status: recordForm.value.unified_status,
+            grant_provision: recordForm.value.grant_provision,
             remarks: recordForm.value.remarks
         };
         console.log('Form data being sent:', formData);
@@ -1308,6 +1336,15 @@ const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+};
+
+const formatDateForAPI = (date) => {
+    if (!date) return null;
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 };
 
 const getAttachmentUrl = (attachment) => {

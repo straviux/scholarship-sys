@@ -33,6 +33,7 @@ class ScholarshipRecord extends Model
         'academic_status',
         'scholarship_status',
         'scholarship_status_remarks',
+        'unified_status',
         'grant_provision',
         'scholarship_status_date',
         'is_active',
@@ -122,6 +123,14 @@ class ScholarshipRecord extends Model
                     $model->approval_status
                 );
             }
+
+            // Auto-generate unified_status if not explicitly set
+            if ($model->isDirty(['approval_status', 'scholarship_status']) || $model->isDirty('unified_status') === false) {
+                $model->unified_status = self::generateUnifiedStatus(
+                    $model->approval_status,
+                    $model->scholarship_status
+                );
+            }
         });
     }
 
@@ -143,6 +152,33 @@ class ScholarshipRecord extends Model
             null => 0,                // No status yet
             default => 0,             // Default to waiting list
         };
+    }
+
+    /**
+     * Generate unified status from approval and scholarship status
+     * Maps legacy two-field status to single unified status
+     */
+    public static function generateUnifiedStatus(?string $approvalStatus, ?int $scholarshipStatus): string
+    {
+        // Declined takes priority
+        if ($approvalStatus === 'declined') {
+            return 'declined';
+        }
+
+        // Pending approval
+        if (in_array($approvalStatus, ['pending', 'conditionally-approved', 'conditional'])) {
+            return 'pending_approval';
+        }
+
+        // Approved - check scholarship_status
+        if ($approvalStatus === 'approved' || $approvalStatus === 'auto_approved') {
+            if ($scholarshipStatus === 3) {
+                return 'completed';
+            }
+            return 'active_scholar';
+        }
+
+        return 'unknown';
     }
 
     /**

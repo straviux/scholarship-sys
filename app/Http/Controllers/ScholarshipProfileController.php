@@ -605,15 +605,8 @@ class ScholarshipProfileController extends Controller
     {
         // Get all scholarship profiles with their latest scholarship record
         $query = ScholarshipProfile::with([
-            'scholarshipGrant' => function ($q) {
-                $q->with(['program', 'course', 'school', 'attachments'])
-                    ->orderByRaw('CASE 
-                        WHEN scholarship_status = 1 THEN 0
-                        WHEN scholarship_status = 0 THEN 1
-                        ELSE 2
-                    END')
-                    ->latest('created_at')
-                    ->limit(1);
+            'latestScholarshipRecord' => function ($q) {
+                $q->with(['program', 'course', 'school', 'attachments']);
             },
             'disbursements' => function ($q) {
                 $q->with('attachments');
@@ -625,31 +618,27 @@ class ScholarshipProfileController extends Controller
 
         if ($profileType === 'existing') {
             // Filter for active scholars (scholarship_status = 1 and scholarship_status_remarks = 'Active Scholar')
-            $query->whereHas('scholarshipGrant', function ($q) {
+            $query->whereHas('latestScholarshipRecord', function ($q) {
                 $q->where('scholarship_status', 1)
                     ->where('scholarship_status_remarks', 'Active Scholar');
             });
         } elseif ($profileType === 'declined') {
-            // Filter for declined profiles based on approval_status
-            $query->whereHas('scholarshipGrant', function ($q) {
-                $q->where('approval_status', 'declined');
+            // Filter for declined profiles based on unified_status
+            $query->whereHas('latestScholarshipRecord', function ($q) {
+                $q->where('unified_status', 'declined');
             });
         } else {
-            // For 'all' - apply approval_status filter if provided
-            if ($request->filled('approval_status')) {
-                $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                    $q->where('approval_status', $request->approval_status);
+            // For 'all' - apply unified_status filter if provided
+            if ($request->filled('unified_status')) {
+                $query->whereHas('latestScholarshipRecord', function ($q) use ($request) {
+                    $q->where('unified_status', $request->unified_status);
                 });
-            } else {
-                // If no approval_status filter specified in 'all' mode, show all profiles
-                // Profiles are accessed through scholarshipGrant relationship
-                $query->with('scholarshipGrant');
             }
         }
 
         // Filter by program
         if ($request->filled('program')) {
-            $query->whereHas('scholarshipGrant.program', function ($q) use ($request) {
+            $query->whereHas('latestScholarshipRecord.program', function ($q) use ($request) {
                 $q->where('scholarship_programs.shortname', 'like', '%' . $request->program . '%')
                     ->orWhere('scholarship_programs.name', 'like', '%' . $request->program . '%');
             });
@@ -657,7 +646,7 @@ class ScholarshipProfileController extends Controller
 
         // Filter by school
         if ($request->filled('school')) {
-            $query->whereHas('scholarshipGrant.school', function ($q) use ($request) {
+            $query->whereHas('latestScholarshipRecord.school', function ($q) use ($request) {
                 $q->where('shortname', 'like', '%' . $request->school . '%')
                     ->orWhere('name', 'like', '%' . $request->school . '%');
             });
@@ -665,7 +654,7 @@ class ScholarshipProfileController extends Controller
 
         // Filter by course
         if ($request->filled('course')) {
-            $query->whereHas('scholarshipGrant.course', function ($q) use ($request) {
+            $query->whereHas('latestScholarshipRecord.course', function ($q) use ($request) {
                 $q->where('courses.shortname', 'like', '%' . $request->course . '%')
                     ->orWhere('courses.name', 'like', '%' . $request->course . '%');
             });
@@ -673,7 +662,7 @@ class ScholarshipProfileController extends Controller
 
         // Filter by year_level
         if ($request->filled('year_level')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+            $query->whereHas('latestScholarshipRecord', function ($q) use ($request) {
                 $q->where('year_level', 'like', '%' . $request->year_level . '%');
             });
         }
@@ -696,7 +685,7 @@ class ScholarshipProfileController extends Controller
 
         // Filter by grant provision
         if ($request->filled('grant_provision')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+            $query->whereHas('latestScholarshipRecord', function ($q) use ($request) {
                 $q->where('grant_provision', $request->grant_provision);
             });
         }
@@ -704,9 +693,9 @@ class ScholarshipProfileController extends Controller
         // Filter by contract attachment - three states: null (all), 'with', 'without'
         if ($request->filled('contract_status')) {
             if ($request->contract_status === 'with') {
-                $query->whereHas('scholarshipGrant.attachments');
+                $query->whereHas('latestScholarshipRecord.attachments');
             } elseif ($request->contract_status === 'without') {
-                $query->whereDoesntHave('scholarshipGrant.attachments');
+                $query->whereDoesntHave('latestScholarshipRecord.attachments');
             }
         }
 
@@ -731,15 +720,15 @@ class ScholarshipProfileController extends Controller
                     ->orWhere('barangay', 'like', '%' . $searchTerm . '%')
                     ->orWhere('contact_no', 'like', '%' . $searchTerm . '%')
                     ->orWhere('email', 'like', '%' . $searchTerm . '%')
-                    ->orWhereHas('scholarshipGrant.school', function ($schoolQuery) use ($searchTerm) {
+                    ->orWhereHas('latestScholarshipRecord.school', function ($schoolQuery) use ($searchTerm) {
                         $schoolQuery->where('schools.name', 'like', '%' . $searchTerm . '%')
                             ->orWhere('schools.shortname', 'like', '%' . $searchTerm . '%');
                     })
-                    ->orWhereHas('scholarshipGrant.course', function ($courseQuery) use ($searchTerm) {
+                    ->orWhereHas('latestScholarshipRecord.course', function ($courseQuery) use ($searchTerm) {
                         $courseQuery->where('courses.name', 'like', '%' . $searchTerm . '%')
                             ->orWhere('courses.shortname', 'like', '%' . $searchTerm . '%');
                     })
-                    ->orWhereHas('scholarshipGrant.program', function ($programQuery) use ($searchTerm) {
+                    ->orWhereHas('latestScholarshipRecord.program', function ($programQuery) use ($searchTerm) {
                         $programQuery->where('scholarship_programs.name', 'like', '%' . $searchTerm . '%')
                             ->orWhere('scholarship_programs.shortname', 'like', '%' . $searchTerm . '%');
                     })
@@ -756,7 +745,7 @@ class ScholarshipProfileController extends Controller
 
         // Transform data to include latest scholarship record info
         $profiles->getCollection()->transform(function ($profile) {
-            $latestRecord = $profile->scholarshipGrant->first();
+            $latestRecord = $profile->latestScholarshipRecord;
             $profile->latest_scholarship_record = $latestRecord;
             $profile->total_scholarships = $profile->scholarshipGrant()->count();
 

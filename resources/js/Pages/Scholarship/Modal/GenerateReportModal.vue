@@ -23,13 +23,12 @@
                         </small>
                     </div>
 
-                    <!-- Approval Status -->
+                    <!-- Status -->
                     <div class="mb-4">
-                        <label class="block mb-2 text-sm font-medium text-gray-700">Approval Status</label>
-                        <Select v-model="selectedApprovalStatus" :options="approvalStatusOptions" optionLabel="label"
+                        <label class="block mb-2 text-sm font-medium text-gray-700">Status</label>
+                        <Select v-model="selectedUnifiedStatus" :options="unifiedStatusOptions" optionLabel="label"
                             optionValue="value" placeholder="All Statuses" class="w-full" showClear />
-                        <small class="text-xs text-gray-500 mt-1">Filter by pending, approved, or declined
-                            status</small>
+                        <small class="text-xs text-gray-500 mt-1">Filter by unified status</small>
                     </div>
 
                     <!-- Program -->
@@ -178,6 +177,7 @@
 import { ref, computed, shallowRef, markRaw, watch } from 'vue';
 import { defineAsyncComponent } from 'vue';
 import moment from 'moment';
+import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 
 // PrimeVue Components
 import Dialog from 'primevue/dialog';
@@ -213,7 +213,7 @@ const selectedSchool = ref(null);
 const selectedCourses = ref([]);
 const selectedMunicipality = ref(null);
 const selectedYearLevel = ref(null);
-const selectedApprovalStatus = ref(null);
+const selectedUnifiedStatus = ref(null);
 const selectedGrantProvision = ref(null);
 
 // Report Configuration
@@ -223,14 +223,14 @@ const showSequenceNumbers = ref(true);
 const enableJpmHighlighting = ref(true);
 const jpmFilter = ref('all');
 
-// Approval Status Options
-const approvalStatusOptions = [
+// Status composable
+const { statusOptions } = useScholarshipStatus();
+
+// Unified Status Options for report
+const unifiedStatusOptions = computed(() => [
     { label: 'All Statuses', value: null },
-    { label: 'Pending', value: 'pending' },
-    { label: 'Approved', value: 'approved' },
-    { label: 'Auto Approved', value: 'auto_approved' },
-    { label: 'Declined', value: 'declined' },
-];
+    ...statusOptions.value
+]);
 
 // Grant Provision Options
 const grantProvisionOptions = [
@@ -277,7 +277,7 @@ const activeFiltersCount = computed(() => {
     if (selectedCourses.value && selectedCourses.value.length > 0) count++;
     if (selectedMunicipality.value) count++;
     if (selectedYearLevel.value) count++;
-    if (selectedApprovalStatus.value) count++;
+    if (selectedUnifiedStatus.value) count++;
     if (selectedGrantProvision.value) count++;
     return count;
 });
@@ -295,7 +295,7 @@ function clearAllFilters() {
     selectedCourses.value = [];
     selectedMunicipality.value = null;
     selectedYearLevel.value = null;
-    selectedApprovalStatus.value = null;
+    selectedUnifiedStatus.value = null;
     selectedGrantProvision.value = null;
     groupBy.value = 'none';
     showSequenceNumbers.value = true;
@@ -332,7 +332,7 @@ function generateReport() {
         courses: courseShortnames,
         municipality: selectedMunicipality.value?.name || '',
         year_level: selectedYearLevel.value?.value || '',
-        approval_status: selectedApprovalStatus.value || '',
+        unified_status: selectedUnifiedStatus.value || '',
         grant_provision: selectedGrantProvision.value || '',
         report_type: reportType.value,
         group_by: groupBy.value,
