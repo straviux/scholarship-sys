@@ -65,7 +65,7 @@ class ScholarshipRecordController extends Controller
         // By default, do not show pending records (scholarship_status == 0)
         $showAll = $request->boolean('show_all_status', false);
         if (!$showAll) {
-            $query->where('scholarship_status', '!=', 0);
+            $query->where('unified_status', '!=', 'pending');
         }
         // Filter by course
         if ($request->filled('course')) {

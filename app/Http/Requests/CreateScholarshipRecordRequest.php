@@ -51,18 +51,6 @@ class CreateScholarshipRecordRequest extends FormRequest
                 'string',
                 'max:20'
             ],
-            "scholarship_status" => [
-                'integer'
-            ],
-            "scholarship_status_date" => [
-                'nullable',
-                'date',
-            ],
-            "scholarship_status_remarks" => [
-                'nullable',
-                'string',
-                'max:500'
-            ],
             "term" => [
                 'required',
                 'string',

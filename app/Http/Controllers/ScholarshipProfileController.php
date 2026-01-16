@@ -800,9 +800,8 @@ class ScholarshipProfileController extends Controller
         $records = ScholarshipRecord::where('profile_id', $profileId)
             ->with(['program', 'course', 'school'])
             ->orderByRaw('CASE 
-                WHEN scholarship_status = 1 THEN 0
-                WHEN scholarship_status = 0 THEN 1
-                ELSE 2
+                WHEN unified_status = "pending" THEN 0
+                ELSE 1
             END')
             ->orderBy('created_at', 'desc')
             ->get();

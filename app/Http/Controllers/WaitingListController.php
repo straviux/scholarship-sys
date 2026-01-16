@@ -86,7 +86,7 @@ class WaitingListController extends Controller
                 'scholarship_profiles.temporary_municipality',
                 'scholarship_profiles.temporary_barangay',
                 'scholarship_profiles.temporary_address',
-                // Status fields now based on approval_status
+                // Status and JPM fields
                 'scholarship_profiles.is_jpm_member',
                 'scholarship_profiles.is_father_jpm',
                 'scholarship_profiles.is_mother_jpm',
@@ -94,7 +94,7 @@ class WaitingListController extends Controller
                 'scholarship_profiles.is_not_jpm',
                 'scholarship_profiles.jpm_remarks',
                 'scholarship_records.date_filed',
-                'scholarship_records.approval_status'
+                'scholarship_records.unified_status'
             )
             ->where(function ($q) use ($programId) {
                 // Display all PENDING applications (based on unified_status)
@@ -347,7 +347,7 @@ class WaitingListController extends Controller
         $profiles->load([
             'scholarshipGrant' => function ($q) {
                 $q->with(['program', 'school', 'course'])
-                    ->select('id', 'profile_id', 'program_id', 'school_id', 'course_id', 'scholarship_status', 'approval_status', 'year_level', 'yakap_category', 'date_filed')
+                    ->select('id', 'profile_id', 'program_id', 'school_id', 'course_id', 'unified_status', 'year_level', 'yakap_category', 'date_filed')
                     ->orderBy('created_at', 'desc');
             }
         ]);

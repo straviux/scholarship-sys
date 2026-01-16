@@ -18,16 +18,7 @@ class ScholarshipApprovalService
             $oldStatus = $record->approval_status;
 
             $record->update([
-                'approval_status' => 'approved',
-                'approved_by' => $approver->id,
-                'approved_at' => now(),
-                'approval_remarks' => $data['remarks'] ?? null,
-                'scholarship_status' => 1, // 1 = Approved/Active
-                'scholarship_status_remarks' => 'Active Scholar',
-                // Clear decline fields if previously declined
-                'declined_by' => null,
-                'declined_at' => null,
-                'decline_reason' => null,
+                'unified_status' => 'approved',
             ]);
 
             $this->createStatusHistory($record, 'approved', $oldStatus, $approver, $data['remarks'] ?? null);
@@ -49,16 +40,7 @@ class ScholarshipApprovalService
             $oldStatus = $record->approval_status;
 
             $record->update([
-                'approval_status' => 'declined',
-                'declined_by' => $decliner->id,
-                'declined_at' => now(),
-                'decline_reason' => $data['reason'],
-                'scholarship_status' => 4, // 4 = Cancelled/Declined
-                'scholarship_status_remarks' => 'Application Declined',
-                // Clear approval fields if previously approved
-                'approved_by' => null,
-                'approved_at' => null,
-                'approval_remarks' => null,
+                'unified_status' => 'denied',
             ]);
 
             $this->createStatusHistory($record, 'declined', $oldStatus, $decliner, $data['details'] ?? null);

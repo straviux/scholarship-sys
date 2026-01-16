@@ -76,15 +76,8 @@ class ScholarshipRecord extends Model
             }
         });
 
-        // Auto-generate unified_status if not explicitly set
-        static::saving(function ($model) {
-            if (!$model->isDirty('unified_status')) {
-                $model->unified_status = self::generateUnifiedStatus(
-                    $model->approval_status,
-                    $model->scholarship_status
-                );
-            }
-        });
+        // unified_status is now the primary status field
+        // No auto-generation needed as it's explicitly set
     }
 
     /**
@@ -108,8 +101,8 @@ class ScholarshipRecord extends Model
     }
 
     /**
-     * Generate unified status from approval and scholarship status
-     * Maps to single unified status system
+     * Generate unified status from old approval and scholarship status (for migration purposes)
+     * Maps legacy status values to single unified status system
      */
     public static function generateUnifiedStatus(?string $approvalStatus, ?int $scholarshipStatus): string
     {
@@ -148,7 +141,7 @@ class ScholarshipRecord extends Model
      */
     public function isOnWaitingList(): bool
     {
-        return $this->scholarship_status === 0;
+        return $this->unified_status === 'pending';
     }
 
     /**
@@ -420,30 +413,6 @@ class ScholarshipRecord extends Model
     public function scopeRenewalApplications($query)
     {
         return $query->whereNotNull('previous_scholarship_id');
-    }
-
-    public function updateScholarshipStatus($status_id)
-    {
-        $status_remarks = '';
-        if ($status_id == 0) {
-            $status_remarks = 'pending for approval';
-        }
-        if ($status_id == 1) {
-            $status_remarks = 'approved and ongoing';
-        }
-        if ($status_id == 2) {
-            $status_remarks = 'grant completed';
-        }
-        if ($status_id == 3) {
-            $status_remarks = 'suspended';
-        }
-        if ($status_id == 4) {
-            $status_remarks = 'cancelled';
-        }
-
-        $this->scholarship_status = $status_id;
-        $this->scholarship_status_remarks = $status_remarks;
-        return $this->save();
     }
 
     public function updateRemarks($remarks)

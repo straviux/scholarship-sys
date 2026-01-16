@@ -96,15 +96,10 @@ class ScholarController extends Controller
                 'year_level' => $request->year_level,
                 'program_id' => $program_id,
                 'school_id' => $school->id ?? null,
-                'scholarship_status' => 1, // 1 = Approved/Active (scholars are already approved)
-                'scholarship_status_remarks' => 'Active Scholar',
+                'unified_status' => 'active', // Active scholars
                 'is_active' => 1,
                 'date_filed' => $request->date_filed ?? now(),
                 'date_approved' => $request->date_approved ?? $request->date_filed ?? now(), // Use provided date_approved, fallback to date_filed, then now
-                // Set approval workflow fields for active scholars
-                'approval_status' => 'approved',
-                'approved_by' => Auth::id(),
-                'approved_at' => $request->date_approved ?? $request->date_filed ?? now(),
             ]);
 
             DB::commit();
@@ -194,7 +189,7 @@ class ScholarController extends Controller
             if (!$record) {
                 $record = ScholarshipRecord::where('profile_id', $profile->profile_id)
                     ->where('is_active', 1)
-                    ->whereIn('scholarship_status', [1, 2]) // Active or Ongoing
+                    ->whereIn('unified_status', ['active', 'completed']) // Active or Ongoing
                     ->first();
             }
 
@@ -220,15 +215,10 @@ class ScholarController extends Controller
                     'year_level' => $request->year_level,
                     'program_id' => $program_id,
                     'school_id' => $school->id ?? null,
-                    'scholarship_status' => 1, // Active
-                    'scholarship_status_remarks' => 'Active Scholar',
+                    'unified_status' => 'active', // Active
                     'is_active' => 1,
                     'date_filed' => $request->date_filed ?? now(),
                     'date_approved' => $request->date_approved ?? $request->date_filed ?? now(),
-                    // Set approval workflow fields for active scholars
-                    'approval_status' => 'approved',
-                    'approved_by' => Auth::id(),
-                    'approved_at' => $request->date_approved ?? $request->date_filed ?? now(),
                 ]);
             }
 

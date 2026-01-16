@@ -103,7 +103,7 @@ class ScholarshipProfile extends Model
         return $this->hasOne(
             ScholarshipRecord::class,
             'profile_id'
-        )->with(['program', 'course'])->whereIn('scholarship_status', [1, 3]);
+        )->with(['program', 'course'])->whereIn('unified_status', ['active', 'completed']);
     }
 
     public function pendingScholarshipGrant()
@@ -111,7 +111,7 @@ class ScholarshipProfile extends Model
         return $this->hasOne(
             ScholarshipRecord::class,
             'profile_id'
-        )->with(['program', 'course'])->where('scholarship_status', 0);
+        )->with(['program', 'course'])->where('unified_status', 'pending');
     }
 
     public function latestScholarshipRecord()

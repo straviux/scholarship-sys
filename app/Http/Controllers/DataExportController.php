@@ -117,14 +117,14 @@ class DataExportController extends Controller
         // This matches the waiting_list_report.blade.php exact logic
         $allPendingProfiles = ScholarshipProfile::with([
             'scholarshipGrant' => function ($query) {
-                $query->where('scholarship_status', 0);
+                $query->where('unified_status', 'pending');
             },
             'scholarshipGrant.program',
             'scholarshipGrant.school',
             'scholarshipGrant.course'
         ])
             ->whereHas('scholarshipGrant', function ($query) {
-                $query->where('scholarship_status', 0);
+                $query->where('unified_status', 'pending');
             })
             ->get();
 
@@ -243,7 +243,7 @@ class DataExportController extends Controller
         // Get applicants (waiting list) - use the same queue map from profiles
         $applicantsQuery = ScholarshipProfile::with(['scholarshipGrant.program', 'scholarshipGrant.school', 'scholarshipGrant.course'])
             ->whereHas('scholarshipGrant', function ($q) {
-                $q->where('scholarship_status', 0);
+                $q->where('unified_status', 'pending');
             });
 
         if ($request->filled('program_id') || $request->filled('school_id')) {

@@ -494,13 +494,6 @@
                                 {{ formatDate(selectedProfile.latest_scholarship_record.created_at) }}
                             </p>
                         </div>
-                        <div v-if="selectedProfile.latest_scholarship_record.scholarship_status_remarks"
-                            class="md:col-span-2">
-                            <label class="text-xs font-medium text-gray-600">Status Remarks</label>
-                            <p class="text-sm font-medium">
-                                {{ selectedProfile.latest_scholarship_record.scholarship_status_remarks }}
-                            </p>
-                        </div>
                     </div>
                 </div>
 
