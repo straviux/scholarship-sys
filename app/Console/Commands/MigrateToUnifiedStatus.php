@@ -27,7 +27,7 @@ class MigrateToUnifiedStatus extends Command
     public function handle()
     {
         $dryRun = $this->option('dry-run');
-        
+
         if ($dryRun) {
             $this->info('Running in DRY-RUN mode. No changes will be made.');
         }

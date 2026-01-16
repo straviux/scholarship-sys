@@ -116,7 +116,7 @@
                                 </div>
                                 <div>
                                     <h5 class="font-semibold text-gray-800">{{ record.program?.name || 'Unknown Program'
-                                    }}</h5>
+                                        }}</h5>
                                     <p class="text-sm text-gray-600">{{ record.program?.shortname || '' }}</p>
                                 </div>
                             </div>

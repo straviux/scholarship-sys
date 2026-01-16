@@ -91,7 +91,8 @@
                                         Course</th>
                                     <th v-if="!params.year_level" class="px-4 py-3 text-left font-medium text-gray-700">
                                         Year</th>
-                                    <th v-if="!params.approval_status" class="px-4 py-3 text-left font-medium text-gray-700">Status</th>
+                                    <th v-if="!params.approval_status"
+                                        class="px-4 py-3 text-left font-medium text-gray-700">Status</th>
                                     <th v-if="!params.grant_provision"
                                         class="px-4 py-3 text-left font-medium text-gray-700">Grant</th>
                                     <th class="px-4 py-3 text-left font-medium text-gray-700">Date Filed</th>

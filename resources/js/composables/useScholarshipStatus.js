@@ -152,9 +152,11 @@ export const useScholarshipStatus = () => {
 		const config = statusConfig[status] || statusConfig.unknown;
 		const bgColor = config.bgColor;
 		const textColor = config.textColor;
-		return `px-3 py-1 rounded-full text-sm font-semibold`
-			+ ` border border-current` 
-			+ ` style="background-color: ${bgColor}; color: ${textColor};"`;
+		return (
+			`px-3 py-1 rounded-full text-sm font-semibold` +
+			` border border-current` +
+			` style="background-color: ${bgColor}; color: ${textColor};"`
+		);
 	};
 
 	/**

@@ -1,5 +1,6 @@
 <template>
     <AdminLayout>
+
         <Head title="Reviewed Applicants - Approval Management" />
 
         <div>
@@ -23,12 +24,13 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
                         <div class="flex flex-col">
                             <label class="text-xs font-medium text-gray-600 mb-1">Status</label>
-                            <Select v-model="filters.status" :options="statusOptions" optionLabel="label" 
+                            <Select v-model="filters.status" :options="statusOptions" optionLabel="label"
                                 optionValue="value" placeholder="All Statuses" size="small" class="w-full" />
                         </div>
                         <div class="flex flex-col">
                             <label class="text-xs font-medium text-gray-600 mb-1">Name</label>
-                            <InputText v-model="filters.name" placeholder="Search by name" size="small" class="w-full" @keyup.enter="applyFilters" />
+                            <InputText v-model="filters.name" placeholder="Search by name" size="small" class="w-full"
+                                @keyup.enter="applyFilters" />
                         </div>
                         <div class="flex flex-col">
                             <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
@@ -78,15 +80,13 @@
                         <Column header="Actions" :style="{ width: '300px' }">
                             <template #body="slotProps">
                                 <div class="flex gap-2 items-center">
-                                    <Button v-if="hasRole('administrator') || hasRole('program_manager')" 
-                                        label="Approve" icon="pi pi-check" size="small" severity="success" 
+                                    <Button v-if="hasRole('administrator') || hasRole('program_manager')"
+                                        label="Approve" icon="pi pi-check" size="small" severity="success"
                                         @click="approveApplication(slotProps.data)" />
                                     <Button icon="pi pi-arrow-left" rounded text severity="warning" size="small"
-                                        @click="revertStatus(slotProps.data)" 
-                                        v-tooltip.top="'Mark as Pending'" />
+                                        @click="revertStatus(slotProps.data)" v-tooltip.top="'Mark as Pending'" />
                                     <Button icon="pi pi-eye" rounded text size="small"
-                                        @click="viewProfile(slotProps.data)" 
-                                        v-tooltip.top="'View Profile'" />
+                                        @click="viewProfile(slotProps.data)" v-tooltip.top="'View Profile'" />
                                 </div>
                             </template>
                         </Column>
@@ -134,15 +134,13 @@
                         <Column header="Actions" :style="{ width: '300px' }">
                             <template #body="slotProps">
                                 <div class="flex gap-2 items-center">
-                                    <Button v-if="hasRole('administrator') || hasRole('program_manager')" 
-                                        label="Confirm" icon="pi pi-times" size="small" severity="danger" 
+                                    <Button v-if="hasRole('administrator') || hasRole('program_manager')"
+                                        label="Confirm" icon="pi pi-times" size="small" severity="danger"
                                         @click="denyApplication(slotProps.data)" />
                                     <Button icon="pi pi-arrow-left" rounded text severity="warning" size="small"
-                                        @click="revertStatus(slotProps.data)" 
-                                        v-tooltip.top="'Mark as Pending'" />
+                                        @click="revertStatus(slotProps.data)" v-tooltip.top="'Mark as Pending'" />
                                     <Button icon="pi pi-eye" rounded text size="small"
-                                        @click="viewProfile(slotProps.data)" 
-                                        v-tooltip.top="'View Profile'" />
+                                        @click="viewProfile(slotProps.data)" v-tooltip.top="'View Profile'" />
                                 </div>
                             </template>
                         </Column>
@@ -228,8 +226,8 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Denial Reason</label>
-                    <Select v-model="denyForm.reason" :options="declineReasons" optionLabel="label" 
-                        optionValue="value" placeholder="Select a reason" class="w-full" />
+                    <Select v-model="denyForm.reason" :options="declineReasons" optionLabel="label" optionValue="value"
+                        placeholder="Select a reason" class="w-full" />
                 </div>
 
                 <div>
