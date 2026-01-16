@@ -99,8 +99,8 @@ class WaitingListController extends Controller
             ->where(function ($q) use ($programId) {
                 // Display all PENDING applications (based on unified_status)
                 // Exclude records marked as approved_pending or denied
-                // Only show profiles with scholarship records that don't have a final status
-                $q->whereNotIn('scholarship_records.unified_status', ['approved_pending', 'denied'])
+                // Only show profiles with scholarship records that have pending_approval status
+                $q->where('scholarship_records.unified_status', 'pending_approval')
                     ->whereNotNull('scholarship_records.profile_id');
 
                 // Filter by program if specified
