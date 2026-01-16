@@ -274,6 +274,17 @@ Route::post('/applicants', [ApplicantController::class, 'store'])
 
 - Has ALL permissions (cannot be modified)
 
+### Program Manager
+
+- Can view, create, and edit applicants
+- **Can mark applicants as approved or denied** ✓
+- Can view, create, edit scholarships and update status
+- Can view, create, edit disbursements
+- Can view and manage waiting list
+- Can view programs, courses, schools, requirements
+- Can view and generate reports
+- **Primary role for handling application approvals and denials**
+
 ### Moderator
 
 - Can view, create, and edit applicants
@@ -282,6 +293,7 @@ Route::post('/applicants', [ApplicantController::class, 'store'])
 - Can view and manage waiting list
 - Can view programs, courses, schools, requirements
 - Can view and generate reports
+- **Note: Cannot mark applicants as approved/denied (Program Manager only)**
 
 ### User (Read-only)
 

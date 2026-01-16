@@ -47,7 +47,7 @@ Route::middleware('auth')->group(function () {
 });
 
 
-Route::middleware(['auth', 'role:administrator'])->group(function () {
+Route::middleware(['auth', 'check-roles:administrator|program_manager'])->group(function () {
     // Unified Access Control Page
     Route::get('/access-control', [AccessControlController::class, 'index'])->name('access-control.index');
 
@@ -101,7 +101,7 @@ Route::middleware(['auth'])->group(function () {
     // Admin page for viewing single update details
     Route::get('/admin/system-updates/{id}', function ($id) {
         return inertia('Admin/SystemUpdateShow', ['id' => $id]);
-    })->name('admin.system-updates.show')->middleware('role:administrator');
+    })->name('admin.system-updates.show')->middleware('check-roles:administrator|program_manager');
 
     // User-facing page to view all system updates
     Route::get('/system-updates', function () {
@@ -131,21 +131,28 @@ Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->gr
     Route::post('/profiles/add-educational-background', 'addEducationBackgroundApi')->name('profile-api.addeducation');
     Route::put('/profiles/update-educational-background/{id}', 'updateEducationBackgroundApi')->name('profile-api.updateeducation');
     Route::delete('/profiles/delete-educational-background/{id}', 'deleteEducationBackgroundApi')->name('profile-api.deleteeducation');
+});
 
-
-    // WAITING LIST ROUTES
+// WAITING LIST ROUTES - Accessible to all authenticated users
+// Access is controlled via permission gates in the controller
+Route::middleware(['auth'])->group(function () {
     // Dedicated routes for waiting list management
-    Route::get('/applicants/{action?}/{id?}', [WaitingListController::class, 'index'])->name('waitinglist.index'); // Accepts filter values via query string: ?applied_course=...&municipality=...&name=...&per_page=...
+    // Specific routes MUST come before generic {action?}/{id?} route
     Route::post('/applicants', [ScholarshipProfileController::class, 'storeApplicant'])->name('waitinglist.store');
     Route::put('/applicants/{id}', [ScholarshipProfileController::class, 'updateApplicant'])->name('waitinglist.update');
     Route::delete('/applicants/{id}', [WaitingListController::class, 'destroy'])->name('waitinglist.destroy');
+    Route::get('/applicants-export', [WaitingListController::class, 'export'])->name('waitinglist.export');
     Route::put('/applicants/{id}/jpm-status', [WaitingListController::class, 'updateJpmStatus'])->name('waitinglist.updateJpmStatus');
     Route::put('/applicants/{id}/jpm-remarks', [WaitingListController::class, 'updateJpmRemarks'])->name('waitinglist.updateJpmRemarks');
-    Route::get('/applicants-export', [WaitingListController::class, 'export'])->name('waitinglist.export');
+    // Generic route MUST come last to catch all remaining /applicants patterns
+    Route::get('/applicants/{action?}/{id?}', [WaitingListController::class, 'index'])->name('waitinglist.index'); // Accepts filter values via query string: ?applied_course=...&municipality=...&name=...&per_page=...
 
     Route::get('/get-user-encoded-records', [WaitingListController::class, 'getUserEncodedRecords'])->name('waitinglist.getUserEncodedRecords');
+});
 
-    // SCHOLAR ROUTES
+// SCHOLAR ROUTES - Accessible to all authenticated users
+// Access is controlled via permission gates in the controller
+Route::middleware(['auth'])->group(function () {
     // Dedicated routes for managing active scholars (not applicants)
     // These routes create profiles with scholarship_status = 1 (approved/active)
     Route::post('/scholars', [ScholarController::class, 'store'])->name('scholars.store');
@@ -241,6 +248,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/scholarship/{record}/decline', [ScholarshipProfileController::class, 'decline'])
         ->name('scholarship.record.decline');
+
+    Route::patch('/scholarship/{record}/update-status', [ScholarshipProfileController::class, 'updateStatus'])
+        ->name('scholarship.record.update-status');
+
+    Route::get('/reviewed-applicants', [ScholarshipProfileController::class, 'showReviewedApplicants'])
+        ->name('scholarship.reviewed-applicants');
 
     Route::post('/scholarship/{record}/conditional', [ScholarshipProfileController::class, 'setConditionalApproval'])
         ->name('scholarship.record.conditional');
@@ -366,14 +379,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/system-updates/mark-all-read', [SystemUpdateController::class, 'markAllAsRead']);
 
     // Admin routes for managing system updates
-    Route::middleware(['role:administrator'])->group(function () {
+    Route::middleware(['check-roles:administrator|program_manager'])->group(function () {
         Route::get('/api/admin/system-updates', [SystemUpdateController::class, 'adminIndex']);
         Route::post('/api/system-updates', [SystemUpdateController::class, 'store']);
     });
 
     // Individual update routes (must be after specific routes)
     Route::post('/api/system-updates/{systemUpdate}/mark-read', [SystemUpdateController::class, 'markAsRead'])->name('system-updates.mark-read');
-    Route::delete('/api/system-updates/{systemUpdate}', [SystemUpdateController::class, 'destroy'])->middleware('role:administrator');
+    Route::delete('/api/system-updates/{systemUpdate}', [SystemUpdateController::class, 'destroy'])->middleware('check-roles:administrator|program_manager');
 });
 
 // Test route for debugging notifications

@@ -4,8 +4,8 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div class="border rounded p-3">
                 <div class="text-xs text-gray-600 mb-1">Current Status</div>
-                <Chip :label="getApprovalStatusLabel(application.approval_status)"
-                    :severity="getApprovalStatusSeverity(application.approval_status)" class="text-sm" />
+                <Chip :label="getStatusLabel(application.unified_status)"
+                    :severity="getStatusSeverity(application.unified_status)" class="text-sm" />
             </div>
 
             <div class="border rounded p-3" v-if="!props.showApplicantName">
@@ -115,108 +115,6 @@
                 </template>
             </Timeline>
         </div>
-
-        <!-- Action Buttons -->
-        <div class="flex justify-between items-center pt-2">
-            <div class="flex gap-2">
-                <Button v-if="canApprove(application) && hasPermission('applicants.approve')" label="Approve"
-                    icon="pi pi-thumbs-up" severity="success" @click="showApprovalDialog = true" />
-                <Button v-if="canDecline(application) && hasPermission('applicants.approve')" label="Decline"
-                    icon="pi pi-thumbs-down" severity="danger" outlined @click="showDeclineDialog = true" />
-            </div>
-
-            <div class="flex gap-2">
-                <Button label="View Full Profile" icon="pi pi-id-card" severity="secondary" outlined
-                    @click="viewFullProfile" />
-                <Button label="Print Application" icon="pi pi-file-pdf" severity="secondary" outlined
-                    @click="printApplication" />
-            </div>
-        </div>
-
-        <!-- Approval Dialog -->
-        <Dialog v-model:visible="showApprovalDialog" modal header="Approve Application" :style="{ width: '500px' }"
-            class="p-fluid">
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs text-gray-700 mb-1">
-                        Approval Date
-                    </label>
-                    <Calendar v-model="approvalForm.date_approved" showIcon class="w-full" :maxDate="new Date()" />
-                </div>
-
-                <div>
-                    <label class="block text-xs text-gray-700 mb-1">
-                        Remarks (Optional)
-                    </label>
-                    <Textarea v-model="approvalForm.remarks" rows="3" class="w-full text-xs"
-                        placeholder="Add any additional comments..." />
-                </div>
-
-                <div v-if="isEligibleForAutoApproval(application.gwa)"
-                    class="p-3 bg-blue-50 border border-blue-200 rounded">
-                    <div class="flex items-center gap-2 text-blue-800 text-xs">
-                        <i class="pi pi-info-circle"></i>
-                        <span class="font-medium">Auto-Approval Eligible</span>
-                    </div>
-                    <div class="text-xs text-blue-700 mt-1">
-                        This applicant meets the criteria for automatic approval based on their GWA of {{
-                            application.gwa }}.
-                    </div>
-                </div>
-            </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" outlined @click="showApprovalDialog = false" />
-                <Button label="Approve Application" severity="success" @click="confirmApproval"
-                    :loading="approvalForm.processing" />
-            </template>
-        </Dialog>
-
-        <!-- Decline Dialog -->
-        <Dialog v-model:visible="showDeclineDialog" modal header="Decline Application" :style="{ width: '500px' }"
-            class="p-fluid">
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs text-gray-700 mb-1">
-                        Reason for Decline <span class="text-red-500">*</span>
-                    </label>
-                    <Select v-model="declineForm.reason" :options="declineReasonsOptions" optionLabel="label"
-                        optionValue="value" placeholder="Select a reason" class="w-full"
-                        :class="{ 'p-invalid': declineForm.errors.reason }" />
-                    <small v-if="declineForm.errors.reason" class="p-error">
-                        {{ declineForm.errors.reason }}
-                    </small>
-                </div>
-
-                <div>
-                    <label class="block text-xs text-gray-700 mb-1">
-                        Additional Details <span class="text-red-500">*</span>
-                    </label>
-                    <Textarea v-model="declineForm.details" rows="4" class="w-full text-xs"
-                        placeholder="Please provide specific details about the decline decision..."
-                        :class="{ 'p-invalid': declineForm.errors.details }" />
-                    <small v-if="declineForm.errors.details" class="p-error">
-                        {{ declineForm.errors.details }}
-                    </small>
-                </div>
-
-                <div class="p-3 bg-red-50 border border-red-200 rounded">
-                    <div class="flex items-center gap-2 text-red-800 text-xs">
-                        <i class="pi pi-exclamation-triangle"></i>
-                        <span class="font-medium">Important Notice</span>
-                    </div>
-                    <div class="text-xs text-red-700 mt-1">
-                        This action will permanently decline the application. The applicant will be notified via email.
-                    </div>
-                </div>
-            </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" outlined @click="showDeclineDialog = false" />
-                <Button label="Decline Application" severity="danger" @click="confirmDecline"
-                    :loading="declineForm.processing" />
-            </template>
-        </Dialog>
     </div>
 </template>
 
@@ -243,6 +141,7 @@ import { ref, computed } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
 import moment from 'moment';
 import { usePermission } from '@/composable/permissions';
+import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 
 // PrimeVue Components
 import Panel from 'primevue/panel';
@@ -280,39 +179,13 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['approved', 'declined', 'refresh']);
+const emit = defineEmits(['refresh']);
 
 // Permission composable
 const { hasPermission } = usePermission();
 
-// Dialog state
-const showApprovalDialog = ref(false);
-const showDeclineDialog = ref(false);
-
-// Forms
-const approvalForm = useForm({
-    date_approved: new Date(),
-    remarks: ''
-});
-
-const declineForm = useForm({
-    reason: '',
-    details: '',
-    errors: {}
-});
-
-// Computed properties
-const declineReasonsOptions = computed(() => {
-    if (Array.isArray(props.declineReasons)) {
-        return props.declineReasons;
-    }
-
-    // Convert object format to array format for dropdown
-    return Object.entries(props.declineReasons).map(([value, label]) => ({
-        value,
-        label
-    }));
-});
+// Status composable
+const { getStatusLabel, getStatusSeverity } = useScholarshipStatus();
 
 // Helper methods
 const getFullName = (profile) => {
@@ -391,54 +264,6 @@ const canApprove = (application) => {
 
 const canDecline = (application) => {
     return application.approval_status === 'pending';
-};
-
-// Action methods
-const confirmApproval = () => {
-    approvalForm.post(route('scholarship.record.approve', props.application.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            showApprovalDialog.value = false;
-            emit('approved', props.application);
-            emit('refresh');
-        },
-        onError: (errors) => {
-            console.error('Approval failed:', errors);
-        }
-    });
-};
-
-const confirmDecline = () => {
-    // Validate required fields
-    declineForm.errors = {};
-    if (!declineForm.reason) {
-        declineForm.errors.reason = 'Please select a reason for decline';
-        return;
-    }
-    if (!declineForm.details) {
-        declineForm.errors.details = 'Please provide additional details';
-        return;
-    }
-
-    declineForm.post(route('scholarship.record.decline', props.application.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            showDeclineDialog.value = false;
-            emit('declined', props.application);
-            emit('refresh');
-        },
-        onError: (errors) => {
-            console.error('Decline failed:', errors);
-        }
-    });
-};
-
-const viewFullProfile = () => {
-    router.visit(route('scholarship.profile.show', props.application.profile.profile_id));
-};
-
-const printApplication = () => {
-    window.print();
 };
 </script>
 

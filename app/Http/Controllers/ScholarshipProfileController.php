@@ -1001,6 +1001,90 @@ class ScholarshipProfileController extends Controller
     }
 
     /**
+     * Update scholarship record status (for marking as approved/denied during review)
+     */
+    public function updateStatus(Request $request, ScholarshipRecord $record)
+    {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'unified_status' => 'required|string|in:pending_approval,approved_pending,denied',
+        ]);
+
+        try {
+            $record->unified_status = $request->unified_status;
+            $record->save();
+
+            return back()->with('success', 'Application status updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Status update failed', [
+                'record_id' => $record->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->with('error', 'Failed to update status: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display reviewed applicants (marked as approved/denied during review phase)
+     */
+    public function showReviewedApplicants(Request $request)
+    {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'You do not have permission to view reviewed applicants.');
+        }
+
+        $query = ScholarshipRecord::whereIn('unified_status', ['approved_pending', 'denied'])
+            ->with([
+                'profile' => function ($q) {
+                    $q->select('profile_id', 'first_name', 'last_name', 'middle_name', 'contact_no');
+                },
+                'program' => function ($q) {
+                    $q->select('scholarship_programs.id', 'scholarship_programs.name', 'scholarship_programs.shortname');
+                },
+                'course' => function ($q) {
+                    $q->select('courses.id', 'courses.name', 'courses.shortname');
+                },
+                'school' => function ($q) {
+                    $q->select('schools.id', 'schools.name', 'schools.shortname');
+                }
+            ]);
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('unified_status', $request->status);
+        }
+
+        // Filter by name
+        if ($request->filled('name')) {
+            $query->whereHas('profile', function ($q) use ($request) {
+                $q->where(function ($subQ) use ($request) {
+                    $subQ->where('first_name', 'like', '%' . $request->name . '%')
+                        ->orWhere('last_name', 'like', '%' . $request->name . '%')
+                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $request->name . '%'])
+                        ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ['%' . $request->name . '%']);
+                });
+            });
+        }
+
+        // Filter by program
+        if ($request->filled('program')) {
+            $query->where('program_id', $request->program);
+        }
+
+        // Sort by date filed (newest first)
+        $reviewed = $query->orderBy('date_filed', 'desc')->get();
+
+        return Inertia::render('ReviewedApplicants/Index', [
+            'reviewed_applicants' => $reviewed,
+            'decline_reasons' => config('scholarship.decline_reasons'),
+        ]);
+    }
+
+    /**
      * Update completion status for a scholarship record
      */
     public function updateCompletionStatus(Request $request, ScholarshipRecord $record)

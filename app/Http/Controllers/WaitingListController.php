@@ -21,6 +21,10 @@ class WaitingListController extends Controller
      */
     public function index(Request $request, $action = null, $id = null): Response
     {
+        // Increase memory limit and execution time for large queries
+        ini_set('memory_limit', '2048M');
+        ini_set('max_execution_time', '300');
+
         if (!Gate::allows('create-scholar-profile') && $action === 'create') {
             $action = null;
             $msg = ['error' => true, 'message' => 'You are not allowed to perform this action'];
@@ -93,9 +97,10 @@ class WaitingListController extends Controller
                 'scholarship_records.approval_status'
             )
             ->where(function ($q) use ($programId) {
-                // Display all PENDING applications (based on approval_status)
-                // Only show profiles with scholarship records that have pending approval status
-                $q->whereNotIn('scholarship_records.approval_status', ['approved', 'auto_approved', 'declined'])
+                // Display all PENDING applications (based on unified_status)
+                // Exclude records marked as approved_pending or denied
+                // Only show profiles with scholarship records that don't have a final status
+                $q->whereNotIn('scholarship_records.unified_status', ['approved_pending', 'denied'])
                     ->whereNotNull('scholarship_records.profile_id');
 
                 // Filter by program if specified

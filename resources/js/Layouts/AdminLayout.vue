@@ -154,6 +154,13 @@ onUnmounted(() => {
                                         <span class="-mr-1 font-medium">Waiting List</span>
                                     </SidebarLink>
                                 </li>
+                                <li v-if="hasPermission('applicants.approve')">
+                                    <SidebarLink :href="route('scholarship.reviewed-applicants')"
+                                        :active="route().current('scholarship.reviewed-applicants')">
+                                        <i class="pi pi-check-circle mr-2 text-sm"></i>
+                                        <span class="-mr-1 font-medium">Reviewed Applicants</span>
+                                    </SidebarLink>
+                                </li>
                                 <li>
                                     <SidebarLink :href="route('scholarship.profiles')"
                                         :active="route().current('scholarship.profiles') || route().current('scholarship.profile.show') || route().current('scholarship.profile.history')">
@@ -173,7 +180,8 @@ onUnmounted(() => {
                                 class="ml-auto" />
                         </SidebarLink>
                     </li>
-                    <li v-if="hasRole('administrator') || hasRole('moderator') || hasRole('jpm_admin')">
+                    <li
+                        v-if="hasRole('administrator') || hasRole('moderator') || hasRole('program_manager') || hasRole('jpm_admin')">
                         <details open>
                             <summary>
                                 <i class="pi pi-table mr-2"></i>
@@ -441,29 +449,29 @@ onUnmounted(() => {
                                 <div class="py-2">
                                     <Link :href="route('user.profile')"
                                         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
-                                    <i class="pi pi-user text-gray-600"></i>
-                                    <div class="flex-1">
-                                        <span class="text-sm font-medium text-gray-900">Profile</span>
-                                        <p class="text-xs text-gray-500">View and edit your profile</p>
-                                    </div>
+                                        <i class="pi pi-user text-gray-600"></i>
+                                        <div class="flex-1">
+                                            <span class="text-sm font-medium text-gray-900">Profile</span>
+                                            <p class="text-xs text-gray-500">View and edit your profile</p>
+                                        </div>
                                     </Link>
 
                                     <Link :href="route('user.profile')"
                                         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
-                                    <i class="pi pi-cog text-gray-600"></i>
-                                    <div class="flex-1">
-                                        <span class="text-sm font-medium text-gray-900">Settings</span>
-                                        <p class="text-xs text-gray-500">Account preferences</p>
-                                    </div>
+                                        <i class="pi pi-cog text-gray-600"></i>
+                                        <div class="flex-1">
+                                            <span class="text-sm font-medium text-gray-900">Settings</span>
+                                            <p class="text-xs text-gray-500">Account preferences</p>
+                                        </div>
                                     </Link>
 
                                     <Link :href="route('user.profile')"
                                         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
-                                    <i class="pi pi-chart-line text-gray-600"></i>
-                                    <div class="flex-1">
-                                        <span class="text-sm font-medium text-gray-900">Activity</span>
-                                        <p class="text-xs text-gray-500">View your recent activity</p>
-                                    </div>
+                                        <i class="pi pi-chart-line text-gray-600"></i>
+                                        <div class="flex-1">
+                                            <span class="text-sm font-medium text-gray-900">Activity</span>
+                                            <p class="text-xs text-gray-500">View your recent activity</p>
+                                        </div>
                                     </Link>
                                 </div>
 
@@ -471,8 +479,8 @@ onUnmounted(() => {
                                 <div class="px-4 py-2 border-t border-gray-100 bg-gray-50">
                                     <Link :href="route('logout')" method="post" as="button"
                                         class="w-full flex items-center justify-center gap-2 px-4 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors duration-200">
-                                    <i class="pi pi-sign-out"></i>
-                                    <span class="text-sm font-medium">Sign Out</span>
+                                        <i class="pi pi-sign-out"></i>
+                                        <span class="text-sm font-medium">Sign Out</span>
                                     </Link>
                                 </div>
                             </Popover>

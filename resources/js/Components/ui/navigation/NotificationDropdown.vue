@@ -153,7 +153,7 @@
                         <div class="flex items-center space-x-4">
                             <!-- <span>Type: <span class="font-medium">{{ selectedNotification?.type }}</span></span> -->
                             <span>Priority: <span class="font-medium capitalize">{{ selectedNotification?.priority
-                                    }}</span></span>
+                            }}</span></span>
                         </div>
                         <div class="flex items-center space-x-4">
                             <span>@<span class="font-medium">{{ selectedNotification?.created_by }}</span></span>
@@ -325,7 +325,7 @@ const getTypeIconClass = (type) => {
 const viewAllNotifications = () => {
     // Navigate to full notifications page
     popoverRef.value.hide()
-    router.visit(route('admin.system-updates'))
+    router.visit(route('system-updates.index'))
 }
 
 const openNotificationModal = (notification) => {

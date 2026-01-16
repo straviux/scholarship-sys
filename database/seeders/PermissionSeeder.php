@@ -103,6 +103,33 @@ class PermissionSeeder extends Seeder
         $adminRole = Role::firstOrCreate(['name' => 'administrator']);
         $adminRole->givePermissionTo(Permission::all());
 
+        // Assign permissions to program_manager role - like moderator but with approval capabilities
+        $programManagerRole = Role::firstOrCreate(['name' => 'program_manager']);
+        $programManagerPermissions = [
+            'applicants.view',
+            'applicants.create',
+            'applicants.edit',
+            'applicants.approve', // Program managers can approve/deny applications
+            'scholarships.view',
+            'scholarships.create',
+            'scholarships.edit',
+            'scholarships.update-status',
+            'disbursements.view',
+            'disbursements.create',
+            'disbursements.edit',
+            'waiting-list.view',
+            'waiting-list.manage',
+            'programs.view',
+            'courses.view',
+            'schools.view',
+            'requirements.view',
+            'reports.view',
+            'reports.generate',
+            'forms-templates.view',
+            'forms-templates.download',
+        ];
+        $programManagerRole->syncPermissions($programManagerPermissions);
+
         // Assign limited permissions to moderator role
         $moderatorRole = Role::firstOrCreate(['name' => 'moderator']);
         $moderatorPermissions = [

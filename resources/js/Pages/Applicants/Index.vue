@@ -721,6 +721,28 @@ const selectedApplicant = ref(null);
 const showProfileReviewModal = ref(false);
 const selectedApplication = ref(null);
 const selectedApplicantForReview = ref(null);
+const currentProfileIndex = ref(-1);
+const hasPreviousProfile = ref(false);
+const hasNextProfile = ref(true);
+
+// Approval confirmation modal state
+const showApprovalConfirmModal = ref(false);
+const approvalAction = ref(null); // 'approve' or 'deny'
+const approvalRemarks = ref('');
+
+// Profile menu items for dropdown
+const profileMenuItems = ref([
+    {
+        label: 'Mark as Approved for Review',
+        icon: 'pi pi-check',
+        command: () => markAsApproved()
+    },
+    {
+        label: 'Mark as Denied',
+        icon: 'pi pi-times',
+        command: () => markAsDenied()
+    }
+]);
 
 // Priority modal state
 const showPriorityModal = ref(false);
@@ -755,6 +777,9 @@ const deleteApplicant = () => {
 
 // Combined profile and review modal methods
 const openProfileReviewModal = (applicant) => {
+    // Find the index of the applicant in the current list
+    currentProfileIndex.value = applicants.value.findIndex(a => a.profile_id === applicant.profile_id);
+
     // Store the full profile data
     selectedApplicantForReview.value = applicant;
 
@@ -774,15 +799,87 @@ const openProfileReviewModal = (applicant) => {
         conditional_deadline: applicant.scholarship_grant?.[0]?.conditional_deadline || null,
         conditional_deadline_notified_at: applicant.scholarship_grant?.[0]?.conditional_deadline_notified_at || null,
         conditional_deadline_expired: applicant.scholarship_grant?.[0]?.conditional_deadline_expired || false,
-        approval_remarks: applicant.scholarship_grant?.[0]?.approval_remarks || null,
+        approval_remarks: applicant.scholarship_grant?.[0]?.approval_remarks || null
     };
+
+    // Check if there are previous/next profiles on current page
+    const checkNavigationAvailability = () => {
+        hasPreviousProfile.value = currentProfileIndex.value > 0;
+        hasNextProfile.value = currentProfileIndex.value < applicants.value.length - 1;
+    };
+
+    checkNavigationAvailability();
+
     showProfileReviewModal.value = true;
+};
+
+const goToPreviousProfile = () => {
+    if (currentProfileIndex.value <= 0) return;
+
+    currentProfileIndex.value--;
+    const previousApplicant = applicants.value[currentProfileIndex.value];
+    openProfileReviewModal(previousApplicant);
+};
+
+const goToNextProfile = () => {
+    if (currentProfileIndex.value >= applicants.value.length - 1) return;
+
+    currentProfileIndex.value++;
+    const nextApplicant = applicants.value[currentProfileIndex.value];
+    openProfileReviewModal(nextApplicant);
 };
 
 const closeProfileReviewModal = () => {
     showProfileReviewModal.value = false;
     selectedApplication.value = null;
     selectedApplicantForReview.value = null;
+};
+
+const markAsApproved = () => {
+    if (!selectedApplicantForReview.value) return;
+    approvalAction.value = 'approve';
+    approvalRemarks.value = '';
+    showApprovalConfirmModal.value = true;
+};
+
+const markAsDenied = () => {
+    if (!selectedApplicantForReview.value) return;
+    approvalAction.value = 'deny';
+    approvalRemarks.value = '';
+    showApprovalConfirmModal.value = true;
+};
+
+const confirmApprovalAction = () => {
+    if (!selectedApplicantForReview.value) return;
+
+    const data = {
+        unified_status: approvalAction.value === 'approve' ? 'approved_pending' : 'denied'
+    };
+
+    router.patch(route('scholarship.record.update-status', selectedApplicantForReview.value.scholarship_grant[0].id), data, {
+        onSuccess: () => {
+            const message = approvalAction.value === 'approve'
+                ? 'Application marked as approved for review'
+                : 'Application marked as denied';
+            toast.success(message);
+            closeApprovalConfirmModal();
+            closeProfileReviewModal();
+            refreshApplicationList();
+        },
+        onError: (errors) => {
+            const message = approvalAction.value === 'approve'
+                ? 'Failed to mark application as approved'
+                : 'Failed to mark application as denied';
+            toast.error(message);
+            console.error(errors);
+        }
+    });
+};
+
+const closeApprovalConfirmModal = () => {
+    showApprovalConfirmModal.value = false;
+    approvalAction.value = null;
+    approvalRemarks.value = '';
 };
 
 const handleApprovalAction = () => {
@@ -1104,8 +1201,6 @@ const formatDate = (date) => {
                         <Button icon="pi pi-user-plus" @click="openYakapCategoryModal"
                             v-if="hasPermission('applicants.create')" severity="success"
                             v-tooltip.bottom="'Add New Applicant'" />
-                        <Button icon="pi pi-print" @click="openReportModal" severity="info"
-                            v-tooltip.bottom="'Generate Report'" v-if="hasPermission('reports.generate')" />
                         <!-- <Button as="a" label="Existing" icon="pi pi-user"
                             v-if="hasPermission('create-scholar-profile') && !hasRole('user')"
                             :href="route('waitinglist.index', { action: 'add-existing' })" severity="secondary"
@@ -1349,21 +1444,21 @@ const formatDate = (date) => {
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Prog. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Cour. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_course || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Sch. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_school_course || '-'
-                                                    }}</span>
+                                                }}</span>
 
                                             </div>
                                         </div>
@@ -1623,7 +1718,7 @@ const formatDate = (date) => {
                         class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows="6" placeholder="Enter remarks here..." />
                     <small v-if="remarksForm.errors.remarks" class="text-red-500">{{ remarksForm.errors.remarks
-                    }}</small>
+                        }}</small>
                 </div>
             </div>
 
@@ -1665,9 +1760,12 @@ const formatDate = (date) => {
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" />
 
         <!-- Integrated Profile & Review Modal -->
-        <Dialog v-model:visible="showProfileReviewModal" modal header="Application Review & Applicant Profile"
-            :style="{ width: '50vw' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }" :maximizable="true"
-            class="p-fluid">
+        <Dialog v-model:visible="showProfileReviewModal" modal :style="{ width: '50vw' }"
+            :breakpoints="{ '1199px': '75vw', '575px': '90vw' }" :maximizable="true" class="p-fluid">
+
+            <template #header>
+                <span>Application Review & Applicant Profile</span>
+            </template>
 
             <div v-if="selectedApplicantForReview">
                 <!-- Header Summary -->
@@ -1676,16 +1774,18 @@ const formatDate = (date) => {
                         <Avatar :label="getApplicantInitials(selectedApplicantForReview)" size="large" shape="circle"
                             class="bg-blue-600 text-white" />
                         <div class="flex-1">
-                            <h3 class="text-xl font-bold text-gray-900">{{
-                                getApplicantFullName(selectedApplicantForReview) }}</h3>
+                            <h3 class="text-xl font-bold text-gray-900"
+                                @click="router.visit(route('scholarship.profile.show', selectedApplicantForReview.profile_id))">
+                                {{
+                                    getApplicantFullName(selectedApplicantForReview) }}</h3>
                             <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
                                 <span><i class="pi pi-phone mr-1"></i>{{ selectedApplicantForReview.contact_no || 'N/A'
-                                    }}</span>
+                                }}</span>
                                 <span><i class="pi pi-envelope mr-1"></i>{{ selectedApplicantForReview.email || 'N/A'
-                                    }}</span>
+                                }}</span>
                                 <span><i class="pi pi-calendar mr-1"></i>{{
                                     formatDate(selectedApplicantForReview.date_filed)
-                                    }}</span>
+                                }}</span>
                             </div>
                         </div>
                         <!-- Queue Numbers -->
@@ -1711,6 +1811,15 @@ const formatDate = (date) => {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Quick Action Buttons -->
+                <div v-if="hasRole('administrator') || hasRole('program_manager')"
+                    class="flex gap-2 mb-4 pt-3 border-t">
+                    <Button label="Mark as Approved" icon="pi pi-check" severity="success" size="small"
+                        @click="markAsApproved" />
+                    <Button label="Mark as Denied" icon="pi pi-times" severity="danger" size="small"
+                        @click="markAsDenied" />
                 </div>
 
                 <!-- Tabbed Content -->
@@ -1772,7 +1881,7 @@ const formatDate = (date) => {
                                             <label class="text-gray-600">Income</label>
                                             <div class="font-medium">{{ selectedApplicantForReview.gross_monthly_income
                                                 || 'N/A'
-                                                }}</div>
+                                            }}</div>
                                         </div>
                                         <div>
                                             <label class="text-gray-600">Address</label>
@@ -1937,6 +2046,19 @@ const formatDate = (date) => {
                     </TabPanels>
                 </Tabs>
             </div>
+
+            <template #footer>
+                <div class="flex items-center justify-between w-full">
+                    <div></div>
+                    <div class="flex opacity-75">({{ currentProfileIndex + 1 }}/{{ applicants.length }})</div>
+                    <div class="flex gap-2">
+                        <Button icon="pi pi-chevron-left" label="Previous" @click="goToPreviousProfile"
+                            :disabled="!hasPreviousProfile" severity="info" />
+                        <Button icon="pi pi-chevron-right" iconPos="right" label="Next" @click="goToNextProfile"
+                            :disabled="!hasNextProfile" severity="info" />
+                    </div>
+                </div>
+            </template>
         </Dialog>
 
         <!-- YAKAP Category Modal - for selecting category when creating new applicant -->
@@ -1979,6 +2101,58 @@ const formatDate = (date) => {
                 <Button label="Cancel" icon="pi pi-times" @click="closeUpdateYakapModal" class="p-button-text" />
                 <Button label="Update" icon="pi pi-check" @click="submitUpdateYakap" severity="success"
                     :loading="updateYakapForm.processing" />
+            </template>
+        </Dialog>
+
+        <!-- Approval Confirmation Modal -->
+        <Dialog v-model:visible="showApprovalConfirmModal" modal
+            :header="`Confirm ${approvalAction === 'approve' ? 'Approval' : 'Denial'}`" :style="{ width: '500px' }">
+            <div v-if="selectedApplicantForReview" class="space-y-4">
+                <!-- Applicant Info -->
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded">
+                    <div class="font-semibold text-blue-900">
+                        {{ selectedApplicantForReview.last_name }}, {{ selectedApplicantForReview.first_name }}
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        {{ selectedApplicantForReview.scholarship_grant?.[0]?.program?.shortname }} -
+                        {{ selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname }}
+                    </div>
+                </div>
+
+                <!-- Action Message -->
+                <div v-if="approvalAction === 'approve'" class="p-3 bg-green-50 border border-green-200 rounded">
+                    <p class="text-sm text-green-800">
+                        <strong>What happens next:</strong>
+                    </p>
+                    <ul class="text-sm text-green-700 mt-2 ml-4 list-disc space-y-1">
+                        <li>Application will be moved to the "Reviewed Applicants" page</li>
+                        <li>Applicant will be removed from the waiting list</li>
+                        <li>Status will be marked as "Approved Pending"</li>
+                        <li>Further processing can be done from the Reviewed Applicants page</li>
+                        <li><strong>The record must still be approved under Reviewed Applicants before it can be
+                                recorded as an active scholar.</strong></li>
+                    </ul>
+                </div>
+
+                <div v-else class="p-3 bg-red-50 border border-red-200 rounded">
+                    <p class="text-sm text-red-800">
+                        <strong>What happens next:</strong>
+                    </p>
+                    <ul class="text-sm text-red-700 mt-2 ml-4 list-disc space-y-1">
+                        <li>Application will be moved to the "Reviewed Applicants" page</li>
+                        <li>Applicant will be removed from the waiting list</li>
+                        <li>Status will be marked as "Denied"</li>
+                        <li>Further confirmation can be done from the Reviewed Applicants page</li>
+                        <li><strong>Record still needs to be confirmed in Reviewed Applicants for the denial to be
+                                finalized</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Cancel" severity="secondary" @click="closeApprovalConfirmModal" />
+                <Button :label="`Confirm ${approvalAction === 'approve' ? 'Approval' : 'Denial'}`"
+                    :severity="approvalAction === 'approve' ? 'success' : 'danger'" @click="confirmApprovalAction" />
             </template>
         </Dialog>
 
