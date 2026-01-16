@@ -242,7 +242,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/scholarship-records/{scholarship_record_id}/generate-qr', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'generateQrCode'])
         ->name('scholarship.records.generate-qr');
 
-    // Approval workflow routes
     Route::post('/scholarship/{record}/approve', [ScholarshipProfileController::class, 'approve'])
         ->name('scholarship.record.approve');
 
@@ -255,12 +254,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reviewed-applicants', [ScholarshipProfileController::class, 'showReviewedApplicants'])
         ->name('scholarship.reviewed-applicants');
 
-    Route::post('/scholarship/{record}/conditional', [ScholarshipProfileController::class, 'setConditionalApproval'])
-        ->name('scholarship.record.conditional');
-
-    Route::put('/scholarship/{record}/conditional', [ScholarshipProfileController::class, 'updateConditionalApproval'])
-        ->name('scholarship.record.conditional.update');
-
     // Completion status update route
     Route::post('/scholarship/{record}/completion-status', [ScholarshipProfileController::class, 'updateCompletionStatus'])
         ->name('scholarship.record.update-completion-status');
@@ -268,16 +261,6 @@ Route::middleware(['auth'])->group(function () {
     // Debug route for completion statuses
     Route::get('/debug/completion-statuses', [ScholarshipProfileController::class, 'debugCompletionStatuses'])
         ->name('debug.completion-statuses');
-
-    // Enhanced approval workflow
-    Route::post('/scholarship/{record}/approve-enhanced', [ScholarshipProfileController::class, 'approveEnhanced'])
-        ->name('scholarship.approve-enhanced');
-
-    Route::post('/scholarship/{record}/decline-enhanced', [ScholarshipProfileController::class, 'declineEnhanced'])
-        ->name('scholarship.decline-enhanced');
-
-    Route::post('/scholarship/{record}/resubmit', [ScholarshipProfileController::class, 'resubmit'])
-        ->name('scholarship.resubmit');
 
     // Approval history and statistics
     Route::get('/scholarship/{record}/history', [ScholarshipProfileController::class, 'getApprovalHistory'])

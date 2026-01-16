@@ -163,7 +163,6 @@ class ScholarshipRecordController extends Controller
         $validatedData = $request->validated();
         // $validatedData['date_approved'] = $request->date_approved ?? null;
         $validatedData['created_by'] = $request->user() ? $request->user()->id : null;
-        $validatedData['scholarship_status_date'] = Carbon::now();
         $validatedData['unified_status'] = 'pending';
 
         $newScholar = ScholarshipRecord::create($validatedData);

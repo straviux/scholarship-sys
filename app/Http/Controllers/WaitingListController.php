@@ -420,14 +420,8 @@ class WaitingListController extends Controller
                     'profiles' => ScholarshipProfileResource::collection($profiles),
                     'profiles_total' => $profiles->total(),
                     'records' => $request->get('records', 10),
-                    // Add approval workflow data
-                    'approvalStatuses' => collect(config('scholarship.approval_statuses'))
-                        ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label']])
-                        ->values()
-                        ->toArray(),
                     'completionStatuses' => config('scholarship.completion_statuses'),
                     'declineReasons' => config('scholarship.decline_reasons'),
-                    'autoApprovalConfig' => config('scholarship.auto_approval', []),
                 ]
             );
         }
@@ -468,14 +462,8 @@ class WaitingListController extends Controller
                 'profiles' => ScholarshipProfileResource::collection($profiles),
                 'profiles_total' => $profiles->total(),
                 'records' => $request->get('records', 10),
-                // Add approval workflow data
-                'approvalStatuses' => collect(config('scholarship.approval_statuses'))
-                    ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label']])
-                    ->values()
-                    ->toArray(),
                 'declineReasons' => config('scholarship.decline_reasons'),
                 'completionStatuses' => config('scholarship.completion_statuses'),
-                'autoApprovalConfig' => config('scholarship.auto_approval', []),
             ]
         );
     }

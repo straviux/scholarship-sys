@@ -116,7 +116,7 @@
                                 </div>
                                 <div>
                                     <h5 class="font-semibold text-gray-800">{{ record.program?.name || 'Unknown Program'
-                                        }}</h5>
+                                    }}</h5>
                                     <p class="text-sm text-gray-600">{{ record.program?.shortname || '' }}</p>
                                 </div>
                             </div>
@@ -199,9 +199,8 @@
             </template>
 
             <ApprovalWorkflow v-if="selectedApplication" :application="selectedApplication"
-                :approval-statuses="approvalStatuses || []" :decline-reasons="declineReasons || {}"
-                :show-applicant-name="true" @approved="handleApprovalAction" @declined="handleApprovalAction"
-                @conditionalApproval="handleApprovalAction" @refresh="refreshData" />
+                :decline-reasons="declineReasons || {}" :show-applicant-name="true" @approved="handleApprovalAction"
+                @declined="handleApprovalAction" @conditionalApproval="handleApprovalAction" @refresh="refreshData" />
         </Dialog>
     </AdminLayout>
 </template>
@@ -224,7 +223,6 @@ import Dialog from 'primevue/dialog';
 const props = defineProps({
     profile: Object,
     scholarshipRecords: Array,
-    approvalStatuses: Array,
     declineReasons: Object,
 });
 
@@ -242,12 +240,6 @@ const getFullName = (profile) => {
         profile.extension_name
     ].filter(Boolean);
     return parts.join(' ');
-};
-
-const getApprovalStatusLabel = (status) => {
-    if (!Array.isArray(props.approvalStatuses)) return status || 'Unknown';
-    const statusObj = props.approvalStatuses.find(s => s.value === status);
-    return statusObj?.label || status || 'Unknown';
 };
 
 const getApprovalStatusSeverity = (status) => {

@@ -246,7 +246,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { router, useForm } from '@inertiajs/vue3';
+import { router, useForm, Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import moment from 'moment';
 import { toast } from 'vue3-toastify';

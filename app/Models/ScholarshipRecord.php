@@ -31,59 +31,20 @@ class ScholarshipRecord extends Model
         'end_date',
         'remarks',
         'academic_status',
-        'scholarship_status',
-        'scholarship_status_remarks',
         'unified_status',
         'grant_provision',
-        'scholarship_status_date',
         'is_active',
         'created_by',
         'updated_by',
         'date_filed',
         'date_approved',
-        // Enhanced workflow fields
-        'application_cycle',
-        'previous_scholarship_id',
-        'completion_status',
-        'completion_date',
-        'completion_remarks',
-        'next_degree_level',
-        'resubmitted_at',
-        'resubmission_notes',
-        'resubmission_allowed_by',
-        'resubmission_allowed_at',
-        'resubmission_deadline',
-        'resubmission_requirements',
-        'resubmission_count',
-        'approval_status',
-        'approved_by',
-        'approved_at',
-        'declined_by',
-        'declined_at',
-        'approval_remarks',
-        'decline_reason',
-        'conditional_requirements',
-        'conditional_deadline',
-        'conditional_deadline_notified_at',
-        'conditional_deadline_expired',
         'upload_token',
         'upload_token_expires_at',
-        // Note: application_status, application_status_remarks, application_status_date removed (redundant with scholarship_status)
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'completion_date' => 'date',
-        'resubmitted_at' => 'datetime',
-        'resubmission_allowed_at' => 'datetime',
-        'resubmission_deadline' => 'datetime',
-        'approved_at' => 'datetime',
-        'declined_at' => 'datetime',
-        'conditional_requirements' => 'array',
-        'conditional_deadline' => 'datetime',
-        'conditional_deadline_notified_at' => 'datetime',
-        'conditional_deadline_expired' => 'boolean',
         'date_filed' => 'date',
         'date_approved' => 'date',
         'start_date' => 'date',
@@ -93,7 +54,6 @@ class ScholarshipRecord extends Model
 
     /**
      * Boot the model
-     * Automatically update scholarship_status when approval_status changes
      * Automatically set created_by and updated_by on create/update
      */
     protected static function boot()
@@ -116,16 +76,9 @@ class ScholarshipRecord extends Model
             }
         });
 
-        // Automatically sync scholarship_status based on approval_status
+        // Auto-generate unified_status if not explicitly set
         static::saving(function ($model) {
-            if ($model->isDirty('approval_status')) {
-                $model->scholarship_status = self::getScholarshipStatusFromApprovalStatus(
-                    $model->approval_status
-                );
-            }
-
-            // Auto-generate unified_status if not explicitly set
-            if ($model->isDirty(['approval_status', 'scholarship_status']) || $model->isDirty('unified_status') === false) {
+            if (!$model->isDirty('unified_status')) {
                 $model->unified_status = self::generateUnifiedStatus(
                     $model->approval_status,
                     $model->scholarship_status
@@ -196,40 +149,6 @@ class ScholarshipRecord extends Model
     public function isOnWaitingList(): bool
     {
         return $this->scholarship_status === 0;
-    }
-
-    /**
-     * Check if scholarship is active
-     * @return bool
-     */
-    public function isActive(): bool
-    {
-        return $this->scholarship_status === 1;
-    }
-
-    /**
-     * Check if scholarship is denied
-     * @return bool
-     */
-    public function isDenied(): bool
-    {
-        return $this->scholarship_status === 2;
-    }
-
-    /**
-     * Get human-readable approval status name
-     * @return string
-     */
-    public function getStatusDisplayName(): string
-    {
-        return match ($this->approval_status) {
-            'pending' => 'Pending Review',
-            'approved' => 'Approved',
-            'auto_approved' => 'Auto-Approved',
-            'declined' => 'Declined',
-            'conditional' => 'Conditional Approval',
-            default => 'Unknown',
-        };
     }
 
     /**
@@ -369,66 +288,54 @@ class ScholarshipRecord extends Model
         return $this->hasMany(ScholarshipApprovalHistory::class, 'scholarship_record_id', 'id');
     }
 
-    // Status helper methods using configuration
-    public function getApprovalStatusConfig()
+    // Status helper methods - Now using unified_status
+    public function getUnifiedStatusConfig()
     {
-        return config('scholarship.approval_statuses')[$this->approval_status] ?? null;
+        $statusConfig = [
+            'pending' => ['label' => 'Pending', 'color' => 'warning'],
+            'approved' => ['label' => 'Approved', 'color' => 'info'],
+            'denied' => ['label' => 'Denied', 'color' => 'danger'],
+            'active' => ['label' => 'Active', 'color' => 'success'],
+            'completed' => ['label' => 'Completed', 'color' => 'secondary'],
+            'unknown' => ['label' => 'Unknown', 'color' => 'secondary'],
+        ];
+        return $statusConfig[$this->unified_status] ?? null;
     }
 
-    public function getApprovalStatusLabel()
+    public function getUnifiedStatusLabel()
     {
-        return $this->getApprovalStatusConfig()['label'] ?? ucfirst($this->approval_status);
+        return $this->getUnifiedStatusConfig()['label'] ?? ucfirst($this->unified_status);
     }
 
-    public function getApprovalStatusColor()
+    public function getUnifiedStatusColor()
     {
-        return $this->getApprovalStatusConfig()['color'] ?? 'secondary';
+        return $this->getUnifiedStatusConfig()['color'] ?? 'secondary';
     }
 
-    public function getCompletionStatusConfig()
-    {
-        return config('scholarship.completion_statuses')[$this->completion_status] ?? null;
-    }
-
-    public function getCompletionStatusLabel()
-    {
-        return $this->getCompletionStatusConfig()['label'] ?? ucfirst($this->completion_status);
-    }
-
-    public function getCompletionStatusColor()
-    {
-        return $this->getCompletionStatusConfig()['color'] ?? 'secondary';
-    }
-
-    // Status checks
+    // Status checks - Using unified_status
     public function isPending()
     {
-        return $this->approval_status === 'pending';
+        return $this->unified_status === 'pending';
     }
 
     public function isApproved()
     {
-        return $this->approval_status === 'approved';
+        return $this->unified_status === 'approved';
     }
 
-    public function isDeclined()
+    public function isDenied()
     {
-        return $this->approval_status === 'declined';
+        return $this->unified_status === 'denied';
     }
 
-    public function isConditional()
+    public function isActive()
     {
-        return $this->approval_status === 'conditional';
-    }
-
-    public function isResubmitted()
-    {
-        return $this->approval_status === 'resubmitted';
+        return $this->unified_status === 'active';
     }
 
     public function isCompleted()
     {
-        return $this->completion_status === 'completed';
+        return $this->unified_status === 'completed';
     }
 
     public function isDiscontinued()
@@ -438,61 +345,15 @@ class ScholarshipRecord extends Model
 
     public function canBeModified()
     {
-        return in_array($this->approval_status, ['pending', 'conditional', 'resubmitted']);
+        return in_array($this->unified_status, ['pending', 'approved']);
     }
 
     public function canBeResubmitted()
     {
         $maxResubmissions = config('scholarship.application_cycle_limits.max_cycles', 2);
-        return $this->approval_status === 'declined'
+        return $this->unified_status === 'denied'
             && $this->resubmission_count < $maxResubmissions
             && (!$this->resubmission_deadline || now()->lte($this->resubmission_deadline));
-    }
-
-    public function canApplyForNext()
-    {
-        return $this->isCompleted()
-            && !$this->hasActiveNextApplication()
-            && $this->meetsGradeRequirement()
-            && $this->hasAvailableNextLevels();
-    }
-
-    public function hasActiveNextApplication()
-    {
-        return $this->nextApplications()
-            ->whereIn('approval_status', ['pending', 'approved', 'conditional'])
-            ->exists();
-    }
-
-    public function meetsGradeRequirement()
-    {
-        $minGrade = config('scholarship.application_cycle_limits.grade_requirement', 2.0);
-        $completion = $this->completion;
-
-        return $completion && $completion->final_grade <= $minGrade;
-    }
-
-    public function hasAvailableNextLevels()
-    {
-        return count($this->getAvailableNextLevels()) > 0;
-    }
-
-    public function getAvailableNextLevels()
-    {
-        // This would need to be implemented based on your program structure
-        // For now, returning basic progression
-        $currentLevel = $this->next_degree_level ?? 'undergraduate';
-        $currentConfig = config('scholarship.degree_levels')[$currentLevel] ?? null;
-
-        return $currentConfig ? $currentConfig['next_levels'] : [];
-    }
-
-    public function getApplicationHistory()
-    {
-        return ScholarshipRecord::where('profile_id', $this->profile_id)
-            ->orderBy('application_cycle')
-            ->with(['program', 'course', 'completion'])
-            ->get();
     }
 
     public function shouldAutoApprove()
@@ -520,10 +381,10 @@ class ScholarshipRecord extends Model
         return true;
     }
 
-    // Scopes for querying
-    public function scopeByApprovalStatus($query, $status)
+    // Scopes for querying using unified_status
+    public function scopeByUnifiedStatus($query, $status)
     {
-        return $query->where('approval_status', $status);
+        return $query->where('unified_status', $status);
     }
 
     public function scopeByCompletionStatus($query, $status)
@@ -533,27 +394,27 @@ class ScholarshipRecord extends Model
 
     public function scopePending($query)
     {
-        return $query->where('approval_status', 'pending');
+        return $query->where('unified_status', 'pending');
     }
 
     public function scopeApproved($query)
     {
-        return $query->where('approval_status', 'approved');
+        return $query->where('unified_status', 'approved');
     }
 
-    public function scopeDeclined($query)
+    public function scopeDenied($query)
     {
-        return $query->where('approval_status', 'declined');
+        return $query->where('unified_status', 'denied');
     }
 
     public function scopeActive($query)
     {
-        return $query->where('completion_status', 'active');
+        return $query->where('unified_status', 'active');
     }
 
     public function scopeCompleted($query)
     {
-        return $query->where('completion_status', 'completed');
+        return $query->where('unified_status', 'completed');
     }
 
     public function scopeRenewalApplications($query)

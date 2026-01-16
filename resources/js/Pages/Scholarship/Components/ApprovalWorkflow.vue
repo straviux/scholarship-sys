@@ -158,15 +158,7 @@ const props = defineProps({
         type: Object,
         required: true
     },
-    approvalStatuses: {
-        type: Array,
-        default: () => []
-    },
     declineReasons: {
-        type: Object,
-        default: () => ({})
-    },
-    autoApprovalConfig: {
         type: Object,
         default: () => ({})
     },
@@ -201,11 +193,6 @@ const getInitials = (profile) => {
     const first = profile.first_name?.charAt(0) || '';
     const last = profile.last_name?.charAt(0) || '';
     return (first + last).toUpperCase() || 'NA';
-};
-
-const getApprovalStatusLabel = (status) => {
-    const statusObj = props.approvalStatuses.find(s => s.value === status);
-    return statusObj?.label || status || 'Unknown';
 };
 
 const getApprovalStatusSeverity = (status) => {

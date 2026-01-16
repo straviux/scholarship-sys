@@ -45,10 +45,9 @@ class JasperReportDataService
         $query = ScholarshipProfile::query();
 
         // Filter for waiting list (pending status only)
-        // For waiting list reports, only show records with scholarship_status = 0 and not in final approval states
+        // For waiting list reports, only show records with unified_status = 'pending'
         $query->whereHas('scholarshipGrant', function ($q) {
-            $q->where('scholarship_status', 0)
-                ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
+            $q->where('unified_status', 'pending')
                 ->orderBy('date_filed', 'desc')
                 ->orderBy('created_at', 'desc');
         });
@@ -104,10 +103,10 @@ class JasperReportDataService
             // Query still returns the records but JPM columns won't be exposed
         }
 
-        // Apply approval status filtering (overrides default if provided)
+        // Apply unified status filtering (overrides default if provided)
         if (!empty($filters['approval_statuses'])) {
             $query->whereHas('scholarship_grant', function ($q) use ($filters) {
-                $q->whereIn('approval_status', (array)$filters['approval_statuses']);
+                $q->whereIn('unified_status', (array)$filters['approval_statuses']);
             });
         }
 
@@ -141,7 +140,7 @@ class JasperReportDataService
         }
 
         if (!empty($filters['approval_statuses'])) {
-            $query->whereIn('approval_status', (array)$filters['approval_statuses']);
+            $query->whereIn('unified_status', (array)$filters['approval_statuses']);
         }
 
         $query->with(['profile', 'program', 'school', 'course']);

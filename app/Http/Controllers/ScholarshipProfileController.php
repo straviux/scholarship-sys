@@ -770,15 +770,11 @@ class ScholarshipProfileController extends Controller
 
         // Get filter options
         $programs = ScholarshipProgram::select('id', 'name', 'shortname')->get();
-        $approvalStatuses = collect(config('scholarship.approval_statuses'))
-            ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label']])
-            ->values()
-            ->toArray();
 
         return Inertia::render('Scholarship/Index', [
             'profiles' => $profiles,
             'filters' => $request->only([
-                'approval_status',
+                'unified_status',
                 'profile_type',
                 'name',
                 'program',
@@ -791,7 +787,6 @@ class ScholarshipProfileController extends Controller
                 'page'
             ]),
             'programs' => $programs,
-            'approvalStatuses' => $approvalStatuses,
             'declineReasons' => config('scholarship.decline_reasons'),
             'profiles_total' => $profiles->total(),
         ]);
@@ -848,88 +843,8 @@ class ScholarshipProfileController extends Controller
         return Inertia::render('Scholarship/ProfileHistory', [
             'profile' => $profile,
             'scholarshipRecords' => $profile->scholarshipGrant,
-            'approvalStatuses' => collect(config('scholarship.approval_statuses'))
-                ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label']])
-                ->values()
-                ->toArray(),
             'declineReasons' => config('scholarship.decline_reasons'),
         ]);
-    }
-
-    /**
-     * Set conditional approval for scholarship application
-     */
-    public function setConditionalApproval(Request $request, $id)
-    {
-        $request->validate([
-            'conditions' => 'required|string|max:1000',
-            'deadline' => 'nullable|date|after:today',
-            'remarks' => 'nullable|string|max:500'
-        ]);
-
-        try {
-            $record = ScholarshipRecord::findOrFail($id);
-            $approvalService = app(ScholarshipApprovalService::class);
-
-            $approvalService->setConditional($record, Auth::user(), [
-                'conditions' => $request->conditions,
-                'deadline' => $request->deadline,
-                'remarks' => $request->remarks ?? $request->conditions
-            ]);
-
-            return back()->with('success', 'Conditional approval set successfully.');
-        } catch (\Exception $e) {
-            Log::error('Conditional approval failed', [
-                'record_id' => $id,
-                'error' => $e->getMessage()
-            ]);
-
-            return back()->with('error', 'Failed to set conditional approval: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Update conditional approval deadline and conditions
-     */
-    public function updateConditionalApproval(Request $request, $id)
-    {
-        $request->validate([
-            'conditions' => 'nullable|string|max:1000',
-            'deadline' => 'nullable|date|after:today'
-        ]);
-
-        try {
-            $record = ScholarshipRecord::findOrFail($id);
-
-            if ($record->approval_status !== 'conditional') {
-                return back()->with('error', 'Only conditional approvals can be updated.');
-            }
-
-            $approvalService = app(ScholarshipApprovalService::class);
-
-            $updates = [];
-            if ($request->has('conditions')) {
-                $updates['conditions'] = $request->conditions;
-            }
-            if ($request->has('deadline')) {
-                $updates['deadline'] = $request->deadline;
-            }
-
-            if (empty($updates)) {
-                return back()->with('error', 'No updates provided.');
-            }
-
-            $approvalService->updateConditional($record, Auth::user(), $updates);
-
-            return back()->with('success', 'Conditional approval updated successfully.');
-        } catch (\Exception $e) {
-            Log::error('Conditional approval update failed', [
-                'record_id' => $id,
-                'error' => $e->getMessage()
-            ]);
-
-            return back()->with('error', 'Failed to update conditional approval: ' . $e->getMessage());
-        }
     }
 
     /**
@@ -1163,73 +1078,6 @@ class ScholarshipProfileController extends Controller
             'allowed_values' => $allowedStatuses,
             'config_path_exists' => file_exists(config_path('scholarship.php'))
         ]);
-    }
-
-    /**
-     * Enhanced approve method with auto-approval logic
-     */
-    public function approveEnhanced(Request $request, ScholarshipRecord $record)
-    {
-        if (!Gate::allows('applicants.approve')) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $request->validate([
-            'type' => 'required|in:full,conditional',
-            'remarks' => 'nullable|string|max:1000',
-            'requirements' => 'nullable|string|max:1000',
-        ]);
-
-        $approvalService = app(\App\Services\ScholarshipApprovalService::class);
-
-        try {
-            if ($request->type === 'conditional') {
-                $approvalService->setConditional($record, Auth::user(), [
-                    'conditions' => $request->requirements ? [$request->requirements] : [],
-                    'remarks' => $request->remarks,
-                ]);
-                $message = 'Application conditionally approved';
-            } else {
-                $approvalService->approve($record, Auth::user(), [
-                    'remarks' => $request->remarks,
-                ]);
-                $message = 'Application approved successfully';
-            }
-
-            return response()->json(['message' => $message]);
-        } catch (\InvalidArgumentException $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
-        }
-    }
-
-    /**
-     * Enhanced decline method
-     */
-    public function declineEnhanced(Request $request, ScholarshipRecord $record)
-    {
-        if (!Gate::allows('applicants.approve')) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $validReasons = array_keys(config('scholarship.decline_reasons'));
-
-        $request->validate([
-            'reason' => ['required', 'string', 'in:' . implode(',', $validReasons)],
-            'details' => 'nullable|string|max:1000',
-        ]);
-
-        $approvalService = app(\App\Services\ScholarshipApprovalService::class);
-
-        try {
-            $approvalService->decline($record, Auth::user(), [
-                'reason' => $request->reason,
-                'details' => $request->details,
-            ]);
-
-            return response()->json(['message' => 'Application declined']);
-        } catch (\InvalidArgumentException $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
-        }
     }
 
     /**

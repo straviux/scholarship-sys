@@ -1,51 +1,6 @@
 <?php
 
 return [
-    'approval_statuses' => [
-        'pending' => [
-            'label' => 'Pending Review',
-            'color' => 'warning',
-            'icon' => 'pi-clock',
-            'description' => 'Application is awaiting review',
-            'auto_approve' => false
-        ],
-        'approved' => [
-            'label' => 'Approved',
-            'color' => 'success',
-            'icon' => 'pi-check-circle',
-            'description' => 'Application has been approved',
-            'auto_approve' => false
-        ],
-        'declined' => [
-            'label' => 'Declined',
-            'color' => 'danger',
-            'icon' => 'pi-times-circle',
-            'description' => 'Application has been declined',
-            'auto_approve' => false
-        ],
-        'conditional' => [
-            'label' => 'Conditional Approval',
-            'color' => 'info',
-            'icon' => 'pi-info-circle',
-            'description' => 'Approved with conditions',
-            'auto_approve' => false
-        ],
-        'resubmitted' => [
-            'label' => 'Resubmitted',
-            'color' => 'secondary',
-            'icon' => 'pi-refresh',
-            'description' => 'Application resubmitted after decline',
-            'auto_approve' => true // Auto-approve resubmissions
-        ],
-        'withdrawn' => [
-            'label' => 'Withdrawn',
-            'color' => 'secondary',
-            'icon' => 'pi-minus-circle',
-            'description' => 'Application withdrawn by applicant',
-            'auto_approve' => false
-        ]
-    ],
-
     'completion_statuses' => [
         'pending' => [
             'label' => 'Pending',
