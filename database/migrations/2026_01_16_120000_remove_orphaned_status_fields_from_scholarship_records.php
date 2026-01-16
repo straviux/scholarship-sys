@@ -14,6 +14,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('scholarship_records', function (Blueprint $table) {
+            // First, drop foreign key constraints
+            $table->dropForeign(['approved_by']);
+            $table->dropForeign(['declined_by']);
+            $table->dropForeign(['resubmission_allowed_by']);
+            $table->dropForeign(['previous_scholarship_id']);
+
             // Drop old approval workflow fields
             $table->dropColumn([
                 'approval_status',
@@ -111,6 +117,12 @@ return new class extends Migration
             $table->string('application_cycle')->nullable()->after('completion_remarks');
             $table->unsignedBigInteger('previous_scholarship_id')->nullable()->after('application_cycle');
             $table->string('next_degree_level')->nullable()->after('previous_scholarship_id');
+
+            // Restore foreign key constraints
+            $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('declined_by')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('resubmission_allowed_by')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('previous_scholarship_id')->references('id')->on('scholarship_records')->onDelete('set null');
         });
     }
 };
