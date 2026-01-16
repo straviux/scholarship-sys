@@ -244,7 +244,7 @@ const grantProvisionOptions = [
 // Group By Options
 const groupByOptions = [
     { label: 'No Grouping (By Date Filed)', value: 'none' },
-    { label: 'By Approval Status', value: 'approval_status' },
+    { label: 'By Status', value: 'unified_status' },
     { label: 'By School', value: 'school' },
     { label: 'By Program', value: 'program' },
     { label: 'By Course', value: 'course' },

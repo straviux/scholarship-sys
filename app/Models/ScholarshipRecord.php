@@ -156,28 +156,36 @@ class ScholarshipRecord extends Model
 
     /**
      * Generate unified status from approval and scholarship status
-     * Maps legacy two-field status to single unified status
+     * Maps to single unified status system
      */
     public static function generateUnifiedStatus(?string $approvalStatus, ?int $scholarshipStatus): string
     {
-        // Declined takes priority
-        if ($approvalStatus === 'declined') {
-            return 'declined';
+        // Denied takes priority
+        if ($approvalStatus === 'denied' || $approvalStatus === 'declined') {
+            return 'denied';
         }
 
-        // Pending approval
-        if (in_array($approvalStatus, ['pending', 'conditionally-approved', 'conditional'])) {
-            return 'pending_approval';
+        // Completed
+        if ($scholarshipStatus === 3) {
+            return 'completed';
         }
 
-        // Approved - check scholarship_status
+        // Active (approved and active)
         if ($approvalStatus === 'approved' || $approvalStatus === 'auto_approved') {
-            if ($scholarshipStatus === 3) {
-                return 'completed';
-            }
-            return 'active_scholar';
+            return 'active';
         }
 
+        // Approved (marked as approved but not yet activated)
+        if ($approvalStatus === 'approved_pending') {
+            return 'approved';
+        }
+
+        // Pending (new or unset status)
+        if (in_array($approvalStatus, ['pending', 'conditionally-approved', 'conditional', null])) {
+            return 'pending';
+        }
+
+        // Fallback for unrecognized statuses
         return 'unknown';
     }
 

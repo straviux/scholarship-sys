@@ -46,7 +46,7 @@ class ScholarshipProfileController extends Controller
         if ($new_profile && $hasAcademicInfo) {
             // Check for ongoing or pending scholarship record
             $hasActive = ScholarshipRecord::where('profile_id', $new_profile->profile_id)
-                ->whereIn('scholarship_status', [0, 1]) // 0: Pending, 1: Ongoing/Active
+                ->whereIn('unified_status', ['pending', 'approved', 'active'])
                 ->exists();
             if (!$hasActive) {
                 // Get course - prefer ID, fallback to name lookup
@@ -75,8 +75,7 @@ class ScholarshipProfileController extends Controller
                     'year_level' => $request->year_level,
                     'program_id' => $program_id ?? null,
                     'school_id' => $school->id ?? null,
-                    'scholarship_status' => 0, // Pending by default
-                    'scholarship_status_remarks' => 'Pending', // Pending by default
+                    'unified_status' => 'pending', // Default to pending
                     'is_active' => 1,
                     'date_filed' =>  $request->date_filed ?? now(),
                 ]);
@@ -139,7 +138,7 @@ class ScholarshipProfileController extends Controller
 
             // Check for ongoing or pending scholarship record
             $hasActive = ScholarshipRecord::where('profile_id', $profile->profile_id)
-                ->whereIn('scholarship_status', [0, 1]) // 0: Pending, 1: Ongoing/Active
+                ->whereIn('unified_status', ['pending', 'approved', 'active'])
                 ->exists();
             if (!$hasActive) {
                 // Create new scholarship record
@@ -152,7 +151,7 @@ class ScholarshipProfileController extends Controller
                     'year_level' => $request->year_level,
                     'program_id' => $program_id,
                     'school_id' => $school->id ?? null,
-                    'scholarship_status' => 0, // Pending by default
+                    'unified_status' => 'pending', // Default to pending
                     'is_active' => 1,
                     'date_filed' =>  $request->date_filed ?? now(),
                 ]);
@@ -167,7 +166,7 @@ class ScholarshipProfileController extends Controller
                 // If not found by ID, try to find the active/pending record
                 if (!$record) {
                     $record = ScholarshipRecord::where('profile_id', $profile->profile_id)
-                        ->whereIn('scholarship_status', [0, 1]) // 0: Pending, 1: Ongoing/Active
+                        ->whereIn('unified_status', ['pending', 'approved', 'active'])
                         ->first();
                 }
 
@@ -260,7 +259,7 @@ class ScholarshipProfileController extends Controller
         $query = $request->get('q', '');
 
         $profiles = ScholarshipProfile::with(['scholarshipGrant' => function ($q) {
-            $q->where('scholarship_status', 0)->latest('date_filed');
+            $q->where('unified_status', 'pending')->latest('date_filed');
         }])
             ->where(function ($q) use ($query) {
                 $q->where('first_name', 'like', "%$query%")
@@ -292,7 +291,7 @@ class ScholarshipProfileController extends Controller
     public function searchExistingProfile(Request $request)
     {
         $query = trim(preg_replace('/\s+/', ' ', $request->get('q', '')));
-        $excludedStatuses = [0, 1, 3];
+        $excludedStatuses = ['pending']; // Exclude pending applications
         $profiles = ScholarshipProfile::where(function ($q) use ($query) {
             $q->where('first_name', 'LIKE', "%$query%")
                 ->orWhere('last_name', 'LIKE', "%$query%")
@@ -306,7 +305,7 @@ class ScholarshipProfileController extends Controller
             ->where(function ($q) use ($excludedStatuses) {
                 $q->whereDoesntHave('scholarshipGrant')
                     ->orWhereHas('scholarshipGrant', function ($subQ) use ($excludedStatuses) {
-                        $subQ->whereNotIn('scholarship_status', $excludedStatuses);
+                        $subQ->whereNotIn('unified_status', $excludedStatuses);
                     });
             })
             ->limit(20)
@@ -367,7 +366,7 @@ class ScholarshipProfileController extends Controller
 
         // Check for ongoing or pending records
         $hasActive = ScholarshipRecord::where('profile_id', $profile_id)
-            ->whereIn('scholarship_status', [0, 1]) // 0: Pending, 1: Ongoing/Active
+            ->whereIn('unified_status', ['pending', 'approved', 'active'])
             ->exists();
 
         if ($hasActive) {
@@ -378,7 +377,7 @@ class ScholarshipProfileController extends Controller
         $record = ScholarshipRecord::create([
             'profile_id' => $profile_id,
             'course_id' => $course, // or set to correct field if needed
-            'scholarship_status' => 0, // Pending by default
+            'unified_status' => 'pending', // Default to pending
             'is_active' => 1,
             'date_filed' => now(),
             // Add other required fields as needed
@@ -418,7 +417,7 @@ class ScholarshipProfileController extends Controller
     {
 
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) {
-            $q->where('scholarship_status', 0)->latest('created_at'); // return scholarship grant with pending status
+            $q->where('unified_status', 'pending')->latest('created_at'); // return scholarship grant with pending status
         }])->with('scholarshipGrant');
 
         if ($request->filled('program')) {
@@ -617,15 +616,14 @@ class ScholarshipProfileController extends Controller
         $profileType = $request->get('profile_type', 'all');
 
         if ($profileType === 'existing') {
-            // Filter for active scholars (scholarship_status = 1 and scholarship_status_remarks = 'Active Scholar')
+            // Filter for active scholars (unified_status = 'active')
             $query->whereHas('latestScholarshipRecord', function ($q) {
-                $q->where('scholarship_status', 1)
-                    ->where('scholarship_status_remarks', 'Active Scholar');
+                $q->where('unified_status', 'active');
             });
         } elseif ($profileType === 'declined') {
             // Filter for declined profiles based on unified_status
             $query->whereHas('latestScholarshipRecord', function ($q) {
-                $q->where('unified_status', 'declined');
+                $q->where('unified_status', 'denied');
             });
         } else {
             // For 'all' - apply unified_status filter if provided
@@ -1010,7 +1008,7 @@ class ScholarshipProfileController extends Controller
         }
 
         $request->validate([
-            'unified_status' => 'required|string|in:pending_approval,approved_pending,denied',
+            'unified_status' => 'required|string|in:pending,approved,denied,active,completed,unknown',
         ]);
 
         try {
@@ -1037,7 +1035,7 @@ class ScholarshipProfileController extends Controller
             abort(403, 'You do not have permission to view reviewed applicants.');
         }
 
-        $query = ScholarshipRecord::whereIn('unified_status', ['approved_pending', 'denied'])
+        $query = ScholarshipRecord::whereIn('unified_status', ['approved', 'denied'])
             ->with([
                 'profile' => function ($q) {
                     $q->select('profile_id', 'first_name', 'last_name', 'middle_name', 'contact_no');

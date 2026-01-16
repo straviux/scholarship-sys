@@ -302,7 +302,7 @@ const showDenyDialog = ref(false);
 // Computed properties
 const statusOptions = [
     { label: 'All Statuses', value: null },
-    { label: 'Approved (Pending)', value: 'approved_pending' },
+    { label: 'Approved', value: 'approved' },
     { label: 'Denied', value: 'denied' }
 ];
 
@@ -315,7 +315,7 @@ const declineReasons = computed(() => {
 });
 
 const approvedList = computed(() => {
-    return filterApplicants('approved_pending');
+    return filterApplicants('approved');
 });
 
 const deniedList = computed(() => {
@@ -326,7 +326,7 @@ const stats = computed(() => {
     const all = props.reviewed_applicants || [];
     return {
         total: all.length,
-        approved: all.filter(r => r.unified_status === 'approved_pending').length,
+        approved: all.filter(r => r.unified_status === 'approved').length,
         denied: all.filter(r => r.unified_status === 'denied').length
     };
 });
@@ -416,7 +416,7 @@ const confirmDeny = () => {
 
 const revertStatus = (record) => {
     router.patch(route('scholarship.record.update-status', record.id), {
-        unified_status: 'pending_approval'
+        unified_status: 'pending'
     }, {
         onSuccess: () => {
             toast.success('Status reverted to pending');

@@ -258,14 +258,47 @@
                             </template>
                         </Column>
 
-                        <Column field="status" header="Status" style="min-width: 140px;">
+                        <Column field="status" header="Status" style="min-width: 120px;">
                             <template #body="slotProps">
-                                <Chip
-                                    v-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status"
-                                    :label="getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)"
-                                    :severity="getScholarshipStatusSeverity(slotProps.data.latest_scholarship_record.unified_status)"
-                                    size="small" class="font-medium" />
-                                <Chip v-else label="No Record" severity="secondary" size="small" />
+                                <div v-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'pending'"
+                                    :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
+                                    v-tooltip="'Awaiting review'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
+                                    {{ getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status) }}
+                                </div>
+                                <div v-else-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'approved'"
+                                    :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
+                                    v-tooltip="'Complete approval in Reviewed Applicants'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
+                                    {{ getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status) }}
+                                </div>
+                                <div v-else-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'denied'"
+                                    :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
+                                    v-tooltip="'Application has been denied'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
+                                    {{ getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status) }}
+                                </div>
+                                <div v-else-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'active'"
+                                    :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
+                                    v-tooltip="'Enrolled as scholar'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
+                                    {{ getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status) }}
+                                </div>
+                                <div v-else-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'completed'"
+                                    :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
+                                    v-tooltip="'Scholarship completed'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
+                                    {{ getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status) }}
+                                </div>
+                                <div v-else-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'unknown'"
+                                    :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
+                                    v-tooltip="'Status unknown'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
+                                    {{ getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status) }}
+                                </div>
+                                <div v-else class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block bg-gray-100 text-gray-800 border-gray-300">
+                                    No Record
+                                </div>
                             </template>
                         </Column>
 
@@ -373,9 +406,42 @@
                         <div>
                             <label class="text-xs font-medium text-gray-600">Status</label>
                             <div class="mt-1" v-if="selectedProfile.latest_scholarship_record.unified_status">
-                                <Chip
-                                    :label="getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.unified_status)"
-                                    :severity="getScholarshipStatusSeverity(selectedProfile.latest_scholarship_record.unified_status)" />
+                                <div v-if="selectedProfile.latest_scholarship_record.unified_status === 'pending'"
+                                    :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
+                                    v-tooltip="'Awaiting review'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
+                                    {{ getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.unified_status) }}
+                                </div>
+                                <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'approved'"
+                                    :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
+                                    v-tooltip="'Complete approval in Reviewed Applicants'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
+                                    {{ getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.unified_status) }}
+                                </div>
+                                <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'denied'"
+                                    :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
+                                    v-tooltip="'Application has been denied'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
+                                    {{ getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.unified_status) }}
+                                </div>
+                                <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'active'"
+                                    :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
+                                    v-tooltip="'Enrolled as scholar'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
+                                    {{ getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.unified_status) }}
+                                </div>
+                                <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'completed'"
+                                    :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
+                                    v-tooltip="'Scholarship completed'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
+                                    {{ getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.unified_status) }}
+                                </div>
+                                <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'unknown'"
+                                    :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
+                                    v-tooltip="'Status unknown'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
+                                    {{ getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.unified_status) }}
+                                </div>
                             </div>
                             <p v-else class="text-sm font-medium text-gray-500">N/A</p>
                         </div>
@@ -602,7 +668,7 @@ const grantProvisionForm = useForm({
 });
 
 // Computed properties
-const { statusOptions, getStatusLabel, getStatusSeverity } = useScholarshipStatus();
+const { statusOptions, getStatusLabel, getStatusSeverity, getStatusStyle } = useScholarshipStatus();
 
 const unifiedStatusOptions = computed(() => [
     { label: 'All Statuses', value: null },
@@ -960,9 +1026,9 @@ const triggerSearch = () => {
 // Watch for profile type changes
 watch(profileType, (newValue, oldValue) => {
     if (newValue !== oldValue) {
-        // Clear approval_status when switching to 'existing' or 'declined'
-        if (newValue === 'existing' || newValue === 'declined') {
-            filter.approval_status = null;
+        // Clear unified_status when switching to 'existing' or 'denied'
+        if (newValue === 'existing' || newValue === 'denied') {
+            filter.unified_status = null;
         }
         filterList(true); // Reset to page 1 when profile type changes
     }

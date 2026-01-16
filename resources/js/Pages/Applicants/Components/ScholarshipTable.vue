@@ -7,9 +7,9 @@
                 <tr>
                     <th class="text-xs font-normal text-gray-500  w-[25%]">Status</th>
                     <td><span class="text-xs font-bold mb-4 uppercase"
-                            :class="profile.scholarship_status == 0 ? 'text-orange-500' : profile.scholarship_status == 1 ? 'text-green-500' : profile.scholarship_status == 2 ? 'text-purple-500' : profile.scholarship_status == 3 ? 'text-yellow-500' : 'text-red-500'">
+                            :class="profile.unified_status === 'pending' ? 'text-orange-500' : profile.unified_status === 'active' ? 'text-green-500' : profile.unified_status === 'approved' ? 'text-blue-500' : profile.unified_status === 'completed' ? 'text-yellow-500' : profile.unified_status === 'denied' ? 'text-red-500' : 'text-gray-500'">
                             {{
-                                checkStatus(profile.scholarship_status)
+                                checkStatus(profile.unified_status)
                             }}
                         </span></td>
                 </tr>

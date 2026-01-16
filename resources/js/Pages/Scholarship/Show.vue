@@ -264,9 +264,9 @@
 
                                         <Column header="Status" style="min-width: 120px">
                                             <template #body="slotProps">
-                                                <Chip v-if="slotProps.data.approval_status"
-                                                    :label="slotProps.data.approval_status"
-                                                    :class="getStatusClass(slotProps.data.approval_status)" />
+                                                <Chip v-if="slotProps.data.unified_status"
+                                                    :label="slotProps.data.unified_status"
+                                                    :class="getStatusClass(slotProps.data.unified_status)" />
                                             </template>
                                         </Column>
 

@@ -125,17 +125,14 @@
  * This component handles the approval workflow for scholarship applications.
  * 
  * Status Management:
- * - Uses `approval_status` for workflow display (pending, approved, declined)
- * - When approved, backend also sets:
- *   - `scholarship_status = 1` (Active/Approved)
- *   - `scholarship_status_remarks = 'Active Scholar'`
- * - When declined, backend also sets:
- *   - `scholarship_status = 4` (Cancelled/Declined)
- *   - `scholarship_status_remarks = 'Application Declined'`
+ * - Uses `unified_status` for workflow display (pending, approved, denied, active, completed, unknown)
+ * - When approved, status changes to 'approved'
+ * - When denied, status changes to 'denied'
+ * - Backend handles activation to 'active' status
  * 
- * The dual status system ensures:
- * - approval_status: Tracks workflow state (for this component and approval history)
- * - scholarship_status: Primary status for filtering and business logic
+ * The unified status system ensures:
+ * - Single source of truth for all scholarship record states
+ * - Consistent filtering across all controllers and views
  */
 import { ref, computed } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
@@ -259,11 +256,11 @@ const isEligibleForAutoApproval = (gwa) => {
 
 // Permission checks
 const canApprove = (application) => {
-    return application.approval_status === 'pending';
+    return application.unified_status === 'pending';
 };
 
 const canDecline = (application) => {
-    return application.approval_status === 'pending';
+    return application.unified_status === 'pending';
 };
 </script>
 

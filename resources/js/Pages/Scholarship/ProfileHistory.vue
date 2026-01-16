@@ -121,8 +121,8 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-3">
-                                <Chip :label="getApprovalStatusLabel(record.approval_status)"
-                                    :severity="getApprovalStatusSeverity(record.approval_status)" />
+                                <Chip :label="record.unified_status"
+                                    :severity="getStatusSeverity(record.unified_status)" />
                                 <Button icon="pi pi-clipboard-check" severity="success" size="small" rounded outlined
                                     v-tooltip.top="'Review Application'" @click="reviewApplication(record)" />
                             </div>

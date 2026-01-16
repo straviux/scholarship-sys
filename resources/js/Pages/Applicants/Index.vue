@@ -792,8 +792,7 @@ const openProfileReviewModal = (applicant) => {
         course: applicant.scholarship_grant?.[0]?.course || null,
         school: applicant.scholarship_grant?.[0]?.school || null,
         year_level: applicant.scholarship_grant?.[0]?.year_level || null,
-        unified_status: applicant.scholarship_grant?.[0]?.unified_status || 'pending_approval',
-        scholarship_status: applicant.scholarship_grant?.[0]?.scholarship_status || 0,
+        unified_status: applicant.scholarship_grant?.[0]?.unified_status || 'pending',
         created_at: applicant.scholarship_grant?.[0]?.created_at || applicant.created_at,
         conditional_requirements: applicant.scholarship_grant?.[0]?.conditional_requirements || null,
         conditional_deadline: applicant.scholarship_grant?.[0]?.conditional_deadline || null,
@@ -853,7 +852,7 @@ const confirmApprovalAction = () => {
     if (!selectedApplicantForReview.value) return;
 
     const data = {
-        unified_status: approvalAction.value === 'approve' ? 'approved_pending' : 'denied'
+        unified_status: approvalAction.value === 'approve' ? 'approved' : 'denied'
     };
 
     router.patch(route('scholarship.record.update-status', selectedApplicantForReview.value.scholarship_grant[0].id), data, {

@@ -98,9 +98,8 @@ class WaitingListController extends Controller
             )
             ->where(function ($q) use ($programId) {
                 // Display all PENDING applications (based on unified_status)
-                // Exclude records marked as approved_pending or denied
-                // Only show profiles with scholarship records that have pending_approval status
-                $q->where('scholarship_records.unified_status', 'pending_approval')
+                // Only show profiles with pending status
+                $q->where('scholarship_records.unified_status', 'pending')
                     ->whereNotNull('scholarship_records.profile_id');
 
                 // Filter by program if specified
@@ -280,10 +279,9 @@ class WaitingListController extends Controller
             ->with([
                 'scholarshipGrant' => function ($q) use ($programId) {
                     $q->with(['program', 'school', 'course'])
-                        ->where('scholarship_status', 0)
-                        ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
+                        ->where('unified_status', 'pending')
                         ->orderBy('created_at', 'desc')
-                        ->select('id', 'profile_id', 'program_id', 'school_id', 'course_id', 'scholarship_status', 'approval_status', 'year_level', 'yakap_category', 'date_filed');
+                        ->select('id', 'profile_id', 'program_id', 'school_id', 'course_id', 'unified_status', 'year_level', 'yakap_category', 'date_filed');
 
                     // Filter by program if specified
                     if ($programId) {
@@ -292,9 +290,8 @@ class WaitingListController extends Controller
                 }
             ])
             ->whereHas('scholarshipGrant', function ($recordQ) use ($programId) {
-                // Include profiles with pending approval status
-                $recordQ->where('scholarship_status', 0)
-                    ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined']);
+                // Include profiles with pending status
+                $recordQ->where('unified_status', 'pending');
                 // Filter by program if specified
                 if ($programId) {
                     $recordQ->where('program_id', $programId);
@@ -304,8 +301,7 @@ class WaitingListController extends Controller
         // Sort by scholarship record date_filed, getting the most recent record's date_filed per profile
         $baseQuery->leftJoin('scholarship_records as sr_sort', function ($join) use ($programId) {
             $join->on('scholarship_profiles.profile_id', '=', 'sr_sort.profile_id')
-                ->where('sr_sort.scholarship_status', 0)
-                ->whereNotIn('sr_sort.approval_status', ['approved', 'auto_approved', 'declined']);
+                ->where('sr_sort.unified_status', 'pending');
             if ($programId) {
                 $join->where('sr_sort.program_id', $programId);
             }
@@ -607,8 +603,7 @@ class WaitingListController extends Controller
         $programId = ScholarshipProgram::where('shortname', $request->get('program'))->first()?->id;
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant', 'priorityAssignedBy'])
             ->whereHas('scholarshipGrant', function ($q) use ($programId) {
-                $q->where('scholarship_status', 0)
-                    ->whereNotIn('approval_status', ['approved', 'auto_approved', 'declined'])
+                $q->where('unified_status', 'pending')
                     ->orderBy('date_filed', 'asc')
                     ->orderBy('created_at', 'asc');
                 if ($programId) {

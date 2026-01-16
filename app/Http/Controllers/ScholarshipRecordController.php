@@ -164,13 +164,7 @@ class ScholarshipRecordController extends Controller
         // $validatedData['date_approved'] = $request->date_approved ?? null;
         $validatedData['created_by'] = $request->user() ? $request->user()->id : null;
         $validatedData['scholarship_status_date'] = Carbon::now();
-
-        // If scholarship_status is not provided, calculate it from approval_status or default to pending (0)
-        $approval_status = $validatedData['approval_status'] ?? 'pending';
-        $scholarship_status = $validatedData['scholarship_status'] ?? ScholarshipRecord::getScholarshipStatusFromApprovalStatus($approval_status);
-
-        $validatedData['scholarship_status'] = $scholarship_status;
-        $validatedData['scholarship_status_remarks'] = $scholarship_status == 0 ? 'Scholarship application pending approval' : ($scholarship_status == 1 ? 'Scholarship application approved' : 'Scholarship application status unknown');
+        $validatedData['unified_status'] = 'pending';
 
         $newScholar = ScholarshipRecord::create($validatedData);
         if ($newScholar) {
@@ -190,15 +184,6 @@ class ScholarshipRecordController extends Controller
         $record = ScholarshipRecord::findOrFail($id);
         $validated = $request->validated();
         $validated['date_approved'] = $request->date_approved ?? $record->date_approved;
-
-        // If scholarship_status is not provided, keep existing or calculate from approval_status
-        if (!isset($validated['scholarship_status']) || $validated['scholarship_status'] === null) {
-            if (isset($validated['approval_status'])) {
-                $validated['scholarship_status'] = ScholarshipRecord::getScholarshipStatusFromApprovalStatus($validated['approval_status']);
-            } else {
-                $validated['scholarship_status'] = $record->scholarship_status;
-            }
-        }
 
         $record->update($validated);
         return response()->json(['message' => 'Scholarship record updated successfully.', 'data' => $record]);
@@ -277,16 +262,14 @@ class ScholarshipRecordController extends Controller
         }
 
         $record = ScholarshipRecord::findOrFail($id);
-        // Status 1 means 'approved and ongoing' per ScholarshipRecord model
-        $record->updateScholarshipStatus(1);
+        $record->unified_status = 'approved';
         $record->date_approved = $request->date_approved ?? null;
-        $record->scholarship_status_remarks = 'Application approved';
         $record->save();
         return redirect()->back()->with('success', 'Scholarship record approved.');
     }
 
     /**
-     * Approve a scholarship record by ID.
+     * Decline a scholarship record by ID.
      */
     public function declineScholarshipRecord(Request $request, $id)
     {
@@ -295,11 +278,8 @@ class ScholarshipRecordController extends Controller
         }
 
         $record = ScholarshipRecord::findOrFail($id);
-        // Status 2 means 'declined' per ScholarshipRecord model
-        $record->updateScholarshipStatus(5);
+        $record->unified_status = 'denied';
         $record->remarks = $request->remarks ?? $record->remarks;
-        $record->scholarship_status_remarks = 'Application declined';
-        // $record->date_declined = $request->date_declined ?? null;
         $record->save();
         return redirect()->back()->with('success', 'Scholarship record declined.');
     }
@@ -399,8 +379,7 @@ class ScholarshipRecordController extends Controller
             // Create a new record with defaults for pending/waiting applicants
             $record = ScholarshipRecord::create([
                 'profile_id' => $profile_id,
-                'scholarship_status' => 0, // Pending
-                'approval_status' => 'pending',
+                'unified_status' => 'pending',
                 'yakap_category' => 'yakap-capitol',
                 'yakap_location' => null,
                 'date_filed' => now()
@@ -414,8 +393,7 @@ class ScholarshipRecordController extends Controller
                 'profile_id' => $record->profile_id,
                 'yakap_category' => $record->yakap_category,
                 'yakap_location' => $record->yakap_location,
-                'scholarship_status' => $record->scholarship_status,
-                'approval_status' => $record->approval_status
+                'unified_status' => $record->unified_status
             ]);
         }
 

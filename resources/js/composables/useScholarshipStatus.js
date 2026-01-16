@@ -1,36 +1,54 @@
 import { ref, computed } from 'vue';
 
 export const useScholarshipStatus = () => {
-	// Status configuration
+	// Status configuration - Updated for unified_status system
 	const statusConfig = {
-		pending_approval: {
-			label: 'Pending Approval',
+		pending: {
+			label: 'Pending',
 			severity: 'warning',
-			description: 'Awaiting approval',
+			color: '#F59E0B',
+			bgColor: '#FEF3C7',
+			textColor: '#92400E',
+			description: 'Awaiting review',
 		},
-		active_scholar: {
-			label: 'Active Scholar',
+		approved: {
+			label: 'Approved',
+			severity: 'info',
+			color: '#3B82F6',
+			bgColor: '#DBEAFE',
+			textColor: '#1E3A8A',
+			description: 'Approved, waiting activation',
+		},
+		denied: {
+			label: 'Denied',
+			severity: 'danger',
+			color: '#EF4444',
+			bgColor: '#FEE2E2',
+			textColor: '#7F1D1D',
+			description: 'Application denied',
+		},
+		active: {
+			label: 'Active',
 			severity: 'success',
-			description: 'Approved and enrolled',
+			color: '#10B981',
+			bgColor: '#D1FAE5',
+			textColor: '#065F46',
+			description: 'Enrolled as scholar',
 		},
 		completed: {
 			label: 'Completed',
 			severity: 'secondary',
+			color: '#6B7280',
+			bgColor: '#F3F4F6',
+			textColor: '#1F2937',
 			description: 'Scholarship completed',
-		},
-		declined: {
-			label: 'Declined',
-			severity: 'danger',
-			description: 'Application declined',
-		},
-		withdrawn: {
-			label: 'Withdrawn',
-			severity: 'secondary',
-			description: 'Withdrawn from scholarship',
 		},
 		unknown: {
 			label: 'Unknown',
 			severity: 'secondary',
+			color: '#9CA3AF',
+			bgColor: '#F9FAFB',
+			textColor: '#374151',
 			description: 'Status unknown',
 		},
 	};
@@ -67,22 +85,22 @@ export const useScholarshipStatus = () => {
 	 * Fallback: Map legacy approval_status + scholarship_status to unified status
 	 */
 	const mapLegacyStatus = (approvalStatus, scholarshipStatus) => {
-		// Declined takes priority
-		if (approvalStatus === 'declined') {
-			return 'declined';
+		// Denied takes priority
+		if (approvalStatus === 'denied' || approvalStatus === 'declined') {
+			return 'denied';
 		}
 
 		// Pending approval
 		if (approvalStatus === 'pending' || approvalStatus === 'conditionally-approved') {
-			return 'pending_approval';
+			return 'pending';
 		}
 
-		// Approved maps to active_scholar
+		// Approved maps to approved state
 		if (approvalStatus === 'approved' || approvalStatus === 'auto_approved') {
 			if (scholarshipStatus === 3) {
 				return 'completed';
 			}
-			return 'active_scholar';
+			return 'active';
 		}
 
 		return 'unknown';
@@ -131,15 +149,24 @@ export const useScholarshipStatus = () => {
 	 * Get CSS class for status badge
 	 */
 	const getStatusClass = (status) => {
-		const severityMap = {
-			success: 'bg-green-100 text-green-800',
-			warning: 'bg-yellow-100 text-yellow-800',
-			danger: 'bg-red-100 text-red-800',
-			info: 'bg-blue-100 text-blue-800',
-			secondary: 'bg-gray-100 text-gray-800',
+		const config = statusConfig[status] || statusConfig.unknown;
+		const bgColor = config.bgColor;
+		const textColor = config.textColor;
+		return `px-3 py-1 rounded-full text-sm font-semibold`
+			+ ` border border-current` 
+			+ ` style="background-color: ${bgColor}; color: ${textColor};"`;
+	};
+
+	/**
+	 * Get inline style object for status badge
+	 */
+	const getStatusStyle = (status) => {
+		const config = statusConfig[status] || statusConfig.unknown;
+		return {
+			backgroundColor: config.bgColor,
+			color: config.textColor,
+			borderColor: config.color,
 		};
-		const severity = getStatusSeverity(status);
-		return severityMap[severity] || severityMap.secondary;
 	};
 
 	return {
@@ -152,6 +179,7 @@ export const useScholarshipStatus = () => {
 		getUnifiedStatus,
 		getRecordStatusInfo,
 		getStatusClass,
+		getStatusStyle,
 		mapLegacyStatus,
 	};
 };

@@ -91,8 +91,7 @@
                                         Course</th>
                                     <th v-if="!params.year_level" class="px-4 py-3 text-left font-medium text-gray-700">
                                         Year</th>
-                                    <th v-if="!params.approval_status"
-                                        class="px-4 py-3 text-left font-medium text-gray-700">Status</th>
+                                    <th v-if="!params.approval_status" class="px-4 py-3 text-left font-medium text-gray-700">Status</th>
                                     <th v-if="!params.grant_provision"
                                         class="px-4 py-3 text-left font-medium text-gray-700">Grant</th>
                                     <th class="px-4 py-3 text-left font-medium text-gray-700">Date Filed</th>
@@ -213,7 +212,7 @@ const activeFilters = computed(() => {
     const filters = {};
     if (props.params.date_from) filters['Date From'] = moment(props.params.date_from).format('MMM DD, YYYY');
     if (props.params.date_to) filters['Date To'] = moment(props.params.date_to).format('MMM DD, YYYY');
-    if (props.params.approval_status) filters['Status'] = formatApprovalStatusText(props.params.approval_status);
+    if (props.params.approval_status) filters['Status'] = formatUnifiedStatusText(props.params.approval_status);
     if (props.params.program) filters['Program'] = props.params.program;
     if (props.params.school) filters['School'] = props.params.school;
     if (props.params.courses) filters['Course'] = props.params.courses;
@@ -308,29 +307,33 @@ function formatDate(date) {
 }
 
 function formatApprovalStatus(item) {
-    const status = item.scholarship_grant?.[0]?.approval_status;
-    return formatApprovalStatusText(status);
+    const status = item.scholarship_grant?.[0]?.unified_status;
+    return formatUnifiedStatusText(status);
 }
 
-function formatApprovalStatusText(status) {
+function formatUnifiedStatusText(status) {
     const statusMap = {
         'pending': 'Pending',
         'approved': 'Approved',
-        'auto_approved': 'Auto Approved',
-        'declined': 'Declined'
+        'denied': 'Denied',
+        'active': 'Active',
+        'completed': 'Completed',
+        'unknown': 'Unknown'
     };
     return statusMap[status] || status || 'N/A';
 }
 
 function getStatusSeverity(item) {
-    const status = item.scholarship_grant?.[0]?.approval_status;
+    const status = item.scholarship_grant?.[0]?.unified_status;
     const severityMap = {
         'pending': 'warning',
-        'approved': 'success',
-        'auto_approved': 'info',
-        'declined': 'danger'
+        'approved': 'info',
+        'denied': 'danger',
+        'active': 'success',
+        'completed': 'secondary',
+        'unknown': 'secondary'
     };
-    return severityMap[status] || 'secondary';
+    return severityMap[status] || 'info';
 }
 
 function formatGrantProvision(item) {

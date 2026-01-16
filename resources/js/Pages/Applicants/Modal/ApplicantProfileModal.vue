@@ -431,7 +431,7 @@ const form = useForm({
 const hasPendingOrOngoing = computed(() => {
     const profile = form.selectedProfile?.profile;
     if (profile && profile.scholarship_grant && profile.scholarship_grant.length > 0) {
-        return profile.scholarship_grant.some(r => r.scholarship_status === 0 || r.scholarship_status === 1);
+        return profile.scholarship_grant.some(r => r.unified_status === 'pending' || r.unified_status === 'active' || r.unified_status === 'approved');
     }
     return false;
 });
