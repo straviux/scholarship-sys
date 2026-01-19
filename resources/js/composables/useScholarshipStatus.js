@@ -118,9 +118,21 @@ export const useScholarshipStatus = () => {
 	 * Get unified status from record (with fallback to legacy fields)
 	 */
 	const getUnifiedStatus = (record) => {
+		// Valid status values
+		const validStatuses = [
+			'pending',
+			'approved',
+			'active',
+			'completed',
+			'denied',
+			'withdrawn',
+			'unknown',
+		];
+
 		// Try new unified_status first
 		if (record.unified_status) {
-			return record.unified_status;
+			// If it's a valid status, return it; otherwise return 'unknown'
+			return validStatuses.includes(record.unified_status) ? record.unified_status : 'unknown';
 		}
 
 		// Fallback to legacy fields

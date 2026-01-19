@@ -338,7 +338,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -1078,8 +1078,9 @@ const getStatusClass = (status) => {
         'completed': 'bg-gray-100 text-gray-800',
         'denied': 'bg-red-100 text-red-800',
         'withdrawn': 'bg-purple-100 text-purple-800',
+        'unknown': 'bg-gray-200 text-gray-700',
     };
-    return classes[status?.toLowerCase()] || 'bg-gray-100 text-gray-800';
+    return classes[status?.toLowerCase()] || 'bg-gray-200 text-gray-700';
 };
 
 // Attachment methods

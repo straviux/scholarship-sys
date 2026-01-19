@@ -308,6 +308,12 @@
                                         getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
                                     }}
                                 </div>
+                                <div v-else-if="slotProps.data.latest_scholarship_record"
+                                    :style="getStatusStyle('unknown')"
+                                    v-tooltip="'Unrecognized status - treating as unknown'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
+                                    Unknown
+                                </div>
                                 <div v-else
                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block bg-gray-100 text-gray-800 border-gray-300">
                                     No Record
