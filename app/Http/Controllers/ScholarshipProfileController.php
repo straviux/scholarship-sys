@@ -635,17 +635,13 @@ class ScholarshipProfileController extends Controller
                 $q->where('unified_status', 'denied');
             });
         } else {
-            // For 'all' - default to pending status unless explicitly specified otherwise
+            // For 'all' - show all statuses unless explicitly specified otherwise
             if ($request->filled('unified_status')) {
                 $query->whereHas('latestScholarshipRecord', function ($q) use ($request) {
                     $q->where('unified_status', $request->unified_status);
                 });
-            } else {
-                // Default to pending status when no filter is specified
-                $query->whereHas('latestScholarshipRecord', function ($q) {
-                    $q->where('unified_status', 'pending');
-                });
             }
+            // If no unified_status filter is specified, show all records regardless of status
         }
 
         // Filter by program
