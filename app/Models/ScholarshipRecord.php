@@ -263,17 +263,20 @@ class ScholarshipRecord extends Model
 
     public function approvedBy()
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        // Deprecated: approved_by field removed in migration
+        throw new \BadMethodCallException('approvedBy() is deprecated. Use approvalHistory() instead.');
     }
 
     public function declinedBy()
     {
-        return $this->belongsTo(User::class, 'declined_by');
+        // Deprecated: declined_by field removed in migration
+        throw new \BadMethodCallException('declinedBy() is deprecated. Use approvalHistory() instead.');
     }
 
     public function resubmissionAllowedBy()
     {
-        return $this->belongsTo(User::class, 'resubmission_allowed_by');
+        // Deprecated: resubmission_allowed_by field removed in migration
+        throw new \BadMethodCallException('resubmissionAllowedBy() is deprecated. Resubmission workflow no longer supported.');
     }
 
     public function approvalHistory()
@@ -333,7 +336,8 @@ class ScholarshipRecord extends Model
 
     public function isDiscontinued()
     {
-        return $this->completion_status === 'discontinued';
+        // Deprecated: completion_status field removed in migration
+        throw new \BadMethodCallException('isDiscontinued() is deprecated. Use unified_status === "completed" instead.');
     }
 
     public function canBeModified()
@@ -343,10 +347,8 @@ class ScholarshipRecord extends Model
 
     public function canBeResubmitted()
     {
-        $maxResubmissions = config('scholarship.application_cycle_limits.max_cycles', 2);
-        return $this->unified_status === 'denied'
-            && $this->resubmission_count < $maxResubmissions
-            && (!$this->resubmission_deadline || now()->lte($this->resubmission_deadline));
+        // Deprecated: resubmission workflow fields removed in migration
+        throw new \BadMethodCallException('canBeResubmitted() is deprecated. Resubmission workflow no longer supported.');
     }
 
     public function shouldAutoApprove()
@@ -382,7 +384,8 @@ class ScholarshipRecord extends Model
 
     public function scopeByCompletionStatus($query, $status)
     {
-        return $query->where('completion_status', $status);
+        // Deprecated: completion_status field removed in migration
+        throw new \BadMethodCallException('scopeByCompletionStatus() is deprecated. Use unified_status queries instead.');
     }
 
     public function scopePending($query)

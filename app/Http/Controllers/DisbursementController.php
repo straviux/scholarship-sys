@@ -178,7 +178,7 @@ class DisbursementController extends Controller
     {
         $validated = $request->validate([
             'attachment_type' => 'required|in:voucher,cheque,receipt',
-            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:25600', // 25MB max
+            'file' => 'required|file|mimes:pdf,jpg,jpeg,png,exe|max:25600', // 25MB max
         ]);
 
         $disbursement = Disbursement::with('profile')->findOrFail($disbursementId);

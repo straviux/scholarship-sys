@@ -626,10 +626,15 @@ class ScholarshipProfileController extends Controller
                 $q->where('unified_status', 'denied');
             });
         } else {
-            // For 'all' - apply unified_status filter if provided
+            // For 'all' - default to pending status unless explicitly specified otherwise
             if ($request->filled('unified_status')) {
                 $query->whereHas('latestScholarshipRecord', function ($q) use ($request) {
                     $q->where('unified_status', $request->unified_status);
+                });
+            } else {
+                // Default to pending status when no filter is specified
+                $query->whereHas('latestScholarshipRecord', function ($q) {
+                    $q->where('unified_status', 'pending');
                 });
             }
         }
@@ -834,7 +839,8 @@ class ScholarshipProfileController extends Controller
     {
         $profile = ScholarshipProfile::with([
             'scholarshipGrant' => function ($q) {
-                $q->with(['program', 'course', 'school', 'approvedBy', 'declinedBy', 'approvalHistory'])
+                // Note: approvedBy, declinedBy relationships removed - FK fields will be dropped
+                $q->with(['program', 'course', 'school', 'approvalHistory'])
                     ->orderBy('created_at', 'desc');
             }
         ])->findOrFail($profileId);
@@ -1089,7 +1095,7 @@ class ScholarshipProfileController extends Controller
             'graduation_date' => 'nullable|date',
             'final_grade' => 'nullable|numeric|min:1|max:5',
             'honors' => 'nullable|string|max:100',
-            'completion_certificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'completion_certificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png,exe|max:5120',
             'completion_remarks' => 'nullable|string|max:1000',
         ]);
 

@@ -471,14 +471,14 @@ class ReportController extends Controller
         // Build query based on filters
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant']);
 
-        // Filter by approval status (pending, approved, auto_approved, declined)
+        // Filter by unified status (pending, approved, denied, active, completed)
         if ($request->filled('approval_status')) {
             $statuses = is_array($request->approval_status)
                 ? $request->approval_status
                 : explode(',', $request->approval_status);
 
             $query->whereHas('scholarshipGrant', function ($q) use ($statuses) {
-                $q->whereIn('approval_status', $statuses);
+                $q->whereIn('unified_status', $statuses);
             });
         }
 
@@ -592,9 +592,9 @@ class ReportController extends Controller
 
             // Approval status summary
             if (!$request->filled('approval_status')) {
-                $summary['by_approval_status'] = $profiles->groupBy(function ($p) {
+                $summary['by_unified_status'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
-                    return ($grant && $grant->approval_status) ? ucwords(str_replace('_', ' ', $grant->approval_status)) : 'No Status';
+                    return ($grant && $grant->unified_status) ? ucwords(str_replace('_', ' ', $grant->unified_status)) : 'No Status';
                 })->map(fn($group) => $group->count());
             }
 
@@ -669,8 +669,8 @@ class ReportController extends Controller
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
 
                     switch ($groupBy) {
-                        case 'approval_status':
-                            return ($grant && $grant->approval_status) ? ucwords(str_replace('_', ' ', $grant->approval_status)) : 'No Status';
+                        case 'unified_status':
+                            return ($grant && $grant->unified_status) ? ucwords(str_replace('_', ' ', $grant->unified_status)) : 'No Status';
                         case 'grant_provision':
                             return ($grant && $grant->grant_provision) ? ucwords(str_replace('_', ' ', $grant->grant_provision)) : 'No Provision';
                         case 'school':
@@ -746,14 +746,14 @@ class ReportController extends Controller
         // Build query based on filters
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant']);
 
-        // Filter by approval status
+        // Filter by unified status
         if ($request->filled('approval_status')) {
             $statuses = is_array($request->approval_status)
                 ? $request->approval_status
                 : explode(',', $request->approval_status);
 
             $query->whereHas('scholarshipGrant', function ($q) use ($statuses) {
-                $q->whereIn('approval_status', $statuses);
+                $q->whereIn('unified_status', $statuses);
             });
         }
 
@@ -867,9 +867,9 @@ class ReportController extends Controller
 
             // Approval status summary
             if (!$request->filled('approval_status')) {
-                $summary['by_approval_status'] = $profiles->groupBy(function ($p) {
+                $summary['by_unified_status'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
-                    return ($grant && $grant->approval_status) ? ucwords(str_replace('_', ' ', $grant->approval_status)) : 'No Status';
+                    return ($grant && $grant->unified_status) ? ucwords(str_replace('_', ' ', $grant->unified_status)) : 'No Status';
                 })->map(fn($group) => $group->count());
             }
 

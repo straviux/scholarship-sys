@@ -65,10 +65,10 @@ class ScholarshipReportExport implements FromView, ShouldAutoSize, WithEvents, W
                     // Sort profiles - approved by year level, others by date filed
                     $sortedProfiles = $this->profiles->sortBy(function ($profile) {
                         $grant = optional($profile->scholarshipGrant->first());
-                        $approvalStatus = $grant->approval_status ?? '';
+                        $unifiedStatus = $grant->unified_status ?? '';
 
-                        // For approved status, sort alphabetically by year level
-                        if (in_array($approvalStatus, ['approved', 'auto_approved'])) {
+                        // For approved/active status, sort alphabetically by year level
+                        if (in_array($unifiedStatus, ['approved', 'active'])) {
                             $yearLevel = $grant->year_level ?? 'ZZZZ';
                             return [$yearLevel, $profile->last_name, $profile->first_name];
                         }

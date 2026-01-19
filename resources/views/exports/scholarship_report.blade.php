@@ -65,6 +65,7 @@
         @if($value && !in_array($key, ['paper_size', 'orientation', 'date_filed']))
         <span style="color:#d1d5db;">•</span>
         @if($key === 'approval_status')
+        <!-- Display unified status from request parameter -->
         <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
         @elseif($key === 'grant_provision')
         <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
@@ -113,11 +114,11 @@
             <th>Total</th>
             <td>{{ $summary['total'] ?? 0 }}</td>
         </tr>
-        @if(isset($summary['by_approval_status']))
+        @if(isset($summary['by_unified_status']))
         <tr>
-            <th colspan="2">By Approval Status</th>
+            <th colspan="2">By Unified Status</th>
         </tr>
-        @foreach($summary['by_approval_status'] as $name => $count)
+        @foreach($summary['by_unified_status'] as $name => $count)
         @if($name !== 'No Status')
         <tr>
             <td>{{ $name }}</td>
@@ -125,10 +126,10 @@
         </tr>
         @endif
         @endforeach
-        @if(isset($summary['by_approval_status']['No Status']))
+        @if(isset($summary['by_unified_status']['No Status']))
         <tr>
             <td><em>No Status</em></td>
-            <td>{{ $summary['by_approval_status']['No Status'] }}</td>
+            <td>{{ $summary['by_unified_status']['No Status'] }}</td>
         </tr>
         @endif
         @endif
@@ -241,7 +242,7 @@
     if(empty($filters['school'])) $colCount++;
     if(empty($filters['course'])) $colCount++;
     if(empty($filters['year_level'])) $colCount++;
-    if(empty($filters['approval_status'])) $colCount++;
+    if(empty($filters['approval_status'])) $colCount++; // Check request parameter
     if(empty($filters['grant_provision'])) $colCount++;
 
     $showingApproved = false;
@@ -313,10 +314,10 @@
             @php
             $sortedProfiles = isset($profiles) && $profiles ? $profiles->sortBy(function($profile) {
             $grant = optional($profile->scholarshipGrant->first());
-            $approvalStatus = $grant->approval_status ?? '';
+            $unifiedStatus = $grant->unified_status ?? '';
 
-            // For approved status, sort alphabetically by school then year level
-            if (in_array($approvalStatus, ['approved', 'auto_approved'])) {
+            // For approved/active status, sort alphabetically by school then year level
+            if (in_array($unifiedStatus, ['approved', 'active'])) {
             $school = optional($grant->school)->name ?? 'ZZZZ';
             $yearLevel = $grant->year_level ?? 'ZZZZ';
             return [$school, $yearLevel, $profile->last_name, $profile->first_name];
@@ -334,7 +335,7 @@
             $grant = optional($profile->scholarshipGrant->first());
             $dateFiled = $grant->date_filed;
             $dateApproved = $grant->date_approved;
-            $approvalStatus = $grant->approval_status ?? '-';
+            $unifiedStatus = $grant->unified_status ?? '-';
             $grantProvision = $grant->grant_provision ?? '-';
 
             $contacts = array_filter([
@@ -343,7 +344,7 @@
             ]);
 
             // Use date approved for approved statuses, otherwise use date filed
-            $displayDate = (in_array($approvalStatus, ['approved', 'auto_approved']) && $dateApproved) ? $dateApproved : $dateFiled;
+            $displayDate = (in_array($unifiedStatus, ['approved', 'active']) && $dateApproved) ? $dateApproved : $dateFiled;
 
             // Check if applicant, parent, or guardian is JPM
             $isJpm = ($canViewJpm ?? false) && ($profile->is_jpm_member || $profile->is_father_jpm || $profile->is_mother_jpm || $profile->is_guardian_jpm);
@@ -368,7 +369,7 @@
                 <td>{{ $grant->year_level ?? '-' }}</td>
                 @endif
                 @if(empty($filters['approval_status']))
-                <td>{{ $approvalStatus !== '-' ? ucwords(str_replace('_', ' ', $approvalStatus)) : '-' }}</td>
+                <td>{{ $unifiedStatus !== '-' ? ucwords(str_replace('_', ' ', $unifiedStatus)) : '-' }}</td>
                 @endif
                 @if(empty($filters['grant_provision']))
                 <td>{{ $grantProvision !== '-' ? ucwords(str_replace('_', ' ', $grantProvision)) : '-' }}</td>

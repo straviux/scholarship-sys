@@ -338,7 +338,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -942,7 +942,7 @@ const openAddRecordModal = () => {
         term: null,
         date_filed: new Date(),
         date_approved: null,
-        approval_status: 'approved',
+        unified_status: 'approved_pending',
         grant_provision: null,
         remarks: null,
         processing: false

@@ -102,9 +102,9 @@ class DashboardController extends Controller
             $dailyData = ScholarshipRecord::select(
                 DB::raw('DATE(date_filed) as date'),
                 DB::raw('COUNT(*) as applications'),
-                DB::raw('SUM(CASE WHEN scholarship_status = 1 THEN 1 ELSE 0 END) as approved'),
-                DB::raw('SUM(CASE WHEN scholarship_status = 0 THEN 1 ELSE 0 END) as pending'),
-                DB::raw('SUM(CASE WHEN scholarship_status = 4 THEN 1 ELSE 0 END) as rejected')
+                DB::raw('SUM(CASE WHEN unified_status IN ("approved", "active") THEN 1 ELSE 0 END) as approved'),
+                DB::raw('SUM(CASE WHEN unified_status = "pending" THEN 1 ELSE 0 END) as pending'),
+                DB::raw('SUM(CASE WHEN unified_status = "denied" THEN 1 ELSE 0 END) as rejected')
             )
                 ->whereNotNull('date_filed')
                 ->whereBetween('date_filed', [$startOfMonth, $endOfMonth])
@@ -165,8 +165,8 @@ class DashboardController extends Controller
             $monthlyData = ScholarshipRecord::select(
                 DB::raw('MONTH(date_filed) as month'),
                 DB::raw('COUNT(*) as applications'),
-                DB::raw('SUM(CASE WHEN scholarship_status = 1 THEN 1 ELSE 0 END) as approved'),
-                DB::raw('SUM(CASE WHEN scholarship_status = 0 THEN 1 ELSE 0 END) as pending')
+                DB::raw('SUM(CASE WHEN unified_status IN ("approved", "active") THEN 1 ELSE 0 END) as approved'),
+                DB::raw('SUM(CASE WHEN unified_status = "pending" THEN 1 ELSE 0 END) as pending')
             )
                 ->whereNotNull('date_filed')
                 ->whereBetween('date_filed', [$startOfYear, $endOfYear])
@@ -561,9 +561,9 @@ class DashboardController extends Controller
                 'thisMonth' => ScholarshipRecord::whereNotNull('date_filed')->where('date_filed', '>=', $thisMonth)->count(),
                 'total' => ScholarshipRecord::count(),
                 'totalProfiles' => ScholarshipProfile::count(),
-                'pendingApplications' => ScholarshipRecord::where('scholarship_status', 0)->count(),
-                'approvedApplications' => ScholarshipRecord::where('scholarship_status', 1)->count(),
-                'completedApplications' => ScholarshipRecord::where('scholarship_status', 2)->count()
+                'pendingApplications' => ScholarshipRecord::where('unified_status', 'pending')->count(),
+                'approvedApplications' => ScholarshipRecord::whereIn('unified_status', ['approved', 'active'])->count(),
+                'completedApplications' => ScholarshipRecord::where('unified_status', 'completed')->count()
             ];
         } catch (\Exception $e) {
             Log::error('Error in getRecentStatistics: ' . $e->getMessage());
@@ -579,7 +579,7 @@ class DashboardController extends Controller
         $yearlyData = ScholarshipRecord::select(
             DB::raw('YEAR(date_filed) as year'),
             DB::raw('COUNT(*) as applications'),
-            DB::raw('SUM(CASE WHEN scholarship_status = 1 THEN 1 ELSE 0 END) as approved')
+            DB::raw('SUM(CASE WHEN unified_status IN ("approved", "active") THEN 1 ELSE 0 END) as approved')
         )
             ->groupBy(DB::raw('YEAR(date_filed)'))
             ->orderBy('year')

@@ -210,7 +210,7 @@ class ScholarshipRecordController extends Controller
 
     public function getScholarshipRecordsApi($id = null): JsonResponse
     {
-        $scholarship = ScholarshipRecord::with(['course', 'program'])->where('profile_id', '=', $id)->orderBy('scholarship_status', 'asc')->get();
+        $scholarship = ScholarshipRecord::with(['course', 'program'])->where('profile_id', '=', $id)->orderBy('unified_status', 'asc')->get();
         return response()->json(['data' => $scholarship]);
     }
 

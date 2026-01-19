@@ -64,14 +64,14 @@ class SystemReportController extends Controller
         return [
             'total_scholarship_records' => $totalRecords,
             'total_scholarship_profiles' => $totalProfiles,
-            'pending_applications' => ScholarshipRecord::where('scholarship_status', 0)->count(),
-            'approved_applications' => ScholarshipRecord::where('scholarship_status', 1)->count(),
-            'rejected_applications' => ScholarshipRecord::where('scholarship_status', 2)->count(),
+            'pending_applications' => ScholarshipRecord::where('unified_status', 'pending')->count(),
+            'approved_applications' => ScholarshipRecord::whereIn('unified_status', ['approved', 'active'])->count(),
+            'rejected_applications' => ScholarshipRecord::where('unified_status', 'denied')->count(),
             'total_users' => User::count(),
             'active_programs' => ScholarshipProgram::count(),
             'total_schools' => School::count(),
             'total_courses' => Course::count(),
-            'approval_rate' => $totalRecords > 0 ? round((ScholarshipRecord::where('scholarship_status', 1)->count() / $totalRecords) * 100, 2) : 0
+            'approval_rate' => $totalRecords > 0 ? round((ScholarshipRecord::whereIn('unified_status', ['approved', 'active'])->count() / $totalRecords) * 100, 2) : 0
         ];
     }
 
@@ -100,33 +100,33 @@ class SystemReportController extends Controller
         return [
             'by_status' => ScholarshipRecord::selectRaw('
                 CASE 
-                    WHEN scholarship_status = 0 THEN "Pending"
-                    WHEN scholarship_status = 1 THEN "Approved" 
-                    WHEN scholarship_status = 2 THEN "Rejected"
+                    WHEN unified_status = "pending" THEN "Pending"
+                    WHEN unified_status IN ("approved", "active") THEN "Approved" 
+                    WHEN unified_status = "denied" THEN "Rejected"
                     ELSE "Unknown"
                 END as status_name,
-                scholarship_status,
+                unified_status,
                 COUNT(*) as count
-            ')->groupBy('scholarship_status')->get(),
+            ')->groupBy('unified_status')->get(),
 
             'by_program' => ScholarshipRecord::leftJoin('scholarship_programs', 'scholarship_records.program_id', '=', 'scholarship_programs.id')
                 ->selectRaw('
                     COALESCE(scholarship_programs.shortname, "No Program") as program_name,
-                    scholarship_status,
+                    unified_status,
                     COUNT(*) as count
                 ')
-                ->groupBy('scholarship_records.program_id', 'scholarship_programs.shortname', 'scholarship_status')
+                ->groupBy('scholarship_records.program_id', 'scholarship_programs.shortname', 'unified_status')
                 ->orderBy('count', 'desc')
                 ->get(),
 
             'monthly_trends' => ScholarshipRecord::selectRaw('
                 YEAR(date_filed) as year,
                 MONTH(date_filed) as month,
-                scholarship_status,
+                unified_status,
                 COUNT(*) as count
             ')
                 ->whereYear('date_filed', now()->year)
-                ->groupByRaw('YEAR(date_filed), MONTH(date_filed), scholarship_status')
+                ->groupByRaw('YEAR(date_filed), MONTH(date_filed), unified_status')
                 ->orderByRaw('YEAR(date_filed) ASC, MONTH(date_filed) ASC')
                 ->get(),
 
@@ -189,8 +189,8 @@ class SystemReportController extends Controller
                 ->selectRaw('
                     COALESCE(courses.name, "No Course") as course_name,
                     COUNT(*) as total_applications,
-                    SUM(CASE WHEN scholarship_status = 1 THEN 1 ELSE 0 END) as approved,
-                    ROUND((SUM(CASE WHEN scholarship_status = 1 THEN 1 ELSE 0 END) / COUNT(*)) * 100, 2) as approval_rate
+                    SUM(CASE WHEN unified_status IN ("approved", "active") THEN 1 ELSE 0 END) as approved,
+                    ROUND((SUM(CASE WHEN unified_status IN ("approved", "active") THEN 1 ELSE 0 END) / COUNT(*)) * 100, 2) as approval_rate
                 ')
                 ->groupBy('scholarship_records.course_id', 'courses.name')
                 ->orderBy('total_applications', 'desc')
@@ -200,7 +200,7 @@ class SystemReportController extends Controller
             'by_year_level' => ScholarshipRecord::selectRaw('
                 COALESCE(year_level, "Not Specified") as year_level,
                 COUNT(*) as count,
-                ROUND(AVG(CASE WHEN scholarship_status = 1 THEN 1.0 ELSE 0.0 END) * 100, 2) as approval_rate
+                ROUND(AVG(CASE WHEN unified_status IN ("approved", "active") THEN 1.0 ELSE 0.0 END) * 100, 2) as approval_rate
             ')
                 ->groupBy('year_level')
                 ->orderBy('count', 'desc')
@@ -326,8 +326,8 @@ class SystemReportController extends Controller
                 scholarship_programs.shortname,
                 scholarship_programs.name,
                 COUNT(scholarship_records.id) as total_applications,
-                SUM(CASE WHEN scholarship_records.scholarship_status = 1 THEN 1 ELSE 0 END) as approved,
-                ROUND((SUM(CASE WHEN scholarship_records.scholarship_status = 1 THEN 1 ELSE 0 END) / COUNT(scholarship_records.id)) * 100, 2) as success_rate
+                SUM(CASE WHEN scholarship_records.unified_status IN ("approved", "active") THEN 1 ELSE 0 END) as approved,
+                ROUND((SUM(CASE WHEN scholarship_records.unified_status IN ("approved", "active") THEN 1 ELSE 0 END) / COUNT(scholarship_records.id)) * 100, 2) as success_rate
             ')
             ->groupBy('scholarship_programs.id', 'scholarship_programs.shortname', 'scholarship_programs.name')
             ->orderBy('total_applications', 'desc')

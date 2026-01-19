@@ -257,11 +257,12 @@ class JasperReportDataService
             unset($data['jpm_remarks']);
         }
 
-        // Hide conditional approval details for non-admin users
-        if (!auth()->user()->hasRole('administrator')) {
-            unset($data['conditional_requirements']);
-            unset($data['conditional_deadline']);
-        }
+        // Note: conditional_requirements and conditional_deadline fields removed in migration
+        // Conditional approval workflow no longer supported
+        // if (!auth()->user()->hasRole('administrator')) {
+        //     unset($data['conditional_requirements']);
+        //     unset($data['conditional_deadline']);
+        // }
 
         return (object)$data;
     }

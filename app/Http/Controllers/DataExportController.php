@@ -102,7 +102,9 @@ class DataExportController extends Controller
         }
 
         if ($request->filled('status')) {
-            $recordsQuery->where('approval_status', $request->status);
+            $recordsQuery->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('unified_status', $request->status);
+            });
         }
 
         if ($request->filled('date_from')) {
@@ -210,7 +212,7 @@ class DataExportController extends Controller
                 'program_name' => $record->program->shortname ?? $record->program->name ?? null,
                 'school_name' => $record->school->name ?? null,
                 'course_name' => $record->course->name ?? null,
-                'approval_status' => $record->approval_status,
+                'approval_status' => $record->scholarshipGrant ? ($record->scholarshipGrant->unified_status ?? 'unknown') : 'unknown',
                 'year_level' => $record->year_level,
                 'term' => $record->term,
                 'yakap_category' => $record->yakap_category ?? 'yakap-capitol',
@@ -219,7 +221,8 @@ class DataExportController extends Controller
             ];
 
             // Include queue info for pending applications using pre-calculated values (use profile_id)
-            if ($record->approval_status === 'pending' && isset($recordQueueMap[$record->profile_id])) {
+            $unifiedStatus = $record->scholarshipGrant ? ($record->scholarshipGrant->unified_status ?? 'unknown') : 'unknown';
+            if ($unifiedStatus === 'pending' && isset($recordQueueMap[$record->profile_id])) {
                 if (isset($recordQueueMap[$record->profile_id]['overall'])) {
                     $data['queue_number_overall'] = $recordQueueMap[$record->profile_id]['overall'];
                 }
@@ -369,7 +372,9 @@ class DataExportController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('approval_status', $request->status);
+            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
+                $q->where('unified_status', $request->status);
+            });
         }
 
         if ($request->filled('date_from')) {
@@ -404,7 +409,7 @@ class DataExportController extends Controller
             'total_profiles' => $scholarsCount + $applicantsCount,
             'total_requirements' => 0,
             'status_breakdown' => DB::table('scholarship_records')
-                ->selectRaw('approval_status, COUNT(*) as count')
+                ->selectRaw('unified_status, COUNT(*) as count')
                 ->when($request->filled('program_id'), function ($q) use ($request) {
                     $q->where('program_id', $request->program_id);
                 })
@@ -417,8 +422,8 @@ class DataExportController extends Controller
                 ->when($request->filled('date_to'), function ($q) use ($request) {
                     $q->whereDate('created_at', '<=', $request->date_to);
                 })
-                ->groupBy('approval_status')
-                ->pluck('count', 'approval_status'),
+                ->groupBy('unified_status')
+                ->pluck('count', 'unified_status'),
             'filters' => $validated,
         ]);
     }

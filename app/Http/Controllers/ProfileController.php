@@ -440,11 +440,11 @@ class ProfileController extends Controller
             // Track total created
             $totalCreated++;
 
-            // Get profile status (pending = 0, approved = 1)
-            $profileStatus = $record->scholarship_status == 1 ? 'Approved' : 'Pending';
+            // Get profile status (pending = 0, approved = 1 maps to unified_status)
+            $profileStatus = in_array($record->unified_status, ['active', 'approved']) ? 'Approved' : 'Pending';
 
             // Count approved existing profiles
-            if ($record->scholarship_status == 1 && $record->profile && !is_null($record->profile->profile_id)) {
+            if (in_array($record->unified_status, ['active', 'approved']) && $record->profile && !is_null($record->profile->profile_id)) {
                 $existingApproved++;
             }
 
@@ -512,7 +512,7 @@ class ProfileController extends Controller
             if (!isset($programBreakdownCurrentMonth[$programKey])) {
                 $programBreakdownCurrentMonth[$programKey] = ['pending' => 0, 'approved' => 0, 'total' => 0];
             }
-            $profileStatus = $record->scholarship_status == 1 ? 'Approved' : 'Pending';
+            $profileStatus = in_array($record->unified_status, ['active', 'approved']) ? 'Approved' : 'Pending';
             if ($profileStatus === 'Approved') {
                 $programBreakdownCurrentMonth[$programKey]['approved']++;
             } else {

@@ -41,7 +41,7 @@ class WaitingListController extends Controller
 
         $query = ScholarshipProfile::distinct()
             // Join with scholarship_records to access date_filed and filtering
-            ->leftJoin('scholarship_records', 'scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
+            ->join('scholarship_records', 'scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
             // OPTIMIZATION: Only select columns needed for display (not all 50+ columns)
             // This reduces memory usage and data transfer by ~80%
             ->select(
@@ -96,19 +96,16 @@ class WaitingListController extends Controller
                 'scholarship_records.date_filed',
                 'scholarship_records.unified_status'
             )
-            ->where(function ($q) use ($programId) {
-                // Display all PENDING applications (based on unified_status)
-                // Only show profiles with pending status
-                $q->where('scholarship_records.unified_status', 'pending')
-                    ->whereNotNull('scholarship_records.profile_id');
+            // CRITICAL: Filter for ONLY PENDING status to exclude approved/denied/active records
+            ->where('scholarship_records.unified_status', 'pending')
+            ->whereNotNull('scholarship_records.profile_id');
 
-                // Filter by program if specified
-                if ($programId) {
-                    $q->where('scholarship_records.program_id', $programId);
-                }
-            });
+        // Filter by program if specified
+        if ($programId) {
+            $query->where('scholarship_records.program_id', $programId);
+        }
 
-        // Filter by date range (date_filed) - use scholarship_records.date_filed if available, otherwise profile created_at
+        // Filter by date range (date_filed) - pending status already guaranteed by INNER JOIN
         if ($request->filled('date_from') && $request->filled('date_to')) {
             $query->where(function ($q) use ($request) {
                 $q->whereBetween('scholarship_records.date_filed', [$request->date_from, $request->date_to])
@@ -142,20 +139,14 @@ class WaitingListController extends Controller
             }
         }
 
-        // Filter by year_level (only applies if profile has scholarship records)
+        // Filter by year_level - must ensure pending status is maintained
         if ($request->filled('year_level')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('scholarship_records.year_level', 'like', '%' . $request->year_level . '%')
-                    ->orWhereNull('scholarship_records.profile_id'); // Include profiles without records
-            });
+            $query->where('scholarship_records.year_level', 'like', '%' . $request->year_level . '%');
         }
 
-        // Filter by yakap_category (only applies if profile has scholarship records)
+        // Filter by yakap_category - must ensure pending status is maintained
         if ($request->filled('yakap_category')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('scholarship_records.yakap_category', $request->yakap_category)
-                    ->orWhereNull('scholarship_records.profile_id'); // Include profiles without records
-            });
+            $query->where('scholarship_records.yakap_category', $request->yakap_category);
         }
 
         // Filter by course - use leftJoin to avoid duplicate rows
@@ -819,6 +810,107 @@ class WaitingListController extends Controller
         } catch (\Exception $e) {
             Log::error('Error deleting applicant: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to delete applicant.');
+        }
+    }
+
+    /**
+     * TEST FUNCTION: Create mock applicants with random data for testing
+     * Usage: POST /test-add-applicants with JSON body: {"count": 5}
+     * This is for development/testing only and should be removed in production
+     */
+    public function testAddApplicants(Request $request)
+    {
+        // Security check - only allow in development
+        if (!config('app.debug')) {
+            abort(403, 'Test function not available in production.');
+        }
+
+        $count = $request->get('count', 3);
+        $programId = ScholarshipProgram::first()?->id;
+        $created = [];
+
+        try {
+            for ($i = 0; $i < $count; $i++) {
+                $firstName = fake()->firstName();
+                $lastName = fake()->lastName();
+
+                // Create profile
+                $profile = ScholarshipProfile::create([
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'middle_name' => fake()->firstName(),
+                    'extension_name' => '',
+                    'date_of_birth' => fake()->dateTimeThisDecade(),
+                    'gender' => fake()->randomElement(['Male', 'Female']),
+                    'place_of_birth' => fake()->city(),
+                    'civil_status' => fake()->randomElement(['Single', 'Married', 'Divorced', 'Widowed']),
+                    'religion' => fake()->randomElement(['Catholic', 'Muslim', 'Protestant', 'Buddhist', 'Other']),
+                    'indigenous_group' => '',
+                    'municipality' => fake()->city(),
+                    'barangay' => fake()->word(),
+                    'address' => fake()->address(),
+                    'contact_no' => fake()->phoneNumber(),
+                    'contact_no_2' => fake()->phoneNumber(),
+                    'email' => fake()->email(),
+                    'temporary_municipality' => fake()->city(),
+                    'temporary_barangay' => fake()->word(),
+                    'temporary_address' => fake()->address(),
+                    'father_name' => fake()->firstName() . ' ' . $lastName,
+                    'father_occupation' => fake()->jobTitle(),
+                    'father_birthdate' => fake()->dateTimeThisDecade(),
+                    'father_contact_no' => fake()->phoneNumber(),
+                    'mother_name' => fake()->firstName() . ' ' . $lastName,
+                    'mother_occupation' => fake()->jobTitle(),
+                    'mother_birthdate' => fake()->dateTimeThisDecade(),
+                    'mother_contact_no' => fake()->phoneNumber(),
+                    'guardian_name' => fake()->firstName() . ' ' . $lastName,
+                    'guardian_relationship' => fake()->randomElement(['Uncle', 'Aunt', 'Grandparent', 'Other']),
+                    'guardian_occupation' => fake()->jobTitle(),
+                    'guardian_contact_no' => fake()->phoneNumber(),
+                    'parents_guardian_gross_monthly_income' => fake()->numberBetween(5000, 100000),
+                    'is_jpm_member' => false,
+                    'is_father_jpm' => false,
+                    'is_mother_jpm' => false,
+                    'is_guardian_jpm' => false,
+                    'is_not_jpm' => false,
+                    'jpm_remarks' => '',
+                    'remarks' => 'Test record - ' . fake()->sentence(),
+                    'created_by' => Auth::id(),
+                    'date_filed' => now(),
+                ]);
+
+                // Create scholarship record with PENDING status
+                if ($programId) {
+                    $profile->scholarshipGrant()->create([
+                        'program_id' => $programId,
+                        'school_id' => null,
+                        'course_id' => null,
+                        'year_level' => fake()->randomElement(['1st Year', '2nd Year', '3rd Year', '4th Year']),
+                        'term' => fake()->randomElement(['1st Semester', '2nd Semester']),
+                        'academic_year' => now()->year . '-' . (now()->year + 1),
+                        'unified_status' => 'pending', // TEST DATA - PENDING STATUS
+                        'date_filed' => now(),
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+
+                $created[] = [
+                    'profile_id' => $profile->profile_id,
+                    'name' => $firstName . ' ' . $lastName,
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "$count test applicants created successfully",
+                'created' => $created,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error creating test applicants: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create test applicants: ' . $e->getMessage(),
+            ], 500);
         }
     }
 }

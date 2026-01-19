@@ -15,7 +15,7 @@ class ScholarshipApprovalService
         $this->validateCanModify($record);
 
         DB::transaction(function () use ($record, $approver, $data) {
-            $oldStatus = $record->approval_status;
+            $oldStatus = $record->unified_status;
 
             $record->update([
                 'unified_status' => 'approved',
@@ -37,7 +37,7 @@ class ScholarshipApprovalService
         $this->validateDeclineReason($data['reason']);
 
         DB::transaction(function () use ($record, $decliner, $data) {
-            $oldStatus = $record->approval_status;
+            $oldStatus = $record->unified_status;
 
             $record->update([
                 'unified_status' => 'denied',
@@ -55,42 +55,20 @@ class ScholarshipApprovalService
 
     public function setConditional(ScholarshipRecord $record, User $user, array $requirements)
     {
-        $this->validateCanModify($record);
-
-        DB::transaction(function () use ($record, $user, $requirements) {
-            $oldStatus = $record->approval_status;
-
-            $record->update([
-                'approval_status' => 'conditional',
-                'conditional_requirements' => $requirements['conditions'] ?? [],
-                'conditional_deadline' => $requirements['deadline'] ?? null,
-                'conditional_deadline_expired' => false,
-                'conditional_deadline_notified_at' => null,
-                'approved_by' => $user->id,
-                'approved_at' => now(),
-                'approval_remarks' => $requirements['remarks'] ?? null,
-            ]);
-
-            $this->createStatusHistory($record, 'conditional', $oldStatus, $user, $requirements['remarks'] ?? null);
-
-            Log::info('Conditional approval set', [
-                'record_id' => $record->id,
-                'set_by' => $user->id,
-                'deadline' => $requirements['deadline'],
-                'conditions' => $requirements['conditions']
-            ]);
-        });
+        throw new \InvalidArgumentException('Conditional approval workflow is no longer supported. Use approve() or decline() instead.');
     }
 
     /**
-     * Update conditional approval deadline and conditions
+     * Update conditional approval deadline and conditions (DEPRECATED)
+     * Conditional approval is no longer supported
      */
     public function updateConditional(ScholarshipRecord $record, User $user, array $updates)
     {
-        if ($record->approval_status !== 'conditional') {
-            throw new \InvalidArgumentException('Only conditional approvals can be updated');
-        }
+        throw new \InvalidArgumentException('Conditional approval workflow is no longer supported. Use approve() or decline() instead.');
+    }
 
+    private function _updateConditionalDeprecated(ScholarshipRecord $record, User $user, array $updates)
+    {
         DB::transaction(function () use ($record, $user, $updates) {
             $oldDeadline = $record->conditional_deadline;
             $oldConditions = $record->conditional_requirements;
@@ -150,133 +128,40 @@ class ScholarshipApprovalService
     }
 
     /**
-     * Handle expired conditional approvals
+     * Handle expired conditional approvals (DEPRECATED)
+     * Conditional approval is no longer supported
      */
     public function expireConditionalApproval(ScholarshipRecord $record, User $systemUser = null)
     {
-        if ($record->approval_status !== 'conditional') {
-            throw new \InvalidArgumentException('Only conditional approvals can be expired');
-        }
-
-        $systemUser = $systemUser ?? $this->getSystemUser();
-
-        DB::transaction(function () use ($record, $systemUser) {
-            $oldStatus = $record->approval_status;
-
-            $record->update([
-                'approval_status' => 'declined',
-                'conditional_deadline_expired' => true,
-                'declined_by' => $systemUser->id,
-                'declined_at' => now(),
-                'decline_reason' => 'conditional_deadline_expired',
-                'approval_remarks' => 'Conditional approval expired - deadline not met',
-                'scholarship_status' => 4, // 4 = Cancelled/Declined
-                'scholarship_status_remarks' => 'Conditional Deadline Expired',
-            ]);
-
-            $this->createStatusHistory($record, 'declined', $oldStatus, $systemUser, 'Conditional approval deadline expired');
-
-            Log::info('Conditional approval expired', [
-                'record_id' => $record->id,
-                'deadline' => $record->conditional_deadline,
-                'expired_at' => now()
-            ]);
-        });
+        throw new \InvalidArgumentException('Conditional approval workflow is no longer supported. Use decline() instead.');
     }
 
     /**
-     * Send deadline reminder notification
+     * Send deadline reminder notification (DEPRECATED)
+     * No longer applicable with unified status system
      */
     public function sendDeadlineReminder(ScholarshipRecord $record)
     {
-        if ($record->approval_status !== 'conditional') {
-            return false;
-        }
-
-        // Mark as notified to prevent duplicate reminders
-        $record->update([
-            'conditional_deadline_notified_at' => now()
-        ]);
-
-        // Here you would implement actual notification logic
-        // For example: email, SMS, in-app notification
-        Log::info('Deadline reminder sent', [
-            'record_id' => $record->id,
-            'deadline' => $record->conditional_deadline,
-            'applicant_id' => $record->profile_id
-        ]);
-
-        return true;
+        Log::info('sendDeadlineReminder called but deprecated', ['record_id' => $record->id]);
+        return false;
     }
 
     /**
-     * Check and process expired conditional approvals
+     * Check and process expired conditional approvals (DEPRECATED)
      */
     public function processExpiredConditionalApprovals()
     {
-        $expiredRecords = ScholarshipRecord::where('approval_status', 'conditional')
-            ->where('conditional_deadline', '<', now())
-            ->where('conditional_deadline_expired', false)
-            ->with('profile')
-            ->get();
-
-        $processed = 0;
-        $systemUser = $this->getSystemUser();
-
-        foreach ($expiredRecords as $record) {
-            try {
-                $this->expireConditionalApproval($record, $systemUser);
-                $processed++;
-            } catch (\Exception $e) {
-                Log::error('Failed to expire conditional approval', [
-                    'record_id' => $record->id,
-                    'error' => $e->getMessage()
-                ]);
-            }
-        }
-
-        Log::info('Processed expired conditional approvals', [
-            'total_processed' => $processed,
-            'total_found' => $expiredRecords->count()
-        ]);
-
-        return $processed;
+        Log::info('processExpiredConditionalApprovals called but deprecated');
+        return 0;
     }
 
     /**
-     * Send deadline reminders (typically run daily)
+     * Send deadline reminders (DEPRECATED)
      */
     public function sendUpcomingDeadlineReminders($daysBefore = 3)
     {
-        $reminderDate = now()->addDays($daysBefore);
-
-        $records = ScholarshipRecord::where('approval_status', 'conditional')
-            ->whereDate('conditional_deadline', $reminderDate->toDateString())
-            ->whereNull('conditional_deadline_notified_at')
-            ->with('profile')
-            ->get();
-
-        $sent = 0;
-
-        foreach ($records as $record) {
-            try {
-                if ($this->sendDeadlineReminder($record)) {
-                    $sent++;
-                }
-            } catch (\Exception $e) {
-                Log::error('Failed to send deadline reminder', [
-                    'record_id' => $record->id,
-                    'error' => $e->getMessage()
-                ]);
-            }
-        }
-
-        Log::info('Sent deadline reminders', [
-            'total_sent' => $sent,
-            'days_before' => $daysBefore
-        ]);
-
-        return $sent;
+        Log::info('sendUpcomingDeadlineReminders called but deprecated');
+        return 0;
     }
 
     /**
@@ -292,33 +177,12 @@ class ScholarshipApprovalService
         ]);
     }
 
+    /**
+     * Resubmit declined application (DEPRECATED)
+     */
     public function resubmit(ScholarshipRecord $record, array $data = [])
     {
-        if (!$record->isDeclined()) {
-            throw new \InvalidArgumentException('Only declined applications can be resubmitted');
-        }
-
-        DB::transaction(function () use ($record, $data) {
-            $oldStatus = $record->approval_status;
-
-            $record->update([
-                'approval_status' => 'resubmitted',
-                'scholarship_status' => 0, // Back to pending/waiting
-                'resubmitted_at' => now(),
-                'resubmission_notes' => $data['notes'] ?? null,
-                'resubmission_count' => $record->resubmission_count + 1,
-                // Keep decline history but clear current decline status
-                'declined_by' => null,
-                'declined_at' => null,
-            ]);
-
-            $this->createStatusHistory($record, 'resubmitted', $oldStatus, null, $data['notes'] ?? null);
-
-            // Auto-approve if configured
-            if ($record->shouldAutoApprove()) {
-                $this->autoApprove($record);
-            }
-        });
+        throw new \InvalidArgumentException('Resubmission workflow is no longer supported.');
     }
 
     public function autoApprove(ScholarshipRecord $record)
@@ -373,7 +237,7 @@ class ScholarshipApprovalService
     private function validateCanModify(ScholarshipRecord $record)
     {
         if (!$record->canBeModified()) {
-            throw new \InvalidArgumentException("Application with status '{$record->approval_status}' cannot be modified");
+            throw new \InvalidArgumentException("Application with status '{$record->unified_status}' cannot be modified");
         }
     }
 
@@ -392,7 +256,7 @@ class ScholarshipApprovalService
             'scholarship_record_id' => $record->id,
             'action' => $action,
             'previous_status' => $oldStatus,
-            'new_status' => $record->approval_status,
+            'new_status' => $record->unified_status,
             'performed_by' => $user?->id,
             'remarks' => $remarks,
             'performed_at' => now(),
@@ -413,11 +277,11 @@ class ScholarshipApprovalService
 
         return [
             'total' => $query->count(),
-            'pending' => $query->clone()->where('approval_status', 'pending')->count(),
-            'approved' => $query->clone()->where('approval_status', 'approved')->count(),
-            'declined' => $query->clone()->where('approval_status', 'declined')->count(),
-            'conditional' => $query->clone()->where('approval_status', 'conditional')->count(),
-            'resubmitted' => $query->clone()->where('approval_status', 'resubmitted')->count(),
+            'pending' => $query->clone()->where('unified_status', 'pending')->count(),
+            'approved' => $query->clone()->where('unified_status', 'approved')->count(),
+            'denied' => $query->clone()->where('unified_status', 'denied')->count(),
+            'active' => $query->clone()->where('unified_status', 'active')->count(),
+            'completed' => $query->clone()->where('unified_status', 'completed')->count(),
         ];
     }
 }

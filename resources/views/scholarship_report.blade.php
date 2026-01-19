@@ -208,6 +208,7 @@
         @if($value && !in_array($key, ['paper_size', 'orientation', 'date_filed']))
         <span style="color:#d1d5db;">•</span>
         @if($key === 'approval_status')
+        <!-- Display unified status from request parameter -->
         <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
         @elseif($key === 'grant_provision')
         <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
@@ -266,7 +267,7 @@
     @if($reportType === 'summary')
     <table class="summary-table">
         @php
-        $showApprovalStatus = (!isset($groupBy) || $groupBy === 'none' || $groupBy === 'approval_status');
+        $showUnifiedStatus = (!isset($groupBy) || $groupBy === 'none' || $groupBy === 'unified_status');
         $showGrantProvision = (!isset($groupBy) || $groupBy === 'none' || $groupBy === 'grant_provision');
         $showProgram = (!isset($groupBy) || $groupBy === 'none' || $groupBy === 'program');
         $showSchool = (!isset($groupBy) || $groupBy === 'none' || $groupBy === 'school');
@@ -276,12 +277,12 @@
         $total = $summary['total'] ?? 1;
         @endphp
 
-        @if(isset($summary['by_approval_status']) && $showApprovalStatus)
+        @if(isset($summary['by_unified_status']) && $showUnifiedStatus)
         <tr>
-            <th colspan="3">By Approval Status</th>
+            <th colspan="3">By Unified Status</th>
         </tr>
         @php
-        $statusData = collect($summary['by_approval_status'])->filter(function($count, $name) {
+        $statusData = collect($summary['by_unified_status'])->filter(function($count, $name) {
         return $name !== 'No Status';
         })->sortDesc();
         $statusIndex = 1;
@@ -293,11 +294,11 @@
             <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
         </tr>
         @endforeach
-        @if(isset($summary['by_approval_status']['No Status']))
+        @if(isset($summary['by_unified_status']['No Status']))
         <tr>
             <td><em>{{ $statusIndex }}. No Status</em></td>
-            <td>{{ $summary['by_approval_status']['No Status'] }}</td>
-            <td>{{ number_format(($summary['by_approval_status']['No Status'] / $total) * 100, 1) }}%</td>
+            <td>{{ $summary['by_unified_status']['No Status'] }}</td>
+            <td>{{ number_format(($summary['by_unified_status']['No Status'] / $total) * 100, 1) }}%</td>
         </tr>
         @endif
         @endif
@@ -442,10 +443,10 @@
     @php
     $sortedProfiles = $groupProfiles->sortBy(function($profile) {
     $grant = optional($profile->scholarshipGrant->first());
-    $approvalStatus = $grant->approval_status ?? '';
+    $unifiedStatus = $grant->unified_status ?? '';
 
-    // For approved status, sort alphabetically by school then year level
-    if (in_array($approvalStatus, ['approved', 'auto_approved'])) {
+    // For approved/active status, sort alphabetically by school then year level
+    if (in_array($unifiedStatus, ['approved', 'active'])) {
     $school = optional($grant->school)->name ?? 'ZZZZ'; // Put empty schools at the end
     $yearLevel = $grant->year_level ?? 'ZZZZ'; // Put empty year levels at the end
     return [$school, $yearLevel, $profile->last_name, $profile->first_name];
@@ -493,7 +494,7 @@
                 @if(empty($filters['year_level']) && (!isset($groupBy) || $groupBy !== 'year_level'))
                 <th style="width:50px">Level</th>
                 @endif
-                @if(empty($filters['approval_status']) && (!isset($groupBy) || $groupBy !== 'approval_status'))
+                @if(empty($filters['approval_status']) && (!isset($groupBy) || $groupBy !== 'unified_status'))
                 <th style="width:85px">Status</th>
                 @endif
                 @if(empty($filters['grant_provision']) && (!isset($groupBy) || $groupBy !== 'grant_provision'))
@@ -517,11 +518,11 @@
             $grant = optional($profile->scholarshipGrant->first());
             $dateFiled = $grant->date_filed;
             $dateApproved = $grant->date_approved;
-            $approvalStatus = $grant->approval_status ?? '-';
+            $unifiedStatus = $grant->unified_status ?? '-';
             $grantProvision = $grant->grant_provision ?? '-';
 
             $statusClass = '';
-            switch($approvalStatus) {
+            switch($unifiedStatus) {
             case 'approved':
             $statusClass = 'status-approved';
             break;
@@ -540,7 +541,7 @@
             $rowClass = $isJpm ? 'jpm-row' : '';
 
             // Use date approved for approved statuses, otherwise use date filed
-            $displayDate = (in_array($approvalStatus, ['approved', 'auto_approved']) && $dateApproved) ? $dateApproved : $dateFiled;
+            $displayDate = (in_array($unifiedStatus, ['approved', 'active']) && $dateApproved) ? $dateApproved : $dateFiled;
             @endphp
             <tr class="{{ $rowClass }}">
                 <td style="font-size:10px;min-width:20px;width:20px;color:#555;padding-left:0.05cm;padding-right:0.05cm;">{{ $overallIndex }}</td>
@@ -569,10 +570,10 @@
                 @if(empty($filters['year_level']) && (!isset($groupBy) || $groupBy !== 'year_level'))
                 <td style="font-size:11px;">{{ $grant->year_level ?? '-' }}</td>
                 @endif
-                @if(empty($filters['approval_status']) && (!isset($groupBy) || $groupBy !== 'approval_status'))
+                @if(empty($filters['approval_status']) && (!isset($groupBy) || $groupBy !== 'unified_status'))
                 <td style="font-size:11px;">
-                    @if($approvalStatus !== '-')
-                    <span class="status-tag {{ $statusClass }}">{{ ucwords(str_replace('_', ' ', $approvalStatus)) }}</span>
+                    @if($unifiedStatus !== '-')
+                    <span class="status-tag {{ $statusClass }}">{{ ucwords(str_replace('_', ' ', $unifiedStatus)) }}</span>
                     @else
                     -
                     @endif

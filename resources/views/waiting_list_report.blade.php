@@ -179,6 +179,7 @@
         @if($value && !in_array($key, ['paper_size', 'orientation', 'date_filed']))
         <span style="color:#d1d5db;">•</span>
         @if($key === 'approval_status')
+        <!-- Display unified status from request parameter -->
         <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
         @if($key === 'grant_provision')
         <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>

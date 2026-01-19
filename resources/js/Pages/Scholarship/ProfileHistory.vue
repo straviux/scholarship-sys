@@ -77,15 +77,17 @@
                             </div>
                             <div>
                                 <span class="text-sm text-gray-600">Approved:</span>
-                                <div class="font-medium text-green-600">{{ getStatusCount('approved') }}</div>
+                                <div class="font-medium text-green-600">{{ getStatusCount('approved') +
+                                    getStatusCount('active')
+                                    }}</div>
                             </div>
                             <div>
                                 <span class="text-sm text-gray-600">Pending:</span>
                                 <div class="font-medium text-yellow-600">{{ getStatusCount('pending') }}</div>
                             </div>
                             <div>
-                                <span class="text-sm text-gray-600">Declined:</span>
-                                <div class="font-medium text-red-600">{{ getStatusCount('declined') }}</div>
+                                <span class="text-sm text-gray-600">Denied:</span>
+                                <div class="font-medium text-red-600">{{ getStatusCount('denied') }}</div>
                             </div>
                         </div>
                     </div>
@@ -116,7 +118,7 @@
                                 </div>
                                 <div>
                                     <h5 class="font-semibold text-gray-800">{{ record.program?.name || 'Unknown Program'
-                                    }}</h5>
+                                        }}</h5>
                                     <p class="text-sm text-gray-600">{{ record.program?.shortname || '' }}</p>
                                 </div>
                             </div>
@@ -242,16 +244,20 @@ const getFullName = (profile) => {
     return parts.join(' ');
 };
 
-const getApprovalStatusSeverity = (status) => {
-    switch (status) {
+const getStatusSeverity = (unifiedStatus) => {
+    switch (unifiedStatus) {
         case 'approved':
+            return 'success';
+        case 'active':
             return 'success';
         case 'pending':
             return 'warning';
-        case 'declined':
+        case 'denied':
             return 'danger';
-        case 'auto_approved':
-            return 'info';
+        case 'completed':
+            return 'secondary';
+        case 'unknown':
+            return 'secondary';
         default:
             return 'secondary';
     }
@@ -263,7 +269,10 @@ const formatDate = (date) => {
 };
 
 const getStatusCount = (status) => {
-    return props.scholarshipRecords.filter(record => record.approval_status === status).length;
+    return props.scholarshipRecords.filter(record => {
+        const grant = Array.isArray(record.scholarship_grant) ? record.scholarship_grant[0] : record.scholarship_grant;
+        return grant?.unified_status === status;
+    }).length;
 };
 
 // Action methods

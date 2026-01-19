@@ -17,12 +17,13 @@ class ScholarshipCompletionService
         $this->validateCanComplete($record);
 
         DB::transaction(function () use ($record, $data, $verifier) {
-            // Update the scholarship record
-            $record->update([
-                'completion_status' => 'completed',
-                'completion_date' => $data['completion_date'],
-                'completion_remarks' => $data['completion_remarks'] ?? null,
-            ]);
+            // Update the scholarship record - completion_status field removed in migration
+            // Only create completion record - scholarship completion tracked in separate table
+            // $record->update([
+            //     'completion_status' => 'completed',
+            //     'completion_date' => $data['completion_date'],
+            //     'completion_remarks' => $data['completion_remarks'] ?? null,
+            // ]);
 
             // Create completion record
             ScholarshipCompletion::create([
@@ -64,11 +65,13 @@ class ScholarshipCompletionService
     {
         $this->validateCanDiscontinue($record);
 
-        $record->update([
-            'completion_status' => 'discontinued',
-            'completion_date' => $data['discontinue_date'] ?? now(),
-            'completion_remarks' => $data['reason'],
-        ]);
+        // Note: completion_status field removed in migration
+        // Discontinuation now tracked via ScholarshipApprovalHistory only
+        // $record->update([
+        //     'completion_status' => 'discontinued',
+        //     'completion_date' => $data['discontinue_date'] ?? now(),
+        //     'completion_remarks' => $data['reason'],
+        // ]);
 
         // Create history record
         ScholarshipApprovalHistory::create([
