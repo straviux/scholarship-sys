@@ -79,7 +79,7 @@
                                 <span class="text-sm text-gray-600">Approved:</span>
                                 <div class="font-medium text-green-600">{{ getStatusCount('approved') +
                                     getStatusCount('active')
-                                    }}</div>
+                                }}</div>
                             </div>
                             <div>
                                 <span class="text-sm text-gray-600">Pending:</span>
@@ -118,7 +118,7 @@
                                 </div>
                                 <div>
                                     <h5 class="font-semibold text-gray-800">{{ record.program?.name || 'Unknown Program'
-                                        }}</h5>
+                                    }}</h5>
                                     <p class="text-sm text-gray-600">{{ record.program?.shortname || '' }}</p>
                                 </div>
                             </div>
@@ -255,6 +255,8 @@ const getStatusSeverity = (unifiedStatus) => {
         case 'denied':
             return 'danger';
         case 'completed':
+            return 'secondary';
+        case 'withdrawn':
             return 'secondary';
         case 'unknown':
             return 'secondary';

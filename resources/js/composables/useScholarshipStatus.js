@@ -43,6 +43,14 @@ export const useScholarshipStatus = () => {
 			textColor: '#1F2937',
 			description: 'Scholarship completed',
 		},
+		withdrawn: {
+			label: 'Withdrawn',
+			severity: 'secondary',
+			color: '#8B5CF6',
+			bgColor: '#F3E8FF',
+			textColor: '#5B21B6',
+			description: 'Scholarship withdrawn',
+		},
 		unknown: {
 			label: 'Unknown',
 			severity: 'secondary',

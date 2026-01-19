@@ -207,7 +207,7 @@
         @foreach($filters as $key => $value)
         @if($value && !in_array($key, ['paper_size', 'orientation', 'date_filed']))
         <span style="color:#d1d5db;">•</span>
-        @if($key === 'approval_status')
+        @if($key === 'unified_status')
         <!-- Display unified status from request parameter -->
         <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
         @elseif($key === 'grant_provision')
@@ -494,7 +494,7 @@
                 @if(empty($filters['year_level']) && (!isset($groupBy) || $groupBy !== 'year_level'))
                 <th style="width:50px">Level</th>
                 @endif
-                @if(empty($filters['approval_status']) && (!isset($groupBy) || $groupBy !== 'unified_status'))
+                @if(empty($filters['unified_status']) && (!isset($groupBy) || $groupBy !== 'unified_status'))
                 <th style="width:85px">Status</th>
                 @endif
                 @if(empty($filters['grant_provision']) && (!isset($groupBy) || $groupBy !== 'grant_provision'))
@@ -503,9 +503,9 @@
                 <th style="width:70px">
                     @php
                     $showingApproved = false;
-                    if (isset($filters['approval_status'])) {
-                    $statusFilter = is_array($filters['approval_status']) ? $filters['approval_status'] : [$filters['approval_status']];
-                    $showingApproved = in_array('approved', $statusFilter) || in_array('auto_approved', $statusFilter);
+                    if (isset($filters['unified_status'])) {
+                    $statusFilter = is_array($filters['unified_status']) ? $filters['unified_status'] : [$filters['unified_status']];
+                    $showingApproved = in_array('approved', $statusFilter) || in_array('active', $statusFilter);
                     }
                     @endphp
                     {{ $showingApproved ? 'Date Approved' : 'Date Filed' }}
@@ -570,7 +570,7 @@
                 @if(empty($filters['year_level']) && (!isset($groupBy) || $groupBy !== 'year_level'))
                 <td style="font-size:11px;">{{ $grant->year_level ?? '-' }}</td>
                 @endif
-                @if(empty($filters['approval_status']) && (!isset($groupBy) || $groupBy !== 'unified_status'))
+                @if(empty($filters['unified_status']) && (!isset($groupBy) || $groupBy !== 'unified_status'))
                 <td style="font-size:11px;">
                     @if($unifiedStatus !== '-')
                     <span class="status-tag {{ $statusClass }}">{{ ucwords(str_replace('_', ' ', $unifiedStatus)) }}</span>

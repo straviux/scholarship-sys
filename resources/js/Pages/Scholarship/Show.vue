@@ -338,7 +338,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -760,7 +760,7 @@ const recordForm = ref({
     term: null,
     date_filed: null,
     date_approved: null,
-    unified_status: 'approved_pending',
+    unified_status: 'pending',
     grant_provision: null,
     remarks: null,
     processing: false
@@ -942,7 +942,7 @@ const openAddRecordModal = () => {
         term: null,
         date_filed: new Date(),
         date_approved: null,
-        unified_status: 'approved_pending',
+        unified_status: 'pending',
         grant_provision: null,
         remarks: null,
         processing: false
@@ -965,7 +965,7 @@ const openEditRecordModal = async (record) => {
         term: record.term,
         date_filed: record.date_filed ? new Date(record.date_filed) : null,
         date_approved: record.date_approved ? new Date(record.date_approved) : null,
-        unified_status: record.unified_status || 'approved_pending',
+        unified_status: record.unified_status || 'pending',
         grant_provision: record.grant_provision || null,
         remarks: record.remarks,
         processing: false
@@ -988,7 +988,7 @@ const closeRecordModal = () => {
         term: null,
         date_filed: null,
         date_approved: null,
-        unified_status: 'approved_pending',
+        unified_status: 'pending',
         grant_provision: null,
         remarks: null,
         processing: false
@@ -1072,10 +1072,12 @@ const deleteRecord = async () => {
 
 const getStatusClass = (status) => {
     const classes = {
-        'approved': 'bg-green-100 text-green-800',
         'pending': 'bg-yellow-100 text-yellow-800',
-        'declined': 'bg-red-100 text-red-800',
-        'conditional': 'bg-orange-100 text-orange-800',
+        'approved': 'bg-blue-100 text-blue-800',
+        'active': 'bg-green-100 text-green-800',
+        'completed': 'bg-gray-100 text-gray-800',
+        'denied': 'bg-red-100 text-red-800',
+        'withdrawn': 'bg-purple-100 text-purple-800',
     };
     return classes[status?.toLowerCase()] || 'bg-gray-100 text-gray-800';
 };

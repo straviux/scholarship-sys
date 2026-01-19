@@ -110,7 +110,7 @@ class CreateScholarshipRecordRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:50',
-                'in:pending_approval,active_scholar,completed,declined,withdrawn'
+                'in:pending,approved,active,completed,denied,withdrawn'
             ],
 
         ];

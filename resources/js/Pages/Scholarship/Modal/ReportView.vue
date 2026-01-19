@@ -91,7 +91,7 @@
                                         Course</th>
                                     <th v-if="!params.year_level" class="px-4 py-3 text-left font-medium text-gray-700">
                                         Year</th>
-                                    <th v-if="!params.approval_status"
+                                    <th v-if="!params.unified_status"
                                         class="px-4 py-3 text-left font-medium text-gray-700">Status</th>
                                     <th v-if="!params.grant_provision"
                                         class="px-4 py-3 text-left font-medium text-gray-700">Grant</th>
@@ -122,7 +122,7 @@
                                     <td v-if="!params.year_level" class="px-4 py-3 text-gray-600">
                                         {{ item.scholarship_grant?.[0]?.year_level || '-' }}
                                     </td>
-                                    <td v-if="!params.approval_status" class="px-4 py-3">
+                                    <td v-if="!params.unified_status" class="px-4 py-3">
                                         <Tag :value="formatApprovalStatus(item)" :severity="getStatusSeverity(item)" />
                                     </td>
                                     <td v-if="!params.grant_provision" class="px-4 py-3 text-gray-600">
@@ -213,7 +213,7 @@ const activeFilters = computed(() => {
     const filters = {};
     if (props.params.date_from) filters['Date From'] = moment(props.params.date_from).format('MMM DD, YYYY');
     if (props.params.date_to) filters['Date To'] = moment(props.params.date_to).format('MMM DD, YYYY');
-    if (props.params.approval_status) filters['Status'] = formatUnifiedStatusText(props.params.approval_status);
+    if (props.params.unified_status) filters['Status'] = formatUnifiedStatusText(props.params.unified_status);
     if (props.params.program) filters['Program'] = props.params.program;
     if (props.params.school) filters['School'] = props.params.school;
     if (props.params.courses) filters['Course'] = props.params.courses;
