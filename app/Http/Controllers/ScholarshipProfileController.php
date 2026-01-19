@@ -416,9 +416,18 @@ class ScholarshipProfileController extends Controller
     public function generateReport(Request $request)
     {
 
-        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) {
-            $q->where('unified_status', 'pending')->latest('created_at'); // return scholarship grant with pending status
-        }])->with('scholarshipGrant');
+        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant']);
+
+        // Filter by unified_status parameter
+        if ($request->filled('unified_status')) {
+            $statuses = is_array($request->unified_status)
+                ? $request->unified_status
+                : explode(',', $request->unified_status);
+
+            $query->whereHas('scholarshipGrant', function ($q) use ($statuses) {
+                $q->whereIn('unified_status', $statuses);
+            });
+        }
 
         if ($request->filled('program')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
