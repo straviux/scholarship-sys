@@ -464,8 +464,7 @@ class ScholarshipProfileController extends Controller
             $query->whereHas('scholarshipGrant.course', function ($cq) use ($coursesArray) {
                 $cq->where(function ($subQuery) use ($coursesArray) {
                     foreach ($coursesArray as $course) {
-                        $subQuery->orWhere('courses.shortname', 'like', '%' . $course . '%')
-                            ->orWhere('courses.name', 'like', '%' . $course . '%');
+                        $subQuery->orWhere('courses.name', 'like', '%' . $course . '%');
                     }
                 });
             });
