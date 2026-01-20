@@ -313,9 +313,9 @@ function generateReport() {
     const date_from = dateFrom.value ? moment(dateFrom.value).format('YYYY-MM-DD') : '';
     const date_to = dateTo.value ? moment(dateTo.value).format('YYYY-MM-DD') : '';
 
-    // Convert selected courses array to comma-separated shortnames
-    const courseShortnames = selectedCourses.value && selectedCourses.value.length > 0
-        ? selectedCourses.value.map(course => course.shortname).join(',')
+    // Convert selected courses array to comma-separated names
+    const courseNames = selectedCourses.value && selectedCourses.value.length > 0
+        ? selectedCourses.value.map(course => course.name).join(',')
         : '';
 
     // Convert selected schools array to comma-separated shortnames
@@ -329,7 +329,7 @@ function generateReport() {
         date_to,
         program: selectedProgram.value?.id || '',
         school: schoolShortnames,
-        courses: courseShortnames,
+        courses: courseNames,
         municipality: selectedMunicipality.value?.name || '',
         year_level: selectedYearLevel.value?.value || '',
         unified_status: selectedUnifiedStatus.value || '',
