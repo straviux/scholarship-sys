@@ -23,11 +23,16 @@ class ScholarshipApiController extends Controller
                 'course'
             ])->get();
 
-            $formatted = $records->map(function ($record) {
+            // Calculate queue numbers for pending records
+            $queueMap = $this->calculateQueueNumbers($records);
+
+            $formatted = $records->map(function ($record) use ($queueMap) {
                 $profile = $record->profile;
+                $profileId = $profile->profile_id ?? null;
+                $queueData = $queueMap[$profileId] ?? [];
 
                 return [
-                    'profile_id' => $profile->profile_id ?? null,
+                    'profile_id' => $profileId,
                     'full_name' => trim(
                         ($profile->first_name ?? '') . ' ' .
                             ($profile->middle_name ?? '') . ' ' .
@@ -52,11 +57,11 @@ class ScholarshipApiController extends Controller
                     'academic_year' => $record->academic_year ?? null,
                     'unified_status' => $record->unified_status ?? null,
                     'date_applied' => $record->date_filed ? $record->date_filed->format('Y-m-d') : null,
-                    'queue_number_overall' => null, // To be implemented with queue system
-                    'queue_number_daily' => null,   // To be implemented with queue system
-                    'queue_number_program' => null, // To be implemented with queue system
-                    'queue_number_school' => null,  // To be implemented with queue system
-                    'queue_number_course' => null,  // To be implemented with queue system
+                    'queue_number_overall' => $queueData['overall'] ?? null,
+                    'queue_number_daily' => $queueData['daily'] ?? null,
+                    'queue_number_program' => $queueData['program'] ?? null,
+                    'queue_number_school' => $queueData['school'] ?? null,
+                    'queue_number_course' => $queueData['course'] ?? null,
                     'created_at' => $record->created_at?->toIso8601String() ?? null,
                     'updated_at' => $record->updated_at?->toIso8601String() ?? null,
                 ];
@@ -100,11 +105,16 @@ class ScholarshipApiController extends Controller
                     'course'
                 ])->get();
 
-            $formatted = $records->map(function ($record) {
+            // Calculate queue numbers for pending records
+            $queueMap = $this->calculateQueueNumbers($records);
+
+            $formatted = $records->map(function ($record) use ($queueMap) {
                 $profile = $record->profile;
+                $profileId = $profile->profile_id ?? null;
+                $queueData = $queueMap[$profileId] ?? [];
 
                 return [
-                    'profile_id' => $profile->profile_id ?? null,
+                    'profile_id' => $profileId,
                     'full_name' => trim(
                         ($profile->first_name ?? '') . ' ' .
                             ($profile->middle_name ?? '') . ' ' .
@@ -129,11 +139,11 @@ class ScholarshipApiController extends Controller
                     'academic_year' => $record->academic_year ?? null,
                     'unified_status' => $record->unified_status ?? null,
                     'date_applied' => $record->date_filed ? $record->date_filed->format('Y-m-d') : null,
-                    'queue_number_overall' => null,
-                    'queue_number_daily' => null,
-                    'queue_number_program' => null,
-                    'queue_number_school' => null,
-                    'queue_number_course' => null,
+                    'queue_number_overall' => $queueData['overall'] ?? null,
+                    'queue_number_daily' => $queueData['daily'] ?? null,
+                    'queue_number_program' => $queueData['program'] ?? null,
+                    'queue_number_school' => $queueData['school'] ?? null,
+                    'queue_number_course' => $queueData['course'] ?? null,
                     'created_at' => $record->created_at?->toIso8601String() ?? null,
                     'updated_at' => $record->updated_at?->toIso8601String() ?? null,
                 ];
@@ -175,9 +185,13 @@ class ScholarshipApiController extends Controller
                 ], 404);
             }
 
+            // Calculate queue numbers for this record
+            $queueMap = $this->calculateQueueNumbers(collect([$record]));
+            $queueData = $queueMap[$profileId] ?? [];
+
             $profile = $record->profile;
             $formatted = [
-                'profile_id' => $profile->profile_id ?? null,
+                'profile_id' => $profileId,
                 'full_name' => trim(
                     ($profile->first_name ?? '') . ' ' .
                         ($profile->middle_name ?? '') . ' ' .
@@ -202,11 +216,11 @@ class ScholarshipApiController extends Controller
                 'academic_year' => $record->academic_year ?? null,
                 'unified_status' => $record->unified_status ?? null,
                 'date_applied' => $record->date_filed ? $record->date_filed->format('Y-m-d') : null,
-                'queue_number_overall' => null,
-                'queue_number_daily' => null,
-                'queue_number_program' => null,
-                'queue_number_school' => null,
-                'queue_number_course' => null,
+                'queue_number_overall' => $queueData['overall'] ?? null,
+                'queue_number_daily' => $queueData['daily'] ?? null,
+                'queue_number_program' => $queueData['program'] ?? null,
+                'queue_number_school' => $queueData['school'] ?? null,
+                'queue_number_course' => $queueData['course'] ?? null,
                 'created_at' => $record->created_at?->toIso8601String() ?? null,
                 'updated_at' => $record->updated_at?->toIso8601String() ?? null,
             ];
@@ -222,5 +236,99 @@ class ScholarshipApiController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Calculate queue numbers for scholarship records
+     * Only assigns queue numbers to pending records
+     * 
+     * @param \Illuminate\Support\Collection $records
+     * @return array
+     */
+    private function calculateQueueNumbers($records): array
+    {
+        $queueMap = [];
+
+        // Initialize queueMap for all records with null values
+        foreach ($records as $record) {
+            $profileId = $record->profile_id;
+            $queueMap[$profileId] = [
+                'overall' => null,
+                'daily' => null,
+                'program' => null,
+                'school' => null,
+                'course' => null,
+            ];
+        }
+
+        // Sort records by date_filed and created_at (matching DataExportController logic)
+        $sortedRecords = $records->sortBy(function ($record) {
+            $dateFiled = $record->date_filed ? $record->date_filed->format('Y-m-d') : '9999-12-31';
+            $createdAt = $record->created_at ? $record->created_at->format('Y-m-d H:i:s') : '9999-12-31 23:59:59';
+            return [$dateFiled, $createdAt];
+        });
+
+        // Initialize queue tracking arrays
+        $programQueueNumbers = [];
+        $schoolQueueNumbers = [];
+        $courseQueueNumbers = [];
+        $dailyQueueNumbers = [];
+        $overallQueueNumber = 0;
+
+        foreach ($sortedRecords as $record) {
+            $profileId = $record->profile_id;
+            $status = $record->unified_status ?? 'unknown';
+
+            // Only assign queue numbers to pending records
+            if ($status !== 'pending') {
+                continue;
+            }
+
+            // Overall queue number by date filed order
+            $overallQueueNumber++;
+            $queueMap[$profileId]['overall'] = $overallQueueNumber;
+
+            // Daily queue number - position among pending applicants on the same date
+            if ($record->date_filed) {
+                $dateFiled = $record->date_filed->format('Y-m-d');
+                if (!isset($dailyQueueNumbers[$dateFiled])) {
+                    $dailyQueueNumbers[$dateFiled] = 0;
+                }
+                $dailyQueueNumbers[$dateFiled]++;
+                $queueMap[$profileId]['daily'] = $dailyQueueNumbers[$dateFiled];
+            }
+
+            // Queue number for Program
+            if ($record->program) {
+                $programName = $record->program->shortname ?? $record->program->name ?? 'no_program';
+                if (!isset($programQueueNumbers[$programName])) {
+                    $programQueueNumbers[$programName] = 0;
+                }
+                $programQueueNumbers[$programName]++;
+                $queueMap[$profileId]['program'] = $programQueueNumbers[$programName];
+            }
+
+            // Queue number for School
+            if ($record->school) {
+                $schoolName = $record->school->shortname ?? $record->school->name ?? 'no_school';
+                if (!isset($schoolQueueNumbers[$schoolName])) {
+                    $schoolQueueNumbers[$schoolName] = 0;
+                }
+                $schoolQueueNumbers[$schoolName]++;
+                $queueMap[$profileId]['school'] = $schoolQueueNumbers[$schoolName];
+            }
+
+            // Queue number for Course
+            if ($record->course) {
+                $courseName = $record->course->shortname ?? $record->course->name ?? 'no_course';
+                if (!isset($courseQueueNumbers[$courseName])) {
+                    $courseQueueNumbers[$courseName] = 0;
+                }
+                $courseQueueNumbers[$courseName]++;
+                $queueMap[$profileId]['course'] = $courseQueueNumbers[$courseName];
+            }
+        }
+
+        return $queueMap;
     }
 }
