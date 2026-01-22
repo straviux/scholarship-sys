@@ -130,7 +130,7 @@ class DashboardController extends Controller
                         'fill' => true
                     ],
                     [
-                        'label' => 'Approved',
+                        'label' => 'Active',
                         'data' => $dailyData->pluck('approved'),
                         'backgroundColor' => 'rgba(75, 192, 192, 0.2)',
                         'borderColor' => 'rgba(75, 192, 192, 1)',
@@ -184,17 +184,17 @@ class DashboardController extends Controller
                         'data' => collect($months)->map(function ($month, $index) use ($monthlyData) {
                             $data = $monthlyData->where('month', $index + 1)->first();
                             return $data ? $data->applications : 0;
-                        }),
+                        })->values()->all(),
                         'backgroundColor' => 'rgba(153, 102, 255, 0.2)',
                         'borderColor' => 'rgba(153, 102, 255, 1)',
                         'borderWidth' => 2
                     ],
                     [
-                        'label' => 'Approved',
+                        'label' => 'Active',
                         'data' => collect($months)->map(function ($month, $index) use ($monthlyData) {
                             $data = $monthlyData->where('month', $index + 1)->first();
                             return $data ? $data->approved : 0;
-                        }),
+                        })->values()->all(),
                         'backgroundColor' => 'rgba(75, 192, 192, 0.2)',
                         'borderColor' => 'rgba(75, 192, 192, 1)',
                         'borderWidth' => 2
@@ -338,16 +338,16 @@ class DashboardController extends Controller
     {
         $statusData = ScholarshipRecord::select(
             DB::raw('CASE 
-                WHEN scholarship_status = 0 THEN "Pending"
-                WHEN scholarship_status = 1 THEN "Approved"
-                WHEN scholarship_status = 2 THEN "Completed"
-                WHEN scholarship_status = 3 THEN "Suspended"
-                WHEN scholarship_status = 4 THEN "Cancelled"
+                WHEN unified_status = "pending" THEN "Pending"
+                WHEN unified_status = "approved" THEN "Approved"
+                WHEN unified_status = "active" THEN "Active"
+                WHEN unified_status = "completed" THEN "Completed"
+                WHEN unified_status = "denied" THEN "Denied"
                 ELSE "Unknown"
             END as status'),
             DB::raw('COUNT(*) as count')
         )
-            ->groupBy('scholarship_status')
+            ->groupBy('unified_status')
             ->get();
 
         return [
@@ -358,9 +358,9 @@ class DashboardController extends Controller
                     'backgroundColor' => [
                         '#FFA726', // Pending - Orange
                         '#66BB6A', // Approved - Green
+                        '#4BC0C0', // Active - Teal
                         '#42A5F5', // Completed - Blue
-                        '#EF5350', // Suspended - Red
-                        '#AB47BC'  // Cancelled - Purple
+                        '#EF5350'  // Denied - Red
                     ]
                 ]
             ]
@@ -597,7 +597,7 @@ class DashboardController extends Controller
                     'fill' => false
                 ],
                 [
-                    'label' => 'Approved',
+                    'label' => 'Active',
                     'data' => $yearlyData->pluck('approved'),
                     'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
                     'borderColor' => 'rgba(54, 162, 235, 1)',
@@ -645,8 +645,8 @@ class DashboardController extends Controller
                 ->selectRaw('
                     COALESCE(courses.name, "No Course") as course_name,
                     COUNT(*) as total_applications,
-                    SUM(CASE WHEN scholarship_status = 1 THEN 1 ELSE 0 END) as approved,
-                    ROUND((SUM(CASE WHEN scholarship_status = 1 THEN 1 ELSE 0 END) / COUNT(*)) * 100, 2) as approval_rate
+                    SUM(CASE WHEN unified_status IN ("approved", "active") THEN 1 ELSE 0 END) as approved,
+                    ROUND((SUM(CASE WHEN unified_status IN ("approved", "active") THEN 1 ELSE 0 END) / COUNT(*)) * 100, 2) as approval_rate
                 ')
                 ->groupBy('scholarship_records.course_id', 'courses.name')
                 ->orderBy('total_applications', 'desc')
@@ -656,7 +656,7 @@ class DashboardController extends Controller
             'by_year_level' => ScholarshipRecord::selectRaw('
                 COALESCE(year_level, "Not Specified") as year_level,
                 COUNT(*) as count,
-                ROUND(AVG(CASE WHEN scholarship_status = 1 THEN 1.0 ELSE 0.0 END) * 100, 2) as approval_rate
+                ROUND(AVG(CASE WHEN unified_status IN ("approved", "active") THEN 1.0 ELSE 0.0 END) * 100, 2) as approval_rate
             ')
                 ->groupBy('year_level')
                 ->orderBy('count', 'desc')

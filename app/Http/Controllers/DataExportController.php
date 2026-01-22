@@ -76,12 +76,20 @@ class DataExportController extends Controller
      */
     public function exportToJson(Request $request)
     {
-        $validated = $request->validate([
-            'program_id' => 'nullable|exists:scholarship_programs,id',
-            'school_id' => 'nullable|exists:schools,id',
-            'status' => 'nullable|string',
-            'date_from' => 'nullable|date',
-            'date_to' => 'nullable|date',
+        // Initialize validated array with request parameters
+        $validated = $request->only([
+            'program_id',
+            'program',
+            'school_id',
+            'school',
+            'course',
+            'status',
+            'unified_status',
+            'year_level',
+            'municipality',
+            'grant_provision',
+            'date_from',
+            'date_to'
         ]);
 
         // Get scholarship records (existing scholars)
@@ -97,14 +105,58 @@ class DataExportController extends Controller
             $recordsQuery->where('program_id', $request->program_id);
         }
 
+        // Filter by program name (mapping from report filter)
+        if ($request->filled('program')) {
+            $recordsQuery->whereHas('program', function ($q) use ($request) {
+                $q->where('shortname', 'like', '%' . $request->program . '%')
+                    ->orWhere('name', 'like', '%' . $request->program . '%');
+            });
+        }
+
         if ($request->filled('school_id')) {
             $recordsQuery->where('school_id', $request->school_id);
         }
 
-        if ($request->filled('status')) {
-            $recordsQuery->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->where('unified_status', $request->status);
+        // Filter by school name (mapping from report filter)
+        if ($request->filled('school')) {
+            $recordsQuery->whereHas('school', function ($q) use ($request) {
+                $q->where('shortname', 'like', '%' . $request->school . '%')
+                    ->orWhere('name', 'like', '%' . $request->school . '%');
             });
+        }
+
+        // Filter by course name (mapping from report filter)
+        if ($request->filled('course')) {
+            $recordsQuery->whereHas('course', function ($q) use ($request) {
+                $q->where('shortname', 'like', '%' . $request->course . '%')
+                    ->orWhere('name', 'like', '%' . $request->course . '%');
+            });
+        }
+
+        if ($request->filled('status')) {
+            $recordsQuery->where('unified_status', $request->status);
+        }
+
+        // Filter by unified_status (mapping from report filter)
+        if ($request->filled('unified_status')) {
+            $recordsQuery->where('unified_status', $request->unified_status);
+        }
+
+        // Filter by year_level
+        if ($request->filled('year_level')) {
+            $recordsQuery->where('year_level', $request->year_level);
+        }
+
+        // Filter by municipality
+        if ($request->filled('municipality')) {
+            $recordsQuery->whereHas('profile', function ($q) use ($request) {
+                $q->where('municipality', 'like', '%' . $request->municipality . '%');
+            });
+        }
+
+        // Filter by grant_provision
+        if ($request->filled('grant_provision')) {
+            $recordsQuery->where('grant_provision', $request->grant_provision);
         }
 
         if ($request->filled('date_from')) {
@@ -212,16 +264,19 @@ class DataExportController extends Controller
                 'program_name' => $record->program->shortname ?? $record->program->name ?? null,
                 'school_name' => $record->school->name ?? null,
                 'course_name' => $record->course->name ?? null,
-                'approval_status' => $record->scholarshipGrant ? ($record->scholarshipGrant->unified_status ?? 'unknown') : 'unknown',
+                'approval_status' => $record->unified_status ?? 'unknown',
                 'year_level' => $record->year_level,
                 'term' => $record->term,
+                'grant_provision' => $record->grant_provision ?? '-',
                 'yakap_category' => $record->yakap_category ?? 'yakap-capitol',
                 'yakap_location' => $record->yakap_location,
+                'date_filed' => $record->date_filed,
+                'date_approved' => $record->date_approved,
                 'date_applied' => $record->date_filed,
             ];
 
             // Include queue info for pending applications using pre-calculated values (use profile_id)
-            $unifiedStatus = $record->scholarshipGrant ? ($record->scholarshipGrant->unified_status ?? 'unknown') : 'unknown';
+            $unifiedStatus = $record->unified_status ?? 'unknown';
             if ($unifiedStatus === 'pending' && isset($recordQueueMap[$record->profile_id])) {
                 if (isset($recordQueueMap[$record->profile_id]['overall'])) {
                     $data['queue_number_overall'] = $recordQueueMap[$record->profile_id]['overall'];
@@ -297,9 +352,11 @@ class DataExportController extends Controller
                 'course_name' => $courseName !== 'no_course' ? $courseName : null,
                 'year_level' => $grant?->year_level,
                 'term' => $grant?->term,
+                'grant_provision' => $grant?->grant_provision ?? '-',
                 'yakap_category' => $grant?->yakap_category ?? 'yakap-capitol',
                 'yakap_location' => $grant?->yakap_location,
                 'date_filed' => $profile->date_filed,
+                'date_approved' => $grant?->date_approved,
                 'date_applied' => $grant?->date_filed,
                 'application_status' => $profile->application_status,
                 'jpm_remarks' => $profile->jpm_remarks,

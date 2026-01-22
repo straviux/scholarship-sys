@@ -145,6 +145,26 @@ const barChartOptions = ref({
     }
 });
 
+const monthlyChartOptions = ref({
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: 'x',
+    plugins: {
+        legend: {
+            position: 'top',
+        },
+    },
+    scales: {
+        y: {
+            beginAtZero: true,
+            stacked: false
+        },
+        x: {
+            stacked: false
+        }
+    }
+});
+
 // Computed properties for formatted stats
 const formattedStats = computed(() => {
     return {
@@ -272,12 +292,12 @@ onMounted(() => {
                     </template>
                 </Card>
 
-                <!-- Approved Applications -->
+                <!-- Active Applications -->
                 <Card class="shadow-sm border-l-4 border-green-400">
                     <template #content>
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-gray-600">Approved</p>
+                                <p class="text-sm text-gray-600">Active</p>
                                 <p class="text-xl font-bold text-green-600">{{ recentStats.approvedApplications }}</p>
                             </div>
                             <i class="pi pi-check-circle text-green-600 text-2xl"></i>
@@ -326,7 +346,7 @@ onMounted(() => {
                     </template>
                     <template #content>
                         <div class="h-80">
-                            <Chart type="bar" :data="monthlyStats" :options="chartOptions" class="h-full" />
+                            <Chart type="bar" :data="monthlyStats" :options="monthlyChartOptions" class="h-full" />
                         </div>
                     </template>
                 </Card>

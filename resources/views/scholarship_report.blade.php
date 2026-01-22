@@ -497,7 +497,13 @@
                 @if(empty($filters['unified_status']) && (!isset($groupBy) || $groupBy !== 'unified_status'))
                 <th style="width:85px">Status</th>
                 @endif
-                @if(empty($filters['grant_provision']) && (!isset($groupBy) || $groupBy !== 'grant_provision'))
+                @php
+                $isStatusActive = !empty($filters['unified_status']) && (
+                    (is_array($filters['unified_status']) && in_array('active', $filters['unified_status']) && count($filters['unified_status']) === 1) ||
+                    (!is_array($filters['unified_status']) && $filters['unified_status'] === 'active')
+                );
+                @endphp
+                @if(empty($filters['grant_provision']) && (!isset($groupBy) || $groupBy !== 'grant_provision') && $isStatusActive)
                 <th style="width:85px">Grant Provision</th>
                 @endif
                 <th style="width:70px">
@@ -579,7 +585,7 @@
                     @endif
                 </td>
                 @endif
-                @if(empty($filters['grant_provision']) && (!isset($groupBy) || $groupBy !== 'grant_provision'))
+                @if(empty($filters['grant_provision']) && (!isset($groupBy) || $groupBy !== 'grant_provision') && $isStatusActive)
                 <td style="font-size:11px;">{{ $grantProvision !== '-' ? ucwords(str_replace('_', ' ', $grantProvision)) : '-' }}</td>
                 @endif
                 <td style="font-size:11px;">

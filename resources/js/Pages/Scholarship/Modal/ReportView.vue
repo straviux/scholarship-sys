@@ -81,21 +81,24 @@
                                 <tr class="bg-gray-50 border-b border-gray-200">
                                     <th class="px-4 py-3 text-left font-medium text-gray-700">#</th>
                                     <th class="px-4 py-3 text-left font-medium text-gray-700">Name</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-700">Contact No(s).</th>
                                     <th v-if="!params.municipality"
-                                        class="px-4 py-3 text-left font-medium text-gray-700">Address</th>
+                                        class="px-4 py-3 text-left font-medium text-gray-700">Municipality</th>
                                     <th v-if="!params.program" class="px-4 py-3 text-left font-medium text-gray-700">
                                         Program</th>
                                     <th v-if="!params.school" class="px-4 py-3 text-left font-medium text-gray-700">
                                         School</th>
-                                    <th v-if="!params.courses" class="px-4 py-3 text-left font-medium text-gray-700">
+                                    <th v-if="!params.course && !params.courses"
+                                        class="px-4 py-3 text-left font-medium text-gray-700">
                                         Course</th>
                                     <th v-if="!params.year_level" class="px-4 py-3 text-left font-medium text-gray-700">
-                                        Year</th>
+                                        Level</th>
                                     <th v-if="!params.unified_status"
                                         class="px-4 py-3 text-left font-medium text-gray-700">Status</th>
-                                    <th v-if="!params.grant_provision"
-                                        class="px-4 py-3 text-left font-medium text-gray-700">Grant</th>
-                                    <th class="px-4 py-3 text-left font-medium text-gray-700">Date Filed</th>
+                                    <th v-if="!params.grant_provision && isStatusActive"
+                                        class="px-4 py-3 text-left font-medium text-gray-700">Grant Provision</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-700">{{ isShowingApproved ?
+                                        'Date Approved' : 'Date Filed' }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -107,29 +110,32 @@
                                     <td class="px-4 py-3 text-gray-900">
                                         {{ formatName(item) }}
                                     </td>
+                                    <td class="px-4 py-3 text-gray-600">
+                                        {{ item.contact_no || '-' }}
+                                    </td>
                                     <td v-if="!params.municipality" class="px-4 py-3 text-gray-600">
-                                        {{ formatAddress(item) }}
+                                        {{ item.municipality || '-' }}
                                     </td>
                                     <td v-if="!params.program" class="px-4 py-3 text-gray-600">
-                                        {{ item.scholarship_grant?.[0]?.program?.shortname || '-' }}
+                                        {{ item.program_name || '-' }}
                                     </td>
                                     <td v-if="!params.school" class="px-4 py-3 text-gray-600">
-                                        {{ item.scholarship_grant?.[0]?.school?.shortname || '-' }}
+                                        {{ item.school_name || '-' }}
                                     </td>
-                                    <td v-if="!params.courses" class="px-4 py-3 text-gray-600">
-                                        {{ item.scholarship_grant?.[0]?.course?.shortname || '-' }}
+                                    <td v-if="!params.course && !params.courses" class="px-4 py-3 text-gray-600">
+                                        {{ item.course_name || '-' }}
                                     </td>
                                     <td v-if="!params.year_level" class="px-4 py-3 text-gray-600">
-                                        {{ item.scholarship_grant?.[0]?.year_level || '-' }}
+                                        {{ item.year_level || '-' }}
                                     </td>
                                     <td v-if="!params.unified_status" class="px-4 py-3">
                                         <Tag :value="formatApprovalStatus(item)" :severity="getStatusSeverity(item)" />
                                     </td>
-                                    <td v-if="!params.grant_provision" class="px-4 py-3 text-gray-600">
+                                    <td v-if="!params.grant_provision && isStatusActive" class="px-4 py-3 text-gray-600">
                                         {{ formatGrantProvision(item) }}
                                     </td>
                                     <td class="px-4 py-3 text-gray-600">
-                                        {{ formatDate(item.scholarship_grant?.[0]?.date_filed) }}
+                                        {{ formatDate(isShowingApproved ? item.date_approved : item.date_filed) }}
                                     </td>
                                 </tr>
                             </tbody>
@@ -223,6 +229,22 @@ const activeFilters = computed(() => {
     return filters;
 });
 
+// Determine if showing approved/active status (for Date Approved column header)
+const isShowingApproved = computed(() => {
+    if (!props.params.unified_status) return false;
+    const status = props.params.unified_status;
+    const statusArray = Array.isArray(status) ? status : [status];
+    return statusArray.includes('approved') || statusArray.includes('active');
+});
+
+// Check if status filter is specifically "active"
+const isStatusActive = computed(() => {
+    if (!props.params.unified_status) return false;
+    const status = props.params.unified_status;
+    const statusArray = Array.isArray(status) ? status : [status];
+    return statusArray.includes('active') && statusArray.length === 1;
+});
+
 // Methods
 function goBack() {
     emit('close');
@@ -235,23 +257,78 @@ function regenerate() {
 async function loadData() {
     loading.value = true;
     try {
-        // Build query parameters for scholarship profiles
-        const queryParams = {
-            ...props.params,
-            // Add scholarship-specific filters
-            profile_type: 'approved', // Only approved scholars
-        };
+        // Map filter parameters to API endpoint format
+        const queryParams = {};
 
-        const response = await axios.get(route('scholarship.profiles'), {
+        // Map unified_status to status
+        if (props.params.unified_status) {
+            queryParams.status = props.params.unified_status;
+        }
+
+        // Map program name to program_id if available
+        if (props.params.program) {
+            // Try to find program by name
+            queryParams.program = props.params.program;
+        }
+
+        // Map school name to school_id if available
+        if (props.params.school) {
+            queryParams.school = props.params.school;
+        }
+
+        // Map course
+        if (props.params.courses) {
+            queryParams.course = props.params.courses;
+        }
+
+        // Map other filters
+        if (props.params.date_from) {
+            queryParams.date_from = props.params.date_from;
+        }
+
+        if (props.params.date_to) {
+            queryParams.date_to = props.params.date_to;
+        }
+
+        if (props.params.year_level) {
+            queryParams.year_level = props.params.year_level;
+        }
+
+        if (props.params.municipality) {
+            queryParams.municipality = props.params.municipality;
+        }
+
+        if (props.params.grant_provision) {
+            queryParams.grant_provision = props.params.grant_provision;
+        }
+
+        console.log('Loading report with params:', queryParams);
+
+        const response = await axios.get(route('data-export.download'), {
             params: queryParams
         });
 
-        // Handle response based on your backend structure
-        if (response.data.profiles) {
-            records.value = Array.isArray(response.data.profiles) ? response.data.profiles : response.data.profiles.data || [];
-        } else {
-            records.value = [];
+        console.log('Report response:', response.data);
+
+        // Extract records from response - backend returns { scholars, applicants, metadata }
+        let data = [];
+        if (response.data && Array.isArray(response.data)) {
+            // Direct array response
+            data = response.data;
+        } else if (response.data.scholars && Array.isArray(response.data.scholars)) {
+            // Backend returns { scholars, applicants, metadata }
+            data = response.data.scholars;
+        } else if (response.data.applicants && Array.isArray(response.data.applicants)) {
+            // Use applicants if scholars not available
+            data = response.data.applicants;
+        } else if (response.data.data && Array.isArray(response.data.data)) {
+            data = response.data.data;
+        } else if (response.data.profiles && Array.isArray(response.data.profiles)) {
+            data = response.data.profiles;
         }
+
+        console.log('Extracted data:', data);
+        records.value = data || [];
 
         // Calculate summary if needed
         if (reportType.value === 'summary') {
@@ -266,9 +343,8 @@ async function loadData() {
 }
 
 function calculateSummary() {
-    const uniquePrograms = new Set(records.value.map(r => r.scholarship_grant?.[0]?.program?.id).filter(Boolean));
-    const uniqueSchools = new Set(records.value.map(r => r.scholarship_grant?.[0]?.school?.id).filter(Boolean));
-
+    const uniquePrograms = new Set(records.value.map(r => r.program_name).filter(Boolean));
+    const uniqueSchools = new Set(records.value.map(r => r.school_name).filter(Boolean));
     summaryData.value = {
         programs: uniquePrograms.size,
         schools: uniqueSchools.size
@@ -293,7 +369,7 @@ function saveAsExcel() {
 
 function formatName(item) {
     const parts = [item.last_name, item.first_name, item.middle_name].filter(Boolean);
-    return parts.join(', ').toUpperCase();
+    return parts.join(', ').toUpperCase() || (item.full_name ? item.full_name.toUpperCase() : '-');
 }
 
 function formatAddress(item) {
@@ -308,7 +384,7 @@ function formatDate(date) {
 }
 
 function formatApprovalStatus(item) {
-    const status = item.scholarship_grant?.[0]?.unified_status;
+    const status = item.approval_status;
     return formatUnifiedStatusText(status);
 }
 
@@ -325,7 +401,7 @@ function formatUnifiedStatusText(status) {
 }
 
 function getStatusSeverity(item) {
-    const status = item.scholarship_grant?.[0]?.unified_status;
+    const status = item.approval_status;
     const severityMap = {
         'pending': 'warning',
         'approved': 'info',
@@ -338,7 +414,7 @@ function getStatusSeverity(item) {
 }
 
 function formatGrantProvision(item) {
-    const provision = item.scholarship_grant?.[0]?.grant_provision;
+    const provision = item.grant_provision;
     return formatGrantProvisionText(provision);
 }
 
