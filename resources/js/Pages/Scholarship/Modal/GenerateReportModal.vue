@@ -120,7 +120,8 @@
                     </div>
 
                     <!-- JPM Highlighting Toggle -->
-                    <div class="mb-4 py-3 px-3 bg-gray-50 rounded border border-gray-200">
+                    <div v-if="canEnableJpmHighlighting"
+                        class="mb-4 py-3 px-3 bg-gray-50 rounded border border-gray-200">
                         <div class="flex items-center justify-between mb-2">
                             <label class="text-sm font-medium text-gray-700">Enable JPM Highlighting</label>
                             <ToggleSwitch v-model="enableJpmHighlighting" />
@@ -129,7 +130,7 @@
                     </div>
 
                     <!-- JPM Filter -->
-                    <div class="mb-4 px-2">
+                    <div v-if="canEnableJpmHighlighting" class="mb-4 px-2">
                         <label class="block mb-2 text-sm font-medium text-gray-700">JPM Filter</label>
                         <div class="flex flex-col gap-2">
                             <div class="flex items-center">
@@ -176,6 +177,7 @@
 <script setup>
 import { ref, computed, shallowRef, markRaw, watch } from 'vue';
 import { defineAsyncComponent } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import moment from 'moment';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 
@@ -200,6 +202,18 @@ const props = defineProps({
 
 const emit = defineEmits(['update:show']);
 
+// Get current user from Inertia
+const page = usePage();
+const currentUser = computed(() => page.props.auth.user);
+
+// Check if user has permission to enable JPM Highlighting
+const canEnableJpmHighlighting = computed(() => {
+    if (!currentUser.value) return false;
+    const userRoles = currentUser.value.roles || [];
+    const allowedRoles = ['administrator', 'jpm_moderator', 'program_manager'];
+    return userRoles.some(role => allowedRoles.includes(role.name || role));
+});
+
 // State Management
 const showReportModal = ref(false);
 const lastParams = ref({});
@@ -220,7 +234,7 @@ const selectedGrantProvision = ref(null);
 const reportType = ref('list');
 const groupBy = ref('none');
 const showSequenceNumbers = ref(true);
-const enableJpmHighlighting = ref(true);
+const enableJpmHighlighting = ref(false);
 const jpmFilter = ref('all');
 
 // Status composable
@@ -299,7 +313,7 @@ function clearAllFilters() {
     selectedGrantProvision.value = null;
     groupBy.value = 'none';
     showSequenceNumbers.value = true;
-    enableJpmHighlighting.value = true;
+    enableJpmHighlighting.value = false;
     jpmFilter.value = 'all';
 }
 
