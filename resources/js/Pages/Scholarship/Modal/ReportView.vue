@@ -131,7 +131,8 @@
                                     <td v-if="!params.unified_status" class="px-4 py-3">
                                         <Tag :value="formatApprovalStatus(item)" :severity="getStatusSeverity(item)" />
                                     </td>
-                                    <td v-if="!params.grant_provision && isStatusActive" class="px-4 py-3 text-gray-600">
+                                    <td v-if="!params.grant_provision && isStatusActive"
+                                        class="px-4 py-3 text-gray-600">
                                         {{ formatGrantProvision(item) }}
                                     </td>
                                     <td class="px-4 py-3 text-gray-600">

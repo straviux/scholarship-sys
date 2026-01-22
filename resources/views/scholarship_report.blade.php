@@ -499,8 +499,8 @@
                 @endif
                 @php
                 $isStatusActive = !empty($filters['unified_status']) && (
-                    (is_array($filters['unified_status']) && in_array('active', $filters['unified_status']) && count($filters['unified_status']) === 1) ||
-                    (!is_array($filters['unified_status']) && $filters['unified_status'] === 'active')
+                (is_array($filters['unified_status']) && in_array('active', $filters['unified_status']) && count($filters['unified_status']) === 1) ||
+                (!is_array($filters['unified_status']) && $filters['unified_status'] === 'active')
                 );
                 @endphp
                 @if(empty($filters['grant_provision']) && (!isset($groupBy) || $groupBy !== 'grant_provision') && $isStatusActive)
