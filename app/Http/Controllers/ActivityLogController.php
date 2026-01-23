@@ -51,13 +51,18 @@ class ActivityLogController extends Controller
     public function statusTimeline(Request $request, $profileId)
     {
         $timeline = ActivityLog::where('profile_id', $profileId)
-            ->where('activity_type', 'status_change')
+            ->where('activity_type', 'status_changed')
             ->with(['user' => function ($q) {
                 $q->select('id', 'name', 'username');
             }])
             ->orderBy('performed_at', 'asc')
             ->get()
             ->map(function ($log) {
+                $details = is_array($log->details) ? $log->details : json_decode($log->details, true);
+                if (is_array($details) && isset($details['activity_type'])) {
+                    $details['activity_type'] = 'Status Change';
+                }
+
                 return [
                     'id' => $log->id,
                     'status' => $log->action,
@@ -70,8 +75,9 @@ class ActivityLogController extends Controller
                     ] : null,
                     'remarks' => $log->remarks,
                     'description' => $log->description,
+                    'activity_type' => 'Status Changed',
                     'performed_at' => $log->performed_at,
-                    'details' => $log->details
+                    'details' => $details
                 ];
             });
 

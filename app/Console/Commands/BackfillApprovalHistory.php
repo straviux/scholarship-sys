@@ -20,7 +20,7 @@ class BackfillApprovalHistory extends Command
 
         try {
             $count = 0;
-            $records = ScholarshipRecord::with('profile')->get();
+            $records = ScholarshipRecord::with('profile', 'program')->get();
 
             $this->withProgressBar($records, function ($record) use (&$count) {
                 $profileId = $record->profile_id;
@@ -31,7 +31,7 @@ class BackfillApprovalHistory extends Command
 
                 // Check if this record already has a status log
                 $exists = ActivityLog::where('profile_id', $profileId)
-                    ->where('activity_type', 'status_change')
+                    ->where('activity_type', 'status_changed')
                     ->where('details->record_id', $record->id)
                     ->exists();
 
@@ -49,14 +49,14 @@ class BackfillApprovalHistory extends Command
                     ActivityLog::create([
                         'profile_id' => $profileId,
                         'user_id' => $userId,
-                        'activity_type' => 'status_change',
+                        'activity_type' => 'status_changed',
                         'action' => $record->unified_status,
                         'description' => $description,
                         'new_value' => $record->unified_status,
                         'remarks' => $remarks,
                         'details' => [
                             'record_id' => $record->id,
-                            'program_name' => $record->program?->program_name ?? 'Unknown',
+                            'program_name' => $record->program?->name ?? 'Unknown Program',
                             'academic_year' => $record->academic_year
                         ],
                         'performed_at' => $performedAt,

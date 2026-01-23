@@ -194,10 +194,15 @@ class ActivityLogService
     }
 
     /**
-     * Log application status change
+     * Log application status change - only logs if status actually changed
      */
     public static function logStatusChange($profileId, $oldStatus, $newStatus, $remarks = null)
     {
+        // Only log if status actually changed
+        if ($oldStatus === $newStatus) {
+            return false; // Status didn't change, don't log
+        }
+
         // Autogenerate remarks if not provided
         if (!$remarks) {
             $remarks = "Status changed from {$oldStatus} to {$newStatus}";
@@ -206,13 +211,15 @@ class ActivityLogService
         ActivityLog::logActivity(
             profileId: $profileId,
             userId: Auth::id(),
-            activityType: 'status_change',
+            activityType: 'status_changed',
             action: $newStatus,
             description: "Changed application status from {$oldStatus} to {$newStatus}",
             oldValue: $oldStatus,
             newValue: $newStatus,
             remarks: $remarks
         );
+
+        return true; // Status changed and was logged
     }
 
     /**
