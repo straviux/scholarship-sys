@@ -76,9 +76,12 @@ class BackfillActivityLogs extends Command
                 ->first();
 
             if (!$exists) {
+                // Use created_by if available, otherwise fall back to system user
+                $userId = $profile->created_by ?? $this->systemUserId;
+                
                 ActivityLog::logActivity(
                     profileId: $profile->profile_id,
-                    userId: $this->systemUserId,
+                    userId: $userId,
                     activityType: 'profile_created',
                     action: 'Profile Created',
                     description: "Profile created for {$profile->first_name} {$profile->last_name}",
@@ -114,9 +117,12 @@ class BackfillActivityLogs extends Command
                 ->first();
 
             if (!$exists) {
+                // Use updated_by if available, otherwise fall back to system user
+                $userId = $profile->updated_by ?? $this->systemUserId;
+                
                 ActivityLog::logActivity(
                     profileId: $profile->profile_id,
-                    userId: $this->systemUserId,
+                    userId: $userId,
                     activityType: 'profile_updated',
                     action: 'Profile Updated',
                     description: "Profile information was updated",
@@ -152,9 +158,12 @@ class BackfillActivityLogs extends Command
                 ->first();
 
             if (!$exists) {
+                // Use created_by if available, otherwise fall back to system user
+                $userId = $record->created_by ?? $this->systemUserId;
+                
                 ActivityLog::logActivity(
                     profileId: $record->profile_id,
-                    userId: $this->systemUserId,
+                    userId: $userId,
                     activityType: 'record_created',
                     action: 'Scholarship Record Created',
                     description: "Scholarship record created: {$record->program?->name} - {$record->academic_year}",
@@ -192,9 +201,12 @@ class BackfillActivityLogs extends Command
                 ->first();
 
             if (!$exists) {
+                // Use updated_by if available, otherwise fall back to system user
+                $userId = $record->updated_by ?? $this->systemUserId;
+                
                 ActivityLog::logActivity(
                     profileId: $record->profile_id,
-                    userId: $this->systemUserId,
+                    userId: $userId,
                     activityType: 'record_updated',
                     action: 'Scholarship Record Updated',
                     description: "Scholarship record updated: {$record->program?->name}",
@@ -220,10 +232,10 @@ class BackfillActivityLogs extends Command
     {
         $this->info('📎 Backfilling attachment uploads...');
 
-        // Get attachments from the database
+        // Get attachments from the database with related record and profile info
         $attachments = DB::table('scholarship_record_attachments')
             ->join('scholarship_records', 'scholarship_record_attachments.scholarship_record_id', '=', 'scholarship_records.id')
-            ->select('scholarship_record_attachments.*', 'scholarship_records.profile_id')
+            ->select('scholarship_record_attachments.*', 'scholarship_records.profile_id', 'scholarship_records.created_by')
             ->get();
 
         $count = 0;
@@ -235,9 +247,12 @@ class BackfillActivityLogs extends Command
                 ->first();
 
             if (!$exists) {
+                // Use the scholarship record's created_by if available, otherwise system user
+                $userId = $attachment->created_by ?? $this->systemUserId;
+                
                 ActivityLog::logActivity(
                     profileId: $attachment->profile_id,
-                    userId: $this->systemUserId,
+                    userId: $userId,
                     activityType: 'attachment_uploaded',
                     action: 'Attachment Uploaded',
                     description: "Attachment uploaded: {$attachment->attachment_name}",
