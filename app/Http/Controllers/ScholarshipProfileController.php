@@ -15,11 +15,11 @@ use App\Models\School;
 use App\Services\ScholarshipApprovalService;
 use App\Services\ScholarshipCompletionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class ScholarshipProfileController extends Controller
 {
@@ -105,7 +105,7 @@ class ScholarshipProfileController extends Controller
         $profile = ScholarshipProfile::findOrFail($id);
 
         // Debug: Log incoming request data
-        \Log::info('Update Applicant Request Data:', [
+        Log::info('Update Applicant Request Data:', [
             'father_name' => $request->father_name,
             'mother_name' => $request->mother_name,
             'guardian_name' => $request->guardian_name,
@@ -185,13 +185,13 @@ class ScholarshipProfileController extends Controller
         }
 
         $validated = $request->validated();
-        \Log::info('Validated data to update:', $validated);
+        Log::info('Validated data to update:', $validated);
 
         $profile->update($validated);
 
         // Refresh from database to check what was actually saved
         $profile->refresh();
-        \Log::info('Profile after update:', [
+        Log::info('Profile after update:', [
             'father_name' => $profile->father_name,
             'mother_name' => $profile->mother_name,
             'guardian_name' => $profile->guardian_name,

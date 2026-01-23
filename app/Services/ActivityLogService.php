@@ -25,6 +25,14 @@ class ActivityLogService
             }
         }
 
+        // Autogenerate remarks if not provided
+        if (!$remarks && !empty($changedFields)) {
+            $remarks = "Modified " . count($changedFields) . " field(s): " . implode(", ", array_slice($changedFields, 0, 3));
+            if (count($changedFields) > 3) {
+                $remarks .= " and " . (count($changedFields) - 3) . " more";
+            }
+        }
+
         ActivityLog::logActivity(
             profileId: $profileId,
             userId: Auth::id(),
@@ -41,6 +49,14 @@ class ActivityLogService
      */
     public static function logRecordCreated($profileId, $recordData = [], $remarks = null)
     {
+        // Autogenerate remarks if not provided
+        if (!$remarks) {
+            $program = $recordData['program_name'] ?? 'Unknown Program';
+            $year = $recordData['academic_year'] ?? 'N/A';
+            $term = $recordData['term'] ?? 'N/A';
+            $remarks = "Created scholarship record for {$program} ({$year}, {$term})";
+        }
+
         ActivityLog::logActivity(
             profileId: $profileId,
             userId: Auth::id(),
@@ -76,6 +92,14 @@ class ActivityLogService
         }
 
         if (count($changes) > 0) {
+            // Autogenerate remarks if not provided
+            if (!$remarks) {
+                $remarks = "Updated " . count($changes) . " field(s): " . implode(", ", array_slice($changes, 0, 3));
+                if (count($changes) > 3) {
+                    $remarks .= " and " . (count($changes) - 3) . " more";
+                }
+            }
+
             ActivityLog::logActivity(
                 profileId: $profileId,
                 userId: Auth::id(),
@@ -93,6 +117,13 @@ class ActivityLogService
      */
     public static function logRecordDeleted($profileId, $recordData = [], $remarks = null)
     {
+        // Autogenerate remarks if not provided
+        if (!$remarks) {
+            $program = $recordData['program_name'] ?? 'Unknown Program';
+            $year = $recordData['academic_year'] ?? 'N/A';
+            $remarks = "Deleted scholarship record for {$program} ({$year})";
+        }
+
         ActivityLog::logActivity(
             profileId: $profileId,
             userId: Auth::id(),
@@ -113,6 +144,14 @@ class ActivityLogService
      */
     public static function logAttachmentUploaded($profileId, $attachmentName = null, $fileName = null, $remarks = null)
     {
+        // Autogenerate remarks if not provided
+        if (!$remarks) {
+            $remarks = "Uploaded {$attachmentName}";
+            if ($fileName) {
+                $remarks .= " ({$fileName})";
+            }
+        }
+
         ActivityLog::logActivity(
             profileId: $profileId,
             userId: Auth::id(),
@@ -132,6 +171,14 @@ class ActivityLogService
      */
     public static function logAttachmentDeleted($profileId, $attachmentName = null, $fileName = null, $remarks = null)
     {
+        // Autogenerate remarks if not provided
+        if (!$remarks) {
+            $remarks = "Deleted {$attachmentName}";
+            if ($fileName) {
+                $remarks .= " ({$fileName})";
+            }
+        }
+
         ActivityLog::logActivity(
             profileId: $profileId,
             userId: Auth::id(),
@@ -151,6 +198,11 @@ class ActivityLogService
      */
     public static function logStatusChange($profileId, $oldStatus, $newStatus, $remarks = null)
     {
+        // Autogenerate remarks if not provided
+        if (!$remarks) {
+            $remarks = "Status changed from {$oldStatus} to {$newStatus}";
+        }
+
         ActivityLog::logActivity(
             profileId: $profileId,
             userId: Auth::id(),
@@ -168,6 +220,11 @@ class ActivityLogService
      */
     public static function logPriorityAssigned($profileId, $priorityLevel = null, $remarks = null)
     {
+        // Autogenerate remarks if not provided
+        if (!$remarks) {
+            $remarks = "Assigned priority level: {$priorityLevel}";
+        }
+
         ActivityLog::logActivity(
             profileId: $profileId,
             userId: Auth::id(),
@@ -184,6 +241,11 @@ class ActivityLogService
      */
     public static function logPriorityRemoved($profileId, $remarks = null)
     {
+        // Autogenerate remarks if not provided
+        if (!$remarks) {
+            $remarks = "Removed priority level";
+        }
+
         ActivityLog::logActivity(
             profileId: $profileId,
             userId: Auth::id(),
@@ -199,6 +261,14 @@ class ActivityLogService
      */
     public static function logYakapCategoryUpdated($profileId, $oldCategory, $newCategory, $location = null, $remarks = null)
     {
+        // Autogenerate remarks if not provided
+        if (!$remarks) {
+            $remarks = "YAKAP category changed from {$oldCategory} to {$newCategory}";
+            if ($location) {
+                $remarks .= " for {$location}";
+            }
+        }
+
         ActivityLog::logActivity(
             profileId: $profileId,
             userId: Auth::id(),
@@ -217,6 +287,19 @@ class ActivityLogService
      */
     public static function logJpmTagging($profileId, $changes = [], $remarks = null)
     {
+        // Autogenerate remarks if not provided
+        if (!$remarks) {
+            if (count($changes) > 0) {
+                $changedFields = array_keys($changes);
+                $remarks = "Updated JPM tagging: " . implode(", ", array_slice($changedFields, 0, 3));
+                if (count($changedFields) > 3) {
+                    $remarks .= " and " . (count($changedFields) - 3) . " more";
+                }
+            } else {
+                $remarks = "Updated JPM tagging information";
+            }
+        }
+
         ActivityLog::logActivity(
             profileId: $profileId,
             userId: Auth::id(),

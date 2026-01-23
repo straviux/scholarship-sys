@@ -289,6 +289,10 @@ Route::middleware(['auth'])->group(function () {
     // Activity Logs routes
     Route::get('/activity-logs/{profileId}', [App\Http\Controllers\ActivityLogController::class, 'profileActivities'])
         ->name('activity-logs.profile');
+    Route::get('/activity-logs/{profileId}/approval-history', [App\Http\Controllers\ActivityLogController::class, 'approvalHistory'])
+        ->name('activity-logs.approval-history');
+    Route::get('/activity-logs/{profileId}/status-timeline', [App\Http\Controllers\ActivityLogController::class, 'statusTimeline'])
+        ->name('activity-logs.status-timeline');
 });
 Route::middleware(['auth'])->controller(ScholarshipProgramController::class)->group(function () {
     Route::get('/scholarshipprograms/get-active-list', 'getActiveProgramsApi')->name('scholarshipprograms.getactivelist');

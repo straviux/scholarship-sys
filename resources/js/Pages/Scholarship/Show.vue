@@ -399,93 +399,77 @@
                         <!-- Approval History Tab -->
                         <TabPanel value="5">
                             <div class="p-6">
-                                <div v-if="profile.scholarshipGrant && profile.scholarshipGrant.length > 0"
-                                    class="space-y-6">
-                                    <div v-for="(record, recordIndex) in profile.scholarshipGrant" :key="record.id"
-                                        class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                                        <!-- Record Header -->
-                                        <div class="flex items-center justify-between mb-4">
-                                            <div>
-                                                <h4 class="font-semibold text-gray-900">{{ record.program?.name ||
-                                                    'Unknown Program' }}</h4>
-                                                <p class="text-sm text-gray-600">{{ record.academic_year }} - {{
-                                                    record.term }}</p>
+                                <!-- Status Timeline -->
+                                <div v-if="statusTimeline && statusTimeline.length > 0" class="space-y-4">
+                                    <div class="mb-4">
+                                        <h3 class="text-lg font-semibold text-gray-900">Status Change Timeline</h3>
+                                        <p class="text-sm text-gray-600">Complete history of all status updates</p>
+                                    </div>
+
+                                    <div v-for="(timeline, timelineIndex) in statusTimeline" :key="timeline.id"
+                                        class="flex gap-4">
+                                        <!-- Timeline Dot and Line -->
+                                        <div class="flex flex-col items-center">
+                                            <div
+                                                class="w-10 h-10 rounded-full bg-white border-2 flex items-center justify-center border-blue-400 bg-blue-50">
+                                                <i class="pi pi-check text-xs text-blue-600"></i>
                                             </div>
-                                            <Chip :label="getStatusLabel(record.unified_status)"
-                                                :severity="getStatusSeverity(record.unified_status)" />
+                                            <div v-if="timelineIndex < (statusTimeline.length - 1)"
+                                                class="w-0.5 h-12 bg-gray-300 mt-2"></div>
                                         </div>
 
-                                        <!-- Timeline -->
-                                        <div v-if="record.approvalHistory && record.approvalHistory.length > 0"
-                                            class="space-y-4">
-                                            <div v-for="(history, historyIndex) in sortedApprovalHistory(record.approvalHistory)"
-                                                :key="history.id" class="flex gap-4">
-                                                <!-- Timeline Dot and Line -->
-                                                <div class="flex flex-col items-center">
-                                                    <div class="w-10 h-10 rounded-full bg-white border-2 flex items-center justify-center"
-                                                        :class="getHistoryStatusClass(history.action)">
-                                                        <i :class="getHistoryIcon(history.action)" class="text-xs"></i>
+                                        <!-- Timeline Content -->
+                                        <div class="flex-1 pb-4">
+                                            <div class="bg-white p-4 rounded border border-gray-200">
+                                                <div class="flex items-start justify-between mb-2">
+                                                    <div>
+                                                        <h5 class="font-semibold text-gray-900">
+                                                            Status: <span class="text-blue-600">{{ timeline.new_status
+                                                            }}</span>
+                                                        </h5>
+                                                        <p class="text-sm text-gray-600">{{
+                                                            formatDateTime(timeline.performed_at) }}</p>
                                                     </div>
-                                                    <div v-if="historyIndex < (record.approvalHistory.length - 1)"
-                                                        class="w-0.5 h-12 bg-gray-300 mt-2"></div>
                                                 </div>
 
-                                                <!-- Timeline Content -->
-                                                <div class="flex-1 pb-4">
-                                                    <div class="bg-white p-4 rounded border border-gray-200">
-                                                        <div class="flex items-start justify-between mb-2">
-                                                            <div>
-                                                                <h5 class="font-semibold text-gray-900">{{
-                                                                    getHistoryActionLabel(history.action)
-                                                                }}</h5>
-                                                                <p class="text-sm text-gray-600">{{
-                                                                    formatDateTime(history.performed_at) }}</p>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="grid grid-cols-2 gap-4 mb-3">
-                                                            <div>
-                                                                <p class="text-xs text-gray-600">Previous Status</p>
-                                                                <p class="text-sm font-medium text-gray-900">{{
-                                                                    history.previous_status || 'N/A'
-                                                                }}</p>
-                                                            </div>
-                                                            <div>
-                                                                <p class="text-xs text-gray-600">New Status</p>
-                                                                <p class="text-sm font-medium text-gray-900">{{
-                                                                    history.new_status || 'N/A' }}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="mb-3">
-                                                            <p class="text-xs text-gray-600">Performed By</p>
-                                                            <p class="text-sm font-medium text-gray-900">{{
-                                                                history.performedBy?.name ||
-                                                                'System' }}</p>
-                                                        </div>
-
-                                                        <div v-if="history.remarks"
-                                                            class="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
-                                                            <p class="text-xs text-blue-700 font-semibold mb-1">Remarks:
-                                                            </p>
-                                                            <p class="text-sm text-blue-900">{{ history.remarks }}</p>
-                                                        </div>
+                                                <div class="grid grid-cols-2 gap-4 mb-3">
+                                                    <div>
+                                                        <p class="text-xs text-gray-600">Previous Status</p>
+                                                        <p class="text-sm font-medium text-gray-900">{{
+                                                            timeline.old_status || 'N/A'
+                                                        }}</p>
                                                     </div>
+                                                    <div>
+                                                        <p class="text-xs text-gray-600">New Status</p>
+                                                        <p class="text-sm font-medium text-gray-900">{{
+                                                            timeline.new_status || 'N/A'
+                                                        }}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <p class="text-xs text-gray-600">Changed By</p>
+                                                    <p class="text-sm font-medium text-gray-900">{{
+                                                        timeline.changed_by?.name || 'System'
+                                                    }}</p>
+                                                </div>
+
+                                                <div v-if="timeline.remarks"
+                                                    class="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                                                    <p class="text-xs text-blue-700 font-semibold mb-1">Remarks:
+                                                    </p>
+                                                    <p class="text-sm text-blue-900">{{ timeline.remarks }}</p>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div v-else class="text-center py-6 text-gray-500">
-                                            <i class="pi pi-inbox text-2xl mb-2"></i>
-                                            <p class="text-sm">No approval history available</p>
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Empty state for status timeline -->
                                 <div v-else class="text-center py-12 text-gray-500">
                                     <i class="pi pi-inbox text-4xl mb-4" style="opacity: 0.5"></i>
-                                    <p class="text-lg">No Scholarship Records</p>
-                                    <p class="text-sm text-gray-400 mt-2">This profile has no scholarship application
-                                        records yet</p>
+                                    <p class="text-lg">No Status History</p>
+                                    <p class="text-sm text-gray-400 mt-2">No status changes have been recorded yet</p>
                                 </div>
                             </div>
                         </TabPanel>
@@ -871,7 +855,7 @@
 
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed, watch, onUnmounted, nextTick } from 'vue';
+import { ref, computed, watch, onUnmounted, nextTick, onMounted } from 'vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
@@ -928,6 +912,7 @@ const selectedRecord = ref(null);
 const viewerAttachment = ref(null);
 const uploading = ref(false);
 const activityLogs = ref([]);
+const statusTimeline = ref([]);
 const recordForm = ref({
     grant_id: null,
     program_id: null,
@@ -982,7 +967,22 @@ const dragStart = ref({ x: 0, y: 0 });
 
 // Watch for tab changes and persist to localStorage
 watch(activeTab, (newValue) => {
+    console.log('Tab changed to:', newValue);
     localStorage.setItem('scholarProfileActiveTab', newValue);
+    // Load status timeline when tab 5 (Approval History) is selected
+    if (newValue === '5') {
+        console.log('Approval History tab selected, loading timeline...');
+        loadStatusTimeline();
+    }
+});
+
+// Load status timeline if Approval History tab is already open on mount
+onMounted(() => {
+    console.log('Component mounted, activeTab:', activeTab.value);
+    if (activeTab.value === '5') {
+        console.log('Tab 5 is already active, loading timeline on mount...');
+        loadStatusTimeline();
+    }
 });
 
 // Reset zoom when modal opens/closes
@@ -1732,5 +1732,19 @@ const fetchActivityLogs = async () => {
 
 // Fetch activity logs when component mounts
 fetchActivityLogs();
+
+// Load status timeline data from API
+const loadStatusTimeline = async () => {
+    try {
+        console.log('Loading status timeline for profile_id:', props.profile.profile_id);
+        const response = await axios.get(`/activity-logs/${props.profile.profile_id}/status-timeline`);
+        console.log('Status timeline response:', response.data);
+        statusTimeline.value = response.data.data || response.data || [];
+        console.log('Status timeline loaded:', statusTimeline.value.length, 'items');
+    } catch (error) {
+        console.error('Error loading status timeline:', error);
+        statusTimeline.value = [];
+    }
+};
 
 </script>
