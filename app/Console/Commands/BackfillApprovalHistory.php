@@ -36,21 +36,15 @@ class BackfillApprovalHistory extends Command
                     ->exists();
 
                 if (!$exists) {
-                    // Use the user who created the record, or who last updated it
-                    $userId = $record->created_by ?? $record->updated_by;
+                    // Use the user who created the record
+                    $userId = $record->created_by;
 
-                    // Check if this is the initial status (created_at = updated_at means no changes)
-                    // or if it was updated later (created_at < updated_at)
-                    $isInitial = $record->created_at->eq($record->updated_at);
+                    // All records marked as initially encoded
+                    $remarks = "Record initially encoded as {$record->unified_status}";
+                    $description = "Record initially encoded as {$record->unified_status}";
 
-                    // Autogenerate remarks indicating if it's initial or updated
-                    if ($isInitial) {
-                        $remarks = "Record initially encoded as {$record->unified_status}";
-                        $description = "Record initially encoded as {$record->unified_status}";
-                    } else {
-                        $remarks = "Status changed to {$record->unified_status}";
-                        $description = "Changed application status to {$record->unified_status}";
-                    }
+                    // Always use created_at timestamp
+                    $performedAt = $record->created_at;
 
                     ActivityLog::create([
                         'profile_id' => $profileId,
@@ -65,7 +59,7 @@ class BackfillApprovalHistory extends Command
                             'program_name' => $record->program?->program_name ?? 'Unknown',
                             'academic_year' => $record->academic_year
                         ],
-                        'performed_at' => $record->updated_at ?? $record->created_at,
+                        'performed_at' => $performedAt,
                     ]);
 
                     $count++;
