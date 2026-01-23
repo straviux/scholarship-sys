@@ -546,7 +546,8 @@
                                                             class="text-sm bg-gray-50 p-2 rounded">
                                                             <span class="text-gray-600">{{ formatDetailKey(key) }}:
                                                             </span>
-                                                            <span class="text-gray-900 font-medium">{{ value }}</span>
+                                                            <span class="text-gray-900 font-medium">{{ maskIdValue(key,
+                                                                value) }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1640,7 +1641,7 @@ const getActivityColor = (activityType) => {
 const getActivityLabel = (activityType) => {
     const labels = {
         'profile_edited': 'Profile Updated',
-        'profile_updated': 'Profile Update',
+        'profile_updated': 'Profile Updated',
         'attachment_uploaded': 'Attachment Uploaded',
         'record_created': 'Scholarship Record Created',
         'record_updated': 'Scholarship Record Updated',
@@ -1673,6 +1674,22 @@ const formatDetailKey = (key) => {
     return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
+const maskIdValue = (key, value) => {
+    // Check if user is admin (has permission to view IDs)
+    const isAdmin = hasPermission('admin.access') || hasPermission('applicants.edit');
+
+    // List of ID-related field names that should be masked for non-admins
+    const idFields = ['record_id', 'attachment_id', 'profile_id', 'id'];
+    const keyLower = key.toLowerCase();
+
+    // If it's an ID field and user is not admin, mask it
+    if (!isAdmin && idFields.some(field => keyLower.includes(field))) {
+        return '****';
+    }
+
+    return value;
+};
+
 // Fetch activity logs for the profile
 const fetchActivityLogs = async () => {
     try {
@@ -1693,16 +1710,16 @@ const fetchActivityLogs = async () => {
         };
 
         activities.sort((a, b) => {
-            // Sort by date first (latest first), then by hierarchy
+            // Sort by date first (latest first - newest at top), then by hierarchy
             const dateCompare = new Date(b.performed_at) - new Date(a.performed_at);
             if (dateCompare !== 0) {
                 return dateCompare;
             }
 
-            // If same date, sort by hierarchy
+            // If same date, sort by hierarchy (reverse so higher hierarchy numbers come first)
             const hierarchyA = hierarchy[a.activity_type] || 999;
             const hierarchyB = hierarchy[b.activity_type] || 999;
-            return hierarchyA - hierarchyB;
+            return hierarchyB - hierarchyA;
         });
 
         activityLogs.value = activities;
