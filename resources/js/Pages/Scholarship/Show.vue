@@ -340,7 +340,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -411,7 +411,7 @@
                                         <!-- Timeline Dot and Line -->
                                         <div class="flex flex-col items-center">
                                             <div
-                                                class="w-10 h-10 rounded-full bg-white border-2 flex items-center justify-center border-blue-400 bg-blue-50">
+                                                class="w-10 h-10 rounded-full bg-blue-50 border-2 flex items-center justify-center border-blue-400">
                                                 <i class="pi pi-check text-xs text-blue-600"></i>
                                             </div>
                                             <div v-if="timelineIndex < (statusTimeline.length - 1)"
@@ -425,7 +425,7 @@
                                                     <div>
                                                         <h5 class="font-semibold text-gray-900">
                                                             Status: <span class="text-blue-600">{{ timeline.new_status
-                                                            }}</span>
+                                                                }}</span>
                                                         </h5>
                                                         <p class="text-sm text-gray-600">{{
                                                             formatDateTime(timeline.performed_at) }}</p>
@@ -437,13 +437,13 @@
                                                         <p class="text-xs text-gray-600">Previous Status</p>
                                                         <p class="text-sm font-medium text-gray-900">{{
                                                             timeline.old_status || 'N/A'
-                                                        }}</p>
+                                                            }}</p>
                                                     </div>
                                                     <div>
                                                         <p class="text-xs text-gray-600">New Status</p>
                                                         <p class="text-sm font-medium text-gray-900">{{
                                                             timeline.new_status || 'N/A'
-                                                        }}</p>
+                                                            }}</p>
                                                     </div>
                                                 </div>
 
@@ -451,7 +451,7 @@
                                                     <p class="text-xs text-gray-600">Changed By</p>
                                                     <p class="text-sm font-medium text-gray-900">{{
                                                         timeline.changed_by?.name || 'System'
-                                                    }}</p>
+                                                        }}</p>
                                                 </div>
 
                                                 <div v-if="timeline.remarks"

@@ -40,7 +40,7 @@ Route::post('/mobile/upload/profile/{token}', [ProfileController::class, 'proces
     ->name('mobile.profile.upload.submit');
 
 // TEST ROUTE: Create mock applicants (only in debug mode, auth required but CSRF exempt)
-Route::middleware(['auth'])->post('/test-add-applicants', [WaitingListController::class, 'testAddApplicants'])->name('waitinglist.testAddApplicants')->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
+Route::middleware(['auth'])->post('/test-add-applicants', [WaitingListController::class, 'testAddApplicants'])->name('waitinglist.testAddApplicants')->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 
 // Broadcasting Authentication
 Broadcast::routes(['middleware' => ['auth']]);
