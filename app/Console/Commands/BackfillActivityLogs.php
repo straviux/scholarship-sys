@@ -78,7 +78,7 @@ class BackfillActivityLogs extends Command
             if (!$exists) {
                 // Use created_by if available, otherwise fall back to system user
                 $userId = $profile->created_by ?? $this->systemUserId;
-                
+
                 ActivityLog::logActivity(
                     profileId: $profile->profile_id,
                     userId: $userId,
@@ -90,7 +90,8 @@ class BackfillActivityLogs extends Command
                         'last_name' => $profile->last_name,
                         'email' => $profile->email
                     ],
-                    remarks: 'Historical record - auto-backfilled'
+                    remarks: 'Historical record - auto-backfilled',
+                    performedAt: $profile->created_at
                 );
                 $count++;
             }
@@ -119,7 +120,7 @@ class BackfillActivityLogs extends Command
             if (!$exists) {
                 // Use updated_by if available, otherwise fall back to system user
                 $userId = $profile->updated_by ?? $this->systemUserId;
-                
+
                 ActivityLog::logActivity(
                     profileId: $profile->profile_id,
                     userId: $userId,
@@ -131,7 +132,8 @@ class BackfillActivityLogs extends Command
                         'email' => $profile->email,
                         'address' => $profile->address
                     ],
-                    remarks: 'Historical record - auto-backfilled'
+                    remarks: 'Historical record - auto-backfilled',
+                    performedAt: $profile->updated_at
                 );
                 $count++;
             }
@@ -160,7 +162,7 @@ class BackfillActivityLogs extends Command
             if (!$exists) {
                 // Use created_by if available, otherwise fall back to system user
                 $userId = $record->created_by ?? $this->systemUserId;
-                
+
                 ActivityLog::logActivity(
                     profileId: $record->profile_id,
                     userId: $userId,
@@ -174,7 +176,8 @@ class BackfillActivityLogs extends Command
                         'academic_year' => $record->academic_year,
                         'term' => $record->term
                     ],
-                    remarks: 'Historical record - auto-backfilled'
+                    remarks: 'Historical record - auto-backfilled',
+                    performedAt: $record->created_at
                 );
                 $count++;
             }
@@ -203,7 +206,7 @@ class BackfillActivityLogs extends Command
             if (!$exists) {
                 // Use updated_by if available, otherwise fall back to system user
                 $userId = $record->updated_by ?? $this->systemUserId;
-                
+
                 ActivityLog::logActivity(
                     profileId: $record->profile_id,
                     userId: $userId,
@@ -215,7 +218,8 @@ class BackfillActivityLogs extends Command
                         'status' => $record->unified_status,
                         'year_level' => $record->year_level
                     ],
-                    remarks: 'Historical record - auto-backfilled'
+                    remarks: 'Historical record - auto-backfilled',
+                    performedAt: $record->updated_at
                 );
                 $count++;
             }
@@ -249,7 +253,7 @@ class BackfillActivityLogs extends Command
             if (!$exists) {
                 // Use the scholarship record's created_by if available, otherwise system user
                 $userId = $attachment->created_by ?? $this->systemUserId;
-                
+
                 ActivityLog::logActivity(
                     profileId: $attachment->profile_id,
                     userId: $userId,
@@ -262,7 +266,8 @@ class BackfillActivityLogs extends Command
                         'attachment_name' => $attachment->attachment_name,
                         'file_size' => $attachment->file_size
                     ],
-                    remarks: 'Historical record - auto-backfilled'
+                    remarks: 'Historical record - auto-backfilled',
+                    performedAt: $attachment->created_at
                 );
                 $count++;
             }

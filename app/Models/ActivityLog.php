@@ -71,7 +71,8 @@ class ActivityLog extends Model
         $details = [],
         $remarks = null,
         $snapshotBefore = null,
-        $snapshotAfter = null
+        $snapshotAfter = null,
+        $performedAt = null
     ) {
         return static::create([
             'profile_id' => $profileId,
@@ -85,7 +86,7 @@ class ActivityLog extends Model
             'remarks' => $remarks,
             'snapshot_before' => $snapshotBefore,
             'snapshot_after' => $snapshotAfter,
-            'performed_at' => now()
+            'performed_at' => $performedAt ?? now()
         ]);
     }
 }
