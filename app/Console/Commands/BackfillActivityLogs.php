@@ -156,7 +156,7 @@ class BackfillActivityLogs extends Command
         foreach ($records as $record) {
             $exists = ActivityLog::where('profile_id', $record->profile_id)
                 ->where('activity_type', 'record_created')
-                ->where('details->record_id', $record->scholarship_record_id)
+                ->where('details->record_id', $record->id)
                 ->first();
 
             if (!$exists) {
@@ -170,7 +170,7 @@ class BackfillActivityLogs extends Command
                     action: 'Scholarship Record Created',
                     description: "Scholarship record created: {$record->program?->name} - {$record->academic_year}",
                     details: [
-                        'record_id' => $record->scholarship_record_id,
+                        'record_id' => $record->id,
                         'program' => $record->program?->name,
                         'school' => $record->school?->name,
                         'academic_year' => $record->academic_year,
@@ -200,7 +200,7 @@ class BackfillActivityLogs extends Command
         foreach ($records as $record) {
             $exists = ActivityLog::where('profile_id', $record->profile_id)
                 ->where('activity_type', 'record_updated')
-                ->where('details->record_id', $record->scholarship_record_id)
+                ->where('details->record_id', $record->id)
                 ->first();
 
             if (!$exists) {
@@ -214,7 +214,7 @@ class BackfillActivityLogs extends Command
                     action: 'Scholarship Record Updated',
                     description: "Scholarship record updated: {$record->program?->name}",
                     details: [
-                        'record_id' => $record->scholarship_record_id,
+                        'record_id' => $record->id,
                         'status' => $record->unified_status,
                         'year_level' => $record->year_level
                     ],

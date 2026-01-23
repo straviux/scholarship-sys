@@ -493,63 +493,70 @@
                         <!-- Activity Logs Tab -->
                         <TabPanel value="6">
                             <div class="p-6">
-                                <div v-if="activityLogs.length > 0" class="space-y-4">
-                                    <div v-for="(activity, index) in activityLogs" :key="activity.id"
-                                        class="flex gap-4 pb-4"
-                                        :class="{ 'border-b border-gray-200': index < (activityLogs.length - 1) }">
-                                        <!-- Activity Icon -->
-                                        <div class="flex-shrink-0">
-                                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                                                :class="getActivityColor(activity.activity_type)">
-                                                <i :class="getActivityIcon(activity.activity_type)"
-                                                    class="text-base"></i>
-                                            </div>
-                                        </div>
+                                <div v-if="activityLogs.length > 0" class="relative">
+                                    <!-- Timeline background line -->
+                                    <div
+                                        class="absolute left-4 top-8 bottom-0 w-1 bg-gradient-to-b from-blue-300 via-purple-300 to-pink-300">
+                                    </div>
 
-                                        <!-- Activity Details -->
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-start justify-between">
-                                                <div class="flex-1">
+                                    <!-- Timeline container -->
+                                    <div class="space-y-8">
+                                        <div v-for="(activity, index) in activityLogs" :key="activity.id"
+                                            class="relative pl-16">
+
+                                            <!-- Timeline dot -->
+                                            <div class="absolute left-0 top-1 w-9 h-9 rounded-full flex items-center justify-center text-white font-bold shadow-lg ring-4 ring-white"
+                                                :class="getActivityColor(activity.activity_type)">
+                                                <i :class="getActivityIcon(activity.activity_type)"></i>
+                                            </div>
+
+                                            <!-- Activity Card -->
+                                            <div
+                                                class="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow p-4">
+                                                <div class="flex items-start justify-between mb-2">
                                                     <h5 class="font-semibold text-gray-900">
                                                         {{ getActivityLabel(activity.activity_type) }}
                                                     </h5>
-                                                    <p class="text-sm text-gray-600 mt-1">{{ activity.description }}</p>
+                                                    <span class="text-xs text-gray-500 whitespace-nowrap ml-2">
+                                                        {{ getRelativeTime(activity.performed_at) }}
+                                                    </span>
                                                 </div>
-                                                <span class="text-xs text-gray-500 whitespace-nowrap ml-4">
-                                                    {{ getRelativeTime(activity.performed_at) }}
-                                                </span>
-                                            </div>
 
-                                            <!-- User Info -->
-                                            <div class="mt-2 text-sm">
-                                                <span class="text-gray-600">by </span>
-                                                <span class="font-medium text-gray-900">{{ activity.user?.name ||
-                                                    'System' }}</span>
-                                                <span v-if="activity.user?.roles && activity.user.roles.length > 0" class="text-gray-600">
-                                                    ({{ activity.user.roles[0].name }})
-                                                </span>
-                                            </div>
+                                                <p class="text-sm text-gray-600 mb-3">{{ activity.description }}</p>
 
-                                            <!-- Datetime Info -->
-                                            <div class="mt-1 text-xs text-gray-500">
-                                                {{ formatDateTime(activity.performed_at) }}
-                                            </div>
-
-                                            <!-- Details -->
-                                            <div v-if="activity.details"
-                                                class="mt-3 p-3 bg-gray-50 rounded border border-gray-200">
-                                                <div v-for="(value, key) in activity.details" :key="key"
-                                                    class="text-sm">
-                                                    <span class="text-gray-600">{{ formatDetailKey(key) }}: </span>
-                                                    <span class="text-gray-900 font-medium">{{ value }}</span>
+                                                <!-- User Info -->
+                                                <div class="text-sm text-gray-600 mb-2">
+                                                    <span class="font-medium text-gray-900">{{ activity.user?.name ||
+                                                        'System' }}</span>
+                                                    <span v-if="activity.user?.office_designation">
+                                                        ({{ activity.user.office_designation }})
+                                                    </span>
                                                 </div>
-                                            </div>
 
-                                            <!-- Remarks -->
-                                            <div v-if="activity.remarks"
-                                                class="mt-3 p-3 bg-blue-50 rounded border-l-4 border-blue-400">
-                                                <p class="text-xs text-blue-700 font-semibold mb-1">Remarks:</p>
-                                                <p class="text-sm text-blue-900">{{ activity.remarks }}</p>
+                                                <!-- Datetime Info -->
+                                                <div class="text-xs text-gray-500 mb-3 pb-3 border-b border-gray-100">
+                                                    {{ formatDateTime(activity.performed_at) }}
+                                                </div>
+
+                                                <!-- Details -->
+                                                <div v-if="activity.details" class="mb-3">
+                                                    <div class="text-xs text-gray-600 font-semibold mb-2">Details:</div>
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                        <div v-for="(value, key) in activity.details" :key="key"
+                                                            class="text-sm bg-gray-50 p-2 rounded">
+                                                            <span class="text-gray-600">{{ formatDetailKey(key) }}:
+                                                            </span>
+                                                            <span class="text-gray-900 font-medium">{{ value }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Remarks -->
+                                                <div v-if="activity.remarks"
+                                                    class="p-2 bg-blue-50 rounded border-l-4 border-blue-400">
+                                                    <p class="text-xs text-blue-700 font-semibold mb-1">Remarks:</p>
+                                                    <p class="text-sm text-blue-900">{{ activity.remarks }}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1606,15 +1613,15 @@ const getAttachmentUrl = (attachment) => {
 // Activity Logs Methods
 const getActivityIcon = (activityType) => {
     const icons = {
-        'profile_edited': 'pi-user',
-        'attachment_uploaded': 'pi-upload',
-        'record_created': 'pi-plus-circle',
-        'record_updated': 'pi-pencil',
-        'record_deleted': 'pi-trash',
-        'status_changed': 'pi-arrow-right-arrow-left',
-        'profile_created': 'pi-user-plus'
+        'profile_edited': 'pi pi-user',
+        'attachment_uploaded': 'pi pi-upload',
+        'record_created': 'pi pi-plus-circle',
+        'record_updated': 'pi pi-pencil',
+        'record_deleted': 'pi pi-trash',
+        'status_changed': 'pi pi-arrow-right-arrow-left',
+        'profile_created': 'pi pi-user-plus'
     };
-    return icons[activityType] || 'pi-history';
+    return icons[activityType] || 'pi pi-history';
 };
 
 const getActivityColor = (activityType) => {
@@ -1633,6 +1640,7 @@ const getActivityColor = (activityType) => {
 const getActivityLabel = (activityType) => {
     const labels = {
         'profile_edited': 'Profile Updated',
+        'profile_updated': 'Profile Update',
         'attachment_uploaded': 'Attachment Uploaded',
         'record_created': 'Scholarship Record Created',
         'record_updated': 'Scholarship Record Updated',
@@ -1671,7 +1679,33 @@ const fetchActivityLogs = async () => {
         console.log('Fetching activities for profile_id:', props.profile.profile_id);
         const response = await axios.get(`/activity-logs/${props.profile.profile_id}`);
         console.log('Activity logs response:', response.data);
-        activityLogs.value = response.data.data || response.data || [];
+        let activities = response.data.data || response.data || [];
+
+        // Sort by activity type hierarchy and then by date (latest first within each type)
+        const hierarchy = {
+            'profile_created': 1,
+            'record_created': 2,
+            'profile_updated': 3,
+            'record_updated': 4,
+            'attachment_uploaded': 5,
+            'status_changed': 6,
+            'record_deleted': 7
+        };
+
+        activities.sort((a, b) => {
+            // Sort by date first (latest first), then by hierarchy
+            const dateCompare = new Date(b.performed_at) - new Date(a.performed_at);
+            if (dateCompare !== 0) {
+                return dateCompare;
+            }
+
+            // If same date, sort by hierarchy
+            const hierarchyA = hierarchy[a.activity_type] || 999;
+            const hierarchyB = hierarchy[b.activity_type] || 999;
+            return hierarchyA - hierarchyB;
+        });
+
+        activityLogs.value = activities;
         console.log('Activities loaded:', activityLogs.value.length);
     } catch (error) {
         console.error('Error fetching activity logs:', error);
