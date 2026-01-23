@@ -340,7 +340,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -437,7 +437,7 @@
                                                             <div>
                                                                 <h5 class="font-semibold text-gray-900">{{
                                                                     getHistoryActionLabel(history.action)
-                                                                    }}</h5>
+                                                                }}</h5>
                                                                 <p class="text-sm text-gray-600">{{
                                                                     formatDateTime(history.performed_at) }}</p>
                                                             </div>
@@ -448,7 +448,7 @@
                                                                 <p class="text-xs text-gray-600">Previous Status</p>
                                                                 <p class="text-sm font-medium text-gray-900">{{
                                                                     history.previous_status || 'N/A'
-                                                                    }}</p>
+                                                                }}</p>
                                                             </div>
                                                             <div>
                                                                 <p class="text-xs text-gray-600">New Status</p>
@@ -495,12 +495,14 @@
                             <div class="p-6">
                                 <div v-if="activityLogs.length > 0" class="space-y-4">
                                     <div v-for="(activity, index) in activityLogs" :key="activity.id"
-                                        class="flex gap-4 pb-4" :class="{ 'border-b border-gray-200': index < (activityLogs.length - 1) }">
+                                        class="flex gap-4 pb-4"
+                                        :class="{ 'border-b border-gray-200': index < (activityLogs.length - 1) }">
                                         <!-- Activity Icon -->
                                         <div class="flex-shrink-0">
                                             <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
                                                 :class="getActivityColor(activity.activity_type)">
-                                                <i :class="getActivityIcon(activity.activity_type)" class="text-base"></i>
+                                                <i :class="getActivityIcon(activity.activity_type)"
+                                                    class="text-base"></i>
                                             </div>
                                         </div>
 
@@ -521,9 +523,10 @@
                                             <!-- User Info -->
                                             <div class="mt-2 text-sm">
                                                 <span class="text-gray-600">by </span>
-                                                <span class="font-medium text-gray-900">{{ activity.user?.name || 'System' }}</span>
-                                                <span v-if="activity.user?.role" class="text-gray-600">
-                                                    ({{ activity.user.role }})
+                                                <span class="font-medium text-gray-900">{{ activity.user?.name ||
+                                                    'System' }}</span>
+                                                <span v-if="activity.user?.roles && activity.user.roles.length > 0" class="text-gray-600">
+                                                    ({{ activity.user.roles[0].name }})
                                                 </span>
                                             </div>
 
@@ -533,15 +536,18 @@
                                             </div>
 
                                             <!-- Details -->
-                                            <div v-if="activity.details" class="mt-3 p-3 bg-gray-50 rounded border border-gray-200">
-                                                <div v-for="(value, key) in activity.details" :key="key" class="text-sm">
+                                            <div v-if="activity.details"
+                                                class="mt-3 p-3 bg-gray-50 rounded border border-gray-200">
+                                                <div v-for="(value, key) in activity.details" :key="key"
+                                                    class="text-sm">
                                                     <span class="text-gray-600">{{ formatDetailKey(key) }}: </span>
                                                     <span class="text-gray-900 font-medium">{{ value }}</span>
                                                 </div>
                                             </div>
 
                                             <!-- Remarks -->
-                                            <div v-if="activity.remarks" class="mt-3 p-3 bg-blue-50 rounded border-l-4 border-blue-400">
+                                            <div v-if="activity.remarks"
+                                                class="mt-3 p-3 bg-blue-50 rounded border-l-4 border-blue-400">
                                                 <p class="text-xs text-blue-700 font-semibold mb-1">Remarks:</p>
                                                 <p class="text-sm text-blue-900">{{ activity.remarks }}</p>
                                             </div>
@@ -551,7 +557,8 @@
                                 <div v-else class="text-center py-12 text-gray-500">
                                     <i class="pi pi-history text-4xl mb-4" style="opacity: 0.5"></i>
                                     <p class="text-lg">No Activity Records</p>
-                                    <p class="text-sm text-gray-400 mt-2">No activities have been logged for this profile yet</p>
+                                    <p class="text-sm text-gray-400 mt-2">No activities have been logged for this
+                                        profile yet</p>
                                 </div>
                             </div>
                         </TabPanel>
@@ -1661,8 +1668,11 @@ const formatDetailKey = (key) => {
 // Fetch activity logs for the profile
 const fetchActivityLogs = async () => {
     try {
-        const response = await axios.get(`/activity-logs/${props.profile.id}`);
-        activityLogs.value = response.data.data || [];
+        console.log('Fetching activities for profile_id:', props.profile.profile_id);
+        const response = await axios.get(`/activity-logs/${props.profile.profile_id}`);
+        console.log('Activity logs response:', response.data);
+        activityLogs.value = response.data.data || response.data || [];
+        console.log('Activities loaded:', activityLogs.value.length);
     } catch (error) {
         console.error('Error fetching activity logs:', error);
         activityLogs.value = [];
@@ -1673,5 +1683,3 @@ const fetchActivityLogs = async () => {
 fetchActivityLogs();
 
 </script>
-
-```
