@@ -37,6 +37,7 @@
                         <Tab value="3">Obligations & Transactions</Tab>
                         <Tab value="4">Attachments</Tab>
                         <Tab value="5">Approval History</Tab>
+                        <Tab value="6">Activity Logs</Tab>
                     </TabList>
                     <TabPanels>
                         <!-- Personal Information Tab -->
@@ -488,6 +489,72 @@
                                 </div>
                             </div>
                         </TabPanel>
+
+                        <!-- Activity Logs Tab -->
+                        <TabPanel value="6">
+                            <div class="p-6">
+                                <div v-if="activityLogs.length > 0" class="space-y-4">
+                                    <div v-for="(activity, index) in activityLogs" :key="activity.id"
+                                        class="flex gap-4 pb-4" :class="{ 'border-b border-gray-200': index < (activityLogs.length - 1) }">
+                                        <!-- Activity Icon -->
+                                        <div class="flex-shrink-0">
+                                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                                                :class="getActivityColor(activity.activity_type)">
+                                                <i :class="getActivityIcon(activity.activity_type)" class="text-base"></i>
+                                            </div>
+                                        </div>
+
+                                        <!-- Activity Details -->
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-start justify-between">
+                                                <div class="flex-1">
+                                                    <h5 class="font-semibold text-gray-900">
+                                                        {{ getActivityLabel(activity.activity_type) }}
+                                                    </h5>
+                                                    <p class="text-sm text-gray-600 mt-1">{{ activity.description }}</p>
+                                                </div>
+                                                <span class="text-xs text-gray-500 whitespace-nowrap ml-4">
+                                                    {{ getRelativeTime(activity.performed_at) }}
+                                                </span>
+                                            </div>
+
+                                            <!-- User Info -->
+                                            <div class="mt-2 text-sm">
+                                                <span class="text-gray-600">by </span>
+                                                <span class="font-medium text-gray-900">{{ activity.user?.name || 'System' }}</span>
+                                                <span v-if="activity.user?.role" class="text-gray-600">
+                                                    ({{ activity.user.role }})
+                                                </span>
+                                            </div>
+
+                                            <!-- Datetime Info -->
+                                            <div class="mt-1 text-xs text-gray-500">
+                                                {{ formatDateTime(activity.performed_at) }}
+                                            </div>
+
+                                            <!-- Details -->
+                                            <div v-if="activity.details" class="mt-3 p-3 bg-gray-50 rounded border border-gray-200">
+                                                <div v-for="(value, key) in activity.details" :key="key" class="text-sm">
+                                                    <span class="text-gray-600">{{ formatDetailKey(key) }}: </span>
+                                                    <span class="text-gray-900 font-medium">{{ value }}</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Remarks -->
+                                            <div v-if="activity.remarks" class="mt-3 p-3 bg-blue-50 rounded border-l-4 border-blue-400">
+                                                <p class="text-xs text-blue-700 font-semibold mb-1">Remarks:</p>
+                                                <p class="text-sm text-blue-900">{{ activity.remarks }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-else class="text-center py-12 text-gray-500">
+                                    <i class="pi pi-history text-4xl mb-4" style="opacity: 0.5"></i>
+                                    <p class="text-lg">No Activity Records</p>
+                                    <p class="text-sm text-gray-400 mt-2">No activities have been logged for this profile yet</p>
+                                </div>
+                            </div>
+                        </TabPanel>
                     </TabPanels>
                 </Tabs>
             </div>
@@ -845,6 +912,7 @@ const qrCountdownInterval = ref(null);
 const selectedRecord = ref(null);
 const viewerAttachment = ref(null);
 const uploading = ref(false);
+const activityLogs = ref([]);
 const recordForm = ref({
     grant_id: null,
     program_id: null,
@@ -1528,4 +1596,82 @@ const getAttachmentUrl = (attachment) => {
     return route(routeName, attachment.attachment_id);
 };
 
+// Activity Logs Methods
+const getActivityIcon = (activityType) => {
+    const icons = {
+        'profile_edited': 'pi-user',
+        'attachment_uploaded': 'pi-upload',
+        'record_created': 'pi-plus-circle',
+        'record_updated': 'pi-pencil',
+        'record_deleted': 'pi-trash',
+        'status_changed': 'pi-arrow-right-arrow-left',
+        'profile_created': 'pi-user-plus'
+    };
+    return icons[activityType] || 'pi-history';
+};
+
+const getActivityColor = (activityType) => {
+    const colors = {
+        'profile_edited': 'bg-blue-500',
+        'attachment_uploaded': 'bg-green-500',
+        'record_created': 'bg-purple-500',
+        'record_updated': 'bg-orange-500',
+        'record_deleted': 'bg-red-500',
+        'status_changed': 'bg-indigo-500',
+        'profile_created': 'bg-teal-500'
+    };
+    return colors[activityType] || 'bg-gray-500';
+};
+
+const getActivityLabel = (activityType) => {
+    const labels = {
+        'profile_edited': 'Profile Updated',
+        'attachment_uploaded': 'Attachment Uploaded',
+        'record_created': 'Scholarship Record Created',
+        'record_updated': 'Scholarship Record Updated',
+        'record_deleted': 'Scholarship Record Deleted',
+        'status_changed': 'Status Changed',
+        'profile_created': 'Profile Created'
+    };
+    return labels[activityType] || activityType;
+};
+
+const getRelativeTime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (seconds < 60) return 'just now';
+    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
+
+    return formatDateShort(dateString);
+};
+
+const formatDetailKey = (key) => {
+    return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+};
+
+// Fetch activity logs for the profile
+const fetchActivityLogs = async () => {
+    try {
+        const response = await axios.get(`/activity-logs/${props.profile.id}`);
+        activityLogs.value = response.data.data || [];
+    } catch (error) {
+        console.error('Error fetching activity logs:', error);
+        activityLogs.value = [];
+    }
+};
+
+// Fetch activity logs when component mounts
+fetchActivityLogs();
+
 </script>
+
+```

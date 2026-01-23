@@ -828,7 +828,13 @@ class ScholarshipProfileController extends Controller
                 $q->with(['program', 'course', 'school', 'attachments', 'approvalHistory.performedBy'])
                     ->orderBy('created_at', 'desc');
             },
-            'disbursements.attachments'
+            'disbursements.attachments',
+            'activityLogs' => function ($q) {
+                $q->with(['user' => function ($u) {
+                    $u->with('roles');
+                }])
+                    ->orderBy('performed_at', 'desc');
+            }
         ])->findOrFail($profileId);
 
         return Inertia::render('Scholarship/Show', [

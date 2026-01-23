@@ -21,6 +21,7 @@ use App\Http\Controllers\SystemOptionController;
 use App\Http\Controllers\MobileUploadController;
 use App\Http\Controllers\DataExportController;
 use App\Http\Controllers\HelpController;
+use App\Http\Controllers\ActivityLogController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -284,6 +285,10 @@ Route::middleware(['auth'])->group(function () {
     // Applicant remarks route
     Route::post('/applicants/{profile_id}/update-remarks', [ScholarshipProfileController::class, 'updateApplicantRemarks'])
         ->name('applicants.update-remarks');
+
+    // Activity Logs routes
+    Route::get('/activity-logs/{profileId}', [App\Http\Controllers\ActivityLogController::class, 'profileActivities'])
+        ->name('activity-logs.profile');
 });
 Route::middleware(['auth'])->controller(ScholarshipProgramController::class)->group(function () {
     Route::get('/scholarshipprograms/get-active-list', 'getActiveProgramsApi')->name('scholarshipprograms.getactivelist');

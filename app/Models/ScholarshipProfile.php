@@ -142,6 +142,11 @@ class ScholarshipProfile extends Model
         return $this->belongsTo(User::class, 'priority_assigned_by');
     }
 
+    public function activityLogs()
+    {
+        return $this->hasMany(ActivityLog::class, 'profile_id', 'profile_id');
+    }
+
     public static function boot()
     {
         parent::boot();
