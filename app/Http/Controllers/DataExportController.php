@@ -105,12 +105,17 @@ class DataExportController extends Controller
             $recordsQuery->where('program_id', $request->program_id);
         }
 
-        // Filter by program name (mapping from report filter)
+        // Filter by program - can be either ID or name
         if ($request->filled('program')) {
-            $recordsQuery->whereHas('program', function ($q) use ($request) {
-                $q->where('shortname', 'like', '%' . $request->program . '%')
-                    ->orWhere('name', 'like', '%' . $request->program . '%');
-            });
+            // Check if program is numeric (ID) or string (name)
+            if (is_numeric($request->program)) {
+                $recordsQuery->where('program_id', $request->program);
+            } else {
+                $recordsQuery->whereHas('program', function ($q) use ($request) {
+                    $q->where('shortname', 'like', '%' . $request->program . '%')
+                        ->orWhere('name', 'like', '%' . $request->program . '%');
+                });
+            }
         }
 
         if ($request->filled('school_id')) {

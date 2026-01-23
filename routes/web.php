@@ -20,6 +20,7 @@ use App\Http\Controllers\SystemUpdateController;
 use App\Http\Controllers\SystemOptionController;
 use App\Http\Controllers\MobileUploadController;
 use App\Http\Controllers\DataExportController;
+use App\Http\Controllers\HelpController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -47,6 +48,7 @@ Broadcast::routes(['middleware' => ['auth']]);
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/help', [HelpController::class, 'index'])->name('help.index');
 });
 
 

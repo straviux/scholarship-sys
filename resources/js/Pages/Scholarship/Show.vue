@@ -36,6 +36,7 @@
                         <Tab value="2">Academic Information</Tab>
                         <Tab value="3">Obligations & Transactions</Tab>
                         <Tab value="4">Attachments</Tab>
+                        <Tab value="5">Approval History</Tab>
                     </TabList>
                     <TabPanels>
                         <!-- Personal Information Tab -->
@@ -338,7 +339,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -390,6 +391,100 @@
                                     <p class="text-gray-500 text-lg">No Attachments Available</p>
                                     <p class="text-gray-400 text-sm mt-2">Upload attachments from the Academic
                                         Information tab</p>
+                                </div>
+                            </div>
+                        </TabPanel>
+
+                        <!-- Approval History Tab -->
+                        <TabPanel value="5">
+                            <div class="p-6">
+                                <div v-if="profile.scholarshipGrant && profile.scholarshipGrant.length > 0"
+                                    class="space-y-6">
+                                    <div v-for="(record, recordIndex) in profile.scholarshipGrant" :key="record.id"
+                                        class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                                        <!-- Record Header -->
+                                        <div class="flex items-center justify-between mb-4">
+                                            <div>
+                                                <h4 class="font-semibold text-gray-900">{{ record.program?.name ||
+                                                    'Unknown Program' }}</h4>
+                                                <p class="text-sm text-gray-600">{{ record.academic_year }} - {{
+                                                    record.term }}</p>
+                                            </div>
+                                            <Chip :label="getStatusLabel(record.unified_status)"
+                                                :severity="getStatusSeverity(record.unified_status)" />
+                                        </div>
+
+                                        <!-- Timeline -->
+                                        <div v-if="record.approvalHistory && record.approvalHistory.length > 0"
+                                            class="space-y-4">
+                                            <div v-for="(history, historyIndex) in sortedApprovalHistory(record.approvalHistory)"
+                                                :key="history.id" class="flex gap-4">
+                                                <!-- Timeline Dot and Line -->
+                                                <div class="flex flex-col items-center">
+                                                    <div class="w-10 h-10 rounded-full bg-white border-2 flex items-center justify-center"
+                                                        :class="getHistoryStatusClass(history.action)">
+                                                        <i :class="getHistoryIcon(history.action)" class="text-xs"></i>
+                                                    </div>
+                                                    <div v-if="historyIndex < (record.approvalHistory.length - 1)"
+                                                        class="w-0.5 h-12 bg-gray-300 mt-2"></div>
+                                                </div>
+
+                                                <!-- Timeline Content -->
+                                                <div class="flex-1 pb-4">
+                                                    <div class="bg-white p-4 rounded border border-gray-200">
+                                                        <div class="flex items-start justify-between mb-2">
+                                                            <div>
+                                                                <h5 class="font-semibold text-gray-900">{{
+                                                                    getHistoryActionLabel(history.action)
+                                                                    }}</h5>
+                                                                <p class="text-sm text-gray-600">{{
+                                                                    formatDateTime(history.performed_at) }}</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="grid grid-cols-2 gap-4 mb-3">
+                                                            <div>
+                                                                <p class="text-xs text-gray-600">Previous Status</p>
+                                                                <p class="text-sm font-medium text-gray-900">{{
+                                                                    history.previous_status || 'N/A'
+                                                                    }}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p class="text-xs text-gray-600">New Status</p>
+                                                                <p class="text-sm font-medium text-gray-900">{{
+                                                                    history.new_status || 'N/A' }}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="mb-3">
+                                                            <p class="text-xs text-gray-600">Performed By</p>
+                                                            <p class="text-sm font-medium text-gray-900">{{
+                                                                history.performedBy?.name ||
+                                                                'System' }}</p>
+                                                        </div>
+
+                                                        <div v-if="history.remarks"
+                                                            class="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                                                            <p class="text-xs text-blue-700 font-semibold mb-1">Remarks:
+                                                            </p>
+                                                            <p class="text-sm text-blue-900">{{ history.remarks }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div v-else class="text-center py-6 text-gray-500">
+                                            <i class="pi pi-inbox text-2xl mb-2"></i>
+                                            <p class="text-sm">No approval history available</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-else class="text-center py-12 text-gray-500">
+                                    <i class="pi pi-inbox text-4xl mb-4" style="opacity: 0.5"></i>
+                                    <p class="text-lg">No Scholarship Records</p>
+                                    <p class="text-sm text-gray-400 mt-2">This profile has no scholarship application
+                                        records yet</p>
                                 </div>
                             </div>
                         </TabPanel>
@@ -909,6 +1004,84 @@ const formatDateShort = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+};
+
+const formatDateTime = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    }).format(date);
+};
+
+const sortedApprovalHistory = (history) => {
+    if (!history) return [];
+    return [...history].sort((a, b) => new Date(b.performed_at) - new Date(a.performed_at));
+};
+
+const getHistoryActionLabel = (action) => {
+    const labels = {
+        'approved': 'Approved',
+        'denied': 'Denied',
+        'pending': 'Pending',
+        'active': 'Active',
+        'completed': 'Completed',
+        'withdrawn': 'Withdrawn',
+        'loa': 'Leave of Absence',
+        'suspended': 'Suspended',
+        'unknown': 'Unknown',
+        'declined': 'Declined',
+        'conditional': 'Conditional Approval',
+        'resubmitted': 'Resubmitted',
+        'discontinued': 'Discontinued',
+        'renewal_application': 'Renewal Application'
+    };
+    return labels[action] || action;
+};
+
+const getHistoryIcon = (action) => {
+    const icons = {
+        'approved': 'pi pi-check',
+        'denied': 'pi pi-times',
+        'pending': 'pi pi-clock',
+        'active': 'pi pi-circle-fill',
+        'completed': 'pi pi-check-circle',
+        'withdrawn': 'pi pi-times-circle',
+        'loa': 'pi pi-pause',
+        'suspended': 'pi pi-ban',
+        'unknown': 'pi pi-question',
+        'declined': 'pi pi-times',
+        'conditional': 'pi pi-info-circle',
+        'resubmitted': 'pi pi-refresh',
+        'discontinued': 'pi pi-pause',
+        'renewal_application': 'pi pi-plus'
+    };
+    return icons[action] || 'pi pi-circle';
+};
+
+const getHistoryStatusClass = (action) => {
+    const classes = {
+        'approved': 'border-green-400 bg-green-50',
+        'denied': 'border-red-400 bg-red-50',
+        'pending': 'border-yellow-400 bg-yellow-50',
+        'active': 'border-blue-400 bg-blue-50',
+        'completed': 'border-gray-400 bg-gray-50',
+        'withdrawn': 'border-purple-400 bg-purple-50',
+        'loa': 'border-orange-400 bg-orange-50',
+        'suspended': 'border-red-900 bg-red-50',
+        'unknown': 'border-gray-300 bg-gray-50',
+        'declined': 'border-red-400 bg-red-50',
+        'conditional': 'border-blue-400 bg-blue-50',
+        'resubmitted': 'border-yellow-400 bg-yellow-50',
+        'discontinued': 'border-orange-400 bg-orange-50',
+        'renewal_application': 'border-purple-400 bg-purple-50'
+    };
+    return classes[action] || 'border-gray-400 bg-gray-50';
 };
 
 const handleSuccess = () => {

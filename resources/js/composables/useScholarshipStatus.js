@@ -51,6 +51,22 @@ export const useScholarshipStatus = () => {
 			textColor: '#5B21B6',
 			description: 'Scholarship withdrawn',
 		},
+		loa: {
+			label: 'LOA',
+			severity: 'warning',
+			color: '#D97706',
+			bgColor: '#FEF08A',
+			textColor: '#78350F',
+			description: 'Leave of absence',
+		},
+		suspended: {
+			label: 'Suspended',
+			severity: 'danger',
+			color: '#DC2626',
+			bgColor: '#FECACA',
+			textColor: '#7F1D1D',
+			description: 'Scholarship suspended',
+		},
 		unknown: {
 			label: 'Unknown',
 			severity: 'secondary',
@@ -126,6 +142,8 @@ export const useScholarshipStatus = () => {
 			'completed',
 			'denied',
 			'withdrawn',
+			'loa',
+			'suspended',
 			'unknown',
 		];
 

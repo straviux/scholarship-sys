@@ -825,7 +825,7 @@ class ScholarshipProfileController extends Controller
     {
         $profile = ScholarshipProfile::with([
             'scholarshipGrant' => function ($q) {
-                $q->with(['program', 'course', 'school', 'attachments'])
+                $q->with(['program', 'course', 'school', 'attachments', 'approvalHistory.performedBy'])
                     ->orderBy('created_at', 'desc');
             },
             'disbursements.attachments'
@@ -932,7 +932,7 @@ class ScholarshipProfileController extends Controller
         }
 
         $request->validate([
-            'unified_status' => 'required|string|in:pending,approved,denied,active,completed,unknown',
+            'unified_status' => 'required|string|in:pending,approved,denied,active,completed,withdrawn,loa,suspended,unknown',
         ]);
 
         try {

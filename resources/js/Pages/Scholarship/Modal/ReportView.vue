@@ -194,6 +194,7 @@ const emit = defineEmits(['close']);
 const loading = ref(true);
 const records = ref([]);
 const summaryData = ref({ programs: 0, schools: 0 });
+const programNameCache = ref(null);
 const paperSize = ref(props.params.paper_size || 'A4');
 const orientation = ref(props.params.orientation || 'landscape');
 const reportType = computed(() => props.params.report_type || 'list');
@@ -221,7 +222,18 @@ const activeFilters = computed(() => {
     if (props.params.date_from) filters['Date From'] = moment(props.params.date_from).format('MMM DD, YYYY');
     if (props.params.date_to) filters['Date To'] = moment(props.params.date_to).format('MMM DD, YYYY');
     if (props.params.unified_status) filters['Status'] = formatUnifiedStatusText(props.params.unified_status);
-    if (props.params.program) filters['Program'] = props.params.program;
+
+    // Display program name instead of ID
+    if (props.params.program) {
+        if (is_numeric(props.params.program)) {
+            // If program is numeric (ID), use cached program name from first record
+            const programName = programNameCache.value || (records.value.length > 0 ? records.value[0].program_name : null);
+            filters['Program'] = programName || `Program #${props.params.program}`;
+        } else {
+            filters['Program'] = props.params.program;
+        }
+    }
+
     if (props.params.school) filters['School'] = props.params.school;
     if (props.params.courses) filters['Course'] = props.params.courses;
     if (props.params.municipality) filters['Municipality'] = props.params.municipality;
@@ -331,6 +343,11 @@ async function loadData() {
         console.log('Extracted data:', data);
         records.value = data || [];
 
+        // Cache the program name from first record if program filter is numeric
+        if (is_numeric(props.params.program) && records.value.length > 0) {
+            programNameCache.value = records.value[0].program_name;
+        }
+
         // Calculate summary if needed
         if (reportType.value === 'summary') {
             calculateSummary();
@@ -366,6 +383,11 @@ function saveAsExcel() {
         ...props.params
     });
     window.open(url, '_blank');
+}
+
+// Helper function to check if value is numeric
+function is_numeric(val) {
+    return !isNaN(parseFloat(val)) && isFinite(val);
 }
 
 function formatName(item) {
@@ -409,6 +431,9 @@ function getStatusSeverity(item) {
         'denied': 'danger',
         'active': 'success',
         'completed': 'secondary',
+        'withdrawn': 'secondary',
+        'loa': 'warning',
+        'suspended': 'danger',
         'unknown': 'secondary'
     };
     return severityMap[status] || 'info';

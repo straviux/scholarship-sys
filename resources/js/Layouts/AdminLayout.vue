@@ -180,6 +180,12 @@ onUnmounted(() => {
                                 class="ml-auto" />
                         </SidebarLink>
                     </li>
+                    <li>
+                        <SidebarLink :href="route('help.index')" :active="route().current('help.index')">
+                            <i class="pi pi-question-circle mr-2"></i>
+                            <span class="font-medium">Help & Instructions</span>
+                        </SidebarLink>
+                    </li>
                     <li
                         v-if="hasRole('administrator') || hasRole('moderator') || hasRole('program_manager') || hasRole('jpm_admin')">
                         <details open>
@@ -316,6 +322,13 @@ onUnmounted(() => {
                                 style="min-width: 1.25rem; height: 1.25rem; font-size: 0.625rem;" />
                         </SidebarLink>
                     </li>
+                    <li>
+                        <SidebarLink :href="route('help.index')" :active="route().current('help.index')"
+                            class="flex flex-col justify-center text-center">
+                            <i class="pi pi-question-circle text-xl"></i>
+                            <span class="text-xs">help</span>
+                        </SidebarLink>
+                    </li>
                     <li v-if="hasPermission('manage-scholarship-programs')">
                         <SidebarLink :href="route('scholarshipprograms.index')"
                             :active="route().current('scholarshipprograms.index')"
@@ -417,6 +430,14 @@ onUnmounted(() => {
                     </button>
                     <!-- <div v-if="!toggleMenu" class="h-full w-full">test</div> -->
                     <div class="space-x-6 hidden md:flex items-center justify-center">
+                        <!-- Help Link -->
+                        <Link :href="route('help.index')"
+                            class="text-gray-300 hover:text-white hover:bg-gray-700 transition-colors duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
+                            :class="{ 'bg-gray-700 text-white': route().current('help.index') }">
+                            <i class="pi pi-question-circle"></i>
+                            <span class="hidden lg:inline">Help</span>
+                        </Link>
+
                         <!-- Notification Dropdown -->
                         <NotificationDropdown
                             :unread-count="($page.props.auth.user && $page.props.auth.user.unread_notifications_count) || 0"
