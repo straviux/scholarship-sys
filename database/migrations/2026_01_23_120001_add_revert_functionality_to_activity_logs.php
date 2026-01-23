@@ -35,7 +35,7 @@ return new class extends Migration
         $result = $connection->select("SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
                                        WHERE TABLE_NAME = 'activity_logs' AND COLUMN_NAME = 'reverted_by_log_id' 
                                        AND REFERENCED_TABLE_NAME IS NOT NULL");
-        
+
         if (empty($result) && Schema::hasColumn('activity_logs', 'reverted_by_log_id')) {
             Schema::table('activity_logs', function (Blueprint $table) {
                 $table->foreign('reverted_by_log_id')->references('id')->on('activity_logs')->cascadeOnDelete();
