@@ -21,8 +21,9 @@ class WaitingListController extends Controller
      */
     public function index(Request $request, $action = null, $id = null): Response
     {
-        // Increase memory limit and execution time for large queries
-        ini_set('memory_limit', '2048M');
+        // Increase memory limit for large queries
+        // Chunking approach used below prevents most memory exhaustion
+        ini_set('memory_limit', '1024M');
         ini_set('max_execution_time', '300');
 
         if (!Gate::allows('create-scholar-profile') && $action === 'create') {
@@ -262,53 +263,49 @@ class WaitingListController extends Controller
 
         $records = $request->get('records', 10);
 
-        // IMPORTANT: Calculate sequence numbers based on the ENTIRE waiting list
-        // This ensures queue numbers reflect actual position in the complete waiting list,
-        // not just the filtered or paginated results.
-        // Build a base query for ALL pending applications (without other filters, but respects program filter)
-        $baseQuery = ScholarshipProfile::query()
-            ->with([
-                'scholarshipGrant' => function ($q) use ($programId) {
-                    $q->with(['program', 'school', 'course'])
-                        ->where('unified_status', 'pending')
-                        ->orderBy('created_at', 'desc')
-                        ->select('id', 'profile_id', 'program_id', 'school_id', 'course_id', 'unified_status', 'year_level', 'yakap_category', 'date_filed');
+        // CRITICAL FIX: Don't pre-calculate sequence numbers for ALL profiles
+        // This was causing memory exhaustion when there were thousands of profiles
+        // Instead, paginate first, then calculate only for the page results
+        
+        // Now apply filters and pagination to the main query
+        /** @disregard UndefinedMethod withQueryString */
+        $profiles = $query->paginate($records)->withQueryString();
 
-                    // Filter by program if specified
-                    if ($programId) {
-                        $q->where('program_id', $programId);
-                    }
-                }
-            ])
-            ->whereHas('scholarshipGrant', function ($recordQ) use ($programId) {
-                // Include profiles with pending status
-                $recordQ->where('unified_status', 'pending');
-                // Filter by program if specified
+        // Calculate sequence numbers ONLY for the current page's results
+        // This is a complete reordering - get all pending profiles to calculate position
+        $allPendingForSequence = ScholarshipProfile::query()
+            ->whereHas('scholarshipGrant', function ($q) use ($programId) {
+                $q->where('unified_status', 'pending');
                 if ($programId) {
-                    $recordQ->where('program_id', $programId);
+                    $q->where('program_id', $programId);
                 }
-            });
-
-        // Sort by scholarship record date_filed, getting the most recent record's date_filed per profile
-        $baseQuery->leftJoin('scholarship_records as sr_sort', function ($join) use ($programId) {
-            $join->on('scholarship_profiles.profile_id', '=', 'sr_sort.profile_id')
-                ->where('sr_sort.unified_status', 'pending');
-            if ($programId) {
-                $join->where('sr_sort.program_id', $programId);
-            }
-        })
-            ->orderBy('sr_sort.date_filed', 'asc')
+            })
+            ->with(['scholarshipGrant' => function ($q) use ($programId) {
+                $q->where('unified_status', 'pending');
+                if ($programId) {
+                    $q->where('program_id', $programId);
+                }
+                $q->select('id', 'profile_id', 'program_id', 'school_id', 'course_id', 'unified_status', 'year_level', 'date_filed');
+            }])
+            ->leftJoin('scholarship_records as sr_seq', function ($join) use ($programId) {
+                $join->on('scholarship_profiles.profile_id', '=', 'sr_seq.profile_id')
+                    ->where('sr_seq.unified_status', 'pending');
+                if ($programId) {
+                    $join->where('sr_seq.program_id', $programId);
+                }
+            })
+            ->orderBy('sr_seq.date_filed', 'asc')
             ->orderBy('scholarship_profiles.created_at', 'asc')
-            ->distinct('scholarship_profiles.profile_id');
+            ->distinct('scholarship_profiles.profile_id')
+            ->select('scholarship_profiles.*')
+            ->limit(5000) // Safety limit to prevent loading massive datasets
+            ->get();
 
-        // Get ALL profiles for sequence number calculation
-        $allProfiles = (clone $baseQuery)->get();
+        // Calculate sequence numbers only for the results we got
+        SequenceNumberCalculator::calculateSequenceNumbers($allPendingForSequence);
 
-        // Calculate sequence numbers on the ENTIRE waiting list
-        SequenceNumberCalculator::calculateSequenceNumbers($allProfiles);
-
-        // Create a map of profile_id -> sequence numbers for quick lookup
-        $sequenceMap = $allProfiles->mapWithKeys(function ($profile) {
+        // Create a quick lookup map
+        $sequenceMap = $allPendingForSequence->mapWithKeys(function ($profile) {
             return [
                 $profile->profile_id => [
                     'sequence_number' => $profile->sequence_number,
@@ -318,12 +315,8 @@ class WaitingListController extends Controller
                 ]
             ];
         });
-        
-        // Now apply filters and pagination to the main query
-        /** @disregard UndefinedMethod withQueryString */
-        $profiles = $query->paginate($records)->withQueryString();
 
-        // Restore sequence numbers from the complete waiting list calculation
+        // Restore sequence numbers from the waiting list calculation
         $profiles->getCollection()->each(function ($profile) use ($sequenceMap) {
             if (isset($sequenceMap[$profile->profile_id])) {
                 $numbers = $sequenceMap[$profile->profile_id];

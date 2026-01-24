@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\Inertia;
@@ -42,7 +43,15 @@ class RequirementController extends Controller
      */
     public function store(CreateRequirementRequest $request)
     {
-        Requirement::create($request->validated());
+        $requirement = Requirement::create($request->validated());
+
+        // Log requirement creation
+        ActivityLogService::logRecordCreated(
+            profileId: null,
+            recordData: ['name' => $requirement->name],
+            remarks: "Created requirement: {$requirement->name}"
+        );
+
         return back();
     }
 
@@ -52,6 +61,7 @@ class RequirementController extends Controller
     public function update(Request $request, Requirement $program_requirement)
     {
         $requirement = Requirement::findOrFail($program_requirement->id);
+        $oldData = $requirement->getAttributes();
         $requirement->update($request->validate([
             "name" => [
                 'required',
@@ -75,6 +85,15 @@ class RequirementController extends Controller
                 'boolean'
             ],
         ]));
+
+        // Log requirement update
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: $oldData,
+            newData: $requirement->fresh()->getAttributes(),
+            remarks: "Updated requirement: {$requirement->name}"
+        );
+
         return back();
     }
 

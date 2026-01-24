@@ -6,6 +6,7 @@ use App\Models\Disbursement;
 use App\Models\Cheque;
 use App\Models\DisbursementAttachment;
 use App\Models\ScholarshipProfile;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -60,6 +61,18 @@ class DisbursementController extends Controller
 
         $disbursement = Disbursement::create($validated);
 
+        // Log disbursement creation
+        ActivityLogService::logRecordCreated(
+            profileId: $validated['profile_id'],
+            recordData: [
+                'disbursement_type' => $validated['disbursement_type'] ?? 'N/A',
+                'payee' => $validated['payee'] ?? 'N/A',
+                'amount' => $validated['amount'] ?? 0,
+                'obr_status' => $validated['obr_status'] ?? 'N/A'
+            ],
+            remarks: "Created disbursement: {$validated['payee']} - {$validated['amount']}"
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Disbursement created successfully',
@@ -90,7 +103,16 @@ class DisbursementController extends Controller
         ]);
 
         $disbursement = Disbursement::findOrFail($id);
+        $oldData = $disbursement->getAttributes();
         $disbursement->update($validated);
+
+        // Log disbursement update
+        ActivityLogService::logRecordUpdated(
+            profileId: $disbursement->profile_id,
+            oldData: $oldData,
+            newData: $disbursement->fresh()->getAttributes(),
+            remarks: "Updated disbursement: {$validated['payee']}"
+        );
 
         return response()->json([
             'success' => true,
@@ -105,7 +127,15 @@ class DisbursementController extends Controller
     public function destroy($id)
     {
         $disbursement = Disbursement::findOrFail($id);
+        $disbursementData = $disbursement->getAttributes();
         $disbursement->delete();
+
+        // Log disbursement deletion
+        ActivityLogService::logRecordDeleted(
+            profileId: $disbursementData['profile_id'],
+            recordData: $disbursementData,
+            remarks: "Deleted disbursement: {$disbursementData['payee']}"
+        );
 
         return response()->json([
             'success' => true,
@@ -129,6 +159,14 @@ class DisbursementController extends Controller
 
         $cheque = Cheque::create($validated);
 
+        // Log cheque addition
+        $disbursement = Disbursement::findOrFail($disbursementId);
+        ActivityLogService::logRecordCreated(
+            profileId: $disbursement->profile_id,
+            recordData: ['cheque_no' => $validated['cheque_no']],
+            remarks: "Added cheque: {$validated['cheque_no']}"
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Cheque added successfully',
@@ -148,7 +186,17 @@ class DisbursementController extends Controller
         ]);
 
         $cheque = Cheque::findOrFail($chequeId);
+        $oldData = $cheque->getAttributes();
         $cheque->update($validated);
+
+        // Log cheque update
+        $disbursement = $cheque->disbursement;
+        ActivityLogService::logRecordUpdated(
+            profileId: $disbursement->profile_id,
+            oldData: $oldData,
+            newData: $cheque->fresh()->getAttributes(),
+            remarks: "Updated cheque: {$validated['cheque_no']}"
+        );
 
         return response()->json([
             'success' => true,
@@ -163,7 +211,16 @@ class DisbursementController extends Controller
     public function destroyCheque($chequeId)
     {
         $cheque = Cheque::findOrFail($chequeId);
+        $chequeData = $cheque->getAttributes();
+        $disbursement = $cheque->disbursement;
         $cheque->delete();
+
+        // Log cheque deletion
+        ActivityLogService::logRecordDeleted(
+            profileId: $disbursement->profile_id,
+            recordData: $chequeData,
+            remarks: "Deleted cheque: {$chequeData['cheque_no']}"
+        );
 
         return response()->json([
             'success' => true,
@@ -217,6 +274,14 @@ class DisbursementController extends Controller
             'file_size' => $file->getSize(),
         ]);
 
+        // Log attachment upload
+        ActivityLogService::logAttachmentUploaded(
+            profileId: $disbursement->profile_id,
+            attachmentName: $validated['attachment_type'],
+            fileName: $fileName,
+            remarks: "Uploaded {$validated['attachment_type']}: {$fileName}"
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Attachment uploaded successfully',
@@ -230,6 +295,8 @@ class DisbursementController extends Controller
     public function deleteAttachment($attachmentId)
     {
         $attachment = DisbursementAttachment::findOrFail($attachmentId);
+        $disbursement = $attachment->disbursement;
+        $attachmentData = $attachment->getAttributes();
 
         // Delete file from storage
         if (Storage::disk('public')->exists($attachment->file_path)) {
@@ -237,6 +304,14 @@ class DisbursementController extends Controller
         }
 
         $attachment->delete();
+
+        // Log attachment deletion
+        ActivityLogService::logAttachmentDeleted(
+            profileId: $disbursement->profile_id,
+            attachmentName: $attachmentData['attachment_type'],
+            fileName: $attachmentData['file_name'],
+            remarks: "Deleted {$attachmentData['attachment_type']}: {$attachmentData['file_name']}"
+        );
 
         return response()->json([
             'success' => true,

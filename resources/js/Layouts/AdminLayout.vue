@@ -1,7 +1,8 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, provide } from "vue";
 import SidebarLink from "@/Components/ui/navigation/SidebarLink.vue";
 import NotificationDropdown from "@/Components/ui/navigation/NotificationDropdown.vue";
+import ActivityLogsDropdown from "@/Components/ui/navigation/ActivityLogsDropdown.vue";
 import { Link, usePage } from "@inertiajs/vue3";
 import { usePermission } from "@/composable/permissions";
 
@@ -16,6 +17,7 @@ const toggleMenu = ref(false);
 const sidebarMinimized = ref(localStorage.getItem('sidebarMinimized') === 'true');
 const userMenuRef = ref(null);
 const unreadUpdatesCount = ref(0);
+const activityLogsDropdownRef = ref(null);
 
 function toggleSidebarMinimized() {
     sidebarMinimized.value = !sidebarMinimized.value;
@@ -49,6 +51,16 @@ function getRoleDisplay() {
 
     return 'User';
 }
+
+// Function to refresh activity logs dropdown
+function refreshActivityLogs() {
+    if (activityLogsDropdownRef.value && activityLogsDropdownRef.value.refreshActivities) {
+        activityLogsDropdownRef.value.refreshActivities();
+    }
+}
+
+// Provide refresh function to child components
+provide('refreshActivityLogs', refreshActivityLogs);
 
 // Fetch unread updates count
 async function fetchUnreadCount() {
@@ -261,6 +273,13 @@ onUnmounted(() => {
                                     </SidebarLink>
                                 </li>
                                 <li>
+                                    <SidebarLink v-if="hasRole('administrator')" :href="route('admin.deleted-records')"
+                                        :active="route().current('admin.deleted-records')">
+                                        <i class="pi pi-trash mr-2"></i>
+                                        <span class="-mr-1 font-medium indent-3">Deleted Records</span>
+                                    </SidebarLink>
+                                </li>
+                                <li>
                                     <SidebarLink v-if="hasRole('administrator')" :href="route('data-export.index')"
                                         :active="route().current('data-export.index')">
                                         <i class="pi pi-download mr-2"></i>
@@ -392,6 +411,14 @@ onUnmounted(() => {
                         </SidebarLink>
                     </li>
                     <li v-if="hasRole('administrator')">
+                        <SidebarLink :href="route('admin.deleted-records')"
+                            :active="route().current('admin.deleted-records')"
+                            class="flex flex-col justify-center text-center">
+                            <i class="pi pi-trash text-xl"></i>
+                            <span class="text-xs">trash</span>
+                        </SidebarLink>
+                    </li>
+                    <li v-if="hasRole('administrator')">
                         <SidebarLink :href="route('data-export.index')" :active="route().current('data-export.index')"
                             class="flex flex-col justify-center text-center">
                             <i class="pi pi-download text-xl"></i>
@@ -442,6 +469,9 @@ onUnmounted(() => {
                         <NotificationDropdown
                             :unread-count="($page.props.auth.user && $page.props.auth.user.unread_notifications_count) || 0"
                             :class="{ 'animate-shake': ($page.props.auth.user && $page.props.auth.user.unread_notifications_count) > 0 }" />
+
+                        <!-- Activity Logs Dropdown -->
+                        <ActivityLogsDropdown ref="activityLogsDropdownRef" />
 
                         <!-- User Settings Menu -->
                         <div class="relative">

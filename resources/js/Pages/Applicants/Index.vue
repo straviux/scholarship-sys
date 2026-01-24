@@ -3,7 +3,7 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import moment from 'moment'
 import { Head, useForm, router, usePage } from '@inertiajs/vue3';
-import { ref, onBeforeUnmount, watch, computed } from 'vue';
+import { ref, onBeforeUnmount, watch, computed, inject } from 'vue';
 import { usePermission } from '@/composable/permissions';
 import axios from 'axios';
 
@@ -48,6 +48,9 @@ const openReportModal = () => { showReportModal.value = true; };
 
 
 const { hasPermission, hasRole } = usePermission();
+
+// Inject the refresh function from AdminLayout
+const refreshActivityLogs = inject('refreshActivityLogs', null);
 
 const props = defineProps({
     profile: Object,
@@ -274,6 +277,7 @@ const submitUpdateYakap = () => {
         closeUpdateYakapModal();
         toast.success('YAKAP category updated successfully!');
         refreshApplicationList();
+        if (refreshActivityLogs) refreshActivityLogs();
     }).catch(error => {
         toast.error('Failed to update YAKAP category');
         console.error(error.response?.data || error);
@@ -536,6 +540,7 @@ const submitRemarks = () => {
             toast.success('Remarks updated successfully!');
             closeRemarksModal();
             refreshApplicationList();
+            if (refreshActivityLogs) refreshActivityLogs();
         },
         onError: () => {
             toast.error('Failed to update remarks');
@@ -768,12 +773,13 @@ const closeDeleteModal = () => {
 const deleteApplicant = () => {
     if (!selectedApplicant.value) return;
 
-    router.delete(route('waitinglist.destroy', selectedApplicant.value.profile_id), {
+    router.delete(route('applicants.destroy', selectedApplicant.value.profile_id), {
         preserveState: true,
         preserveScroll: true,
         onSuccess: () => {
             closeDeleteModal();
             toast.success('Applicant deleted successfully');
+            if (refreshActivityLogs) refreshActivityLogs();
         },
         onError: () => {
             closeDeleteModal();
@@ -920,7 +926,8 @@ const closePriorityModal = () => {
 
 const handlePrioritySuccess = () => {
     closePriorityModal();
-    refreshApplicationList();
+    // Toast is shown in the modal after successful API response
+    // Don't show another toast here to avoid duplicates
 };
 
 const removePriority = (applicant) => {
@@ -1450,21 +1457,21 @@ const formatDate = (date) => {
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Prog. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Cour. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_course || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Sch. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_school_course || '-'
-                                                    }}</span>
+                                                }}</span>
 
                                             </div>
                                         </div>
@@ -1724,7 +1731,7 @@ const formatDate = (date) => {
                         class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows="6" placeholder="Enter remarks here..." />
                     <small v-if="remarksForm.errors.remarks" class="text-red-500">{{ remarksForm.errors.remarks
-                    }}</small>
+                        }}</small>
                 </div>
             </div>
 
@@ -1742,7 +1749,7 @@ const formatDate = (date) => {
                 <i class="pi pi-exclamation-triangle text-3xl text-red-500"></i>
                 <div>
                     <p class="text-lg font-semibold text-gray-800 mb-2">
-                        Are you sure you want to delete this applicant?
+                        {{ hasRole('administrator') ? 'Permanently delete this applicant?' : 'Delete this applicant?' }}
                     </p>
                     <div class="bg-gray-100 p-3 rounded border-l-4 border-red-500" v-if="selectedApplicant">
                         <div class="font-semibold text-red-700">
@@ -1751,14 +1758,19 @@ const formatDate = (date) => {
                         <div class="text-sm text-gray-600">{{ selectedApplicant.contact_no }}</div>
                     </div>
                     <p class="text-sm text-gray-600 mt-2">
-                        This action cannot be undone.
+                        {{ hasRole('administrator') ? `Administrators can permanently delete records. This action cannot
+                        be
+                        undone.` : `Non - administrators can soft delete records. Administrators can restore them
+                        later.`
+                        }}
                     </p>
                 </div>
             </div>
 
             <template #footer>
                 <Button label="Cancel" severity="secondary" @click="closeDeleteModal" outlined />
-                <Button label="Delete Applicant" severity="danger" @click="deleteApplicant" />
+                <Button :label="hasRole('administrator') ? 'Permanently Delete' : 'Delete Applicant'" severity="danger"
+                    @click="deleteApplicant" />
             </template>
         </Dialog>
 
@@ -1786,12 +1798,12 @@ const formatDate = (date) => {
                                     getApplicantFullName(selectedApplicantForReview) }}</h3>
                             <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
                                 <span><i class="pi pi-phone mr-1"></i>{{ selectedApplicantForReview.contact_no || 'N/A'
-                                    }}</span>
+                                }}</span>
                                 <span><i class="pi pi-envelope mr-1"></i>{{ selectedApplicantForReview.email || 'N/A'
-                                    }}</span>
+                                }}</span>
                                 <span><i class="pi pi-calendar mr-1"></i>{{
                                     formatDate(selectedApplicantForReview.date_filed)
-                                    }}</span>
+                                }}</span>
                             </div>
                         </div>
                         <!-- Queue Numbers -->
@@ -1885,7 +1897,7 @@ const formatDate = (date) => {
                                             <label class="text-gray-600">Income</label>
                                             <div class="font-medium">{{ selectedApplicantForReview.gross_monthly_income
                                                 || 'N/A'
-                                                }}</div>
+                                            }}</div>
                                         </div>
                                         <div>
                                             <label class="text-gray-600">Address</label>

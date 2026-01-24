@@ -47,7 +47,7 @@ class ActivityLogService
     /**
      * Log scholarship record created
      */
-    public static function logRecordCreated($profileId, $recordData = [], $remarks = null)
+    public static function logRecordCreated($profileId, $recordData = [], $remarks = null, $snapshotAfter = null)
     {
         // Autogenerate remarks if not provided
         if (!$remarks) {
@@ -68,14 +68,15 @@ class ActivityLogService
                 'academic_year' => $recordData['academic_year'] ?? null,
                 'term' => $recordData['term'] ?? null
             ],
-            remarks: $remarks
+            remarks: $remarks,
+            snapshotAfter: $snapshotAfter
         );
     }
 
     /**
      * Log scholarship record updated
      */
-    public static function logRecordUpdated($profileId, $oldData = [], $newData = [], $remarks = null)
+    public static function logRecordUpdated($profileId, $oldData = [], $newData = [], $remarks = null, $snapshotBefore = null, $snapshotAfter = null)
     {
         $changes = [];
         $details = [];
@@ -107,7 +108,9 @@ class ActivityLogService
                 action: 'updated',
                 description: 'Updated scholarship record: ' . implode(', ', $changes),
                 details: $details,
-                remarks: $remarks
+                remarks: $remarks,
+                snapshotBefore: $snapshotBefore,
+                snapshotAfter: $snapshotAfter
             );
         }
     }
@@ -115,7 +118,7 @@ class ActivityLogService
     /**
      * Log scholarship record deleted
      */
-    public static function logRecordDeleted($profileId, $recordData = [], $remarks = null)
+    public static function logRecordDeleted($profileId, $recordData = [], $remarks = null, $snapshotBefore = null)
     {
         // Autogenerate remarks if not provided
         if (!$remarks) {
@@ -135,7 +138,8 @@ class ActivityLogService
                 'academic_year' => $recordData['academic_year'] ?? null,
                 'term' => $recordData['term'] ?? null
             ],
-            remarks: $remarks
+            remarks: $remarks,
+            snapshotBefore: $snapshotBefore
         );
     }
 

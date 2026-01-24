@@ -8,6 +8,7 @@ use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipRecord;
 use App\Models\Course;
 use App\Models\School;
+use App\Services\ActivityLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -195,6 +196,7 @@ class ScholarController extends Controller
 
             if ($record) {
                 // Update existing scholarship record
+                $oldData = $record->getAttributes();
                 $record->update([
                     'course_id' => $course->id ?? null,
                     'term' => $request->term,
@@ -205,6 +207,13 @@ class ScholarController extends Controller
                     'date_filed' => $request->date_filed ?? $record->date_filed,
                     'date_approved' => $request->date_approved ?? $record->date_approved,
                 ]);
+
+                // Log the update activity
+                ActivityLogService::logRecordUpdated(
+                    profileId: $record->profile_id,
+                    oldData: $oldData,
+                    newData: $record->fresh()->getAttributes()
+                );
             } else {
                 // If no active record exists, create a new one
                 ScholarshipRecord::create([

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateSchoolRequest;
 use App\Models\School;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\Inertia;
@@ -60,7 +61,15 @@ class SchoolController extends Controller
      */
     public function store(CreateSchoolRequest $request): RedirectResponse
     {
-        School::create($request->validated());
+        $school = School::create($request->validated());
+
+        // Log school creation
+        ActivityLogService::logRecordCreated(
+            profileId: null,
+            recordData: ['name' => $school->name, 'shortname' => $school->shortname],
+            remarks: "Created school: {$school->name}"
+        );
+
         return back();
     }
 
@@ -71,6 +80,7 @@ class SchoolController extends Controller
     public function update(Request $request, School $school)
     {
         $school = School::findOrFail($school->id);
+        $oldData = $school->getAttributes();
         $school->update($request->validate([
             "name" => [
                 'required',
@@ -106,6 +116,15 @@ class SchoolController extends Controller
                 'boolean'
             ],
         ]));
+
+        // Log school update
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: $oldData,
+            newData: $school->fresh()->getAttributes(),
+            remarks: "Updated school: {$school->name}"
+        );
+
         return back();
     }
 
@@ -114,7 +133,16 @@ class SchoolController extends Controller
      */
     public function destroy(School $school)
     {
+        $schoolData = $school->getAttributes();
         $school->delete();
+
+        // Log school deletion
+        ActivityLogService::logRecordDeleted(
+            profileId: null,
+            recordData: $schoolData,
+            remarks: "Deleted school: {$schoolData['name']}"
+        );
+
         return back();
     }
 

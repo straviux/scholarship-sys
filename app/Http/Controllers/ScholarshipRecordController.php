@@ -7,11 +7,14 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\CreateScholarshipRecordRequest;
 use App\Models\ScholarshipRecord;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipRecordRequirement;
 use App\Models\ScholarshipProgram;
+use App\Services\ActivityLogService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
@@ -181,18 +184,39 @@ class ScholarshipRecordController extends Controller
     public function update(CreateScholarshipRecordRequest $request, $id)
     {
         $record = ScholarshipRecord::findOrFail($id);
+        $profile = ScholarshipProfile::find($record->profile_id);
+        $oldData = $record->getAttributes();
         $validated = $request->validated();
         $validated['date_approved'] = $request->date_approved ?? $record->date_approved;
 
         $record->update($validated);
+
+        // Log the update activity with scholar profile snapshot
+        ActivityLogService::logRecordUpdated(
+            profileId: $record->profile_id,
+            oldData: $oldData,
+            newData: $record->fresh()->getAttributes(),
+            snapshotBefore: $profile ? $profile->getAttributes() : null,
+            snapshotAfter: $profile ? $profile->fresh()->getAttributes() : null
+        );
+
         return response()->json(['message' => 'Scholarship record updated successfully.', 'data' => $record]);
     }
 
     public function updateScholarshipStatusApi($id, Request $request): JsonResponse
     {
         $scholarship = ScholarshipRecord::find($id);
+        $oldStatus = $scholarship->unified_status;
         // $neweducbackground = ApplicantEducationalBackground::create($request->validated());
         $scholarship->updateScholarshipStatus($request->status_id);
+
+        // Log the status change
+        ActivityLogService::logStatusChange(
+            profileId: $scholarship->profile_id,
+            oldStatus: $oldStatus,
+            newStatus: $scholarship->fresh()->unified_status
+        );
+
         return response()->json(['message' => 'success', 'data' => $scholarship]);
         // return back();
     }
@@ -200,8 +224,18 @@ class ScholarshipRecordController extends Controller
     public function updateRemarks($id, Request $request): JsonResponse
     {
         $scholarship = ScholarshipRecord::find($id);
+        $oldRemarks = $scholarship->remarks;
         // $neweducbackground = ApplicantEducationalBackground::create($request->validated());
         $scholarship->updateRemarks($request->remarks);
+
+        // Log the remarks update
+        ActivityLogService::logRecordUpdated(
+            profileId: $scholarship->profile_id,
+            oldData: ['remarks' => $oldRemarks],
+            newData: ['remarks' => $request->remarks],
+            remarks: "Updated remarks: {$request->remarks}"
+        );
+
         // $scholarship->
         return response()->json(['message' => 'success', 'data' => $scholarship]);
         // return back();
@@ -299,8 +333,33 @@ class ScholarshipRecordController extends Controller
         }
 
         $record = ScholarshipRecord::findOrFail($id);
+        $oldGrantProvision = $record->grant_provision;
         $record->grant_provision = $grantProvision;
         $record->save();
+
+        // Log activity directly to database
+        try {
+            \App\Models\ActivityLog::create([
+                'profile_id' => $record->profile_id,
+                'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                'activity_type' => 'record_updated',
+                'action' => 'updated',
+                'description' => 'Grant provision updated',
+                'details' => [
+                    'grant_provision' => [
+                        'old' => $oldGrantProvision,
+                        'new' => $grantProvision
+                    ]
+                ],
+                'remarks' => "Changed grant provision from {$oldGrantProvision} to {$grantProvision}",
+                'performed_at' => now()
+            ]);
+        } catch (\Exception $logError) {
+            \Illuminate\Support\Facades\Log::warning('Activity logging failed for grant provision update', [
+                'record_id' => $record->id,
+                'error' => $logError->getMessage()
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Grant provision updated successfully.');
     }
@@ -317,6 +376,9 @@ class ScholarshipRecordController extends Controller
 
         try {
             $record = ScholarshipRecord::findOrFail($id);
+            $oldCategory = $record->yakap_category;
+            $oldLocation = $record->yakap_location;
+
             $record->yakap_category = $request->yakap_category;
 
             // Only update location if not capitol
@@ -328,6 +390,35 @@ class ScholarshipRecordController extends Controller
 
             $record->save();
 
+            // Log activity directly to database
+            try {
+                \App\Models\ActivityLog::create([
+                    'profile_id' => $record->profile_id,
+                    'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                    'activity_type' => 'record_updated',
+                    'action' => 'updated',
+                    'description' => 'YAKAP category updated',
+                    'details' => [
+                        'yakap_category' => [
+                            'old' => $oldCategory,
+                            'new' => $record->yakap_category
+                        ],
+                        'yakap_location' => [
+                            'old' => $oldLocation,
+                            'new' => $record->yakap_location
+                        ]
+                    ],
+                    'remarks' => "Changed YAKAP category from {$oldCategory} to {$record->yakap_category}" .
+                        ($record->yakap_location ? " (Location: {$record->yakap_location})" : ""),
+                    'performed_at' => now()
+                ]);
+            } catch (\Exception $logError) {
+                \Illuminate\Support\Facades\Log::warning('Activity logging failed for YAKAP update', [
+                    'record_id' => $record->id,
+                    'error' => $logError->getMessage()
+                ]);
+            }
+
             if ($request->wantsJson()) {
                 return response()->json([
                     'message' => 'YAKAP category updated successfully',
@@ -338,7 +429,7 @@ class ScholarshipRecordController extends Controller
 
             return redirect()->back()->with('success', 'YAKAP category updated successfully.');
         } catch (\Exception $e) {
-            \Log::error('Error updating YAKAP category: ' . $e->getMessage());
+            Log::error('Error updating YAKAP category: ' . $e->getMessage());
 
             if ($request->wantsJson()) {
                 return response()->json(['error' => 'Failed to update YAKAP category'], 500);
@@ -354,11 +445,50 @@ class ScholarshipRecordController extends Controller
     public function destroy($id)
     {
         $record = ScholarshipRecord::findOrFail($id);
+        $recordData = $record->getAttributes();
+        $profileId = $record->profile_id;
+
+        // Log soft deletion BEFORE deleting
+        ActivityLogService::logRecordDeleted(
+            profileId: $profileId,
+            recordData: $recordData,
+            remarks: "Soft deleted scholarship record for {$profileId}"
+        );
+
+        // Soft deletion for all users (recovery available from Deleted Records)
         $record->delete();
+
         if (request()->wantsJson()) {
             return response()->json(['message' => 'Scholarship record deleted successfully.']);
         }
         return redirect()->back()->with('message', 'Scholarship record deleted successfully.');
+    }
+
+    /**
+     * Restore a soft-deleted scholarship record (admin only)
+     */
+    public function restore($id)
+    {
+        // Check if user is administrator
+        if (!auth()->user()?->hasRole('administrator')) {
+            abort(403, 'Only administrators can restore deleted records.');
+        }
+
+        $record = ScholarshipRecord::onlyTrashed()->findOrFail($id);
+        $record->restore();
+
+        // Log restoration
+        ActivityLogService::logRecordUpdated(
+            profileId: $record->profile_id,
+            oldData: ['status' => 'deleted'],
+            newData: ['status' => 'restored'],
+            remarks: "Restored deleted scholarship record for {$record->profile_id}"
+        );
+
+        if (request()->wantsJson()) {
+            return response()->json(['message' => 'Scholarship record restored successfully.']);
+        }
+        return redirect()->back()->with('message', 'Scholarship record restored successfully.');
     }
 
     /**
@@ -435,7 +565,7 @@ class ScholarshipRecordController extends Controller
 
             return redirect()->back()->with('success', "YAKAP category updated for {$updated} record(s)");
         } catch (\Exception $e) {
-            \Log::error('Error batch updating YAKAP category: ' . $e->getMessage());
+            Log::error('Error batch updating YAKAP category: ' . $e->getMessage());
 
             if ($request->wantsJson()) {
                 return response()->json(['error' => 'Failed to batch update YAKAP categories'], 500);

@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\FormTemplate;
 use App\Models\SystemOption;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Response;
 use Inertia\Inertia;
 
 class FormTemplateController extends Controller
@@ -68,7 +70,14 @@ class FormTemplateController extends Controller
         $validated['created_by'] = auth()->id();
         $validated['updated_by'] = auth()->id();
 
-        FormTemplate::create($validated);
+        $template = FormTemplate::create($validated);
+
+        // Log form template creation
+        ActivityLogService::logRecordCreated(
+            profileId: null,
+            recordData: ['title' => $template->title, 'category' => $template->category],
+            remarks: "Uploaded form template: {$template->title}"
+        );
 
         return back()->with('success', 'Form/letter uploaded successfully.');
     }
@@ -110,7 +119,16 @@ class FormTemplateController extends Controller
 
         $validated['updated_by'] = auth()->id();
 
+        $oldData = $formTemplate->getAttributes();
         $formTemplate->update($validated);
+
+        // Log form template update
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: $oldData,
+            newData: $formTemplate->fresh()->getAttributes(),
+            remarks: "Updated form template: {$formTemplate->title}"
+        );
 
         return back()->with('success', 'Form/letter updated successfully.');
     }
@@ -124,12 +142,21 @@ class FormTemplateController extends Controller
             abort(403, 'User does not have the right permissions');
         }
 
+        $templateData = $formTemplate->getAttributes();
+
         // Delete the file
         if ($formTemplate->file_path && Storage::disk('public')->exists($formTemplate->file_path)) {
             Storage::disk('public')->delete($formTemplate->file_path);
         }
 
         $formTemplate->delete();
+
+        // Log form template deletion
+        ActivityLogService::logRecordDeleted(
+            profileId: null,
+            recordData: $templateData,
+            remarks: "Deleted form template: {$templateData['title']}"
+        );
 
         return back()->with('success', 'Form template deleted successfully.');
     }

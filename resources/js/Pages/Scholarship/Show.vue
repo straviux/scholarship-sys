@@ -448,7 +448,7 @@
                                                 </div>
 
                                                 <div class="mb-3">
-                                                    <p class="text-xs text-gray-600">Changed By</p>
+                                                    <p class="text-xs text-gray-600">Encoded by</p>
                                                     <p class="text-sm font-medium text-gray-900">{{
                                                         timeline.changed_by?.name || 'System'
                                                     }}</p>
@@ -855,7 +855,7 @@
 
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed, watch, onUnmounted, nextTick, onMounted } from 'vue';
+import { ref, computed, watch, onUnmounted, nextTick, onMounted, inject } from 'vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
@@ -892,6 +892,9 @@ const props = defineProps({
 
 // Permission composable
 const { hasPermission } = usePermission();
+
+// Inject the refresh function from AdminLayout
+const refreshActivityLogs = inject('refreshActivityLogs', null);
 
 // State
 const activeTab = ref(localStorage.getItem('scholarProfileActiveTab') || '0');
@@ -1172,6 +1175,7 @@ const handleSuccess = () => {
     showFamilyInfoModal.value = false;
     setTimeout(() => {
         router.reload({ only: ['profile'] });
+        if (refreshActivityLogs) refreshActivityLogs();
     }, 1500);
 };
 
@@ -1282,6 +1286,7 @@ const submitRecord = async () => {
 
         closeRecordModal();
         router.reload({ only: ['profile'] });
+        if (refreshActivityLogs) refreshActivityLogs();
     } catch (error) {
         console.error('Error submitting scholarship record:', error);
         console.error('Error response:', error.response?.data);
@@ -1318,6 +1323,7 @@ const deleteRecord = async () => {
         showDeleteConfirm.value = false;
         recordToDelete.value = null;
         router.reload({ only: ['profile'] });
+        if (refreshActivityLogs) refreshActivityLogs();
     } catch (error) {
         console.error('Error deleting scholarship record:', error);
         toast.error(error.response?.data?.message || 'Failed to delete scholarship record');
@@ -1407,6 +1413,7 @@ const uploadAttachment = async () => {
 
         // Reload the profile data to update all views
         router.reload({ only: ['profile'] });
+        if (refreshActivityLogs) refreshActivityLogs();
     } catch (error) {
         toast.error(error.response?.data?.message || 'Failed to upload attachment');
     } finally {
@@ -1438,6 +1445,7 @@ const deleteAttachment = async (attachment) => {
 
         // Reload the profile data to update all views
         router.reload({ only: ['profile'] });
+        if (refreshActivityLogs) refreshActivityLogs();
     } catch (error) {
         toast.error(error.response?.data?.message || 'Failed to delete attachment');
     }

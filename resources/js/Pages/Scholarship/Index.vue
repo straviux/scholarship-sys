@@ -346,11 +346,14 @@
                                 <div class="flex gap-2">
                                     <Button icon="pi pi-eye" size="small" severity="info" outlined rounded
                                         v-tooltip.top="'View'" @click="viewFullProfile(slotProps.data)" />
+                                    <Button icon="pi pi-trash" size="small" severity="danger" outlined rounded
+                                        v-tooltip.top="'Soft Delete (Admin Only)'"
+                                        @click="confirmDeleteProfile(slotProps.data)"
+                                        :disabled="!hasRole('administrator')"
+                                        :class="{ 'opacity-50': !hasRole('administrator') }" />
                                 </div>
                             </template>
-                        </Column>
-
-                        <template #empty>
+                        </Column> <template #empty>
                             <div class="text-center py-12">
                                 <i class="pi pi-users text-6xl text-gray-300 mb-4"></i>
                                 <p class="text-gray-500 text-lg">No profiles found</p>
@@ -570,6 +573,29 @@
             </template>
         </Dialog>
 
+        <!-- Delete Confirmation Modal -->
+        <Dialog v-model:visible="showDeleteConfirmDialog" modal header="Confirm Soft Delete"
+            :style="{ width: '500px' }">
+            <div class="space-y-4">
+                <div class="flex items-center gap-3">
+                    <i class="pi pi-exclamation-triangle text-2xl text-orange-500"></i>
+                    <div>
+                        <p class="font-semibold text-gray-900">Soft Delete Profile</p>
+                        <p class="text-sm text-gray-600">This action can be undone from the Deleted Records page</p>
+                    </div>
+                </div>
+                <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                    <p class="text-sm text-blue-800">
+                        <strong>Profile:</strong> {{ profileToDelete ? getFullName(profileToDelete) : 'N/A' }}
+                    </p>
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Cancel" severity="secondary" @click="showDeleteConfirmDialog = false" outlined />
+                <Button label="Soft Delete" severity="danger" @click="deleteProfile" />
+            </template>
+        </Dialog>
+
         <!-- Application Form Modal -->
         <ApplicantFormModal v-model:visible="showAddApplicantModal" :profiles="profiles" @success="refreshData" />
 
@@ -582,12 +608,15 @@
 </template>
 
 <script setup>
-import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import moment from 'moment';
 import { usePermission } from '@/composable/permissions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
+import axios from 'axios';
+import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
 
 
 // Custom Select Components
@@ -661,6 +690,26 @@ const selectedProfileForContext = ref(null);
 // Permission composable
 const { hasPermission } = usePermission();
 
+// Helper to check user role
+const hasRole = (role) => {
+    try {
+        const page = usePage();
+        const user = page.props?.auth?.user;
+        if (!user) return false;
+
+        // Check roles array
+        if (Array.isArray(user.roles)) {
+            return user.roles.some(r => r.name === role || r === role);
+        }
+
+        // Fallback: check if role is in user directly
+        return user[role] === true || false;
+    } catch (error) {
+        console.error('Error checking role:', error);
+        return false;
+    }
+};
+
 // Grant Provision Options
 const grantProvisionOptions = ref(['Matriculation', 'RLE', 'Tuition', 'RLE and Tuition']);
 
@@ -691,7 +740,12 @@ const grantProvisionForm = useForm({
     grant_provision: null,
 });
 
-// Computed properties
+// Delete Confirmation Dialog
+const showDeleteConfirmDialog = ref(false);
+const profileToDelete = ref(null);
+
+// Inject the refresh function from AdminLayout
+const refreshActivityLogs = inject('refreshActivityLogs', null);
 const { statusOptions, getStatusLabel, getStatusSeverity, getStatusStyle } = useScholarshipStatus();
 
 const unifiedStatusOptions = computed(() => [
@@ -739,6 +793,20 @@ const contextMenuItems = computed(() => [
             }
         },
         visible: () => hasPermission('applicants.edit') && selectedProfileForContext.value?.latest_scholarship_record
+    },
+    {
+        separator: true,
+        visible: () => hasRole('administrator')
+    },
+    {
+        label: 'Soft Delete',
+        icon: 'pi pi-trash',
+        command: () => {
+            if (selectedProfileForContext.value && hasRole('administrator')) {
+                confirmDeleteProfile(selectedProfileForContext.value);
+            }
+        },
+        visible: () => hasRole('administrator')
     }
 ]);
 
@@ -927,6 +995,31 @@ const viewFullProfile = (profile) => {
     router.visit(route('scholarship.profile.show', profile.profile_id));
 };
 
+const confirmDeleteProfile = (profile) => {
+    profileToDelete.value = profile;
+    showDeleteConfirmDialog.value = true;
+};
+
+const deleteProfile = async () => {
+    if (!profileToDelete.value) return;
+
+    const profile = profileToDelete.value;
+    showDeleteConfirmDialog.value = false;
+
+    try {
+        const response = await axios.delete(route('applicants.destroy', profile.profile_id));
+        toast.success('Profile soft deleted successfully. You can restore it from the Deleted Records page.');
+        refreshData();
+    } catch (error) {
+        console.error('Delete profile error:', error);
+        console.error('Response:', error.response?.data);
+        const errorMsg = error.response?.data?.message || error.message || 'Failed to delete profile';
+        toast.error(errorMsg);
+    } finally {
+        profileToDelete.value = null;
+    }
+};
+
 const openGrantProvisionDialog = (profile) => {
     selectedProfileForGrant.value = profile;
 
@@ -978,6 +1071,7 @@ const updateGrantProvision = () => {
                 scholarshipRecordOptions.value = [];
                 grantProvisionForm.reset();
                 refreshData();
+                if (refreshActivityLogs) refreshActivityLogs();
             },
             onError: (errors) => {
                 console.error('Failed to update grant provision:', errors);

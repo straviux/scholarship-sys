@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ScholarshipRecordAttachment extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'scholarship_record_attachments';
     protected $primaryKey = 'attachment_id';
 

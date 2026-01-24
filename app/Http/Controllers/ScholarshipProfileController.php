@@ -13,13 +13,14 @@ use App\Models\ScholarshipRecord;
 use App\Models\Course;
 use App\Models\School;
 use App\Services\ScholarshipApprovalService;
+use Illuminate\Support\Facades\Auth;
 use App\Services\ScholarshipCompletionService;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Auth;
 
 class ScholarshipProfileController extends Controller
 {
@@ -38,6 +39,13 @@ class ScholarshipProfileController extends Controller
         $validated = $request->validated();
         // is_on_waiting_list is now managed through scholarship_records.application_status
         $new_profile = ScholarshipProfile::create($validated);
+
+        // Log profile creation
+        ActivityLogService::logRecordCreated(
+            profileId: $new_profile->profile_id,
+            recordData: $validated,
+            remarks: "Created new applicant profile: {$new_profile->first_name} {$new_profile->last_name}"
+        );
 
         // Create scholarship record if ANY academic information is provided
         $hasAcademicInfo = $request->course || $request->course_id || $request->school || $request->school_id
@@ -103,6 +111,7 @@ class ScholarshipProfileController extends Controller
         }
 
         $profile = ScholarshipProfile::findOrFail($id);
+        $oldData = $profile->getAttributes();
 
         // Debug: Log incoming request data
         Log::info('Update Applicant Request Data:', [
@@ -189,6 +198,13 @@ class ScholarshipProfileController extends Controller
 
         $profile->update($validated);
 
+        // Log profile update
+        ActivityLogService::logRecordUpdated(
+            profileId: $profile->profile_id,
+            oldData: $oldData,
+            newData: $profile->fresh()->getAttributes()
+        );
+
         // Refresh from database to check what was actually saved
         $profile->refresh();
         Log::info('Profile after update:', [
@@ -226,7 +242,16 @@ class ScholarshipProfileController extends Controller
     public function deleteEducationBackgroundApi($id)
     {
         $edu = EducationalBackground::find($id);
-        // $neweducbackground = EducationalBackground::create($request->validated());
+        $eduData = $edu->getAttributes();
+        $profileId = $edu->profile_id;
+
+        // Log education deletion
+        ActivityLogService::logRecordDeleted(
+            profileId: $profileId,
+            recordData: $eduData,
+            remarks: "Deleted education background: {$eduData['school_name']}"
+        );
+
         $edu->delete();
         return response()->json(['message' => 'success']);
         // return back();
@@ -234,11 +259,21 @@ class ScholarshipProfileController extends Controller
 
     public function updateEducationBackgroundApi(Request $request, EducationalBackground $education)
     {
+        $oldData = $education->getAttributes();
         $education->update($request->validate([
             'school_name' => 'required|string|max:255',
             'start_date' => 'required|date_format:Y',
             'end_date' => 'required|date_format:Y',
         ]));
+
+        // Log education update
+        ActivityLogService::logRecordUpdated(
+            profileId: $education->profile_id,
+            oldData: $oldData,
+            newData: $education->fresh()->getAttributes(),
+            remarks: "Updated education background: {$education->school_name}"
+        );
+
         return response()->json(['message' => 'success']);
     }
 
@@ -392,17 +427,56 @@ class ScholarshipProfileController extends Controller
     public function destroy($id)
     {
         $profile = ScholarshipProfile::findOrFail($id);
-        // Delete related scholarship records
-        ScholarshipRecord::where('profile_id', $profile->profile_id)->delete();
-        // Delete related educational backgrounds
-        EducationalBackground::where('profile_id', $profile->profile_id)->delete();
-        // Add more related deletions if needed (e.g., requirements, etc.)
+        $profileData = $profile->getAttributes();
+
+        // Log profile soft deletion BEFORE deleting
+        ActivityLogService::logRecordDeleted(
+            profileId: $id,
+            recordData: $profileData,
+            remarks: "Soft deleted applicant profile: {$profileData['first_name']} {$profileData['last_name']}"
+        );
+
+        // Soft deletion for all users (recovery available from Deleted Records)
+        ScholarshipRecord::where('profile_id', $id)->delete();
+        EducationalBackground::where('profile_id', $id)->delete();
         $profile->delete();
+
         // Return a redirect or JSON response as needed
         if (request()->wantsJson()) {
             return response()->json(['message' => 'Profile deleted successfully.']);
         }
         return redirect()->back()->with('message', 'Profile deleted successfully.');
+    }
+
+    /**
+     * Restore a soft-deleted profile (admin only)
+     */
+    public function restore($id)
+    {
+        // Check if user is administrator
+        if (!auth()->user()?->hasRole('administrator')) {
+            abort(403, 'Only administrators can restore deleted profiles.');
+        }
+
+        $profile = ScholarshipProfile::onlyTrashed()->findOrFail($id);
+        $profile->restore();
+
+        // Also restore related soft-deleted records
+        ScholarshipRecord::onlyTrashed()->where('profile_id', $profile->profile_id)->restore();
+        EducationalBackground::onlyTrashed()->where('profile_id', $profile->profile_id)->restore();
+
+        // Log restoration
+        ActivityLogService::logRecordUpdated(
+            profileId: $profile->profile_id,
+            oldData: ['status' => 'deleted'],
+            newData: ['status' => 'restored'],
+            remarks: "Restored deleted applicant profile: {$profile->first_name} {$profile->last_name}"
+        );
+
+        if (request()->wantsJson()) {
+            return response()->json(['message' => 'Profile restored successfully.']);
+        }
+        return redirect()->back()->with('message', 'Profile restored successfully.');
     }
 
     /**
@@ -1054,6 +1128,7 @@ class ScholarshipProfileController extends Controller
         ]);
 
         try {
+            $oldStatus = $record->completion_status;
             $record->update([
                 'completion_status' => $request->completion_status,
                 'completion_remarks' => $request->remarks,
@@ -1061,9 +1136,17 @@ class ScholarshipProfileController extends Controller
                 'completion_updated_by' => Auth::id()
             ]);
 
+            // Log completion status update
+            ActivityLogService::logStatusChange(
+                profileId: $record->profile_id,
+                oldStatus: $oldStatus,
+                newStatus: $request->completion_status,
+                remarks: "Updated completion status to: {$request->completion_status}"
+            );
+
             Log::info('Completion status updated', [
                 'record_id' => $record->id,
-                'old_status' => $record->getOriginal('completion_status'),
+                'old_status' => $oldStatus,
                 'new_status' => $request->completion_status,
                 'updated_by' => Auth::id()
             ]);
@@ -1156,29 +1239,87 @@ class ScholarshipProfileController extends Controller
      */
     public function assignPriority(Request $request, $id)
     {
-        // Check permissions
+        // Check permission
         if (!Gate::allows('can-manage-priority')) {
-            abort(403, 'Unauthorized action.');
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to manage priority.'
+            ], 403);
         }
 
-        $request->validate([
-            'priority_level' => 'required|in:low,normal,high,urgent',
-            'priority_reason' => 'required|string|max:500'
-        ]);
+        // Validate input
+        try {
+            $validated = $request->validate([
+                'priority_level' => 'required|in:low,normal,high,urgent',
+                'priority_reason' => 'required|string|max:500'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors(),
+                'message' => 'Validation failed.'
+            ], 422);
+        }
 
-        $profile = ScholarshipProfile::findOrFail($id);
+        try {
+            $profile = ScholarshipProfile::find($id);
+            if (!$profile) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Profile not found.'
+                ], 404);
+            }
 
-        $profile->update([
-            'priority_level' => $request->priority_level,
-            'priority_reason' => $request->priority_reason,
-            'priority_assigned_at' => now(),
-            'priority_assigned_by' => Auth::id()
-        ]);
+            $oldPriority = $profile->priority_level;
 
-        return back()->with('message', [
-            'type' => 'success',
-            'content' => 'Priority level assigned successfully!'
-        ]);
+            // Update profile with priority - this is the critical operation
+            $profile->priority_level = $validated['priority_level'];
+            $profile->priority_reason = $validated['priority_reason'];
+            $profile->priority_assigned_at = now();
+            $profile->priority_assigned_by = Auth::id();
+            $profile->save();
+
+            // Log activity directly to database (synchronous but lightweight)
+            try {
+                \App\Models\ActivityLog::create([
+                    'profile_id' => $profile->profile_id,
+                    'user_id' => Auth::id(),
+                    'activity_type' => 'record_updated',
+                    'action' => 'updated',
+                    'description' => 'Priority level assigned',
+                    'details' => [
+                        'priority_level' => [
+                            'old' => $oldPriority,
+                            'new' => $validated['priority_level']
+                        ]
+                    ],
+                    'remarks' => "Assigned {$validated['priority_level']} priority: {$validated['priority_reason']}",
+                    'performed_at' => now()
+                ]);
+            } catch (\Exception $logError) {
+                // Silently fail activity logging - don't block the main operation
+                Log::warning('Activity logging failed for priority assignment', [
+                    'profile_id' => $profile->profile_id,
+                    'error' => $logError->getMessage()
+                ]);
+            }
+
+            // Return minimal response
+            return response()->json([
+                'success' => true,
+                'message' => 'Priority level assigned successfully!'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error assigning priority', [
+                'error' => $e->getMessage(),
+                'id' => $id
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while assigning priority.'
+            ], 500);
+        }
     }
 
     /**
@@ -1192,6 +1333,7 @@ class ScholarshipProfileController extends Controller
         }
 
         $profile = ScholarshipProfile::findOrFail($id);
+        $oldPriority = $profile->priority_level;
 
         $profile->update([
             'priority_level' => 'normal',
@@ -1199,6 +1341,14 @@ class ScholarshipProfileController extends Controller
             'priority_assigned_at' => null,
             'priority_assigned_by' => null
         ]);
+
+        // Log priority removal
+        ActivityLogService::logRecordUpdated(
+            profileId: $profile->profile_id,
+            oldData: ['priority_level' => $oldPriority],
+            newData: ['priority_level' => 'normal'],
+            remarks: "Removed priority: was {$oldPriority}, now normal"
+        );
 
         return back()->with('message', [
             'type' => 'success',
@@ -1222,11 +1372,19 @@ class ScholarshipProfileController extends Controller
         ]);
 
         $profile = ScholarshipProfile::findOrFail($profile_id);
+        $oldRemarks = $profile->remarks;
 
         // Update the remarks
         $profile->update([
             'remarks' => $validated['remarks'] ?? null
         ]);
+
+        // Log the remarks update
+        ActivityLogService::logProfileEdited(
+            profileId: $profile->profile_id,
+            changes: ['remarks' => ['old' => $oldRemarks, 'new' => $validated['remarks'] ?? null]],
+            remarks: "Updated remarks: {$validated['remarks']}"
+        );
 
         return back()->with('message', [
             'type' => 'success',

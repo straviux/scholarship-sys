@@ -6,6 +6,7 @@ use App\Http\Resources\PermissionResource;
 use App\Http\Resources\RoleResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -67,6 +68,17 @@ class UserController extends Controller
         $user->syncRoles($getRole['name']);
         $user->syncPermissions($role->getPermissionNames());
 
+        // Log user creation
+        ActivityLogService::logRecordCreated(
+            profileId: null,
+            recordData: [
+                'name' => $user->name,
+                'username' => $user->username,
+                'role' => $getRole['name']
+            ],
+            remarks: "Created user account: {$user->name} ({$user->username})"
+        );
+
         return to_route('users.index');
     }
 
@@ -96,6 +108,7 @@ class UserController extends Controller
             'roles' => ['required', 'array']
         ]);
 
+        $oldData = $user->getAttributes();
         $getRole = $request->input('roles');
         $role = Role::findById($getRole['id']);
         $user->update([
@@ -106,6 +119,14 @@ class UserController extends Controller
 
         $user->syncRoles($getRole['name']);
         $user->syncPermissions($role->getPermissionNames());
+
+        // Log user update
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: $oldData,
+            newData: $user->fresh()->getAttributes()
+        );
+
         return back();
     }
 
@@ -115,7 +136,16 @@ class UserController extends Controller
     public function destroy(User $user): RedirectResponse
     {
         try {
+            $userData = $user->getAttributes();
             $user->delete();
+
+            // Log user deletion
+            ActivityLogService::logRecordDeleted(
+                profileId: null,
+                recordData: $userData,
+                remarks: "Deleted user account: {$userData['name']} ({$userData['username']})"
+            );
+
             return to_route('users.index')->with('success', 'User deleted successfully.');
         } catch (\Illuminate\Database\QueryException $e) {
             if ($e->getCode() == 23000) {
@@ -134,6 +164,15 @@ class UserController extends Controller
     {
         $user->password = Hash::make($request->password);
         $user->save();
+
+        // Log password change
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: ['password_changed' => false],
+            newData: ['password_changed' => true],
+            remarks: "Changed password for user: {$user->name}"
+        );
+
         return back()->with('success', 'Password updated successfully.');
     }
 }

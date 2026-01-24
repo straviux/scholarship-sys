@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Permission;
@@ -42,7 +43,17 @@ class PermissionManagementController extends Controller
         ]);
 
         $role = Role::findByName($request->role_name);
+        $oldPermissions = $role->permissions->pluck('name')->toArray();
         $role->syncPermissions($request->permissions);
+        $newPermissions = $role->permissions->pluck('name')->toArray();
+
+        // Log role permissions update
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: ['permissions' => $oldPermissions],
+            newData: ['permissions' => $newPermissions],
+            remarks: "Updated permissions for role: {$role->name}"
+        );
 
         // Clear permission cache
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();

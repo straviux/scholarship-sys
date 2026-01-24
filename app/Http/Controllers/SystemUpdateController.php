@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SystemUpdate;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -172,12 +173,28 @@ class SystemUpdateController extends Controller
             'created_by' => Auth::id(),
         ]);
 
+        // Log update creation
+        ActivityLogService::logRecordCreated(
+            profileId: null,
+            recordData: ['title' => $request->title, 'type' => $request->type ?? 'info'],
+            remarks: "Created system update: {$request->title}"
+        );
+
         return response()->json(['message' => 'System update created successfully', 'update' => $update]);
     }
 
     public function destroy(SystemUpdate $systemUpdate): JsonResponse
     {
+        $updateData = $systemUpdate->getAttributes();
         $systemUpdate->update(['is_active' => false]);
+
+        // Log update deactivation
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: ['is_active' => $updateData['is_active']],
+            newData: ['is_active' => false],
+            remarks: "Deactivated system update: {$updateData['title']}"
+        );
 
         return response()->json(['message' => 'System update deactivated']);
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SystemOption;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -50,6 +51,13 @@ class SystemOptionController extends Controller
 
         $option = SystemOption::create($validated);
 
+        // Log option creation
+        ActivityLogService::logRecordCreated(
+            profileId: null,
+            recordData: $validated,
+            remarks: "Created system option: {$validated['category']} - {$validated['value']}"
+        );
+
         return back()->with('success', 'Option created successfully.');
     }
 
@@ -79,7 +87,16 @@ class SystemOptionController extends Controller
             ]);
         }
 
+        $oldData = $systemOption->getAttributes();
         $systemOption->update($validated);
+
+        // Log option update
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: $oldData,
+            newData: $systemOption->fresh()->getAttributes(),
+            remarks: "Updated system option: {$systemOption->category} - {$systemOption->value}"
+        );
 
         return back()->with('success', 'Option updated successfully.');
     }
@@ -89,7 +106,15 @@ class SystemOptionController extends Controller
      */
     public function destroy(SystemOption $systemOption)
     {
+        $optionData = $systemOption->getAttributes();
         $systemOption->delete();
+
+        // Log option deletion
+        ActivityLogService::logRecordDeleted(
+            profileId: null,
+            recordData: $optionData,
+            remarks: "Deleted system option: {$optionData['category']} - {$optionData['value']}"
+        );
 
         return back()->with('success', 'Option deleted successfully.');
     }

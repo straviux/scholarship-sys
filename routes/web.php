@@ -22,6 +22,7 @@ use App\Http\Controllers\MobileUploadController;
 use App\Http\Controllers\DataExportController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -68,6 +69,13 @@ Route::middleware(['auth', 'check-roles:administrator|program_manager'])->group(
     // System Report Routes - Administrator Only
     Route::get('/admin/system-report', [SystemReportController::class, 'index'])->name('admin.system-report');
     Route::get('/admin/system-report/export-json', [SystemReportController::class, 'exportJson'])->name('admin.system-report.export-json');
+
+    // Deleted Records Management Routes - Administrator Only
+    Route::get('/admin/deleted-records', [AdminController::class, 'deletedRecords'])->name('admin.deleted-records');
+    Route::post('/admin/profiles/{id}/restore', [AdminController::class, 'restoreProfile'])->name('admin.profiles.restore');
+    Route::delete('/admin/profiles/{id}/permanently-delete', [AdminController::class, 'permanentlyDeleteProfile'])->name('admin.profiles.permanently-delete');
+    Route::post('/admin/scholarship-records/{id}/restore', [AdminController::class, 'restoreRecord'])->name('admin.records.restore');
+    Route::delete('/admin/scholarship-records/{id}/permanently-delete', [AdminController::class, 'permanentlyDeleteRecord'])->name('admin.records.permanently-delete');
 
     // Role Permissions Routes - Administrator Only
     Route::get('/permission-management', [PermissionManagementController::class, 'index'])->name('permissions.management');
@@ -177,6 +185,7 @@ Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->gro
     Route::post('/scholarship_records', 'store')->name('scholarship_records.store');
     Route::put('/scholarship_records/{id}', 'update')->name('scholarship_records.update');
     Route::delete('/scholarship_records/{scholarship_record}', 'destroy')->name('scholarship_records.destroy');
+    Route::post('/scholarship_records/{id}/restore', 'restore')->name('scholarship_records.restore');
 
     // API's
     Route::post('/scholarship-records/{id}/approve', 'approveScholarshipRecord')->name('scholarship-record.approve');
@@ -282,6 +291,12 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/applicants/{id}/remove-priority', [ScholarshipProfileController::class, 'removePriority'])
         ->name('applicants.remove-priority');
 
+    // Soft delete and restore routes for profiles
+    Route::post('/applicants/{id}/restore', [ScholarshipProfileController::class, 'restore'])
+        ->name('applicants.restore');
+    Route::delete('/applicants/{id}', [ScholarshipProfileController::class, 'destroy'])
+        ->name('applicants.destroy');
+
     // Applicant remarks route
     Route::post('/applicants/{profile_id}/update-remarks', [ScholarshipProfileController::class, 'updateApplicantRemarks'])
         ->name('applicants.update-remarks');
@@ -293,6 +308,17 @@ Route::middleware(['auth'])->group(function () {
         ->name('activity-logs.approval-history');
     Route::get('/activity-logs/{profileId}/status-timeline', [App\Http\Controllers\ActivityLogController::class, 'statusTimeline'])
         ->name('activity-logs.status-timeline');
+
+    // User Activity Logs routes (API)
+    Route::get('/api/user/activity-logs/recent', [App\Http\Controllers\UserActivityLogController::class, 'recentActivities'])
+        ->name('user-activity-logs.recent');
+    Route::get('/api/user/activity-logs', [App\Http\Controllers\UserActivityLogController::class, 'userActivityLogs'])
+        ->name('user-activity-logs.data');
+
+    // User Activity Logs page
+    Route::get('/user/activity-logs', function () {
+        return inertia('User/ActivityLogs');
+    })->name('user-activity-logs.index');
 });
 Route::middleware(['auth'])->controller(ScholarshipProgramController::class)->group(function () {
     Route::get('/scholarshipprograms/get-active-list', 'getActiveProgramsApi')->name('scholarshipprograms.getactivelist');

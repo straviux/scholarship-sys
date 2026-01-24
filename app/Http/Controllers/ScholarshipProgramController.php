@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ScholarshipProgram;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\Inertia;
@@ -64,7 +65,15 @@ class ScholarshipProgramController extends Controller
      */
     public function store(CreateScholarshipProgramRequest $request): RedirectResponse
     {
-        ScholarshipProgram::create($request->validated());
+        $program = ScholarshipProgram::create($request->validated());
+
+        // Log program creation
+        ActivityLogService::logRecordCreated(
+            profileId: null,
+            recordData: ['name' => $program->name, 'shortname' => $program->shortname],
+            remarks: "Created scholarship program: {$program->name}"
+        );
+
         return back();
     }
 
@@ -75,6 +84,7 @@ class ScholarshipProgramController extends Controller
     public function update(Request $request, ScholarshipProgram $scholarshipProgram)
     {
         $requirement = ScholarshipProgram::findOrFail($scholarshipProgram->id);
+        $oldData = $requirement->getAttributes();
         $requirement->update($request->validate([
             "name" => [
                 'required',
@@ -110,13 +120,33 @@ class ScholarshipProgramController extends Controller
                 'boolean'
             ],
         ]));
+
+        // Log program update
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: $oldData,
+            newData: $requirement->fresh()->getAttributes(),
+            remarks: "Updated scholarship program: {$requirement->name}"
+        );
+
         return back();
     }
 
 
     public function updateRequirement(Request $request, ScholarshipProgram $scholarshipProgram)
     {
+        $oldRequirements = $scholarshipProgram->requirements()->pluck('name')->toArray();
         $scholarshipProgram->requirements()->sync($request->requirements ?? []);
+        $newRequirements = $scholarshipProgram->requirements()->pluck('name')->toArray();
+
+        // Log requirement update
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: ['requirements' => $oldRequirements],
+            newData: ['requirements' => $newRequirements],
+            remarks: "Updated requirements for program: {$scholarshipProgram->name}"
+        );
+
         return back();
     }
 

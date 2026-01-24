@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreatePermissionRequest;
 use App\Http\Resources\PermissionResource;
+use App\Services\ActivityLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -34,7 +35,14 @@ class PermissionController extends Controller
      */
     public function store(CreatePermissionRequest $request): RedirectResponse
     {
-        Permission::create($request->validated());
+        $permission = Permission::create($request->validated());
+
+        // Log permission creation
+        ActivityLogService::logRecordCreated(
+            profileId: null,
+            recordData: ['name' => $permission->name],
+            remarks: "Created permission: {$permission->name}"
+        );
 
         return to_route('permissions.index');
     }
@@ -55,7 +63,16 @@ class PermissionController extends Controller
      */
     public function update(CreatePermissionRequest $request, Permission $permission): RedirectResponse
     {
+        $oldData = $permission->getAttributes();
         $permission->update($request->validated());
+
+        // Log permission update
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: $oldData,
+            newData: $permission->fresh()->getAttributes(),
+            remarks: "Updated permission: {$permission->name}"
+        );
 
         return to_route('permissions.index');
     }
@@ -65,7 +82,16 @@ class PermissionController extends Controller
      */
     public function destroy(Permission $permission)
     {
+        $permissionData = $permission->getAttributes();
         $permission->delete();
+
+        // Log permission deletion
+        ActivityLogService::logRecordDeleted(
+            profileId: null,
+            recordData: $permissionData,
+            remarks: "Deleted permission: {$permissionData['name']}"
+        );
+
         return back();
     }
 }

@@ -9,6 +9,7 @@ use App\Models\ScholarshipProgram;
 use App\Models\Course;
 use App\Models\School;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,13 +40,23 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $oldData = $user->getAttributes();
+        $user->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
+
+        // Log profile update
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: $oldData,
+            newData: $user->fresh()->getAttributes(),
+            remarks: "Updated profile information"
+        );
 
         return Redirect::route('profile.edit');
     }
@@ -60,8 +71,16 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+        $userData = $user->getAttributes();
 
         Auth::logout();
+
+        // Log account deletion
+        ActivityLogService::logRecordDeleted(
+            profileId: null,
+            recordData: $userData,
+            remarks: "Deleted user account: {$userData['name']}"
+        );
 
         $user->delete();
 
@@ -81,9 +100,18 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+        $oldName = $user->name;
         $user->update([
             'name' => $request->name,
         ]);
+
+        // Log profile name update
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: ['name' => $oldName],
+            newData: ['name' => $request->name],
+            remarks: "Updated profile name from '{$oldName}' to '{$request->name}'"
+        );
 
         return Redirect::back()->with('success', 'Profile updated successfully!');
     }
@@ -125,6 +153,14 @@ class ProfileController extends Controller
 
                 // Update user record
                 $user->update(['profile_photo' => $processedImagePath]);
+
+                // Log attachment upload
+                ActivityLogService::logAttachmentUploaded(
+                    profileId: null,
+                    attachmentName: 'profile_photo',
+                    fileName: $filename,
+                    remarks: "Updated profile photo: {$filename}"
+                );
 
                 // Get the final file size for logging
                 $finalSize = Storage::disk('public')->size($processedImagePath);

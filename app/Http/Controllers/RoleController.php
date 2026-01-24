@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateRoleRequest;
 use App\Http\Resources\PermissionResource;
 use App\Http\Resources\RoleResource;
+use App\Services\ActivityLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,6 +44,17 @@ class RoleController extends Controller
         if ($request->has('permissions')) {
             $role->syncPermissions($request->input('permissions.*.name'));
         }
+
+        // Log role creation
+        ActivityLogService::logRecordCreated(
+            profileId: null,
+            recordData: [
+                'name' => $role->name,
+                'permissions_count' => $role->permissions->count()
+            ],
+            remarks: "Created role: {$role->name}"
+        );
+
         return to_route('roles.index');
     }
 
@@ -72,11 +84,21 @@ class RoleController extends Controller
             return back()->withErrors(['name' => 'Administrator role name cannot be changed.']);
         }
 
+        $oldData = $role->getAttributes();
         // $role = Role::findById($id);
         $role->update([
             'name' => $request->name
         ]);
         $role->syncPermissions($request->input('permissions.*.name'));
+
+        // Log role update
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: $oldData,
+            newData: $role->fresh()->getAttributes(),
+            remarks: "Updated role: {$role->name}"
+        );
+
         return back();
     }
 
@@ -90,8 +112,17 @@ class RoleController extends Controller
             return back()->withErrors(['error' => 'Administrator role cannot be deleted.']);
         }
 
+        $roleData = $role->getAttributes();
         // $role = Role::findById($id);
         $role->delete();
+
+        // Log role deletion
+        ActivityLogService::logRecordDeleted(
+            profileId: null,
+            recordData: $roleData,
+            remarks: "Deleted role: {$roleData['name']}"
+        );
+
         return back();
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\ScholarshipProgram;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\Inertia;
@@ -68,7 +69,15 @@ class CourseController extends Controller
      */
     public function store(CreateCourseRequest $request): RedirectResponse
     {
-        Course::create($request->validated());
+        $course = Course::create($request->validated());
+
+        // Log course creation
+        ActivityLogService::logRecordCreated(
+            profileId: null,
+            recordData: ['name' => $course->name, 'shortname' => $course->shortname],
+            remarks: "Created course: {$course->name}"
+        );
+
         return back();
     }
 
@@ -79,6 +88,7 @@ class CourseController extends Controller
     public function update(Request $request, Course $course)
     {
         $course = Course::findOrFail($course->id);
+        $oldData = $course->getAttributes();
         $course->update($request->validate([
             "name" => [
                 'required',
@@ -118,6 +128,15 @@ class CourseController extends Controller
                 'exists:scholarship_programs,id'
             ],
         ]));
+
+        // Log course update
+        ActivityLogService::logRecordUpdated(
+            profileId: null,
+            oldData: $oldData,
+            newData: $course->fresh()->getAttributes(),
+            remarks: "Updated course: {$course->name}"
+        );
+
         return back();
     }
 
@@ -126,7 +145,16 @@ class CourseController extends Controller
      */
     public function destroy(Course $course)
     {
+        $courseData = $course->getAttributes();
         $course->delete();
+
+        // Log course deletion
+        ActivityLogService::logRecordDeleted(
+            profileId: null,
+            recordData: $courseData,
+            remarks: "Deleted course: {$courseData['name']}"
+        );
+
         return back();
     }
 
