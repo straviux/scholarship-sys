@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipRecord;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -94,6 +95,14 @@ class AdminController extends Controller
         $profile = ScholarshipProfile::onlyTrashed()->findOrFail($id);
         $profile->restore();
 
+        // Log the restoration
+        ActivityLogService::logRecordUpdated(
+            profileId: $profile->profile_id,
+            oldData: ['status' => 'deleted'],
+            newData: ['status' => 'active'],
+            remarks: "Restored deleted applicant profile: {$profile->first_name} {$profile->last_name}"
+        );
+
         return response()->json(['message' => 'Profile restored successfully.']);
     }
 
@@ -135,6 +144,19 @@ class AdminController extends Controller
         }
 
         $record->restore();
+
+        // Log the restoration
+        $remarks = "Restored deleted scholarship record";
+        if ($profileRestored) {
+            $remarks .= " (Applicant profile was also restored)";
+        }
+
+        ActivityLogService::logRecordUpdated(
+            profileId: $record->profile_id,
+            oldData: ['status' => 'deleted'],
+            newData: ['status' => 'active'],
+            remarks: $remarks
+        );
 
         $message = 'Record restored successfully.';
         if ($profileRestored) {

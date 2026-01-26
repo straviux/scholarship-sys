@@ -62,7 +62,7 @@
                     <p class="text-gray-700">No deleted profiles found</p>
                 </div>
 
-                <div v-for="profile in filteredProfiles" :key="profile.id"
+                <div v-for="profile in filteredProfiles" :key="profile.profile_id"
                     class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
@@ -98,7 +98,8 @@
                         </div>
 
                         <div class="flex gap-2 ml-4">
-                            <Button icon="pi pi-undo" severity="success" rounded @click="restoreProfile(profile.id)"
+                            <Button icon="pi pi-undo" severity="success" rounded
+                                @click="restoreProfile(profile.profile_id)"
                                 title="Restore this applicant and their records" />
                             <Button icon="pi pi-trash" severity="danger" rounded
                                 @click="confirmPermanentlyDeleteProfile(profile)"
@@ -168,7 +169,7 @@
                     <p class="text-sm text-red-800">
                         <strong>Profile:</strong> {{ profileToDelete ? `${profileToDelete.last_name},
                         ${profileToDelete.first_name}${profileToDelete.middle_name ? ' ' + profileToDelete.middle_name :
-                        ''}` : 'N/A' }}
+                                ''}` : 'N/A' }}
                     </p>
                 </div>
             </div>
@@ -283,8 +284,13 @@ const formatDate = (date) => {
 };
 
 const restoreProfile = async (profileId) => {
+    if (!profileId) {
+        showNotification('Invalid profile ID', 'error');
+        return;
+    }
+
     try {
-        const response = await axios.post(route('admin.profiles.restore', profileId));
+        const response = await axios.post(`/admin/profiles/${profileId}/restore`);
         showNotification(response.data?.message || 'Profile and related records restored successfully.');
         setTimeout(() => location.reload(), 1000);
     } catch (error) {
@@ -294,8 +300,13 @@ const restoreProfile = async (profileId) => {
 };
 
 const restoreRecord = async (recordId) => {
+    if (!recordId) {
+        showNotification('Invalid record ID', 'error');
+        return;
+    }
+
     try {
-        const response = await axios.post(route('admin.records.restore', recordId));
+        const response = await axios.post(`/admin/scholarship-records/${recordId}/restore`);
         showNotification(response.data.message);
         setTimeout(() => location.reload(), 1500);
     } catch (error) {

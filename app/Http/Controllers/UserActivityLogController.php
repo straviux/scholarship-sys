@@ -39,13 +39,16 @@ class UserActivityLogController extends Controller
                     'profile_name' => $profileName,
                     'details' => $log->details,
                     'snapshot_before' => $log->snapshot_before,
-                    'snapshot_after' => $log->snapshot_after
+                    'snapshot_after' => $log->snapshot_after,
+                    'is_viewed' => $log->is_viewed
                 ];
             });
 
         return response()->json([
             'data' => $activities,
-            'total' => ActivityLog::where('user_id', Auth::id())->count()
+            'unread_count' => ActivityLog::where('user_id', Auth::id())
+                ->where('is_viewed', false)
+                ->count()
         ]);
     }
 
@@ -102,5 +105,37 @@ class UserActivityLogController extends Controller
             'profile_created' => 'Profile Created'
         ];
         return $labels[$type] ?? ucfirst(str_replace('_', ' ', $type));
+    }
+
+    /**
+     * Mark all unviewed activities as viewed for the authenticated user
+     */
+    public function markAllAsViewed(Request $request)
+    {
+        $count = ActivityLog::where('user_id', Auth::id())
+            ->where('is_viewed', false)
+            ->update([
+                'is_viewed' => true,
+                'viewed_at' => now()
+            ]);
+
+        return response()->json([
+            'message' => 'All activities marked as viewed',
+            'count' => $count
+        ]);
+    }
+
+    /**
+     * Get count of unviewed activities for the authenticated user
+     */
+    public function getUnviewedCount(Request $request)
+    {
+        $count = ActivityLog::where('user_id', Auth::id())
+            ->where('is_viewed', false)
+            ->count();
+
+        return response()->json([
+            'unviewed_count' => $count
+        ]);
     }
 }

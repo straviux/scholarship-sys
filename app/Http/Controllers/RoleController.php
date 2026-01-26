@@ -125,4 +125,27 @@ class RoleController extends Controller
 
         return back();
     }
+
+    /**
+     * Attach a permission to a role (inline assignment)
+     */
+    public function attachPermission(Request $request)
+    {
+        $role = Role::findOrFail($request->role_id);
+        $permission = Permission::findOrFail($request->permission_id);
+
+        $role->givePermissionTo($permission);
+
+        return response()->json(['message' => 'Permission assigned successfully.']);
+    }
+
+    /**
+     * Detach a permission from a role (inline removal)
+     */
+    public function detachPermission(Role $role, Permission $permission)
+    {
+        $role->revokePermissionTo($permission);
+
+        return response()->json(['message' => 'Permission revoked successfully.']);
+    }
 }

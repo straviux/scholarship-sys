@@ -1,7 +1,8 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { Head, useForm, router } from "@inertiajs/vue3";
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
+import axios from "axios";
 import ChangePasswordModal from "@/Pages/Admin/Users/ChangePasswordModal.vue";
 import CreateUserModal from "@/Pages/Admin/Users/CreateUserModal.vue";
 import EditUserModal from "@/Pages/Admin/Users/EditUserModal.vue";
@@ -21,6 +22,7 @@ import Tag from 'primevue/tag';
 import InputText from 'primevue/inputtext';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import Checkbox from 'primevue/checkbox';
 
 const props = defineProps({
     users: Array,
@@ -133,76 +135,149 @@ const formatRoleName = (roleName) => {
 };
 
 // ============================================
-// ROLES TAB
+// ROLES & PERMISSIONS TAB (UNIFIED)
 // ============================================
-const roleGlobalFilter = ref('');
-const roleFirst = ref(0);
-const roleRows = ref(10);
-const roleFilters = ref({
-    global: { value: null, matchMode: 'contains' }
+const roleSearchFilter = ref('');
+const selectedRole = ref(null);
+const rolePermissions = ref({});
+const savingPermissions = ref(null);
+const showCreateRoleModal = ref(false);
+const newRoleName = ref('');
+const newRoleForm = useForm({});
+
+// Computed filtered roles
+const filteredRoles = computed(() => {
+    if (!roleSearchFilter.value.trim()) {
+        return props.roles || [];
+    }
+    const query = roleSearchFilter.value.toLowerCase();
+    return (props.roles || []).filter(role => role.name.toLowerCase().includes(query));
 });
 
-watch(roleGlobalFilter, (newValue) => {
-    roleFilters.value.global.value = newValue;
-});
+// Initialize role-permission mapping
+const initializeRolePermissions = (role) => {
+    if (!rolePermissions.value[role.id]) {
+        rolePermissions.value[role.id] = {};
+        (props.permissions || []).forEach(permission => {
+            rolePermissions.value[role.id][permission.id] =
+                role.permissions?.some(p => p.id === permission.id) || false;
+        });
+    }
+};
 
-const roleForm = useForm({});
+// Select role and initialize permissions
+const selectRole = (role) => {
+    selectedRole.value = role;
+    initializeRolePermissions(role);
+};
+
+// Toggle permission for role
+const togglePermission = async (role, permissionId) => {
+    if (!rolePermissions.value[role.id]) return;
+
+    rolePermissions.value[role.id][permissionId] = !rolePermissions.value[role.id][permissionId];
+
+    // Auto-save permission change
+    savingPermissions.value = `${role.id}-${permissionId}`;
+
+    try {
+        const hasPermission = rolePermissions.value[role.id][permissionId];
+
+        if (hasPermission) {
+            // Add permission to role
+            await axios.post(route('roles.permissions.attach'), {
+                role_id: role.id,
+                permission_id: permissionId
+            });
+            toast.success('Permission assigned');
+        } else {
+            // Remove permission from role
+            await axios.delete(route('roles.permissions.detach', {
+                role: role.id,
+                permission: permissionId
+            }));
+            toast.success('Permission revoked');
+        }
+    } catch (error) {
+        // Revert on error
+        rolePermissions.value[role.id][permissionId] = !rolePermissions.value[role.id][permissionId];
+        toast.error('Failed to update permission');
+    } finally {
+        savingPermissions.value = null;
+    }
+};
+
+// Delete role
+const confirmDeleteRole = (role) => {
+    showConfirmDeleteRoleModal.value = true;
+    modalRoleData.value.id = role.id;
+    modalRoleData.value.name = role.name;
+};
+
+const deleteRole = () => {
+    const roleForm = useForm({});
+    roleForm.delete(route("roles.destroy", modalRoleData.value.id), {
+        onSuccess: () => {
+            toast.success('Role deleted successfully!');
+            closeRoleModal();
+            selectedRole.value = null;
+            router.reload({ only: ['roles'] });
+        },
+        onError: () => {
+            toast.error('Failed to delete role');
+        }
+    });
+};
+
+// Create role modal
+const openCreateRoleModal = () => {
+    newRoleName.value = '';
+    showCreateRoleModal.value = true;
+};
+
+const createRole = () => {
+    if (!newRoleName.value.trim()) {
+        toast.error('Role name is required');
+        return;
+    }
+
+    newRoleForm.post(route('roles.store'), {
+        onSuccess: () => {
+            toast.success('Role created successfully!');
+            closeCreateRoleModal();
+            router.reload({ only: ['roles'] });
+        },
+        onError: (errors) => {
+            toast.error(errors.name || 'Failed to create role');
+        }
+    });
+};
+
+const closeCreateRoleModal = () => {
+    showCreateRoleModal.value = false;
+    newRoleName.value = '';
+};
+
+// Delete role modal state
 const showConfirmDeleteRoleModal = ref(false);
 const modalRoleData = ref({ id: null, name: null });
 
-const editRole = (roleID) => {
-    router.get(route("roles.edit", roleID));
-};
-
-const confirmDeleteRole = (roleID, roleName) => {
-    showConfirmDeleteRoleModal.value = true;
-    modalRoleData.value.id = roleID;
-    modalRoleData.value.name = roleName;
-};
 const closeRoleModal = () => {
     showConfirmDeleteRoleModal.value = false;
 };
-const deleteRole = (roleID) => {
-    roleForm.delete(route("roles.destroy", roleID), {
-        onSuccess: () => closeRoleModal(),
+
+// Get permission group for better organization
+const getPermissionsByGroup = () => {
+    const groups = {};
+    (props.permissions || []).forEach(permission => {
+        const group = permission.name.split('_')[0];
+        if (!groups[group]) groups[group] = [];
+        groups[group].push(permission);
     });
+    return groups;
 };
 
-// ============================================
-// PERMISSIONS TAB
-// ============================================
-const permissionGlobalFilter = ref('');
-const permissionFirst = ref(0);
-const permissionRows = ref(10);
-const permissionFilters = ref({
-    global: { value: null, matchMode: 'contains' }
-});
-
-watch(permissionGlobalFilter, (newValue) => {
-    permissionFilters.value.global.value = newValue;
-});
-
-const permissionForm = useForm({});
-const showConfirmDeletePermissionModal = ref(false);
-const modalPermissionData = ref({ id: null, name: null });
-
-const editPermission = (permissionId) => {
-    router.get(route("permissions.edit", permissionId));
-};
-
-const confirmDeletePermission = (permissionID, permissionName) => {
-    showConfirmDeletePermissionModal.value = true;
-    modalPermissionData.value.id = permissionID;
-    modalPermissionData.value.name = permissionName;
-};
-const closePermissionModal = () => {
-    showConfirmDeletePermissionModal.value = false;
-};
-const deletePermission = (permissionID) => {
-    permissionForm.delete(route("permissions.destroy", permissionID), {
-        onSuccess: () => closePermissionModal(),
-    });
-};
+const permissionGroups = computed(() => getPermissionsByGroup());
 </script>
 
 <template>
@@ -317,127 +392,115 @@ const deletePermission = (permissionID) => {
                     </TabPanel>
 
                     <!-- ============================================ -->
-                    <!-- ROLES TAB -->
+                    <!-- ROLES & PERMISSIONS TAB (UNIFIED) -->
                     <!-- ============================================ -->
                     <TabPanel>
                         <template #header>
                             <div class="flex items-center gap-2">
                                 <i class="pi pi-shield"></i>
-                                <span>Roles</span>
-                                <Tag :value="`${roles.length}`" severity="success" rounded />
+                                <span>Roles & Permissions</span>
+                                <Tag :value="`${roles.length} roles`" severity="success" rounded />
                             </div>
                         </template>
 
-                        <!-- Roles Search and Actions -->
-                        <div class="flex justify-between items-center mb-4">
-                            <div class="flex-1 max-w-md">
-                                <IconField iconPosition="left">
-                                    <InputIcon class="pi pi-search" />
-                                    <InputText v-model="roleGlobalFilter" placeholder="Search roles..."
-                                        class="w-full" />
-                                </IconField>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- Left Sidebar: Roles List -->
+                            <div class="lg:col-span-1">
+                                <h3 class="font-semibold text-gray-700 mb-3">Available Roles</h3>
+                                <Button label="New Role" icon="pi pi-plus" severity="success" raised
+                                    @click="openCreateRoleModal" class="w-full mb-4" />
+
+                                <!-- Role Search -->
+                                <div class="mb-4">
+                                    <IconField iconPosition="left">
+                                        <InputIcon class="pi pi-search" />
+                                        <InputText v-model="roleSearchFilter" placeholder="Search roles..."
+                                            class="w-full text-sm" />
+                                    </IconField>
+                                </div>
+
+                                <!-- Roles List -->
+                                <div class="space-y-2 max-h-96 overflow-y-auto">
+                                    <div v-if="filteredRoles.length === 0" class="text-center text-gray-400 py-8">
+                                        <i class="pi pi-inbox text-2xl mb-2"></i>
+                                        <p class="text-sm">No roles found</p>
+                                    </div>
+
+                                    <button v-for="role in filteredRoles" :key="role.id" @click="selectRole(role)"
+                                        :class="[
+                                            'w-full text-left px-4 py-3 rounded-lg border-2 transition-all',
+                                            selectedRole?.id === role.id
+                                                ? 'border-blue-500 bg-blue-50'
+                                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                                        ]">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-medium text-gray-700 capitalize">{{ role.name }}</span>
+                                            <Tag v-if="role.permissions" :value="`${role.permissions.length}`"
+                                                severity="info" size="small" />
+                                        </div>
+                                    </button>
+                                </div>
                             </div>
-                            <Button label="New Role" icon="pi pi-plus" severity="success" raised
-                                @click="router.get(route('roles.create'))" />
+
+                            <!-- Right Panel: Role Details & Permissions -->
+                            <div class="lg:col-span-2">
+                                <div v-if="!selectedRole"
+                                    class="flex flex-col items-center justify-center h-96 text-gray-400">
+                                    <i class="pi pi-sliders-h text-4xl mb-2"></i>
+                                    <p class="text-lg font-medium">Select a role to manage permissions</p>
+                                </div>
+
+                                <div v-else class="space-y-6">
+                                    <!-- Role Header -->
+                                    <div class="border-b pb-4">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h2 class="text-xl font-semibold text-gray-800 capitalize">
+                                                {{ selectedRole.name }}
+                                            </h2>
+                                            <div class="flex gap-2">
+                                                <Button v-if="selectedRole.name !== 'administrator'" icon="pi pi-trash"
+                                                    severity="danger" size="small" rounded outlined
+                                                    @click="confirmDeleteRole(selectedRole)"
+                                                    v-tooltip.top="'Delete role'" />
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-gray-500">
+                                            Manage permissions for this role
+                                        </p>
+                                    </div>
+
+                                    <!-- Permissions by Group -->
+                                    <div v-if="selectedRole.id && rolePermissions[selectedRole.id]" class="space-y-6">
+                                        <div v-for="(permissions, group) in permissionGroups" :key="group"
+                                            class="bg-gray-50 p-4 rounded-lg">
+                                            <h4 class="font-semibold text-gray-700 capitalize mb-3 text-sm">
+                                                {{ group }} Permissions
+                                            </h4>
+                                            <div class="space-y-3">
+                                                <div v-for="permission in permissions" :key="permission.id"
+                                                    class="flex items-center gap-3">
+                                                    <Checkbox
+                                                        :modelValue="rolePermissions[selectedRole.id][permission.id]"
+                                                        :binary="true"
+                                                        :disabled="savingPermissions === `${selectedRole.id}-${permission.id}`"
+                                                        @update:modelValue="togglePermission(selectedRole, permission.id)" />
+                                                    <label class="flex-1 cursor-pointer text-gray-700 text-sm">
+                                                        {{ permission.name }}
+                                                    </label>
+                                                    <i v-if="savingPermissions === `${selectedRole.id}-${permission.id}`"
+                                                        class="pi pi-spin pi-spinner text-blue-500 text-xs"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div v-else class="text-center text-gray-400 py-12">
+                                        <i class="pi pi-circle text-2xl mb-2"></i>
+                                        <p class="text-sm">Loading permissions...</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-
-                        <!-- Roles DataTable -->
-                        <DataTable :value="roles" stripedRows showGridlines responsiveLayout="scroll"
-                            :emptyMessage="'No roles found'" :globalFilterFields="['name']"
-                            v-model:filters="roleFilters" paginator :rows="roleRows" v-model:first="roleFirst"
-                            :rowsPerPageOptions="[5, 10, 20, 50]"
-                            paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                            :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
-
-                            <Column field="id" header="#" style="width: 50px">
-                                <template #body="slotProps">
-                                    <div class="text-center font-mono text-sm text-gray-500">
-                                        {{ roleFirst + slotProps.index + 1 }}
-                                    </div>
-                                </template>
-                            </Column>
-
-                            <Column field="name" header="Role Name" sortable>
-                                <template #body="slotProps">
-                                    <div class="font-semibold text-gray-800 capitalize">{{ slotProps.data.name }}</div>
-                                </template>
-                            </Column>
-
-                            <Column header="Actions" style="width: 160px">
-                                <template #body="slotProps">
-                                    <div class="flex gap-2 justify-center">
-                                        <Button icon="pi pi-pen-to-square" severity="info" size="small" rounded outlined
-                                            v-tooltip.top="'Edit Role'" @click="editRole(slotProps.data.id)" />
-                                        <Button v-if="slotProps.data.name !== 'administrator'" icon="pi pi-trash"
-                                            severity="danger" size="small" rounded outlined
-                                            v-tooltip.top="'Delete Role'"
-                                            @click="confirmDeleteRole(slotProps.data.id, slotProps.data.name)" />
-                                    </div>
-                                </template>
-                            </Column>
-                        </DataTable>
-                    </TabPanel>
-
-                    <!-- ============================================ -->
-                    <!-- PERMISSIONS TAB -->
-                    <!-- ============================================ -->
-                    <TabPanel>
-                        <template #header>
-                            <div class="flex items-center gap-2">
-                                <i class="pi pi-key"></i>
-                                <span>Permissions</span>
-                                <Tag :value="`${permissions.length}`" severity="warning" rounded />
-                            </div>
-                        </template>
-
-                        <!-- Permissions Search and Actions -->
-                        <div class="flex justify-between items-center mb-4">
-                            <div class="flex-1 max-w-md">
-                                <IconField iconPosition="left">
-                                    <InputIcon class="pi pi-search" />
-                                    <InputText v-model="permissionGlobalFilter" placeholder="Search permissions..."
-                                        class="w-full" />
-                                </IconField>
-                            </div>
-                            <Button label="New Permission" icon="pi pi-plus" severity="success" raised
-                                @click="router.get(route('permissions.create'))" />
-                        </div>
-
-                        <!-- Permissions DataTable -->
-                        <DataTable :value="permissions" stripedRows showGridlines responsiveLayout="scroll"
-                            :emptyMessage="'No permissions found'" :globalFilterFields="['name']"
-                            v-model:filters="permissionFilters" paginator :rows="permissionRows"
-                            v-model:first="permissionFirst" :rowsPerPageOptions="[5, 10, 20, 50]"
-                            paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                            :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
-
-                            <Column field="id" header="#" style="width: 50px">
-                                <template #body="slotProps">
-                                    <div class="text-center font-mono text-sm text-gray-500">
-                                        {{ permissionFirst + slotProps.index + 1 }}
-                                    </div>
-                                </template>
-                            </Column>
-
-                            <Column field="name" header="Permission Name" sortable>
-                                <template #body="slotProps">
-                                    <div class="font-semibold text-gray-800">{{ slotProps.data.name }}</div>
-                                </template>
-                            </Column>
-
-                            <Column header="Actions" style="width: 160px">
-                                <template #body="slotProps">
-                                    <div class="flex gap-2 justify-center">
-                                        <Button icon="pi pi-pen-to-square" severity="info" size="small" rounded outlined
-                                            v-tooltip.top="'Edit Permission'"
-                                            @click="editPermission(slotProps.data.id)" />
-                                        <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
-                                            v-tooltip.top="'Delete Permission'"
-                                            @click="confirmDeletePermission(slotProps.data.id, slotProps.data.name)" />
-                                    </div>
-                                </template>
-                            </Column>
-                        </DataTable>
                     </TabPanel>
                 </TabView>
             </div>
@@ -505,6 +568,25 @@ const deletePermission = (permissionID) => {
         <!-- ROLE MODALS -->
         <!-- ============================================ -->
 
+        <!-- Create Role Modal -->
+        <Dialog v-model:visible="showCreateRoleModal" modal header="Create New Role" :style="{ width: '450px' }"
+            :closable="false">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Role Name</label>
+                    <InputText v-model="newRoleName" placeholder="e.g., data_manager" class="w-full"
+                        :disabled="newRoleForm.processing" />
+                    <p class="text-xs text-gray-500 mt-1">Use underscores for multi-word roles</p>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Cancel" severity="secondary" @click="closeCreateRoleModal" outlined
+                    :disabled="newRoleForm.processing" />
+                <Button label="Create Role" severity="success" @click="createRole" :loading="newRoleForm.processing" />
+            </template>
+        </Dialog>
+
         <!-- Delete Role Confirmation Dialog -->
         <Dialog v-model:visible="showConfirmDeleteRoleModal" :style="{ width: '450px' }" header="Confirm Deletion"
             :modal="true">
@@ -525,35 +607,7 @@ const deletePermission = (permissionID) => {
 
             <template #footer>
                 <Button label="Cancel" severity="secondary" @click="closeRoleModal" outlined />
-                <Button label="Delete Role" severity="danger" @click="deleteRole(modalRoleData.id)" />
-            </template>
-        </Dialog>
-
-        <!-- ============================================ -->
-        <!-- PERMISSION MODALS -->
-        <!-- ============================================ -->
-
-        <!-- Delete Permission Confirmation Dialog -->
-        <Dialog v-model:visible="showConfirmDeletePermissionModal" :style="{ width: '450px' }" header="Confirm Deletion"
-            :modal="true">
-            <div class="flex items-center gap-4">
-                <i class="pi pi-exclamation-triangle text-3xl text-red-500"></i>
-                <div>
-                    <p class="text-lg font-semibold text-gray-800 mb-2">
-                        Are you sure you want to delete this permission?
-                    </p>
-                    <div class="bg-gray-100 p-3 rounded border-l-4 border-red-500">
-                        <div class="font-semibold text-red-700">{{ modalPermissionData.name }}</div>
-                    </div>
-                    <p class="text-sm text-gray-600 mt-2">
-                        This action cannot be undone and may affect roles using this permission.
-                    </p>
-                </div>
-            </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closePermissionModal" outlined />
-                <Button label="Delete Permission" severity="danger" @click="deletePermission(modalPermissionData.id)" />
+                <Button label="Delete Role" severity="danger" @click="deleteRole" />
             </template>
         </Dialog>
     </AdminLayout>

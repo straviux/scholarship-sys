@@ -2,13 +2,13 @@
     <div>
         <!-- Activity Logs Bell Button -->
         <Button type="button" icon="pi pi-history" @click="togglePopover"
-            :severity="activitiesCount > 0 ? 'info' : 'contrast'"
-            :badge="(activitiesCount > 99 ? '99+' : activitiesCount).toString() || ''" size="small"
+            :severity="badgeCount > 0 ? 'info' : 'contrast'"
+            :badge="(badgeCount > 99 ? '99+' : badgeCount).toString() || ''" size="small"
             v-tooltip.bottom="'Your Activity Logs'" />
 
         <!-- Popover Menu -->
-        <Popover ref="popoverRef" class="w-96">
-            <div class="max-h-[500px] overflow-hidden flex flex-col">
+        <Popover ref="popoverRef" class="w-80">
+            <div class="max-h-96 overflow-hidden flex flex-col">
                 <!-- Header -->
                 <div class="px-4 py-3 border-b border-gray-100 flex-shrink-0">
                     <div class="flex items-center justify-between">
@@ -18,7 +18,7 @@
                         </div>
                     </div>
                     <p class="text-xs text-gray-500 mt-1">
-                        {{ activitiesCount }} total activities
+                        {{ badgeCount }} latest activities
                     </p>
                 </div>
 
@@ -39,39 +39,37 @@
 
                     <!-- Activities List -->
                     <div v-else class="divide-y divide-gray-100">
-                        <div v-for="activity in activities" :key="activity.id"
-                            class="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-200"
-                            @click="viewActivityDetail(activity)">
+                        <div v-for="activity in activities" :key="activity.id" class="px-4 py-3">
 
                             <!-- Activity Content -->
-                            <div class="flex gap-3">
-                                <!-- Activity Icon -->
-                                <div class="flex-shrink-0 pt-1">
-                                    <div
-                                        :class="['w-8 h-8 rounded-full flex items-center justify-center text-white text-xs', getActivityColorClass(activity.activity_type)]">
-                                        <i :class="getActivityIcon(activity.activity_type)"></i>
+                            <div>
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center space-x-2">
+                                            <!-- Activity Icon -->
+                                            <div
+                                                :class="['w-5 h-5 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0', getActivityColorClass(activity.activity_type)]">
+                                                <i :class="getActivityIcon(activity.activity_type)"
+                                                    style="font-size: 0.65rem"></i>
+                                            </div>
+                                            <h4 class="text-xs font-medium text-gray-900 line-clamp-1">
+                                                {{ activity.activity_type }}
+                                            </h4>
+                                        </div>
+                                        <p v-if="activity.profile_name"
+                                            class="text-xs text-blue-600 font-medium mt-1 ml-7">
+                                            <i class="pi pi-user text-xs mr-1"></i>{{ activity.profile_name }}
+                                        </p>
+                                        <p class="text-xs text-gray-600 mt-1 ml-7 line-clamp-2">
+                                            {{ activity.remarks || activity.description || 'No details' }}
+                                        </p>
                                     </div>
                                 </div>
 
-                                <!-- Activity Details -->
-                                <div class="flex-1 min-w-0">
-                                    <h4 class="text-xs font-semibold text-gray-900">
-                                        {{ activity.activity_type }}
-                                    </h4>
-                                    <p v-if="activity.profile_name" class="text-xs text-blue-600 font-medium mt-0.5">
-                                        <i class="pi pi-user text-xs mr-1"></i>{{ activity.profile_name }}
-                                    </p>
-                                    <p class="text-xs text-gray-600 mt-0.5 line-clamp-1">
-                                        {{ activity.remarks || activity.description || 'No details' }}
-                                    </p>
-                                    <p class="text-xs text-gray-400 mt-1">
-                                        {{ formatRelativeTime(activity.performed_at) }}
-                                    </p>
-                                </div>
-
-                                <!-- Chevron -->
-                                <div class="flex-shrink-0 pt-1">
-                                    <i class="pi pi-chevron-right text-gray-400 text-xs"></i>
+                                <!-- Footer -->
+                                <div class="flex items-center justify-between mt-2 ml-7 text-xs text-gray-400">
+                                    <span class="truncate">{{ activity.user?.name || 'System' }}</span>
+                                    <span class="text-xs">{{ formatDate(activity.performed_at) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -79,9 +77,11 @@
                 </div>
 
                 <!-- Footer -->
-                <div class="px-4 py-3 border-t border-gray-100 flex-shrink-0 bg-gray-50">
-                    <Button type="button" label="View All Activities" icon="pi pi-arrow-right" iconPos="right"
-                        class="w-full" @click="viewAllActivities" size="small" severity="info" />
+                <div v-if="activities.length > 0" class="px-4 py-2 border-t border-gray-100 bg-gray-50 flex-shrink-0">
+                    <button @click="viewAllActivities"
+                        class="w-full text-center text-xs text-blue-600 hover:text-blue-800 focus:outline-none font-medium transition-colors duration-200 cursor-pointer">
+                        View all
+                    </button>
                 </div>
             </div>
         </Popover>
@@ -89,9 +89,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineExpose } from 'vue';
+import { ref, onMounted, defineExpose, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
+import logger from '@/utils/logger';
 import Button from 'primevue/button';
 import Popover from 'primevue/popover';
 
@@ -99,6 +100,11 @@ const popoverRef = ref(null);
 const activities = ref([]);
 const activitiesCount = ref(0);
 const isLoading = ref(false);
+
+// Computed badge value
+const badgeCount = computed(() => {
+    return activitiesCount.value;
+});
 
 function togglePopover(event) {
     if (popoverRef.value) {
@@ -111,9 +117,9 @@ async function fetchRecentActivities() {
     try {
         const response = await axios.get('/api/user/activity-logs/recent?limit=10');
         activities.value = response.data.data || [];
-        activitiesCount.value = response.data.total || 0;
+        activitiesCount.value = response.data.unread_count || 0;
     } catch (error) {
-        console.error('Error fetching user activity logs:', error);
+        logger.error('Error fetching user activity logs:', error);
         activities.value = [];
     } finally {
         isLoading.value = false;
@@ -169,7 +175,15 @@ function formatRelativeTime(dateString) {
     return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
 }
 
-function viewActivityDetail(activity) {
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+}
+
+async function viewAllActivities() {
+    // Mark all activities as viewed on the backend and reset badge count
+    await markAllActivitiesAsViewed();
     // Close popover
     if (popoverRef.value) {
         popoverRef.value.hide();
@@ -178,13 +192,15 @@ function viewActivityDetail(activity) {
     router.visit('/user/activity-logs');
 }
 
-function viewAllActivities() {
-    // Close popover
-    if (popoverRef.value) {
-        popoverRef.value.hide();
+async function markAllActivitiesAsViewed() {
+    try {
+        await axios.post('/api/user/activity-logs/mark-all-viewed');
+        // Reset the counter
+        activitiesCount.value = 0;
+        logger.log('Activities marked as viewed');
+    } catch (error) {
+        logger.error('Error marking activities as viewed:', error);
     }
-    // Navigate to full activity logs page
-    router.visit('/user/activity-logs');
 }
 
 onMounted(() => {

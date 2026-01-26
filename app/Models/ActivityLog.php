@@ -21,7 +21,9 @@ class ActivityLog extends Model
         'remarks',
         'snapshot_before',
         'snapshot_after',
-        'performed_at'
+        'performed_at',
+        'is_viewed',
+        'viewed_at'
     ];
 
     protected $casts = [
@@ -29,6 +31,7 @@ class ActivityLog extends Model
         'snapshot_before' => 'array',
         'snapshot_after' => 'array',
         'performed_at' => 'datetime',
+        'viewed_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
@@ -55,6 +58,27 @@ class ActivityLog extends Model
     public function changes()
     {
         return $this->hasMany(ChangeHistory::class);
+    }
+
+    /**
+     * Scope to get unviewed activities for a user
+     */
+    public function scopeUnviewedForUser($query, $userId)
+    {
+        return $query->where('user_id', $userId)
+            ->where('is_viewed', false);
+    }
+
+    /**
+     * Mark activity as viewed
+     */
+    public function markAsViewed()
+    {
+        $this->update([
+            'is_viewed' => true,
+            'viewed_at' => now()
+        ]);
+        return $this;
     }
 
     /**

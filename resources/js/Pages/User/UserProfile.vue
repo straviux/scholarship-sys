@@ -1,6 +1,7 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
+import logger from '@/utils/logger';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -174,7 +175,7 @@ const submitProfileUpdate = () => {
             router.reload({ only: ['reportData'] });
         },
         onError: (errors) => {
-            console.error('Profile update failed:', errors);
+            logger.error('Profile update failed:', errors);
         }
     });
 };
@@ -184,7 +185,7 @@ const openProfilePhotoModal = () => {
     profilePhotoForm.photo = null;
     profilePhotoForm.clearErrors();
     showProfilePhotoModal.value = true;
-    console.log('Photo modal opened');
+    logger.log('Photo modal opened');
 };
 
 const openViewPhotoModal = () => {
@@ -254,33 +255,33 @@ const onPhotoSelect = (event) => {
         };
         img.src = imageUrl;
 
-        console.log('Photo selected for editing:', file.name, file.size, file.type);
+        logger.log('Photo selected for editing:', file.name, file.size, file.type);
     } else {
-        console.error('No file selected');
+        logger.error('No file selected');
     }
 };
 
 const submitPhotoUpdate = () => {
-    console.log('Submit photo update called');
-    console.log('Photo file:', profilePhotoForm.photo);
+    logger.log('Submit photo update called');
+    logger.log('Photo file:', profilePhotoForm.photo);
 
     if (!profilePhotoForm.photo) {
         toast.error('Please select a photo first!');
         return;
     }
 
-    console.log('Starting photo upload...');
+    logger.log('Starting photo upload...');
     profilePhotoForm.post(route('profile.photo.update'), {
         preserveScroll: true,
         onSuccess: () => {
-            console.log('Photo upload successful');
+            logger.log('Photo upload successful');
             closeProfilePhotoModal();
             toast.success('Profile photo updated successfully!');
             // Refresh the page to show updated data using Inertia
             router.reload({ only: ['reportData'] });
         },
         onError: (errors) => {
-            console.error('Photo upload failed:', errors);
+            logger.error('Photo upload failed:', errors);
             toast.error('Photo upload failed. Please try again.');
         }
     });
@@ -298,7 +299,7 @@ const showQrCode = async () => {
         showQrModal.value = true;
         startCountdown();
     } catch (error) {
-        console.error('QR code generation error:', error);
+        logger.error('QR code generation error:', error);
         toast.error('Failed to generate QR code');
     }
 };
@@ -517,7 +518,7 @@ const confirmImageEdit = () => {
                 editorImage.value = null;
             }
 
-            console.log('Image edited and ready for upload');
+            logger.log('Image edited and ready for upload');
         }
     }, 'image/jpeg', 0.9);
 };
@@ -567,7 +568,7 @@ const fetchRecordsForDate = async (date) => {
 
         calendarRecords.value = response.data.records;
     } catch (error) {
-        console.error('Error fetching records for date:', error);
+        logger.error('Error fetching records for date:', error);
         toast.error('Failed to load records for this date');
         calendarRecords.value = [];
     } finally {
@@ -596,7 +597,7 @@ const loadRecordsSummaryForMonth = async () => {
 
         recordsByDate.value = response.data.records_by_date;
     } catch (error) {
-        console.error('Error loading records summary:', error);
+        logger.error('Error loading records summary:', error);
     }
 };
 
@@ -1180,7 +1181,7 @@ const loadRecordsSummaryForMonth = async () => {
                                 class="px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-xs font-medium cursor-pointer hover:bg-indigo-200 transition"
                                 @click="selectDateFromList(date)">
                                 {{ new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }}: {{
-                                count
+                                    count
                                 }}
                             </div>
                         </div>

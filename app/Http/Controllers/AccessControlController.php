@@ -20,7 +20,7 @@ class AccessControlController extends Controller
     {
         return Inertia::render('Admin/AccessControl', [
             'users' => UserResource::collection(User::with('roles')->get()),
-            'roles' => RoleResource::collection(Role::all()),
+            'roles' => RoleResource::collection(Role::with('permissions')->get()),
             'permissions' => PermissionResource::collection(Permission::all())
         ]);
     }

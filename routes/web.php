@@ -61,10 +61,25 @@ Route::middleware(['auth', 'check-roles:administrator|program_manager'])->group(
     // Individual resource routes (kept for create/edit/delete operations)
     Route::resource('/users', UserController::class);
     Route::post('/users/{user}/change-password', [UserController::class, 'changePassword'])->name('users.changePassword');
-    Route::resource('/roles', RoleController::class);
-    Route::resource('/permissions', PermissionController::class);
 
-    Route::delete('/roles/{role}/permissions/{permission}', RevokePermissionFromRoleController::class)->name('roles.permission.destroy');
+    // Only keep create, show, edit, store, update, destroy for roles/permissions (no index)
+    Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
+    Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
+    Route::get('/roles/{role}', [RoleController::class, 'show'])->name('roles.show');
+    Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit');
+    Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+    Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+
+    Route::post('/permissions', [PermissionController::class, 'store'])->name('permissions.store');
+    Route::get('/permissions/create', [PermissionController::class, 'create'])->name('permissions.create');
+    Route::get('/permissions/{permission}', [PermissionController::class, 'show'])->name('permissions.show');
+    Route::get('/permissions/{permission}/edit', [PermissionController::class, 'edit'])->name('permissions.edit');
+    Route::put('/permissions/{permission}', [PermissionController::class, 'update'])->name('permissions.update');
+    Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
+
+    // Role-Permission management (for inline assignments)
+    Route::post('/roles/permissions/attach', [RoleController::class, 'attachPermission'])->name('roles.permissions.attach');
+    Route::delete('/roles/{role}/permissions/{permission}', [RoleController::class, 'detachPermission'])->name('roles.permissions.detach');
 
     // System Report Routes - Administrator Only
     Route::get('/admin/system-report', [SystemReportController::class, 'index'])->name('admin.system-report');
@@ -312,6 +327,10 @@ Route::middleware(['auth'])->group(function () {
     // User Activity Logs routes (API)
     Route::get('/api/user/activity-logs/recent', [App\Http\Controllers\UserActivityLogController::class, 'recentActivities'])
         ->name('user-activity-logs.recent');
+    Route::post('/api/user/activity-logs/mark-all-viewed', [App\Http\Controllers\UserActivityLogController::class, 'markAllAsViewed'])
+        ->name('user-activity-logs.mark-all-viewed');
+    Route::get('/api/user/activity-logs/unviewed-count', [App\Http\Controllers\UserActivityLogController::class, 'getUnviewedCount'])
+        ->name('user-activity-logs.unviewed-count');
     Route::get('/api/user/activity-logs', [App\Http\Controllers\UserActivityLogController::class, 'userActivityLogs'])
         ->name('user-activity-logs.data');
 

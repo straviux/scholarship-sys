@@ -5,6 +5,7 @@ import NotificationDropdown from "@/Components/ui/navigation/NotificationDropdow
 import ActivityLogsDropdown from "@/Components/ui/navigation/ActivityLogsDropdown.vue";
 import { Link, usePage } from "@inertiajs/vue3";
 import { usePermission } from "@/composable/permissions";
+import logger from '@/utils/logger';
 
 // PrimeVue Components
 import Button from 'primevue/button';
@@ -69,7 +70,7 @@ async function fetchUnreadCount() {
         const data = await response.json();
         unreadUpdatesCount.value = data.unread_count;
     } catch (error) {
-        console.error('Error fetching unread count:', error);
+        logger.error('Error fetching unread count:', error);
     }
 }
 
@@ -253,16 +254,9 @@ onUnmounted(() => {
                             <ul class="space-y-1 mt-2">
                                 <li>
                                     <SidebarLink v-if="hasRole('administrator')" :href="route('access-control.index')"
-                                        :active="route().current('access-control.index') || route().current('users.index') || route().current('roles.index') || route().current('permissions.index')">
+                                        :active="route().current('access-control.index') || route().current('users.index')">
                                         <i class="pi pi-lock mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Access Control</span>
-                                    </SidebarLink>
-                                </li>
-                                <li>
-                                    <SidebarLink v-if="hasRole('administrator')" :href="route('permissions.management')"
-                                        :active="route().current('permissions.management')">
-                                        <i class="pi pi-shield mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Role Permissions</span>
                                     </SidebarLink>
                                 </li>
                                 <li>
@@ -392,14 +386,6 @@ onUnmounted(() => {
                             class="flex flex-col justify-center text-center">
                             <i class="pi pi-lock text-xl"></i>
                             <span class="text-xs">access</span>
-                        </SidebarLink>
-                    </li>
-                    <li v-if="hasRole('administrator')">
-                        <SidebarLink :href="route('permissions.management')"
-                            :active="route().current('permissions.management')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-shield text-xl"></i>
-                            <span class="text-xs">perms</span>
                         </SidebarLink>
                     </li>
                     <li v-if="hasRole('administrator')">

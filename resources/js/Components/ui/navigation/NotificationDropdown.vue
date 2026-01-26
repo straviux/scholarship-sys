@@ -6,7 +6,7 @@
             :badge="(unreadCount > 99 ? '99+' : unreadCount).toString() || ''" size="small" />
 
         <!-- Popover Menu -->
-        <Popover ref="popoverRef" class="w-80">
+        <Popover ref="popoverRef" class="w-96">
             <div class="max-h-96 overflow-hidden flex flex-col">
                 <!-- Header -->
                 <div class="px-4 py-3 border-b border-gray-100 flex-shrink-0">
@@ -153,7 +153,7 @@
                         <div class="flex items-center space-x-4">
                             <!-- <span>Type: <span class="font-medium">{{ selectedNotification?.type }}</span></span> -->
                             <span>Priority: <span class="font-medium capitalize">{{ selectedNotification?.priority
-                            }}</span></span>
+                                    }}</span></span>
                         </div>
                         <div class="flex items-center space-x-4">
                             <span>@<span class="font-medium">{{ selectedNotification?.created_by }}</span></span>
