@@ -333,6 +333,15 @@ Route::middleware(['auth'])->group(function () {
         ->name('user-activity-logs.unviewed-count');
     Route::get('/api/user/activity-logs', [App\Http\Controllers\UserActivityLogController::class, 'userActivityLogs'])
         ->name('user-activity-logs.data');
+    
+    // Server time API
+    Route::get('/api/server-time', function () {
+        return response()->json([
+            'timestamp' => now(),
+            'datetime' => now()->format('Y-m-d H:i:s'),
+            'timezone' => config('app.timezone')
+        ]);
+    })->name('server-time');
 
     // User Activity Logs page
     Route::get('/user/activity-logs', function () {

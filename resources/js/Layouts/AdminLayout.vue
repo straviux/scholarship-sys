@@ -19,6 +19,8 @@ const sidebarMinimized = ref(localStorage.getItem('sidebarMinimized') === 'true'
 const userMenuRef = ref(null);
 const unreadUpdatesCount = ref(0);
 const activityLogsDropdownRef = ref(null);
+const currentDateTime = ref(new Date());
+const serverTimezone = ref('');
 
 function toggleSidebarMinimized() {
     sidebarMinimized.value = !sidebarMinimized.value;
@@ -74,13 +76,35 @@ async function fetchUnreadCount() {
     }
 }
 
+// Fetch server time
+async function fetchServerTime() {
+    try {
+        const response = await fetch('/api/server-time');
+        const data = await response.json();
+        currentDateTime.value = new Date(data.timestamp);
+        serverTimezone.value = data.timezone;
+    } catch (error) {
+        logger.error('Error fetching server time:', error);
+    }
+}
+
 // Fetch on mount and set interval to refresh
 let intervalId = null;
 
 onMounted(() => {
     fetchUnreadCount();
+    fetchServerTime();
     // Refresh every 30 seconds
     intervalId = setInterval(fetchUnreadCount, 30000);
+
+    // Update server time every second (client-side increment for smooth display)
+    const dateTimeIntervalId = setInterval(() => {
+        currentDateTime.value = new Date(currentDateTime.value.getTime() + 1000);
+    }, 1000);
+
+    return () => {
+        if (dateTimeIntervalId) clearInterval(dateTimeIntervalId);
+    };
 });
 
 onUnmounted(() => {
@@ -433,15 +457,23 @@ onUnmounted(() => {
                             <span class="text-lg font-semibold text-gray-200">Scholarship Program</span>
                         </div>
                         <div class="hidden md:block w-px h-6 bg-gray-600"></div>
-                        <h5 class="text-xl md:text-2xl text-gray-300 hover:text-gray-50 font-medium hidden md:block">
-                            <slot name="header" />
-                        </h5>
+                        <!-- Server Date/Time Display -->
+                        <div class="hidden md:flex flex-col items-start justify-center text-gray-300 text-sm px-4">
+                            <div class="font-semibold">{{ currentDateTime.toLocaleDateString('en-US', {
+                                weekday:
+                                    'short', month: 'short', day: 'numeric', year: 'numeric'
+                            }) }}</div>
+                            <div class="text-xs text-gray-400">{{ currentDateTime.toLocaleTimeString('en-US', {
+                                hour:
+                                    '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+                            }) }} {{ serverTimezone }}
+                            </div>
+                        </div>
                     </div>
                     <button @click="toggleMenu = !toggleMenu"
                         class="md:hidden text-gray-300 hover:text-white focus:outline-none p-2">
                         <i class="pi" :class="toggleMenu ? 'pi-times' : 'pi-bars'"></i>
                     </button>
-                    <!-- <div v-if="!toggleMenu" class="h-full w-full">test</div> -->
                     <div class="space-x-6 hidden md:flex items-center justify-center">
                         <!-- Help Link -->
                         <Link :href="route('help.index')"
