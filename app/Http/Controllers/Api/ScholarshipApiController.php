@@ -331,4 +331,50 @@ class ScholarshipApiController extends Controller
 
         return $queueMap;
     }
+
+    /**
+     * Get all active scholars with their active scholarship record ID
+     * Used for voucher creation
+     */
+    public function getActiveScholars(): JsonResponse
+    {
+        try {
+            $records = ScholarshipRecord::with(['profile'])
+                ->where('unified_status', 'active')
+                ->whereHas('profile', function ($query) {
+                    $query->where('is_active', 1);
+                })
+                ->whereNull('deleted_at')
+                ->orderBy('scholarship_records.created_at', 'desc')
+                ->get();
+
+            $formatted = $records->map(function ($record) {
+                $profile = $record->profile;
+                return [
+                    'id' => $record->id,  // This is the scholarship_record_id
+                    'profile_id' => $profile->profile_id ?? null,
+                    'first_name' => $profile->first_name ?? null,
+                    'middle_name' => $profile->middle_name ?? null,
+                    'last_name' => $profile->last_name ?? null,
+                    'full_name' => trim(
+                        ($profile->first_name ?? '') . ' ' .
+                            ($profile->middle_name ?? '') . ' ' .
+                            ($profile->last_name ?? '')
+                    ),
+                    'email' => $profile->email ?? null,
+                ];
+            });
+
+            return response()->json($formatted);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching active scholars:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'error' => 'Failed to fetch scholars',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

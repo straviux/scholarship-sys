@@ -1391,4 +1391,59 @@ class ScholarshipProfileController extends Controller
             'content' => 'Remarks updated successfully!'
         ]);
     }
+
+    /**
+     * Get scholars for voucher creation (API endpoint)
+     */
+    public function getScholarsForVoucher()
+    {
+        try {
+            // Fetch ONLY active scholars with active scholarship records (unified_status = 'active')
+            $scholars = ScholarshipProfile::where('is_active', true)
+                ->whereHas('scholarshipRecords', function ($query) {
+                    $query->where('unified_status', 'active');
+                })
+                ->select('profile_id', 'first_name', 'middle_name', 'last_name', 'email')
+                ->with(['scholarshipRecords' => function ($query) {
+                    $query->where('unified_status', 'active')
+                        ->select('id', 'profile_id', 'unified_status', 'academic_year', 'term', 'year_level', 'course_id', 'school_id')
+                        ->with(['course' => function ($q) {
+                            $q->select('id', 'name');
+                        }, 'school' => function ($q) {
+                            $q->select('id', 'name');
+                        }])
+                        ->orderByRaw('CASE 
+                            WHEN date_approved IS NOT NULL THEN date_approved
+                            WHEN date_filed IS NOT NULL THEN date_filed
+                            ELSE created_at
+                        END DESC')
+                        ->limit(1);
+                }])
+                ->orderBy('last_name')
+                ->orderBy('first_name')
+                ->get()
+                ->map(function ($scholar) {
+                    $latestScholarship = $scholar->scholarshipRecords->first();
+                    return [
+                        'id' => $latestScholarship?->id,  // Add the scholarship record ID
+                        'profile_id' => $scholar->profile_id,
+                        'first_name' => $scholar->first_name,
+                        'middle_name' => $scholar->middle_name,
+                        'last_name' => $scholar->last_name,
+                        'email' => $scholar->email,
+                        'year_level' => $latestScholarship?->year_level ?? '---',
+                        'course' => $latestScholarship?->course?->name ?? '---',
+                        'school' => $latestScholarship?->school?->name ?? '---',
+                        'academic_year' => $latestScholarship?->academic_year,
+                        'term' => $latestScholarship?->term,
+                        'active_records_count' => $scholar->scholarshipRecords->count(),
+                    ];
+                });
+
+            return response()->json($scholars);
+        } catch (\Exception $e) {
+            Log::error('Error fetching scholars for voucher: ' . $e->getMessage() . ' | ' . $e->getFile() . ':' . $e->getLine());
+            return response()->json(['error' => 'Failed to fetch scholars', 'message' => $e->getMessage()], 500);
+        }
+    }
 }

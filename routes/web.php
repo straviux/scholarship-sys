@@ -278,6 +278,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/scholarship/{record}/decline', [ScholarshipProfileController::class, 'decline'])
         ->name('scholarship.record.decline');
 
+    // Vouchers routes
+    Route::get('/vouchers', function () {
+        return inertia('Vouchers/index');
+    })->name('vouchers.index');
+
     Route::patch('/scholarship/{record}/update-status', [ScholarshipProfileController::class, 'updateStatus'])
         ->name('scholarship.record.update-status');
 
@@ -343,6 +348,10 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('server-time');
 
+    // Scholars API for Obligations & Disbursements
+    Route::get('/api/scholars', [App\Http\Controllers\ScholarshipProfileController::class, 'getScholarsForVoucher'])
+        ->name('api.scholars');
+
     // User Activity Logs page
     Route::get('/user/activity-logs', function () {
         return inertia('User/ActivityLogs');
@@ -390,6 +399,24 @@ Route::middleware(['auth'])->controller(App\Http\Controllers\SchoolController::c
     Route::post('/schools', 'store')->name('school.store');
     Route::put('/schools/{school}', 'update')->name('school.update');
     Route::delete('/schools/{school}', 'destroy')->name('school.destroy');
+});
+
+// Responsibility Center routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/responsibility-centers', function () {
+        return inertia('ResponsibilityCenter/index');
+    })->name('responsibility-centers.index');
+
+    // API routes for responsibility centers
+    Route::get('/api/responsibility-centers', [App\Http\Controllers\ResponsibilityCenterController::class, 'index']);
+    Route::post('/api/responsibility-centers', [App\Http\Controllers\ResponsibilityCenterController::class, 'store']);
+    Route::put('/api/responsibility-centers/{id}', [App\Http\Controllers\ResponsibilityCenterController::class, 'update']);
+    Route::delete('/api/responsibility-centers/{id}', [App\Http\Controllers\ResponsibilityCenterController::class, 'destroy']);
+
+    // Particulars routes
+    Route::post('/api/responsibility-centers/{id}/particulars', [App\Http\Controllers\ResponsibilityCenterController::class, 'storeParticular']);
+    Route::put('/api/responsibility-centers/{id}/particulars/{particulerId}', [App\Http\Controllers\ResponsibilityCenterController::class, 'updateParticular']);
+    Route::delete('/api/responsibility-centers/{id}/particulars/{particulerId}', [App\Http\Controllers\ResponsibilityCenterController::class, 'destroyParticular']);
 });
 
 // Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ScholarshipProfileController::class, 'generateReportPdf']);

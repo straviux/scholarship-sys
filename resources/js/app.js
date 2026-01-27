@@ -7,6 +7,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 // import VueDeviceDetect from '@basitcodeenv/vue3-device-detect';
 import PrimeVue from 'primevue/config';
+import ToastService from 'primevue/toastservice';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 import VueDeviceDetect from '@basitcodeenv/vue3-device-detect';
@@ -85,6 +86,7 @@ createInertiaApp({
 					},
 				},
 			})
+			.use(ToastService)
 			.component('VueDatePicker', VueDatePicker)
 			.directive('can', permissionDirective)
 			.mount(el);

@@ -148,6 +148,11 @@ class ScholarshipProfile extends Model
         return $this->hasMany(ActivityLog::class, 'profile_id', 'profile_id');
     }
 
+    public function scholarshipRecords()
+    {
+        return $this->hasMany(ScholarshipRecord::class, 'profile_id', 'profile_id');
+    }
+
     public static function boot()
     {
         parent::boot();

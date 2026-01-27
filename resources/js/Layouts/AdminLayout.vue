@@ -11,6 +11,8 @@ import logger from '@/utils/logger';
 import Button from 'primevue/button';
 import Avatar from 'primevue/avatar';
 import Badge from 'primevue/badge';
+import Toast from 'primevue/toast';
+import ConfirmDialog from 'primevue/confirmdialog';
 
 const { hasRole, hasPermission } = usePermission();
 const $page = usePage();
@@ -115,6 +117,8 @@ onUnmounted(() => {
 </script>
 
 <template>
+    <Toast />
+    <ConfirmDialog></ConfirmDialog>
     <div class="w-full h-full flex">
         <!-- Floating Sidebar -->
         <aside
@@ -209,6 +213,12 @@ onUnmounted(() => {
                         </details>
                     </li>
                     <li>
+                        <SidebarLink :href="route('vouchers.index')" :active="route().current('vouchers.index')">
+                            <i class="pi pi-credit-card mr-2"></i>
+                            <span class="font-medium">Vouchers</span>
+                        </SidebarLink>
+                    </li>
+                    <li>
                         <SidebarLink :href="route('system-updates.index')"
                             :active="route().current('system-updates.index')">
                             <i class="pi pi-bell mr-2"></i>
@@ -257,6 +267,14 @@ onUnmounted(() => {
                                         :active="route().current('school.index')">
                                         <i class="pi pi-building mr-2"></i>
                                         <span class="-mr-1 font-medium indent-3">Schools</span>
+                                    </SidebarLink>
+                                </li>
+                                <li
+                                    v-if="hasRole('administrator') || hasRole('moderator') || hasRole('program_manager')">
+                                    <SidebarLink :href="route('responsibility-centers.index')"
+                                        :active="route().current('responsibility-centers.index')">
+                                        <i class="pi pi-code mr-2"></i>
+                                        <span class="-mr-1 font-medium indent-3">Resp Centers</span>
                                     </SidebarLink>
                                 </li>
                                 <li v-if="hasRole('administrator')">

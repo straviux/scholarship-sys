@@ -38,6 +38,7 @@ class HandleInertiaRequests extends Middleware
             'permissions' => fn() => $request->user()
                 ? $request->user()->getAllPermissions()->pluck('name')->toArray()
                 : [],
+            'csrf_token' => fn() => $request->session()->token(),
             'localip' => getHostByName(getHostName()),
             'flash' => [
                 'success' => fn() => $request->session()->get('success'),
