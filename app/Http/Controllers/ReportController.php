@@ -16,15 +16,15 @@ class ReportController extends Controller
     /**
      * Get the Chrome executable path with fallback logic
      * Tries the configured path first, then fallback paths
+     * If none found, returns null to let Browsershot use auto-detection
      * 
-     * @return string
-     * @throws \Exception
+     * @return string|null
      */
     protected function getChromePath()
     {
         $primaryPath = config('scholarship.browsershot.chrome_path');
 
-        // Try primary path first
+        // Try primary path first if explicitly configured
         if ($primaryPath && file_exists($primaryPath)) {
             return $primaryPath;
         }
@@ -32,16 +32,20 @@ class ReportController extends Controller
         // Try fallback paths
         $fallbackPaths = config('scholarship.browsershot.fallback_paths', []);
         foreach ($fallbackPaths as $path) {
-            if (file_exists($path)) {
+            // Expand directory paths to find any Chrome installation
+            if (is_dir($path)) {
+                $files = glob($path . '/**/chrome.exe', \GLOB_RECURSIVE);
+                if (!empty($files) && file_exists($files[0])) {
+                    return $files[0];
+                }
+            } elseif (file_exists($path)) {
                 return $path;
             }
         }
 
-        // If no valid path found, throw exception
-        throw new \Exception(
-            'Chrome executable not found. Please configure CHROME_PATH in your .env file or install Chrome/Chromium. ' .
-                'Tried paths: ' . $primaryPath . ', ' . implode(', ', $fallbackPaths)
-        );
+        // Return null to let Browsershot use auto-detection
+        // This is safer than throwing an exception as Browsershot can find Chrome automatically
+        return null;
     }
 
     /**
@@ -256,9 +260,15 @@ class ReportController extends Controller
         $paperSize = $request->get('paper_size', 'A4');
         $orientation = $request->get('orientation', 'portrait');
         try {
-            $browsershot = Browsershot::html($html)
-                ->setChromePath($this->getChromePath())
-                ->showBackground()
+            $browsershot = Browsershot::html($html);
+
+            // Only set Chrome path if one was found
+            $chromePath = $this->getChromePath();
+            if ($chromePath) {
+                $browsershot->setChromePath($chromePath);
+            }
+
+            $browsershot->showBackground()
                 ->showBrowserHeaderAndFooter()
                 ->footerHtml('<div class="report-footer" style="font-size: 9px; color: #444;position:fixed;right:0.5cm;bottom:0.1cm;">
                     <span>Generated on <span class="date "></span></span>
@@ -707,9 +717,15 @@ class ReportController extends Controller
         $orientation = $request->get('orientation', 'portrait');
 
         try {
-            $browsershot = Browsershot::html($html)
-                ->setChromePath($this->getChromePath())
-                ->showBackground()
+            $browsershot = Browsershot::html($html);
+
+            // Only set Chrome path if one was found
+            $chromePath = $this->getChromePath();
+            if ($chromePath) {
+                $browsershot->setChromePath($chromePath);
+            }
+
+            $browsershot->showBackground()
                 ->showBrowserHeaderAndFooter()
                 ->footerHtml('<div class="report-footer" style="font-size: 9px; color: #444;position:fixed;right:0.5cm;bottom:0.1cm;">
                     <span>Generated on <span class="date "></span></span>
@@ -984,9 +1000,15 @@ class ReportController extends Controller
         ])->render();
 
         try {
-            $browsershot = Browsershot::html($html)
-                ->setChromePath($this->getChromePath())
-                ->showBackground()
+            $browsershot = Browsershot::html($html);
+
+            // Only set Chrome path if one was found
+            $chromePath = $this->getChromePath();
+            if ($chromePath) {
+                $browsershot->setChromePath($chromePath);
+            }
+
+            $browsershot->showBackground()
                 ->showBrowserHeaderAndFooter()
                 ->footerHtml('<div class="report-footer" style="font-size: 9px; color: #444;position:fixed;right:0.5cm;bottom:0.1cm;">
                     <span>Generated on <span class="date "></span></span>

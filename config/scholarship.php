@@ -102,13 +102,23 @@ return [
     // Browsershot / PDF Generation settings
     'browsershot' => [
         // Chrome executable path - can be overridden via CHROME_PATH env variable
-        'chrome_path' => env('CHROME_PATH', 'C:\\Users\\Administrator\\.cache\\puppeteer\\chrome\\win64-140.0.7339.82\\chrome-win64\\chrome.exe'),
+        // If CHROME_PATH is not set, Browsershot will use its built-in Puppeteer Chrome
+        'chrome_path' => env('CHROME_PATH', null),
 
         // Alternative paths to try if the primary path fails
+        // Browsershot will auto-detect Chrome installations in these directories
         'fallback_paths' => [
+            // Windows standard installation paths
             'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
             'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-            'C:\\Users\\Administrator\\.cache\\puppeteer\\chrome-headless-shell\\win64-140.0.7339.82\\chrome-headless-shell-win64\\chrome-headless-shell.exe',
+
+            // Puppeteer cache directories (version-agnostic)
+            'C:\\Users\\' . get_current_user() . '\\.cache\\puppeteer\\chrome',
+            'C:\\Users\\' . get_current_user() . '\\.cache\\puppeteer\\chrome-headless-shell',
+
+            // Node modules local installations
+            base_path('node_modules/puppeteer/.cache/chrome'),
+            base_path('node_modules/puppeteer-extra-plugin-stealth/node_modules/puppeteer/.cache/chrome'),
         ],
 
         // Node binary path (usually auto-detected)
@@ -116,5 +126,11 @@ return [
 
         // NPM binary path (usually auto-detected)
         'npm_path' => env('NPM_PATH', null),
+
+        // Timeout for PDF generation (in seconds)
+        'timeout' => env('BROWSERSHOT_TIMEOUT', 120),
+
+        // Enable headless mode (recommended for production)
+        'headless' => env('BROWSERSHOT_HEADLESS', true),
     ]
 ];
