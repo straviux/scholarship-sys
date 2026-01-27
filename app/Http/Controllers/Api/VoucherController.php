@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Voucher;
+use App\Traits\ManagesChromeForPdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -12,6 +13,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class VoucherController extends Controller
 {
+    use ManagesChromeForPdf;
     /**
      * Generate a unique voucher number.
      */
@@ -207,10 +209,18 @@ class VoucherController extends Controller
             $html = view('vouchers.obr', ['voucher' => $voucher])->render();
 
             // Convert HTML to PDF using Browsershot
-            $pdf = Browsershot::html($html)
-                ->paperSize(216, 330, 'mm')
-                ->margins(0, 0, 0, 0)
-                ->pdf();
+            $browsershot = Browsershot::html($html);
+            
+            // Only set Chrome path if one was found
+            $chromePath = $this->getChromePath();
+            if ($chromePath) {
+                $browsershot->setChromePath($chromePath);
+            }
+            
+            $browsershot->paperSize(216, 330, 'mm')
+                ->margins(0, 0, 0, 0);
+            
+            $pdf = $browsershot->pdf();
 
             $filename = 'OBR-' . $voucher->voucher_number . '.pdf';
 
