@@ -173,7 +173,7 @@
 
         .obr-info-row .column_2 {
             padding-left: 2px;
-            font-weight: bold;
+            font-weight: normal;
             text-align: left;
             flex: 1;
             display: flex;
@@ -335,7 +335,7 @@
             <div class="column_2 center">{{ $voucher->particulars_name ?? '_______________' }}</div>
             <div class="column_5">
                 <div class="fpp">&nbsp;</div>
-                <div class="account-code" style="font-size: 12px;">{{ $voucher->account_code ?? '_______________' }}</div>
+                <div class="account-code" style="font-size: 12px; font-weight: normal;">{{ $voucher->account_code ?? '_______________' }}</div>
                 <div class="amount">&nbsp;</div>
             </div>
         </div>
