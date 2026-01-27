@@ -112,19 +112,19 @@ return [
             // Windows standard installation paths (works with any account)
             'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
             'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-            
+
             // Chromium alternatives
             'C:\\Program Files\\Chromium\\Application\\chrome.exe',
             'C:\\Program Files (x86)\\Chromium\\Application\\chrome.exe',
-            
+
             // Puppeteer cache directories (service account compatible)
             base_path('node_modules/puppeteer/.cache/chrome'),
             base_path('node_modules/puppeteer-extra-plugin-stealth/node_modules/puppeteer/.cache/chrome'),
-            
+
             // User-specific paths (if running as regular user)
             'C:\\Users\\' . get_current_user() . '\\.cache\\puppeteer\\chrome',
             'C:\\Users\\' . get_current_user() . '\\.cache\\puppeteer\\chrome-headless-shell',
-            
+
             // Shared Puppeteer cache location
             'C:\\ProgramData\\.cache\\puppeteer\\chrome',
         ],
