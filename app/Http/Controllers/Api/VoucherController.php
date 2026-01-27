@@ -210,16 +210,16 @@ class VoucherController extends Controller
 
             // Convert HTML to PDF using Browsershot
             $browsershot = Browsershot::html($html);
-            
+
             // Only set Chrome path if one was found
             $chromePath = $this->getChromePath();
             if ($chromePath) {
                 $browsershot->setChromePath($chromePath);
             }
-            
+
             $browsershot->paperSize(216, 330, 'mm')
                 ->margins(0, 0, 0, 0);
-            
+
             $pdf = $browsershot->pdf();
 
             $filename = 'OBR-' . $voucher->voucher_number . '.pdf';
