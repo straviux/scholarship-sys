@@ -102,23 +102,31 @@ return [
     // Browsershot / PDF Generation settings
     'browsershot' => [
         // Chrome executable path - can be overridden via CHROME_PATH env variable
-        // If CHROME_PATH is not set, Browsershot will use its built-in Puppeteer Chrome
+        // IMPORTANT FOR PRODUCTION: Set this explicitly to avoid service account cache issues
+        // Example: CHROME_PATH=C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe
         'chrome_path' => env('CHROME_PATH', null),
 
         // Alternative paths to try if the primary path fails
         // Browsershot will auto-detect Chrome installations in these directories
         'fallback_paths' => [
-            // Windows standard installation paths
+            // Windows standard installation paths (works with any account)
             'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
             'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-
-            // Puppeteer cache directories (version-agnostic)
-            'C:\\Users\\' . get_current_user() . '\\.cache\\puppeteer\\chrome',
-            'C:\\Users\\' . get_current_user() . '\\.cache\\puppeteer\\chrome-headless-shell',
-
-            // Node modules local installations
+            
+            // Chromium alternatives
+            'C:\\Program Files\\Chromium\\Application\\chrome.exe',
+            'C:\\Program Files (x86)\\Chromium\\Application\\chrome.exe',
+            
+            // Puppeteer cache directories (service account compatible)
             base_path('node_modules/puppeteer/.cache/chrome'),
             base_path('node_modules/puppeteer-extra-plugin-stealth/node_modules/puppeteer/.cache/chrome'),
+            
+            // User-specific paths (if running as regular user)
+            'C:\\Users\\' . get_current_user() . '\\.cache\\puppeteer\\chrome',
+            'C:\\Users\\' . get_current_user() . '\\.cache\\puppeteer\\chrome-headless-shell',
+            
+            // Shared Puppeteer cache location
+            'C:\\ProgramData\\.cache\\puppeteer\\chrome',
         ],
 
         // Node binary path (usually auto-detected)

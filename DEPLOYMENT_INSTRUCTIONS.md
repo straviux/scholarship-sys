@@ -6,40 +6,80 @@ Production OBR PDF generation was failing with:
 Could not find Chrome (ver. 140.0.7339.82)
 ```
 
-The issue was hardcoded Chrome paths in configuration that didn't exist on production servers.
+The issue was hardcoded Chrome paths in configuration that didn't exist on production servers, especially when running under service accounts (Apache, System).
+
+## ⚠️ CRITICAL FOR PRODUCTION WINDOWS SERVERS
+
+If your application runs under Apache or System service account:
+
+### You MUST install Google Chrome
+
+1. **Download and Install:**
+   - Visit https://www.google.com/chrome/
+   - Download the installer
+   - Run as Administrator to install to `C:\Program Files\Google\Chrome`
+
+   OR use Chocolatey:
+   ```powershell
+   choco install googlechrome
+   ```
+
+2. **Configure in .env:**
+   ```env
+   CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
+   ```
+
+3. **Automated Setup (Recommended):**
+   ```powershell
+   # Run as Administrator from project directory
+   .\setup-chrome-production.bat
+   ```
+
+4. **Restart Apache:**
+   ```powershell
+   net stop Apache2.4
+   net start Apache2.4
+   ```
 
 ## What You Need To Do
 
-### ✅ Option 1: Do Nothing (Recommended)
-The application now auto-detects Chrome. Most servers will work without any configuration:
-- Browsershot will automatically find Chrome if installed
-- Browsershot can auto-install Chromium if needed
-- **No configuration required**
+### ✅ Option 1: Use Automated Setup Script (EASIEST)
+```powershell
+# Run as Administrator
+cd C:\Apache24\htdocs\scholarship-sys
+.\setup-chrome-production.bat
+```
 
-### ✅ Option 2: Set Chrome Path (Optional)
-If you have Chrome installed at a non-standard location, set in your `.env`:
+This script will:
+- Verify Chrome installation
+- Set file permissions
+- Update .env file
+- Install Node dependencies
+- Restart services
+
+### ✅ Option 2: Manual Setup
+1. Install Chrome from https://www.google.com/chrome/
+2. Add to `.env`:
+   ```env
+   CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
+   BROWSERSHOT_TIMEOUT=120
+   BROWSERSHOT_HEADLESS=true
+   ```
+3. Restart Apache service
+4. Test OBR generation
+
+### ✅ Option 3: Puppeteer Setup (Advanced)
+If you prefer using Puppeteer's bundled Chrome:
+```bash
+cd C:\Apache24\htdocs\scholarship-sys
+npm install puppeteer
+npx puppeteer browsers install chrome
+```
+
+Then set in `.env`:
 ```env
-CHROME_PATH=/usr/bin/google-chrome
-# or on Windows:
-CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
+PUPPETEER_CACHE_DIR=C:\ProgramData\.cache\puppeteer
 ```
-
-### ✅ Option 3: Install Chrome (Optional)
-If Chrome isn't installed and you want to use system Chrome instead of bundled Chromium:
-
-**Ubuntu/Debian:**
-```bash
-sudo apt-get update
-sudo apt-get install google-chrome-stable
-```
-
-**CentOS/RHEL:**
-```bash
-sudo yum install google-chrome-stable
-```
-
-**Windows:**
-Download from https://www.google.com/chrome/
 
 ## Deployment Steps
 
@@ -47,69 +87,90 @@ Download from https://www.google.com/chrome/
    - `config/scholarship.php` (updated)
    - `app/Http/Controllers/ReportController.php` (updated)
    - `app/Traits/ManagesChromeForPdf.php` (new)
+   - `setup-chrome-production.bat` (new script)
 
-2. **No database migrations needed** - configuration only
+2. **Run setup script:**
+   ```powershell
+   .\setup-chrome-production.bat
+   ```
 
-3. **No cache clearing needed** - but recommended:
+3. **Clear application cache:**
    ```bash
    php artisan config:cache
    php artisan view:cache
    ```
 
-4. **Test OBR generation:**
+4. **Restart Apache:**
+   ```powershell
+   net stop Apache2.4
+   net start Apache2.4
+   ```
+
+5. **Test OBR generation:**
    - Navigate to a voucher record
    - Try generating OBR PDF
    - If successful, you're done!
 
 ## Verification Checklist
 
-- [ ] OBR PDF generation works
-- [ ] Waiting list reports generate PDFs
-- [ ] Scholarship reports generate PDFs
-- [ ] Export selected applicants generates PDFs
-- [ ] No Chrome version errors in logs
+- [ ] Chrome is installed in `C:\Program Files\Google\Chrome\Application\`
+- [ ] CHROME_PATH is set in `.env`
+- [ ] Service account has permissions on Chrome directory
+- [ ] Apache service has been restarted
+- [ ] OBR PDF generation works without errors
+- [ ] Check `storage/logs/laravel.log` for any errors
 
-## If Issues Persist
+## Troubleshooting
 
-1. **Check Chrome installation:**
-   ```bash
-   # Linux
-   which google-chrome
-   # Windows
-   where chrome
-   ```
+### Chrome not found error
+```
+Error: Could not find Chrome
+```
+**Solution:** Install Chrome manually and set `CHROME_PATH` in `.env`
 
-2. **Check logs:**
-   ```bash
-   tail -f storage/logs/laravel.log
-   ```
+### Permission denied error
+```
+Access denied to Chrome executable
+```
+**Solution:** Run setup script as Administrator to grant permissions
 
-3. **Enable debug mode temporarily:**
-   ```env
-   APP_DEBUG=true
-   ```
+### Service account issue
+```
+Cache path: C:\Windows\system32\config\systemprofile\.cache\puppeteer
+```
+**Solution:** This is expected for service accounts. Setting explicit `CHROME_PATH` fixes this.
 
-4. **Test Chrome path:**
-   ```bash
-   php artisan tinker
-   > exec('chrome --version')
-   > exec('chromium --version')
-   ```
+### Still having issues?
+1. Check `storage/logs/laravel.log`
+2. Enable debug mode: `APP_DEBUG=true`
+3. Review: [documentation/PRODUCTION_CHROME_SERVICE_ACCOUNT_SETUP.md](documentation/PRODUCTION_CHROME_SERVICE_ACCOUNT_SETUP.md)
 
 ## Files Changed
 
-| File | Changes |
+| File | Purpose |
 |------|---------|
-| `config/scholarship.php` | Removed version-specific paths, added auto-detection |
-| `app/Http/Controllers/ReportController.php` | Enhanced Chrome path detection logic |
-| `app/Traits/ManagesChromeForPdf.php` | NEW - Reusable Chrome management |
-| `documentation/OBR_CHROME_VERSION_FIX.md` | Full technical documentation |
-| `.env.chrome.example` | Example environment configuration |
+| `config/scholarship.php` | Updated fallback paths for service accounts |
+| `app/Http/Controllers/ReportController.php` | Enhanced Chrome path detection |
+| `app/Traits/ManagesChromeForPdf.php` | NEW - Chrome management trait |
+| `setup-chrome-production.bat` | NEW - Automated setup script |
+| `documentation/PRODUCTION_CHROME_SERVICE_ACCOUNT_SETUP.md` | NEW - Detailed service account guide |
 
-## Rollback (if needed)
+## Environment Variables Reference
 
-If something breaks, the changes are fully reversible. The old logic threw exceptions; the new logic gracefully falls back to auto-detection. No breaking changes were introduced.
+```env
+# REQUIRED for production service accounts
+CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
+
+# OPTIONAL - Advanced configuration
+BROWSERSHOT_TIMEOUT=120          # PDF generation timeout (seconds)
+BROWSERSHOT_HEADLESS=true        # Run Chrome headless (recommended)
+PUPPETEER_CACHE_DIR=...          # Custom Puppeteer cache location
+
+# For Puppeteer-based Chrome
+NODE_PATH=/usr/bin/node
+NPM_PATH=/usr/local/bin/npm
+```
 
 ---
 
-**Questions?** See [documentation/OBR_CHROME_VERSION_FIX.md](documentation/OBR_CHROME_VERSION_FIX.md) for detailed technical information.
+**Questions?** See [documentation/PRODUCTION_CHROME_SERVICE_ACCOUNT_SETUP.md](documentation/PRODUCTION_CHROME_SERVICE_ACCOUNT_SETUP.md) for detailed technical information.
