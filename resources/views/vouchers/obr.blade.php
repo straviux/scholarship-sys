@@ -30,6 +30,12 @@
             justify-content: center !important;
         }
 
+        /* Center class specifically for column_2 with vertical flex layout */
+        .obr-info-row .column_2.center {
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
         .container {
             max-width: 950px;
             margin: 0 auto;
@@ -98,10 +104,26 @@
 
         /* Ensure paragraphs display as block elements */
         p {
-            display: block;
-            margin: 0;
-            padding: 0;
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
             line-height: 1.6;
+            width: 100%;
+            word-wrap: break-word;
+            white-space: normal;
+        }
+
+        /* Quill editor align classes */
+        p.ql-align-center {
+            text-align: center;
+        }
+
+        p.ql-align-left {
+            text-align: left;
+        }
+
+        p.ql-align-right {
+            text-align: right;
         }
 
         .obr-info-row {
@@ -155,7 +177,8 @@
             text-align: left;
             flex: 1;
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            align-items: flex-start;
             border-right: 1px solid #333;
         }
 
@@ -321,7 +344,7 @@
         @if($voucher->particulars_description)
         <div class="obr-info-row no-border-bottom">
             <div class="column_1">&nbsp;</div>
-            <div class="column_2 center">
+            <div class="column_2 center" style="font-size: 12px;">
                 {!! $voucher->particulars_description !!}
             </div>
             <div class="column_5">
