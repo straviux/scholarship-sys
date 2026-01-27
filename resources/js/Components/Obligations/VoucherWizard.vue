@@ -292,7 +292,7 @@ const fetchResponsibilityCentersAndParticulars = async () => {
 // Get currently selected RC
 const selectedRC = computed(() => {
     if (!voucherData.obligations.responsibility_center) return null;
-    return responsibilityCenters.value.find(rc => rc.id === parseInt(voucherData.obligations.responsibility_center));
+    return responsibilityCenters.value.find(rc => rc.code === voucherData.obligations.responsibility_center);
 });
 
 // Get particulars for selected RC (memoized via computed)
@@ -701,7 +701,7 @@ onMounted(() => {
                         <div class="flex justify-between pt-2 border-t border-gray-300">
                             <span class="text-gray-600 font-medium">Amount per Scholar:</span>
                             <span class="font-bold text-gray-900">{{ formatCurrency(voucherData.obligations.amount)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div v-if="voucherData.scholars.length > 1" class="flex justify-between">
                             <span class="text-gray-600 font-medium">Total Amount ({{ voucherData.scholars.length }}
@@ -721,7 +721,7 @@ onMounted(() => {
                                     class="flex justify-between">
                                     <span>{{ scholar.first_name }} {{ scholar.last_name }}</span>
                                     <span class="font-semibold">{{ formatCurrency(voucherData.obligations.amount)
-                                        }}</span>
+                                    }}</span>
                                 </li>
                             </ol>
                         </div>
@@ -789,11 +789,11 @@ onMounted(() => {
                         class="flex items-center justify-between bg-green-50 p-3 rounded border border-green-200">
                         <div class="flex-1">
                             <div class="text-sm font-medium text-gray-900">{{ scholar.first_name }} {{ scholar.last_name
-                                }}
+                            }}
                             </div>
                             <div class="text-xs text-gray-500">
                                 <span v-if="scholar.year_level" class="uppercase">{{ formatYearLevel(scholar.year_level)
-                                    }}</span>
+                                }}</span>
                                 <span v-else class="text-red-500">---</span>
                                 {{ scholar.course ? ' | ' + scholar.course : '' }}
                             </div>
@@ -825,7 +825,7 @@ onMounted(() => {
                 <div class="flex justify-between pb-3 border-b border-gray-200">
                     <span class="text-gray-600">Particulars:</span>
                     <span class="font-medium text-gray-900">{{ voucherData.obligations.particulars_name || '---'
-                    }}</span>
+                        }}</span>
                 </div>
 
                 <div class="flex justify-between pb-3 border-b border-gray-200">
@@ -839,7 +839,7 @@ onMounted(() => {
                             class="flex justify-between items-center">
                             <span>{{ i + 1 }}. {{ scholar.first_name }} {{ scholar.last_name }}</span>
                             <span class="font-semibold text-gray-900">{{ formatCurrency(voucherData.obligations.amount)
-                            }}</span>
+                                }}</span>
                         </li>
                     </ol>
                 </div>
