@@ -96,6 +96,14 @@
             color: #000;
         }
 
+        /* Ensure paragraphs display as block elements */
+        p {
+            display: block;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
         .obr-info-row {
             display: flex;
             justify-content: space-between;
