@@ -217,7 +217,7 @@ class VoucherController extends Controller
                 $browsershot->setChromePath($chromePath);
             }
 
-            $browsershot->paperSize('A4', 'portrait')
+            $browsershot->format('A4')
                 ->margins(0, 0, 0, 0);
 
             $pdf = $browsershot->pdf();
