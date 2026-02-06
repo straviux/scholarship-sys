@@ -392,17 +392,10 @@ const deactivateUpdate = (update) => {
 const confirmDeactivate = async () => {
     isDeactivating.value = true
     try {
-        // Since backend doesn't support update endpoints, update client-side state
-        // Note: This will reset when page refreshes until backend endpoints are implemented
-        const updateIndex = updates.value.findIndex(u => u.id === updateToDeactivate.value.id)
-        if (updateIndex !== -1) {
-            updates.value[updateIndex].is_active = false
-        }
-
+        await axios.put(`/api/system-updates/${updateToDeactivate.value.id}/deactivate`)
+        await fetchUpdates()
         showDeactivateDialog.value = false
         updateToDeactivate.value = null
-
-        console.log('Update deactivated (client-side only - will reset on page refresh)')
     } catch (error) {
         console.error('Error deactivating update:', error)
     } finally {
@@ -417,14 +410,8 @@ const cancelDeactivate = () => {
 
 const reactivateUpdate = async (update) => {
     try {
-        // Since backend doesn't support update endpoints, update client-side state
-        // Note: This will reset when page refreshes until backend endpoints are implemented
-        const updateIndex = updates.value.findIndex(u => u.id === update.id)
-        if (updateIndex !== -1) {
-            updates.value[updateIndex].is_active = true
-        }
-
-        console.log('Update reactivated (client-side only - will reset on page refresh)')
+        await axios.put(`/api/system-updates/${update.id}/reactivate`)
+        await fetchUpdates()
     } catch (error) {
         console.error('Error reactivating update:', error)
     }

@@ -464,7 +464,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Individual update routes (must be after specific routes)
     Route::post('/api/system-updates/{systemUpdate}/mark-read', [SystemUpdateController::class, 'markAsRead'])->name('system-updates.mark-read');
-    Route::delete('/api/system-updates/{systemUpdate}', [SystemUpdateController::class, 'destroy'])->middleware('check-roles:administrator|program_manager');
+    Route::put('/api/system-updates/{systemUpdate}/deactivate', [SystemUpdateController::class, 'deactivate'])->middleware('check-roles:administrator|program_manager')->name('system-updates.deactivate');
+    Route::put('/api/system-updates/{systemUpdate}/reactivate', [SystemUpdateController::class, 'reactivate'])->middleware('check-roles:administrator|program_manager')->name('system-updates.reactivate');
+    Route::delete('/api/system-updates/{systemUpdate}', [SystemUpdateController::class, 'destroy'])->middleware('check-roles:administrator|program_manager')->name('system-updates.destroy');
 });
 
 // Test route for debugging notifications

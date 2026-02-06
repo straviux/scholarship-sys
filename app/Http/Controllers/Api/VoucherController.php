@@ -107,11 +107,6 @@ class VoucherController extends Controller
                 'data' => $voucher
             ], 201);
         } catch (\Exception $e) {
-            \Log::error('Voucher creation error:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'payload' => $request->all()
-            ]);
             return response()->json([
                 'message' => 'Error creating voucher',
                 'error' => $e->getMessage()
@@ -160,6 +155,71 @@ class VoucherController extends Controller
                 'message' => 'Voucher not found',
                 'error' => $e->getMessage()
             ], 404);
+        }
+    }
+
+    /**
+     * Update a voucher.
+     */
+    public function update(Request $request, $id)
+    {
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        try {
+            $voucher = Voucher::findOrFail($id);
+
+            // Validate incoming data
+            $validator = Validator::make($request->all(), [
+                'voucher_type' => 'required|in:disbursements,payroll',
+                'explanation' => 'nullable|string',
+                'payee_type' => 'required|in:scholar,school,individual',
+                'payee_name' => 'required|string',
+                'payee_address' => 'nullable|string',
+                'responsibility_center' => 'nullable',
+                'account_code' => 'nullable|string',
+                'particulars_name' => 'nullable|string',
+                'particulars_description' => 'nullable|string',
+                'amount' => 'required|numeric|min:0',
+                'scholar_ids' => 'nullable|array',
+                'scholar_ids.*.profile_id' => 'nullable',
+                'scholar_ids.*.scholarship_record_id' => 'nullable',
+                'notes' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Update the voucher
+            $voucher->update([
+                'voucher_type' => $request->voucher_type,
+                'explanation' => $request->explanation,
+                'payee_type' => $request->payee_type,
+                'payee_name' => $request->payee_name,
+                'payee_address' => $request->payee_address,
+                'responsibility_center' => $request->responsibility_center,
+                'account_code' => $request->account_code,
+                'particulars_name' => $request->particulars_name,
+                'particulars_description' => $request->particulars_description,
+                'amount' => $request->amount,
+                'scholar_ids' => $request->scholar_ids,
+                'notes' => $request->notes,
+            ]);
+
+            return response()->json([
+                'message' => 'Voucher updated successfully',
+                'data' => $voucher
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error updating voucher',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -228,10 +288,6 @@ class VoucherController extends Controller
                 ->header('Content-Type', 'application/pdf')
                 ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
         } catch (\Exception $e) {
-            \Log::error('OBR PDF generation error:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
             return response()->json([
                 'message' => 'Error generating PDF',
                 'error' => $e->getMessage()
@@ -259,10 +315,6 @@ class VoucherController extends Controller
                 $filename
             );
         } catch (\Exception $e) {
-            \Log::error('OBR Excel generation error:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
             return response()->json([
                 'message' => 'Error generating Excel',
                 'error' => $e->getMessage()
@@ -305,10 +357,6 @@ class VoucherController extends Controller
                 ->header('Content-Type', 'application/pdf')
                 ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
         } catch (\Exception $e) {
-            \Log::error('DV PDF generation error:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
             return response()->json([
                 'message' => 'Error generating PDF',
                 'error' => $e->getMessage()
@@ -336,12 +384,52 @@ class VoucherController extends Controller
                 $filename
             );
         } catch (\Exception $e) {
-            \Log::error('DV Excel generation error:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
             return response()->json([
                 'message' => 'Error generating Excel',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate Payroll PDF using Browsershot
+     */
+    public function generatePayrollPdf($id)
+    {
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        try {
+            $voucher = Voucher::findOrFail($id);
+
+            // Render the view to HTML
+            $html = view('vouchers.payroll', ['voucher' => $voucher])->render();
+
+            // Convert HTML to PDF using Browsershot
+            $browsershot = Browsershot::html($html);
+
+            // Only set Chrome path if one was found
+            $chromePath = $this->getChromePath();
+            if ($chromePath) {
+                $browsershot->setChromePath($chromePath);
+            }
+
+            $browsershot->margins(0, 0, 0, 0)
+                ->paperSize(330, 215.9, 'mm') // 8.5x13 inches landscape: 330mm x 215.9mm
+                ->showBackground()
+                ->printBackground();
+
+            $pdf = $browsershot->pdf();
+
+            $filename = 'Payroll-' . $voucher->voucher_number . '.pdf';
+
+            return response($pdf, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error generating PDF',
                 'error' => $e->getMessage()
             ], 500);
         }

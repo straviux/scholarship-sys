@@ -10,6 +10,7 @@ Route::middleware(['web'])->group(function () {
     Route::post('/vouchers', [VoucherController::class, 'store']);
     Route::get('/vouchers', [VoucherController::class, 'index']);
     Route::get('/vouchers/{id}', [VoucherController::class, 'show']);
+    Route::put('/vouchers/{id}', [VoucherController::class, 'update']);
     Route::delete('/vouchers/{id}', [VoucherController::class, 'destroy']);
 
     // OBR Report generation
@@ -19,6 +20,9 @@ Route::middleware(['web'])->group(function () {
     // DV (Disbursement Voucher) Report generation
     Route::get('/vouchers/{id}/dv-pdf', [VoucherController::class, 'generateDVPdf']);
     Route::get('/vouchers/{id}/dv-excel', [VoucherController::class, 'generateDVExcel']);
+
+    // Payroll Report generation
+    Route::get('/vouchers/{id}/payroll-pdf', [VoucherController::class, 'generatePayrollPdf']);
 
     // Scholars endpoint for voucher creation
     Route::get('/scholars', [ScholarshipApiController::class, 'getActiveScholars']);

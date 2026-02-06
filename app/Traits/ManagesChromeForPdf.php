@@ -33,19 +33,47 @@ trait ManagesChromeForPdf
         // Try fallback paths
         $fallbackPaths = config('scholarship.browsershot.fallback_paths', []);
         foreach ($fallbackPaths as $path) {
-            // Expand directory paths to find any Chrome installation
-            if (is_dir($path)) {
-                $files = glob($path . '/**/chrome.exe', \GLOB_RECURSIVE);
-                if (!empty($files) && file_exists($files[0])) {
-                    return $files[0];
-                }
-            } elseif (file_exists($path)) {
+            // Check if path is a direct file
+            if (file_exists($path) && is_file($path)) {
                 return $path;
+            }
+
+            // Search recursively in directory for Chrome executable
+            if (is_dir($path)) {
+                $chromePath = $this->findChromeInDirectory($path);
+                if ($chromePath && file_exists($chromePath)) {
+                    return $chromePath;
+                }
             }
         }
 
-        // Return null to let Browsershot use auto-detection
+        // Return null to let Browsershot use auto-detection and Puppeteer to download Chrome if needed
         // This is safer than throwing an exception as Browsershot can find Chrome automatically
+        return null;
+    }
+
+    /**
+     * Recursively search for chrome.exe in a directory
+     * Compatible with Windows and Unix-like systems
+     *
+     * @param string $directory
+     * @return string|null
+     */
+    private function findChromeInDirectory($directory)
+    {
+        try {
+            $iterator = new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS);
+            $recursiveIterator = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::SELF_FIRST);
+
+            foreach ($recursiveIterator as $file) {
+                if ($file->getFilename() === 'chrome.exe' && $file->isFile()) {
+                    return $file->getRealPath();
+                }
+            }
+        } catch (\Exception $e) {
+            // If directory cannot be read, silently continue
+        }
+
         return null;
     }
 

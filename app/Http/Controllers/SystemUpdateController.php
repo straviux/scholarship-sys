@@ -149,7 +149,7 @@ class SystemUpdateController extends Controller
             'type' => 'in:info,warning,success,error',
             'priority' => 'in:low,normal,high,urgent',
             'is_global' => 'boolean',
-            'target_roles' => 'array',
+            'target_roles' => 'nullable|array',
             'expires_at' => 'nullable|date|after:now',
         ]);
 
@@ -160,42 +160,74 @@ class SystemUpdateController extends Controller
             ], 422);
         }
 
-        $update = SystemUpdate::create([
-            'title' => $request->title,
-            'content' => $request->content ?? '',
-            'markdown_content' => $request->markdown_content,
-            'is_markdown' => $request->is_markdown ?? false,
-            'type' => $request->type ?? 'info',
-            'priority' => $request->priority ?? 'normal',
-            'is_global' => $request->is_global ?? true,
-            'target_roles' => $request->target_roles,
-            'expires_at' => $request->expires_at,
-            'created_by' => Auth::id(),
-        ]);
+        try {
+            $update = SystemUpdate::create([
+                'title' => $request->title,
+                'content' => $request->content ?? '',
+                'markdown_content' => $request->markdown_content ?? '',
+                'is_markdown' => $request->is_markdown ?? false,
+                'type' => $request->type ?? 'info',
+                'priority' => $request->priority ?? 'normal',
+                'is_global' => $request->is_global ?? true,
+                'target_roles' => $request->target_roles ?? [],
+                'expires_at' => $request->expires_at,
+                'created_by' => Auth::id(),
+            ]);
 
-        // Log update creation
-        ActivityLogService::logRecordCreated(
-            profileId: null,
-            recordData: ['title' => $request->title, 'type' => $request->type ?? 'info'],
-            remarks: "Created system update: {$request->title}"
-        );
-
-        return response()->json(['message' => 'System update created successfully', 'update' => $update]);
+            return response()->json(['message' => 'System update created successfully', 'update' => $update]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to create system update',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
+    /**
+     * Deactivate a system update (soft delete)
+     */
+    public function deactivate(SystemUpdate $systemUpdate): JsonResponse
+    {
+        try {
+            $systemUpdate->update(['is_active' => false]);
+            return response()->json(['message' => 'System update deactivated']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to deactivate system update',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Reactivate a system update
+     */
+    public function reactivate(SystemUpdate $systemUpdate): JsonResponse
+    {
+        try {
+            $systemUpdate->update(['is_active' => true]);
+            return response()->json(['message' => 'System update reactivated']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to reactivate system update',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Permanently delete a system update
+     */
     public function destroy(SystemUpdate $systemUpdate): JsonResponse
     {
-        $updateData = $systemUpdate->getAttributes();
-        $systemUpdate->update(['is_active' => false]);
-
-        // Log update deactivation
-        ActivityLogService::logRecordUpdated(
-            profileId: null,
-            oldData: ['is_active' => $updateData['is_active']],
-            newData: ['is_active' => false],
-            remarks: "Deactivated system update: {$updateData['title']}"
-        );
-
-        return response()->json(['message' => 'System update deactivated']);
+        try {
+            $systemUpdate->forceDelete();
+            return response()->json(['message' => 'System update permanently deleted']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to delete system update',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
