@@ -16,6 +16,10 @@ Route::middleware(['web'])->group(function () {
     Route::get('/vouchers/{id}/obr-pdf', [VoucherController::class, 'generateOBRPdf']);
     Route::get('/vouchers/{id}/obr-excel', [VoucherController::class, 'generateOBRExcel']);
 
+    // DV (Disbursement Voucher) Report generation
+    Route::get('/vouchers/{id}/dv-pdf', [VoucherController::class, 'generateDVPdf']);
+    Route::get('/vouchers/{id}/dv-excel', [VoucherController::class, 'generateDVExcel']);
+
     // Scholars endpoint for voucher creation
     Route::get('/scholars', [ScholarshipApiController::class, 'getActiveScholars']);
 });

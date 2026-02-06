@@ -300,7 +300,7 @@
         <!-- OBR Payee Row -->
         <div class="obr-info-row">
             <div class="column_1">Payee:</div>
-            <div class="column_2">{{ $voucher->payee_name ?? '_______________' }}</div>
+            <div class="column_2" style="font-weight:600">{{ $voucher->payee_name ?? '_______________' }}</div>
             <div class="column_5">&nbsp;</div>
         </div>
 
@@ -314,14 +314,14 @@
         <!-- OBR Address Row -->
         <div class="obr-info-row">
             <div class="column_1">Address:</div>
-            <div class="column_2">{{ $voucher->payee_address ?? '_______________' }}</div>
+            <div class="column_2" style="font-weight:600">{{ $voucher->payee_address ?? '_______________' }}</div>
             <div class="column_5">&nbsp;</div>
         </div>
 
         <!-- OBR RCenter Row -->
         <div class="obr-info-row">
             <div class="column_1 center">Responsibility Center:</div>
-            <div class="column_2 center">PARTICULARS</div>
+            <div class="column_2 center" style="font-weight:600">PARTICULARS</div>
             <div class="column_5">
                 <div class="fpp">F.P.P</div>
                 <div class="account-code">Account Code</div>
@@ -452,22 +452,22 @@
             @endif
             <!-- Row 5 -->
             <div class="obr-info-row">
-                <div class="column_2" style="flex: 1.134;">
+                <div class="column_2" style="flex: 1.08;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                         <tr>
-                            <td style="width: 100%;padding-top:12px; padding-left:90px; font-weight: bold; vertical-align: top;display:flex; align-items: center;font-size:14px">
-                                <div style="border: 1px solid #333;padding:0 8px;margin-right:4px;justify-content: center; display: flex; align-items: center;justify-content: center;">A</div> <span>Certified</span>
+                            <td style="width: 100%;font-weight: bold; vertical-align: top;display:flex; align-items: center;font-size:14px">
+                                <div style="border: 1px solid #333;padding:0 18px;margin-top:-1px;margin-left:-3px;margin-right:4px;justify-content: center; display: flex; align-items: center;justify-content: center;">A</div> <span>Certified</span>
                             </td>
                         </tr>
                         <tr>
-                            <td style="width: 100%;padding-top:5px;padding-left:124px;font-weight: normal; text-wrap: break-word;font-size:11px;display:flex;">
+                            <td style="width: 100%;padding-top:5px;padding-left:50px;font-weight: normal; text-wrap: break-word;font-size:11px;display:flex;">
                                 <div style="border: 1px solid #333;height:22px;width:28px;margin-right:4px;justify-content: center; display: flex; align-items: center;justify-content: center;"></div>
                                 Charges to appropriation/allotment necessary, lawful and under my direct supervision
                             </td>
                         </tr>
                         <tr>
-                            <td style="width: 100%;padding-top:5px;padding-bottom:2px;padding-left:124px;font-weight: normal; text-wrap: break-word;font-size:11px;display:flex;">
-                                <div style="border: 1px solid #333;height:22px;width:22px;margin-right:4px;justify-content: center; display: flex; align-items: center;justify-content: center;"></div>
+                            <td style="width: 100%;padding-top:5px;padding-bottom:2px;padding-left:50px;font-weight: normal; text-wrap: break-word;font-size:11px;display:flex;">
+                                <div style="border: 1px solid #333;height:22px;width:20px;margin-right:4px;justify-content: center; display: flex; align-items: center;justify-content: center;"></div>
                                 Supporting documents valid, proper and legal
                             </td>
                         </tr>
@@ -476,12 +476,14 @@
                 <div class="column_3" style="flex: 0.9;border-right: none;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
                         <tr>
-                            <td style="width: 100%; padding-left:20px;margin-top:-12px; font-weight: bold; vertical-align: top;display:flex; align-items: center;font-size:14px">
-                                <div style="border: 1px solid #333;padding:0 8px;margin-right:4px;justify-content: center; display: flex; align-items: center;justify-content: center;">B</div> <span>Certified</span>
+                            <td style="width: 100%; margin-top:-26px;margin-left:-3px; font-weight: bold; vertical-align: top;display:flex; align-items: center;font-size:14px">
+                                <div style="border: 1px solid #333;padding:0 18px;margin-right:4px;justify-content: center; display: flex; align-items: center;justify-content: center;">B</div> <span>Certified</span>
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding-left:50px;padding-top:10px;font-weight: normal; text-wrap: break-word;font-size:11px">Existence of Available Appropriation</td>
+                            <td style="padding-left:50px;padding-top:4px;font-weight: normal; text-wrap: break-word;font-size:11px;display:flex;">
+                                <div style="border: 1px solid #333;height:22px;width:20px;margin-right:4px;justify-content: center; display: flex; align-items: center;justify-content: center;"></div>Existence of Available Appropriation
+                            </td>
                         </tr>
                         <tr>
                             <td style="width: 100%;font-weight: normal; text-wrap: break-word;font-size:11px">&nbsp;</td>
@@ -506,7 +508,7 @@
                 <div class="column_1" style="text-align: center; font-size:12px">Printed Name</div>
                 <div class="column_2 center" style="font-weight: 600;">AMY ROA ALVAREZ</div>
                 <div class="column_3" style="text-align: center; font-size:12px">Printed Name</div>
-                <div class="column_5 center">
+                <div class="column_5 center" style="font-weight: 600;">
                     MA. ISABEL E. GUINTO
                 </div>
             </div>
@@ -514,16 +516,16 @@
             <!-- Row 8 -->
             <div class="obr-info-row" style="min-height: 50px;">
                 <div class="column_1" style="text-align: center; font-size:12px">Position</div>
-                <div class="column_2 center" style="font-weight: normal;">GOVERNOR</div>
+                <div class="column_2 center" style="font-weight: normal;font-size:16px">Governor</div>
                 <div class="column_3" style="text-align: center; font-size:12px">Position</div>
-                <div class="column_5 center" style="flex-direction: column; justify-content: space-around;">
-                    <div style="border-bottom: 1px solid #333; padding-bottom: 4px;">Supervising Administrative Officer</div>
+                <div class="column_5 center" style="flex-direction: column; justify-content: space-around;font-size:12px">
+                    <div style="padding-bottom: 4px;">Supervising Administrative Officer</div>
                     <div>Acting Provincial Budget Officer</div>
                 </div>
             </div>
 
             <!-- Row 9 -->
-            <div class="obr-info-row">
+            <div class="obr-info-row no-border-bottom">
                 <div class="column_1" style="text-align: center;  font-size:12px">Date</div>
                 <div class="column_2">&nbsp;</div>
                 <div class="column_3" style="text-align: center;  font-size:12px">Date</div>

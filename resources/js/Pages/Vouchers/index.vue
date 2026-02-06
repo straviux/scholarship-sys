@@ -144,14 +144,8 @@ const generateDocument = async (docType) => {
             url = `/api/vouchers/${selectedVoucher.value.id}/obr-pdf`;
             fileType = 'pdf';
         } else if (docType === 'DV') {
-            // TODO: Add DV endpoint
-            toast.add({
-                severity: 'warn',
-                summary: 'Not Implemented',
-                detail: 'DV document generation coming soon',
-                life: 3000
-            });
-            return;
+            url = `/api/vouchers/${selectedVoucher.value.id}/dv-pdf`;
+            fileType = 'pdf';
         } else if (docType === 'PR') {
             // Payroll Register for payroll vouchers
             toast.add({

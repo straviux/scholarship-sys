@@ -269,4 +269,81 @@ class VoucherController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Generate DV (Disbursement Voucher) PDF using Browsershot
+     */
+    public function generateDVPdf($id)
+    {
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        try {
+            $voucher = Voucher::findOrFail($id);
+
+            // Render the view to HTML
+            $html = view('vouchers.disbursement', ['voucher' => $voucher])->render();
+
+            // Convert HTML to PDF using Browsershot
+            $browsershot = Browsershot::html($html);
+
+            // Only set Chrome path if one was found
+            $chromePath = $this->getChromePath();
+            if ($chromePath) {
+                $browsershot->setChromePath($chromePath);
+            }
+
+            $browsershot->margins(0, 0, 0, 0)
+                ->paperSize(216, 330, 'mm');
+
+            $pdf = $browsershot->pdf();
+
+            $filename = 'DV-' . $voucher->voucher_number . '.pdf';
+
+            return response($pdf, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+        } catch (\Exception $e) {
+            \Log::error('DV PDF generation error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'message' => 'Error generating PDF',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate DV (Disbursement Voucher) Excel using Maatwebsite Excel
+     */
+    public function generateDVExcel($id)
+    {
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        try {
+            $voucher = Voucher::findOrFail($id);
+
+            $filename = 'DV-' . $voucher->voucher_number . '.xlsx';
+
+            // Return Excel download using Maatwebsite Excel
+            return Excel::download(
+                new \App\Exports\VoucherOBRExport($voucher),
+                $filename
+            );
+        } catch (\Exception $e) {
+            \Log::error('DV Excel generation error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'message' => 'Error generating Excel',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

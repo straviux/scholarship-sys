@@ -363,7 +363,7 @@ class DataExportController extends Controller
                 'date_filed' => $profile->date_filed,
                 'date_approved' => $grant?->date_approved,
                 'date_applied' => $grant?->date_filed,
-                'application_status' => $profile->application_status,
+                'application_status' => $grant?->unified_status ?? 'pending',
                 'jpm_remarks' => $profile->jpm_remarks,
             ];
 
@@ -448,9 +448,9 @@ class DataExportController extends Controller
         }
 
         // Count applicants
-        // is_on_waiting_list is now managed through scholarship_records.application_status
+        // is_on_waiting_list is now managed through scholarship_records.unified_status
         $applicantsQuery = ScholarshipProfile::whereHas('scholarshipGrant', function ($q) {
-            $q->where('application_status', 0); // 0 = Waiting List
+            $q->where('unified_status', 'pending'); // pending = Waiting List
         });
 
         if ($request->filled('date_from')) {
