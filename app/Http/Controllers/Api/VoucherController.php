@@ -21,10 +21,11 @@ class VoucherController extends Controller
     {
         $year = date('Y');
         $month = date('m');
-        $prefix = sprintf('V-%s%s-', $year, $month);
+        $prefix = sprintf('DV-%s%s-', $year, $month);
 
-        // Find the highest sequence number for this month
-        $lastVoucher = Voucher::where('voucher_number', 'like', $prefix . '%')
+        // Find the highest sequence number for this month, excluding soft-deleted vouchers
+        $lastVoucher = Voucher::withoutTrashed()
+            ->where('voucher_number', 'like', $prefix . '%')
             ->orderBy('voucher_number', 'desc')
             ->first();
 
@@ -36,7 +37,7 @@ class VoucherController extends Controller
             $nextNumber = 1;
         }
 
-        // Format: V-YYYYMM-0001
+        // Format: DV-YYYYMM-0001
         return $prefix . sprintf('%04d', $nextNumber);
     }
 
@@ -111,6 +112,10 @@ class VoucherController extends Controller
                 'data' => $voucher
             ], 201);
         } catch (\Exception $e) {
+            \Log::error('Voucher creation error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'request' => $request->all()
+            ]);
             return response()->json([
                 'message' => 'Error creating voucher',
                 'error' => $e->getMessage()
