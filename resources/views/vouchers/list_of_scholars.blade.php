@@ -138,7 +138,7 @@
 
                 // Get course name from relationship if available
                 if($record->course) {
-                $courseName = $record->course->course_name ?? '';
+                $courseName = $record->course->name ?? '';
                 }
                 }
                 }
