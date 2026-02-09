@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('scholarship_records', function (Blueprint $table) {
-            $table->string('yakap_category')->nullable()->after('term');
-            $table->string('yakap_location')->nullable()->after('yakap_category');
+            // Make yakap_category nullable (it was created with a default but not nullable)
+            $table->string('yakap_category')->nullable()->change();
         });
     }
 
@@ -23,7 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('scholarship_records', function (Blueprint $table) {
-            $table->dropColumn(['yakap_category', 'yakap_location']);
+            // Revert to NOT NULL with default
+            $table->string('yakap_category')->default('yakap-capitol')->change();
         });
     }
 };
