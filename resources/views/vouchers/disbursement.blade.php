@@ -408,8 +408,8 @@
             $headerHeight = 80;
             $payeeRowHeight = 60;
             $addressRowHeight = 60;
-            $explanationRowHeight = 40;
-            $scholarRowHeight = 20;
+            $explanationRowHeight = 100; // Increased to account for multi-line explanations
+            $scholarRowHeight = 30; // Slightly increased
             $totalRowHeight = 40;
             $certifiedRowHeight = 100;
             $sigRowHeight = 30;
@@ -430,13 +430,14 @@
             $pageHeight = 1240;
             $availableHeight = $pageHeight - $fixedHeight;
 
-            // Each blank row is approximately 20px
-            $blankRowHeight = 20;
-            $numBlankRows = max(3, floor($availableHeight / $blankRowHeight) - 1); // Subtract 1 to close the gap
+            // Each blank row is approximately 40px
+            $blankRowHeight = 40;
+            // More conservative calculation: subtract 3 instead of 1 to prevent overflow to second page
+            $numBlankRows = max(2, floor($availableHeight / $blankRowHeight) - 3);
             @endphp
 
             @for ($i = 0; $i < $numBlankRows; $i++)
-                <div class="obr-info-row no-border-bottom" style="min-height: 20px;">
+                <div class="obr-info-row no-border-bottom" style="min-height: 40px;">
                 <div class="column_2">&nbsp;</div>
                 <div class="column_5">&nbsp;</div>
         </div>
