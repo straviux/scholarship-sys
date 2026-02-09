@@ -24,6 +24,10 @@ class CreateScholarshipRecordRequest extends FormRequest
     {
         // $id = $this->route('id');
         $id = $this->route('courses') ?? null;
+
+        // Check if this is a G12 record
+        $isG12 = $this->input('year_level') === 'G12';
+
         return [
             "school_name" => [
                 'nullable',
@@ -41,21 +45,17 @@ class CreateScholarshipRecordRequest extends FormRequest
                 'string',
                 'max:20'
             ],
-            "academic_year" => [
-                'required',
-                'string',
-                'max:20'
-            ],
+            "academic_year" => $isG12
+                ? ['nullable', 'string', 'max:20']
+                : ['required', 'string', 'max:20'],
             "academic_status" => [
                 'nullable',
                 'string',
                 'max:20'
             ],
-            "term" => [
-                'required',
-                'string',
-                'max:50'
-            ],
+            "term" => $isG12
+                ? ['nullable', 'string', 'max:50']
+                : ['required', 'string', 'max:50'],
             "remarks" => [
                 'nullable',
                 'string',
@@ -84,18 +84,15 @@ class CreateScholarshipRecordRequest extends FormRequest
                 'required',
                 'exists:scholarship_profiles,profile_id'
             ],
-            "course_id" => [
-                'required',
-                'exists:courses,id'
-            ],
-            "program_id" => [
-                'required',
-                'exists:scholarship_programs,id'
-            ],
-            "school_id" => [
-                'required',
-                'exists:schools,id'
-            ],
+            "course_id" => $isG12
+                ? ['nullable', 'exists:courses,id']
+                : ['required', 'exists:courses,id'],
+            "program_id" => $isG12
+                ? ['nullable', 'exists:scholarship_programs,id']
+                : ['required', 'exists:scholarship_programs,id'],
+            "school_id" => $isG12
+                ? ['nullable', 'exists:schools,id']
+                : ['required', 'exists:schools,id'],
             "approval_status" => [
                 'nullable',
                 'string',

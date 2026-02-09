@@ -340,7 +340,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -425,7 +425,7 @@
                                                     <div>
                                                         <h5 class="font-semibold text-gray-900">
                                                             Status: <span class="text-blue-600">{{ timeline.new_status
-                                                            }}</span>
+                                                                }}</span>
                                                         </h5>
                                                         <p class="text-sm text-gray-600">{{
                                                             formatDateTime(timeline.performed_at) }}</p>
@@ -437,13 +437,13 @@
                                                         <p class="text-xs text-gray-600">Previous Status</p>
                                                         <p class="text-sm font-medium text-gray-900">{{
                                                             timeline.old_status || 'N/A'
-                                                        }}</p>
+                                                            }}</p>
                                                     </div>
                                                     <div>
                                                         <p class="text-xs text-gray-600">New Status</p>
                                                         <p class="text-sm font-medium text-gray-900">{{
                                                             timeline.new_status || 'N/A'
-                                                        }}</p>
+                                                            }}</p>
                                                     </div>
                                                 </div>
 
@@ -451,7 +451,7 @@
                                                     <p class="text-xs text-gray-600">Encoded by</p>
                                                     <p class="text-sm font-medium text-gray-900">{{
                                                         timeline.changed_by?.name || 'System'
-                                                    }}</p>
+                                                        }}</p>
                                                 </div>
 
                                                 <div v-if="timeline.remarks"
@@ -760,21 +760,24 @@
             <div class="space-y-4 py-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Program *</label>
-                        <ProgramSelect v-model="recordForm.program_id" :clearable="false" />
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Program <span v-if="isG12Record"
+                                class="text-xs text-gray-500">(Optional for G12)</span><span v-else>*</span></label>
+                        <ProgramSelect v-model="recordForm.program_id" />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">School *</label>
-                        <SchoolSelect v-model="recordForm.school_id" :clearable="false" />
+                        <label class="block text-sm font-medium text-gray-700 mb-2">School <span v-if="isG12Record"
+                                class="text-xs text-gray-500">(Optional for G12)</span><span v-else>*</span></label>
+                        <SchoolSelect v-model="recordForm.school_id" />
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Course *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Course <span v-if="isG12Record"
+                                class="text-xs text-gray-500">(N/A for G12)</span><span v-else>*</span></label>
                         <CourseSelect v-model="recordForm.course_id"
                             :scholarship-program-id="typeof recordForm.program_id === 'object' ? recordForm.program_id?.id : recordForm.program_id"
-                            :clearable="false" />
+                            :disabled="isG12Record" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Year Level *</label>
@@ -784,11 +787,14 @@
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Academic Year *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Academic Year <span
+                                v-if="isG12Record" class="text-xs text-gray-500">(Optional for G12)</span><span
+                                v-else>*</span></label>
                         <AcademicYearSelect v-model="recordForm.academic_year" />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Term *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Term <span v-if="isG12Record"
+                                class="text-xs text-gray-500">(Optional for G12)</span><span v-else>*</span></label>
                         <TermSelect v-model="recordForm.term" />
                     </div>
                 </div>
@@ -1009,6 +1015,11 @@ const scholarshipRecords = computed(() => {
     if (!props.profile.scholarship_grant) return [];
     // Return all records, already sorted by latest first from backend
     return props.profile.scholarship_grant;
+});
+
+const isG12Record = computed(() => {
+    const yearLevelValue = typeof recordForm.value.year_level === 'object' ? recordForm.value.year_level?.value : recordForm.value.year_level;
+    return yearLevelValue === 'G12';
 });
 
 const allAttachments = computed(() => {
@@ -1259,12 +1270,47 @@ const submitRecord = async () => {
     recordForm.value.processing = true;
 
     try {
+        // Validate required fields
+        const yearLevelValue = typeof recordForm.value.year_level === 'object' ? recordForm.value.year_level?.value : recordForm.value.year_level;
+        const isG12 = yearLevelValue === 'G12';
+
+        // For non-G12 records, program, school, academic_year, and term are required
+        if (!isG12) {
+            if (!recordForm.value.program_id) {
+                toast.error('Program is required');
+                recordForm.value.processing = false;
+                return;
+            }
+            if (!recordForm.value.school_id) {
+                toast.error('School is required');
+                recordForm.value.processing = false;
+                return;
+            }
+            if (!recordForm.value.academic_year) {
+                toast.error('Academic Year is required');
+                recordForm.value.processing = false;
+                return;
+            }
+            if (!recordForm.value.term) {
+                toast.error('Term is required');
+                recordForm.value.processing = false;
+                return;
+            }
+        }
+
+        // Year level is always required
+        if (!yearLevelValue) {
+            toast.error('Year Level is required');
+            recordForm.value.processing = false;
+            return;
+        }
+
         const formData = {
             profile_id: props.profile.profile_id,
             program_id: typeof recordForm.value.program_id === 'object' ? recordForm.value.program_id?.id : recordForm.value.program_id,
             school_id: typeof recordForm.value.school_id === 'object' ? recordForm.value.school_id?.id : recordForm.value.school_id,
             course_id: typeof recordForm.value.course_id === 'object' ? recordForm.value.course_id?.id : recordForm.value.course_id,
-            year_level: typeof recordForm.value.year_level === 'object' ? recordForm.value.year_level?.value : recordForm.value.year_level,
+            year_level: yearLevelValue,
             academic_year: typeof recordForm.value.academic_year === 'object' ? recordForm.value.academic_year?.value : recordForm.value.academic_year,
             term: typeof recordForm.value.term === 'object' ? recordForm.value.term?.value : recordForm.value.term,
             date_filed: formatDateForAPI(recordForm.value.date_filed),
