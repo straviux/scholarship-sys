@@ -473,6 +473,15 @@ const handleSubmit = () => {
         })(),
     };
 
+    console.log('🔍 SUBMIT DATA DEBUG:', {
+        form_yakap_category: form.yakap_category,
+        form_yakap_location: form.yakap_location,
+        submit_yakap_category: submitData.yakap_category,
+        submit_yakap_location: submitData.yakap_location,
+        props_yakap_category: props.yakapCategory,
+        props_yakap_location: props.yakapLocation,
+    });
+
     if (props.mode === 'edit' && props.profile) {
         // Update existing profile - use profile_id from the profile object
         const profileId = props.profile.profile_id;
@@ -570,9 +579,26 @@ const emptyFormState = {
     academic_year: null,
     date_filed: null,
     remarks: '',
-    yakap_category: 'yakap-capitol',
+    yakap_category: null,  // Changed from 'yakap-capitol' to null - will be set from props
     yakap_location: '',
 };
+
+// Watch yakap prop changes and sync with form
+watch(() => props.yakapCategory, (newValue) => {
+    console.log('yakapCategory prop changed to:', newValue);
+    if (props.mode === 'create' && newValue) {
+        form.yakap_category = newValue;
+        console.log('Form yakap_category updated:', form.yakap_category);
+    }
+});
+
+watch(() => props.yakapLocation, (newValue) => {
+    console.log('yakapLocation prop changed to:', newValue);
+    if (props.mode === 'create' && newValue) {
+        form.yakap_location = newValue;
+        console.log('Form yakap_location updated:', form.yakap_location);
+    }
+});
 
 // Reset form to initial empty state
 const resetForm = () => {
