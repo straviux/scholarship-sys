@@ -168,7 +168,13 @@
 
                     <div class="row border-none">
                         <div class="col col-grow col-center col-vcenter">
-                            <span class="text-lg font-semibold tracking-wide">{{ $term .' '. $academicYear }}</span>
+                            <span class="text-lg font-semibold tracking-wide">
+                                @if($term === 'review')
+                                {{ $academicYear }}
+                                @else
+                                {{ $term .' '. $academicYear }}
+                                @endif
+                            </span>
                         </div>
                     </div>
 
