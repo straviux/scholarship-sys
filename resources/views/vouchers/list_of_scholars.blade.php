@@ -167,6 +167,14 @@
                         </div>
                     </div>
 
+                    @if($voucher->obr_type === 'REIMBURSEMENT')
+                    <div class="row border-none">
+                        <div class="col col-grow col-center col-vcenter">
+                            <span class="text-lg font-semibold tracking-wide">FOR REIMBURSEMENT</span>
+                        </div>
+                    </div>
+                    @endif
+
 
 
 

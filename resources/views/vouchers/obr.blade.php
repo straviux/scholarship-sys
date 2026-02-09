@@ -355,8 +355,8 @@
         </div>
         @endif
 
-        <!-- OBR Name of Scholars Rows -->
-        @if($voucher->scholar_ids && count($voucher->scholar_ids) > 0)
+        <!-- OBR Name of Scholars Rows (Hidden if REIMBURSEMENT) -->
+        @if($voucher->obr_type !== 'REIMBURSEMENT' && $voucher->scholar_ids && count($voucher->scholar_ids) > 0)
         @php
         // Fetch scholar details for each profile_id
         $scholars = [];
