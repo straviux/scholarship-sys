@@ -506,16 +506,30 @@ const submit = (closeAfter = false) => {
 
     console.log('Form data after null conversion:', form.data());
 
-    // Then apply uppercase to name fields that are not null
-    if (form.last_name) form.last_name = form.last_name.toUpperCase();
-    if (form.first_name) form.first_name = form.first_name.toUpperCase();
-    if (form.middle_name) form.middle_name = form.middle_name.toUpperCase();
-    if (form.extension_name) form.extension_name = form.extension_name.toUpperCase();
-    if (form.father_name) form.father_name = form.father_name.toUpperCase();
-    if (form.mother_name) form.mother_name = form.mother_name.toUpperCase();
-    if (form.guardian_name) form.guardian_name = form.guardian_name.toUpperCase();
-    if (form.address) form.address = form.address.toUpperCase();
-    if (form.temporary_address) form.temporary_address = form.temporary_address.toUpperCase();
+    // Helper function for uppercase transformation
+    const toUpperCase = (value) => {
+        if (!value || typeof value !== 'string') return value;
+        return value.toUpperCase();
+    };
+
+    // Apply uppercase to text fields that are not null
+    form.last_name = toUpperCase(form.last_name);
+    form.first_name = toUpperCase(form.first_name);
+    form.middle_name = toUpperCase(form.middle_name);
+    form.extension_name = toUpperCase(form.extension_name);
+    form.father_name = toUpperCase(form.father_name);
+    form.father_occupation = toUpperCase(form.father_occupation);
+    form.mother_name = toUpperCase(form.mother_name);
+    form.mother_occupation = toUpperCase(form.mother_occupation);
+    form.guardian_name = toUpperCase(form.guardian_name);
+    form.guardian_occupation = toUpperCase(form.guardian_occupation);
+    form.guardian_relationship = toUpperCase(form.guardian_relationship);
+    form.address = toUpperCase(form.address);
+    form.temporary_address = toUpperCase(form.temporary_address);
+    form.place_of_birth = toUpperCase(form.place_of_birth);
+    form.religion = toUpperCase(form.religion);
+    form.indigenous_group = toUpperCase(form.indigenous_group);
+    form.remarks = toUpperCase(form.remarks);
 
     // Handle municipality and barangay extraction from objects
     if (typeof form.municipality === 'object' && form.municipality?.name) {
@@ -541,13 +555,6 @@ const submit = (closeAfter = false) => {
         form.temporary_barangay = form.temporary_barangay.name.toUpperCase();
     } else if (typeof form.temporary_barangay === 'string' && form.temporary_barangay) {
         form.temporary_barangay = form.temporary_barangay.toUpperCase();
-    }
-
-    // Handle place_of_birth if it's an object
-    if (typeof form.place_of_birth === 'object' && form.place_of_birth?.name) {
-        form.place_of_birth = form.place_of_birth.name.toUpperCase();
-    } else if (typeof form.place_of_birth === 'string' && form.place_of_birth) {
-        form.place_of_birth = form.place_of_birth.toUpperCase();
     }
 
     // Handle empty academic info - only set if values exist

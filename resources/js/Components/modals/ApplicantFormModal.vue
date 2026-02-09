@@ -427,9 +427,33 @@ watch(() => props.visible, async (newValue) => {
 });
 
 const handleSubmit = () => {
+    // Helper function to convert string to uppercase
+    const toUpperCase = (value) => {
+        if (!value || typeof value !== 'string') return value;
+        return value.toUpperCase();
+    };
+
     // Transform data before submitting
     const submitData = {
         ...form.data(),
+        // Convert all text fields to uppercase
+        first_name: toUpperCase(form.first_name),
+        middle_name: toUpperCase(form.middle_name),
+        last_name: toUpperCase(form.last_name),
+        extension_name: toUpperCase(form.extension_name),
+        address: toUpperCase(form.address),
+        temporary_address: toUpperCase(form.temporary_address),
+        place_of_birth: toUpperCase(form.place_of_birth?.name || form.place_of_birth) || null,
+        religion: toUpperCase(form.religion),
+        indigenous_group: toUpperCase(form.indigenous_group),
+        father_name: toUpperCase(form.father_name),
+        mother_name: toUpperCase(form.mother_name),
+        guardian_name: toUpperCase(form.guardian_name),
+        father_occupation: toUpperCase(form.father_occupation),
+        mother_occupation: toUpperCase(form.mother_occupation),
+        guardian_occupation: toUpperCase(form.guardian_occupation),
+        guardian_relationship: toUpperCase(form.guardian_relationship),
+        remarks: toUpperCase(form.remarks),
         // Format dates properly to avoid timezone issues
         date_of_birth: formatDateForBackend(form.date_of_birth),
         date_filed: formatDateForBackend(form.date_filed),
@@ -443,8 +467,6 @@ const handleSubmit = () => {
         temporary_municipality: form.temporary_municipality?.name || form.temporary_municipality || null,
         // Extract name from temporary barangay object if it exists
         temporary_barangay: form.temporary_barangay?.name || form.temporary_barangay || null,
-        // Extract name from place_of_birth if it's an object
-        place_of_birth: form.place_of_birth?.name || form.place_of_birth || null,
         // Send IDs for course, school, and program (backend expects IDs for scholarship records)
         course_id: form.course?.id || null,
         school_id: form.school?.id || null,

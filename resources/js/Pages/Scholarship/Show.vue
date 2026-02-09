@@ -1305,6 +1305,12 @@ const submitRecord = async () => {
             return;
         }
 
+        // Helper function to convert string to uppercase
+        const toUpperCase = (value) => {
+            if (!value || typeof value !== 'string') return value;
+            return value.toUpperCase();
+        };
+
         const formData = {
             profile_id: props.profile.profile_id,
             program_id: typeof recordForm.value.program_id === 'object' ? recordForm.value.program_id?.id : recordForm.value.program_id,
@@ -1316,8 +1322,8 @@ const submitRecord = async () => {
             date_filed: formatDateForAPI(recordForm.value.date_filed),
             date_approved: formatDateForAPI(recordForm.value.date_approved),
             unified_status: recordForm.value.unified_status,
-            grant_provision: recordForm.value.grant_provision,
-            remarks: recordForm.value.remarks
+            grant_provision: toUpperCase(recordForm.value.grant_provision),
+            remarks: toUpperCase(recordForm.value.remarks)
         };
         console.log('Form data being sent:', formData);
         let response;

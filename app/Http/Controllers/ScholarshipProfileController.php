@@ -454,7 +454,7 @@ class ScholarshipProfileController extends Controller
     public function restore($id)
     {
         // Check if user is administrator
-        if (!auth()->user()?->hasRole('administrator')) {
+        if (!Auth::user()?->hasRole('administrator')) {
             abort(403, 'Only administrators can restore deleted profiles.');
         }
 
