@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccessControlController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PermissionManagementController;
 use App\Http\Controllers\ProfileController;
@@ -48,7 +49,8 @@ Broadcast::routes(['middleware' => ['auth']]);
 
 // This file is part of the routes/web.php file for the Laravel application.
 Route::middleware('auth')->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('home');
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/home', [HomeController::class, 'index'])->name('home.index');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/help', [HelpController::class, 'index'])->name('help.index');
 });

@@ -168,9 +168,16 @@ onUnmounted(() => {
                 <ul v-if="!sidebarMinimized"
                     class="menu space-y-3 md:space-y-2 mt-2 px-3 pb-3 text-sm md:text-xs w-full text-gray-300 hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block flex-1">
                     <li>
+                        <SidebarLink :href="route('home.index')"
+                            :active="route().current('home.index') || route().current('home')">
+                            <i class="pi pi-th-large mr-2 text-sm"></i>
+                            <span class="font-medium">Home</span>
+                        </SidebarLink>
+                    </li>
+                    <li>
                         <SidebarLink :href="route('dashboard')"
-                            :active="route().current('dashboard') || route().current('home') || route().current('index')">
-                            <i class="pi pi-home mr-2 text-sm"></i>
+                            :active="route().current('dashboard') || route().current('index')">
+                            <i class="pi pi-chart-bar mr-2 text-sm"></i>
                             <span class="font-medium">Dashboard</span>
                         </SidebarLink>
                     </li>
