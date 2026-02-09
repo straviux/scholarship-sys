@@ -32,10 +32,12 @@ watch(selectedCategory, (newCategory) => {
 });
 
 const handleConfirm = () => {
-    // Convert selected object to string if needed
+    // Extract just the location name (school or municipality) instead of entire object
     let locationValue = selectedLocation.value;
-    if (locationValue && typeof locationValue === 'object') {
-        locationValue = JSON.stringify(locationValue);
+    if (locationValue) {
+        if (typeof locationValue === 'object' && locationValue?.name) {
+            locationValue = locationValue.name;  // Extract just the name
+        }
     }
 
     emit('selected', {

@@ -417,12 +417,8 @@ watch(() => props.visible, async (newValue) => {
         validationError.value = '';
         isValidating.value = false;
     } else if (newValue && props.mode === 'create') {
-        // In create mode, reset to empty form
-        form.reset();
-        form.clearErrors();
-        activeStep.value = '1';
-        validationError.value = '';
-        isValidating.value = false;
+        // In create mode, use resetForm to properly set yakap from props
+        resetForm();
     }
 });
 
@@ -443,6 +439,10 @@ const handleSubmit = () => {
         extension_name: toUpperCase(form.extension_name),
         address: toUpperCase(form.address),
         temporary_address: toUpperCase(form.temporary_address),
+        municipality: toUpperCase(form.municipality?.name || form.municipality) || null,
+        barangay: toUpperCase(form.barangay?.name || form.barangay) || null,
+        temporary_municipality: toUpperCase(form.temporary_municipality?.name || form.temporary_municipality) || null,
+        temporary_barangay: toUpperCase(form.temporary_barangay?.name || form.temporary_barangay) || null,
         place_of_birth: toUpperCase(form.place_of_birth?.name || form.place_of_birth) || null,
         religion: toUpperCase(form.religion),
         indigenous_group: toUpperCase(form.indigenous_group),
@@ -460,13 +460,9 @@ const handleSubmit = () => {
         // Extract value from academic_year object if it exists
         academic_year: form.academic_year?.value || form.academic_year || null,
         // Extract name from municipality object if it exists
-        municipality: form.municipality?.name || form.municipality || null,
         // Extract name from barangay object if it exists
-        barangay: form.barangay?.name || form.barangay || null,
         // Extract name from temporary municipality object if it exists
-        temporary_municipality: form.temporary_municipality?.name || form.temporary_municipality || null,
         // Extract name from temporary barangay object if it exists
-        temporary_barangay: form.temporary_barangay?.name || form.temporary_barangay || null,
         // Send IDs for course, school, and program (backend expects IDs for scholarship records)
         course_id: form.course?.id || null,
         school_id: form.school?.id || null,
@@ -481,27 +477,23 @@ const handleSubmit = () => {
         term: form.term?.value || form.term || null,
         // YAKAP fields - only set yakap_category if it has a value, otherwise leave it as empty/null
         yakap_category: form.yakap_category || null,
-        yakap_location: (() => {
-            if (!form.yakap_location) return '';
-            // If it's a JSON string, keep it as-is (backend will parse)
-            if (typeof form.yakap_location === 'string') {
-                return form.yakap_location;
-            }
-            // If it's an object, convert to JSON string
-            if (typeof form.yakap_location === 'object') {
-                return JSON.stringify(form.yakap_location);
-            }
-            return '';
-        })(),
+        yakap_location: form.yakap_location || null,  // Already a clean string name from modal
     };
 
     console.log('🔍 SUBMIT DATA DEBUG:', {
         form_yakap_category: form.yakap_category,
         form_yakap_location: form.yakap_location,
+        form_yakap_location_type: typeof form.yakap_location,
+        form_yakap_location_full: JSON.stringify(form.yakap_location, null, 2),
         submit_yakap_category: submitData.yakap_category,
         submit_yakap_location: submitData.yakap_location,
+        submit_yakap_location_type: typeof submitData.yakap_location,
         props_yakap_category: props.yakapCategory,
         props_yakap_location: props.yakapLocation,
+        municipality: submitData.municipality,
+        barangay: submitData.barangay,
+        temporary_municipality: submitData.temporary_municipality,
+        temporary_barangay: submitData.temporary_barangay,
     });
 
     if (props.mode === 'edit' && props.profile) {
@@ -605,58 +597,38 @@ const emptyFormState = {
     yakap_location: '',
 };
 
-// Watch yakap prop changes and sync with form
+// Watch yakap prop changes and sync with form - immediately apply any changes
 watch(() => props.yakapCategory, (newValue) => {
-    console.log('yakapCategory prop changed to:', newValue);
-    if (props.mode === 'create' && newValue) {
-        form.yakap_category = newValue;
-        console.log('Form yakap_category updated:', form.yakap_category);
-    }
+    // Always update form when prop changes, regardless of current state
+    form.yakap_category = newValue || null;
+    console.log('📌 yakapCategory prop changed to:', newValue, '| Form updated:', form.yakap_category);
 });
 
 watch(() => props.yakapLocation, (newValue) => {
-    console.log('yakapLocation prop changed to:', newValue);
-    if (props.mode === 'create' && newValue) {
-        form.yakap_location = newValue;
-        console.log('Form yakap_location updated:', form.yakap_location);
-    }
+    // Always update form when prop changes, regardless of current state
+    form.yakap_location = newValue || '';
+    console.log('📌 yakapLocation prop changed to:', newValue, '| Form updated:', form.yakap_location);
 });
 
 // Reset form to initial empty state
 const resetForm = () => {
     // Reset to empty values for create mode
     Object.keys(emptyFormState).forEach(key => {
-        // Use props for yakap fields instead of empty state defaults
-        if (key === 'yakap_category') {
-            form[key] = props.yakapCategory || null;
-        } else if (key === 'yakap_location') {
-            form[key] = props.yakapLocation || '';
-        } else {
-            form[key] = emptyFormState[key];
-        }
+        form[key] = emptyFormState[key];
     });
+    // Then set yakap fields from props to ensure they're not cleared
+    if (props.mode === 'create') {
+        form.yakap_category = props.yakapCategory || null;
+        form.yakap_location = props.yakapLocation || '';
+    }
     form.clearErrors();
     activeStep.value = '1';
     validationError.value = null;
-    console.log('Form reset with yakap values from props:', {
+    console.log('Form reset complete with yakap values from props:', {
         yakap_category: form.yakap_category,
         yakap_location: form.yakap_location
     });
 };
-
-// Watch for modal visibility changes - reset form when opening in create mode
-watch(() => props.visible, (newVal, oldVal) => {
-    if (newVal && !oldVal && props.mode === 'create') {
-        // Modal is opening in create mode - reset to empty state
-        nextTick(() => {
-            resetForm();
-        });
-    }
-});
-
-onMounted(() => {
-    console.log('ApplicantFormModal mounted with props:', props);
-});
 
 // Add to form state
 const yakapCategoryOptions = [

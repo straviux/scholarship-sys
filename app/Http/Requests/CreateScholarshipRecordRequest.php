@@ -103,6 +103,16 @@ class CreateScholarshipRecordRequest extends FormRequest
                 'string',
                 'max:50'
             ],
+            "yakap_category" => [
+                'nullable',
+                'string',
+                'max:50'
+            ],
+            "yakap_location" => [
+                'nullable',
+                'string',
+                'max:255'  // Store location name only (school or municipality)
+            ],
             "unified_status" => [
                 'nullable',
                 'string',

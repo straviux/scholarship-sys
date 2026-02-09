@@ -397,6 +397,10 @@ const handleSubmit = () => {
         extension_name: toUpperCase(form.extension_name),
         address: toUpperCase(form.address),
         temporary_address: toUpperCase(form.temporary_address),
+        municipality: toUpperCase(form.municipality?.name || form.municipality) || null,
+        barangay: toUpperCase(form.barangay?.name || form.barangay) || null,
+        temporary_municipality: toUpperCase(form.temporary_municipality?.name || form.temporary_municipality) || null,
+        temporary_barangay: toUpperCase(form.temporary_barangay?.name || form.temporary_barangay) || null,
         place_of_birth: toUpperCase(form.place_of_birth?.name || form.place_of_birth) || null,
         religion: toUpperCase(form.religion),
         indigenous_group: toUpperCase(form.indigenous_group),
@@ -410,14 +414,6 @@ const handleSubmit = () => {
         remarks: toUpperCase(form.remarks),
         // Extract value from academic_year object if it exists
         academic_year: form.academic_year?.value || form.academic_year || null,
-        // Extract name from municipality object if it exists
-        municipality: form.municipality?.name || form.municipality || null,
-        // Extract name from barangay object if it exists
-        barangay: form.barangay?.name || form.barangay || null,
-        // Extract name from temporary municipality object if it exists
-        temporary_municipality: form.temporary_municipality?.name || form.temporary_municipality || null,
-        // Extract name from temporary barangay object if it exists
-        temporary_barangay: form.temporary_barangay?.name || form.temporary_barangay || null,
         // Send IDs for course, school, and program (backend expects IDs for scholarship records)
         course_id: form.course?.id || null,
         school_id: form.school?.id || null,

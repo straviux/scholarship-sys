@@ -86,6 +86,8 @@ class ScholarshipProfileController extends Controller
                     'unified_status' => 'pending', // Default to pending
                     'is_active' => 1,
                     'date_filed' =>  $request->date_filed ?? now(),
+                    'yakap_category' => $request->yakap_category ?? null,
+                    'yakap_location' => $request->yakap_location ?? null,
                 ]);
             }
         }
@@ -163,6 +165,8 @@ class ScholarshipProfileController extends Controller
                     'unified_status' => 'pending', // Default to pending
                     'is_active' => 1,
                     'date_filed' =>  $request->date_filed ?? now(),
+                    'yakap_category' => $request->yakap_category ?? null,
+                    'yakap_location' => $request->yakap_location ?? null,
                 ]);
             } else {
                 // Update existing record - find by scholarship_grant_id or get the active record
@@ -188,6 +192,8 @@ class ScholarshipProfileController extends Controller
                     $record->school_id = $school->id ?? null;
                     $record->date_filed = $request->date_filed ?? $record->date_filed;
                     $record->date_approved = $request->date_approved ?? $record->date_approved;
+                    $record->yakap_category = $request->yakap_category ?? $record->yakap_category;
+                    $record->yakap_location = $request->yakap_location ?? $record->yakap_location;
                     $record->save();
                 }
             }

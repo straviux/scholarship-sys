@@ -264,6 +264,16 @@ class CreateScholarshipProfileRequest extends FormRequest
                 'string',
                 'max:50'
             ],
+            "yakap_category" => [
+                'nullable',
+                'string',
+                'max:50'
+            ],
+            "yakap_location" => [
+                'nullable',
+                'string',
+                'max:255'
+            ],
         ];
     }
 
