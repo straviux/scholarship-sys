@@ -129,6 +129,12 @@
                                         size="small" class="w-full" />
                                 </div>
                                 <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Academic Year</label>
+                                    <Select v-model="filter.academic_year" :options="academicYearOptions"
+                                        optionLabel="label" optionValue="value" placeholder="All Years" showClear
+                                        size="small" class="w-full" />
+                                </div>
+                                <div class="flex flex-col">
                                     <label class="text-xs font-medium text-gray-600 mb-1">Grant Provision</label>
                                     <Select v-model="filter.grant_provision" :options="grantProvisionOptions"
                                         placeholder="All Provisions" size="small" class="w-full" showClear />
@@ -668,6 +674,7 @@ const filter = useForm({
     course: props.filters?.course || "",
     municipality: props.filters?.municipality || "",
     year_level: props.filters?.year_level || "",
+    academic_year: props.filters?.academic_year || "",
     grant_provision: props.filters?.grant_provision || null,
     unified_status: props.filters?.unified_status || null,
     global_search: props.filters?.global_search || "",
@@ -713,10 +720,26 @@ const hasRole = (role) => {
 // Grant Provision Options
 const grantProvisionOptions = ref(['Matriculation', 'RLE', 'Tuition', 'RLE and Tuition']);
 
+// Academic Year Options - generate current year and previous years with all ranges first, then single years
+const academicYearOptions = computed(() => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    // Add all range year options first
+    for (let i = currentYear; i >= currentYear - 10; i--) {
+        years.push({ label: `${i}-${i + 1}`, value: `${i}-${i + 1}` });
+    }
+    // Add all single year options
+    for (let i = currentYear; i >= currentYear - 10; i--) {
+        years.push({ label: i.toString(), value: i.toString() });
+    }
+    return years;
+});
+
 // Profile Type Options
 const profileTypeOptions = ref([
     { label: 'All', value: 'all', icon: 'pi pi-users' },
     { label: 'Existing', value: 'existing', icon: 'pi pi-check-circle' },
+    { label: 'Pending', value: 'pending', icon: 'pi pi-clock' },
     { label: 'Declined', value: 'declined', icon: 'pi pi-times-circle' }
 ]);
 
@@ -894,6 +917,7 @@ const filterList = (resetToPage1 = false) => {
     const name = filter.name.toLowerCase() || "";
     const school = filter.school?.shortname?.toLowerCase() || "";
     const year_level = filter.year_level?.value?.toLowerCase() || "";
+    const academic_year = filter.academic_year || "";
     const global_search = globalFilter.value.toLowerCase() || "";
     const records = filter.records;
     const unified_status = filter.unified_status || "";
@@ -908,6 +932,7 @@ const filterList = (resetToPage1 = false) => {
     if (municipality) params.municipality = municipality;
     if (name) params.name = name;
     if (year_level) params.year_level = year_level;
+    if (academic_year) params.academic_year = academic_year;
     if (global_search) params.global_search = global_search;
     if (filter.grant_provision) params.grant_provision = filter.grant_provision;
 
@@ -931,6 +956,9 @@ const filterList = (resetToPage1 = false) => {
     if (profileType.value === 'existing') {
         params.profile_type = 'existing';
         // Filter for approved statuses
+    } else if (profileType.value === 'pending') {
+        params.profile_type = 'pending';
+        // Filter for pending status
     } else if (profileType.value === 'declined') {
         params.profile_type = 'declined';
         // Filter for declined status
@@ -956,6 +984,7 @@ const clearFilters = () => {
     filter.course = "";
     filter.municipality = "";
     filter.year_level = "";
+    filter.academic_year = "";
     filter.grant_provision = null;
     filter.unified_status = null;
     filter.contract_status = null;
@@ -1144,8 +1173,8 @@ const triggerSearch = () => {
 // Watch for profile type changes
 watch(profileType, (newValue, oldValue) => {
     if (newValue !== oldValue) {
-        // Clear unified_status when switching to 'existing' or 'denied'
-        if (newValue === 'existing' || newValue === 'denied') {
+        // Clear unified_status when switching to 'existing', 'pending' or 'declined'
+        if (newValue === 'existing' || newValue === 'pending' || newValue === 'declined') {
             filter.unified_status = null;
         }
         filterList(true); // Reset to page 1 when profile type changes

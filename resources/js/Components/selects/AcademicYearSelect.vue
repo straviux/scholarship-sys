@@ -19,16 +19,24 @@ const startYear = 2018; // Define your desired starting year
 
 const acad_year = computed(() => {
     const years = [];
+    // Add all range year options first
     for (let year = currentYear; year >= startYear; year--) {
         years.push({
             label: `${year}-${year + 1}`,
             value: `${year}-${year + 1}`
         });
     }
+    // Add all single year options
+    for (let year = currentYear; year >= startYear; year--) {
+        years.push({
+            label: year.toString(),
+            value: year.toString()
+        });
+    }
     return years;
 });
 // Local value for v-model
-const defaultYearValue = `${currentYear}-${currentYear + 1}`;
+const defaultYearValue = currentYear.toString();
 const defaultYearObj = computed(() => acad_year.value.find(y => y.value === defaultYearValue));
 
 // Helper function to find the year object from a value (string or object)

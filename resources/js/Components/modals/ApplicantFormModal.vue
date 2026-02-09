@@ -352,6 +352,7 @@ const handleNextStep1 = async () => {
 
 const closeModal = () => {
     emit('update:visible', false);
+    resetForm();
 };
 
 // Reset form when modal is opened - matching PriorityModal pattern

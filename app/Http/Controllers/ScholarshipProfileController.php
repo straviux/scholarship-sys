@@ -702,6 +702,11 @@ class ScholarshipProfileController extends Controller
             $query->whereHas('latestScholarshipRecord', function ($q) {
                 $q->where('unified_status', 'active');
             });
+        } elseif ($profileType === 'pending') {
+            // Filter for pending profiles based on unified_status
+            $query->whereHas('latestScholarshipRecord', function ($q) {
+                $q->where('unified_status', 'pending');
+            });
         } elseif ($profileType === 'declined') {
             // Filter for declined profiles based on unified_status
             $query->whereHas('latestScholarshipRecord', function ($q) {
@@ -745,6 +750,13 @@ class ScholarshipProfileController extends Controller
         if ($request->filled('year_level')) {
             $query->whereHas('latestScholarshipRecord', function ($q) use ($request) {
                 $q->where('year_level', 'like', '%' . $request->year_level . '%');
+            });
+        }
+
+        // Filter by academic_year
+        if ($request->filled('academic_year')) {
+            $query->whereHas('latestScholarshipRecord', function ($q) use ($request) {
+                $q->where('academic_year', $request->academic_year);
             });
         }
 
