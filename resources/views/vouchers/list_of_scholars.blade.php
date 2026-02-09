@@ -143,6 +143,10 @@
                 }
                 }
 
+                // Use payee name if payee type is school
+                if($voucher->payee_type === 'school' && $voucher->payee_name) {
+                $schoolName = $voucher->payee_name;
+                }
 
                 @endphp
 

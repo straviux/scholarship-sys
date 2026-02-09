@@ -374,7 +374,7 @@
 
             <!-- EXPLANATION VALUE ROW -->
             <div class="obr-info-row no-border-bottom">
-                <div class="column_2 center" style="font-size:11px;line-height:1.2">{!! $voucher->explanation ?? '_______________' !!}</div>
+                <div class="column_2 center" style="font-size:12px;line-height:1.2">{!! $voucher->explanation ?? '_______________' !!}</div>
                 <div class="column_5" style="justify-content:flex-end!important;padding-right:10px;">₱ {{ $voucher->amount ?? '_______________' }}</div>
             </div>
             <!-- Scholar's name ROW -->
@@ -409,7 +409,7 @@
             $payeeRowHeight = 60;
             $addressRowHeight = 60;
             $explanationRowHeight = 40;
-            $scholarRowHeight = 40;
+            $scholarRowHeight = 20;
             $totalRowHeight = 40;
             $certifiedRowHeight = 100;
             $sigRowHeight = 30;
