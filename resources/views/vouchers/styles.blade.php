@@ -142,6 +142,10 @@
     }
 
     /* Letter Spacing */
+    .tracking-tighter {
+        letter-spacing: -1px;
+    }
+
     .tracking-tight {
         letter-spacing: -0.5px;
     }
@@ -152,6 +156,18 @@
 
     .tracking-wide {
         letter-spacing: 1px;
+    }
+
+    .tracking-wider {
+        letter-spacing: 2px;
+    }
+
+    .tracking-widest {
+        letter-spacing: 3px;
+    }
+
+    .tracking-expanded {
+        letter-spacing: 4px;
     }
 
     /* Text Transform */
@@ -167,6 +183,48 @@
         text-transform: capitalize;
     }
 
+    /* Text Decoration */
+    .underline {
+        text-decoration: underline;
+    }
+
+    .line-through {
+        text-decoration: line-through;
+    }
+
+    .overline {
+        text-decoration: overline;
+    }
+
+    .no-underline {
+        text-decoration: none;
+    }
+
+    .italic {
+        font-style: italic;
+    }
+
+    .not-italic {
+        font-style: normal;
+    }
+
+    .text-strike {
+        text-decoration: line-through;
+    }
+
+    /* Text Decoration Color & Style */
+    .underline-dotted {
+        text-decoration: underline dotted;
+    }
+
+    .underline-dashed {
+        text-decoration: underline dashed;
+    }
+
+    .underline-wavy {
+        text-decoration: underline wavy;
+    }
+
     /* Text Colors */
     .text-black {
         color: #000;
@@ -180,6 +238,139 @@
         color: #666;
     }
 
+    .text-gray-light {
+        color: #999;
+    }
+
+    .text-gray-dark {
+        color: #333;
+    }
+
+    .text-red {
+        color: #dc2626;
+    }
+
+    .text-red-light {
+        color: #ef4444;
+    }
+
+    .text-red-dark {
+        color: #7f1d1d;
+    }
+
+    .text-blue {
+        color: #2563eb;
+    }
+
+    .text-blue-light {
+        color: #60a5fa;
+    }
+
+    .text-blue-dark {
+        color: #1e40af;
+    }
+
+    .text-green {
+        color: #16a34a;
+    }
+
+    .text-green-light {
+        color: #4ade80;
+    }
+
+    .text-green-dark {
+        color: #15803d;
+    }
+
+    .text-yellow {
+        color: #eab308;
+    }
+
+    .text-yellow-dark {
+        color: #a16207;
+    }
+
+    .text-orange {
+        color: #ea580c;
+    }
+
+    .text-orange-dark {
+        color: #7c2d12;
+    }
+
+    /* Background Colors */
+    .bg-black {
+        background-color: #000;
+    }
+
+    .bg-white {
+        background-color: #fff;
+    }
+
+    .bg-gray {
+        background-color: #f3f4f6;
+    }
+
+    .bg-gray-light {
+        background-color: #f9fafb;
+    }
+
+    .bg-gray-dark {
+        background-color: #e5e7eb;
+    }
+
+    .bg-red {
+        background-color: #fecaca;
+    }
+
+    .bg-red-light {
+        background-color: #fee2e2;
+    }
+
+    .bg-red-dark {
+        background-color: #fca5a5;
+    }
+
+    .bg-blue {
+        background-color: #bfdbfe;
+    }
+
+    .bg-blue-light {
+        background-color: #dbeafe;
+    }
+
+    .bg-blue-dark {
+        background-color: #93c5fd;
+    }
+
+    .bg-green {
+        background-color: #bbf7d0;
+    }
+
+    .bg-green-light {
+        background-color: #dcfce7;
+    }
+
+    .bg-green-dark {
+        background-color: #86efac;
+    }
+
+    .bg-yellow {
+        background-color: #fef3c7;
+    }
+
+    .bg-yellow-dark {
+        background-color: #fde68a;
+    }
+
+    .bg-orange {
+        background-color: #fed7aa;
+    }
+
+    .bg-orange-dark {
+        background-color: #fbddd2;
+    }
+
     /* ============================================
        PARAGRAPH & TEXT BLOCK STYLES
        ============================================ */
@@ -188,7 +379,6 @@
         display: block !important;
         margin: 0 !important;
         padding: 0 !important;
-        line-height: 1.6;
         width: 100%;
         word-wrap: break-word;
         white-space: normal;
@@ -777,15 +967,10 @@
     }
 
     table th {
-        background: #68BB59 !important;
         padding: 12px 4px !important;
         text-align: center;
     }
 
-
-    table tfoot tr {
-        background-color: #f5f5f5;
-    }
 
     /* ============================================
        UTILITY CLASSES

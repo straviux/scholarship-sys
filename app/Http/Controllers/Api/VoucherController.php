@@ -434,4 +434,48 @@ class VoucherController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Generate List of Scholars PDF using Browsershot
+     */
+    public function generateListOfScholarsPdf($id)
+    {
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        try {
+            $voucher = Voucher::findOrFail($id);
+
+            // Render the view to HTML
+            $html = view('vouchers.list_of_scholars', ['voucher' => $voucher])->render();
+
+            // Convert HTML to PDF using Browsershot
+            $browsershot = Browsershot::html($html);
+
+            // Only set Chrome path if one was found
+            $chromePath = $this->getChromePath();
+            if ($chromePath) {
+                $browsershot->setChromePath($chromePath);
+            }
+
+            $browsershot->margins(0, 0, 0, 0)
+                ->paperSize(210, 297, 'mm') // A4: 210mm x 297mm
+                ->showBackground()
+                ->printBackground();
+
+            $pdf = $browsershot->pdf();
+
+            $filename = 'ListOfScholars-' . $voucher->voucher_number . '.pdf';
+
+            return response($pdf, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error generating PDF',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

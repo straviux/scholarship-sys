@@ -90,20 +90,20 @@
                 <table class="text-base" style="border-collapse: collapse; width: 100%;">
                     <thead>
                         <tr class="row">
-                            <th class="col col-60 col-center col-vcenter text-base" style="border: 1px solid #333;">
+                            <th class="col col-60 col-center col-vcenter text-base bg-green-dark" style="border: 1px solid #333;">
                                 <span>No.</span>
                             </th>
-                            <th class="col col-360  col-center col-vcenter text-base" style="border: 1px solid #333;">
+                            <th class="col col-360  col-center col-vcenter text-base bg-green-dark" style="border: 1px solid #333;">
                                 <span>Names</span>
                             </th>
-                            <th class="col col-200  col-center col-vcenter text-base" style="border: 1px solid #333;">
+                            <th class="col col-200  col-center col-vcenter text-base bg-green-dark" style="border: 1px solid #333;">
                                 <span>Year Level</span>
                             </th>
-                            <th class="col col-200  col-center col-vcenter text-base" style="border: 1px solid #333;">
+                            <th class="col col-200  col-center col-vcenter text-base bg-green-dark" style="border: 1px solid #333;">
                                 <span>Amount</span>
                             </th>
 
-                            <th class="col col-grow  col-center col-vcenter text-base" style="border: 1px solid #333;">
+                            <th class="col col-grow  col-center col-vcenter text-base bg-green-dark" style="border: 1px solid #333;">
                                 <span>Signature</span>
                             </th>
                         </tr>

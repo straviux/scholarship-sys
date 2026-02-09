@@ -366,12 +366,25 @@
         if($profileId) {
         $profile = \App\Models\ScholarshipProfile::find($profileId);
         $year = '';
+        $record = null;
+
+        // First try: Use the provided record ID
         if($recordId) {
         $record = \App\Models\ScholarshipRecord::find($recordId);
+        }
+
+        // Second try: Get latest active/non-soft-deleted record for this profile
+        if(!$record) {
+        $record = \App\Models\ScholarshipRecord::where('profile_id', $profileId)
+        ->whereNull('deleted_at')
+        ->orderBy('created_at', 'desc')
+        ->first();
+        }
+
         if($record) {
         $year = $record->year_level ?? '';
         }
-        }
+
         if($profile) {
         $scholars[] = [
         'name' => $profile->first_name . ' ' . $profile->last_name,
@@ -406,8 +419,8 @@
         @foreach($scholars as $scholar)
         <div class="obr-info-row no-border-bottom">
             <div class="column_1">&nbsp;</div>
-            <div class="column_2" style="border:none">{{ $loop->iteration }}. {{ $scholar['name'] }}</div>
-            <div class="column_3">{{ $scholar['year'] }}</div>
+            <div class="column_2" style="border:none; font-size:12px">{{ $loop->iteration }}. {{ $scholar['name'] }}</div>
+            <div class="column_3" style="font-size:12px">{{ $scholar['year'] }}</div>
             <div class="column_5">
                 <div class="fpp">&nbsp;</div>
                 <div class="account-code">&nbsp;</div>

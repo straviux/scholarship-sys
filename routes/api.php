@@ -24,6 +24,9 @@ Route::middleware(['web'])->group(function () {
     // Payroll Report generation
     Route::get('/vouchers/{id}/payroll-pdf', [VoucherController::class, 'generatePayrollPdf']);
 
+    // List of Scholars PDF generation
+    Route::get('/vouchers/{id}/list-of-scholars-pdf', [VoucherController::class, 'generateListOfScholarsPdf']);
+
     // Scholars endpoint for voucher creation
     Route::get('/scholars', [ScholarshipApiController::class, 'getActiveScholars']);
 });
