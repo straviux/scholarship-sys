@@ -377,7 +377,9 @@
                 <div class="column_2 center" style="font-size:12px;line-height:1.2">{!! $voucher->explanation ?? '_______________' !!}</div>
                 <div class="column_5" style="justify-content:flex-end!important;padding-right:10px;">₱ {{ $voucher->amount ?? '_______________' }}</div>
             </div>
-            <!-- Scholar's name ROW -->
+
+            <!-- Scholar's name ROW (Hidden if REIMBURSEMENT) -->
+            @if($voucher->obr_type !== 'REIMBURSEMENT')
             <div class="obr-info-row no-border-bottom">
                 <div class="column_2 center" style=font-weight:600;">
                     <br>
@@ -401,6 +403,7 @@
                 </div>
                 <div class="column_5">&nbsp;</div>
             </div>
+            @endif
 
             <!-- Blank Rows for Space (Auto-computed) -->
             @php

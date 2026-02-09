@@ -24,6 +24,7 @@ class Voucher extends Model
         'amount',
         'scholar_ids',
         'notes',
+        'obr_type',
         'created_by',
     ];
 

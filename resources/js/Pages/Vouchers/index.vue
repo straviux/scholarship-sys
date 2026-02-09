@@ -583,7 +583,7 @@ onMounted(() => {
                                 <td class="px-6 py-4 text-sm text-gray-900">{{ voucher.payee_name }}</td>
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">{{
                                     formatAmount(calculateTotalAmount(voucher))
-                                    }}</td>
+                                }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ voucher.creator?.name || '---' }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ formatDate(voucher.created_at) }}</td>
                                 <td class="px-6 py-4 text-sm">
@@ -676,7 +676,7 @@ onMounted(() => {
                 <div class="bg-white border border-gray-200 rounded p-4">
                     <p class="text-sm font-semibold text-gray-900 mb-2">Scholars ({{ selectedVoucher.scholar_ids?.length
                         || 0
-                    }})</p>
+                        }})</p>
                     <div v-if="loadingScholars" class="text-center py-2">
                         <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span class="text-xs">Loading...</span>
                     </div>
@@ -685,7 +685,7 @@ onMounted(() => {
                         <div v-for="(scholar, index) in scholarsDetails" :key="index"
                             class="text-xs text-gray-700 py-1 px-2 bg-gray-50 rounded flex items-center justify-between gap-2">
                             <span class="font-medium">{{ index + 1 }}. {{ scholar.first_name }} {{ scholar.last_name
-                            }}</span>
+                                }}</span>
                             <span class="text-gray-600 whitespace-nowrap">
                                 <span v-if="scholar.course_name">{{ scholar.course_name }}</span>
                                 <span v-if="scholar.year_level" class="ml-1">| {{
@@ -693,7 +693,7 @@ onMounted(() => {
                                         scholar.year_level
                                 }}</span>
                                 <span v-if="scholar.academic_year" class="ml-1">| {{ scholar.academic_year
-                                }}</span>
+                                    }}</span>
                                 <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                             </span>
                         </div>
@@ -842,16 +842,21 @@ onMounted(() => {
                 <!-- Step 2: Obligations -->
                 <div v-if="editStep === 2" class="space-y-4">
                     <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                        <p class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>Fill in the OBR details
-                            below</p>
+                        <p class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>Voucher: <span
+                                class="font-semibold">{{ editFormData.voucher_number }}</span></p>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Voucher Number (Read-only) -->
+                        <!-- OBR Type -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Voucher Number</label>
-                            <input :value="editFormData.voucher_number" type="text" disabled
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed" />
+                            <label class="block text-sm font-medium text-gray-700 mb-1">OBR Type</label>
+                            <select v-model="editFormData.obr_type"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
+                                <option value="">Select OBR Type</option>
+                                <option value="REGULAR">REGULAR</option>
+                                <option value="FINANCIAL ASSISTANCE">FINANCIAL ASSISTANCE</option>
+                                <option value="REIMBURSEMENT">REIMBURSEMENT</option>
+                            </select>
                         </div>
 
                         <!-- Payee Type -->
@@ -866,14 +871,14 @@ onMounted(() => {
                         </div>
 
                         <!-- Payee Name -->
-                        <div class="md:col-span-2">
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Payee Name</label>
                             <input v-model="editFormData.payee_name" type="text" placeholder="Enter payee name..."
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                         </div>
 
                         <!-- Payee Address -->
-                        <div class="md:col-span-2">
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Payee Address</label>
                             <input v-model="editFormData.payee_address" type="text" placeholder="Enter payee address..."
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
@@ -1051,7 +1056,7 @@ onMounted(() => {
                         </div>
                         <div v-if="editFormData.payee_type" class="text-xs">
                             <span class="font-medium">Type:</span> <span class="capitalize">{{ editFormData.payee_type
-                                }}</span>
+                            }}</span>
                         </div>
                         <div v-if="editFormData.amount" class="text-xs">
                             <span class="font-medium">Amount:</span> ₱{{ parseFloat(editFormData.amount).toFixed(2) }}
@@ -1081,7 +1086,7 @@ onMounted(() => {
                     <div class="space-y-1 text-orange-800 text-xs">
                         <div>
                             <span class="font-medium">Type:</span> <span class="capitalize">{{ editFormData.voucher_type
-                                }}</span>
+                            }}</span>
                         </div>
                     </div>
                 </div>
