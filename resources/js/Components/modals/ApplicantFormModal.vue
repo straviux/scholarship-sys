@@ -158,7 +158,7 @@ const props = defineProps({
     },
     yakapCategory: {
         type: String,
-        default: 'yakap-capitol'
+        default: null // Changed from 'yakap-capitol' to null so new applicants don't have a default
     },
     yakapLocation: {
         type: String,
@@ -260,7 +260,7 @@ const form = useForm({
     academic_year: grant?.academic_year || null,
     date_filed: formatDateForPicker(grant?.date_filed),
     remarks: grant?.remarks || p?.remarks || '',
-    yakap_category: props.mode === 'create' ? props.yakapCategory : (grant?.yakap_category || 'yakap-capitol'),
+    yakap_category: props.mode === 'create' ? (props.yakapCategory || null) : (grant?.yakap_category || null),
     yakap_location: props.mode === 'create' ? props.yakapLocation : (grant?.yakap_location || ''),
 });
 
@@ -409,7 +409,7 @@ watch(() => props.visible, async (newValue) => {
         form.date_filed = formatDateForPicker(grant?.date_filed);
         form.remarks = grant?.remarks || p?.remarks || '';
 
-        form.yakap_category = grant?.yakap_category || 'yakap-capitol';
+        form.yakap_category = grant?.yakap_category || null;
         form.yakap_location = grant?.yakap_location || '';
 
         form.clearErrors();
@@ -457,8 +457,8 @@ const handleSubmit = () => {
         year_level: form.year_level?.value || form.year_level || null,
         // Extract value from term object if it exists (1ST SEM, 2ND SEM, etc.)
         term: form.term?.value || form.term || null,
-        // YAKAP fields - convert location to string if it's a JSON string
-        yakap_category: form.yakap_category || 'yakap-capitol',
+        // YAKAP fields - only set yakap_category if it has a value, otherwise leave it as empty/null
+        yakap_category: form.yakap_category || null,
         yakap_location: (() => {
             if (!form.yakap_location) return '';
             // If it's a JSON string, keep it as-is (backend will parse)
@@ -580,7 +580,7 @@ const resetForm = () => {
     Object.keys(emptyFormState).forEach(key => {
         // Use props for yakap fields instead of empty state defaults
         if (key === 'yakap_category') {
-            form[key] = props.yakapCategory || 'yakap-capitol';
+            form[key] = props.yakapCategory || null;
         } else if (key === 'yakap_location') {
             form[key] = props.yakapLocation || '';
         } else {
@@ -617,6 +617,6 @@ const yakapCategoryOptions = [
     { value: 'yakap-field', label: 'YAKAP Field' }
 ];
 
-if (!form.yakap_category) form.yakap_category = 'yakap-capitol';
+// Allow yakap_category to be null/empty - user must select from modal
 if (!form.yakap_location) form.yakap_location = '';
 </script>

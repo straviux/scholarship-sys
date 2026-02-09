@@ -79,6 +79,8 @@ const props = defineProps({
     term: [String, Object],
     academic_year: [String, Object],
     remarks: String,
+    yakap_category: String,
+    yakap_location: [String, Object],
     showHeader: {
         type: Boolean,
         default: true
@@ -92,7 +94,9 @@ const emit = defineEmits([
     'update:year_level',
     'update:term',
     'update:academic_year',
-    'update:remarks'
+    'update:remarks',
+    'update:yakap_category',
+    'update:yakap_location'
 ]);
 
 

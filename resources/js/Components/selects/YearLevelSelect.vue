@@ -18,6 +18,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue']);
 const year_levels = [
+    { label: "G12", value: "G12" },
     { label: "1ST YEAR", value: "1ST" },
     { label: "2ND YEAR", value: "2ND" },
     { label: "3RD YEAR", value: "3RD" },
