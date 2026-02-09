@@ -6,6 +6,7 @@ import VoucherWizard from '@/Components/Obligations/VoucherWizard.vue';
 import Dialog from 'primevue/dialog';
 import Drawer from 'primevue/drawer';
 import Button from 'primevue/button';
+import ContextMenu from 'primevue/contextmenu';
 import { useToast } from 'primevue/usetoast';
 import { QuillEditor } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
@@ -39,6 +40,14 @@ const editSearchLoading = ref(false);
 const editLoading = ref(false);
 const showEditPreviewDrawer = ref(false);
 const responsibilityCenters = ref([]);
+const contextMenu = ref();
+const showRemarksDialog = ref(false);
+const selectedVoucherForRemarks = ref(null);
+const remarksForm = reactive({
+    remarks: ''
+});
+const savingRemarks = ref(false);
+const contextMenuItems = ref([]);
 const quillToolbar = [
     [{ align: [] }],
     ['bold', 'italic', 'underline'],
@@ -400,6 +409,105 @@ const confirmDelete = async () => {
     }
 };
 
+// Context Menu
+const openContextMenu = (event, voucher) => {
+    event.preventDefault();
+    const items = [
+        {
+            label: 'View',
+            icon: 'pi pi-eye',
+            command: () => viewVoucher(voucher.id)
+        },
+        {
+            label: 'Edit',
+            icon: 'pi pi-pencil',
+            command: () => editVoucher(voucher.id)
+        },
+        {
+            label: 'Add/Edit Remarks',
+            icon: 'pi pi-comment',
+            command: () => openRemarksModal(voucher)
+        }
+    ];
+
+    if (isAdmin.value) {
+        items.push({
+            separator: true
+        });
+        items.push({
+            label: 'Delete',
+            icon: 'pi pi-trash',
+            command: () => deleteVoucher(voucher.id),
+            class: 'p-menuitem-danger'
+        });
+    }
+
+    contextMenuItems.value = items;
+    contextMenu.value.show(event);
+};
+
+// Open remarks modal
+const openRemarksModal = (voucher) => {
+    selectedVoucherForRemarks.value = voucher;
+    remarksForm.remarks = voucher.remarks || '';
+    showRemarksDialog.value = true;
+};
+
+// Save remarks
+const saveRemarks = async () => {
+    if (!selectedVoucherForRemarks.value) return;
+
+    savingRemarks.value = true;
+    try {
+        // GET the current voucher data
+        const currentVoucher = await axios.get(`/api/vouchers/${selectedVoucherForRemarks.value.id}`);
+        const voucherData = currentVoucher.data.data;
+
+        // PUT with all required fields plus updated remarks
+        await axios.put(`/api/vouchers/${selectedVoucherForRemarks.value.id}`, {
+            voucher_type: voucherData.voucher_type,
+            explanation: voucherData.explanation,
+            payee_type: voucherData.payee_type,
+            payee_name: voucherData.payee_name,
+            payee_address: voucherData.payee_address,
+            responsibility_center: voucherData.responsibility_center,
+            account_code: voucherData.account_code,
+            particulars_name: voucherData.particulars_name,
+            particulars_description: voucherData.particulars_description,
+            amount: voucherData.amount,
+            obr_type: voucherData.obr_type,
+            scholar_ids: voucherData.scholar_ids,
+            notes: voucherData.notes,
+            remarks: remarksForm.remarks
+        });
+
+        // Update the voucher in the list
+        const voucherIndex = vouchers.value.findIndex(v => v.id === selectedVoucherForRemarks.value.id);
+        if (voucherIndex > -1) {
+            vouchers.value[voucherIndex].remarks = remarksForm.remarks;
+        }
+
+        showRemarksDialog.value = false;
+        toast.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Remarks saved successfully',
+            life: 3000
+        });
+    } catch (error) {
+        console.error('Error saving remarks:', error);
+        const errorMsg = error.response?.data?.message || error.message;
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to save remarks: ' + errorMsg,
+            life: 5000
+        });
+    } finally {
+        savingRemarks.value = false;
+    }
+};
+
 // Format date
 const formatDate = (date) => {
     if (!date) return '---';
@@ -489,7 +597,7 @@ onMounted(() => {
     <Head title="Vouchers" />
 
     <AdminLayout>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <!-- Header -->
             <div class="mb-8 flex items-center justify-between">
                 <div>
@@ -521,8 +629,8 @@ onMounted(() => {
                         </button>
                     </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
+                <div class="overflow-x-auto -mx-6">
+                    <table class="w-full divide-y divide-gray-200 px-6">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th
@@ -534,6 +642,9 @@ onMounted(() => {
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Payee</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    OBR Type</th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Total Amount</th>
@@ -550,25 +661,26 @@ onMounted(() => {
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <tr v-if="loading" class="hover:bg-gray-50">
-                                <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">
+                                <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500">
                                     <i class="pi pi-spin pi-spinner mr-2"></i> Loading vouchers...
                                 </td>
                             </tr>
                             <tr v-else-if="vouchers.length === 0" class="hover:bg-gray-50">
-                                <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">
+                                <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500">
                                     <p>No vouchers created yet.</p>
                                     <p class="text-xs text-gray-400 mt-1">Click the "Create Voucher" button to get
                                         started</p>
                                 </td>
                             </tr>
                             <tr v-else-if="filteredVouchers.length === 0" class="hover:bg-gray-50">
-                                <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">
+                                <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500">
                                     <p>No vouchers match your search.</p>
                                     <p class="text-xs text-gray-400 mt-1">Try adjusting your search criteria</p>
                                 </td>
                             </tr>
                             <tr v-for="voucher in filteredVouchers" :key="voucher.id"
-                                class="hover:bg-gray-50 transition">
+                                class="hover:bg-gray-50 transition"
+                                @contextmenu.prevent="openContextMenu($event, voucher)">
                                 <td class="px-6 py-4 text-sm font-medium text-blue-600">{{ voucher.voucher_number }}
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
@@ -577,35 +689,32 @@ onMounted(() => {
                                         'bg-blue-100 text-blue-800': voucher.voucher_type === 'disbursements',
                                         'bg-green-100 text-green-800': voucher.voucher_type === 'payroll'
                                     }">
-                                        {{ voucher.voucher_type }}
+                                        {{ voucher.voucher_type === 'disbursements' ? 'Disbursement Voucher' :
+                                            (voucher.voucher_type === 'payroll' ? 'Payroll' : voucher.voucher_type) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">{{ voucher.payee_name }}</td>
+                                <td class="px-6 py-4 text-sm">
+                                    <span :class="{
+                                        'px-3 py-1 rounded-full text-xs font-medium': true,
+                                        'bg-gray-100 text-gray-800': voucher.obr_type === 'REGULAR',
+                                        'bg-yellow-100 text-yellow-800': voucher.obr_type === 'FINANCIAL ASSISTANCE',
+                                        'bg-red-100 text-red-800': voucher.obr_type === 'REIMBURSEMENT'
+                                    }">
+                                        {{ voucher.obr_type || '---' }}
+                                    </span>
+                                </td>
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">{{
                                     formatAmount(calculateTotalAmount(voucher))
                                 }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ voucher.creator?.name || '---' }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ formatDate(voucher.created_at) }}</td>
                                 <td class="px-6 py-4 text-sm">
-                                    <div class="flex items-center gap-2">
-                                        <button @click="viewVoucher(voucher.id)"
-                                            class="text-blue-600 hover:text-blue-800 font-medium text-xs cursor-pointer"
-                                            title="View Voucher">
-                                            <i class="pi pi-eye"></i>
-                                        </button>
-                                        <button @click="editVoucher(voucher.id)"
-                                            class="text-green-600 hover:text-green-800 font-medium text-xs cursor-pointer"
-                                            title="Edit Voucher">
-                                            <i class="pi pi-pencil"></i>
-                                        </button>
-                                        <button v-if="isAdmin" @click="deleteVoucher(voucher.id)"
-                                            :disabled="deletingId === voucher.id"
-                                            class="text-red-600 hover:text-red-800 font-medium text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                            title="Delete Voucher">
-                                            <i
-                                                :class="deletingId === voucher.id ? 'pi pi-spin pi-spinner' : 'pi pi-trash'"></i>
-                                        </button>
-                                    </div>
+                                    <button @click="(e) => openContextMenu(e, voucher)"
+                                        class="text-gray-500 hover:text-gray-700 font-medium text-lg cursor-pointer"
+                                        title="Actions">
+                                        <i class="pi pi-ellipsis-v"></i>
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -651,8 +760,11 @@ onMounted(() => {
                         <p class="text-sm text-gray-900 font-medium">{{ selectedVoucher.voucher_number }}</p>
                     </div>
                     <div>
-                        <p class="text-xs font-semibold text-gray-600 uppercase">Type</p>
-                        <p class="text-sm text-gray-900 font-medium">{{ selectedVoucher.voucher_type }}</p>
+                        <p class="text-xs font-semibold text-gray-600 uppercase">Disbursement Type</p>
+                        <p class="text-sm text-gray-900 font-medium">{{ selectedVoucher.voucher_type === 'disbursements'
+                            ?
+                            'Disbursement Voucher' : (selectedVoucher.voucher_type === 'payroll' ? 'Payroll' :
+                                selectedVoucher.voucher_type) }}</p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold text-gray-600 uppercase">Payee</p>
@@ -670,6 +782,16 @@ onMounted(() => {
                         <p class="text-xs font-semibold text-gray-600 uppercase">Date</p>
                         <p class="text-sm text-gray-900">{{ formatDate(selectedVoucher.created_at) }}</p>
                     </div>
+                    <div>
+                        <p class="text-xs font-semibold text-gray-600 uppercase">OBR Type</p>
+                        <p class="text-sm text-gray-900 font-medium">{{ selectedVoucher.obr_type || '---' }}</p>
+                    </div>
+                </div>
+
+                <!-- Remarks -->
+                <div v-if="selectedVoucher.remarks" class=" border rounded p-3">
+                    <p class="text-xs font-semibolduppercase mb-2">Remarks</p>
+                    <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ selectedVoucher.remarks }}</p>
                 </div>
 
                 <!-- Scholars List -->
@@ -733,6 +855,31 @@ onMounted(() => {
             </div>
             <template #footer>
                 <Button label="Close" severity="secondary" @click="showViewDialog = false" outlined />
+            </template>
+        </Dialog>
+
+        <!-- Context Menu -->
+        <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
+
+        <!-- Remarks Dialog -->
+        <Dialog v-model:visible="showRemarksDialog" modal header="Add/Edit Remarks" :style="{ width: '600px' }">
+            <div v-if="selectedVoucherForRemarks" class="space-y-4">
+                <div>
+                    <p class="text-sm font-medium text-gray-700 mb-2">Voucher: {{
+                        selectedVoucherForRemarks.voucher_number }}
+                    </p>
+                    <p class="text-xs text-gray-500">Add or edit remarks for this voucher</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-900 mb-2">Remarks</label>
+                    <textarea v-model="remarksForm.remarks" rows="6"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        placeholder="Enter remarks..." />
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Cancel" severity="secondary" @click="showRemarksDialog = false" outlined />
+                <Button label="Save" severity="success" @click="saveRemarks" :loading="savingRemarks" />
             </template>
         </Dialog>
 
@@ -985,8 +1132,10 @@ onMounted(() => {
                                 <span class="capitalize">{{ editFormData.payee_type }}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="font-medium">Type:</span>
-                                <span class="capitalize">{{ editFormData.voucher_type }}</span>
+                                <span class="font-medium">Disbursement Type:</span>
+                                <span>{{ editFormData.voucher_type === 'disbursements' ? 'Disbursement Voucher' :
+                                    (editFormData.voucher_type === 'payroll' ? 'Payroll' : editFormData.voucher_type)
+                                }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="font-medium">Amount:</span>
@@ -1085,8 +1234,10 @@ onMounted(() => {
                     <h4 class="font-medium text-orange-900 mb-2">Voucher Configuration</h4>
                     <div class="space-y-1 text-orange-800 text-xs">
                         <div>
-                            <span class="font-medium">Type:</span> <span class="capitalize">{{ editFormData.voucher_type
-                            }}</span>
+                            <span class="font-medium">Disbursement Type:</span> <span>{{ editFormData.voucher_type ===
+                                'disbursements' ? 'Disbursement Voucher' : (editFormData.voucher_type === 'payroll' ?
+                                    'Payroll'
+                                    : editFormData.voucher_type) }}</span>
                         </div>
                     </div>
                 </div>

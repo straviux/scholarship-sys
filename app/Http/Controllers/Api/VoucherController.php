@@ -71,6 +71,7 @@ class VoucherController extends Controller
             'scholar_ids.*.profile_id' => 'nullable',
             'scholar_ids.*.scholarship_record_id' => 'nullable',
             'notes' => 'nullable|string',
+            'remarks' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -100,6 +101,7 @@ class VoucherController extends Controller
                 'obr_type' => $request->obr_type,
                 'scholar_ids' => $request->scholar_ids,
                 'notes' => $request->notes,
+                'remarks' => $request->remarks,
                 'created_by' => $userId,
             ]);
 
@@ -189,6 +191,7 @@ class VoucherController extends Controller
                 'scholar_ids.*.profile_id' => 'nullable',
                 'scholar_ids.*.scholarship_record_id' => 'nullable',
                 'notes' => 'nullable|string',
+                'remarks' => 'nullable|string',
             ]);
 
             if ($validator->fails()) {
@@ -213,6 +216,7 @@ class VoucherController extends Controller
                 'obr_type' => $request->obr_type,
                 'scholar_ids' => $request->scholar_ids,
                 'notes' => $request->notes,
+                'remarks' => $request->remarks,
             ]);
 
             return response()->json([
