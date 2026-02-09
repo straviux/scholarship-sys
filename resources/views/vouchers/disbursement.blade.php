@@ -374,7 +374,7 @@
 
             <!-- EXPLANATION VALUE ROW -->
             <div class="obr-info-row no-border-bottom">
-                <div class="column_2 center">{!! $voucher->explanation ?? '_______________' !!}</div>
+                <div class="column_2 center" style="font-size:11px;line-height:1.2">{!! $voucher->explanation ?? '_______________' !!}</div>
                 <div class="column_5" style="justify-content:flex-end!important;padding-right:10px;">₱ {{ $voucher->amount ?? '_______________' }}</div>
             </div>
             <!-- Scholar's name ROW -->
