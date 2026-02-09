@@ -73,6 +73,7 @@ class VoucherController extends Controller
             'scholar_ids.*.scholarship_record_id' => 'nullable',
             'notes' => 'nullable|string',
             'remarks' => 'nullable|string',
+            'transaction_status' => 'nullable|in:pending,suspended,completed',
         ]);
 
         if ($validator->fails()) {
@@ -103,6 +104,7 @@ class VoucherController extends Controller
                 'scholar_ids' => $request->scholar_ids,
                 'notes' => $request->notes,
                 'remarks' => $request->remarks,
+                'transaction_status' => 'pending',
                 'created_by' => $userId,
             ]);
 
@@ -112,10 +114,6 @@ class VoucherController extends Controller
                 'data' => $voucher
             ], 201);
         } catch (\Exception $e) {
-            \Log::error('Voucher creation error: ' . $e->getMessage(), [
-                'exception' => $e,
-                'request' => $request->all()
-            ]);
             return response()->json([
                 'message' => 'Error creating voucher',
                 'error' => $e->getMessage()
@@ -197,6 +195,7 @@ class VoucherController extends Controller
                 'scholar_ids.*.scholarship_record_id' => 'nullable',
                 'notes' => 'nullable|string',
                 'remarks' => 'nullable|string',
+                'transaction_status' => 'nullable|in:pending,suspended,completed',
             ]);
 
             if ($validator->fails()) {
@@ -222,6 +221,7 @@ class VoucherController extends Controller
                 'scholar_ids' => $request->scholar_ids,
                 'notes' => $request->notes,
                 'remarks' => $request->remarks,
+                'transaction_status' => $request->transaction_status,
             ]);
 
             return response()->json([

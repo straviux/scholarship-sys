@@ -26,6 +26,7 @@ class Voucher extends Model
         'notes',
         'remarks',
         'obr_type',
+        'transaction_status',
         'created_by',
     ];
 
