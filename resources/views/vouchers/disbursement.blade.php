@@ -430,13 +430,13 @@
             $pageHeight = 1240;
             $availableHeight = $pageHeight - $fixedHeight;
 
-            // Each blank row is approximately 40px
-            $blankRowHeight = 40;
+            // Each blank row is approximately 20px
+            $blankRowHeight = 20;
             $numBlankRows = max(3, floor($availableHeight / $blankRowHeight) - 1); // Subtract 1 to close the gap
             @endphp
 
             @for ($i = 0; $i < $numBlankRows; $i++)
-                <div class="obr-info-row no-border-bottom" style="min-height: 40px;">
+                <div class="obr-info-row no-border-bottom" style="min-height: 20px;">
                 <div class="column_2">&nbsp;</div>
                 <div class="column_5">&nbsp;</div>
         </div>
