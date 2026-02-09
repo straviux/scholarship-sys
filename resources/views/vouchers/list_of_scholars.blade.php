@@ -88,7 +88,7 @@
                     <p class="text-lg text-center leading-tight">Republic of the Philippines</p>
                     <p class="text-md text-center leading-tight">Provincial Government of Palawan</p>
                     <p class="text-md text-center leading-tight">OFFICE OF THE GOVERNOR</p>
-                    <p class="text-md text-center font-semibold leading-tight">AKBAY SA MAG-AARAL YAMAN SA KINABUKASAN</p>
+                    <p class="text-md text-center font-semibold leading-tight">AKBAY SA MAG-AARAL YAMAN NG KINABUKASAN</p>
                     <p class="text-md text-center leading-tight">(PROGRAMANG PANG-EDUKASYON PARA SA PALAWEÑO)</p>
                 </div>
             </div>
@@ -171,6 +171,13 @@
                             <span class="text-lg font-semibold tracking-wide">{{ $term .' '. $academicYear }}</span>
                         </div>
                     </div>
+
+                    <div class="row border-none" style="margin-top:32px">
+                        <div class="col col-grow col-center col-vcenter">
+                            <span class="text-lg font-semibold tracking-wide">{{ $courseName }}</span>
+                        </div>
+                    </div>
+
 
                 </div>
 
@@ -275,7 +282,7 @@
                     <div class="text-center">
                         <p class="text-lg font-semibold tracking-wide underline">NUR-AINA S. IBRAHIM</p>
                         <p class="text-lg" style="margin-top:-2px !important">Program Manager</p>
-                        <p class="text-lg" style="margin-top:-4px !important">Yakap sa Edukasyon</p>
+                        <p class="text-lg" style="margin-top:-4px !important">Akbay sa Mag-Aaral Yaman ng Kinabukasan</p>
                     </div>
 
                 </div>
