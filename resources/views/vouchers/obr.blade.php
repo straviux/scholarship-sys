@@ -334,8 +334,8 @@
             <div class="column_2 center" style="font-weight:600">{{ $voucher->particulars_name ?? '_______________' }}</div>
             <div class="column_5">
                 <div class="fpp">&nbsp;</div>
-                <div class="account-code" style="font-size: 12px; font-weight: normal;">{{ $voucher->account_code ?? '_______________' }}</div>
-                <div class="amount" style="font-size: 12px; font-weight: normal;">
+                <div class="account-code" style="font-size: 9pt; font-weight: normal;">{{ $voucher->account_code ?? '_______________' }}</div>
+                <div class="amount" style="font-size: 11pt; font-weight: normal;">
                     @if($voucher->obr_type === 'REIMBURSEMENT')
                     ₱{{ number_format($voucher->amount, 2) }}
                     @else
@@ -412,8 +412,8 @@
         </div>
         <div class="obr-info-row no-border-bottom" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <div class="column_1 ">&nbsp;</div>
-            <div class="column_2" style="text-decoration: underline;border:none; font-weight:600">NAME OF SCHOLARS</div>
-            <div class="column_3" style="text-decoration: underline; font-weight:600">YEAR</div>
+            <div class="column_2" style="text-decoration: underline;border:none; font-weight:600; font-size:12pt">NAME OF SCHOLARS</div>
+            <div class="column_3" style="text-decoration: underline; font-weight:600; font-size:12pt">YEAR</div>
             <div class="column_5">
                 <div class="fpp">&nbsp;</div>
                 <div class="account-code">&nbsp;</div>
@@ -424,12 +424,12 @@
         @foreach($scholars as $scholar)
         <div class="obr-info-row no-border-bottom" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <div class="column_1">&nbsp;</div>
-            <div class="column_2" style="border:none; font-size:12px">{{ $loop->iteration }}. {{ $scholar['name'] }}</div>
-            <div class="column_3" style="font-size:12px">{{ $scholar['year'] }}</div>
+            <div class="column_2" style="border:none; font-size:11pt">{{ $loop->iteration }}. {{ $scholar['name'] }}</div>
+            <div class="column_3" style="font-size:11pt">{{ $scholar['year'] }}</div>
             <div class="column_5">
                 <div class="fpp">&nbsp;</div>
                 <div class="account-code">&nbsp;</div>
-                <div class="amount">₱ {{ number_format($scholar['amount'], 2) }}</div>
+                <div class="amount" style="font-size:11pt">₱ {{ number_format($scholar['amount'], 2) }}</div>
             </div>
         </div>
         @endforeach
@@ -464,7 +464,7 @@
                 <div class="column_5">
                     <div class="fpp" style="border: none;"></div>
                     <div class="account-code" style="border: none;"></div>
-                    <div class="amount" style="font-weight: bold;border: none;">₱ {{ number_format($voucher->amount * count($voucher->scholar_ids), 2) }}</div>
+                    <div class="amount" style="font-weight: bold;border: none;font-size:11pt">₱ {{ number_format($voucher->amount * count($voucher->scholar_ids), 2) }}</div>
                 </div>
             </div>
             @endif

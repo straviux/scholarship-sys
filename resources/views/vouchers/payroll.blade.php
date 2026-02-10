@@ -73,15 +73,46 @@
             <!-- Payroll Title Row -->
             <div class="row border-none">
                 <div class="col col-grow col-center col-vcenter">
-                    <span class="text-sm">{!! $voucher->explanation !!}</span>
+                    <span class="text-sm" style="font-size: 10pt;">{!! $voucher->explanation !!}</span>
                 </div>
             </div>
 
+            @php
+            // Get term and academic year from first scholar's record
+            $term = '';
+            $academicYear = '';
+
+            if($voucher->scholar_ids && count($voucher->scholar_ids) > 0) {
+            $firstScholar = $voucher->scholar_ids[0];
+            $profileId = is_array($firstScholar) ? $firstScholar['profile_id'] : $firstScholar;
+            $recordId = is_array($firstScholar) ? ($firstScholar['scholarship_record_id'] ?? null) : null;
+
+            $record = null;
+
+            // First try: Use the provided record ID
+            if($recordId) {
+            $record = \App\Models\ScholarshipRecord::find($recordId);
+            }
+
+            // Second try: Get latest active/non-soft-deleted record for this profile
+            if(!$record && $profileId) {
+            $record = \App\Models\ScholarshipRecord::where('profile_id', $profileId)
+            ->whereNull('deleted_at')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+            }
+
+            if($record) {
+            $term = $record->term ?? '';
+            $academicYear = $record->academic_year ?? '';
+            }
+            }
+            @endphp
 
             <!-- Payroll Title Row -->
             <div class="row border-none">
                 <div class="col col-grow col-left col-vcenter">
-                    <span class="font-bold text-sm">FOR ACADEMIC YEAR {{$voucher->term}} SEM {{$voucher->academic_year}}</span>
+                    <span class="font-bold" style="font-size:10pt">FOR ACADEMIC YEAR {{ $academicYear }} SEM {{ $term }}</span>
                 </div>
             </div>
 
@@ -90,20 +121,20 @@
                 <table class="text-base" style="border-collapse: collapse; width: 100%;">
                     <thead>
                         <tr class="row">
-                            <th class="col col-60 col-center col-vcenter text-base bg-green-dark" style="border: 1px solid #333;">
+                            <th class="col col-60 col-center col-vcenter bg-green-dark" style="border: 1px solid #333;font-size:11pt">
                                 <span>No.</span>
                             </th>
-                            <th class="col col-360  col-center col-vcenter text-base bg-green-dark" style="border: 1px solid #333;">
+                            <th class="col col-360  col-center col-vcenter bg-green-dark" style="border: 1px solid #333;font-size:11pt">
                                 <span>Names</span>
                             </th>
-                            <th class="col col-200  col-center col-vcenter text-base bg-green-dark" style="border: 1px solid #333;">
+                            <th class="col col-200  col-center col-vcenter bg-green-dark" style="border: 1px solid #333;font-size:11pt  ">
                                 <span>Year Level</span>
                             </th>
-                            <th class="col col-200  col-center col-vcenter text-base bg-green-dark" style="border: 1px solid #333;">
+                            <th class="col col-200  col-center col-vcenter bg-green-dark" style="border: 1px solid #333;font-size:11pt">
                                 <span>Amount</span>
                             </th>
 
-                            <th class="col col-grow  col-center col-vcenter text-base bg-green-dark" style="border: 1px solid #333;">
+                            <th class="col col-grow  col-center col-vcenter bg-green-dark" style="border: 1px solid #333;font-size:11pt">
                                 <span>Signature</span>
                             </th>
                         </tr>
@@ -123,12 +154,23 @@
                         if($profileId) {
                         $profile = \App\Models\ScholarshipProfile::find($profileId);
                         $year = '';
+                        $record = null;
 
+                        // First try: Use the provided record ID
                         if($recordId) {
                         $record = \App\Models\ScholarshipRecord::find($recordId);
+                        }
+
+                        // Second try: Get latest active/non-soft-deleted record for this profile
+                        if(!$record) {
+                        $record = \App\Models\ScholarshipRecord::where('profile_id', $profileId)
+                        ->whereNull('deleted_at')
+                        ->orderBy('updated_at', 'desc')
+                        ->first();
+                        }
+
                         if($record) {
                         $year = $record->year_level ?? '';
-                        }
                         }
 
                         if($profile) {
@@ -151,22 +193,22 @@
                             <td class="col col-60 col-center col-vcenter text-base font-bold" style="border: 1px solid #333;">
                                 {{ $loop->iteration }}
                             </td>
-                            <td class="col col-360 col-left col-vcenter text-base font-bold" style="border: 1px solid #333;">
+                            <td class="col col-360 col-left col-vcenter font-bold" style="border: 1px solid #333;font-size:11pt">
                                 {{ $scholar['name'] }}
                             </td>
-                            <td class="col col-200 col-center col-vcenter text-base font-bold" style="border: 1px solid #333;">
+                            <td class="col col-200 col-center col-vcenter font-bold" style="border: 1px solid #333;font-size:11pt">
                                 {{ $scholar['year'] ?? 'N/A' }}
                             </td>
-                            <td class="col col-200 col-right col-vcenter text-base font-bold" style="border: 1px solid #333;">
+                            <td class="col col-200 col-right col-vcenter font-bold" style="border: 1px solid #333;font-size:11pt">
                                 ₱ {{ number_format($scholar['amount'], 2) }}
                             </td>
-                            <td class="col col-grow col-center col-vcenter text-base" style="border: 1px solid #333;">
+                            <td class="col col-grow col-center col-vcenter" style="border: 1px solid #333;">
                                 &nbsp;
                             </td>
                         </tr>
                         @empty
                         <tr class="row">
-                            <td colspan="5" class="col col-12 col-center col-vcenter text-base" style="padding: 10px 0; border: 1px solid #333;">
+                            <td colspan="5" class="col col-12 col-center col-vcenter" style="padding: 10px 0; border: 1px solid #333;">
                                 No scholars included in this payroll
                             </td>
                         </tr>
@@ -203,10 +245,10 @@
                             </td>
                             <td class="col col-360 col-center col-vcenter text-base" style="border: 1px solid #333;">
                             </td>
-                            <td class="col col-200 col-center col-vcenter text-base" style="border: 1px solid #333;">
+                            <td class="col col-200 col-center col-vcenter" style="border: 1px solid #333;font-size:11pt">
                                 <span class="font-bold">GRAND TOTAL</span>
                             </td>
-                            <td class="col col-200 col-right col-vcenter text-base font-bold" style="border: 1px solid #333;">
+                            <td class="col col-200 col-right col-vcenter text-base font-bold" style="border: 1px solid #333;font-size:11pt">
                                 ₱ {{ number_format($totalAmount ?? $voucher->amount ?? 0, 2) }}
                             </td>
                             <td class="col col-grow col-center col-vcenter text-base" style="border: 1px solid #333;">

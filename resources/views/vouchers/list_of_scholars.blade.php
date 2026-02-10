@@ -235,7 +235,7 @@
                         if(!$record) {
                         $record = \App\Models\ScholarshipRecord::where('profile_id', $profileId)
                         ->whereNull('deleted_at')
-                        ->orderBy('created_at', 'desc')
+                        ->orderBy('updated_at', 'desc')
                         ->first();
                         }
 
@@ -260,10 +260,10 @@
                         $totalAmount += $scholar['amount'];
                         @endphp
                         <tr>
-                            <td style="text-align: center;">{{ $loop->iteration }}</td>
-                            <td style="padding: 8px;" class="text-lg font-semibold">{{ $scholar['name'] }}</td>
-                            <td style="text-align: center;" class="text-lg font-semibold">{{ $scholar['year'] ?? 'N/A' }}</td>
-                            <td style="text-align: right; padding: 8px;" class="text-lg font-semibold">₱ {{ number_format($scholar['amount'], 2) }}</td>
+                            <td style="text-align: center;" class="font-semibold">{{ $loop->iteration }}</td>
+                            <td style="padding: 8px; font-size:11pt;" class="font-semibold">{{ $scholar['name'] }}</td>
+                            <td style="text-align: center; font-size:11pt;" class="font-semibold">{{ $scholar['year'] ?? 'N/A' }}</td>
+                            <td style="text-align: right; padding: 8px; font-size:11pt;" class="font-semibold">₱ {{ number_format($scholar['amount'], 2) }}</td>
                         </tr>
                         @empty
                         <tr>
@@ -288,8 +288,8 @@
                         <tr>
                             <td></td>
                             <td></td>
-                            <td style="text-align: right; padding: 8px;" class="text-xl font-semibold">TOTAL</td>
-                            <td style="text-align: right; padding: 8px;" class="text-xl font-semibold">₱ {{ number_format($totalAmount, 2) }}</td>
+                            <td style="text-align: center; padding: 8px;" class="text-xl font-semibold">TOTAL</td>
+                            <td style="text-align: right; padding: 8px; font-size: 12pt;" class="font-semibold">₱ {{ number_format($totalAmount, 2) }}</td>
                         </tr>
                     </tfoot>
                 </table>
