@@ -198,21 +198,21 @@ const getCardShadow = (color) => {
 
     <Head title="Home" />
     <AdminLayout>
-        <div class="space-y-8 pb-8">
-            <!-- Header Section -->
-            <div class="rounded-lg p-8 shadow-lg">
-                <div class="flex items-center justify-between">
+        <Toolbar class="border-0 bg-transparent p-0">
+            <template #start>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center justify-center w-16 h-16">
+                        <i class="pi pi-graduation-cap text-indigo-900" style="font-size: 2rem;"></i>
+                    </div>
                     <div>
-                        <h1 class="text-4xl font-bold mb-2 text-gray-700">PGP Scholarship Portal</h1>
-                        <p class=" text-lg">A centralized platform for managing scholarship applications,
+                        <h1 class="text-2xl font-bold text-gray-700">PGP Scholarship Portal</h1>
+                        <p class="text-gray-600 mt-1">A centralized platform for managing scholarship applications,
                             requirements, and updates.</p>
                     </div>
-                    <div>
-                        <i class="pi pi-graduation-cap text-gray-600" style="font-size: 3rem;"></i>
-                    </div>
                 </div>
-            </div>
-
+            </template>
+        </Toolbar>
+        <div class="space-y-8 py-12">
             <!-- Service Cards Section -->
             <div>
                 <div class="flex items-center gap-2 mb-4">

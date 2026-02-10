@@ -772,24 +772,35 @@ onMounted(() => {
     <Head title="Vouchers" />
 
     <AdminLayout>
-        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
             <!-- Header -->
-            <div class="mb-8 flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Vouchers Management</h1>
-                    <p class="text-sm text-gray-600 mt-1">Create and manage obligations and vouchers for scholars
-                        disbursements
-                        and payroll</p>
-                </div>
-                <button @click="handleCreateVoucher"
-                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
-                    <i class="pi pi-plus mr-2 text-sm"></i>
-                    <span>Create Voucher</span>
-                </button>
-            </div>
+            <Toolbar class="border-0 bg-transparent p-0">
+                <template #start>
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center justify-center w-16 h-16">
+                            <i class="pi pi-credit-card text-indigo-900" style="font-size: 2rem;"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-700">Vouchers Management</h1>
+                            <p class="text-gray-600 mt-1">Create and manage obligations and vouchers for scholars
+                                disbursements
+                                and payroll</p>
+                        </div>
+                    </div>
+                </template>
+                <template #end>
+                    <button @click="handleCreateVoucher"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+                        <i class="pi pi-plus mr-2 text-sm"></i>
+                        <span>Create Voucher</span>
+                    </button>
+                </template>
+            </Toolbar>
+
 
             <!-- List/Summary Section -->
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white rounded-lg shadow p-6 mt-8">
                 <div class="flex items-center justify-between gap-4 mb-4 flex-col sm:flex-row">
                     <div class="flex-1 w-full">
                         <input v-model="searchQuery" type="text"
