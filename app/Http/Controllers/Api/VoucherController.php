@@ -59,6 +59,7 @@ class VoucherController extends Controller
         $validator = Validator::make($request->all(), [
             'voucher_type' => 'required|in:disbursements,payroll',
             'explanation' => 'nullable|string',
+            'los_course' => 'nullable|string',
             'payee_type' => 'required|in:scholar,school,individual',
             'payee_name' => 'required|string',
             'payee_address' => 'nullable|string',
@@ -92,6 +93,7 @@ class VoucherController extends Controller
                 'voucher_number' => $voucherNumber,
                 'voucher_type' => $request->voucher_type,
                 'explanation' => $request->explanation,
+                'los_course' => $request->los_course,
                 'payee_type' => $request->payee_type,
                 'payee_name' => $request->payee_name,
                 'payee_address' => $request->payee_address,
@@ -181,6 +183,7 @@ class VoucherController extends Controller
             $validator = Validator::make($request->all(), [
                 'voucher_type' => 'required|in:disbursements,payroll',
                 'explanation' => 'nullable|string',
+                'los_course' => 'nullable|string',
                 'payee_type' => 'required|in:scholar,school,individual',
                 'payee_name' => 'required|string',
                 'payee_address' => 'nullable|string',
@@ -209,6 +212,7 @@ class VoucherController extends Controller
             $voucher->update([
                 'voucher_type' => $request->voucher_type,
                 'explanation' => $request->explanation,
+                'los_course' => $request->los_course,
                 'payee_type' => $request->payee_type,
                 'payee_name' => $request->payee_name,
                 'payee_address' => $request->payee_address,

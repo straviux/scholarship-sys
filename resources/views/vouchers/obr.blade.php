@@ -332,11 +332,17 @@
         <!-- OBR PARTICULARS Row -->
         <div class="obr-info-row no-border-bottom">
             <div class="column_1 center">{{ $voucher->responsibility_center ?? '_______________' }}</div>
-            <div class="column_2 center">{{ $voucher->particulars_name ?? '_______________' }}</div>
+            <div class="column_2 center" style="font-weight:600">{{ $voucher->particulars_name ?? '_______________' }}</div>
             <div class="column_5">
                 <div class="fpp">&nbsp;</div>
                 <div class="account-code" style="font-size: 12px; font-weight: normal;">{{ $voucher->account_code ?? '_______________' }}</div>
-                <div class="amount">&nbsp;</div>
+                <div class="amount" style="font-size: 12px; font-weight: normal;">
+                    @if($voucher->obr_type === 'REIMBURSEMENT')
+                    ₱{{ number_format($voucher->amount, 2) }}
+                    @else
+                    &nbsp;
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -344,7 +350,7 @@
         @if($voucher->particulars_description)
         <div class="obr-info-row no-border-bottom">
             <div class="column_1">&nbsp;</div>
-            <div class="column_2 center" style="font-size: 11px;line-height:1.2">
+            <div class="column_2 center" style="font-size: 11pt;line-height:1.2">
                 {!! $voucher->particulars_description !!}
             </div>
             <div class="column_5">
