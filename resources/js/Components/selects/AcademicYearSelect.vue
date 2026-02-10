@@ -36,7 +36,7 @@ const acad_year = computed(() => {
     return years;
 });
 // Local value for v-model
-const defaultYearValue = currentYear.toString();
+const defaultYearValue = `${currentYear}-${currentYear + 1}`;
 const defaultYearObj = computed(() => acad_year.value.find(y => y.value === defaultYearValue));
 
 // Helper function to find the year object from a value (string or object)
@@ -71,15 +71,15 @@ watch(() => props.modelValue, (val) => {
     }
 }, { immediate: true });
 
-// Emit changes to parent
+// Emit changes to parent - emit only the value string
 watch(localValue, (val) => {
-    emit('update:modelValue', val);
+    emit('update:modelValue', val?.value || val);
 }, { deep: true });
 
 // Emit initial value on mount to ensure parent gets the preselected value
 onMounted(() => {
     if (localValue.value) {
-        emit('update:modelValue', localValue.value);
+        emit('update:modelValue', localValue.value?.value || localValue.value);
     }
 });
 

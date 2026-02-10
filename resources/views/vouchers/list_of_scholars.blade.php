@@ -102,6 +102,82 @@
                 $term = '';
                 $academicYear = '';
 
+                // Check if voucher has academic_year and semester stored
+                if(!empty($voucher->academic_year) && !empty($voucher->semester)) {
+                $academicYear = $voucher->academic_year;
+                $term = $voucher->semester;
+                } else {
+                // Fall back to scholarship record if voucher fields are empty
+                if($voucher->scholar_ids && count($voucher->scholar_ids) > 0) {
+                $firstScholar = $voucher->scholar_ids[0];
+                $profileId = is_array($firstScholar) ? $firstScholar['profile_id'] : $firstScholar;
+                $recordId = is_array($firstScholar) ? ($firstScholar['scholarship_record_id'] ?? null) : null;
+
+                $record = null;
+
+                // First try: Use the provided record ID
+                if($recordId) {
+                $record = \App\Models\ScholarshipRecord::with('course', 'school')
+                ->find($recordId);
+                }
+
+                // Second try: Get latest active/non-soft-deleted record for this profile
+                if(!$record && $profileId) {
+                $record = \App\Models\ScholarshipRecord::where('profile_id', $profileId)
+                ->with('course', 'school')
+                ->whereNull('deleted_at') // Not soft deleted
+                ->orderBy('created_at', 'desc')
+                ->first();
+                }
+
+                if($record) {
+                $term = $record->term ?? '';
+                $academicYear = $record->academic_year ?? '';
+                }
+                }
+                }
+
+                // Use voucher course if stored, otherwise fall back to scholarship record
+                if(!empty($voucher->course)) {
+                $courseName = $voucher->course;
+                } else if($voucher->scholar_ids && count($voucher->scholar_ids) > 0) {
+                $firstScholar = $voucher->scholar_ids[0];
+                $profileId = is_array($firstScholar) ? $firstScholar['profile_id'] : $firstScholar;
+                $recordId = is_array($firstScholar) ? ($firstScholar['scholarship_record_id'] ?? null) : null;
+
+                $record = null;
+
+                // First try: Use the provided record ID
+                if($recordId) {
+                $record = \App\Models\ScholarshipRecord::with('course', 'school')
+                ->find($recordId);
+                }
+
+                // Second try: Get latest active/non-soft-deleted record for this profile
+                if(!$record && $profileId) {
+                $record = \App\Models\ScholarshipRecord::where('profile_id', $profileId)
+                ->with('course', 'school')
+                ->whereNull('deleted_at') // Not soft deleted
+                ->orderBy('created_at', 'desc')
+                ->first();
+                }
+
+                if($record) {
+                // Try school_name field first
+                $schoolName = $record->school_name ?? '';
+
+                // If school_name is empty, try to get from school relationship
+                if(empty($schoolName) && $record->school) {
+                $schoolName = $record->school->name ?? '';
+                }
+
+                // Get course name from relationship if available
+                if($record->course) {
+                $courseName = $record->course->name ?? '';
+                }
+                }
+                } else {
+                // Fallback: fetch from scholarship record
                 if($voucher->scholar_ids && count($voucher->scholar_ids) > 0) {
                 $firstScholar = $voucher->scholar_ids[0];
                 $profileId = is_array($firstScholar) ? $firstScholar['profile_id'] : $firstScholar;
@@ -133,12 +209,10 @@
                 $schoolName = $record->school->name ?? '';
                 }
 
-                $term = $record->term ?? '';
-                $academicYear = $record->academic_year ?? '';
-
                 // Get course name from relationship if available
                 if($record->course) {
                 $courseName = $record->course->name ?? '';
+                }
                 }
                 }
                 }
@@ -181,10 +255,12 @@
                     <div class="row border-none">
                         <div class="col col-grow col-center col-vcenter">
                             <span class="text-lg font-semibold tracking-wide">
-                                @if($term === 'review')
-                                {{ $academicYear }}
-                                @else
+                                @if(!empty($academicYear) && !empty($term))
                                 {{ $term .' '. $academicYear }}
+                                @elseif(!empty($academicYear))
+                                {{ $academicYear }}
+                                @elseif(!empty($term))
+                                {{ $term }}
                                 @endif
                             </span>
                         </div>

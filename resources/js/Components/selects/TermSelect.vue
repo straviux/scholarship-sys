@@ -49,7 +49,7 @@ watch(() => props.modelValue, (val) => {
     localValue.value = val;
 });
 
-// Emit changes to parent
+// Emit changes to parent - emit only the value string
 watch(localValue, (val) => {
     if (localValue.value && terms.value.length) {
         if (props.multiple && Array.isArray(localValue.value)) {
@@ -61,7 +61,7 @@ watch(localValue, (val) => {
             if (selected) localValue.value = selected;
         }
     }
-    emit('update:modelValue', val);
+    emit('update:modelValue', val?.value || val);
 });
 
 watch(
