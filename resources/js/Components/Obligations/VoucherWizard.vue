@@ -38,7 +38,8 @@ const voucherData = reactive({
     },
     disbursements: {
         type: 'disbursements', // disbursements or payroll
-        explanation: ''
+        explanation: '',
+        los_course: '' // Optional course name for Letter of Support
     },
     summary: {
         notes: ''
@@ -240,6 +241,7 @@ const handleSubmit = async () => {
         const payload = {
             voucher_type: voucherData.disbursements.type,
             explanation: voucherData.disbursements.explanation,
+            los_course: voucherData.disbursements.los_course,
             payee_type: voucherData.obligations.payee_type,
             payee_name: payeeName,
             payee_address: voucherData.obligations.payee_address,
@@ -663,6 +665,19 @@ onMounted(() => {
                             content-type="html" theme="snow" placeholder="Enter explanation..." style="height: 200px" />
                     </div>
                 </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-900 mb-2">
+                        LOS Course (Optional)
+                    </label>
+                    <p class="text-xs text-gray-500 mb-2">
+                        Specify a custom course name to display in the Letter of Support. If left empty, the scholar's
+                        course will be used.
+                    </p>
+                    <input v-model="voucherData.disbursements.los_course" type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="e.g., Bachelor of Science in Information Technology" />
+                </div>
             </div>
 
             <!-- Step 4: Review & Create -->
@@ -717,7 +732,7 @@ onMounted(() => {
                         <div class="flex justify-between pt-2 border-t border-gray-300">
                             <span class="text-gray-600 font-medium">Amount per Scholar:</span>
                             <span class="font-bold text-gray-900">{{ formatCurrency(voucherData.obligations.amount)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div v-if="voucherData.scholars.length > 1" class="flex justify-between">
                             <span class="text-gray-600 font-medium">Total Amount ({{ voucherData.scholars.length }}
@@ -737,7 +752,7 @@ onMounted(() => {
                                     class="flex justify-between">
                                     <span>{{ scholar.first_name }} {{ scholar.last_name }}</span>
                                     <span class="font-semibold">{{ formatCurrency(voucherData.obligations.amount)
-                                    }}</span>
+                                        }}</span>
                                 </li>
                             </ol>
                         </div>
@@ -756,6 +771,13 @@ onMounted(() => {
                     <h4 class="font-medium text-blue-900 mb-2">{{ voucherData.disbursements.type === 'disbursements' ?
                         'Disbursements' : 'Payroll' }} Explanation</h4>
                     <p class="text-sm text-blue-800" v-html="voucherData.disbursements.explanation"></p>
+                </div>
+
+                <!-- LOS Course Summary -->
+                <div v-if="voucherData.disbursements.los_course"
+                    class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                    <h4 class="font-medium text-purple-900 mb-2">Letter of Support Course</h4>
+                    <p class="text-sm text-purple-800">{{ voucherData.disbursements.los_course }}</p>
                 </div>
             </div>
         </div>
@@ -805,11 +827,11 @@ onMounted(() => {
                         class="flex items-center justify-between bg-green-50 p-3 rounded border border-green-200">
                         <div class="flex-1">
                             <div class="text-sm font-medium text-gray-900">{{ scholar.first_name }} {{ scholar.last_name
-                            }}
+                                }}
                             </div>
                             <div class="text-xs text-gray-500">
                                 <span v-if="scholar.year_level" class="uppercase">{{ formatYearLevel(scholar.year_level)
-                                }}</span>
+                                    }}</span>
                                 <span v-else class="text-red-500">---</span>
                                 {{ scholar.course ? ' | ' + scholar.course : '' }}
                             </div>
@@ -841,7 +863,7 @@ onMounted(() => {
                 <div class="flex justify-between pb-3 border-b border-gray-200">
                     <span class="text-gray-600">Particulars:</span>
                     <span class="font-medium text-gray-900">{{ voucherData.obligations.particulars_name || '---'
-                        }}</span>
+                    }}</span>
                 </div>
 
                 <div class="flex justify-between pb-3 border-b border-gray-200">
@@ -855,7 +877,7 @@ onMounted(() => {
                             class="flex justify-between items-center">
                             <span>{{ i + 1 }}. {{ scholar.first_name }} {{ scholar.last_name }}</span>
                             <span class="font-semibold text-gray-900">{{ formatCurrency(voucherData.obligations.amount)
-                                }}</span>
+                            }}</span>
                         </li>
                     </ol>
                 </div>

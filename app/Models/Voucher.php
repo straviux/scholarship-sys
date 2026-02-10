@@ -14,6 +14,7 @@ class Voucher extends Model
         'voucher_number',
         'voucher_type',
         'explanation',
+        'los_course',
         'payee_type',
         'payee_name',
         'payee_address',

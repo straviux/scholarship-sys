@@ -912,7 +912,7 @@ onMounted(() => {
                                 </td>
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">{{
                                     formatAmount(calculateTotalAmount(voucher))
-                                }}</td>
+                                    }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ voucher.creator?.name || '---' }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ formatDate(voucher.created_at) }}</td>
                                 <td class="px-6 py-4 text-sm">
@@ -1017,7 +1017,7 @@ onMounted(() => {
                 <div class="bg-white border border-gray-200 rounded p-4">
                     <p class="text-sm font-semibold text-gray-900 mb-2">Scholars ({{ selectedVoucher.scholar_ids?.length
                         || 0
-                        }})</p>
+                    }})</p>
                     <div v-if="loadingScholars" class="text-center py-2">
                         <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span class="text-xs">Loading...</span>
                     </div>
@@ -1026,7 +1026,7 @@ onMounted(() => {
                         <div v-for="(scholar, index) in scholarsDetails" :key="index"
                             class="text-xs text-gray-700 py-1 px-2 bg-gray-50 rounded flex items-center justify-between gap-2">
                             <span class="font-medium">{{ index + 1 }}. {{ scholar.first_name }} {{ scholar.last_name
-                                }}</span>
+                            }}</span>
                             <span class="text-gray-600 whitespace-nowrap">
                                 <span v-if="scholar.course_name">{{ scholar.course_name }}</span>
                                 <span v-if="scholar.year_level" class="ml-1">| {{
@@ -1034,7 +1034,7 @@ onMounted(() => {
                                         scholar.year_level
                                 }}</span>
                                 <span v-if="scholar.academic_year" class="ml-1">| {{ scholar.academic_year
-                                    }}</span>
+                                }}</span>
                                 <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                             </span>
                         </div>
@@ -1367,6 +1367,18 @@ onMounted(() => {
                                 style="height: 200px" />
                         </div>
                     </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-900 mb-2">LOS Course (Optional)</label>
+                        <p class="text-xs text-gray-500 mb-2">
+                            Specify a custom course name to display in the Letter of Support. If left empty, the
+                            scholar's
+                            course will be used.
+                        </p>
+                        <input v-model="editFormData.los_course" type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="e.g., Bachelor of Science in Information Technology" />
+                    </div>
                 </div>
 
                 <!-- Step 4: Review & Save -->
@@ -1390,7 +1402,7 @@ onMounted(() => {
                                 <span class="font-medium">Disbursement Type:</span>
                                 <span>{{ editFormData.voucher_type === 'disbursements' ? 'Disbursement Voucher' :
                                     (editFormData.voucher_type === 'payroll' ? 'Payroll' : editFormData.voucher_type)
-                                }}</span>
+                                    }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="font-medium">Amount:</span>
@@ -1460,7 +1472,7 @@ onMounted(() => {
                         </div>
                         <div v-if="editFormData.payee_type" class="text-xs">
                             <span class="font-medium">Type:</span> <span class="capitalize">{{ editFormData.payee_type
-                            }}</span>
+                                }}</span>
                         </div>
                         <div v-if="editFormData.amount" class="text-xs">
                             <span class="font-medium">Amount:</span> ₱{{ parseFloat(editFormData.amount).toFixed(2) }}
