@@ -42,7 +42,6 @@
             background: #fff;
             padding: 0;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border: 1px solid #333;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
@@ -278,7 +277,7 @@
     ?>
     <div class="container">
         <!-- Header -->
-        <div class="header">
+        <div class="header" style="border-top:1px solid #333;border-left:1px solid #333;border-right:1px solid #333;">
             @if($logoDataUrl)
             <div class="header-logo">
                 <img src="{{ $logoDataUrl }}" alt="PGP Logo">
@@ -292,45 +291,45 @@
         </div>
 
         <!-- OBR Info Row -->
-        <div class="obr-info-row">
+        <div class="obr-info-row" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <div class="label">OBLIGATION REQUEST</div>
-            <div class="number">No.</div>
+            <div class="number" style="font-size:9pt">No.</div>
         </div>
 
         <!-- OBR Payee Row -->
-        <div class="obr-info-row">
-            <div class="column_1">Payee:</div>
-            <div class="column_2" style="font-weight:600">{{ $voucher->payee_name ?? '_______________' }}</div>
+        <div class="obr-info-row" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
+            <div class="column_1" style="font-size:9pt">Payee:</div>
+            <div class="column_2" style="font-weight:600; font-size:11pt">{{ $voucher->payee_name ?? '_______________' }}</div>
             <div class="column_5">&nbsp;</div>
         </div>
 
         <!-- OBR Office Row -->
-        <div class="obr-info-row">
-            <div class="column_1">Office:</div>
+        <div class="obr-info-row" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
+            <div class="column_1" style="font-size:9pt">Office:</div>
             <div class="column_2">&nbsp;</div>
             <div class="column_5">&nbsp;</div>
         </div>
 
         <!-- OBR Address Row -->
-        <div class="obr-info-row">
-            <div class="column_1">Address:</div>
-            <div class="column_2" style="font-weight:600">{{ $voucher->payee_address ?? '_______________' }}</div>
+        <div class="obr-info-row" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
+            <div class="column_1" style="font-size:9pt">Address:</div>
+            <div class="column_2" style="font-weight:600; font-size:11pt">{{ $voucher->payee_address ?? '_______________' }}</div>
             <div class="column_5">&nbsp;</div>
         </div>
 
         <!-- OBR RCenter Row -->
-        <div class="obr-info-row">
-            <div class="column_1 center">Responsibility Center:</div>
+        <div class="obr-info-row" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
+            <div class="column_1 center" style="font-size:9pt">Responsibility Center:</div>
             <div class="column_2 center" style="font-weight:600">PARTICULARS</div>
             <div class="column_5">
-                <div class="fpp">F.P.P</div>
-                <div class="account-code">Account Code</div>
-                <div class="amount">Amount</div>
+                <div class="fpp" style="font-size:9pt">F.P.P</div>
+                <div class="account-code" style="font-size:9pt">Account Code</div>
+                <div class="amount" style="font-size:9pt">Amount</div>
             </div>
         </div>
 
         <!-- OBR PARTICULARS Row -->
-        <div class="obr-info-row no-border-bottom">
+        <div class="obr-info-row no-border-bottom" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <div class="column_1 center">{{ $voucher->responsibility_center ?? '_______________' }}</div>
             <div class="column_2 center" style="font-weight:600">{{ $voucher->particulars_name ?? '_______________' }}</div>
             <div class="column_5">
@@ -348,7 +347,7 @@
 
         <!-- OBR Particulars Description Row -->
         @if($voucher->particulars_description)
-        <div class="obr-info-row no-border-bottom">
+        <div class="obr-info-row no-border-bottom" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <div class="column_1">&nbsp;</div>
             <div class="column_2 center" style="font-size: 11pt;line-height:1.2">
                 {!! $voucher->particulars_description !!}
@@ -402,7 +401,7 @@
         }
         @endphp
 
-        <div class="obr-info-row no-border-bottom">
+        <div class="obr-info-row no-border-bottom" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <div class="column_1">&nbsp;</div>
             <div class="column_2">&nbsp;</div>
             <div class="column_5">
@@ -411,7 +410,7 @@
                 <div class="amount">&nbsp;</div>
             </div>
         </div>
-        <div class="obr-info-row no-border-bottom">
+        <div class="obr-info-row no-border-bottom" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <div class="column_1 ">&nbsp;</div>
             <div class="column_2" style="text-decoration: underline;border:none; font-weight:600">NAME OF SCHOLARS</div>
             <div class="column_3" style="text-decoration: underline; font-weight:600">YEAR</div>
@@ -423,7 +422,7 @@
         </div>
 
         @foreach($scholars as $scholar)
-        <div class="obr-info-row no-border-bottom">
+        <div class="obr-info-row no-border-bottom" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <div class="column_1">&nbsp;</div>
             <div class="column_2" style="border:none; font-size:12px">{{ $loop->iteration }}. {{ $scholar['name'] }}</div>
             <div class="column_3" style="font-size:12px">{{ $scholar['year'] }}</div>
@@ -437,8 +436,8 @@
         @endif
 
         <!-- Fill remaining space until bottom section -->
-        <div style="flex: 1; display: flex; flex-direction: column;">
-            <div class="obr-info-row" style="color: transparent; flex: 1; border-bottom: none;">
+        <div style="flex: 0.8; display: flex; flex-direction: column;">
+            <div class="obr-info-row" style="color: transparent; flex: 1; border-bottom: none; border-left:1px solid #333!important;border-right:1px solid #333!important;">
                 <div class="column_1">&nbsp;</div>
                 <div class="column_2" style="border:none">&nbsp;</div>
                 <div class="column_3">&nbsp;</div>
@@ -455,7 +454,7 @@
         @endif
 
         <!-- Bottom Section -->
-        <div class="obr-bottom-section">
+        <div class="obr-bottom-section" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <!-- TOTAL Row -->
             @if($voucher->scholar_ids && count($voucher->scholar_ids) > 0)
             <div class="obr-info-row no-border-bottom border-top">
@@ -495,7 +494,7 @@
                 <div class="column_3" style="flex: 0.9;border-right: none;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
                         <tr>
-                            <td style="width: 100%; margin-top:-26px;margin-left:-3px; font-weight: bold; vertical-align: top;display:flex; align-items: center;font-size:14px">
+                            <td style="width: 100%; margin-top:-25px;margin-left:-3px; font-weight: bold; vertical-align: top;display:flex; align-items: center;font-size:14px">
                                 <div style="border: 1px solid #333;padding:0 18px;margin-right:4px;justify-content: center; display: flex; align-items: center;justify-content: center;">B</div> <span>Certified</span>
                             </td>
                         </tr>
@@ -514,9 +513,9 @@
 
             <!-- Row 6 -->
             <div class="obr-info-row" style="min-height: 60px;">
-                <div class="column_1" style="text-align: center; font-size:12px; padding-top: 40px;">Signature</div>
+                <div class="column_1" style="text-align: center; font-size:9pt; padding-top: 40px;">Signature</div>
                 <div class="column_2">&nbsp;</div>
-                <div class="column_3" style="text-align: center; font-size:12px; padding-top: 40px;">Signature</div>
+                <div class="column_3" style="text-align: center; font-size:9pt; padding-top: 40px;">Signature</div>
                 <div class="column_5">
 
                 </div>
@@ -524,30 +523,30 @@
 
             <!-- Row 7 -->
             <div class="obr-info-row">
-                <div class="column_1" style="text-align: center; font-size:12px">Printed Name</div>
-                <div class="column_2 center" style="font-weight: 600;">AMY ROA ALVAREZ</div>
-                <div class="column_3" style="text-align: center; font-size:12px">Printed Name</div>
-                <div class="column_5 center" style="font-weight: 600;">
+                <div class="column_1" style="text-align: center; font-size:9pt">Printed Name</div>
+                <div class="column_2 center" style="font-weight: 600;font-size:11pt">AMY ROA ALVAREZ</div>
+                <div class="column_3" style="text-align: center; font-size:9pt">Printed Name</div>
+                <div class="column_5 center" style="font-weight: 600;font-size:11pt">
                     MA. ISABEL E. GUINTO
                 </div>
             </div>
 
             <!-- Row 8 -->
             <div class="obr-info-row" style="min-height: 50px;">
-                <div class="column_1" style="text-align: center; font-size:12px">Position</div>
-                <div class="column_2 center" style="font-weight: normal;font-size:16px">Governor</div>
-                <div class="column_3" style="text-align: center; font-size:12px">Position</div>
-                <div class="column_5 center" style="flex-direction: column; justify-content: space-around;font-size:12px">
-                    <div style="padding-bottom: 4px;">Supervising Administrative Officer</div>
+                <div class="column_1" style="text-align: center; font-size:9pt">Position</div>
+                <div class="column_2 center" style="font-weight: normal;font-size:11pt">Governor</div>
+                <div class="column_3" style="text-align: center; font-size:9pt">Position</div>
+                <div class="column_5 center" style="flex-direction: column; justify-content: space-around;font-size:10pt">
+                    <div style="padding-bottom: 1px;">Supervising Administrative Officer</div>
                     <div>Acting Provincial Budget Officer</div>
                 </div>
             </div>
 
             <!-- Row 9 -->
             <div class="obr-info-row no-border-bottom">
-                <div class="column_1" style="text-align: center;  font-size:12px">Date</div>
+                <div class="column_1" style="text-align: center;  font-size:9pt">Date</div>
                 <div class="column_2">&nbsp;</div>
-                <div class="column_3" style="text-align: center;  font-size:12px">Date</div>
+                <div class="column_3" style="text-align: center;  font-size:9pt">Date</div>
                 <div class="column_5">
 
                 </div>

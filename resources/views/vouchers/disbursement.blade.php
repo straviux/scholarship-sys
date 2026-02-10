@@ -374,7 +374,7 @@
 
             <!-- EXPLANATION VALUE ROW -->
             <div class="obr-info-row no-border-bottom">
-                <div class="column_2 center" style="font-size:11px;line-height:1.2">{!! $voucher->explanation ?? '_______________' !!}</div>
+                <div class="column_2 center" style="font-size:11pt;line-height:1.2">{!! $voucher->explanation ?? '_______________' !!}</div>
                 <div class="column_5" style="justify-content:flex-end!important;padding-right:10px;">₱ {{ number_format($voucher->amount,2) ?? '_______________' }}</div>
             </div>
 
