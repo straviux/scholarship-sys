@@ -200,15 +200,15 @@ const getCardShadow = (color) => {
     <AdminLayout>
         <div class="space-y-8 pb-8">
             <!-- Header Section -->
-            <div class="bg-gradient-to-r from-emerald-500 to-emerald-400 text-white rounded-lg p-8 shadow-lg">
+            <div class="rounded-lg p-8 shadow-lg">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h1 class="text-4xl font-bold mb-2">PGP Scholarship Portal</h1>
-                        <p class="text-indigo-100 text-lg">A centralized platform for managing scholarship applications,
+                        <h1 class="text-4xl font-bold mb-2 text-gray-700">PGP Scholarship Portal</h1>
+                        <p class=" text-lg">A centralized platform for managing scholarship applications,
                             requirements, and updates.</p>
                     </div>
                     <div>
-                        <i class="pi pi-graduation-cap" style="font-size: 3rem;"></i>
+                        <i class="pi pi-graduation-cap text-gray-600" style="font-size: 3rem;"></i>
                     </div>
                 </div>
             </div>

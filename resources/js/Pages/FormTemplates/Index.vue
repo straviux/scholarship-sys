@@ -45,7 +45,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                        }}</span>
+                                            }}</span>
                                     </template>
                                 </Column>
 
@@ -116,7 +116,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                        }}</span>
+                                            }}</span>
                                     </template>
                                 </Column>
 
@@ -270,7 +270,7 @@
                                     <span><i class="pi pi-file mr-1"></i>{{ viewingTemplate.file_name }}</span>
                                     <span><i class="pi pi-database mr-1"></i>{{
                                         formatFileSize(viewingTemplate.file_size)
-                                    }}</span>
+                                        }}</span>
                                     <span v-if="viewingTemplate.category">
                                         <i class="pi pi-tag mr-1"></i>{{ viewingTemplate.category }}
                                     </span>
@@ -372,6 +372,7 @@ const dialogMode = ref('upload');
 const templateToDelete = ref(null);
 const editingTemplate = ref(null);
 const viewingTemplate = ref(null);
+const editingTemplateId = ref(null);
 
 // Image zoom state (same as disbursement viewer)
 const imageZoom = ref(1);
@@ -414,6 +415,7 @@ const openUploadDialog = () => {
 const openEditDialog = (template) => {
     dialogMode.value = 'edit';
     editingTemplate.value = template;
+    editingTemplateId.value = template.id;
     form.clearErrors();
     form.title = template.title;
     form.description = template.description;
@@ -421,7 +423,6 @@ const openEditDialog = (template) => {
     form.sort_order = template.sort_order;
     form.is_active = template.is_active;
     form.file = null;
-    form.id = template.id;
     showDialog.value = true;
 };
 
@@ -438,13 +439,11 @@ const submitForm = () => {
             },
         });
     } else {
-        form.post(route('form-templates.update', form.id), {
+        form.put(route('form-templates.update', editingTemplateId.value), {
             onSuccess: () => {
                 showDialog.value = false;
                 form.reset();
             },
-            forceFormData: true,
-            _method: 'put',
         });
     }
 };
