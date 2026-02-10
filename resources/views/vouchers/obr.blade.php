@@ -344,7 +344,7 @@
         @if($voucher->particulars_description)
         <div class="obr-info-row no-border-bottom">
             <div class="column_1">&nbsp;</div>
-            <div class="column_2 center" style="font-size: 13px;">
+            <div class="column_2 center" style="font-size: 11px;line-height:1.2">
                 {!! $voucher->particulars_description !!}
             </div>
             <div class="column_5">
