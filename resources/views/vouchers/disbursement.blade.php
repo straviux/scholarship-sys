@@ -374,8 +374,8 @@
 
             <!-- EXPLANATION VALUE ROW -->
             <div class="obr-info-row no-border-bottom">
-                <div class="column_2 center" style="font-size:12px;line-height:1.2">{!! $voucher->explanation ?? '_______________' !!}</div>
-                <div class="column_5" style="justify-content:flex-end!important;padding-right:10px;">₱ {{ $voucher->amount ?? '_______________' }}</div>
+                <div class="column_2 center" style="font-size:11px;line-height:1.2">{!! $voucher->explanation ?? '_______________' !!}</div>
+                <div class="column_5" style="justify-content:flex-end!important;padding-right:10px;">₱ {{ number_format($voucher->amount,2) ?? '_______________' }}</div>
             </div>
 
             <!-- Scholar's name ROW (Hidden if REIMBURSEMENT) -->
@@ -458,7 +458,7 @@
         <!-- Total Amount Row -->
         <div class="obr-info-row" style="border-top:1px solid #333;">
             <div class="column_2" style="font-weight:600;align-items:flex-end!important;padding-right:10px;">TOTAL</div>
-            <div class="column_5" style="font-weight:600;justify-content:flex-end!important;padding-right:10px;">₱ {{ $voucher->amount ?? '_______________' }}</div>
+            <div class="column_5" style="font-weight:600;justify-content:flex-end!important;padding-right:10px;">₱ {{ number_format($voucher->amount,2) ?? '_______________' }}</div>
         </div>
 
         <!-- Certified Row -->
