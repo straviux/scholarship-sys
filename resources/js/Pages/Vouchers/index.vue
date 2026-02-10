@@ -30,16 +30,8 @@ const selectedVoucher = ref(null);
 const scholarsDetails = ref([]);
 const loadingScholars = ref(false);
 const scholarsCache = ref(new Map()); // Cache for scholar details by ID
-const showEditDialog = ref(false);
-const editStep = ref(1);
 const editingId = ref(null);
 const editFormData = ref(null);
-const editScholars = ref([]);
-const editSearchQuery = ref('');
-const editSelectAll = ref(false);
-const editSearchLoading = ref(false);
-const editLoading = ref(false);
-const showEditPreviewDrawer = ref(false);
 const responsibilityCenters = ref([]);
 const contextMenu = ref();
 const showRemarksDialog = ref(false);
@@ -177,20 +169,13 @@ const editVoucher = async (voucherId) => {
         const response = await axios.get(`/api/vouchers/${voucherId}`);
         const voucher = response.data.data;
 
-        // Ensure all fields are properly initialized
+        // Set up edit data
         editFormData.value = {
             ...voucher,
             responsibility_center: voucher.responsibility_center || ''
         };
-        editStep.value = 1;
-        editSearchQuery.value = '';
-        editSelectAll.value = false;
-        showEditDialog.value = true;
-        showEditPreviewDrawer.value = true;
-
-        // Wait for Vue to update the DOM before fetching scholars
-        await nextTick();
-        await fetchScholarsForEdit();
+        editingId.value = voucherId;
+        showWizard.value = true;
     } catch (error) {
         console.error('Error fetching voucher:', error);
         toast.add({
@@ -216,9 +201,9 @@ const saveVoucher = async () => {
             vouchers.value[index] = editFormData.value;
         }
 
-        showEditDialog.value = false;
+        showWizard.value = false;
         editFormData.value = null;
-        editStep.value = 1;
+        editingId.value = null;
         toast.add({
             severity: 'success',
             summary: 'Success',
@@ -236,139 +221,6 @@ const saveVoucher = async () => {
         });
     } finally {
         editingId.value = null;
-    }
-};
-
-// Navigate edit steps
-const nextEditStep = () => {
-    if (editStep.value < 4) {
-        editStep.value++;
-    }
-};
-
-const prevEditStep = () => {
-    if (editStep.value > 1) {
-        editStep.value--;
-    }
-};
-
-// Cancel edit
-const cancelEdit = () => {
-    showEditDialog.value = false;
-    showEditPreviewDrawer.value = false;
-    editFormData.value = null;
-    editingId.value = null;
-    editStep.value = 1;
-    editScholars.value = [];
-    editSearchQuery.value = '';
-    editSelectAll.value = false;
-};
-
-// Fetch scholars for editing
-const fetchScholarsForEdit = async () => {
-    editLoading.value = true;
-    try {
-        const response = await axios.get('/api/scholars');
-        const data = Array.isArray(response.data) ? response.data : (response.data.data || []);
-        if (data && data.length > 0) {
-            editScholars.value = data.map(s => ({
-                ...s,
-                selected: editFormData.value?.scholar_ids?.some(sid =>
-                    (typeof sid === 'object' ? sid.profile_id : sid) === s.profile_id
-                ) || false
-            }));
-        }
-    } catch (error) {
-        console.error('Error fetching scholars:', error);
-    } finally {
-        editLoading.value = false;
-    }
-};
-
-// Filter scholars for edit search
-const filteredEditScholars = computed(() => {
-    if (!editSearchQuery.value.trim()) {
-        return editScholars.value;
-    }
-    const search = editSearchQuery.value.toLowerCase();
-    return editScholars.value.filter(s =>
-        (s.first_name?.toLowerCase() || '').includes(search) ||
-        (s.last_name?.toLowerCase() || '').includes(search) ||
-        (s.middle_name?.toLowerCase() || '').includes(search) ||
-        (s.email?.toLowerCase() || '').includes(search)
-    );
-});
-
-// Toggle select all for edit
-const toggleEditSelectAll = () => {
-    editSelectAll.value = !editSelectAll.value;
-    filteredEditScholars.value.forEach(s => {
-        s.selected = editSelectAll.value;
-    });
-    updateEditSelectedScholars();
-};
-
-// Count selected scholars for edit
-const editSelectedCount = computed(() => {
-    return editScholars.value.filter(s => s.selected).length;
-});
-
-// Update edit form with selected scholars
-const updateEditSelectedScholars = () => {
-    const selected = editScholars.value.filter(s => s.selected);
-    editFormData.value.scholar_ids = selected.map(s => ({
-        profile_id: s.profile_id
-    }));
-};
-
-// Remove scholar from edit
-const removeEditScholar = (profileId) => {
-    const scholar = editScholars.value.find(s => s.profile_id === profileId);
-    if (scholar) {
-        scholar.selected = false;
-        updateEditSelectedScholars();
-    }
-};
-
-// Fetch voucher details for editing
-const fetchVoucherDetails = async (voucherId) => {
-    const voucher = vouchers.value.find(v => v.id === voucherId);
-    if (voucher) {
-        editFormData.value = { ...voucher };
-    }
-};
-
-// Fetch scholar details by profile IDs
-const fetchScholarsDetails = async (scholarIds) => {
-    if (!scholarIds || scholarIds.length === 0) {
-        scholarsDetails.value = [];
-        return;
-    }
-
-    loadingScholars.value = true;
-    try {
-        const scholars = [];
-        // Fetch each scholar's details
-        for (const scholar of scholarIds) {
-            try {
-                // Extract profile_id - handle both old format (string) and new format (object)
-                const profileId = typeof scholar === 'object' ? scholar.profile_id : scholar;
-                const response = await axios.get(`/api/scholarships/profile/${profileId}`);
-                if (response.data.data) {
-                    scholars.push(response.data.data);
-                    // Cache the scholar by ID
-                    scholarsCache.value.set(profileId, response.data.data);
-                }
-            } catch (error) {
-                console.error(`Error fetching scholar details:`, error);
-            }
-        }
-        scholarsDetails.value = scholars;
-    } catch (error) {
-        console.error('Error fetching scholars:', error);
-        scholarsDetails.value = [];
-    } finally {
-        loadingScholars.value = false;
     }
 };
 
@@ -733,18 +585,6 @@ const fetchResponsibilityCentersAndParticulars = async () => {
     }
 };
 
-// Watch for edit step changes to auto-show drawer on step 1 and 2
-watch(
-    () => editStep.value,
-    (newStep) => {
-        if (newStep === 1 || newStep === 2) {
-            showEditPreviewDrawer.value = true;
-        } else {
-            showEditPreviewDrawer.value = false;
-        }
-    }
-);
-
 // Watch for editFormData changes to ensure responsibility center is properly set
 watch(
     () => editFormData.value?.responsibility_center,
@@ -929,8 +769,9 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Voucher Creation Wizard -->
-        <VoucherWizard v-if="showWizard" @close="handleWizardClose" @scholar-selected="handleScholarSelection" />
+        <!-- Voucher Wizard (Create & Edit) -->
+        <VoucherWizard v-if="showWizard" :mode="editingId ? 'edit' : 'create'" :voucherId="editingId"
+            :initialData="editFormData" @close="handleWizardClose" @scholar-selected="handleScholarSelection" />
 
         <!-- Delete Confirmation Dialog -->
         <Dialog v-model:visible="showDeleteConfirmDialog" modal header="Confirm Delete" :style="{ width: '500px' }">
@@ -1138,378 +979,6 @@ onMounted(() => {
             </template>
         </Dialog>
 
-        <!-- Edit Voucher Dialog (4-Step Wizard) -->
-        <Dialog v-model:visible="showEditDialog" modal :header="`Edit Voucher - Step ${editStep} of 4`"
-            :style="{ width: '900px' }" @hide="cancelEdit">
-            <div v-if="editFormData" class="space-y-6">
-                <!-- Progress Bar -->
-                <div class="space-y-2">
-                    <div class="flex justify-between text-sm text-gray-600">
-                        <span>Step {{ editStep }} of 4</span>
-                        <span>{{ Math.round((editStep / 4) * 100) }}%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                            :style="{ width: (editStep / 4) * 100 + '%' }"></div>
-                    </div>
-                </div>
-
-                <!-- Step 1: Scholar Selection -->
-                <div v-if="editStep === 1" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-3">
-                            Select Scholars
-                        </label>
-
-                        <div class="space-y-3">
-                            <!-- Info Banner -->
-                            <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                <p class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>Only active
-                                    scholars are
-                                    displayed</p>
-                            </div>
-
-                            <!-- Search Input -->
-                            <div class="relative">
-                                <input v-model="editSearchQuery" type="text" placeholder="Search by name or email..."
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                                <div v-if="editSearchLoading" class="absolute right-3 top-2.5">
-                                    <i class="pi pi-spin pi-spinner text-blue-600"></i>
-                                </div>
-                            </div>
-
-                            <!-- Loading State -->
-                            <div v-if="editLoading" class="text-center py-8">
-                                <i class="pi pi-spin pi-spinner text-3xl text-blue-600"></i>
-                                <p class="mt-2 text-gray-600">Loading scholars...</p>
-                            </div>
-
-                            <!-- Select All Checkbox -->
-                            <div v-if="!editLoading && editSearchQuery.trim()" class="flex items-center">
-                                <input id="edit-select-all" v-model="editSelectAll" type="checkbox"
-                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                                    @change="toggleEditSelectAll" />
-                                <label for="edit-select-all" class="ml-3 text-sm font-medium text-gray-900">
-                                    Select All ({{ filteredEditScholars.length }} found)
-                                </label>
-                            </div>
-
-                            <!-- Scholar List (Only shown when searching) -->
-                            <div v-if="!editLoading && editSearchQuery.trim()"
-                                class="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-4">
-                                <div v-if="filteredEditScholars.length === 0" class="text-center py-8 text-gray-500">
-                                    <p>No scholars match your search</p>
-                                </div>
-                                <!-- Available scholars -->
-                                <div v-if="filteredEditScholars.filter(s => !s.selected).length > 0">
-                                    <div v-for="scholar in filteredEditScholars.filter(s => !s.selected)"
-                                        :key="scholar.profile_id"
-                                        class="flex items-center hover:bg-gray-50 p-2 rounded">
-                                        <input :id="`edit-scholar-${scholar.profile_id}`" v-model="scholar.selected"
-                                            type="checkbox"
-                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                                            @change="updateEditSelectedScholars" />
-                                        <label :for="`edit-scholar-${scholar.profile_id}`"
-                                            class="ml-3 text-sm text-gray-700 flex-1 cursor-pointer">
-                                            <div class="font-medium">{{ scholar.first_name }} {{ scholar.middle_name }}
-                                                {{
-                                                    scholar.last_name }}</div>
-                                            <div class="text-gray-500 text-xs">
-                                                <span v-if="scholar.year_level" class="uppercase">{{
-                                                    /^(1st|2nd|3rd|4th)$/i.test(scholar.year_level) ? scholar.year_level
-                                                        + ' YEAR' : scholar.year_level
-                                                }}</span>
-                                                <span v-else class="text-red-500">---</span>
-                                                {{ scholar.course ? ' | ' + scholar.course : '' }}
-                                                {{ scholar.school ? ' | ' + scholar.school : '' }}
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Search instruction (when no search) -->
-                            <div v-if="!editSearchQuery.trim()" class="text-center py-8 text-gray-500">
-                                <p class="text-sm">Search for scholars to add them</p>
-                            </div>
-
-                            <!-- Selected Count -->
-                            <div class="text-sm text-gray-600">
-                                {{ editSelectedCount }} scholar(s) selected
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Step 2: Obligations -->
-                <div v-if="editStep === 2" class="space-y-4">
-                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                        <p class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>Voucher: <span
-                                class="font-semibold">{{ editFormData.voucher_number }}</span></p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- OBR Type -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">OBR Type</label>
-                            <select v-model="editFormData.obr_type"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
-                                <option value="">Select OBR Type</option>
-                                <option value="REGULAR">REGULAR</option>
-                                <option value="FINANCIAL ASSISTANCE">FINANCIAL ASSISTANCE</option>
-                                <option value="REIMBURSEMENT">REIMBURSEMENT</option>
-                            </select>
-                        </div>
-
-                        <!-- Payee Type -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Payee Type</label>
-                            <select v-model="editFormData.payee_type"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
-                                <option value="scholar">Scholar</option>
-                                <option value="school">School</option>
-                                <option value="individual">Individual</option>
-                            </select>
-                        </div>
-
-                        <!-- Payee Name -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Payee Name</label>
-                            <input v-model="editFormData.payee_name" type="text" placeholder="Enter payee name..."
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                        </div>
-
-                        <!-- Payee Address -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Payee Address</label>
-                            <input v-model="editFormData.payee_address" type="text" placeholder="Enter payee address..."
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                        </div>
-
-                        <!-- Responsibility Center -->
-                        <div>
-
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Responsibility Center</label>
-                            <select :key="`rc-${editFormData.id}`" v-model="editFormData.responsibility_center"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
-                                <!-- <option value="">Select Responsibility Center</option> -->
-                                <option v-for="rc in responsibilityCenters" :key="rc.id" :value="rc.code">
-                                    {{ rc.code }}
-                                </option>
-                            </select>
-                        </div>
-
-                        <!-- Particulars Name -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Particulars Name</label>
-                            <input v-model="editFormData.particulars_name" type="text" placeholder="Particular name..."
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                        </div>
-
-                        <!-- Account Code -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Account Code</label>
-                            <input v-model="editFormData.account_code" type="text" placeholder="Account code..."
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                        </div>
-
-                        <!-- Amount -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-                            <div class="relative">
-                                <span class="absolute left-3 top-2.5 text-gray-600 font-medium">₱</span>
-                                <input v-model.number="editFormData.amount" type="number" placeholder="0.00" step="0.01"
-                                    class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Particulars Description Quill Editor -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Particulars (Descriptions)</label>
-                        <div class="border border-gray-300 rounded-lg overflow-hidden">
-                            <QuillEditor v-model:content="editFormData.particulars_description" :toolbar="quillToolbar"
-                                content-type="html" theme="snow" placeholder="Enter particulars description..."
-                                style="height: 200px" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Step 3: Voucher Type & Explanation -->
-                <div v-if="editStep === 3" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-3">Voucher Type</label>
-                        <div class="space-y-3">
-                            <div class="flex items-center">
-                                <input id="edit-disbursements" v-model="editFormData.voucher_type" type="radio"
-                                    value="disbursements"
-                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" />
-                                <label for="edit-disbursements" class="ml-3 text-sm font-medium text-gray-900">
-                                    Disbursement Voucher
-                                </label>
-                            </div>
-                            <div class="flex items-center">
-                                <input id="edit-payroll" v-model="editFormData.voucher_type" type="radio"
-                                    value="payroll"
-                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" />
-                                <label for="edit-payroll" class="ml-3 text-sm font-medium text-gray-900">
-                                    Payroll
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">Explanation</label>
-                        <div class="border border-gray-300 rounded-lg overflow-hidden">
-                            <QuillEditor v-model:content="editFormData.explanation" :toolbar="quillToolbar"
-                                content-type="html" theme="snow" placeholder="Enter explanation..."
-                                style="height: 200px" />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 mb-2">LOS Course (Optional)</label>
-                        <p class="text-xs text-gray-500 mb-2">
-                            Specify a custom course name to display in the Letter of Support. If left empty, the
-                            scholar's
-                            course will be used.
-                        </p>
-                        <input v-model="editFormData.los_course" type="text"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="e.g., Bachelor of Science in Information Technology" />
-                    </div>
-                </div>
-
-                <!-- Step 4: Review & Save -->
-                <div v-if="editStep === 4" class="space-y-4">
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <h4 class="font-medium text-blue-900 mb-3">Edit Summary</h4>
-                        <div class="space-y-2 text-sm text-blue-800">
-                            <div class="flex justify-between">
-                                <span class="font-medium">Voucher #:</span>
-                                <span>{{ editFormData.voucher_number }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="font-medium">Payee:</span>
-                                <span>{{ editFormData.payee_name }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="font-medium">Payee Type:</span>
-                                <span class="capitalize">{{ editFormData.payee_type }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="font-medium">Disbursement Type:</span>
-                                <span>{{ editFormData.voucher_type === 'disbursements' ? 'Disbursement Voucher' :
-                                    (editFormData.voucher_type === 'payroll' ? 'Payroll' : editFormData.voucher_type)
-                                    }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="font-medium">Amount:</span>
-                                <span>₱{{ parseFloat(editFormData.amount || 0).toFixed(2) }}</span>
-                            </div>
-                            <div v-if="editFormData.responsibility_center" class="flex justify-between">
-                                <span class="font-medium">RC:</span>
-                                <span>{{ editFormData.responsibility_center }}</span>
-                            </div>
-                            <div v-if="editFormData.particulars_name" class="flex justify-between">
-                                <span class="font-medium">Particulars:</span>
-                                <span>{{ editFormData.particulars_name }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg">
-                        <p class="text-sm text-amber-900"><i class="pi pi-info-circle mr-2"></i>Please review all
-                            details
-                            before saving</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer with Navigation -->
-            <template #footer>
-                <div class="flex justify-between items-center w-full">
-                    <Button v-if="editStep > 1" label="Previous" severity="secondary" @click="prevEditStep" outlined />
-                    <div v-else></div>
-                    <div class="space-x-2">
-                        <Button label="Cancel" severity="secondary" @click="cancelEdit" outlined />
-                        <Button v-if="editStep < 4" label="Next" severity="primary" @click="nextEditStep" />
-                        <Button v-if="editStep === 4" label="Save" severity="success" @click="saveVoucher"
-                            :loading="editingId !== null" />
-                    </div>
-                </div>
-            </template>
-        </Dialog>
-
-        <!-- Edit Preview Drawer -->
-        <Drawer v-model:visible="showEditPreviewDrawer" header="Edit Preview" :modal="false" position="right"
-            :closable="false" :style="{ width: '350px' }">
-            <div v-if="editFormData" class="space-y-4 text-sm">
-                <!-- Selected Scholars Section -->
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <h4 class="font-medium text-blue-900 mb-2">Selected Scholars ({{ editSelectedCount }})</h4>
-                    <div v-if="editSelectedCount > 0" class="space-y-2 max-h-48 overflow-y-auto">
-                        <div v-for="scholar in editScholars.filter(s => s.selected)" :key="scholar.profile_id"
-                            class="text-xs text-blue-800 py-2 px-2 bg-white rounded border border-blue-100 flex items-center justify-between gap-2">
-                            <span>• {{ scholar.first_name }} {{ scholar.last_name }}</span>
-                            <button @click="removeEditScholar(scholar.profile_id)"
-                                class="text-red-600 hover:text-red-800 font-medium text-xs cursor-pointer"
-                                title="Remove Scholar">
-                                <i class="pi pi-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div v-else class="text-xs text-blue-600">No scholars selected</div>
-                </div>
-
-                <!-- Payee Information Section -->
-                <div v-if="editStep >= 2" class="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <h4 class="font-medium text-green-900 mb-2">Payee Information</h4>
-                    <div class="space-y-1 text-green-800">
-                        <div v-if="editFormData.payee_name" class="text-xs">
-                            <span class="font-medium">Name:</span> {{ editFormData.payee_name }}
-                        </div>
-                        <div v-if="editFormData.payee_type" class="text-xs">
-                            <span class="font-medium">Type:</span> <span class="capitalize">{{ editFormData.payee_type
-                                }}</span>
-                        </div>
-                        <div v-if="editFormData.amount" class="text-xs">
-                            <span class="font-medium">Amount:</span> ₱{{ parseFloat(editFormData.amount).toFixed(2) }}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Obligation Details Section -->
-                <div v-if="editStep >= 2" class="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                    <h4 class="font-medium text-purple-900 mb-2">Obligation Details</h4>
-                    <div class="space-y-1 text-purple-800 text-xs">
-                        <div v-if="editFormData.particulars_name">
-                            <span class="font-medium">Particulars:</span> {{ editFormData.particulars_name }}
-                        </div>
-                        <div v-if="editFormData.account_code">
-                            <span class="font-medium">Account Code:</span> {{ editFormData.account_code }}
-                        </div>
-                        <div v-if="editFormData.responsibility_center">
-                            <span class="font-medium">RC:</span> {{ editFormData.responsibility_center }}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Voucher Type Section -->
-                <div v-if="editStep >= 3" class="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                    <h4 class="font-medium text-orange-900 mb-2">Voucher Configuration</h4>
-                    <div class="space-y-1 text-orange-800 text-xs">
-                        <div>
-                            <span class="font-medium">Disbursement Type:</span> <span>{{ editFormData.voucher_type ===
-                                'disbursements' ? 'Disbursement Voucher' : (editFormData.voucher_type === 'payroll' ?
-                                    'Payroll'
-                                    : editFormData.voucher_type) }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </Drawer>
     </AdminLayout>
 </template>
 

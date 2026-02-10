@@ -1,17 +1,34 @@
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import Dialog from 'primevue/dialog';
 import Drawer from 'primevue/drawer';
 import { QuillEditor } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
+import { useToast } from 'primevue/usetoast';
 import logger from '@/utils/logger';
 
-const emit = defineEmits(['close', 'scholar-selected']);
+const toast = useToast(); const emit = defineEmits(['close', 'scholar-selected']);
+
+// Props for edit mode
+const props = defineProps({
+    mode: {
+        type: String,
+        default: 'create', // 'create' or 'edit'
+        validator: v => ['create', 'edit'].includes(v)
+    },
+    voucherId: {
+        type: [Number, String],
+        default: null
+    },
+    initialData: {
+        type: Object,
+        default: null
+    }
+});
 
 const showModal = ref(true);
-const showPreviewDrawer = ref(false);
 const step = ref(1);
 const selectedScholars = ref([]);
 const searchQuery = ref('');
@@ -24,10 +41,12 @@ const selectedRCParticulars = ref([]);
 
 // Form data for all sections
 const voucherData = reactive({
+    voucher_number: '',
     scholars: [],
     obligations: {
         payee_type: 'scholar', // scholar or school
         payee_id: '',
+        payee_name: '',
         payee_address: '',
         responsibility_center: '',
         account_code: '',
@@ -42,7 +61,8 @@ const voucherData = reactive({
         los_course: '' // Optional course name for Letter of Support
     },
     summary: {
-        notes: ''
+        notes: '',
+        transaction_status: 'pending' // pending, suspended, completed
     }
 });
 
@@ -193,11 +213,12 @@ const updateSelectedCount = () => {
 
 // Get step title
 const getStepTitle = () => {
+    const prefix = props.mode === 'edit' ? 'Edit' : 'Create';
     const titles = [
-        'Select Scholars',
-        'Obligation Request',
-        'Disbursements/Payroll',
-        'Review & Create'
+        `${prefix} - Select Scholars`,
+        `${prefix} - Obligation Request`,
+        `${prefix} - Disbursements/Payroll`,
+        `Review & ${props.mode === 'edit' ? 'Update' : 'Create'}`
     ];
     return titles[step.value - 1];
 };
@@ -220,21 +241,82 @@ const previousStep = () => {
     }
 };
 
+// Load initial data for edit mode
+const loadEditData = async () => {
+    if (props.mode !== 'edit' || !props.initialData) return;
+
+    try {
+        // Populate voucherData with initial data
+        const data = props.initialData;
+
+        // Set voucher number
+        voucherData.voucher_number = data.voucher_number || data.number || '';
+
+        // Set obligations
+        voucherData.obligations.payee_type = data.payee_type || 'scholar';
+        voucherData.obligations.payee_id = data.payee_id || '';
+        voucherData.obligations.payee_name = data.payee_name || '';
+
+        // For school payees, if payee_id is empty but payee_name exists, use payee_name as payee_id
+        if (voucherData.obligations.payee_type === 'school' && !voucherData.obligations.payee_id && voucherData.obligations.payee_name) {
+            voucherData.obligations.payee_id = voucherData.obligations.payee_name;
+        }
+
+        voucherData.obligations.payee_address = data.payee_address || '';
+        voucherData.obligations.responsibility_center = data.responsibility_center || '';
+        voucherData.obligations.account_code = data.account_code || '';
+        voucherData.obligations.particulars_name = data.particulars_name || '';
+        voucherData.obligations.particulars_description = data.particulars_description || '';
+        voucherData.obligations.amount = data.amount || '';
+        voucherData.obligations.obr_type = data.obr_type || '';
+
+        // Set disbursements
+        voucherData.disbursements.type = data.voucher_type || 'disbursements';
+        voucherData.disbursements.explanation = data.explanation || '';
+        voucherData.disbursements.los_course = data.los_course || '';
+
+        // Set summary notes
+        voucherData.summary.notes = data.notes || '';
+        voucherData.summary.transaction_status = data.transaction_status || 'pending';
+
+        // Mark scholars as selected based on scholar_ids
+        await nextTick();
+        if (data.scholar_ids && data.scholar_ids.length > 0) {
+            scholars.value.forEach(s => {
+                s.selected = data.scholar_ids.some(sid =>
+                    (typeof sid === 'object' ? sid.profile_id : sid) === s.profile_id
+                );
+            });
+            updateSelectedCount();
+        }
+
+        logger.info('Edit data loaded successfully');
+    } catch (err) {
+        logger.error('Error loading edit data:', err);
+        error.value = 'Failed to load voucher data';
+    }
+};
+
 // Handle submit (Final step)
 const handleSubmit = async () => {
     loading.value = true;
     error.value = '';
 
     try {
-        // Prepare voucher payload
-        // Get payee name - if scholar, lookup the name; otherwise use the text entered
-        let payeeName = voucherData.obligations.payee_id;
-        if (voucherData.obligations.payee_type === 'scholar') {
-            const selectedScholar = voucherData.scholars.find(s => s.profile_id === voucherData.obligations.payee_id);
-            payeeName = selectedScholar ? `${selectedScholar.first_name} ${selectedScholar.last_name}` : '';
-            // Add & CO. if multiple scholars
-            if (voucherData.scholars.length > 1) {
-                payeeName += ' & CO.';
+        // Build payee_name based on payee_type
+        let payeeName = voucherData.obligations.payee_name;
+
+        if (!payeeName) {
+            if (voucherData.obligations.payee_type === 'scholar' && voucherData.obligations.payee_id) {
+                const selectedScholar = voucherData.scholars.find(s => s.profile_id === voucherData.obligations.payee_id);
+                payeeName = selectedScholar ? `${selectedScholar.first_name} ${selectedScholar.last_name}` : '';
+                // Add & CO. if multiple scholars
+                if (voucherData.scholars.length > 1) {
+                    payeeName += ' & CO.';
+                }
+            } else if (voucherData.obligations.payee_type === 'school') {
+                // For school, payee_id contains the school name/identifier
+                payeeName = voucherData.obligations.payee_id;
             }
         }
 
@@ -243,30 +325,60 @@ const handleSubmit = async () => {
             explanation: voucherData.disbursements.explanation,
             los_course: voucherData.disbursements.los_course,
             payee_type: voucherData.obligations.payee_type,
+            payee_id: voucherData.obligations.payee_id,
             payee_name: payeeName,
             payee_address: voucherData.obligations.payee_address,
             responsibility_center: voucherData.obligations.responsibility_center,
             account_code: voucherData.obligations.account_code,
             particulars_name: voucherData.obligations.particulars_name,
             particulars_description: voucherData.obligations.particulars_description,
-            amount: voucherData.obligations.amount,
+            amount: parseFloat(voucherData.obligations.amount) || 0,
             obr_type: voucherData.obligations.obr_type,
-            scholar_ids: voucherData.scholars.map(s => ({
-                profile_id: s.profile_id,
-                scholarship_record_id: s.id // The active scholarship record ID
-            })),
-            notes: voucherData.summary.notes
+            notes: voucherData.summary.notes,
+            transaction_status: voucherData.summary.transaction_status
         };
 
-        const response = await axios.post('/api/vouchers', payload);
+        // For scholar_ids, send as JSON string if it's an array, otherwise as array/object
+        const selectedScholars = voucherData.scholars.filter(s => s.selected);
+        if (selectedScholars.length > 0) {
+            payload.scholar_ids = selectedScholars.map(s => s.profile_id);
+        } else {
+            payload.scholar_ids = [];
+        }
 
-        if (response.data && response.data.id) {
-            logger.info('Voucher saved successfully:', response.data.id);
+        logger.info(`Submitting ${props.mode} voucher payload:`, payload);
+
+        // Use PUT for edit, POST for create
+        const url = props.mode === 'edit' ? `/api/vouchers/${props.voucherId}` : '/api/vouchers';
+        const method = props.mode === 'edit' ? 'put' : 'post';
+        const response = await axios({
+            method,
+            url,
+            data: payload
+        });
+
+        // Handle different response structures
+        const voucherId = response.data?.id || response.data?.data?.id;
+        if (voucherId) {
+            logger.info(`Voucher ${props.mode === 'edit' ? 'updated' : 'saved'} successfully:`, voucherId);
+            toast.add({
+                severity: 'success',
+                summary: props.mode === 'edit' ? 'Voucher Updated' : 'Voucher Created',
+                detail: `Voucher has been ${props.mode === 'edit' ? 'updated' : 'created'} successfully`,
+                life: 3000
+            });
             emit('scholar-selected', voucherData.scholars, voucherData.disbursements.type);
             closeWizard();
         } else {
-            error.value = 'Failed to save voucher. Please try again.';
-            logger.error('Invalid response from server');
+            logger.error('Response from server:', response.data);
+            error.value = `Failed to ${props.mode === 'edit' ? 'update' : 'save'} voucher. Please try again.`;
+            logger.error('Invalid response from server - no ID returned');
+            toast.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: error.value,
+                life: 5000
+            });
         }
     } catch (err) {
         const errorMessage = err.response?.data?.errors ?
@@ -274,8 +386,14 @@ const handleSubmit = async () => {
                 .map(([key, msgs]) => `${key}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
                 .join('; ')
             : (err.response?.data?.message || err.message);
-        error.value = `Error saving voucher: ${errorMessage}`;
-        logger.error('Error saving voucher:', err);
+        error.value = `Error ${props.mode === 'edit' ? 'updating' : 'saving'} voucher: ${errorMessage}`;
+        logger.error(`Error ${props.mode === 'edit' ? 'updating' : 'saving'} voucher:`, err.response?.data);
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: error.value,
+            life: 5000
+        });
     } finally {
         loading.value = false;
     }
@@ -327,28 +445,6 @@ watch(
     }
 );
 
-// Watch for step changes to auto-show drawer on step 1 and 2, close on other steps
-watch(
-    () => step.value,
-    (newStep) => {
-        if (newStep === 1 || newStep === 2) {
-            showPreviewDrawer.value = true;
-        } else {
-            showPreviewDrawer.value = false;
-        }
-    }
-);
-
-// Prevent drawer from closing when on step 1 or 2
-watch(
-    () => showPreviewDrawer.value,
-    (newVal) => {
-        if ((step.value === 1 || step.value === 2) && !newVal) {
-            showPreviewDrawer.value = true;
-        }
-    }
-);
-
 // Get selected scholar for payee
 const selectedPayeeScholar = computed(() => {
     if (voucherData.obligations.payee_type !== 'scholar' || !voucherData.obligations.payee_id) {
@@ -393,6 +489,8 @@ const closeWizard = () => {
     emit('close');
 };
 
+
+
 // Quill toolbar configuration with text alignment
 const quillToolbar = [
     [{ align: [] }],
@@ -401,7 +499,7 @@ const quillToolbar = [
     ['link']
 ];
 
-onMounted(() => {
+onMounted(async () => {
     // Set up CSRF token for axios
     const page = usePage();
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || page.props.csrf_token;
@@ -409,16 +507,20 @@ onMounted(() => {
         axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
     }
 
-    fetchScholars();
-    fetchResponsibilityCentersAndParticulars();
-    // Open drawer initially for step 1
-    showPreviewDrawer.value = true;
+    // Fetch scholars first and wait for it to complete
+    await fetchScholars();
+    await fetchResponsibilityCentersAndParticulars();
+
+    // Load edit data if in edit mode (only after scholars are loaded)
+    if (props.mode === 'edit') {
+        await loadEditData();
+    }
 });
 </script>
 
 <template>
     <Dialog v-model:visible="showModal" :modal="true" :draggable="true" :closable="true" :header="getStepTitle()"
-        :style="{ width: '90%', maxWidth: '800px' }" @hide="closeWizard" class="p-dialog-scrollable">
+        :style="{ width: '90%', maxWidth: '1100px', zIndex: 1100 }" @hide="closeWizard" class="p-dialog-scrollable">
         <div class="space-y-6">
             <!-- Progress Bar -->
             <div class="space-y-2">
@@ -514,106 +616,117 @@ onMounted(() => {
             <!-- Step 2: Obligations -->
             <div v-if="step === 2" class="space-y-4">
                 <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                    <p class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>A new voucher number will be
-                        generated upon saving</p>
+                    <p v-if="props.mode === 'edit'" class="text-sm text-blue-900"><i
+                            class="pi pi-info-circle mr-2"></i>Voucher Number: <span class="font-semibold">{{
+                                voucherData.voucher_number }}</span></p>
+                    <p v-else class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>A new voucher number
+                        will be generated upon saving</p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- OBR Type -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">OBR Type</label>
-                        <select v-model="voucherData.obligations.obr_type"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
-                            <option value="">Select OBR Type</option>
-                            <option value="REGULAR">REGULAR</option>
-                            <option value="FINANCIAL ASSISTANCE">FINANCIAL ASSISTANCE</option>
-                            <option value="REIMBURSEMENT">REIMBURSEMENT</option>
-                        </select>
-                    </div>
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:items-start">
+                    <!-- Column 1: OBR Type, Payee Type, Payee, Payee Address -->
+                    <div class="space-y-4">
+                        <!-- OBR Type -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">OBR Type</label>
+                            <select v-model="voucherData.obligations.obr_type"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
+                                <option value="">Select OBR Type</option>
+                                <option value="REGULAR">REGULAR</option>
+                                <option value="FINANCIAL ASSISTANCE">FINANCIAL ASSISTANCE</option>
+                                <option value="REIMBURSEMENT">REIMBURSEMENT</option>
+                            </select>
+                        </div>
 
-                    <!-- Payee Type -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Payee Type</label>
-                        <select v-model="voucherData.obligations.payee_type"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
-                            <option value="scholar">Scholar</option>
-                            <option value="school">School</option>
-                        </select>
-                    </div>
+                        <!-- Payee Type -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Payee Type</label>
+                            <select v-model="voucherData.obligations.payee_type"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
+                                <option value="scholar">Scholar</option>
+                                <option value="school">School</option>
+                            </select>
+                        </div>
 
-                    <!-- Payee Selection -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Payee</label>
-                        <!-- Scholar Dropdown -->
-                        <select v-if="voucherData.obligations.payee_type === 'scholar'"
-                            v-model="voucherData.obligations.payee_id"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
-                            <option value="">Select Payee</option>
-                            <option v-for="scholar in voucherData.scholars" :key="scholar.profile_id"
-                                :value="scholar.profile_id">
-                                {{ scholar.first_name }} {{ scholar.last_name }}{{ voucherData.scholars.length > 1 ? ` &
-                                CO.` : '' }}
-                            </option>
-                        </select>
-                        <!-- School Input -->
-                        <input v-else v-model="voucherData.obligations.payee_id" type="text"
-                            placeholder="Enter school name..."
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                    </div>
+                        <!-- Payee Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Payee</label>
+                            <!-- Scholar Dropdown -->
+                            <select v-if="voucherData.obligations.payee_type === 'scholar'"
+                                v-model="voucherData.obligations.payee_id"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
+                                <option value="">Select Payee</option>
+                                <option v-for="scholar in voucherData.scholars" :key="scholar.profile_id"
+                                    :value="scholar.profile_id">
+                                    {{ scholar.first_name }} {{ scholar.last_name }}{{ voucherData.scholars.length > 1 ?
+                                        ` &
+                                    CO.` : '' }}
+                                </option>
+                            </select>
+                            <!-- School Input -->
+                            <input v-else v-model="voucherData.obligations.payee_id" type="text"
+                                placeholder="Enter school name..."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                        </div>
 
-                    <!-- Payee Address -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Payee Address</label>
-                        <input v-model="voucherData.obligations.payee_address" type="text"
-                            placeholder="Enter payee address..."
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                    </div>
-
-                    <!-- Responsibility Center -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Responsibility Center</label>
-                        <select v-model="voucherData.obligations.responsibility_center"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
-                            <option value="">Select Responsibility Center</option>
-                            <option v-for="rc in responsibilityCenters" :key="rc.id" :value="rc.code">
-                                {{ rc.code }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <!-- Particular Selection -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Particulars</label>
-                        <select v-model="voucherData.obligations.account_code"
-                            :disabled="!voucherData.obligations.responsibility_center"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed cursor-pointer">
-                            <option value="">Select Particular</option>
-                            <option v-for="particular in currentParticulars" :key="particular.id"
-                                :value="particular.account_code">
-                                {{ particular.name }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <!-- Account Code Display -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Account Code</label>
-                        <input :value="voucherData.obligations.account_code || '---'" type="text" readonly
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed" />
-                    </div>
-
-                    <!-- Amount -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-2.5 text-gray-600 font-medium">₱</span>
-                            <input v-model="voucherData.obligations.amount" type="number" placeholder="0.00" step="0.01"
-                                class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                        <!-- Payee Address -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Payee Address</label>
+                            <input v-model="voucherData.obligations.payee_address" type="text"
+                                placeholder="Enter payee address..."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                         </div>
                     </div>
 
-                    <!-- Particulars Description Quill Editor -->
-                    <div class="md:col-span-2">
+                    <!-- Column 2: Responsibility Center, Particulars, Account Code, Amount -->
+                    <div class="space-y-4">
+                        <!-- Responsibility Center -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Responsibility Center</label>
+                            <select v-model="voucherData.obligations.responsibility_center"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
+                                <option value="">Select Responsibility Center</option>
+                                <option v-for="rc in responsibilityCenters" :key="rc.id" :value="rc.code">
+                                    {{ rc.code }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Particular Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Particulars</label>
+                            <select v-model="voucherData.obligations.account_code"
+                                :disabled="!voucherData.obligations.responsibility_center"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed cursor-pointer">
+                                <option value="">Select Particular</option>
+                                <option v-for="particular in currentParticulars" :key="particular.id"
+                                    :value="particular.account_code">
+                                    {{ particular.name }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Account Code Display -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Account Code</label>
+                            <input :value="voucherData.obligations.account_code || '---'" type="text" readonly
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed" />
+                        </div>
+
+                        <!-- Amount -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2.5 text-gray-600 font-medium">₱</span>
+                                <input v-model="voucherData.obligations.amount" type="number" placeholder="0.00"
+                                    step="0.01"
+                                    class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Particulars Description (Quill Editor) -->
+                    <div class="lg:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Particulars (Descriptions)</label>
                         <div class="border border-gray-300 rounded-lg overflow-hidden">
                             <QuillEditor v-model:content="voucherData.obligations.particulars_description"
@@ -621,14 +734,10 @@ onMounted(() => {
                                 placeholder="Enter particulars description..." style="height: 200px" />
                         </div>
                     </div>
+
                 </div>
 
-                <!-- Preview Button -->
-                <button v-if="voucherData.obligations.payee_id" @click="showPreviewDrawer = true"
-                    class="w-full mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer flex items-center justify-center gap-2">
-                    <i class="pi pi-eye text-sm"></i>
-                    View Obligation Preview
-                </button>
+
             </div>
 
             <!-- Step 3: Explanation -->
@@ -776,7 +885,7 @@ onMounted(() => {
                 <!-- LOS Course Summary -->
                 <div v-if="voucherData.disbursements.los_course"
                     class="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                    <h4 class="font-medium text-purple-900 mb-2">Letter of Support Course</h4>
+                    <h4 class="font-medium text-purple-900 mb-2">List of Scholars Course</h4>
                     <p class="text-sm text-purple-800">{{ voucherData.disbursements.los_course }}</p>
                 </div>
             </div>
@@ -806,7 +915,7 @@ onMounted(() => {
                             <i class="pi pi-spinner pi-spin"></i>
                             Saving...
                         </span>
-                        <span v-else>Create Voucher</span>
+                        <span v-else>{{ props.mode === 'edit' ? 'Update Voucher' : 'Create Voucher' }}</span>
                     </button>
                 </div>
             </div>
@@ -814,8 +923,8 @@ onMounted(() => {
     </Dialog>
 
     <!-- Obligation Preview Drawer -->
-    <Drawer v-model:visible="showPreviewDrawer" :header="step === 1 ? 'Selected Scholars' : 'Obligation Preview'"
-        :modal="false" position="right" :closable="false" :dismissableMask="false" :style="{ width: '420px' }">
+    <Drawer :visible="true" :header="step === 1 ? 'Selected Scholars' : 'Obligation Preview'" :modal="false"
+        position="right" :closable="false" :dismissableMask="false" :style="{ width: '420px', zIndex: 1000 }">
         <div class="space-y-4">
             <!-- Step 1: Selected Scholars -->
             <div v-if="step === 1" class="space-y-3">
@@ -899,6 +1008,11 @@ onMounted(() => {
 :deep(.p-dialog) {
     border-radius: 0.5rem;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    z-index: 1100 !important;
+}
+
+:deep(.p-dialog-mask) {
+    z-index: 1100 !important;
 }
 
 :deep(.p-dialog-header) {
