@@ -78,34 +78,36 @@
             </div>
 
             @php
-            // Get term and academic year from first scholar's record
-            $term = '';
-            $academicYear = '';
+            // Use optional term and academic year, fallback to first scholar's record if null
+            $term = $term ?? '';
+            $academicYear = $academicYear ?? '';
 
-            if($voucher->scholar_ids && count($voucher->scholar_ids) > 0) {
-            $firstScholar = $voucher->scholar_ids[0];
-            $profileId = is_array($firstScholar) ? $firstScholar['profile_id'] : $firstScholar;
-            $recordId = is_array($firstScholar) ? ($firstScholar['scholarship_record_id'] ?? null) : null;
+            if(empty($term) || empty($academicYear)) {
+                if($voucher->scholar_ids && count($voucher->scholar_ids) > 0) {
+                    $firstScholar = $voucher->scholar_ids[0];
+                    $profileId = is_array($firstScholar) ? $firstScholar['profile_id'] : $firstScholar;
+                    $recordId = is_array($firstScholar) ? ($firstScholar['scholarship_record_id'] ?? null) : null;
 
-            $record = null;
+                    $record = null;
 
-            // First try: Use the provided record ID
-            if($recordId) {
-            $record = \App\Models\ScholarshipRecord::find($recordId);
-            }
+                    // First try: Use the provided record ID
+                    if($recordId) {
+                        $record = \App\Models\ScholarshipRecord::find($recordId);
+                    }
 
-            // Second try: Get latest active/non-soft-deleted record for this profile
-            if(!$record && $profileId) {
-            $record = \App\Models\ScholarshipRecord::where('profile_id', $profileId)
-            ->whereNull('deleted_at')
-            ->orderBy('updated_at', 'desc')
-            ->first();
-            }
+                    // Second try: Get latest active/non-soft-deleted record for this profile
+                    if(!$record && $profileId) {
+                        $record = \App\Models\ScholarshipRecord::where('profile_id', $profileId)
+                            ->whereNull('deleted_at')
+                            ->orderBy('updated_at', 'desc')
+                            ->first();
+                    }
 
-            if($record) {
-            $term = $record->term ?? '';
-            $academicYear = $record->academic_year ?? '';
-            }
+                    if($record) {
+                        $term = $term ?? ($record->term ?? '');
+                        $academicYear = $academicYear ?? ($record->academic_year ?? '');
+                    }
+                }
             }
             @endphp
 
