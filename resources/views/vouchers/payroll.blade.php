@@ -112,7 +112,7 @@
             <!-- Payroll Title Row -->
             <div class="row border-none">
                 <div class="col col-grow col-left col-vcenter">
-                    <span class="font-bold" style="font-size:10pt">FOR ACADEMIC YEAR {{ $academicYear }} SEM {{ $term }}</span>
+                    <span class="font-bold" style="font-size:10pt">FOR ACADEMIC YEAR {{ explode(' ', $term)[0] ?? $term }} {{ $academicYear }} </span>
                 </div>
             </div>
 
