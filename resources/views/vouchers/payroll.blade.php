@@ -78,11 +78,12 @@
             </div>
 
             @php
-            // Use optional term and academic year, fallback to first scholar's record if null
-            $term = $term ?? '';
-            $academicYear = $academicYear ?? '';
+            // Get term and academic year from voucher, fallback to first scholar's record if null
+            $term = $voucher->semester ?? null;
+            $academicYear = $voucher->academic_year ?? null;
 
-            if(empty($term) || empty($academicYear)) {
+            // If not available in voucher, fetch from first scholar's record
+            if(!$term || !$academicYear) {
                 if($voucher->scholar_ids && count($voucher->scholar_ids) > 0) {
                     $firstScholar = $voucher->scholar_ids[0];
                     $profileId = is_array($firstScholar) ? $firstScholar['profile_id'] : $firstScholar;
@@ -104,8 +105,8 @@
                     }
 
                     if($record) {
-                        $term = $term ?? ($record->term ?? '');
-                        $academicYear = $academicYear ?? ($record->academic_year ?? '');
+                        if(!$term) $term = $record->term ?? '';
+                        if(!$academicYear) $academicYear = $record->academic_year ?? '';
                     }
                 }
             }
