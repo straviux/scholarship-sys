@@ -41,19 +41,6 @@ const qrCountdownInterval = ref(null);
 const photoPreviewUrl = ref(null);
 const fileInput = ref(null);
 
-// Image editor state
-const showImageEditor = ref(false);
-const selectedImageFile = ref(null);
-const editorCanvas = ref(null);
-const editorImage = ref(null);
-const imageScale = ref(1);
-const imagePosition = ref({ x: 0, y: 0 });
-const isDragging = ref(false);
-const dragStart = ref({ x: 0, y: 0 });
-const canvasSize = 300; // Square canvas for profile photo
-const minScale = 0.5;
-const maxScale = 3;
-
 // Forms
 const changePasswordForm = useForm({
     current_password: '',
@@ -63,10 +50,6 @@ const changePasswordForm = useForm({
 
 const editProfileForm = useForm({
     name: props.reportData?.user_name || '',
-});
-
-const profilePhotoForm = useForm({
-    photo: null,
 });
 
 // Computed properties for statistics
@@ -182,8 +165,6 @@ const submitProfileUpdate = () => {
 
 // Profile photo methods
 const openProfilePhotoModal = () => {
-    profilePhotoForm.photo = null;
-    profilePhotoForm.clearErrors();
     showProfilePhotoModal.value = true;
     logger.log('Photo modal opened');
 };
@@ -204,87 +185,10 @@ const closeProfilePhotoModal = () => {
         URL.revokeObjectURL(photoPreviewUrl.value);
         photoPreviewUrl.value = null;
     }
-    // Clean up image editor state
-    showImageEditor.value = false;
-    if (selectedImageFile.value) {
-        selectedImageFile.value = null;
-    }
-    if (editorImage.value) {
-        URL.revokeObjectURL(editorImage.value.src);
-        editorImage.value = null;
-    }
     // Clear file input
     if (fileInput.value) {
         fileInput.value.value = '';
     }
-    profilePhotoForm.reset();
-    profilePhotoForm.clearErrors();
-};
-
-const onPhotoSelect = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        selectedImageFile.value = file;
-        // Create preview URL for editor
-        const imageUrl = URL.createObjectURL(file);
-
-        // Initialize image editor
-        const img = new Image();
-        img.onload = () => {
-            editorImage.value = img;
-            // Calculate initial scale to fit image in canvas
-            const scaleX = canvasSize / img.width;
-            const scaleY = canvasSize / img.height;
-            imageScale.value = Math.min(scaleX, scaleY);
-
-            // Center the image
-            imagePosition.value = {
-                x: (canvasSize - img.width * imageScale.value) / 2,
-                y: (canvasSize - img.height * imageScale.value) / 2
-            };
-
-            showImageEditor.value = true;
-
-            // Use nextTick to ensure the canvas is rendered before drawing
-            nextTick(() => {
-                // Add a small delay to ensure canvas is fully ready
-                setTimeout(() => {
-                    drawCanvas();
-                }, 100);
-            });
-        };
-        img.src = imageUrl;
-
-        logger.log('Photo selected for editing:', file.name, file.size, file.type);
-    } else {
-        logger.error('No file selected');
-    }
-};
-
-const submitPhotoUpdate = () => {
-    logger.log('Submit photo update called');
-    logger.log('Photo file:', profilePhotoForm.photo);
-
-    if (!profilePhotoForm.photo) {
-        toast.error('Please select a photo first!');
-        return;
-    }
-
-    logger.log('Starting photo upload...');
-    profilePhotoForm.post(route('profile.photo.update'), {
-        preserveScroll: true,
-        onSuccess: () => {
-            logger.log('Photo upload successful');
-            closeProfilePhotoModal();
-            toast.success('Profile photo updated successfully!');
-            // Refresh the page to show updated data using Inertia
-            router.reload({ only: ['reportData'] });
-        },
-        onError: (errors) => {
-            logger.error('Photo upload failed:', errors);
-            toast.error('Photo upload failed. Please try again.');
-        }
-    });
 };
 
 // QR Code methods
@@ -374,155 +278,6 @@ const copyToClipboard = async (text) => {
     }
 };
 
-// Image Editor Functions
-const drawCanvas = () => {
-    if (!editorCanvas.value || !editorImage.value) return;
-
-    const canvas = editorCanvas.value;
-    const ctx = canvas.getContext('2d', { alpha: true });
-    const radius = canvasSize / 2;
-    const centerX = radius;
-    const centerY = radius;
-
-    // Enable anti-aliasing for smoother edges
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvasSize, canvasSize);
-
-    // Save context for clipping
-    ctx.save();
-
-    // Create circular clipping path with anti-aliasing
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-    ctx.closePath();
-    ctx.clip();
-
-    // Fill with white background
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvasSize, canvasSize);
-
-    // Draw image within the circular clip
-    ctx.drawImage(
-        editorImage.value,
-        imagePosition.value.x,
-        imagePosition.value.y,
-        editorImage.value.width * imageScale.value,
-        editorImage.value.height * imageScale.value
-    );
-
-    // Restore context
-    ctx.restore();
-
-    // Draw a smooth anti-aliased border on top
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius - 0.5, 0, 2 * Math.PI);
-    ctx.strokeStyle = 'rgba(229, 231, 235, 0.5)'; // Light gray border
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.restore();
-};
-
-const handleZoomIn = () => {
-    if (imageScale.value < maxScale) {
-        imageScale.value = Math.min(imageScale.value * 1.1, maxScale);
-        drawCanvas();
-    }
-};
-
-const handleZoomOut = () => {
-    if (imageScale.value > minScale) {
-        imageScale.value = Math.max(imageScale.value / 1.1, minScale);
-        drawCanvas();
-    }
-};
-
-const handleMouseDown = (event) => {
-    isDragging.value = true;
-    const rect = editorCanvas.value.getBoundingClientRect();
-    dragStart.value = {
-        x: event.clientX - rect.left - imagePosition.value.x,
-        y: event.clientY - rect.top - imagePosition.value.y
-    };
-};
-
-const handleMouseMove = (event) => {
-    if (!isDragging.value) return;
-
-    const rect = editorCanvas.value.getBoundingClientRect();
-    imagePosition.value = {
-        x: event.clientX - rect.left - dragStart.value.x,
-        y: event.clientY - rect.top - dragStart.value.y
-    };
-
-    drawCanvas();
-};
-
-const handleMouseUp = () => {
-    isDragging.value = false;
-};
-
-const handleWheel = (event) => {
-    event.preventDefault();
-
-    if (event.deltaY < 0) {
-        handleZoomIn();
-    } else {
-        handleZoomOut();
-    }
-};
-
-const cancelImageEdit = () => {
-    showImageEditor.value = false;
-    // Clean up
-    if (selectedImageFile.value) {
-        selectedImageFile.value = null;
-    }
-    if (editorImage.value) {
-        URL.revokeObjectURL(editorImage.value.src);
-        editorImage.value = null;
-    }
-    // Clear file input
-    if (fileInput.value) {
-        fileInput.value.value = '';
-    }
-};
-
-const confirmImageEdit = () => {
-    if (!editorCanvas.value) return;
-
-    // Convert canvas to blob
-    editorCanvas.value.toBlob((blob) => {
-        if (blob) {
-            // Create a new file from the cropped image
-            const croppedFile = new File([blob], selectedImageFile.value.name, {
-                type: 'image/jpeg',
-                lastModified: Date.now()
-            });
-
-            // Set the cropped image as the photo to upload
-            profilePhotoForm.photo = croppedFile;
-
-            // Create preview URL
-            photoPreviewUrl.value = URL.createObjectURL(blob);
-
-            // Close editor
-            showImageEditor.value = false;
-
-            // Clean up editor resources
-            if (editorImage.value) {
-                URL.revokeObjectURL(editorImage.value.src);
-                editorImage.value = null;
-            }
-
-            logger.log('Image edited and ready for upload');
-        }
-    }, 'image/jpeg', 0.9);
-};
-
 // Calendar methods
 const openEncodingCalendarModal = async () => {
     showEncodingCalendarModal.value = true;
@@ -606,10 +361,10 @@ const loadRecordsSummaryForMonth = async () => {
 
 <template>
 
-    <Head title="User Profile" />
+    <Head title="My Reports" />
     <AdminLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">User Profile</h2>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">My Reports</h2>
         </template>
 
         <div class="py-12">
@@ -971,42 +726,14 @@ const loadRecordsSummaryForMonth = async () => {
                         </button>
                     </div>
 
-                    <!-- Divider -->
-                    <div class="flex items-center gap-2">
-                        <div class="flex-1 border-t border-gray-300"></div>
-                        <span class="text-xs text-gray-500">OR</span>
-                        <div class="flex-1 border-t border-gray-300"></div>
-                    </div>
-
-                    <!-- Custom File Input -->
-                    <div class="w-full">
-                        <input type="file" accept="image/*" @change="onPhotoSelect" ref="fileInput" class="hidden"
-                            id="photo-input" />
-                        <label for="photo-input"
-                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">
-                            Choose Photo
-                        </label>
-                    </div>
-
-                    <!-- Photo Preview -->
-                    <div v-if="photoPreviewUrl" class="mt-4">
-                        <p class="text-sm text-gray-600 mb-2">Preview:</p>
-                        <div class="w-32 h-32 mx-auto border-2 border-gray-300 rounded-full overflow-hidden">
-                            <img :src="photoPreviewUrl" alt="Photo preview" class="w-full h-full object-cover" />
-                        </div>
-                    </div>
-
-                    <small v-if="profilePhotoForm.errors?.photo" class="text-red-500">
-                        {{ profilePhotoForm.errors.photo }}
-                    </small>
+                    <p class="text-xs text-gray-500 text-center">For other upload options, go to Settings</p>
                 </div>
             </div>
 
             <template #footer>
                 <div class="flex justify-end gap-2">
                     <Button label="Cancel" severity="secondary" @click="closeProfilePhotoModal" outlined />
-                    <Button label="Upload Photo" @click="submitPhotoUpdate" :loading="profilePhotoForm.processing"
-                        :disabled="!profilePhotoForm.photo || profilePhotoForm.processing" />
+                    <Button label="Go to Settings" severity="primary" @click="closeProfilePhotoModal" />
                 </div>
             </template>
         </Dialog>
@@ -1083,41 +810,6 @@ const loadRecordsSummaryForMonth = async () => {
 
             <template #footer>
                 <Button label="Close" severity="secondary" @click="showQrModal = false" />
-            </template>
-        </Dialog>
-
-        <!-- Image Editor Dialog -->
-        <Dialog v-model:visible="showImageEditor" modal header="Edit Photo" class="w-auto">
-            <div class="space-y-4">
-                <div class="text-center">
-                    <p class="text-sm text-gray-600 mb-4">Zoom and drag to position your photo</p>
-
-                    <!-- Canvas Editor -->
-                    <div class="relative inline-block border-2 border-gray-600 rounded-full overflow-hidden">
-                        <canvas ref="editorCanvas" :width="canvasSize" :height="canvasSize" class="cursor-move block"
-                            @mousedown="handleMouseDown" @mousemove="handleMouseMove" @mouseup="handleMouseUp"
-                            @mouseleave="handleMouseUp" @wheel="handleWheel"></canvas>
-                    </div>
-
-                    <!-- Zoom Controls -->
-                    <div class="flex justify-center gap-2 mt-4">
-                        <Button label="Zoom Out" icon="pi pi-minus" @click="handleZoomOut" size="small"
-                            :disabled="imageScale <= minScale" outlined />
-                        <Button label="Zoom In" icon="pi pi-plus" @click="handleZoomIn" size="small"
-                            :disabled="imageScale >= maxScale" outlined />
-                    </div>
-
-                    <p class="text-xs text-gray-500 mt-2">
-                        Use mouse wheel to zoom, drag to move the image
-                    </p>
-                </div>
-            </div>
-
-            <template #footer>
-                <div class="flex justify-end gap-2">
-                    <Button label="Cancel" severity="secondary" @click="cancelImageEdit" outlined />
-                    <Button label="Use This Photo" @click="confirmImageEdit" />
-                </div>
             </template>
         </Dialog>
 

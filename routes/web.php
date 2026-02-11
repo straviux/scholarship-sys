@@ -24,6 +24,9 @@ use App\Http\Controllers\DataExportController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\MaintenanceController;
+use App\Http\Controllers\User\ProfileController as UserProfileController;
+use App\Http\Controllers\User\SettingsController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -48,15 +51,22 @@ Route::middleware(['auth'])->post('/test-add-applicants', [WaitingListController
 Broadcast::routes(['middleware' => ['auth']]);
 
 // This file is part of the routes/web.php file for the Laravel application.
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'maintenance'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/home', [HomeController::class, 'index'])->name('home.index');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/help', [HelpController::class, 'index'])->name('help.index');
+
+    // User Profile, Settings, and Activity Routes
+    Route::get('/user/profile', [UserProfileController::class, 'show'])->name('user.profile');
+    Route::get('/user/settings', [SettingsController::class, 'show'])->name('user.settings');
+    Route::post('/user/settings/password', [SettingsController::class, 'updatePassword'])->name('user.settings.password');
+    Route::post('/user/settings/profile', [SettingsController::class, 'updateProfile'])->name('user.settings.profile');
+    Route::post('/user/settings/photo', [SettingsController::class, 'updatePhoto'])->name('user.settings.photo');
 });
 
 
-Route::middleware(['auth', 'check-roles:administrator|program_manager'])->group(function () {
+Route::middleware(['auth', 'check-roles:administrator|program_manager', 'maintenance'])->group(function () {
     // Unified Access Control Page
     Route::get('/access-control', [AccessControlController::class, 'index'])->name('access-control.index');
 
@@ -93,6 +103,9 @@ Route::middleware(['auth', 'check-roles:administrator|program_manager'])->group(
     Route::delete('/admin/profiles/{id}/permanently-delete', [AdminController::class, 'permanentlyDeleteProfile'])->name('admin.profiles.permanently-delete');
     Route::post('/admin/scholarship-records/{id}/restore', [AdminController::class, 'restoreRecord'])->name('admin.records.restore');
     Route::delete('/admin/scholarship-records/{id}/permanently-delete', [AdminController::class, 'permanentlyDeleteRecord'])->name('admin.records.permanently-delete');
+
+    // Maintenance Management Routes - Administrator Only
+    Route::inertia('/admin/maintenance', 'Admin/Maintenance/Index')->name('admin.maintenance.index');
 
     // Role Permissions Routes - Administrator Only
     Route::get('/permission-management', [PermissionManagementController::class, 'index'])->name('permissions.management');
@@ -145,9 +158,9 @@ Route::middleware(['auth'])->group(function () {
     })->name('system-updates.show');
 });
 
-// User Profile Route - Display user account information
+// User Reports Route - Display user encoded data summary
 Route::middleware(['auth'])->group(function () {
-    Route::get('/user/profile', [ProfileController::class, 'getUserSummaryReport'])->name('user.profile');
+    Route::get('/user/reports', [ProfileController::class, 'getUserSummaryReport'])->name('user.reports');
     Route::put('/user/profile', [ProfileController::class, 'updateProfile'])->name('user.profile.update');
     Route::post('/user/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
     Route::post('/user/profile/generate-qr', [ProfileController::class, 'generateQrCode'])->name('profile.generate-qr');

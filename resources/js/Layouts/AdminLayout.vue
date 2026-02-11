@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, provide } from "vue";
 import SidebarLink from "@/Components/ui/navigation/SidebarLink.vue";
 import NotificationDropdown from "@/Components/ui/navigation/NotificationDropdown.vue";
 import ActivityLogsDropdown from "@/Components/ui/navigation/ActivityLogsDropdown.vue";
+import MaintenanceAlertModal from "@/Components/MaintenanceAlertModal.vue";
 import { Link, usePage } from "@inertiajs/vue3";
 import { usePermission } from "@/composable/permissions";
 import logger from '@/utils/logger';
@@ -119,6 +120,7 @@ onUnmounted(() => {
 <template>
     <Toast />
     <ConfirmDialog></ConfirmDialog>
+    <MaintenanceAlertModal />
     <div class="w-full h-full flex">
         <!-- Floating Sidebar -->
         <aside
@@ -336,6 +338,14 @@ onUnmounted(() => {
                                         <span class="-mr-1 font-medium indent-3">Manage Updates</span>
                                     </SidebarLink>
                                 </li>
+                                <li>
+                                    <SidebarLink v-if="hasRole('administrator')"
+                                        :href="route('admin.maintenance.index')"
+                                        :active="route().current('admin.maintenance.index')">
+                                        <i class="pi pi-cog mr-2"></i>
+                                        <span class="-mr-1 font-medium indent-3">Maintenance</span>
+                                    </SidebarLink>
+                                </li>
                             </ul>
                         </details>
                     </li>
@@ -468,6 +478,14 @@ onUnmounted(() => {
                             <span class="text-xs">manage</span>
                         </SidebarLink>
                     </li>
+                    <li v-if="hasRole('administrator')">
+                        <SidebarLink :href="route('admin.maintenance.index')"
+                            :active="route().current('admin.maintenance.index')"
+                            class="flex flex-col justify-center text-center">
+                            <i class="pi pi-cog text-xl"></i>
+                            <span class="text-xs">maint</span>
+                        </SidebarLink>
+                    </li>
                 </ul>
             </div>
         </aside>
@@ -541,16 +559,16 @@ onUnmounted(() => {
 
                                 <!-- Menu Items -->
                                 <div class="py-2">
-                                    <Link :href="route('user.profile')"
+                                    <Link :href="route('user.reports')"
                                         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
-                                        <i class="pi pi-user text-gray-600"></i>
+                                        <i class="pi pi-file-pdf text-gray-600"></i>
                                         <div class="flex-1">
-                                            <span class="text-sm font-medium text-gray-900">Profile</span>
-                                            <p class="text-xs text-gray-500">View and edit your profile</p>
+                                            <span class="text-sm font-medium text-gray-900">My Reports</span>
+                                            <p class="text-xs text-gray-500">View your generated reports</p>
                                         </div>
                                     </Link>
 
-                                    <Link :href="route('user.profile')"
+                                    <Link :href="route('user.settings')"
                                         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
                                         <i class="pi pi-cog text-gray-600"></i>
                                         <div class="flex-1">
@@ -559,7 +577,7 @@ onUnmounted(() => {
                                         </div>
                                     </Link>
 
-                                    <Link :href="route('user.profile')"
+                                    <Link :href="route('user-activity-logs.index')"
                                         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
                                         <i class="pi pi-chart-line text-gray-600"></i>
                                         <div class="flex-1">

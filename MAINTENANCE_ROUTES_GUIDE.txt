@@ -1,0 +1,17 @@
+<?php
+
+// Add these routes to your routes/api.php file
+
+use App\Http\Controllers\Admin\MaintenanceController;
+
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    // Maintenance Management Routes
+    Route::prefix('admin/maintenance')->group(function () {
+        Route::get('/', [MaintenanceController::class, 'index']);
+        Route::get('/status', [MaintenanceController::class, 'getStatus']);
+        Route::get('/list', [MaintenanceController::class, 'list']);
+        Route::post('/', [MaintenanceController::class, 'store']);
+        Route::post('/activate', [MaintenanceController::class, 'activate']);
+        Route::post('/deactivate', [MaintenanceController::class, 'deactivate']);
+    });
+});

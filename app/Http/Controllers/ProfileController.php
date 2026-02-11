@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\ScholarshipRecord;
 use App\Models\ScholarshipProfile;
+use App\Models\Voucher;
 use App\Models\ScholarshipProgram;
 use App\Models\Course;
 use App\Models\School;
@@ -441,13 +442,21 @@ class ProfileController extends Controller
         // Defensive check: ensure user is authenticated
         if (!$user) {
             Log::warning('User is not authenticated in getUserSummaryReport');
-            return Inertia::render('User/UserProfile', [
+            return Inertia::render('User/Reports', [
                 'status' => 'Error: User not authenticated',
                 'error' => 'User is not properly authenticated'
             ]);
         }
 
-        // Get all scholarship records created by user
+        // Fetch from two independent tables
+        $profiles = ScholarshipProfile::where('scholarship_profiles.created_by', $user->id)
+            ->leftJoin('scholarship_records', 'scholarship_records.profile_id', '=', 'scholarship_profiles.profile_id')
+            ->select('scholarship_profiles.*', 'scholarship_records.unified_status')
+            ->distinct()
+            ->get();
+        $vouchers = Voucher::where('created_by', $user->id)->get();
+
+        // Get all scholarship records created by user (for legacy stats)
         $allRecords = ScholarshipRecord::where('created_by', $user->id)
             ->with(['profile', 'program', 'course', 'school'])
             ->get();
@@ -636,6 +645,44 @@ class ProfileController extends Controller
             ];
         }, array_keys($schoolBreakdownCurrentMonth), array_values($schoolBreakdownCurrentMonth));
 
+        // Build profiles array - from ScholarshipProfile
+        $profilesArray = $profiles->map(function ($profile) {
+            // Format name as: lastname, firstname middlename
+            $firstName = $profile->first_name ?? '';
+            $middleName = $profile->middle_name ?? '';
+            $lastName = $profile->last_name ?? '';
+
+            $nameFormatted = $lastName;
+            if ($firstName || $middleName) {
+                $nameFormatted .= ', ' . trim("$firstName $middleName");
+            }
+            $profileName = !empty($lastName) ? $nameFormatted : 'Unknown';
+
+            // Use unified_status from related record, fallback to is_active
+            $status = $profile->unified_status ?? ($profile->is_active ? 'active' : 'inactive');
+
+            return [
+                'profile_name' => $profileName,
+                'status' => $status,
+                'date_filed' => $profile->date_filed ? \Carbon\Carbon::parse($profile->date_filed)->toDateTimeString() : null,
+                'created_at' => $profile->created_at->toDateTimeString(),
+                'created_by' => $profile->created_by,
+            ];
+        })->values();
+
+        // Build vouchers array - from Voucher table
+        $vouchersArray = $vouchers->map(function ($voucher) {
+            return [
+                'voucher_id' => $voucher->id,
+                'voucher_number' => $voucher->voucher_number,
+                'scholar_ids' => $voucher->scholar_ids,
+                'amount' => $voucher->amount,
+                'transaction_status' => $voucher->transaction_status,
+                'created_at' => $voucher->created_at->toDateTimeString(),
+                'created_by' => $voucher->created_by,
+            ];
+        })->values();
+
         // Ultra-minimal profile - just basic user info
         $reportData = [
             'user_summary' => [
@@ -669,11 +716,18 @@ class ProfileController extends Controller
             'user_id' => $user->id,
             'user_name' => $user->name,
             'profile_photo_url' => $user->profile_photo_url,
-            'has_profile_photo' => $user->hasProfilePhoto()
+            'has_profile_photo' => $user->hasProfilePhoto(),
+            // Add detailed records for reports
+            'profiles' => $profilesArray->toArray(),
+            'vouchers' => $vouchersArray->toArray()
         ];
 
-        return Inertia::render('User/UserProfile', [
-            'reportData' => $reportData
+        return Inertia::render('User/Reports', [
+            'reportData' => $reportData,
+            'stats' => [
+                'total_profiles' => $profilesArray->count(),
+                'total_vouchers' => $vouchersArray->count(),
+            ]
         ]);
     }
 

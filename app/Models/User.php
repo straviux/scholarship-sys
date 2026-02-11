@@ -22,11 +22,14 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'username',
+        'email',
+        'phone',
         'password',
         'office_designation',
         'profile_photo',
         'upload_token',
         'upload_token_expires_at',
+        'preferences',
     ];
 
     /**
@@ -50,6 +53,7 @@ class User extends Authenticatable
             'user_verified_at' => 'datetime',
             'password' => 'hashed',
             'upload_token_expires_at' => 'datetime',
+            'preferences' => 'array',
         ];
     }
 
@@ -155,5 +159,13 @@ class User extends Authenticatable
         $qrCode = QrCode::size($size)->format('png')->generate($url);
 
         return 'data:image/png;base64,' . base64_encode($qrCode);
+    }
+
+    /**
+     * Get the user activities for this user.
+     */
+    public function activities()
+    {
+        return $this->hasMany(UserActivity::class);
     }
 }

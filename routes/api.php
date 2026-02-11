@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ScholarshipApiController;
 use App\Http\Controllers\Api\VoucherController;
+use App\Http\Controllers\Admin\MaintenanceController;
 
 // Voucher endpoints - use web middleware for session-based auth
 Route::middleware(['web'])->group(function () {
@@ -41,4 +42,18 @@ Route::middleware('api')->group(function () {
 
     // Get single scholarship by profile_id
     Route::get('/scholarships/profile/{profileId}', [ScholarshipApiController::class, 'getScholarshipByProfile']);
+
+    // Public maintenance status endpoint (for alerts and modals)
+    Route::get('/maintenance/status', [MaintenanceController::class, 'getPublicStatus']);
+});
+
+// Maintenance Management Routes (admin only)
+Route::middleware(['web', 'auth', 'admin-role'])->group(function () {
+    Route::prefix('admin/maintenance')->group(function () {
+        Route::get('/status', [MaintenanceController::class, 'getStatus']);
+        Route::get('/list', [MaintenanceController::class, 'list']);
+        Route::post('/', [MaintenanceController::class, 'store']);
+        Route::post('/activate', [MaintenanceController::class, 'activate']);
+        Route::post('/deactivate', [MaintenanceController::class, 'deactivate']);
+    });
 });
