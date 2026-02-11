@@ -178,8 +178,15 @@
                         }
 
                         if($profile) {
+                        $scholarName = $profile->last_name . ', ' . $profile->first_name;
+                        if($profile->middle_name) {
+                        $scholarName .= ' ' . $profile->middle_name;
+                        }
+                        if($profile->ext) {
+                        $scholarName .= ' ' . $profile->ext;
+                        }
                         $scholars[] = [
-                        'name' => $profile->first_name . ' ' . $profile->last_name,
+                        'name' => $scholarName,
                         'year' => $year,
                         'amount' => $voucher->amount
                         ];

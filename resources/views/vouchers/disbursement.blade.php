@@ -392,9 +392,17 @@
                     }, $scholarIds);
 
                     $scholars = \App\Models\ScholarshipProfile::whereIn('profile_id', $profileIds)->get();
-                    $scholarName = $scholars && count($scholars) > 0
-                    ? ($scholars[0]->first_name ?? '') . ' ' . ($scholars[0]->last_name ?? '')
-                    : '_______________';
+                    if($scholars && count($scholars) > 0) {
+                        $scholarName = ($scholars[0]->last_name ?? '') . ', ' . ($scholars[0]->first_name ?? '');
+                        if($scholars[0]->middle_name) {
+                            $scholarName .= ' ' . $scholars[0]->middle_name;
+                        }
+                        if($scholars[0]->ext) {
+                            $scholarName .= ' ' . $scholars[0]->ext;
+                        }
+                    } else {
+                        $scholarName = '_______________';
+                    }
                     } else {
                     $scholarName = '_______________';
                     }
