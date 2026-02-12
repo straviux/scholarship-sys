@@ -651,9 +651,9 @@
 
         <!-- View Attachment Modal -->
         <Dialog v-model:visible="showViewerModal" modal :header="viewerAttachment?.file_name"
-            :style="{ width: '80vw', maxWidth: '1200px' }" :maximizable="true">
+            :style="{ width: '90vw', height: '100vh' }" :maximizable="true">
             <div class="flex items-center justify-center bg-gray-100 rounded relative overflow-hidden"
-                style="min-height: 500px;">
+                style="min-height: 80vh;">
                 <!-- PDF Viewer -->
                 <iframe v-if="viewerAttachment && viewerAttachment.file_type?.includes('pdf')"
                     :src="getAttachmentUrl(viewerAttachment)" class="w-full h-full rounded" style="min-height: 600px;"
@@ -694,8 +694,10 @@
             </div>
 
             <template #footer>
-                <Button label="Download" icon="pi pi-download" @click="downloadAttachment(viewerAttachment)" />
-                <Button label="Close" severity="secondary" @click="showViewerModal = false" />
+                <div class="pt-4 gap-4 flex justify-end">
+                    <Button label="Download" icon="pi pi-download" @click="downloadAttachment(viewerAttachment)" />
+                    <Button label="Close" severity="secondary" @click="showViewerModal = false" />
+                </div>
             </template>
         </Dialog>
 
