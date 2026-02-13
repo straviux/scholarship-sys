@@ -314,8 +314,8 @@ onUnmounted(() => {
 
             <!-- Message -->
             <p class="text-gray-300 text-lg mb-6 leading-relaxed w-full max-w-sm mx-auto">
-                {{ maintenanceStatus?.announcement?.message || 'We are performing scheduled maintenance. Please try
-                again later.' }}
+                {{ maintenanceStatus?.announcement?.message || `We are performing scheduled maintenance. Please try
+                again later.` }}
             </p>
 
             <!-- Status Badge -->
@@ -454,7 +454,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </SidebarLink>
                         </li>
 
@@ -463,7 +463,7 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </div>
                         </li>
                     </template>
