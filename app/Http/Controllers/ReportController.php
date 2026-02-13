@@ -236,7 +236,7 @@ class ReportController extends Controller
         $enableJpmHighlighting = $request->filled('enable_jpm_highlighting') && in_array($request->enable_jpm_highlighting, [1, '1', true, 'true'], true);
         $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only !== '' && in_array($request->show_jpm_only, [1, '1', true, 'true'], true);
         $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm !== '' && in_array($request->hide_jpm, [1, '1', true, 'true'], true);
-        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && $enableJpmHighlighting && !$showJpmOnly && !$hideJpm;
+        $canViewJpm = $request->user() && $request->user()->can('jpm.view') && $enableJpmHighlighting && !$showJpmOnly && !$hideJpm;
 
         // Handle grouping based on group_by parameter
         $groupBy = $request->input('group_by', 'none');
@@ -483,7 +483,7 @@ class ReportController extends Controller
         // Disable JPM highlighting when show_jpm_only or hide_jpm filter is active
         $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
         $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm;
-        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && !$showJpmOnly && !$hideJpm;
+        $canViewJpm = $request->user() && $request->user()->can('jpm.view') && !$showJpmOnly && !$hideJpm;
 
         // Generate filename with current date and time
         $currentDateTime = \Carbon\Carbon::now()->format('Y-m-d_H-i-s');
@@ -693,7 +693,7 @@ class ReportController extends Controller
         $enableJpmHighlighting = $request->filled('enable_jpm_highlighting') && in_array($request->enable_jpm_highlighting, [1, '1', true, 'true'], true);
         $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only !== '' && in_array($request->show_jpm_only, [1, '1', true, 'true'], true);
         $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm !== '' && in_array($request->hide_jpm, [1, '1', true, 'true'], true);
-        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && $enableJpmHighlighting && !$showJpmOnly && !$hideJpm;
+        $canViewJpm = $request->user() && $request->user()->can('jpm.view') && $enableJpmHighlighting && !$showJpmOnly && !$hideJpm;
 
         // Handle grouping
         $groupBy = $request->input('group_by', 'none');
@@ -974,7 +974,7 @@ class ReportController extends Controller
         // JPM highlighting permission
         $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
         $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm;
-        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && !$showJpmOnly && !$hideJpm;
+        $canViewJpm = $request->user() && $request->user()->can('jpm.view') && !$showJpmOnly && !$hideJpm;
 
         // Generate filename with current date and time
         $currentDateTime = \Carbon\Carbon::now()->format('Y-m-d_H-i-s');
@@ -1011,7 +1011,7 @@ class ReportController extends Controller
         $filters = [];
 
         // Check if user has permission to view JPM highlighting
-        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm');
+        $canViewJpm = $request->user() && $request->user()->can('jpm.view');
 
         // Always use list report type for selected applicants (no summary)
         $reportType = 'list';
@@ -1093,7 +1093,7 @@ class ReportController extends Controller
         $filters = [];
 
         // Check if user has permission to view JPM highlighting
-        $canViewJpm = $request->user() && $request->user()->can('can-view-jpm');
+        $canViewJpm = $request->user() && $request->user()->can('jpm.view');
 
         $currentDateTime = \Carbon\Carbon::now()->format('Y-m-d_H-i-s');
         $filename = "selected-applicants_{$currentDateTime}.xlsx";

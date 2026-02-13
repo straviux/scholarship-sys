@@ -26,7 +26,7 @@ class WaitingListController extends Controller
         ini_set('memory_limit', '1024M');
         ini_set('max_execution_time', '300');
 
-        if (!Gate::allows('create-scholar-profile') && $action === 'create') {
+        if (!Gate::allows('applicants.create') && $action === 'create') {
             $action = null;
             $msg = ['error' => true, 'message' => 'You are not allowed to perform this action'];
             abort(403, 'Unauthorized action.');
@@ -721,7 +721,7 @@ class WaitingListController extends Controller
         // Check if user has JPM viewing permission
         // Disable JPM highlighting when show_jpm_only filter is active
         $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
-        $canViewJpm = Gate::allows('can-view-jpm') && !$showJpmOnly;
+        $canViewJpm = Gate::allows('jpm.view') && !$showJpmOnly;
 
         // Generate filename
         $filename = 'applicants_export_' . date('Y-m-d_His');

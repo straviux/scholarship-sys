@@ -2,198 +2,331 @@
     <AdminLayout>
         <div class="maintenance-panel">
             <div class="container mx-auto p-6">
-                <h1 class="text-3xl font-bold mb-6">Maintenance Management</h1>
+                <!-- Header -->
+                <div class="mb-8">
+                    <h1 class="text-4xl font-bold text-gray-900">Maintenance Management</h1>
+                    <p class="text-gray-600 mt-2">Manage system maintenance schedules and alerts</p>
+                </div>
 
-                <!-- Current Status -->
-                <div class="bg-white rounded-lg shadow p-6 mb-6">
-                    <h2 class="text-xl font-semibold mb-4">Current Status</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="p-4 rounded border-l-4"
-                        :class="[
+                <!-- Status Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Current Status Card -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div :class="[
+                            'p-6 border-t-4',
                             isActive
                                 ? 'bg-red-50 border-red-500'
                                 : 'bg-green-50 border-green-500'
                         ]">
-                        <p class="text-sm text-gray-600">Status</p>
-                        <p class="text-2xl font-bold"
-                            :class="[
+                            <p class="text-sm text-gray-600 font-semibold uppercase">Current Status</p>
+                            <p :class="[
+                                'text-3xl font-bold mt-2',
                                 isActive ? 'text-red-600' : 'text-green-600'
                             ]">
-                            {{ isActive ? 'UNDER MAINTENANCE' : 'OPERATIONAL' }}
-                        </p>
-                    </div>
-
-                    <div v-if="countdown" class="p-4 rounded bg-blue-50 border-l-4 border-blue-500">
-                        <p class="text-sm text-gray-600">{{ countdown.message }}</p>
-                        <p class="text-2xl font-bold text-blue-600">{{ countdownDisplay }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Control Panel -->
-            <div class="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 class="text-xl font-semibold mb-4">Control Panel</h2>
-
-                <form @submit.prevent="saveMaintenance" class="space-y-4">
-                    <!-- Active Toggle -->
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded">
-                        <label class="flex items-center cursor-pointer">
-                            <input
-                                type="checkbox"
-                                v-model="form.is_active"
-                                class="w-5 h-5 rounded"
-                            />
-                            <span class="ml-3 font-semibold">Enable Maintenance Mode</span>
-                        </label>
-                        <button
-                            v-if="isActive"
-                            type="button"
-                            @click="deactivateMaintenance"
-                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                            Deactivate Now
-                        </button>
-                    </div>
-
-                    <!-- Title -->
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Title</label>
-                        <input
-                            v-model="form.title"
-                            type="text"
-                            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="System Maintenance"
-                        />
-                    </div>
-
-                    <!-- Message -->
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Message</label>
-                        <textarea
-                            v-model="form.message"
-                            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            rows="4"
-                            placeholder="We are performing scheduled maintenance..."></textarea>
-                    </div>
-
-                    <!-- Start Time -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Start Time</label>
-                            <input
-                                v-model="form.start_time"
-                                type="datetime-local"
-                                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        <!-- End Time -->
-                        <div>
-                            <label class="block text-sm font-medium mb-2">End Time</label>
-                            <input
-                                v-model="form.end_time"
-                                type="datetime-local"
-                                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
+                                {{ isActive ? '🛑 MAINTENANCE' : '✅ OPERATIONAL' }}
+                            </p>
+                            <p class="text-xs text-gray-500 mt-3">Last updated: {{ lastUpdated }}</p>
                         </div>
                     </div>
 
-                    <!-- Type -->
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Alert Type</label>
-                        <select
-                            v-model="form.type"
-                            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="info">Info</option>
-                            <option value="warning">Warning</option>
-                            <option value="critical">Critical</option>
-                        </select>
+                    <!-- Countdown Card -->
+                    <div v-if="countdown && countdown.status === 'upcoming'"
+                        class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="p-6 bg-blue-50 border-t-4 border-blue-500">
+                            <p class="text-sm text-gray-600 font-semibold uppercase">Starting In</p>
+                            <p class="text-3xl font-bold mt-2 text-blue-600 font-mono">{{ countdownDisplay }}</p>
+                            <p class="text-xs text-gray-500 mt-3">{{ formatTime(countdown.start_time) }}</p>
+                        </div>
                     </div>
 
-                    <!-- Admin Access -->
-                    <div class="flex items-center p-4 bg-blue-50 rounded">
-                        <input
-                            type="checkbox"
-                            v-model="form.allow_admin_access"
-                            class="w-5 h-5 rounded"
-                            disabled
-                        />
-                        <label class="ml-3 font-semibold text-blue-900">
-                            Allow admin access during maintenance (Always enabled)
-                        </label>
+                    <!-- Remaining Time Card -->
+                    <div v-if="countdown && countdown.status === 'active'"
+                        class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="p-6 bg-orange-50 border-t-4 border-orange-500">
+                            <p class="text-sm text-gray-600 font-semibold uppercase">Duration</p>
+                            <p class="text-3xl font-bold mt-2 text-orange-600">{{ countdown.duration_minutes || '?' }}
+                                min</p>
+                            <p class="text-xs text-gray-500 mt-3 animate-pulse">⚠️ MAINTENANCE IN PROGRESS</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Two Column Layout -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left Column - Configuration Form -->
+                    <div class="lg:col-span-2">
+                        <!-- Control Panel -->
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-2xl font-bold text-gray-900">Configuration</h2>
+                                <div v-if="isActive" class="flex items-center gap-2 px-3 py-1 bg-red-100 rounded-full">
+                                    <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+                                    <span class="text-sm font-semibold text-red-600">ACTIVE</span>
+                                </div>
+                            </div>
+
+                            <form @submit.prevent="showConfirmDialog" class="space-y-5">
+                                <!-- Quick Toggle -->
+                                <div
+                                    class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200">
+                                    <div>
+                                        <label class="flex items-center cursor-pointer gap-3">
+                                            <input type="checkbox" v-model="form.is_active"
+                                                class="w-5 h-5 rounded cursor-pointer accent-blue-600" />
+                                            <span class="font-semibold text-gray-900">Enable Maintenance Mode</span>
+                                        </label>
+                                        <p class="text-xs text-gray-500 mt-1 ml-8">Users will see a banner with your
+                                            message</p>
+                                    </div>
+                                    <button v-if="isActive" type="button" @click="showDeactivateDialog"
+                                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm">
+                                        Deactivate Now
+                                    </button>
+                                </div>
+
+                                <!-- Title -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-900 mb-2">Banner Title</label>
+                                    <input v-model="form.title" type="text"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="e.g., Scheduled System Maintenance" maxlength="100" />
+                                    <p class="text-xs text-gray-500 mt-1">{{ form.title.length }}/100 characters</p>
+                                </div>
+
+                                <!-- Message -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-900 mb-2">Message</label>
+                                    <textarea v-model="form.message"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                        rows="4" placeholder="Inform users about what's happening..."
+                                        maxlength="500"></textarea>
+                                    <p class="text-xs text-gray-500 mt-1">{{ form.message.length }}/500 characters</p>
+                                </div>
+
+                                <!-- Schedule -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-900 mb-2">Start Time</label>
+                                        <input v-model="form.start_time" type="datetime-local"
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            :min="minStartTime" required />
+                                        <p class="text-xs text-gray-500 mt-1">Minimum 10 minutes from now</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-900 mb-2">End Time</label>
+                                        <input v-model="form.end_time" type="datetime-local"
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            :min="form.start_time" required />
+                                        <p class="text-xs text-gray-500 mt-1">Must be after start time</p>
+                                    </div>
+                                </div>
+
+                                <!-- Alert Type -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-900 mb-3">Alert Severity</label>
+                                    <div class="grid grid-cols-3 gap-3">
+                                        <label class="relative flex cursor-pointer">
+                                            <input type="radio" v-model="form.type" value="info" class="sr-only" />
+                                            <div class="w-full px-4 py-3 border-2 rounded-lg text-center transition"
+                                                :class="[
+                                                    form.type === 'info'
+                                                        ? 'border-blue-500 bg-blue-50'
+                                                        : 'border-gray-300 hover:border-blue-300'
+                                                ]">
+                                                <span class="text-xl">ℹ️</span>
+                                                <p class="font-semibold text-sm mt-1">Info</p>
+                                            </div>
+                                        </label>
+                                        <label class="relative flex cursor-pointer">
+                                            <input type="radio" v-model="form.type" value="warning" class="sr-only" />
+                                            <div class="w-full px-4 py-3 border-2 rounded-lg text-center transition"
+                                                :class="[
+                                                    form.type === 'warning'
+                                                        ? 'border-yellow-500 bg-yellow-50'
+                                                        : 'border-gray-300 hover:border-yellow-300'
+                                                ]">
+                                                <span class="text-xl">⚠️</span>
+                                                <p class="font-semibold text-sm mt-1">Warning</p>
+                                            </div>
+                                        </label>
+                                        <label class="relative flex cursor-pointer">
+                                            <input type="radio" v-model="form.type" value="critical" class="sr-only" />
+                                            <div class="w-full px-4 py-3 border-2 rounded-lg text-center transition"
+                                                :class="[
+                                                    form.type === 'critical'
+                                                        ? 'border-red-500 bg-red-50'
+                                                        : 'border-gray-300 hover:border-red-300'
+                                                ]">
+                                                <span class="text-xl">🛑</span>
+                                                <p class="font-semibold text-sm mt-1">Critical</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Admin Access Notice -->
+                                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
+                                    <span class="text-xl">🔐</span>
+                                    <div>
+                                        <p class="font-semibold text-sm text-blue-900">Admin Access Protected</p>
+                                        <p class="text-xs text-blue-700 mt-1">Admins can always access the system even
+                                            during maintenance</p>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="flex gap-3 pt-4 border-t">
+                                    <button type="submit"
+                                        class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+                                        Save Configuration
+                                    </button>
+                                    <button type="button" @click="resetForm"
+                                        class="px-6 py-3 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition font-semibold">
+                                        Reset
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Preview Banner -->
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h2 class="text-2xl font-bold text-gray-900 mb-5">Preview</h2>
+                            <div v-if="form.is_active" class="rounded-lg overflow-hidden" :class="[
+                                form.type === 'info' ? 'bg-blue-50 border-l-4 border-blue-500' : '',
+                                form.type === 'warning' ? 'bg-yellow-50 border-l-4 border-yellow-500' : '',
+                                form.type === 'critical' ? 'bg-red-50 border-l-4 border-red-500' : '',
+                            ]">
+                                <div class="p-5">
+                                    <h3 class="font-bold text-lg" :class="[
+                                        form.type === 'info' ? 'text-blue-600' : '',
+                                        form.type === 'warning' ? 'text-yellow-600' : '',
+                                        form.type === 'critical' ? 'text-red-600' : '',
+                                    ]">
+                                        {{ form.title || 'Your title here' }}
+                                    </h3>
+                                    <p class="mt-2 text-sm text-gray-700">{{ form.message || `Your message will appear
+                                        here` }}</p>
+                                </div>
+                            </div>
+                            <div v-else
+                                class="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                                <p class="text-gray-500 font-semibold">Maintenance mode is disabled</p>
+                                <p class="text-xs text-gray-400 mt-1">Enable it to preview the banner</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Buttons -->
-                    <div class="flex gap-4 pt-4">
-                        <button
-                            type="submit"
-                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                            Save Changes
-                        </button>
-                        <button
-                            type="button"
-                            @click="resetForm"
-                            class="px-6 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition">
-                            Reset
-                        </button>
+                    <!-- Right Column - Maintenance History -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-lg shadow-md p-6 sticky top-6">
+                            <h2 class="text-2xl font-bold text-gray-900 mb-4">History</h2>
+
+                            <div v-if="history.length > 0" class="space-y-3 max-h-screen overflow-y-auto">
+                                <div v-for="record in history" :key="record.id"
+                                    class="p-3 bg-gray-50 rounded-lg border-l-4 border-gray-300 hover:border-blue-400 transition">
+                                    <div class="flex items-start gap-2">
+                                        <span class="text-lg mt-0.5">
+                                            {{ record.type === 'info' ? 'ℹ️' : record.type === 'warning' ? '⚠️' : '🛑'
+                                            }}
+                                        </span>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="font-semibold text-sm text-gray-900 truncate">{{ record.title }}
+                                            </p>
+                                            <p class="text-xs text-gray-600 mt-0.5">{{ record.message.substring(0, 40)
+                                            }}...</p>
+                                            <div class="flex items-center gap-2 mt-1.5">
+                                                <span class="px-2 py-0.5 rounded text-xs font-semibold inline-block"
+                                                    :class="{
+                                                        'bg-blue-100 text-blue-800': record.type === 'info',
+                                                        'bg-yellow-100 text-yellow-800': record.type === 'warning',
+                                                        'bg-red-100 text-red-800': record.type === 'critical',
+                                                    }">
+                                                    {{ record.type.toUpperCase() }}
+                                                </span>
+                                                <span v-if="record.is_active"
+                                                    class="inline-flex items-center gap-0.5 px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-semibold">
+                                                    <span class="w-1 h-1 bg-red-600 rounded-full animate-pulse"></span>
+                                                    ACTIVE
+                                                </span>
+                                            </div>
+                                            <p class="text-xs text-gray-400 mt-2">📅 {{
+                                                formatDateTime(record.start_time) }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="text-center py-8 text-gray-500">
+                                <p class="text-sm">No maintenance records yet</p>
+                            </div>
+                        </div>
                     </div>
-                </form>
-            </div>
+                </div>
 
-            <!-- Preview Banner -->
-            <div class="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 class="text-xl font-semibold mb-4">Preview</h2>
-                <div v-if="form.is_active" class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
-                    <h3 class="font-bold text-yellow-600">{{ form.title }}</h3>
-                    <p class="mt-2 text-sm">{{ form.message }}</p>
-                </div>
-                <div v-else class="text-gray-500 text-center py-8">
-                    Maintenance mode is disabled. Banner preview will appear when enabled.
-                </div>
-            </div>
 
-            <!-- History -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4">History</h2>
-                <div v-if="history.length > 0" class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b">
-                                <th class="text-left py-2">Title</th>
-                                <th class="text-left py-2">Start Time</th>
-                                <th class="text-left py-2">End Time</th>
-                                <th class="text-left py-2">Type</th>
-                                <th class="text-left py-2">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="record in history" :key="record.id" class="border-b hover:bg-gray-50">
-                                <td class="py-2">{{ record.title }}</td>
-                                <td class="py-2">{{ formatDateTime(record.start_time) }}</td>
-                                <td class="py-2">{{ formatDateTime(record.end_time) }}</td>
-                                <td class="py-2">
-                                    <span class="px-2 py-1 rounded text-xs font-semibold"
-                                        :class="{
-                                            'bg-blue-100 text-blue-800': record.type === 'info',
-                                            'bg-yellow-100 text-yellow-800': record.type === 'warning',
-                                            'bg-red-100 text-red-800': record.type === 'critical',
-                                        }">
-                                        {{ record.type.toUpperCase() }}
-                                    </span>
-                                </td>
-                                <td class="py-2">
-                                    <span v-if="record.is_active" class="text-red-600 font-semibold">ACTIVE</span>
-                                    <span v-else class="text-gray-600">Inactive</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div v-else class="text-gray-500 text-center py-8">
-                    No maintenance records yet.
-                </div>
             </div>
         </div>
-    </div>
+
+        <!-- Confirmation Dialog -->
+        <Teleport to="body">
+            <div v-if="showDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in">
+                    <div class="p-6">
+                        <div class="flex items-center justify-center w-12 h-12 mx-auto rounded-full mb-4" :class="[
+                            dialogType === 'deactivate' ? 'bg-green-100' : 'bg-blue-100'
+                        ]">
+                            <span class="text-2xl">
+                                {{ dialogType === 'deactivate' ? '✅' : '💾' }}
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 text-center">{{ dialogTitle }}</h3>
+                        <p class="text-gray-600 text-sm mt-2 text-center">{{ dialogMessage }}</p>
+                    </div>
+                    <div class="flex gap-3 p-6 bg-gray-50 border-t">
+                        <button @click="closeDialog"
+                            class="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition font-semibold">
+                            Cancel
+                        </button>
+                        <button @click="confirmDialog" :class="[
+                            'flex-1 px-4 py-2 text-white rounded-lg transition font-semibold',
+                            dialogType === 'deactivate'
+                                ? 'bg-green-600 hover:bg-green-700'
+                                : 'bg-blue-600 hover:bg-blue-700'
+                        ]">
+                            {{ dialogAction }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+
+        <!-- Toast Notifications -->
+        <Teleport to="body">
+            <div class="fixed top-4 right-4 space-y-3 z-50 pointer-events-none">
+                <div v-for="toast in toasts" :key="toast.id"
+                    class="pointer-events-auto animate-in slide-in-from-right px-6 py-4 bg-white rounded-lg shadow-lg border-l-4 flex items-start gap-3"
+                    :class="[
+                        toast.type === 'success' ? 'border-green-500 bg-green-50' : '',
+                        toast.type === 'error' ? 'border-red-500 bg-red-50' : '',
+                        toast.type === 'info' ? 'border-blue-500 bg-blue-50' : '',
+                    ]">
+                    <span class="text-lg mt-0.5">
+                        {{ toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : 'ℹ️' }}
+                    </span>
+                    <div>
+                        <p class="font-semibold text-sm" :class="[
+                            toast.type === 'success' ? 'text-green-800' : '',
+                            toast.type === 'error' ? 'text-red-800' : '',
+                            toast.type === 'info' ? 'text-blue-800' : '',
+                        ]">{{ toast.title }}</p>
+                        <p class="text-xs mt-1" :class="[
+                            toast.type === 'success' ? 'text-green-700' : '',
+                            toast.type === 'error' ? 'text-red-700' : '',
+                            toast.type === 'info' ? 'text-blue-700' : '',
+                        ]">{{ toast.message }}</p>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </AdminLayout>
 </template>
 
@@ -204,6 +337,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 
 const $page = usePage();
 
+// Form Data
 const form = ref({
     is_active: false,
     title: 'System Maintenance',
@@ -213,28 +347,63 @@ const form = ref({
     type: 'warning',
     allow_admin_access: true,
 });
+
+// State
 const isActive = ref(false);
 const countdown = ref(null);
 const countdownDisplay = ref('');
 const history = ref([]);
 const countdownInterval = ref(null);
+const lastUpdated = ref('Just now');
+const minStartTime = ref('');
 
+// Dialog State
+const showDialog = ref(false);
+const dialogType = ref('save');
+const dialogTitle = ref('');
+const dialogMessage = ref('');
+const dialogAction = ref('');
+const pendingAction = ref(null);
+
+// Toast State
+const toasts = ref([]);
+let toastId = 0;
+
+// Get CSRF Token
 const getCsrfToken = () => {
-    // Try to get from page props (Inertia way)
     if ($page.props.csrf_token) {
         return $page.props.csrf_token;
     }
-    // Fallback to meta tag
     const meta = document.querySelector('meta[name="csrf-token"]');
     return meta ? meta.content : '';
 };
 
+// Toast Functions
+const showToast = (type, title, message, duration = 4000) => {
+    const id = toastId++;
+    const toast = { id, type, title, message };
+    toasts.value.push(toast);
+    console.warn(`📢 Toast[${id}] (${type}):`, title, message);
+
+    if (duration > 0) {
+        setTimeout(() => {
+            toasts.value = toasts.value.filter(t => t.id !== id);
+        }, duration);
+    }
+
+    return id;
+};
+
+
+
+// Fetch Status
 const fetchStatus = async () => {
     try {
-        const response = await fetch('/api/admin/maintenance/status');
+        const response = await fetch('/api/maintenance/status', {
+            method: 'GET',
+            credentials: 'include',  // Include cookies for auth
+        });
         if (!response.ok) {
-            const text = await response.text();
-            console.error('Status response:', response.status, text);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
@@ -248,12 +417,14 @@ const fetchStatus = async () => {
     }
 };
 
+// Fetch History
 const fetchHistory = async () => {
     try {
-        const response = await fetch('/api/admin/maintenance/list');
+        const response = await fetch('/api/admin/maintenance/list', {
+            method: 'GET',
+            credentials: 'include',  // Include cookies for auth
+        });
         if (!response.ok) {
-            const text = await response.text();
-            console.error('List response:', response.status, text);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
@@ -266,93 +437,251 @@ const fetchHistory = async () => {
                 is_active: active.is_active,
                 title: active.title,
                 message: active.message,
-                start_time: active.start_time.replace('T', ' ').slice(0, 16),
-                end_time: active.end_time.replace('T', ' ').slice(0, 16),
+                start_time: active.start_time.slice(0, 16),
+                end_time: active.end_time.slice(0, 16),
                 type: active.type,
                 allow_admin_access: active.allow_admin_access,
             };
+        } else {
+            // Set defaults only if no active record
+            setDefaultTimes();
         }
     } catch (error) {
         console.error('Error fetching maintenance history:', error);
+        // Set defaults on error
+        setDefaultTimes();
     }
 };
 
+// Set Default Times Helper
+const setDefaultTimes = () => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 10);
+    const startInput = formatDatetimeLocal(now);
+
+    const end = new Date(now);
+    end.setMinutes(end.getMinutes() + 30);
+    const endInput = formatDatetimeLocal(end);
+
+    form.value.start_time = startInput;
+    form.value.end_time = endInput;
+    minStartTime.value = startInput;
+};
+const showConfirmDialog = () => {
+    console.warn('🟡 showConfirmDialog() called');
+
+    if (!form.value.start_time || !form.value.end_time) {
+        console.warn('⚠️ Missing times');
+        showToast('error', 'Validation Error', 'Please fill in start and end times');
+        return;
+    }
+
+    const startTime = new Date(form.value.start_time);
+    const endTime = new Date(form.value.end_time);
+
+    if (endTime <= startTime) {
+        console.warn('⚠️ End time not after start time');
+        showToast('error', 'Validation Error', 'End time must be after start time');
+        return;
+    }
+
+    console.warn('✓ Validation passed - showing dialog');
+    dialogType.value = 'save';
+    dialogTitle.value = 'Save Configuration?';
+    dialogMessage.value = form.value.is_active
+        ? 'You are about to enable maintenance mode. Users will see this banner.'
+        : 'You are about to save these settings.';
+    dialogAction.value = 'Save';
+    pendingAction.value = 'save';
+    showDialog.value = true;
+    console.warn('📋 Dialog shown with pendingAction=save');
+};
+
+const showDeactivateDialog = () => {
+    dialogType.value = 'deactivate';
+    dialogTitle.value = 'Deactivate Maintenance?';
+    dialogMessage.value = 'All users will immediately see the system as operational again.';
+    dialogAction.value = 'Deactivate';
+    pendingAction.value = 'deactivate';
+    showDialog.value = true;
+};
+
+const closeDialog = () => {
+    showDialog.value = false;
+    pendingAction.value = null;
+};
+
+const confirmDialog = async () => {
+    console.warn('🔵 confirmDialog() called - pendingAction:', pendingAction.value);
+
+    // Save the action BEFORE closing the dialog
+    const action = pendingAction.value;
+    closeDialog();
+
+    if (action === 'save') {
+        console.warn('→ Executing SAVE action');
+        await saveMaintenance();
+    } else if (action === 'deactivate') {
+        console.warn('→ Executing DEACTIVATE action');
+        await deactivateMaintenance();
+    } else {
+        console.error('❌ Unknown action:', action);
+    }
+};
+
+// Save Maintenance
 const saveMaintenance = async () => {
+    console.warn('🔵 saveMaintenance() called - START');
     try {
         const csrfToken = getCsrfToken();
+        console.warn('✓ CSRF Token obtained:', csrfToken ? 'exists' : 'MISSING');
+
+        // Convert datetime-local format to Laravel datetime format (YYYY-MM-DD HH:mm:ss)
+        const startStr = form.value.start_time ? form.value.start_time.replace('T', ' ') + ':00' : '';
+        const endStr = form.value.end_time ? form.value.end_time.replace('T', ' ') + ':00' : '';
+
+        const payload = {
+            is_active: form.value.is_active,
+            title: form.value.title,
+            message: form.value.message,
+            start_time: startStr,
+            end_time: endStr,
+            type: form.value.type,
+            allow_admin_access: form.value.allow_admin_access,
+        };
+
+        console.warn('📤 Sending payload:', JSON.stringify(payload, null, 2));
+
         const response = await fetch('/api/admin/maintenance', {
             method: 'POST',
+            credentials: 'include',  // Include cookies for auth
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken,
             },
-            body: JSON.stringify(form.value),
+            body: JSON.stringify(payload),
         });
 
+        console.warn('📥 Response received - Status:', response.status, 'OK:', response.ok);
+
+        let responseData;
+        const contentType = response.headers.get('content-type');
+        console.warn('Response Content-Type:', contentType);
+
+        if (contentType && contentType.includes('application/json')) {
+            responseData = await response.json();
+            console.warn('Response JSON:', JSON.stringify(responseData, null, 2));
+        } else {
+            const text = await response.text();
+            console.warn('Response Text:', text);
+            responseData = {};
+        }
+
         if (response.ok) {
-            const data = await response.json();
-            alert('Maintenance announcement saved successfully!');
+            console.warn('✅ Save SUCCESS');
+            showToast('success', 'Saved!', 'Maintenance configuration has been saved successfully');
             fetchStatus();
             fetchHistory();
         } else {
-            alert('Error saving maintenance announcement');
+            const errorMessage = responseData.message
+                || (responseData.errors ? JSON.stringify(responseData.errors) : null)
+                || `HTTP ${response.status}: Failed to save configuration`;
+            console.error('❌ Save FAILED:', errorMessage);
+            console.error('Full response:', responseData);
+            showToast('error', 'Save Failed', errorMessage);
         }
     } catch (error) {
-        console.error('Error saving maintenance:', error);
-        alert('Error saving maintenance announcement');
+        console.error('💥 EXCEPTION in saveMaintenance:', error.message);
+        console.error('Stack:', error.stack);
+        showToast('error', 'Error', error.message || 'An error occurred while saving');
     }
+    console.warn('🔴 saveMaintenance() - END\n');
 };
 
+// Deactivate Maintenance
 const deactivateMaintenance = async () => {
-    if (!confirm('Are you sure you want to deactivate maintenance mode?')) {
-        return;
-    }
-
     try {
         const csrfToken = getCsrfToken();
         const response = await fetch('/api/admin/maintenance/deactivate', {
             method: 'POST',
+            credentials: 'include',  // Include cookies for auth
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
             },
         });
 
         if (response.ok) {
-            alert('Maintenance mode deactivated');
             form.value.is_active = false;
             isActive.value = false;
+            showToast('success', 'Deactivated!', 'Maintenance mode is now off');
             fetchStatus();
             fetchHistory();
+        } else {
+            showToast('error', 'Deactivation Failed', 'Could not deactivate maintenance mode');
         }
     } catch (error) {
         console.error('Error deactivating maintenance:', error);
+        showToast('error', 'Error', 'An error occurred while deactivating');
     }
 };
 
+// Reset Form
 const resetForm = () => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 10);
+    const startInput = formatDatetimeLocal(now);
+
+    const end = new Date(now);
+    end.setMinutes(end.getMinutes() + 30);
+    const endInput = formatDatetimeLocal(end);
+
     form.value = {
         is_active: false,
         title: 'System Maintenance',
         message: 'We are performing scheduled maintenance. Please try again later.',
-        start_time: '',
-        end_time: '',
+        start_time: startInput,
+        end_time: endInput,
         type: 'warning',
         allow_admin_access: true,
     };
+    showToast('info', 'Reset', 'Form has been cleared');
 };
 
+// Format DateTime
 const formatDateTime = (dateTime) => {
     if (!dateTime) return '-';
-    return new Date(dateTime).toLocaleString();
+    return new Date(dateTime).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
 };
 
+// Format Time
+const formatTime = (dateTime) => {
+    if (!dateTime) return '';
+    return new Date(dateTime).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+};
+
+// Update Countdown Display
 const updateCountdownDisplay = () => {
-    if (!countdown.value || countdown.value.status !== 'upcoming') {
+    if (!countdown.value || countdown.value.status !== 'upcoming' || !countdown.value.start_time) {
         countdownDisplay.value = '';
         return;
     }
 
-    const secondsRemaining = countdown.value.seconds_remaining;
+    // Calculate remaining seconds from NOW until start_time
+    const startTime = new Date(countdown.value.start_time);
+    const now = new Date();
+    const secondsRemaining = Math.max(0, Math.floor((startTime - now) / 1000));
+
     const hours = Math.floor(secondsRemaining / 3600);
     const minutes = Math.floor((secondsRemaining % 3600) / 60);
     const seconds = secondsRemaining % 60;
@@ -360,13 +689,24 @@ const updateCountdownDisplay = () => {
     countdownDisplay.value = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 };
 
+// Helper to format date for datetime-local input (local time, not UTC)
+const formatDatetimeLocal = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+// Lifecycle
 onMounted(() => {
+    console.warn('🟢 Maintenance page mounted - fetching initial data');
     fetchStatus();
     fetchHistory();
 
-    // Update countdown every second
+    // Update countdown display every second (uses latest data from parent)
     countdownInterval.value = setInterval(() => {
-        fetchStatus();
         updateCountdownDisplay();
     }, 1000);
 });
@@ -380,8 +720,47 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .maintenance-panel {
-    background-color: #f9fafb;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     min-height: 100vh;
     padding: 2rem 0;
+}
+
+@keyframes slideInFromRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.animate-in {
+    animation: slideInFromRight 0.3s ease-out;
+}
+
+.slide-in-from-right {
+    animation: slideInFromRight 0.3s ease-out;
+}
+
+/* Scrollbar styling for activity logs */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
 }
 </style>

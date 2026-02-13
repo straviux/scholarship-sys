@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\MaintenanceAnnouncement;
 use Illuminate\Http\Request;
+use Exception;
 
 class MaintenanceController extends Controller
 {
@@ -13,24 +14,33 @@ class MaintenanceController extends Controller
      */
     public function getPublicStatus()
     {
-        $maintenance = MaintenanceAnnouncement::getActive();
+        try {
+            $maintenance = MaintenanceAnnouncement::getActive();
 
-        if (!$maintenance) {
+            if (!$maintenance) {
+                return response()->json([
+                    'is_under_maintenance' => false,
+                    'announcement' => null,
+                ]);
+            }
+
+            return response()->json([
+                'is_under_maintenance' => MaintenanceAnnouncement::isUnderMaintenance(),
+                'announcement' => [
+                    'title' => $maintenance->title,
+                    'message' => $maintenance->message,
+                    'type' => $maintenance->type,
+                    'countdown' => $maintenance->getCountdownData(),
+                ],
+            ]);
+        } catch (Exception $e) {
+            // If the table doesn't exist or there's a database error, return no maintenance
+            // This prevents a 500 error when the migration hasn't been run
             return response()->json([
                 'is_under_maintenance' => false,
                 'announcement' => null,
-            ]);
+            ], 200);
         }
-
-        return response()->json([
-            'is_under_maintenance' => MaintenanceAnnouncement::isUnderMaintenance(),
-            'announcement' => [
-                'title' => $maintenance->title,
-                'message' => $maintenance->message,
-                'type' => $maintenance->type,
-                'countdown' => $maintenance->getCountdownData(),
-            ],
-        ]);
     }
 
     /**
@@ -38,24 +48,32 @@ class MaintenanceController extends Controller
      */
     public function getStatus()
     {
-        $maintenance = MaintenanceAnnouncement::getActive();
+        try {
+            $maintenance = MaintenanceAnnouncement::getActive();
 
-        if (!$maintenance) {
+            if (!$maintenance) {
+                return response()->json([
+                    'is_under_maintenance' => false,
+                    'announcement' => null,
+                ]);
+            }
+
+            return response()->json([
+                'is_under_maintenance' => MaintenanceAnnouncement::isUnderMaintenance(),
+                'announcement' => [
+                    'title' => $maintenance->title,
+                    'message' => $maintenance->message,
+                    'type' => $maintenance->type,
+                    'countdown' => $maintenance->getCountdownData(),
+                ],
+            ]);
+        } catch (Exception $e) {
+            // If the table doesn't exist or there's a database error, return no maintenance
             return response()->json([
                 'is_under_maintenance' => false,
                 'announcement' => null,
-            ]);
+            ], 200);
         }
-
-        return response()->json([
-            'is_under_maintenance' => MaintenanceAnnouncement::isUnderMaintenance(),
-            'announcement' => [
-                'title' => $maintenance->title,
-                'message' => $maintenance->message,
-                'type' => $maintenance->type,
-                'countdown' => $maintenance->getCountdownData(),
-            ],
-        ]);
     }
 
     /**

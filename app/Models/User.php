@@ -168,4 +168,42 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserActivity::class);
     }
+
+    /**
+     * Check if user has a specific permission through their role.
+     * 
+     * Usage:
+     *   $user->hasPermission('users.create')        // true if user's role has this permission
+     *   $user->hasPermission('applicants.edit')     // true if user's role has this permission
+     *
+     * @param string $permission The permission name to check
+     * @return bool
+     */
+    public function hasPermission($permission): bool
+    {
+        // Check if user has the permission through their role
+        return $this->roles()
+            ->whereHas('permissions', fn($query) => $query->where('name', $permission))
+            ->exists();
+    }
+
+    /**
+     * Check if user has any of the specified roles.
+     * 
+     * Usage:
+     *   $user->hasAnyRole(['admin', 'manager'])     // true if user has any of these roles
+     *   $user->hasAnyRole('admin', 'manager')       // true if user has any of these roles
+     *
+     * @param array|string ...$roles The role names to check
+     * @return bool
+     */
+    public function hasAnyRole(...$roles): bool
+    {
+        // Flatten the array if the first argument is an array
+        $rolesToCheck = (is_array($roles[0]) ?? false) ? $roles[0] : $roles;
+
+        return $this->roles()
+            ->whereIn('name', $rolesToCheck)
+            ->exists();
+    }
 }

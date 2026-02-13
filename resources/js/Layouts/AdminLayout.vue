@@ -14,6 +14,7 @@ import Avatar from 'primevue/avatar';
 import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
+import Popover from 'primevue/popover';
 
 const { hasRole, hasPermission } = usePermission();
 const $page = usePage();
@@ -24,6 +25,30 @@ const unreadUpdatesCount = ref(0);
 const activityLogsDropdownRef = ref(null);
 const currentDateTime = ref(new Date());
 const serverTimezone = ref('');
+const menuItems = ref([]);
+const menuLoading = ref(true);
+const expandedMenus = ref(new Set());
+
+// Maintenance status state
+const maintenanceStatus = ref(null);
+let maintenanceCheckIntervalId = null;
+let maintenanceAdjustIntervalId = null;
+let currentMaintenanceCheckInterval = null;
+
+// Check if user is admin
+function isAdmin() {
+    return hasRole('admin') || hasRole('administrator');
+}
+
+// Check if maintenance is currently active
+function isMaintenanceActive() {
+    return maintenanceStatus.value?.is_under_maintenance === true;
+}
+
+// Check if non-admin user should be blocked
+function shouldBlockNonAdminAccess() {
+    return isMaintenanceActive() && !isAdmin();
+}
 
 function toggleSidebarMinimized() {
     sidebarMinimized.value = !sidebarMinimized.value;
@@ -91,13 +116,154 @@ async function fetchServerTime() {
     }
 }
 
+// Fetch maintenance status and compute time until start
+async function fetchMaintenanceStatus() {
+    try {
+        // Use public endpoint so all users (not just admins) can see maintenance alerts
+        const response = await fetch('/api/maintenance/status', {
+            credentials: 'include',
+        });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        maintenanceStatus.value = data;
+
+        // If we have a scheduled start time, start smart polling
+        if (data.announcement?.countdown?.start_time) {
+            scheduleSmartPolling(data.announcement.countdown.start_time);
+        }
+    } catch (error) {
+        logger.error('Error fetching maintenance status:', error);
+    }
+}
+
+// Schedule smart polling based on time until maintenance
+function scheduleSmartPolling(startTimeStr) {
+    const startTime = new Date(startTimeStr);
+    const now = new Date();
+    const minutesUntilStart = (startTime - now) / (1000 * 60);
+
+    console.log(`⏰ Maintenance check scheduled. Minutes until start: ${minutesUntilStart.toFixed(1)}`);
+
+    // Determine polling interval based on time remaining
+    let newInterval;
+    if (minutesUntilStart > 10) {
+        newInterval = 5 * 60 * 1000; // 5 minutes if more than 10 mins away
+        console.log('🟢 5-minute polling (far away)');
+    } else if (minutesUntilStart > 0) {
+        newInterval = 30 * 1000; // 30 seconds if less than 10 mins away
+        console.log('🟡 30-second polling (close)');
+    } else {
+        newInterval = 10 * 1000; // 10 seconds if maintenance is starting
+        console.log('🔴 10-second polling (starting soon)');
+    }
+
+    // Update interval if it changed
+    if (newInterval !== currentMaintenanceCheckInterval) {
+        currentMaintenanceCheckInterval = newInterval;
+
+        // Clear old interval
+        if (maintenanceCheckIntervalId) {
+            clearInterval(maintenanceCheckIntervalId);
+        }
+
+        // Set new interval
+        maintenanceCheckIntervalId = setInterval(() => {
+            fetchMaintenanceStatus();
+        }, newInterval);
+    }
+
+    // Recheck interval adjustment every minute
+    if (!maintenanceAdjustIntervalId) {
+        maintenanceAdjustIntervalId = setInterval(() => {
+            const now = new Date();
+            const remaining = (startTime - now) / (1000 * 60);
+            if (remaining <= 10 && remaining > 0) {
+                // Crossed into the 10-minute window
+                scheduleSmartPolling(startTimeStr);
+            }
+        }, 60 * 1000); // Check every minute
+    }
+}
+
 // Fetch on mount and set interval to refresh
 let intervalId = null;
 
+// Load menu items from API
+async function loadMenuItems() {
+    try {
+        menuLoading.value = true;
+
+        // Set timeout to prevent indefinite loading
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+        const response = await fetch('/api/menu/sidebar', {
+            signal: controller.signal,
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'include'
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`API returned ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success && Array.isArray(result.data)) {
+            menuItems.value = result.data;
+
+            // Expand parent menus by default
+            result.data.forEach(item => {
+                if (item.children && Array.isArray(item.children) && item.children.length > 0) {
+                    expandedMenus.value.add(item.id);
+                }
+            });
+        } else {
+            logger.warn('Invalid menu response format:', result);
+            menuItems.value = [];
+        }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            logger.error('Menu API request timed out after 15 seconds');
+        } else {
+            logger.error('Error loading menu items:', error);
+        }
+        // Fallback to empty menu if API fails
+        menuItems.value = [];
+    } finally {
+        menuLoading.value = false;
+    }
+}
+
+// Toggle menu expansion
+function toggleMenuExpansion(menuId) {
+    if (expandedMenus.value.has(menuId)) {
+        expandedMenus.value.delete(menuId);
+    } else {
+        expandedMenus.value.add(menuId);
+    }
+}
+
+// Get route name from menu item
+function getMenuRoute(menuItem) {
+    return menuItem.route ? route(menuItem.route) : null;
+}
+
 onMounted(() => {
+    loadMenuItems();
     fetchUnreadCount();
     fetchServerTime();
-    // Refresh every 30 seconds
+
+    // Fetch maintenance status for all users - they need to see upcoming maintenance
+    fetchMaintenanceStatus();
+
+    // Refresh unread count every 30 seconds
     intervalId = setInterval(fetchUnreadCount, 30000);
 
     // Update server time every second (client-side increment for smooth display)
@@ -114,6 +280,12 @@ onUnmounted(() => {
     if (intervalId) {
         clearInterval(intervalId);
     }
+    if (maintenanceCheckIntervalId) {
+        clearInterval(maintenanceCheckIntervalId);
+    }
+    if (maintenanceAdjustIntervalId) {
+        clearInterval(maintenanceAdjustIntervalId);
+    }
 });
 </script>
 
@@ -121,7 +293,65 @@ onUnmounted(() => {
     <Toast />
     <ConfirmDialog></ConfirmDialog>
     <MaintenanceAlertModal />
-    <div class="w-full h-full flex">
+
+    <!-- Maintenance Blocking Screen for Non-Admin Users -->
+    <div v-if="shouldBlockNonAdminAccess()" class="fixed inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center z-[999]">
+        <div class="max-w-md w-full mx-4 text-center flex flex-col items-center justify-center">
+            <!-- Icon -->
+            <div class="mb-6">
+                <svg class="w-20 h-20 mx-auto text-yellow-500 animate-pulse" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4v2m0 4v2M8 5h8a2 2 0 012 2v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7a2 2 0 012-2z"></path>
+                </svg>
+            </div>
+
+            <!-- Title -->
+            <h1 class="text-4xl font-bold text-white mb-4 break-words">
+                {{ maintenanceStatus?.announcement?.title || 'System Maintenance' }}
+            </h1>
+
+            <!-- Message -->
+            <p class="text-gray-300 text-lg mb-6 leading-relaxed w-full max-w-sm mx-auto">
+                {{ maintenanceStatus?.announcement?.message || 'We are performing scheduled maintenance. Please try again later.' }}
+            </p>
+
+            <!-- Status Badge -->
+            <div class="inline-block px-6 py-3 rounded-full mb-8" :class="{
+                'bg-blue-500': maintenanceStatus?.announcement?.type === 'info',
+                'bg-yellow-500': maintenanceStatus?.announcement?.type === 'warning',
+                'bg-red-500': maintenanceStatus?.announcement?.type === 'critical',
+            }">
+                <span class="text-white font-semibold">
+                    {{ (maintenanceStatus?.announcement?.type || 'maintenance').toUpperCase() }} IN PROGRESS
+                </span>
+            </div>
+
+            <!-- End Time Info -->
+            <div class="bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg p-6 mb-8 w-full max-w-sm mx-auto">
+                <p class="text-gray-400 text-sm mb-2">Expected to complete:</p>
+                <p class="text-white text-xl font-mono font-semibold break-words">
+                    {{ maintenanceStatus?.announcement?.countdown?.end_time ? new
+                        Date(maintenanceStatus.announcement.countdown.end_time).toLocaleString() : 'TBD' }}
+                </p>
+            </div>
+
+            <!-- Support Message -->
+            <div class="bg-blue-500 bg-opacity-20 border border-blue-400 rounded-lg p-4 w-full max-w-sm mx-auto">
+                <p class="text-blue-200 text-sm">
+                    <i class="pi pi-info-circle mr-2"></i>
+                    Please check back shortly. We appreciate your patience!
+                </p>
+            </div>
+
+            <!-- Refresh Hint -->
+            <p class="text-gray-500 text-xs mt-8">
+                This page will automatically update when maintenance is complete.
+            </p>
+        </div>
+    </div>
+
+    <div v-if="!shouldBlockNonAdminAccess()" class="w-full h-full flex">
         <!-- Floating Sidebar -->
         <aside
             class="hidden fixed z-10 top-20 left-4 md:flex flex-col bg-[#222831] transition-all duration-300 rounded-xl shadow-xl min-w-0 h-[calc(100vh-96px)]"
@@ -167,325 +397,74 @@ onUnmounted(() => {
                         :label="!$page.props.auth.user.has_profile_photo ? ($page.props.auth.user.name || 'U').charAt(0).toUpperCase() : null"
                         size="large" shape="circle" class="sidebar-avatar-medium" />
                 </div>
-                <ul v-if="!sidebarMinimized"
+                <!-- Dynamic Menu from API (Full Width) -->
+                <ul v-if="!sidebarMinimized && !menuLoading"
                     class="menu space-y-3 md:space-y-2 mt-2 px-3 pb-3 text-sm md:text-xs w-full text-gray-300 hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block flex-1">
-                    <li>
-                        <SidebarLink :href="route('home.index')"
-                            :active="route().current('home.index') || route().current('home')">
-                            <i class="pi pi-th-large mr-2 text-sm"></i>
-                            <span class="font-medium">Home</span>
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('dashboard')"
-                            :active="route().current('dashboard') || route().current('index')">
-                            <i class="pi pi-chart-bar mr-2 text-sm"></i>
-                            <span class="font-medium">Dashboard</span>
-                        </SidebarLink>
-                    </li>
-                    <li v-if="hasPermission('forms-templates.view')">
-                        <SidebarLink :href="route('form-templates.index')"
-                            :active="route().current('form-templates.index')">
-                            <i class="pi pi-file mr-2"></i>
-                            <span class="font-medium">Forms & Letters</span>
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <details open>
-                            <summary class="cursor-pointer">
-                                <i class="pi pi-graduation-cap mr-2 text-sm"></i>
-                                <span class="-mr-1 font-medium">Scholarship</span>
-                            </summary>
-                            <ul class="space-y-1 mt-1 ml-2">
-                                <li>
-                                    <SidebarLink :href="route('waitinglist.index')"
-                                        :active="route().current('waitinglist.index')">
-                                        <i class="pi pi-clipboard mr-2 text-sm"></i>
-                                        <span class="-mr-1 font-medium">Waiting List</span>
-                                    </SidebarLink>
-                                </li>
-                                <li v-if="hasPermission('applicants.approve')">
-                                    <SidebarLink :href="route('scholarship.reviewed-applicants')"
-                                        :active="route().current('scholarship.reviewed-applicants')">
-                                        <i class="pi pi-check-circle mr-2 text-sm"></i>
-                                        <span class="-mr-1 font-medium">Reviewed Applicants</span>
-                                    </SidebarLink>
-                                </li>
-                                <li>
-                                    <SidebarLink :href="route('scholarship.profiles')"
-                                        :active="route().current('scholarship.profiles') || route().current('scholarship.profile.show') || route().current('scholarship.profile.history')">
-                                        <i class="pi pi-users mr-2 text-sm"></i>
-                                        <span class="-mr-1 font-medium">Profiles</span>
+                    <template v-for="item in menuItems" :key="item.id">
+                        <!-- Menu item without children -->
+                        <li v-if="!item.children || item.children.length === 0">
+                            <SidebarLink :href="item.route ? route(item.route) : '#'"
+                                :active="item.route && route().current(item.route)">
+                                <i :class="[item.icon, 'mr-2 text-sm']"></i>
+                                <span class="font-medium">{{ item.name }}</span>
+                                <Badge v-if="item.name === 'System Updates' && unreadUpdatesCount > 0"
+                                    :value="unreadUpdatesCount" severity="danger" class="ml-auto" />
+                            </SidebarLink>
+                        </li>
+
+                        <!-- Menu item with children (dropdown) -->
+                        <li v-else>
+                            <div @click="toggleMenuExpansion(item.id)"
+                                class="cursor-pointer flex items-center justify-between py-1 px-2 rounded hover:bg-gray-700 transition-colors">
+                                <span class="flex items-center flex-1">
+                                    <i :class="[item.icon, 'mr-2 text-sm']"></i>
+                                    <span class="-mr-1 font-medium">{{ item.name }}</span>
+                                </span>
+                                <i :class="expandedMenus.has(item.id) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                                    style="font-size: 0.65rem" class="transition-transform duration-200"></i>
+                            </div>
+                            <!-- Children list - show/hide based on expanded state -->
+                            <ul v-if="expandedMenus.has(item.id)" class="space-y-1 mt-1 ml-2">
+                                <li v-for="child in item.children" :key="child.id">
+                                    <SidebarLink :href="child.route ? route(child.route) : '#'"
+                                        :active="child.route && route().current(child.route)">
+                                        <i :class="[child.icon, 'mr-2 text-sm']"></i>
+                                        <span class="-mr-1 font-medium">{{ child.name }}</span>
                                     </SidebarLink>
                                 </li>
                             </ul>
-                        </details>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('vouchers.index')" :active="route().current('vouchers.index')">
-                            <i class="pi pi-credit-card mr-2"></i>
-                            <span class="font-medium">Vouchers</span>
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('system-updates.index')"
-                            :active="route().current('system-updates.index')">
-                            <i class="pi pi-bell mr-2"></i>
-                            <span class="font-medium">System Updates</span>
-                            <Badge v-if="unreadUpdatesCount > 0" :value="unreadUpdatesCount" severity="danger"
-                                class="ml-auto" />
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('help.index')" :active="route().current('help.index')">
-                            <i class="pi pi-question-circle mr-2"></i>
-                            <span class="font-medium">Help & Instructions</span>
-                        </SidebarLink>
-                    </li>
-                    <li
-                        v-if="hasRole('administrator') || hasRole('moderator') || hasRole('program_manager') || hasRole('jpm_admin')">
-                        <details open>
-                            <summary>
-                                <i class="pi pi-table mr-2"></i>
-                                <span class="-mr-1 font-medium">Library</span>
-                            </summary>
-                            <ul class="space-y-1 mt-2">
-                                <li v-if="hasPermission('manage-scholarship-programs')">
-                                    <SidebarLink :href="route('scholarshipprograms.index')"
-                                        :active="route().current('scholarshipprograms.index')">
-                                        <i class="pi pi-book mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Programs</span>
-                                    </SidebarLink>
-                                </li>
-                                <li v-if="hasPermission('manage-program-courses')">
-                                    <SidebarLink :href="route('courses.index')"
-                                        :active="route().current('courses.index')">
-                                        <i class="pi pi-graduation-cap mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Courses</span>
-                                    </SidebarLink>
-                                </li>
-                                <li v-if="hasPermission('requirements.manage')">
-                                    <SidebarLink :href="route('program_requirements.index')"
-                                        :active="route().current('program_requirements.index')">
-                                        <i class="pi pi-list mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Requirements</span>
-                                    </SidebarLink>
-                                </li>
-                                <li v-if="hasPermission('schools.manage')">
-                                    <SidebarLink :href="route('school.index')"
-                                        :active="route().current('school.index')">
-                                        <i class="pi pi-building mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Schools</span>
-                                    </SidebarLink>
-                                </li>
-                                <li
-                                    v-if="hasRole('administrator') || hasRole('moderator') || hasRole('program_manager')">
-                                    <SidebarLink :href="route('responsibility-centers.index')"
-                                        :active="route().current('responsibility-centers.index')">
-                                        <i class="pi pi-code mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Resp Centers</span>
-                                    </SidebarLink>
-                                </li>
-                                <li v-if="hasRole('administrator')">
-                                    <SidebarLink :href="route('system-options.index')"
-                                        :active="route().current('system-options.index')">
-                                        <i class="pi pi-sliders-h mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Option Values</span>
-                                    </SidebarLink>
-                                </li>
-                            </ul>
-                        </details>
-                    </li>
-                    <li v-if="hasRole('administrator')">
-                        <details open>
-                            <summary>
-                                <i class="pi pi-shield mr-2"></i>
-                                <span class="-mr-1 font-medium">Administrator</span>
-                            </summary>
-                            <ul class="space-y-1 mt-2">
-                                <li>
-                                    <SidebarLink v-if="hasRole('administrator')" :href="route('access-control.index')"
-                                        :active="route().current('access-control.index') || route().current('users.index')">
-                                        <i class="pi pi-lock mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Access Control</span>
-                                    </SidebarLink>
-                                </li>
-                                <li>
-                                    <SidebarLink v-if="hasRole('administrator')" :href="route('admin.system-report')"
-                                        :active="route().current('admin.system-report')">
-                                        <i class="pi pi-chart-bar mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">System Stats</span>
-                                    </SidebarLink>
-                                </li>
-                                <li>
-                                    <SidebarLink v-if="hasRole('administrator')" :href="route('admin.deleted-records')"
-                                        :active="route().current('admin.deleted-records')">
-                                        <i class="pi pi-trash mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Deleted Records</span>
-                                    </SidebarLink>
-                                </li>
-                                <li>
-                                    <SidebarLink v-if="hasRole('administrator')" :href="route('data-export.index')"
-                                        :active="route().current('data-export.index')">
-                                        <i class="pi pi-download mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Data Export</span>
-                                    </SidebarLink>
-                                </li>
-                                <li>
-                                    <SidebarLink v-if="hasRole('administrator')" :href="route('admin.system-updates')"
-                                        :active="route().current('admin.system-updates')">
-                                        <i class="pi pi-megaphone mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Manage Updates</span>
-                                    </SidebarLink>
-                                </li>
-                                <li>
-                                    <SidebarLink v-if="hasRole('administrator')"
-                                        :href="route('admin.maintenance.index')"
-                                        :active="route().current('admin.maintenance.index')">
-                                        <i class="pi pi-cog mr-2"></i>
-                                        <span class="-mr-1 font-medium indent-3">Maintenance</span>
-                                    </SidebarLink>
-                                </li>
-                            </ul>
-                        </details>
-                    </li>
+                        </li>
+                    </template>
                 </ul>
-                <ul v-else
+
+                <!-- Loading state -->
+                <div v-if="menuLoading" class="flex items-center justify-center py-8">
+                    <i class="pi pi-spin pi-spinner text-gray-400" style="font-size: 1.5rem"></i>
+                </div>
+                <!-- Dynamic Menu from API (Minimized Width) -->
+                <ul v-if="sidebarMinimized && !menuLoading"
                     class="menu space-y-3 mt-2 px-2 pb-4 w-full text-gray-300 hover:text-gray-50 items-center min-h-0 min-w-0 block flex-1 overflow-y-auto overflow-x-hidden">
-                    <li>
-                        <SidebarLink :href="route('dashboard')"
-                            :active="route().current('dashboard') || route().current('home') || route().current('index')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-home text-xl"></i>
-                            <span class="text-xs">dashboard</span>
-                        </SidebarLink>
-                    </li>
-                    <li v-if="hasPermission('forms-templates.view')">
-                        <SidebarLink :href="route('form-templates.index')"
-                            :active="route().current('form-templates.index')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-file text-xl"></i>
-                            <span class="text-xs">letters</span>
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('waitinglist.index')" :active="route().current('waitinglist.index')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-clipboard text-xl"></i>
-                            <span class="text-xs">waiting list</span>
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('scholarship.profiles')"
-                            :active="route().current('scholarship.profiles') || route().current('scholarship.profile.show') || route().current('scholarship.profile.history')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-users text-xl"></i>
-                            <span class="text-xs">profiles</span>
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('system-updates.index')"
-                            :active="route().current('system-updates.index')"
-                            class="flex flex-col justify-center text-center relative">
-                            <i class="pi pi-bell text-xl"></i>
-                            <span class="text-xs">updates</span>
-                            <Badge v-if="unreadUpdatesCount > 0" :value="unreadUpdatesCount" severity="danger"
-                                class="absolute -top-1 -right-1"
-                                style="min-width: 1.25rem; height: 1.25rem; font-size: 0.625rem;" />
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('help.index')" :active="route().current('help.index')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-question-circle text-xl"></i>
-                            <span class="text-xs">help</span>
-                        </SidebarLink>
-                    </li>
-                    <li v-if="hasPermission('manage-scholarship-programs')">
-                        <SidebarLink :href="route('scholarshipprograms.index')"
-                            :active="route().current('scholarshipprograms.index')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-book text-xl"></i>
-                            <span class="text-xs">programs</span>
-                        </SidebarLink>
-                    </li>
-                    <li v-if="hasPermission('manage-program-courses')">
-                        <SidebarLink :href="route('courses.index')" :active="route().current('courses.index')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-graduation-cap text-xl"></i>
-                            <span class="text-xs">courses</span>
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('program_requirements.index')"
-                            :active="route().current('program_requirements.index')"
-                            class="flex flex-col items-center justify-center text-center">
-                            <i class="pi pi-list text-xl"></i>
-                            <span class="text-xs">reqs</span>
-                        </SidebarLink>
-                    </li>
-                    <li>
-                        <SidebarLink :href="route('school.index')" :active="route().current('school.index')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-building text-xl"></i>
-                            <span class="text-xs">schools</span>
-                        </SidebarLink>
-                    </li>
-                    <li v-if="hasRole('administrator')">
-                        <SidebarLink :href="route('system-options.index')"
-                            :active="route().current('system-options.index')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-sliders-h text-xl"></i>
-                            <span class="text-xs">options</span>
-                        </SidebarLink>
-                    </li>
-                    <li v-if="hasRole('administrator')">
-                        <SidebarLink :href="route('access-control.index')"
-                            :active="route().current('access-control.index') || route().current('users.index') || route().current('roles.index') || route().current('permissions.index')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-lock text-xl"></i>
-                            <span class="text-xs">access</span>
-                        </SidebarLink>
-                    </li>
-                    <li v-if="hasRole('administrator')">
-                        <SidebarLink :href="route('admin.system-report')"
-                            :active="route().current('admin.system-report')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-chart-bar text-xl"></i>
-                            <span class="text-xs">stats</span>
-                        </SidebarLink>
-                    </li>
-                    <li v-if="hasRole('administrator')">
-                        <SidebarLink :href="route('admin.deleted-records')"
-                            :active="route().current('admin.deleted-records')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-trash text-xl"></i>
-                            <span class="text-xs">trash</span>
-                        </SidebarLink>
-                    </li>
-                    <li v-if="hasRole('administrator')">
-                        <SidebarLink :href="route('data-export.index')" :active="route().current('data-export.index')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-download text-xl"></i>
-                            <span class="text-xs">export</span>
-                        </SidebarLink>
-                    </li>
-                    <li v-if="hasRole('administrator')">
-                        <SidebarLink :href="route('admin.system-updates')"
-                            :active="route().current('admin.system-updates')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-megaphone text-xl"></i>
-                            <span class="text-xs">manage</span>
-                        </SidebarLink>
-                    </li>
-                    <li v-if="hasRole('administrator')">
-                        <SidebarLink :href="route('admin.maintenance.index')"
-                            :active="route().current('admin.maintenance.index')"
-                            class="flex flex-col justify-center text-center">
-                            <i class="pi pi-cog text-xl"></i>
-                            <span class="text-xs">maint</span>
-                        </SidebarLink>
-                    </li>
+                    <template v-for="item in menuItems" :key="item.id">
+                        <!-- Single menu item (minimized) -->
+                        <li v-if="!item.children || item.children.length === 0">
+                            <SidebarLink :href="item.route ? route(item.route) : '#'"
+                                :active="item.route && route().current(item.route)"
+                                class="flex flex-col justify-center text-center">
+                                <i :class="[item.icon, 'text-xl']"></i>
+                                <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
+                                    }}</span>
+                            </SidebarLink>
+                        </li>
+
+                        <!-- Parent menu item with children (minimized) -->
+                        <li v-else class="relative group">
+                            <div class="flex flex-col justify-center text-center cursor-pointer">
+                                <i :class="[item.icon, 'text-xl']"></i>
+                                <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
+                                    }}</span>
+                            </div>
+                        </li>
+                    </template>
                 </ul>
             </div>
         </aside>

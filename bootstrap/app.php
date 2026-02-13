@@ -19,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'check-roles' => \App\Http\Middleware\CheckRoles::class,
+            'check.role' => \App\Http\Middleware\CheckRole::class,
+            'check.permission' => \App\Http\Middleware\CheckPermission::class,
             'maintenance' => \App\Http\Middleware\CheckMaintenance::class,
             'admin-role' => \App\Http\Middleware\EnsureAdminRole::class,
             // 'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,

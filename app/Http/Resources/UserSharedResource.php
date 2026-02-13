@@ -19,7 +19,7 @@ class UserSharedResource extends JsonResource
             'name' => $this->name,
             'username' => $this->username,
             'roles' => $this->getRoleNames(),
-            'permissions' => $this->getAllPermissions()->pluck('name'),
+            'permissions' => $this->getAllPermissions()->pluck('name')->toArray(),
             'profile_photo_url' => $this->profile_photo_url,
             'has_profile_photo' => $this->hasProfilePhoto(),
             'unread_notifications_count' => $this->getUnreadNotificationsCount(),

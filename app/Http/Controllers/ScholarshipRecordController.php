@@ -124,7 +124,7 @@ class ScholarshipRecordController extends Controller
     {
 
         $msg = ['error' => false, 'message' => ''];
-        if (!Gate::allows('create-scholar-profile') && $action === 'create') {
+        if (!Gate::allows('scholarships.create') && $action === 'create') {
 
             // insert create logic here
             $action = null;
@@ -147,7 +147,7 @@ class ScholarshipRecordController extends Controller
     public function create(Request $request): Response
     {
         //
-        if (Gate::allows('create-scholar-profile')) {
+        if (Gate::allows('scholarships.create')) {
 
             // insert create logic here
             return Inertia::render('ScholarshipRecord/ScholarCreate');

@@ -6,10 +6,10 @@ use App\Http\Resources\PermissionResource;
 use App\Http\Resources\RoleResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Models\Role;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class AccessControlController extends Controller
 {

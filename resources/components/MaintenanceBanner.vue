@@ -5,10 +5,10 @@
         type === 'critical' ? 'bg-red-50 border-red-500 text-red-900' : '',
     ]">
         <div class="border-l-4 p-4 rounded">
-            <div class="flex items-start">
+            <div class="flex items-center">
                 <div class="flex-1">
                     <h3 class="font-bold text-lg" :class="typeClasses">{{ title }}</h3>
-                    <p class="mt-2 text-sm">{{ message }}</p>
+                    <p class="mt-2 text-sm text-center">{{ message }}</p>
 
                     <div v-if="countdown && countdown.status === 'upcoming'" class="mt-4 pt-4 border-t">
                         <p class="text-sm font-semibold">{{ countdown.message }}</p>

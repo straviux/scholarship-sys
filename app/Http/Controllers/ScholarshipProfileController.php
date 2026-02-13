@@ -653,7 +653,7 @@ class ScholarshipProfileController extends Controller
             $enableJpmHighlighting = $request->filled('enable_jpm_highlighting') && $request->enable_jpm_highlighting == 1;
             $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
             $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm;
-            $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && $enableJpmHighlighting && !$showJpmOnly && !$hideJpm;
+            $canViewJpm = $request->user() && $request->user()->can('jpm.view') && $enableJpmHighlighting && !$showJpmOnly && !$hideJpm;
 
             return response()->json([
                 'success' => true,
@@ -668,7 +668,7 @@ class ScholarshipProfileController extends Controller
             $enableJpmHighlighting = $request->filled('enable_jpm_highlighting') && $request->enable_jpm_highlighting == 1;
             $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
             $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm;
-            $canViewJpm = $request->user() && $request->user()->can('can-view-jpm') && $enableJpmHighlighting && !$showJpmOnly && !$hideJpm;
+            $canViewJpm = $request->user() && $request->user()->can('jpm.view') && $enableJpmHighlighting && !$showJpmOnly && !$hideJpm;
 
             return response()->json([
                 'success' => true,
@@ -1258,7 +1258,7 @@ class ScholarshipProfileController extends Controller
     public function assignPriority(Request $request, $id)
     {
         // Check permission
-        if (!Gate::allows('can-manage-priority')) {
+        if (!Gate::allows('priority.manage')) {
             return response()->json([
                 'success' => false,
                 'message' => 'You do not have permission to manage priority.'
@@ -1346,7 +1346,7 @@ class ScholarshipProfileController extends Controller
     public function removePriority($id)
     {
         // Check permissions
-        if (!Gate::allows('can-manage-priority')) {
+        if (!Gate::allows('priority.manage')) {
             abort(403, 'Unauthorized action.');
         }
 

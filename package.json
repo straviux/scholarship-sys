@@ -52,6 +52,7 @@
         "vue-dynamic-heroicons": "^0.0.2",
         "vue-multiselect": "^3.0.0-beta.3",
         "vue3-toastify": "^0.2.8",
+        "vuedraggable": "^4.1.0",
         "watch": "^0.13.0"
     }
 }

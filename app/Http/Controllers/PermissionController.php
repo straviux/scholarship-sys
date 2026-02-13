@@ -33,7 +33,7 @@ class PermissionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(CreatePermissionRequest $request): RedirectResponse
+    public function store(CreatePermissionRequest $request)
     {
         $permission = Permission::create($request->validated());
 
@@ -43,6 +43,15 @@ class PermissionController extends Controller
             recordData: ['name' => $permission->name],
             remarks: "Created permission: {$permission->name}"
         );
+
+        // Return JSON if AJAX request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'permission' => new PermissionResource($permission),
+                'message' => 'Permission created successfully'
+            ]);
+        }
 
         return to_route('permissions.index');
     }
@@ -61,7 +70,7 @@ class PermissionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(CreatePermissionRequest $request, Permission $permission): RedirectResponse
+    public function update(CreatePermissionRequest $request, Permission $permission)
     {
         $oldData = $permission->getAttributes();
         $permission->update($request->validated());
@@ -74,13 +83,22 @@ class PermissionController extends Controller
             remarks: "Updated permission: {$permission->name}"
         );
 
+        // Return JSON if AJAX request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'permission' => new PermissionResource($permission),
+                'message' => 'Permission updated successfully'
+            ]);
+        }
+
         return to_route('permissions.index');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Permission $permission)
+    public function destroy(Request $request, Permission $permission)
     {
         $permissionData = $permission->getAttributes();
         $permission->delete();
@@ -91,6 +109,14 @@ class PermissionController extends Controller
             recordData: $permissionData,
             remarks: "Deleted permission: {$permissionData['name']}"
         );
+
+        // Return JSON if AJAX request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Permission deleted successfully'
+            ]);
+        }
 
         return back();
     }

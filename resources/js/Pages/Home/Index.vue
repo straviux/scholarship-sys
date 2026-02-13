@@ -118,7 +118,7 @@ const serviceCards = computed(() => {
         });
     }
 
-    if (hasPermission('forms-templates.view')) {
+    if (hasPermission('form-templates.view')) {
         cards.push({
             id: 'forms',
             title: 'Downloadables',

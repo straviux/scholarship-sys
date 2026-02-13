@@ -18,7 +18,7 @@ class FormTemplateController extends Controller
      */
     public function index()
     {
-        if (!Gate::allows('forms-templates.view')) {
+        if (!Gate::allows('form-templates.view')) {
             abort(403, 'User does not have the right permissions');
         }
 
@@ -43,7 +43,7 @@ class FormTemplateController extends Controller
      */
     public function store(Request $request)
     {
-        if (!Gate::allows('forms-templates.upload')) {
+        if (!Gate::allows('form-templates.upload')) {
             abort(403, 'User does not have the right permissions');
         }
 
@@ -87,7 +87,7 @@ class FormTemplateController extends Controller
      */
     public function update(Request $request, FormTemplate $formTemplate)
     {
-        if (!Gate::allows('forms-templates.edit')) {
+        if (!Gate::allows('form-templates.edit')) {
             abort(403, 'User does not have the right permissions');
         }
 
@@ -138,7 +138,7 @@ class FormTemplateController extends Controller
      */
     public function destroy(FormTemplate $formTemplate)
     {
-        if (!Gate::allows('forms-templates.delete')) {
+        if (!Gate::allows('form-templates.delete')) {
             abort(403, 'User does not have the right permissions');
         }
 
@@ -166,7 +166,7 @@ class FormTemplateController extends Controller
      */
     public function download(FormTemplate $formTemplate)
     {
-        if (!Gate::allows('forms-templates.download')) {
+        if (!Gate::allows('form-templates.download')) {
             abort(403, 'User does not have the right permissions');
         }
 
