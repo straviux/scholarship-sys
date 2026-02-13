@@ -295,7 +295,8 @@ onUnmounted(() => {
     <MaintenanceAlertModal />
 
     <!-- Maintenance Blocking Screen for Non-Admin Users -->
-    <div v-if="shouldBlockNonAdminAccess()" class="fixed inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center z-[999]">
+    <div v-if="shouldBlockNonAdminAccess()"
+        class="fixed inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center z-[999]">
         <div class="max-w-md w-full mx-4 text-center flex flex-col items-center justify-center">
             <!-- Icon -->
             <div class="mb-6">
@@ -313,7 +314,8 @@ onUnmounted(() => {
 
             <!-- Message -->
             <p class="text-gray-300 text-lg mb-6 leading-relaxed w-full max-w-sm mx-auto">
-                {{ maintenanceStatus?.announcement?.message || 'We are performing scheduled maintenance. Please try again later.' }}
+                {{ maintenanceStatus?.announcement?.message || 'We are performing scheduled maintenance. Please try
+                again later.' }}
             </p>
 
             <!-- Status Badge -->
@@ -452,7 +454,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </SidebarLink>
                         </li>
 
@@ -461,7 +463,7 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </div>
                         </li>
                     </template>
