@@ -107,7 +107,9 @@ async function fetchUnreadCount() {
 // Fetch server time
 async function fetchServerTime() {
     try {
-        const response = await fetch('/api/server-time');
+        const response = await fetch('/api/server-time', {
+            credentials: 'include',
+        });
         const data = await response.json();
         currentDateTime.value = new Date(data.timestamp);
         serverTimezone.value = data.timezone;

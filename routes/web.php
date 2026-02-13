@@ -46,6 +46,15 @@ Route::get('/mobile/upload/profile/{token}', [ProfileController::class, 'showMob
 Route::post('/mobile/upload/profile/{token}', [ProfileController::class, 'processMobileUpload'])
     ->name('mobile.profile.upload.submit');
 
+// Public API routes (no authentication required)
+Route::get('/api/server-time', function () {
+    return response()->json([
+        'timestamp' => now(),
+        'datetime' => now()->format('Y-m-d H:i:s'),
+        'timezone' => config('app.timezone')
+    ]);
+})->name('server-time.public');
+
 // TEST ROUTE: Create mock applicants (only in debug mode, auth required but CSRF exempt)
 Route::middleware(['auth'])->post('/test-add-applicants', [WaitingListController::class, 'testAddApplicants'])->name('waitinglist.testAddApplicants')->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 
@@ -388,15 +397,6 @@ Route::middleware(['auth'])->group(function () {
         ->name('user-activity-logs.unviewed-count');
     Route::get('/api/user/activity-logs', [App\Http\Controllers\UserActivityLogController::class, 'userActivityLogs'])
         ->name('user-activity-logs.data');
-
-    // Server time API
-    Route::get('/api/server-time', function () {
-        return response()->json([
-            'timestamp' => now(),
-            'datetime' => now()->format('Y-m-d H:i:s'),
-            'timezone' => config('app.timezone')
-        ]);
-    })->name('server-time');
 
     // Scholars API for Obligations & Disbursements
     Route::get('/api/scholars', [App\Http\Controllers\ScholarshipProfileController::class, 'getScholarsForVoucher'])
