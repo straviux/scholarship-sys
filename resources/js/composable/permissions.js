@@ -31,6 +31,20 @@ export function usePermission() {
 	 * @returns {boolean}
 	 */
 	const hasPermission = (name) => {
+		// Debug logging
+		if (name === 'jpm.view') {
+			console.log('hasPermission DEBUG for jpm.view:');
+			console.log('  permissions array:', auth.user.permissions);
+			console.log('  array as JSON:', JSON.stringify(auth.user.permissions));
+			console.log('  array length:', auth.user.permissions.length);
+			console.log('  array contents one by one:');
+			auth.user.permissions.forEach((perm, idx) => {
+				console.log(`    [${idx}]: "${perm}" (length: ${perm.length})`);
+			});
+			console.log('  looking for: "jpm.view" (length: 8)');
+			console.log('  includes result:', auth.user.permissions.includes(name));
+		}
+
 		if (typeof name === 'string') {
 			return auth.user.permissions.includes(name);
 		}

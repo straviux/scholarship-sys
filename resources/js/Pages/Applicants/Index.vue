@@ -550,8 +550,40 @@ const showJpmColumns = ref(hasPermission('jpm.view') && localStorage.getItem('sh
 watch(showJpmColumns, (newValue) => {
     if (hasPermission('jpm.view')) {
         localStorage.setItem('showJpmColumns', newValue.toString());
+    } else {
+        // Clear from localStorage if permission is revoked
+        localStorage.removeItem('showJpmColumns');
+        showJpmColumns.value = false;
     }
 });
+
+// Add a watcher to reset showJpmColumns if user loses permission during session
+const page = usePage();
+watch(() => page.props.auth?.user?.permissions, (newPermissions) => {
+    if (newPermissions && !newPermissions.includes('jpm.view')) {
+        showJpmColumns.value = false;
+        localStorage.removeItem('showJpmColumns');
+    }
+}, { deep: true });
+
+// Computed property to ensure JPM controls are only shown if user ACTUALLY has permission
+// This acts as a final safeguard against any stale state
+const canShowJpmControls = computed(() => {
+    return hasPermission('jpm.view') && showJpmColumns.value === true;
+});
+
+// Debug: Log user permissions to console
+console.log('=== JPM PERMISSION DEBUG ===');
+console.log('User ID:', page.props.auth?.user?.id);
+console.log('User Name:', page.props.auth?.user?.name);
+console.log('User Roles:', page.props.auth?.user?.roles);
+console.log('All permissions array:', JSON.stringify(page.props.auth?.user?.permissions || []));
+console.log('Total permissions:', (page.props.auth?.user?.permissions || []).length);
+console.log('jpm.view in array?', (page.props.auth?.user?.permissions || []).includes('jpm.view'));
+console.log('Has jpm.view (hasPermission):', hasPermission('jpm.view'));
+console.log('showJpmColumns:', showJpmColumns.value);
+console.log('canShowJpmControls:', canShowJpmControls.value);
+console.log('============================');
 
 // Simple view toggle - hide action buttons for easier viewing
 const simpleView = ref(localStorage.getItem('simpleView') !== null ? localStorage.getItem('simpleView') === 'true' : true);
@@ -1191,21 +1223,23 @@ const formatDate = (date) => {
                 <template #end>
                     <div class="flex gap-3 items-center">
                         <!-- JPM Controls -->
-                        <div class="flex items-center gap-4" v-if="hasPermission('jpm.view')">
-                            <div class="flex items-center gap-2">
-                                <Checkbox v-model="showJpmColumns" inputId="showJpmToggle" binary />
-                                <label for="showJpmToggle" class="text-sm text-gray-600 cursor-pointer">Enable JPM
-                                    Tagging</label>
+                        <template v-if="hasPermission('jpm.view')">
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2">
+                                    <Checkbox v-model="showJpmColumns" inputId="showJpmToggle" binary />
+                                    <label for="showJpmToggle" class="text-sm text-gray-600 cursor-pointer">Enable JPM
+                                        Tagging</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <label for="jpmFilter" class="text-sm text-gray-600">JPM Filter:</label>
+                                    <Select v-model="filter.jpm_filter" :options="jpmFilterOptions" optionLabel="label"
+                                        size="small" optionValue="value" placeholder="Select filter" class="w-40"
+                                        inputId="jpmFilter" />
+                                </div>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <label for="jpmFilter" class="text-sm text-gray-600">JPM Filter:</label>
-                                <Select v-model="filter.jpm_filter" :options="jpmFilterOptions" optionLabel="label"
-                                    size="small" optionValue="value" placeholder="Select filter" class="w-40"
-                                    inputId="jpmFilter" />
-                            </div>
-                        </div>
 
-                        <Divider layout="vertical" class="h-6" v-if="hasPermission('jpm.view')" />
+                            <Divider layout="vertical" class="h-6" />
+                        </template>
 
                         <Button icon="pi pi-user-plus" @click="openYakapCategoryModal"
                             v-if="hasPermission('applicants.create')" severity="success"

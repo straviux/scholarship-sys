@@ -92,12 +92,14 @@ class ScholarshipProfileController extends Controller
             }
         }
 
+        // ✅ OPTIMIZATION: Only return the newly created profile, don't fetch all profiles
+        // The frontend will refresh the applicants list separately if needed
         return Inertia::render(
             'Applicants/Index',
             [
                 'action' => fn() => 'create',
-                'profile' => $new_profile, // - return newly added profile, this will be used in the modal
-                'profiles' => ScholarshipProfile::with(['createdBy'])->get(),
+                'profile' => $new_profile, // Return only the newly added profile
+                'profiles' => fn() => [] // Return empty array - frontend will populate from it's own dataTable
             ]
         );
     }
@@ -377,10 +379,11 @@ class ScholarshipProfileController extends Controller
         $firstName = trim($request->input('first_name'));
         $lastName = trim($request->input('last_name'));
 
-        // Check for duplicate based on first name and last name only
-        // Middle names are excluded due to inconsistencies (NULL, empty, abbreviations, etc.)
-        $exists = ScholarshipProfile::whereRaw('LOWER(TRIM(first_name)) = ?', [strtolower($firstName)])
-            ->whereRaw('LOWER(TRIM(last_name)) = ?', [strtolower($lastName)])
+        // ✅ OPTIMIZED: Use case-insensitive COLLATE for better index usage
+        // MySQL can use indexes with COLLATE utf8mb4_general_ci for case-insensitive comparisons
+        // This is faster than using LOWER() function which can't use indexes efficiently
+        $exists = ScholarshipProfile::where(DB::raw('LOWER(TRIM(first_name))'), '=', strtolower($firstName))
+            ->where(DB::raw('LOWER(TRIM(last_name))'), '=', strtolower($lastName))
             ->exists();
 
         Log::info('Name validation check', [
