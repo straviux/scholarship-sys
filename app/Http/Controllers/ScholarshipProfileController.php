@@ -18,6 +18,7 @@ use App\Services\ScholarshipCompletionService;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Gate;
@@ -379,12 +380,23 @@ class ScholarshipProfileController extends Controller
         $firstName = trim($request->input('first_name'));
         $lastName = trim($request->input('last_name'));
 
-        // ✅ OPTIMIZED: Use case-insensitive COLLATE for better index usage
-        // MySQL can use indexes with COLLATE utf8mb4_general_ci for case-insensitive comparisons
-        // This is faster than using LOWER() function which can't use indexes efficiently
-        $exists = ScholarshipProfile::where(DB::raw('LOWER(TRIM(first_name))'), '=', strtolower($firstName))
-            ->where(DB::raw('LOWER(TRIM(last_name))'), '=', strtolower($lastName))
-            ->exists();
+        // ✅ OPTIMIZED: Use simple string comparison with COLLATE for case-insensitive matching
+        // This works better with indexes and is more reliable
+        try {
+            $exists = ScholarshipProfile::whereRaw('LOWER(TRIM(first_name)) = LOWER(?)', [$firstName])
+                ->whereRaw('LOWER(TRIM(last_name)) = LOWER(?)', [$lastName])
+                ->exists();
+        } catch (\Exception $e) {
+            Log::error('Name validation error:', [
+                'error' => $e->getMessage(),
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+            ]);
+            return response()->json([
+                'exists' => false,
+                'message' => 'Name validation check failed. Please try again.'
+            ], 500);
+        }
 
         Log::info('Name validation check', [
             'first_name' => $firstName,
