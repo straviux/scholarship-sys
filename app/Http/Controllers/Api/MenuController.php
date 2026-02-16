@@ -67,7 +67,7 @@ class MenuController extends Controller
                 'user_id' => $request->user() ? $request->user()->id : null,
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error loading menu',

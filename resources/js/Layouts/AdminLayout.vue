@@ -195,7 +195,7 @@ let intervalId = null;
 async function loadMenuItems() {
     const maxRetries = 3;
     let retryCount = 0;
-    
+
     const attemptLoad = async () => {
         try {
             menuLoading.value = true;
@@ -223,7 +223,7 @@ async function loadMenuItems() {
                     menuItems.value = [];
                     return;
                 }
-                
+
                 if (response.status >= 500 && retryCount < maxRetries) {
                     // Retry on server errors
                     retryCount++;
@@ -253,7 +253,7 @@ async function loadMenuItems() {
         } catch (error) {
             if (error.name === 'AbortError') {
                 logger.error('Menu API request timed out after 15 seconds');
-                
+
                 // Retry on timeout if we haven't exceeded max retries
                 if (retryCount < maxRetries) {
                     retryCount++;
@@ -487,7 +487,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </SidebarLink>
                         </li>
 
@@ -496,7 +496,7 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </div>
                         </li>
                     </template>
