@@ -342,30 +342,30 @@ import 'vue3-toastify/dist/index.css';
 // Navigation guard to prevent duplicate requests
 let pendingNavigation = null;
 const safeNavigate = (url) => {
-    console.log('🧭 safeNavigate called with:', url);
+    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ safeNavigate called with:', url);
     if (!pendingNavigation) {
-        console.log('✅ Executing navigation NOW');
+        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Executing navigation NOW');
         pendingNavigation = url;
         // Set a flag to ignore any repeated calls within 100ms
         const navTime = Date.now();
         router.visit(url, {
-            onStart: () => console.log('🚀 Router visit STARTED'),
-            onProgress: (progress) => console.log('📊 Router progress:', progress.percentage),
+            onStart: () => console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Router visit STARTED'),
+            onProgress: (progress) => console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â  Router progress:', progress.percentage),
             onSuccess: () => {
-                console.log('✔️ Router visit SUCCESS');
+                console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Router visit SUCCESS');
                 pendingNavigation = null;
             },
             onError: (errors) => {
-                console.error('❌ Router visit ERROR:', errors);
+                console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Router visit ERROR:', errors);
                 pendingNavigation = null;
             },
             onCancel: () => {
-                console.log('🛑 Router visit CANCELLED');
+                console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂºÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ Router visit CANCELLED');
                 pendingNavigation = null;
             }
         });
     } else {
-        console.log('⏭️ Navigation already pending, ignoring duplicate call');
+        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Navigation already pending, ignoring duplicate call');
     }
 };
 
@@ -374,8 +374,6 @@ import AcademicInformationFields from '@/Components/forms/fields/AcademicInforma
 import ProfileSelect from "@/Components/selects/ProfileSelect.vue";
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import BarangaySelect from '@/Components/selects/BarangaySelect.vue';
-import Select from 'primevue/select';
-import Button from 'primevue/button';
 
 const props = defineProps({
     profile: Object,

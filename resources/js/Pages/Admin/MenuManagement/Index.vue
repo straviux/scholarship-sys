@@ -13,15 +13,6 @@ import TextInput from '@/Components/ui/inputs/TextInput.vue';
 import TextArea from '@/Components/ui/inputs/TextArea.vue';
 
 // PrimeVue
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import InputText from 'primevue/inputtext';
-import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
-import ToggleSwitch from 'primevue/toggleswitch';
-import Select from 'primevue/select';
-import Card from 'primevue/card';
-import { useToast } from 'primevue/usetoast';
 
 const $page = usePage();
 const toast = useToast();
@@ -619,7 +610,7 @@ const debouncedSaveOrder = () => {
                                 <h3 class="text-xl font-semibold text-gray-900">Menu Items</h3>
                                 <p class="text-sm text-gray-600 mt-1 flex items-center gap-2">
                                     <i class="pi pi-info-circle"></i>
-                                    Click on groups to expand/collapse. Use ↑↓ buttons to reorder items within groups.
+                                    Click on groups to expand/collapse. Use ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ buttons to reorder items within groups.
                                 </p>
                             </div>
                         </div>

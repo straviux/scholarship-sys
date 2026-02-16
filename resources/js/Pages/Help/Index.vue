@@ -2,11 +2,6 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import Accordion from 'primevue/accordion';
-import AccordionTab from 'primevue/accordiontab';
-import Card from 'primevue/card';
-import Divider from 'primevue/divider';
-import Toolbar from 'primevue/toolbar';
 
 const activeAccordion = ref(0);
 
@@ -71,7 +66,7 @@ const faqs = ref([
                             start to
                             finish.
                             Track applicants, approve or deny applications, manage disbursements, and generate
-                            reports—all in one
+                            reports📎 all in one
                             place.
                         </p>
                     </div>
@@ -558,7 +553,7 @@ const faqs = ref([
                                     <i class="pi pi-fw pi-plus mr-2"></i>Add a New Applicant
                                 </h5>
                                 <ol class="text-sm text-red-800 space-y-1 list-decimal list-inside">
-                                    <li>Go to Scholarship → Waiting List</li>
+                                    <li>Go to Scholarship ✏️ Waiting List</li>
                                     <li>Click "Add New" button</li>
                                     <li>Fill in all required information</li>
                                     <li>Upload required documents</li>
@@ -659,15 +654,15 @@ const faqs = ref([
                         <h2 class="text-lg font-semibold text-gray-800 mb-3">Still Need Help?</h2>
                         <ul class="space-y-2 text-gray-700">
                             <li class="flex items-start gap-2">
-                                <span class="text-blue-600 font-bold mt-0.5">•</span>
+                                <span class="text-blue-600 font-bold mt-0.5">📎</span>
                                 <span>Review the sections above for detailed guidance on common tasks</span>
                             </li>
                             <li class="flex items-start gap-2">
-                                <span class="text-blue-600 font-bold mt-0.5">•</span>
+                                <span class="text-blue-600 font-bold mt-0.5">📎</span>
                                 <span>Check the Approval History in scholar profiles to track status changes</span>
                             </li>
                             <li class="flex items-start gap-2">
-                                <span class="text-blue-600 font-bold mt-0.5">•</span>
+                                <span class="text-blue-600 font-bold mt-0.5">📎</span>
                                 <span>Navigate to Profiles to generate reports on scholars list, summary, and
                                     statistics</span>
                             </li>

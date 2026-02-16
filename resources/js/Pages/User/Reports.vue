@@ -1,10 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import Dialog from 'primevue/dialog';
-import { useDateUtils } from '@/composable/dateUtils.js';
 
-const { formatDate } = useDateUtils();
 
 const props = defineProps({
     reportData: Object,
@@ -312,7 +310,7 @@ const closeModal = () => {
                                     class="hover:bg-purple-50">
                                     <td class="px-4 py-2 text-gray-700 font-mono">{{ voucher.voucher_id }}</td>
                                     <td class="px-4 py-2 text-gray-700">{{ voucher.voucher_number || 'N/A' }}</td>
-                                    <td class="px-4 py-2 text-gray-700">{{ voucher.amount ? '₱' +
+                                    <td class="px-4 py-2 text-gray-700">{{ voucher.amount ?
                                         parseFloat(voucher.amount).toFixed(2) : 'N/A' }}</td>
                                     <td class="px-4 py-2">
                                         <span

@@ -2,12 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { usePage, Head } from '@inertiajs/vue3';
 import axios from 'axios';
-import { useToast } from 'primevue/usetoast';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
-import Menu from 'primevue/menu';
-import Toast from 'primevue/toast';
 import logger from '@/utils/logger';
 
 defineOptions({

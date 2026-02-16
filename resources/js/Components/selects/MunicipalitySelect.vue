@@ -1,8 +1,6 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue';
 import { useCachedData } from '@/composable/useCachedData';
-import Select from 'primevue/select';
-import MultiSelect from 'primevue/multiselect';
 import axios from 'axios';
 
 const props = defineProps({

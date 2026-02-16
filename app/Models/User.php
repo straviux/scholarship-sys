@@ -170,6 +170,56 @@ class User extends Authenticatable
     }
 
     /**
+     * Get all permissions for this user through their assigned roles.
+     * This overrides the Spatie method to avoid accessing the dropped model_has_permissions table.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function getAllPermissions(): \Illuminate\Support\Collection
+    {
+        // Get permissions from all assigned roles (no direct user permissions)
+        return $this->roles()
+            ->with('permissions')
+            ->get()
+            ->flatMap(fn($role) => $role->permissions)
+            ->unique('id')
+            ->values();
+    }
+
+    /**
+     * Override hasDirectPermission() from HasPermissions trait.
+     * Since we're using role-based permissions only, users cannot have direct permissions.
+     * Always returns false.
+     *
+     * @param string|\Spatie\Permission\Models\Permission $permission
+     * @param string|null $guardName
+     * @return bool
+     */
+    public function hasDirectPermission($permission, $guardName = null): bool
+    {
+        // Direct user permissions no longer exist (role-based only)
+        return false;
+    }
+
+    /**
+     * Override hasPermissionTo() from HasPermissions trait.
+     * Checks if user has permission through their assigned roles only.
+     * Never checks direct permissions since model_has_permissions table was dropped.
+     *
+     * @param string|\Spatie\Permission\Models\Permission $permission
+     * @param string|null $guardName
+     * @return bool
+     */
+    public function hasPermissionTo($permission, $guardName = null): bool
+    {
+        // Convert string permission to Permission object if needed
+        $permission = $this->filterPermission($permission, $guardName);
+
+        // Only check permissions through roles (not direct permissions)
+        return $this->hasPermissionViaRole($permission);
+    }
+
+    /**
      * Check if user has a specific permission through their role.
      * 
      * Usage:

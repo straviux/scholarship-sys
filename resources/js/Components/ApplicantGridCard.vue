@@ -1,10 +1,5 @@
 <script setup>
 import { computed } from 'vue';
-import Card from 'primevue/card';
-import Avatar from 'primevue/avatar';
-import Tag from 'primevue/tag';
-import Divider from 'primevue/divider';
-import Button from 'primevue/button';
 
 const props = defineProps({
     applicant: {

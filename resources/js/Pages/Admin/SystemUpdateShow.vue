@@ -153,10 +153,10 @@ import { ref, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import axios from 'axios'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Tag from 'primevue/tag'
-import Dialog from 'primevue/dialog'
+
+
+
+
 import { marked } from 'marked'
 
 // Configure marked options

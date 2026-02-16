@@ -200,15 +200,11 @@
 
 <script setup>
 import { onMounted, watch, computed, ref } from 'vue';
-import InputText from 'primevue/inputtext';
-import FloatLabel from 'primevue/floatlabel';
-import Checkbox from 'primevue/checkbox';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import BarangaySelect from '@/Components/selects/BarangaySelect.vue';
 import GenderSelect from '@/Components/selects/GenderSelect.vue';
 import CivilStatusSelect from '@/Components/selects/CivilStatusSelect.vue';
 import ReligionSelect from '@/Components/selects/ReligionSelect.vue';
-import { DatePicker } from 'primevue';
 
 const props = defineProps({
     first_name: String,

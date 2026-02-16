@@ -2,13 +2,6 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import logger from '@/utils/logger';
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
-import FileUpload from 'primevue/fileupload';
-import DatePicker from 'primevue/datepicker';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
 import { ref, computed, nextTick, watch, onUnmounted } from 'vue';
 import { useDateUtils } from '@/composable/dateUtils.js';
 import { useForm } from '@inertiajs/vue3';

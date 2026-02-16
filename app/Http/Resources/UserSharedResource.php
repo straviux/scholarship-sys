@@ -14,12 +14,22 @@ class UserSharedResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Get permissions from assigned roles (no direct user permissions anymore)
+        $permissions = $this->roles()
+            ->with('permissions')
+            ->get()
+            ->flatMap(fn($role) => $role->permissions)
+            ->pluck('name')
+            ->unique()
+            ->values()
+            ->toArray();
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'username' => $this->username,
             'roles' => $this->getRoleNames(),
-            'permissions' => $this->getAllPermissions()->pluck('name')->toArray(),
+            'permissions' => $permissions,
             'profile_photo_url' => $this->profile_photo_url,
             'has_profile_photo' => $this->hasProfilePhoto(),
             'unread_notifications_count' => $this->getUnreadNotificationsCount(),

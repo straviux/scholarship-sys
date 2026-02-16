@@ -87,11 +87,6 @@
 import { useForm } from "@inertiajs/vue3";
 import { computed, watch } from "vue";
 import { toast } from 'vue3-toastify';
-import Dialog from 'primevue/dialog';
-import InputText from 'primevue/inputtext';
-import Select from 'primevue/select';
-import Password from 'primevue/password';
-import Button from 'primevue/button';
 
 const props = defineProps({
     show: Boolean,

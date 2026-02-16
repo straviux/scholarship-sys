@@ -1,8 +1,6 @@
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue';
 import { useApi } from '@/composable/api';
-import Select from 'primevue/select';
-import MultiSelect from 'primevue/multiselect';
 const props = defineProps({
     modelValue: {
         type: [String, Number, Object, Array],

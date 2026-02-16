@@ -176,10 +176,6 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import axios from 'axios';
 import moment from 'moment';
-import Button from 'primevue/button';
-import Select from 'primevue/select';
-import Tag from 'primevue/tag';
-import ProgressSpinner from 'primevue/progressspinner';
 
 const props = defineProps({
     params: {

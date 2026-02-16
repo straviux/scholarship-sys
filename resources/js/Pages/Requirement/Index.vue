@@ -5,16 +5,6 @@ import { ref, watch } from "vue";
 import RequirementModal from "./Modal/RequirementModal.vue";
 
 // PrimeVue Components
-import Button from 'primevue/button';
-import Chip from 'primevue/chip';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import InputText from 'primevue/inputtext';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import Panel from 'primevue/panel';
-import Tag from 'primevue/tag';
-import Dialog from 'primevue/dialog';
 
 const props = defineProps({
     action: String,

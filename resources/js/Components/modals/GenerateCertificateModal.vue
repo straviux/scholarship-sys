@@ -1,12 +1,6 @@
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
-import { useToast } from 'primevue/usetoast';
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import InputText from 'primevue/inputtext';
-import Select from 'primevue/select';
-import ProgressBar from 'primevue/progressbar';
 
 const toast = useToast();
 

@@ -1,24 +1,11 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import { Head, Link, useForm, router } from "@inertiajs/vue3";
-import { onMounted, ref, watch } from "vue";
+import { Head, router } from "@inertiajs/vue3";
+import { ref, watch } from "vue";
 import moment from "moment";
-import { useStorage } from '@vueuse/core';
 import ProgramModal from "@/Pages/ScholarshipProgram/Modal/ProgramModal.vue";
 import RequirementModal from "./Modal/RequirementModal.vue";
-
-// PrimeVue Components
-import Button from 'primevue/button';
-import Chip from 'primevue/chip';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import InputText from 'primevue/inputtext';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import Panel from 'primevue/panel';
-import Tag from 'primevue/tag';
-import Dialog from 'primevue/dialog';
-import ToggleSwitch from 'primevue/toggleswitch';
+import { usePermission } from '@/composable/permissions';
 
 const props = defineProps({
     action: String,
@@ -27,7 +14,8 @@ const props = defineProps({
     requirements: Array
 });
 
-const gridview = useStorage('gridview', false);
+const { hasPermission } = usePermission();
+
 
 // Search and pagination
 const globalFilter = ref('');
@@ -80,9 +68,6 @@ const closeDeleteModal = () => {
     selectedProgram.value = null;
 };
 
-onMounted(() => {
-    // console.log(props);
-});
 
 </script>
 
@@ -103,17 +88,11 @@ onMounted(() => {
                     </div>
                 </template>
 
-                <div class="flex justify-between items-center">
+                <div class="flex justify-between items-center" v-if="hasPermission('programs.manage')">
                     <div class="text-gray-600">
                         Manage scholarship programs and their requirements
                     </div>
                     <div class="flex items-center gap-4">
-                        <!-- View Toggle -->
-                        <div class="flex items-center gap-2">
-                            <label class="text-sm text-gray-600">Table</label>
-                            <ToggleSwitch v-model="gridview" />
-                            <label class="text-sm text-gray-600">Grid</label>
-                        </div>
                         <Button label="New Program" icon="pi pi-plus" severity="success" raised
                             @click="router.get(route('scholarshipprograms.index', { action: 'create' }))" />
                     </div>
@@ -121,7 +100,7 @@ onMounted(() => {
             </Panel>
 
             <!-- Search Section (only shown in table view) -->
-            <div class="mt-6" v-if="!gridview">
+            <div class="mt-6">
                 <div class="flex gap-4 items-center mb-4">
                     <div class="flex-1 max-w-md">
                         <IconField iconPosition="left">
@@ -133,10 +112,10 @@ onMounted(() => {
             </div>
             <div class="mt-6">
                 <!-- Table View -->
-                <DataTable v-if="!gridview" :value="scholarshipPrograms" stripedRows showGridlines
-                    responsiveLayout="scroll" :emptyMessage="'No data to be displayed'"
-                    :globalFilterFields="['name', 'shortname', 'remarks']" v-model:filters="filters" paginator
-                    :rows="rows" v-model:first="first" :rowsPerPageOptions="[5, 10, 20, 50]"
+                <DataTable :value="scholarshipPrograms" stripedRows showGridlines responsiveLayout="scroll"
+                    :emptyMessage="'No data to be displayed'" :globalFilterFields="['name', 'shortname', 'remarks']"
+                    v-model:filters="filters" paginator :rows="rows" v-model:first="first"
+                    :rowsPerPageOptions="[5, 10, 20, 50]"
                     paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                     :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
 
@@ -196,69 +175,20 @@ onMounted(() => {
                     <Column header="Actions" style="width: 200px">
                         <template #body="slotProps">
                             <div class="flex gap-2 justify-center">
-                                <Button icon="pi pi-pen-to-square" severity="info" size="small" rounded outlined
-                                    v-tooltip.top="'Edit Program'" @click="editProgram(slotProps.data.id)" />
-                                <Button icon="pi pi-list" severity="warn" size="small" rounded outlined
-                                    v-tooltip.top="'Requirements'"
-                                    @click="router.get(route('scholarshipprograms.index', { id: slotProps.data.id, action: 'update-requirement' }))" />
-                                <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
-                                    v-tooltip.top="'Delete Program'" @click="confirmDeleteProgram(slotProps.data)" />
+                                <Button v-if="hasPermission('programs.manage')" icon="pi pi-pen-to-square"
+                                    severity="info" size="small" rounded outlined v-tooltip.top="'Edit Program'"
+                                    @click="editProgram(slotProps.data.id)" />
+                                <Button v-if="hasPermission('programs.manage')" icon="pi pi-list" severity="warn"
+                                    size="small" rounded outlined v-tooltip.top="'Requirements'"
+                                    @click="router.get(route('programs.index', { id: slotProps.data.id, action: 'update-requirement' }))" />
+                                <Button v-if="hasPermission('programs.delete')" icon="pi pi-trash" severity="danger"
+                                    size="small" rounded outlined v-tooltip.top="'Delete Program'"
+                                    @click="confirmDeleteProgram(slotProps.data)" />
                             </div>
                         </template>
                     </Column>
                 </DataTable>
 
-                <!-- Grid View -->
-                <div v-else class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    <div v-for="(program, index) in scholarshipPrograms" :key="'program_' + program.id"
-                        class="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-
-                        <!-- Card Header -->
-                        <div class="p-6">
-                            <div class="flex items-start justify-between">
-                                <div class="flex-1">
-                                    <div class="text-xs text-gray-400 mb-2">#{{ index + 1 }}</div>
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ program.name }}</h3>
-                                    <p class="text-sm text-gray-500 font-medium">[{{ program.shortname }}]</p>
-                                </div>
-                                <Chip :label="program.is_active ? 'Active' : 'Inactive'"
-                                    :severity="program.is_active ? 'success' : 'secondary'" />
-                            </div>
-
-                            <!-- Program Details -->
-                            <div class="mt-4 space-y-3">
-                                <div class="text-sm">
-                                    <span class="font-medium text-gray-700">Duration:</span>
-                                    <div class="text-gray-600 mt-1">
-                                        {{ program.start_date ? moment(program.start_date).format('MMM DD, YYYY') : `Not
-                                        set` }}
-                                        <span class="mx-2">to</span>
-                                        {{ program.end_date ? moment(program.end_date).format('MMM DD, YYYY') : `Not
-                                        set` }}
-                                    </div>
-                                </div>
-
-                                <div class="text-sm" v-if="program.remarks">
-                                    <span class="font-medium text-gray-700">Remarks:</span>
-                                    <p class="text-gray-600 mt-1">{{ program.remarks }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card Actions -->
-                        <div class="border-t border-gray-100 px-6 py-4">
-                            <div class="flex gap-2 justify-center">
-                                <Button icon="pi pi-pen-to-square" severity="info" size="small" outlined
-                                    v-tooltip.top="'Edit Program'" @click="editProgram(program.id)" />
-                                <Button icon="pi pi-list" severity="warn" size="small" outlined
-                                    v-tooltip.top="'Requirements'"
-                                    @click="router.get(route('scholarshipprograms.index', { id: program.id, action: 'update-requirement' }))" />
-                                <Button icon="pi pi-trash" severity="danger" size="small" outlined
-                                    v-tooltip.top="'Delete Program'" @click="confirmDeleteProgram(program)" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 

@@ -95,10 +95,6 @@
 
 <script setup>
 import { ref } from 'vue';
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
-import Select from 'primevue/select';
-import RadioButton from 'primevue/radiobutton';
 import { toast } from 'vue3-toastify';
 
 const props = defineProps({

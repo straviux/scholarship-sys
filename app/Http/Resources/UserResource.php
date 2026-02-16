@@ -22,7 +22,6 @@ class UserResource extends JsonResource
             'profile_photo_url' => $this->profile_photo_url,
             'has_profile_photo' => !empty($this->profile_photo),
             'roles' => RoleResource::collection($this->whenLoaded('roles')),
-            'permission' => PermissionResource::collection($this->whenLoaded('permissions'))
         ];
     }
 }

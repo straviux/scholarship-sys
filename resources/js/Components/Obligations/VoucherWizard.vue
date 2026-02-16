@@ -2,11 +2,8 @@
 import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import Dialog from 'primevue/dialog';
-import Drawer from 'primevue/drawer';
 import { QuillEditor } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
-import { useToast } from 'primevue/usetoast';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import logger from '@/utils/logger';
@@ -811,7 +808,7 @@ onMounted(async () => {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                             <div class="relative">
-                                <span class="absolute left-3 top-2.5 text-gray-600 font-medium">₱</span>
+                                <span class="absolute left-3 top-2.5 text-gray-600 font-medium">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â±</span>
                                 <input v-model="voucherData.obligations.amount" type="number" placeholder="0.00"
                                     step="0.01"
                                     class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />

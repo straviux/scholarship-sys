@@ -585,7 +585,7 @@
                                 <i :class="getFileIcon(attachment.file_type)" class="text-2xl text-blue-600"></i>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">{{ attachment.attachment_name }}</p>
-                                    <p class="text-xs text-gray-500">{{ attachment.file_name }} • {{
+                                    <p class="text-xs text-gray-500">{{ attachment.file_name }} ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ {{
                                         formatFileSize(attachment.file_size) }}</p>
                                 </div>
                             </div>
@@ -870,20 +870,6 @@ import 'vue3-toastify/dist/index.css';
 import { usePermission } from '@/composable/permissions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import Button from 'primevue/button';
-import Tabs from 'primevue/tabs';
-import TabList from 'primevue/tablist';
-import Tab from 'primevue/tab';
-import TabPanels from 'primevue/tabpanels';
-import TabPanel from 'primevue/tabpanel';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Chip from 'primevue/chip';
-import Dialog from 'primevue/dialog';
-import InputText from 'primevue/inputtext';
-import InputNumber from 'primevue/inputnumber';
-import Select from 'primevue/select';
-import DatePicker from 'primevue/datepicker';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';

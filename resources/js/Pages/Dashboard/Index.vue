@@ -2,8 +2,6 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { ref, computed, onMounted } from 'vue';
-import Chart from 'primevue/chart';
-import Card from 'primevue/card';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 // Register the plugin globally

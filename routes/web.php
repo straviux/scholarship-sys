@@ -7,7 +7,6 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PermissionManagementController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\RevokePermissionFromRoleController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ScholarshipProgramController;
@@ -87,18 +86,12 @@ Route::middleware(['auth', 'check.role:users,access-control', 'maintenance'])->g
     Route::resource('/users', UserController::class);
     Route::post('/users/{user}/change-password', [UserController::class, 'changePassword'])->name('users.changePassword');
 
-    // Only keep create, show, edit, store, update, destroy for roles/permissions (no index)
+    // Role and Permission API routes (accessed from AccessControl page)
     Route::post('/roles', [RoleController::class, 'store'])->middleware('check.permission:roles.manage')->name('roles.store');
-    Route::get('/roles/create', [RoleController::class, 'create'])->middleware('check.permission:roles.manage')->name('roles.create');
-    Route::get('/roles/{role}', [RoleController::class, 'show'])->name('roles.show');
-    Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->middleware('check.permission:roles.manage')->name('roles.edit');
     Route::put('/roles/{role}', [RoleController::class, 'update'])->middleware('check.permission:roles.manage')->name('roles.update');
     Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->middleware('check.permission:roles.manage')->name('roles.destroy');
 
     Route::post('/permissions', [PermissionController::class, 'store'])->middleware('check.permission:permissions.manage')->name('permissions.store');
-    Route::get('/permissions/create', [PermissionController::class, 'create'])->middleware('check.permission:permissions.manage')->name('permissions.create');
-    Route::get('/permissions/{permission}', [PermissionController::class, 'show'])->name('permissions.show');
-    Route::get('/permissions/{permission}/edit', [PermissionController::class, 'edit'])->middleware('check.permission:permissions.manage')->name('permissions.edit');
     Route::put('/permissions/{permission}', [PermissionController::class, 'update'])->middleware('check.permission:permissions.manage')->name('permissions.update');
     Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy'])->middleware('check.permission:permissions.manage')->name('permissions.destroy');
     Route::post('/permissions/cleanup/run', [PermissionController::class, 'cleanup'])->middleware('check.permission:permissions.manage')->name('permissions.cleanup');
@@ -124,8 +117,7 @@ Route::middleware(['auth', 'check.role:system-report,deleted-records,maintenance
     // Maintenance Management Routes
     Route::inertia('/admin/maintenance', 'Admin/Maintenance/Index')->name('admin.maintenance.index');
 
-    // Role Permissions Routes
-    Route::get('/permission-management', [PermissionManagementController::class, 'index'])->name('permissions.management');
+    // Role Permissions API Routes (used by AccessControl.vue)
     Route::post('/permission-management/update-role', [PermissionManagementController::class, 'updateRolePermissions'])->middleware('check.permission:permissions.manage')->name('permissions.update-role');
     Route::post('/permission-management/toggle', [PermissionManagementController::class, 'togglePermission'])->middleware('check.permission:permissions.manage')->name('permissions.toggle');
 
@@ -495,22 +487,6 @@ Route::middleware(['auth'])->get('/api/export-selected/excel', [App\Http\Control
 Route::middleware(['auth'])->get('/api/report/scholarship/pdf', [App\Http\Controllers\ReportController::class, 'generateScholarshipPdf'])->name('report.scholarship.pdf');
 // Scholarship Report Excel generation route
 Route::middleware(['auth'])->get('/api/report/scholarship/excel', [App\Http\Controllers\ReportController::class, 'generateScholarshipExcel'])->name('report.scholarship.excel');
-
-// JasperReports Routes
-Route::middleware(['auth'])->group(function () {
-    // Certificate generation
-    Route::post('/api/jasper/certificate', [App\Http\Controllers\ReportController::class, 'generateCertificate'])->name('jasper.certificate');
-
-    // Disbursement form generation
-    Route::post('/api/jasper/disbursement-form', [App\Http\Controllers\ReportController::class, 'generateDisbursementForm'])->name('jasper.disbursement-form');
-
-    // Generic report generation
-    Route::post('/api/jasper/report', [App\Http\Controllers\ReportController::class, 'generateJasperReport'])->name('jasper.report');
-
-    // List and download generated reports
-    Route::get('/api/jasper/reports', [App\Http\Controllers\ReportController::class, 'listGeneratedReports'])->name('jasper.list-reports');
-    Route::post('/api/jasper/reports/download', [App\Http\Controllers\ReportController::class, 'downloadGeneratedReport'])->name('jasper.download-report');
-});
 
 // System Updates API Routes
 Route::middleware(['auth'])->group(function () {

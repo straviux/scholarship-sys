@@ -1,8 +1,6 @@
-﻿<script setup>
+<script setup>
 import { ref, watch, watchEffect, computed, onMounted } from 'vue';
 import { useApi } from '@/composable/api';
-import Select from 'primevue/select';
-import MultiSelect from 'primevue/multiselect';
 
 const props = defineProps({
     municipalityId: {
@@ -107,9 +105,9 @@ watch(
             });
 
         // Only reset selection when:
-        // 1. Municipality actually changes (not initial load) → oldMunicipalityId !== undefined
-        // 2. There's no existing valid selection → !hasExistingSelection
-        // 3. Municipality changes to a specific value → newMunicipalityId !== '' && !== null
+        // 1. Municipality actually changes (not initial load) ? oldMunicipalityId !== undefined
+        // 2. There's no existing valid selection ? !hasExistingSelection
+        // 3. Municipality changes to a specific value ? newMunicipalityId !== '' && !== null
         const hasExistingSelection = props.modelValue && (
             typeof props.modelValue === 'object'
                 ? props.modelValue.id

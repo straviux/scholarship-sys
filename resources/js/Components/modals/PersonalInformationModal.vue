@@ -38,8 +38,6 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
 import PersonalInformationFields from '@/Components/forms/fields/PersonalInformationFields.vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';

@@ -215,11 +215,6 @@ import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vu
 import moment from 'moment';
 
 // PrimeVue Components
-import Button from 'primevue/button';
-import Panel from 'primevue/panel';
-import Tag from 'primevue/tag';
-import Chip from 'primevue/chip';
-import Dialog from 'primevue/dialog';
 
 // Props
 const props = defineProps({

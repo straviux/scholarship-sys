@@ -151,7 +151,7 @@
                     </div>
 
                     <p v-if="successMsg.photo" class="text-green-600 text-sm font-semibold text-center">
-                        ✓ Photo updated successfully
+                        ✅ Photo updated successfully
                     </p>
 
                     <div class="flex gap-3 pt-4">
@@ -214,7 +214,7 @@
                     </div>
 
                     <p v-if="successMsg.password" class="text-green-600 text-sm font-semibold text-center">
-                        ✓ Password updated successfully
+                        ✅ Password updated successfully
                     </p>
 
                     <div class="flex gap-3 pt-4">
@@ -275,7 +275,7 @@
                     </div>
 
                     <p v-if="successMsg.profile" class="text-green-600 text-sm font-semibold text-center">
-                        ✓ Profile updated successfully
+                        ✅ Profile updated successfully
                     </p>
 
                     <div class="flex gap-3 pt-4">
@@ -347,7 +347,7 @@
                     <!-- Instructions -->
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
                         <p class="text-sm text-blue-900">
-                            <strong>📱 Mobile Upload:</strong> Open this page on your mobile device and scan this QR
+                            <strong>Mobile Upload:</strong> Open this page on your mobile device and scan this QR
                             code with your camera or a QR code scanner app to quickly upload a photo.
                         </p>
                     </div>
@@ -368,8 +368,8 @@
 
                     <!-- Expiration Timer -->
                     <div class="flex items-center justify-center">
-                        <div :class="['text-lg font-bold rounded-lg px-4 py-2', getQrCountdownColor()]">
-                            ⏱️ Expires in: {{ qrCountdown }}
+                        <div :class="['text-lg font-bold rounded-lg px-4 py-2', getQrCountdownColor()]">Expires in: {{
+                            qrCountdown }}
                         </div>
                     </div>
 
@@ -386,9 +386,8 @@
 
 <script setup>
 import { ref, reactive, nextTick, watch, onUnmounted } from 'vue';
-import { useForm, usePage } from '@inertiajs/vue3';
+import { useForm, usePage, Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import Dialog from 'primevue/dialog';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
 
@@ -841,7 +840,7 @@ const startCountdown = () => {
 const copyToClipboard = async (text) => {
     try {
         await navigator.clipboard.writeText(text);
-        copyButtonText.value = '✓ Copied!';
+        copyButtonText.value = '✅ Copied!';
         setTimeout(() => {
             copyButtonText.value = '📋 Copy';
         }, 2000);
@@ -853,7 +852,7 @@ const copyToClipboard = async (text) => {
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        copyButtonText.value = '✓ Copied!';
+        copyButtonText.value = '✅ Copied!';
         setTimeout(() => {
             copyButtonText.value = '📋 Copy';
         }, 2000);

@@ -123,17 +123,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import logger from '@/utils/logger';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import Button from 'primevue/button';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Select from 'primevue/select';
-import DatePicker from 'primevue/datepicker';
-import InputText from 'primevue/inputtext';
 
 const allActivities = ref([]);
 const filteredActivities = ref([]);
@@ -198,7 +192,7 @@ function extractNameFromActivity(data) {
         // Pattern for "... profile: John Doe" or "... applicant: Jane Smith"
         const colonMatch = data.remarks.match(/:\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*(?:\s+[A-Z][a-zA-Z]+)?)(?:\s|$|!|-|\.)/);
         if (colonMatch) {
-            logger.log('✓ Found name in remarks:', colonMatch[1]);
+            logger.log('Found name in remarks:', colonMatch[1]);
             return colonMatch[1].trim();
         }
     }
@@ -209,15 +203,15 @@ function extractNameFromActivity(data) {
             const before = typeof data.snapshot_before === 'string' ? JSON.parse(data.snapshot_before) : data.snapshot_before;
             if (before && before.first_name && before.last_name) {
                 const fullName = `${before.first_name} ${before.last_name}`;
-                logger.log('✓ Found name in snapshot_before:', fullName);
+                logger.log('Found name in snapshot_before:', fullName);
                 return fullName;
             }
             if (before && before.name) {
-                logger.log('✓ Found name in snapshot_before.name:', before.name);
+                logger.log('Found name in snapshot_before.name:', before.name);
                 return before.name;
             }
             if (before && before.title) {
-                logger.log('✓ Found title in snapshot_before:', before.title);
+                logger.log('Found title in snapshot_before:', before.title);
                 return before.title;
             }
         } catch (e) {
@@ -230,15 +224,15 @@ function extractNameFromActivity(data) {
             const after = typeof data.snapshot_after === 'string' ? JSON.parse(data.snapshot_after) : data.snapshot_after;
             if (after && after.first_name && after.last_name) {
                 const fullName = `${after.first_name} ${after.last_name}`;
-                logger.log('✓ Found name in snapshot_after:', fullName);
+                logger.log('Found name in snapshot_after:', fullName);
                 return fullName;
             }
             if (after && after.name) {
-                logger.log('✓ Found name in snapshot_after.name:', after.name);
+                logger.log('Found name in snapshot_after.name:', after.name);
                 return after.name;
             }
             if (after && after.title) {
-                logger.log('✓ Found title in snapshot_after:', after.title);
+                logger.log('Found title in snapshot_after:', after.title);
                 return after.title;
             }
         } catch (e) {
@@ -253,15 +247,15 @@ function extractNameFromActivity(data) {
             if (details && typeof details === 'object') {
                 if (details.first_name && details.last_name) {
                     const fullName = `${details.first_name} ${details.last_name}`;
-                    logger.log('✓ Found name in details:', fullName);
+                    logger.log('Found name in details:', fullName);
                     return fullName;
                 }
                 if (details.name) {
-                    logger.log('✓ Found name in details.name:', details.name);
+                    logger.log('Found name in details.name:', details.name);
                     return details.name;
                 }
                 if (details.title) {
-                    logger.log('✓ Found title in details:', details.title);
+                    logger.log('Found title in details:', details.title);
                     return details.title;
                 }
             }
@@ -274,7 +268,7 @@ function extractNameFromActivity(data) {
     if (data.old_value && typeof data.old_value === 'string') {
         const nameMatch = data.old_value.match(/[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)+/);
         if (nameMatch) {
-            logger.log('✓ Found name in old_value:', nameMatch[0]);
+            logger.log('Found name in old_value:', nameMatch[0]);
             return nameMatch[0];
         }
     }
@@ -282,12 +276,12 @@ function extractNameFromActivity(data) {
     if (data.new_value && typeof data.new_value === 'string') {
         const nameMatch = data.new_value.match(/[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)+/);
         if (nameMatch) {
-            logger.log('✓ Found name in new_value:', nameMatch[0]);
+            logger.log('Found name in new_value:', nameMatch[0]);
             return nameMatch[0];
         }
     }
 
-    logger.log('⚠ No name found in activity:', data);
+    logger.log('No name found in activity:', data);
     return null;
 }
 
@@ -300,7 +294,7 @@ async function fetchActivities() {
             }
         });
         allActivities.value = response.data.data || [];
-        logger.log('📋 Fetched activities:', allActivities.value);
+        logger.log('Fetched activities:', allActivities.value);
         applyFilters();
     } catch (error) {
         logger.error('Error fetching activity logs:', error);

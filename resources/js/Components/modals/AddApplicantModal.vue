@@ -102,15 +102,6 @@
 import { computed, ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
-import Stepper from 'primevue/stepper';
-import StepList from 'primevue/steplist';
-import Step from 'primevue/step';
-import StepPanels from 'primevue/steppanels';
-import StepPanel from 'primevue/steppanel';
-import FloatLabel from 'primevue/floatlabel';
-import DatePicker from 'primevue/datepicker';
 import PersonalInformationFields from '@/Components/forms/fields/PersonalInformationFields.vue';
 import FamilyInformationFields from '@/Components/forms/fields/FamilyInformationFields.vue';
 import AcademicInformationFields from '@/Components/forms/fields/AcademicInformationFields.vue';

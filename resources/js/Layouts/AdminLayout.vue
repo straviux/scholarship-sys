@@ -8,14 +8,6 @@ import { Link, usePage, router } from "@inertiajs/vue3";
 import { usePermission } from "@/composable/permissions";
 import logger from '@/utils/logger';
 
-// PrimeVue Components
-import Button from 'primevue/button';
-import Avatar from 'primevue/avatar';
-import Badge from 'primevue/badge';
-import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
-import Popover from 'primevue/popover';
-
 const { hasRole, hasPermission } = usePermission();
 const $page = usePage();
 const toggleMenu = ref(false);
@@ -148,19 +140,19 @@ function scheduleSmartPolling(startTimeStr) {
     const now = new Date();
     const minutesUntilStart = (startTime - now) / (1000 * 60);
 
-    console.log(`⏰ Maintenance check scheduled. Minutes until start: ${minutesUntilStart.toFixed(1)}`);
+    console.log(`ÃƒÂ¢Ã‚ÂÃ‚Â° Maintenance check scheduled. Minutes until start: ${minutesUntilStart.toFixed(1)}`);
 
     // Determine polling interval based on time remaining
     let newInterval;
     if (minutesUntilStart > 10) {
         newInterval = 5 * 60 * 1000; // 5 minutes if more than 10 mins away
-        console.log('🟢 5-minute polling (far away)');
+        console.log('ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¢ 5-minute polling (far away)');
     } else if (minutesUntilStart > 0) {
         newInterval = 30 * 1000; // 30 seconds if less than 10 mins away
-        console.log('🟡 30-second polling (close)');
+        console.log('ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¡ 30-second polling (close)');
     } else {
         newInterval = 10 * 1000; // 10 seconds if maintenance is starting
-        console.log('🔴 10-second polling (starting soon)');
+        console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ 10-second polling (starting soon)');
     }
 
     // Update interval if it changed
@@ -599,7 +591,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                }}</span>
+                                    }}</span>
                             </SidebarLink>
                         </li>
 
@@ -608,7 +600,7 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                }}</span>
+                                    }}</span>
                             </div>
                         </li>
                     </template>

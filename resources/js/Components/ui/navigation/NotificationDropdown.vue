@@ -153,7 +153,7 @@
                         <div class="flex items-center space-x-4">
                             <!-- <span>Type: <span class="font-medium">{{ selectedNotification?.type }}</span></span> -->
                             <span>Priority: <span class="font-medium capitalize">{{ selectedNotification?.priority
-                                    }}</span></span>
+                            }}</span></span>
                         </div>
                         <div class="flex items-center space-x-4">
                             <span>@<span class="font-medium">{{ selectedNotification?.created_by }}</span></span>
@@ -174,15 +174,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { usePage, router } from '@inertiajs/vue3'
+import { ref, computed, watch, onMounted } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import { useMarkdown } from '@/composable/useMarkdown'
-
-// PrimeVue Components
-import Button from 'primevue/button'
-import Popover from 'primevue/popover'
-import Dialog from 'primevue/dialog'
 
 // Markdown composable
 const { renderMarkdown } = useMarkdown()

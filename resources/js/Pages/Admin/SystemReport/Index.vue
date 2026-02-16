@@ -314,9 +314,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { router, Head } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import Chart from 'primevue/chart'
+
+
+
 
 const props = defineProps({
     report: Object

@@ -22,8 +22,7 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-// import { Dropdown } from 'primevue/dropdown';
-import { useApi } from '@/composable/api';
+// import { useApi } from '@/composable/api';
 
 const props = defineProps({
     modelValue: {

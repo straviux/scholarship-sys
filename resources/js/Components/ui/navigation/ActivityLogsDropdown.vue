@@ -93,8 +93,6 @@ import { ref, onMounted, defineExpose, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import logger from '@/utils/logger';
-import Button from 'primevue/button';
-import Popover from 'primevue/popover';
 
 const popoverRef = ref(null);
 const activities = ref([]);

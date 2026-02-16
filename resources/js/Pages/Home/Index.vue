@@ -2,17 +2,6 @@
 import { Head, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { ref, computed, onMounted } from 'vue';
-import Button from 'primevue/button';
-import Card from 'primevue/card';
-import Panel from 'primevue/panel';
-import Divider from 'primevue/divider';
-import Tag from 'primevue/tag';
-import Badge from 'primevue/badge';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Dialog from 'primevue/dialog';
-import TabView from 'primevue/tabview';
-import TabPanel from 'primevue/tabpanel';
 import { usePermission } from '@/composable/permissions';
 
 const { hasPermission, hasRole } = usePermission();
@@ -310,85 +299,92 @@ const getCardShadow = (color) => {
 
             <!-- Mental Model Section -->
             <Panel header="Mental Model: What Do I Need To Do?" class="border-t-4 border-t-indigo-600">
-                <TabView>
-                    <TabPanel header="I'm New">
-                        <div class="space-y-4">
-                            <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-lg">
-                                <div
-                                    class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full font-semibold flex-shrink-0">
-                                    1</div>
-                                <div>
-                                    <h4 class="font-semibold text-gray-800 mb-1">Start Application</h4>
-                                    <p class="text-sm text-gray-600">Click "Apply for Scholarship" to begin your
-                                        application process</p>
+                <Tabs>
+                    <TabList>
+                        <Tab>I'm New</Tab>
+                        <Tab>I Have Pending Items</Tab>
+                        <Tab>Need Help?</Tab>
+                    </TabList>
+                    <TabPanels>
+                        <TabPanel>
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-lg">
+                                    <div
+                                        class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full font-semibold flex-shrink-0">
+                                        1</div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800 mb-1">Start Application</h4>
+                                        <p class="text-sm text-gray-600">Click "Apply for Scholarship" to begin your
+                                            application process</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-lg">
+                                    <div
+                                        class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full font-semibold flex-shrink-0">
+                                        2</div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800 mb-1">Complete Information</h4>
+                                        <p class="text-sm text-gray-600">Fill in your personal, family, and academic
+                                            information</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-lg">
+                                    <div
+                                        class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full font-semibold flex-shrink-0">
+                                        3</div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800 mb-1">Upload Requirements</h4>
+                                        <p class="text-sm text-gray-600">Submit required documents in the Requirements
+                                            section</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-lg">
-                                <div
-                                    class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full font-semibold flex-shrink-0">
-                                    2</div>
-                                <div>
-                                    <h4 class="font-semibold text-gray-800 mb-1">Complete Information</h4>
-                                    <p class="text-sm text-gray-600">Fill in your personal, family, and academic
-                                        information</p>
+                        </TabPanel>
+                        <TabPanel>
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-4 p-4 bg-orange-50 rounded-lg">
+                                    <i class="pi pi-exclamation-triangle text-2xl text-orange-600 flex-shrink-0"></i>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800 mb-1">Check Your Status</h4>
+                                        <p class="text-sm text-gray-600">Go to "Check Status" to see what items need
+                                            attention</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-4 p-4 bg-orange-50 rounded-lg">
+                                    <i class="pi pi-cloud-upload text-2xl text-orange-600 flex-shrink-0"></i>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800 mb-1">Upload Missing Documents</h4>
+                                        <p class="text-sm text-gray-600">Use "Upload Requirements" to submit any missing
+                                            documents</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-lg">
-                                <div
-                                    class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full font-semibold flex-shrink-0">
-                                    3</div>
-                                <div>
-                                    <h4 class="font-semibold text-gray-800 mb-1">Upload Requirements</h4>
-                                    <p class="text-sm text-gray-600">Submit required documents in the Requirements
-                                        section</p>
+                        </TabPanel>
+                        <TabPanel>
+                            <div class="space-y-4">
+                                <div class="p-4 bg-green-50 rounded-lg">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Common Issues</h4>
+                                    <ul class="text-sm text-gray-600 space-y-2">
+                                        <li class="flex items-center gap-2">
+                                            <i class="pi pi-check text-green-600"></i>
+                                            <span>Login issues? Reset your password on the login page</span>
+                                        </li>
+                                        <li class="flex items-center gap-2">
+                                            <i class="pi pi-check text-green-600"></i>
+                                            <span>Application rejected? Check the feedback section for details</span>
+                                        </li>
+                                        <li class="flex items-center gap-2">
+                                            <i class="pi pi-check text-green-600"></i>
+                                            <span>Document not uploading? Ensure file is in supported format</span>
+                                        </li>
+                                    </ul>
                                 </div>
+                                <Button label="Contact Support" icon="pi pi-envelope" severity="info" class="w-full"
+                                    @click="showHelpDialog = true" />
                             </div>
-                        </div>
-                    </TabPanel>
-                    <TabPanel header="I Have Pending Items">
-                        <div class="space-y-4">
-                            <div class="flex items-start gap-4 p-4 bg-orange-50 rounded-lg">
-                                <i class="pi pi-exclamation-triangle text-2xl text-orange-600 flex-shrink-0"></i>
-                                <div>
-                                    <h4 class="font-semibold text-gray-800 mb-1">Check Your Status</h4>
-                                    <p class="text-sm text-gray-600">Go to "Check Status" to see what items need
-                                        attention</p>
-                                </div>
-                            </div>
-                            <div class="flex items-start gap-4 p-4 bg-orange-50 rounded-lg">
-                                <i class="pi pi-cloud-upload text-2xl text-orange-600 flex-shrink-0"></i>
-                                <div>
-                                    <h4 class="font-semibold text-gray-800 mb-1">Upload Missing Documents</h4>
-                                    <p class="text-sm text-gray-600">Use "Upload Requirements" to submit any missing
-                                        documents</p>
-                                </div>
-                            </div>
-                        </div>
-                    </TabPanel>
-                    <TabPanel header="Need Help?">
-                        <div class="space-y-4">
-                            <div class="p-4 bg-green-50 rounded-lg">
-                                <h4 class="font-semibold text-gray-800 mb-2">Common Issues</h4>
-                                <ul class="text-sm text-gray-600 space-y-2">
-                                    <li class="flex items-center gap-2">
-                                        <i class="pi pi-check text-green-600"></i>
-                                        <span>Login issues? Reset your password on the login page</span>
-                                    </li>
-                                    <li class="flex items-center gap-2">
-                                        <i class="pi pi-check text-green-600"></i>
-                                        <span>Application rejected? Check the feedback section for details</span>
-                                    </li>
-                                    <li class="flex items-center gap-2">
-                                        <i class="pi pi-check text-green-600"></i>
-                                        <span>Document not uploading? Ensure file is in supported format</span>
-                                    </li>
-                                </ul>
-                            </div>
-                            <Button label="Contact Support" icon="pi pi-envelope" severity="info" class="w-full"
-                                @click="showHelpDialog = true" />
-                        </div>
-                    </TabPanel>
-                </TabView>
+                        </TabPanel>
+                    </TabPanels>
+                </Tabs>
             </Panel>
         </div>
 

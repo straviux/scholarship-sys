@@ -136,17 +136,10 @@ class CleanupPermissions extends Command
             $toDelete = $records->skip(1);
 
             foreach ($toDelete as $record) {
-                // Sync the roles/users from this record to the one we're keeping
+                // For RBAC model: only sync roles, not direct user permissions
                 $toKeep = $records->first();
 
-                // Sync users
-                foreach ($record->users as $user) {
-                    if (!$toKeep->users->contains($user->id)) {
-                        $user->givePermissionTo($toKeep);
-                    }
-                }
-
-                // Sync roles
+                // Sync roles (users get permissions from their roles)
                 foreach ($record->roles as $role) {
                     if (!$toKeep->roles->contains($role->id)) {
                         $role->givePermissionTo($toKeep);
@@ -198,16 +191,16 @@ class CleanupPermissions extends Command
             return;
         }
 
-        $permissionCount = $user->permissions()->count();
+        // Since we're using role-based permissions only (model_has_permissions table dropped),
+        // direct user permissions are no longer supported
+        $this->info("User '{$user->name}' uses role-based permissions only.");
+        $this->info("To manage permissions, assign/remove roles instead of direct permissions.");
 
-        if ($permissionCount === 0) {
-            $this->info("User '{$user->name}' has no direct permissions to remove.");
-            return;
-        }
-
-        if ($this->confirm("Remove all {$permissionCount} direct permissions from user '{$user->name}'?")) {
-            $user->syncPermissions([]);
-            $this->info("✓ All direct permissions removed from user '{$user->name}'.");
+        $roles = $user->getRoleNames();
+        if ($roles->isEmpty()) {
+            $this->warn("User '{$user->name}' has no roles assigned.");
+        } else {
+            $this->info("Current roles: " . $roles->implode(', '));
             $this->info("(User still has permissions from their assigned roles)");
         }
     }
@@ -229,17 +222,7 @@ class CleanupPermissions extends Command
             $this->warn("Found {$orphanedRolePerms} orphaned entries in role_has_permissions table");
         }
 
-        // Check for orphaned user_permission entries (permission_id doesn't exist)
-        $orphanedUserPerms = \DB::table('model_has_permissions')
-            ->leftJoin('permissions', 'model_has_permissions.permission_id', '=', 'permissions.id')
-            ->whereNull('permissions.id')
-            ->count();
-
-        if ($orphanedUserPerms > 0) {
-            $this->warn("Found {$orphanedUserPerms} orphaned entries in model_has_permissions table");
-        }
-
-        // Check for duplicate entries in pivot tables
+        // Check for duplicate entries in role_has_permissions
         $dupRolePerms = \DB::table('role_has_permissions')
             ->select('role_id', 'permission_id', \DB::raw('COUNT(*) as count'))
             ->groupBy('role_id', 'permission_id')
@@ -250,17 +233,7 @@ class CleanupPermissions extends Command
             $this->warn("Found {$dupRolePerms} duplicate entries in role_has_permissions table");
         }
 
-        $dupUserPerms = \DB::table('model_has_permissions')
-            ->select('model_id', 'permission_id', \DB::raw('COUNT(*) as count'))
-            ->groupBy('model_id', 'permission_id')
-            ->having('count', '>', 1)
-            ->count();
-
-        if ($dupUserPerms > 0) {
-            $this->warn("Found {$dupUserPerms} duplicate entries in model_has_permissions table");
-        }
-
-        if ($orphanedRolePerms == 0 && $orphanedUserPerms == 0 && $dupRolePerms == 0 && $dupUserPerms == 0) {
+        if ($orphanedRolePerms == 0 && $dupRolePerms == 0) {
             $this->info('No pivot table issues found.');
         }
     }
@@ -280,16 +253,6 @@ class CleanupPermissions extends Command
 
         if ($deletedOrphanedRole > 0) {
             $this->info("✓ Removed {$deletedOrphanedRole} orphaned entries from role_has_permissions");
-        }
-
-        // Remove orphaned entries in model_has_permissions
-        $deletedOrphanedUser = \DB::table('model_has_permissions')
-            ->leftJoin('permissions', 'model_has_permissions.permission_id', '=', 'permissions.id')
-            ->whereNull('permissions.id')
-            ->delete();
-
-        if ($deletedOrphanedUser > 0) {
-            $this->info("✓ Removed {$deletedOrphanedUser} orphaned entries from model_has_permissions");
         }
 
         // Remove duplicate entries in role_has_permissions (keep only first)
@@ -315,29 +278,6 @@ class CleanupPermissions extends Command
             }
         }
 
-        // Remove duplicate entries in model_has_permissions (keep only first)
-        $dupUserPerms = \DB::table('model_has_permissions')
-            ->select('model_id', 'permission_id', \DB::raw('MIN(id) as min_id'))
-            ->groupBy('model_id', 'permission_id')
-            ->having(\DB::raw('COUNT(*)'), '>', 1)
-            ->pluck('min_id');
-
-        if ($dupUserPerms->count() > 0) {
-            $deletedDupUser = \DB::table('model_has_permissions')
-                ->where(function ($query) use ($dupUserPerms) {
-                    $query->selectRaw('COUNT(*)')
-                        ->from('model_has_permissions as mhp2')
-                        ->whereRaw('mhp2.model_id = model_has_permissions.model_id AND mhp2.permission_id = model_has_permissions.permission_id')
-                        ->havingRaw('COUNT(*) > 1');
-                })
-                ->whereNotIn('id', $dupUserPerms)
-                ->delete();
-
-            if ($deletedDupUser > 0) {
-                $this->info("✓ Removed {$deletedDupUser} duplicate entries from model_has_permissions");
-            }
-        }
-
         $this->info('Pivot table cleanup complete.');
     }
 
@@ -353,19 +293,17 @@ class CleanupPermissions extends Command
             return;
         }
 
-        // Count how many roles and users have this permission
+        // Count how many roles have this permission (users no longer have direct permissions)
         $roleCount = $permission->roles()->count();
-        $userCount = $permission->users()->count();
 
         $this->warn("Permission '{$permissionName}' is assigned to:");
         $this->info("  - {$roleCount} roles");
-        $this->info("  - {$userCount} users");
+        $this->info("  - Direct user permission assignments are no longer supported");
 
-        if ($this->confirm("Remove this permission from all roles and users?")) {
+        if ($this->confirm("Remove this permission from all roles?")) {
             $permission->roles()->detach();
-            $permission->users()->detach();
 
-            $this->info("✓ Removed '{$permissionName}' from all roles and users.");
+            $this->info("✓ Removed '{$permissionName}' from all roles.");
         }
     }
 }

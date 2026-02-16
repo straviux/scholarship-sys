@@ -95,8 +95,6 @@
 </template>
 
 <script setup>
-import FloatLabel from 'primevue/floatlabel';
-import InputText from 'primevue/inputtext';
 
 const props = defineProps({
     father_name: String,

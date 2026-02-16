@@ -52,7 +52,7 @@
 
                     <div class="mt-6 pt-6 border-t border-gray-200">
                         <Link href="/user/settings" class="text-blue-600 hover:text-blue-800 font-semibold">
-                            Edit Profile →
+                            Edit Profile ✏️
                         </Link>
                     </div>
                 </div>

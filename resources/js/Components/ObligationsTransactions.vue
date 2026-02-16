@@ -97,26 +97,26 @@
                                                 <span class="font-medium text-gray-900">{{ item.year_level || '-'
                                                     }}</span>
                                             </div>
-                                            <span class="text-gray-300">•</span>
+                                            <span class="text-gray-300">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Term:</span>
                                                 <span class="font-medium text-gray-900">{{ item.semester || '-'
                                                     }}</span>
                                             </div>
-                                            <span class="text-gray-300">•</span>
+                                            <span class="text-gray-300">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">AY:</span>
                                                 <span class="font-medium text-gray-900">{{ item.academic_year || '-'
                                                     }}</span>
                                             </div>
-                                            <span class="text-gray-300">•</span>
+                                            <span class="text-gray-300">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Course:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
                                                 }}</span>
                                             </div>
-                                            <span class="text-gray-300">•</span>
+                                            <span class="text-gray-300">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">School:</span>
                                                 <span class="font-medium text-gray-900">{{
@@ -139,7 +139,7 @@
                                                 <span class="font-semibold text-gray-900">{{ item.cheques &&
                                                     item.cheques.length > 0 ? item.cheques[0].cheque_no : '-' }}</span>
                                             </div>
-                                            <span class="text-gray-300">•</span>
+                                            <span class="text-gray-300">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-600 mr-1">Released:</span>
                                                 <span class="font-medium text-gray-900">{{ item.cheques &&
@@ -343,7 +343,7 @@
                                 <i :class="getFileIcon(attachment.file_type)" class="text-2xl text-blue-600"></i>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">{{ attachment.file_name }}</p>
-                                    <p class="text-xs text-gray-500">{{ attachment.attachment_type }} • {{
+                                    <p class="text-xs text-gray-500">{{ attachment.attachment_type }} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {{
                                         formatFileSize(attachment.file_size) }}</p>
                                 </div>
                             </div>
@@ -514,15 +514,6 @@ import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
 import { usePermission } from '@/composable/permissions';
-import Button from 'primevue/button';
-import DataView from 'primevue/dataview';
-import Dialog from 'primevue/dialog';
-import InputText from 'primevue/inputtext';
-import InputNumber from 'primevue/inputnumber';
-import Textarea from 'primevue/textarea';
-import Select from 'primevue/select';
-import DatePicker from 'primevue/datepicker';
-import Chip from 'primevue/chip';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';

@@ -253,17 +253,6 @@ import { toast } from 'vue3-toastify';
 import { usePermission } from '@/composable/permissions';
 
 // PrimeVue Components
-import Card from 'primevue/card';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import Calendar from 'primevue/calendar';
-import Textarea from 'primevue/textarea';
-import Select from 'primevue/select';
-import InputText from 'primevue/inputtext';
-import Toolbar from 'primevue/toolbar';
-import Panel from 'primevue/panel';
 
 // Custom Components
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';

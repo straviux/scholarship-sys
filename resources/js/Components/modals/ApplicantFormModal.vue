@@ -480,7 +480,7 @@ const handleSubmit = () => {
         yakap_location: form.yakap_location || null,  // Already a clean string name from modal
     };
 
-    console.log('🔍 SUBMIT DATA DEBUG:', {
+    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â SUBMIT DATA DEBUG:', {
         form_yakap_category: form.yakap_category,
         form_yakap_location: form.yakap_location,
         form_yakap_location_type: typeof form.yakap_location,
@@ -601,13 +601,13 @@ const emptyFormState = {
 watch(() => props.yakapCategory, (newValue) => {
     // Always update form when prop changes, regardless of current state
     form.yakap_category = newValue || null;
-    console.log('📌 yakapCategory prop changed to:', newValue, '| Form updated:', form.yakap_category);
+    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ yakapCategory prop changed to:', newValue, '| Form updated:', form.yakap_category);
 });
 
 watch(() => props.yakapLocation, (newValue) => {
     // Always update form when prop changes, regardless of current state
     form.yakap_location = newValue || '';
-    console.log('📌 yakapLocation prop changed to:', newValue, '| Form updated:', form.yakap_location);
+    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ yakapLocation prop changed to:', newValue, '| Form updated:', form.yakap_location);
 });
 
 // Reset form to initial empty state

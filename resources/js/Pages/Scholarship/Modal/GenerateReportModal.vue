@@ -182,12 +182,6 @@ import moment from 'moment';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 
 // PrimeVue Components
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
-import RadioButton from 'primevue/radiobutton';
-import Select from 'primevue/select';
-import DatePicker from 'primevue/datepicker';
-import ToggleSwitch from 'primevue/toggleswitch';
 
 // Custom Components
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';

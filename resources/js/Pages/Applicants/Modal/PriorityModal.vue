@@ -1,5 +1,5 @@
 <template>
-    <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal header="🎯 Assign Priority Level"
+    <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal header="ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â½ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ Assign Priority Level"
         :style="{ width: '500px' }" :closable="true">
         <div class="space-y-6" v-if="applicant">
             <!-- Applicant Info -->
@@ -92,10 +92,6 @@
 import { watch, ref, reactive, inject } from "vue";
 import { toast } from 'vue3-toastify';
 import axios from 'axios';
-import Dialog from 'primevue/dialog';
-import Select from 'primevue/select';
-import Textarea from 'primevue/textarea';
-import Button from 'primevue/button';
 
 const props = defineProps({
     show: Boolean,

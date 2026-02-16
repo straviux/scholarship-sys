@@ -16,6 +16,45 @@ import '@vuepic/vue-datepicker/dist/main.css';
 import 'primeicons/primeicons.css';
 import permissionDirective from './directives/permission';
 
+// PrimeVue Components - Global Registration
+import Button from 'primevue/button';
+import Card from 'primevue/card';
+import Panel from 'primevue/panel';
+import Dialog from 'primevue/dialog';
+import Drawer from 'primevue/drawer';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import InputText from 'primevue/inputtext';
+import InputNumber from 'primevue/inputnumber';
+import InputIcon from 'primevue/inputicon';
+import IconField from 'primevue/iconfield';
+import Textarea from 'primevue/textarea';
+import Select from 'primevue/select';
+import DatePicker from 'primevue/datepicker';
+import Checkbox from 'primevue/checkbox';
+import RadioButton from 'primevue/radiobutton';
+import ToggleSwitch from 'primevue/toggleswitch';
+import Tag from 'primevue/tag';
+import Badge from 'primevue/badge';
+import Chip from 'primevue/chip';
+import Avatar from 'primevue/avatar';
+import FileUpload from 'primevue/fileupload';
+import Menu from 'primevue/menu';
+import ContextMenu from 'primevue/contextmenu';
+import Toast from 'primevue/toast';
+import Timeline from 'primevue/timeline';
+import ProgressSpinner from 'primevue/progressspinner';
+import Tabs from 'primevue/tabs';
+import TabList from 'primevue/tablist';
+import Tab from 'primevue/tab';
+import TabPanels from 'primevue/tabpanels';
+import TabPanel from 'primevue/tabpanel';
+import Toolbar from 'primevue/toolbar';
+import Popover from 'primevue/popover';
+import DataView from 'primevue/dataview';
+import ConfirmDialog from 'primevue/confirmdialog';
+import FloatLabel from 'primevue/floatlabel';
+
 const appName = import.meta.env.VITE_APP_NAME || 'Scholarship Management System';
 
 const Noir = definePreset(Aura, {
@@ -71,7 +110,7 @@ createInertiaApp({
 	resolve: (name) =>
 		resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
 	setup({ el, App, props, plugin }) {
-		return createApp({ render: () => h(App, props) })
+		const app = createApp({ render: () => h(App, props) })
 			.use(plugin)
 			.use(ZiggyVue)
 			.use(VueDeviceDetect)
@@ -88,8 +127,48 @@ createInertiaApp({
 			})
 			.use(ToastService)
 			.component('VueDatePicker', VueDatePicker)
-			.directive('can', permissionDirective)
-			.mount(el);
+			.directive('can', permissionDirective);
+
+		// Register PrimeVue components globally
+		app.component('Button', Button);
+		app.component('Card', Card);
+		app.component('Panel', Panel);
+		app.component('Dialog', Dialog);
+		app.component('Drawer', Drawer);
+		app.component('DataTable', DataTable);
+		app.component('Column', Column);
+		app.component('InputText', InputText);
+		app.component('InputNumber', InputNumber);
+		app.component('InputIcon', InputIcon);
+		app.component('IconField', IconField);
+		app.component('Textarea', Textarea);
+		app.component('Select', Select);
+		app.component('DatePicker', DatePicker);
+		app.component('Checkbox', Checkbox);
+		app.component('RadioButton', RadioButton);
+		app.component('ToggleSwitch', ToggleSwitch);
+		app.component('Tag', Tag);
+		app.component('Badge', Badge);
+		app.component('Chip', Chip);
+		app.component('Avatar', Avatar);
+		app.component('FileUpload', FileUpload);
+		app.component('Menu', Menu);
+		app.component('ContextMenu', ContextMenu);
+		app.component('Toast', Toast);
+		app.component('Timeline', Timeline);
+		app.component('ProgressSpinner', ProgressSpinner);
+		app.component('Tabs', Tabs);
+		app.component('TabList', TabList);
+		app.component('Tab', Tab);
+		app.component('TabPanels', TabPanels);
+		app.component('TabPanel', TabPanel);
+		app.component('Toolbar', Toolbar);
+		app.component('Popover', Popover);
+		app.component('DataView', DataView);
+		app.component('ConfirmDialog', ConfirmDialog);
+		app.component('FloatLabel', FloatLabel);
+
+		return app.mount(el);
 	},
 	progress: {
 		// The delay after which the progress bar will appear, in milliseconds...

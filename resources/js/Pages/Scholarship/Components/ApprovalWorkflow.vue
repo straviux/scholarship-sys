@@ -141,17 +141,6 @@ import { usePermission } from '@/composable/permissions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 
 // PrimeVue Components
-import Panel from 'primevue/panel';
-import Card from 'primevue/card';
-import Avatar from 'primevue/avatar';
-import Chip from 'primevue/chip';
-import Tag from 'primevue/tag';
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import Calendar from 'primevue/calendar';
-import Textarea from 'primevue/textarea';
-import Select from 'primevue/select';
-import Timeline from 'primevue/timeline';
 
 const props = defineProps({
     application: {

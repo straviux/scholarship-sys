@@ -1,23 +1,12 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import { Head, Link, useForm, router } from "@inertiajs/vue3";
-import { onMounted, ref, watch } from "vue";
+import { Head, router } from "@inertiajs/vue3";
+import { ref, watch } from "vue";
 import moment from "moment";
-import { useStorage } from '@vueuse/core';
 import SchoolModal from "@/Pages/School/Modal/SchoolModal.vue";
 import { usePermission } from '@/composable/permissions';
 
 // PrimeVue Components
-import Button from 'primevue/button';
-import Chip from 'primevue/chip';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import InputText from 'primevue/inputtext';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import Panel from 'primevue/panel';
-import Tag from 'primevue/tag';
-import Dialog from 'primevue/dialog';
 
 const props = defineProps({
     action: String,
@@ -98,7 +87,7 @@ const closeDeleteModal = () => {
                     </div>
                 </template>
 
-                <div class="flex justify-between items-center">
+                <div class="flex justify-between items-center" v-if="hasPermission('schools.manage')">
                     <div class="text-gray-600">
                         Manage educational institutions and their details
                     </div>
@@ -184,8 +173,9 @@ const closeDeleteModal = () => {
                     <Column header="Actions" style="width: 160px">
                         <template #body="slotProps">
                             <div class="flex gap-2 justify-center">
-                                <Button icon="pi pi-pen-to-square" severity="info" size="small" rounded outlined
-                                    v-tooltip.top="'Edit School'" @click="editSchool(slotProps.data.id)" />
+                                <Button v-if="hasPermission('schools.manage')" icon="pi pi-pen-to-square"
+                                    severity="info" size="small" rounded outlined v-tooltip.top="'Edit School'"
+                                    @click="editSchool(slotProps.data.id)" />
                                 <Button v-if="hasPermission('schools.delete')" icon="pi pi-trash" severity="danger"
                                     size="small" rounded outlined v-tooltip.top="'Delete School'"
                                     @click="confirmDeleteSchool(slotProps.data)" />

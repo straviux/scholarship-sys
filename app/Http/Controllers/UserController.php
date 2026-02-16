@@ -65,8 +65,8 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Only assign role - permissions come from the role (RBAC model)
         $user->syncRoles($getRole['name']);
-        $user->syncPermissions($role->getPermissionNames());
 
         // Log user creation
         ActivityLogService::logRecordCreated(
@@ -88,7 +88,8 @@ class UserController extends Controller
      */
     public function edit(User $user): Response
     {
-        $user->load(['roles', 'permissions']);
+        // Only load roles - permissions come from the roles assigned to the user
+        $user->load(['roles']);
         return Inertia::render('Admin/Users/Edit', [
             'user' => new UserResource($user),
             'roles' => RoleResource::collection(Role::all())
@@ -117,8 +118,8 @@ class UserController extends Controller
             'office_designation' => $request->office_designation
         ]);
 
+        // Only assign role - permissions come from the role (RBAC model)
         $user->syncRoles($getRole['name']);
-        $user->syncPermissions($role->getPermissionNames());
 
         // Log user update
         ActivityLogService::logRecordUpdated(

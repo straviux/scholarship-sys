@@ -117,7 +117,7 @@
                                             <div v-else class="text-gray-700 line-clamp-3">
                                                 {{ update.content }}
                                             </div>
-                                            <p class="text-sm text-blue-600 mt-2 font-medium">Click to read more →</p>
+                                            <p class="text-sm text-blue-600 mt-2 font-medium">Click to read more</p>
                                         </div>
 
                                         <!-- Footer -->
@@ -159,9 +159,9 @@ import { ref, computed, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import axios from 'axios'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Tag from 'primevue/tag'
+
+
+
 import { marked } from 'marked'
 
 // Configure marked options for security

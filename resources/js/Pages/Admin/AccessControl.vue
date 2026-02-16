@@ -10,22 +10,6 @@ import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
 // PrimeVue Components
-import Panel from 'primevue/panel';
-import Tabs from 'primevue/tabs';
-import TabList from 'primevue/tablist';
-import TabPanels from 'primevue/tabpanels';
-import TabPanel from 'primevue/tabpanel';
-import Tab from 'primevue/tab';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import Avatar from 'primevue/avatar';
-import Tag from 'primevue/tag';
-import InputText from 'primevue/inputtext';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import Checkbox from 'primevue/checkbox';
 
 const props = defineProps({
     users: Array,

@@ -37,8 +37,6 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
 import FamilyInformationFields from '@/Components/forms/fields/FamilyInformationFields.vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';

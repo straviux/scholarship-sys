@@ -23,7 +23,7 @@
                                 'text-3xl font-bold mt-2',
                                 isActive ? 'text-red-600' : 'text-green-600'
                             ]">
-                                {{ isActive ? '🛑 MAINTENANCE' : '✅ OPERATIONAL' }}
+                                {{ isActive ? 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂºÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ MAINTENANCE' : 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ OPERATIONAL' }}
                             </p>
                             <p class="text-xs text-gray-500 mt-3">Last updated: {{ lastUpdated }}</p>
                         </div>
@@ -46,7 +46,7 @@
                             <p class="text-sm text-gray-600 font-semibold uppercase">Duration</p>
                             <p class="text-3xl font-bold mt-2 text-orange-600">{{ countdown.duration_minutes || '?' }}
                                 min</p>
-                            <p class="text-xs text-gray-500 mt-3 animate-pulse">⚠️ MAINTENANCE IN PROGRESS</p>
+                            <p class="text-xs text-gray-500 mt-3 animate-pulse">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â MAINTENANCE IN PROGRESS</p>
                         </div>
                     </div>
                 </div>
@@ -133,7 +133,7 @@
                                                         ? 'border-blue-500 bg-blue-50'
                                                         : 'border-gray-300 hover:border-blue-300'
                                                 ]">
-                                                <span class="text-xl">ℹ️</span>
+                                                <span class="text-xl">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â</span>
                                                 <p class="font-semibold text-sm mt-1">Info</p>
                                             </div>
                                         </label>
@@ -145,7 +145,7 @@
                                                         ? 'border-yellow-500 bg-yellow-50'
                                                         : 'border-gray-300 hover:border-yellow-300'
                                                 ]">
-                                                <span class="text-xl">⚠️</span>
+                                                <span class="text-xl">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â</span>
                                                 <p class="font-semibold text-sm mt-1">Warning</p>
                                             </div>
                                         </label>
@@ -157,7 +157,7 @@
                                                         ? 'border-red-500 bg-red-50'
                                                         : 'border-gray-300 hover:border-red-300'
                                                 ]">
-                                                <span class="text-xl">🛑</span>
+                                                <span class="text-xl">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂºÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ</span>
                                                 <p class="font-semibold text-sm mt-1">Critical</p>
                                             </div>
                                         </label>
@@ -166,7 +166,7 @@
 
                                 <!-- Admin Access Notice -->
                                 <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
-                                    <span class="text-xl">🔐</span>
+                                    <span class="text-xl">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â</span>
                                     <div>
                                         <p class="font-semibold text-sm text-blue-900">Admin Access Protected</p>
                                         <p class="text-xs text-blue-700 mt-1">Admins can always access the system even
@@ -226,7 +226,7 @@
                                     class="p-3 bg-gray-50 rounded-lg border-l-4 border-gray-300 hover:border-blue-400 transition">
                                     <div class="flex items-start gap-2">
                                         <span class="text-lg mt-0.5">
-                                            {{ record.type === 'info' ? 'ℹ️' : record.type === 'warning' ? '⚠️' : '🛑'
+                                            {{ record.type === 'info' ? 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â' : record.type === 'warning' ? 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â' : 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂºÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ'
                                             }}
                                         </span>
                                         <div class="flex-1 min-w-0">
@@ -249,7 +249,7 @@
                                                     ACTIVE
                                                 </span>
                                             </div>
-                                            <p class="text-xs text-gray-400 mt-2">📅 {{
+                                            <p class="text-xs text-gray-400 mt-2">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ {{
                                                 formatDateTime(record.start_time) }}</p>
                                         </div>
                                     </div>
@@ -275,7 +275,7 @@
                             dialogType === 'deactivate' ? 'bg-green-100' : 'bg-blue-100'
                         ]">
                             <span class="text-2xl">
-                                {{ dialogType === 'deactivate' ? '✅' : '💾' }}
+                                {{ dialogType === 'deactivate' ? 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦' : 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¾' }}
                             </span>
                         </div>
                         <h3 class="text-lg font-bold text-gray-900 text-center">{{ dialogTitle }}</h3>
@@ -310,7 +310,7 @@
                         toast.type === 'info' ? 'border-blue-500 bg-blue-50' : '',
                     ]">
                     <span class="text-lg mt-0.5">
-                        {{ toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : 'ℹ️' }}
+                        {{ toast.type === 'success' ? 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦' : toast.type === 'error' ? 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢' : 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â' }}
                     </span>
                     <div>
                         <p class="font-semibold text-sm" :class="[
@@ -383,7 +383,7 @@ const showToast = (type, title, message, duration = 4000) => {
     const id = toastId++;
     const toast = { id, type, title, message };
     toasts.value.push(toast);
-    console.warn(`📢 Toast[${id}] (${type}):`, title, message);
+    console.warn(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Toast[${id}] (${type}):`, title, message);
 
     if (duration > 0) {
         setTimeout(() => {
@@ -468,10 +468,10 @@ const setDefaultTimes = () => {
     minStartTime.value = startInput;
 };
 const showConfirmDialog = () => {
-    console.warn('🟡 showConfirmDialog() called');
+    console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ showConfirmDialog() called');
 
     if (!form.value.start_time || !form.value.end_time) {
-        console.warn('⚠️ Missing times');
+        console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Missing times');
         showToast('error', 'Validation Error', 'Please fill in start and end times');
         return;
     }
@@ -480,12 +480,12 @@ const showConfirmDialog = () => {
     const endTime = new Date(form.value.end_time);
 
     if (endTime <= startTime) {
-        console.warn('⚠️ End time not after start time');
+        console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â End time not after start time');
         showToast('error', 'Validation Error', 'End time must be after start time');
         return;
     }
 
-    console.warn('✓ Validation passed - showing dialog');
+    console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ Validation passed - showing dialog');
     dialogType.value = 'save';
     dialogTitle.value = 'Save Configuration?';
     dialogMessage.value = form.value.is_active
@@ -494,7 +494,7 @@ const showConfirmDialog = () => {
     dialogAction.value = 'Save';
     pendingAction.value = 'save';
     showDialog.value = true;
-    console.warn('📋 Dialog shown with pendingAction=save');
+    console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¹ Dialog shown with pendingAction=save');
 };
 
 const showDeactivateDialog = () => {
@@ -512,29 +512,29 @@ const closeDialog = () => {
 };
 
 const confirmDialog = async () => {
-    console.warn('🔵 confirmDialog() called - pendingAction:', pendingAction.value);
+    console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµ confirmDialog() called - pendingAction:', pendingAction.value);
 
     // Save the action BEFORE closing the dialog
     const action = pendingAction.value;
     closeDialog();
 
     if (action === 'save') {
-        console.warn('→ Executing SAVE action');
+        console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ Executing SAVE action');
         await saveMaintenance();
     } else if (action === 'deactivate') {
-        console.warn('→ Executing DEACTIVATE action');
+        console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ Executing DEACTIVATE action');
         await deactivateMaintenance();
     } else {
-        console.error('❌ Unknown action:', action);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Unknown action:', action);
     }
 };
 
 // Save Maintenance
 const saveMaintenance = async () => {
-    console.warn('🔵 saveMaintenance() called - START');
+    console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµ saveMaintenance() called - START');
     try {
         const csrfToken = getCsrfToken();
-        console.warn('✓ CSRF Token obtained:', csrfToken ? 'exists' : 'MISSING');
+        console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ CSRF Token obtained:', csrfToken ? 'exists' : 'MISSING');
 
         // Convert datetime-local format to Laravel datetime format (YYYY-MM-DD HH:mm:ss)
         const startStr = form.value.start_time ? form.value.start_time.replace('T', ' ') + ':00' : '';
@@ -550,7 +550,7 @@ const saveMaintenance = async () => {
             allow_admin_access: form.value.allow_admin_access,
         };
 
-        console.warn('📤 Sending payload:', JSON.stringify(payload, null, 2));
+        console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¤ Sending payload:', JSON.stringify(payload, null, 2));
 
         const response = await fetch('/api/admin/maintenance', {
             method: 'POST',
@@ -562,7 +562,7 @@ const saveMaintenance = async () => {
             body: JSON.stringify(payload),
         });
 
-        console.warn('📥 Response received - Status:', response.status, 'OK:', response.ok);
+        console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ Response received - Status:', response.status, 'OK:', response.ok);
 
         let responseData;
         const contentType = response.headers.get('content-type');
@@ -578,7 +578,7 @@ const saveMaintenance = async () => {
         }
 
         if (response.ok) {
-            console.warn('✅ Save SUCCESS');
+            console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Save SUCCESS');
             showToast('success', 'Saved!', 'Maintenance configuration has been saved successfully');
             fetchStatus();
             fetchHistory();
@@ -586,16 +586,16 @@ const saveMaintenance = async () => {
             const errorMessage = responseData.message
                 || (responseData.errors ? JSON.stringify(responseData.errors) : null)
                 || `HTTP ${response.status}: Failed to save configuration`;
-            console.error('❌ Save FAILED:', errorMessage);
+            console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Save FAILED:', errorMessage);
             console.error('Full response:', responseData);
             showToast('error', 'Save Failed', errorMessage);
         }
     } catch (error) {
-        console.error('💥 EXCEPTION in saveMaintenance:', error.message);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ EXCEPTION in saveMaintenance:', error.message);
         console.error('Stack:', error.stack);
         showToast('error', 'Error', error.message || 'An error occurred while saving');
     }
-    console.warn('🔴 saveMaintenance() - END\n');
+    console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â´ saveMaintenance() - END\n');
 };
 
 // Deactivate Maintenance
@@ -701,7 +701,7 @@ const formatDatetimeLocal = (date) => {
 
 // Lifecycle
 onMounted(() => {
-    console.warn('🟢 Maintenance page mounted - fetching initial data');
+    console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Maintenance page mounted - fetching initial data');
     fetchStatus();
     fetchHistory();
 

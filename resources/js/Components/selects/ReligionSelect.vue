@@ -8,7 +8,6 @@
 import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
 import { useCachedData } from '@/composable/useCachedData';
-import Select from 'primevue/select';
 
 const props = defineProps({
     modelValue: {

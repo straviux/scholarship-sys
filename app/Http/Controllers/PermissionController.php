@@ -14,23 +14,6 @@ use Spatie\Permission\Models\Permission;
 class PermissionController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
-    public function index(): Response
-    {
-        return Inertia::render('Admin/Permissions/PermissionIndex', [
-            'permissions' => PermissionResource::collection(Permission::all())
-        ]);
-    }
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): Response
-    {
-        return Inertia::render('Admin/Permissions/Create');
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(CreatePermissionRequest $request)
@@ -53,18 +36,7 @@ class PermissionController extends Controller
             ]);
         }
 
-        return to_route('permissions.index');
-    }
-
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Permission $permission): Response
-    {
-        return Inertia::render('Admin/Permissions/Edit', [
-            'permission' => new PermissionResource($permission)
-        ]);
+        return to_route('access-control.index');
     }
 
     /**
@@ -102,14 +74,10 @@ class PermissionController extends Controller
     {
         try {
             $permissionData = $permission->getAttributes();
-
-            // ✅ IMPORTANT: Before deleting, detach permission from all roles and users
-            // This prevents foreign key constraint violations
+            // ✅ IMPORTANT: Before deleting, detach permission from all roles
+            // (Direct user permissions are no longer supported)
             if ($permission->roles()->exists()) {
                 $permission->roles()->detach();
-            }
-            if ($permission->users()->exists()) {
-                $permission->users()->detach();
             }
 
             // Now safe to delete
@@ -166,17 +134,7 @@ class PermissionController extends Controller
                 $results['orphaned_role_permissions'] = $deletedOrphanedRole;
             }
 
-            // 2. Remove orphaned entries in model_has_permissions
-            $deletedOrphanedUser = \DB::table('model_has_permissions')
-                ->leftJoin('permissions', 'model_has_permissions.permission_id', '=', 'permissions.id')
-                ->whereNull('permissions.id')
-                ->delete();
-
-            if ($deletedOrphanedUser > 0) {
-                $results['orphaned_user_permissions'] = $deletedOrphanedUser;
-            }
-
-            // 3. Remove duplicate entries in role_has_permissions
+            // 2. Remove duplicate entries in role_has_permissions
             $dupRolePerms = \DB::select(
                 "SELECT role_id, permission_id FROM role_has_permissions 
                 GROUP BY role_id, permission_id 
@@ -196,33 +154,13 @@ class PermissionController extends Controller
                 $results['duplicate_role_permissions'] = $dupRoleCount;
             }
 
-            // 4. Remove duplicate entries in model_has_permissions
-            $dupUserPerms = \DB::select(
-                "SELECT model_id, permission_id FROM model_has_permissions 
-                GROUP BY model_id, permission_id 
-                HAVING COUNT(*) > 1"
-            );
-
-            $dupUserCount = 0;
-            foreach ($dupUserPerms as $dup) {
-                $dupUserCount += \DB::table('model_has_permissions')
-                    ->where('model_id', $dup->model_id)
-                    ->where('permission_id', $dup->permission_id)
-                    ->skip(1)
-                    ->delete();
-            }
-
-            if ($dupUserCount > 0) {
-                $results['duplicate_user_permissions'] = $dupUserCount;
-            }
-
-            // 5. Clear permission cache
+            // 3. Clear permission cache
             \Spatie\Permission\PermissionRegistrar::class;
             app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Permissions cleanup completed successfully!',
+                'message' => 'Permissions cleanup completed successfully! (Using role-based permissions only)',
                 'results' => $results
             ]);
         } catch (\Exception $e) {

@@ -637,9 +637,6 @@ import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import ApplicantFormModal from '@/Components/modals/ApplicantFormModal.vue';
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
-import ContextMenu from 'primevue/contextmenu';
-import Checkbox from 'primevue/checkbox';
-import Badge from 'primevue/badge';
 
 // Props
 const props = defineProps({

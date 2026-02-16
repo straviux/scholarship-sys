@@ -60,9 +60,6 @@
 </template>
 
 <script setup>
-import FloatLabel from 'primevue/floatlabel';
-import Textarea from 'primevue/textarea';
-import InputText from 'primevue/inputtext';
 import { computed } from 'vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';

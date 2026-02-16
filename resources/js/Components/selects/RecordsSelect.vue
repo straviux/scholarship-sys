@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
-import Select from 'primevue/select';
 
 const props = defineProps({
     modelValue: {

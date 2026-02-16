@@ -136,9 +136,9 @@
                                             </div>
                                             <div v-if="params.show_sequence_numbers == 1"
                                                 class="text-xs text-gray-500 mt-1">
-                                                【Prog.<span class="font-semibold">#{{ item._sequenceProgram }}</span> |
+                                                ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂProg.<span class="font-semibold">#{{ item._sequenceProgram }}</span> |
                                                 Sch.<span class="font-semibold">#{{ item._sequenceSchool }}</span> |
-                                                Course<span class="font-semibold">#{{ item._sequenceCourse }}</span>】
+                                                Course<span class="font-semibold">#{{ item._sequenceCourse }}</span>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ
                                             </div>
                                         </td>
                                         <td v-if="!params.municipality && params.group_by !== 'municipality'"
@@ -291,8 +291,6 @@ import axios from 'axios';
 import moment from 'moment';
 
 // PrimeVue Components
-import ProgressSpinner from 'primevue/progressspinner';
-import Select from 'primevue/select';
 
 const props = defineProps({
     params: { type: Object, required: true },

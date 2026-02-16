@@ -57,7 +57,7 @@
                                         <div class="text-sm text-gray-500">
                                             Created {{ update.created_at }} by {{ update.created_by_name }}
                                         </div>
-                                        <p class="text-sm text-blue-600 mt-2 font-medium">Click to view details →</p>
+                                        <p class="text-sm text-blue-600 mt-2 font-medium">Click to view details ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢</p>
                                     </div>
 
                                     <div class="flex items-center space-x-2 ml-4" @click.stop>
@@ -220,16 +220,16 @@ import { router } from '@inertiajs/vue3'
 import { usePermission } from '@/composable/permissions'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import axios from 'axios'
-import Dialog from 'primevue/dialog'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Select from 'primevue/select'
-import Checkbox from 'primevue/checkbox'
-import Panel from 'primevue/panel'
-import Card from 'primevue/card'
-import Tag from 'primevue/tag'
-import Message from 'primevue/message'
+
+
+
+
+
+
+
+
+
+
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import { marked } from 'marked'

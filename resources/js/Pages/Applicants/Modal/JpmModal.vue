@@ -1,10 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
-import Checkbox from 'primevue/checkbox';
-import Textarea from 'primevue/textarea';
 import { toast } from 'vue3-toastify';
 
 const props = defineProps({

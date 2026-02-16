@@ -169,15 +169,7 @@
 import { ref, computed, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import Card from 'primevue/card';
-import Button from 'primevue/button';
-import Badge from 'primevue/badge';
-import Checkbox from 'primevue/checkbox';
-import InputText from 'primevue/inputtext';
-import OrderList from 'primevue/orderlist';
-import Toast from 'primevue/toast';
 import PrimaryButton from '@/Components/ui/buttons/PrimaryButton.vue';
-import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({
     roles: Array,

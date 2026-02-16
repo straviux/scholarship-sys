@@ -1,23 +1,11 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import { Head, Link, useForm } from "@inertiajs/vue3";
+import { Head } from "@inertiajs/vue3";
 import { onMounted, ref, watch } from "vue";
 import { useStorage } from '@vueuse/core';
 import CourseModal from "@/Pages/Course/Modal/CourseModal.vue";
 import { router } from '@inertiajs/vue3';
-
-// PrimeVue Components
-import Button from 'primevue/button';
-import Chip from 'primevue/chip';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import InputText from 'primevue/inputtext';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import Select from 'primevue/select';
-import Panel from 'primevue/panel';
-import Tag from 'primevue/tag';
-import Dialog from 'primevue/dialog';
+import { usePermission } from '@/composable/permissions';
 
 const props = defineProps({
     action: String,
@@ -26,7 +14,8 @@ const props = defineProps({
     scholarshipPrograms: Object,
 });
 
-const gridview = useStorage('gridview', false);
+const { hasPermission } = usePermission();
+
 const scholarshipProgramsOptions = ref([]);
 const programOptions = ref([]);
 
@@ -124,7 +113,7 @@ const closeDeleteModal = () => {
                     </div>
                 </template>
 
-                <div class="flex justify-between items-center">
+                <div class="flex justify-between items-center" v-if="hasPermission('courses.manage')">
                     <div class="text-gray-600">
                         Manage courses and their scholarship programs
                     </div>
@@ -200,11 +189,12 @@ const closeDeleteModal = () => {
 
                     <Column header="Actions" style="width: 160px">
                         <template #body="slotProps">
-                            <div class="flex gap-2 justify-center">
+                            <div class="flex gap-2 justify-center" v-if="hasPermission('courses.manage')">
                                 <Button icon="pi pi-pen-to-square" severity="info" size="small" rounded outlined
                                     v-tooltip.top="'Edit Course'" @click="editCourse(slotProps.data.id)" />
-                                <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
-                                    v-tooltip.top="'Delete Course'" @click="confirmDeleteCourse(slotProps.data)" />
+                                <Button v-if="hasPermission('courses.delete')" icon="pi pi-trash" severity="danger"
+                                    size="small" rounded outlined v-tooltip.top="'Delete Course'"
+                                    @click="confirmDeleteCourse(slotProps.data)" />
                             </div>
                         </template>
                     </Column>

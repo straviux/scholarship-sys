@@ -4,7 +4,6 @@
 </template>
 
 <script setup>
-import Select from 'primevue/select';
 
 const props = defineProps({
     modelValue: {
