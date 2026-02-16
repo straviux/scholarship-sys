@@ -1,10 +1,10 @@
 <script setup>
-import { ref, onMounted, onUnmounted, provide } from "vue";
+import { ref, onMounted, onUnmounted, provide, watch } from "vue";
 import SidebarLink from "@/Components/ui/navigation/SidebarLink.vue";
 import NotificationDropdown from "@/Components/ui/navigation/NotificationDropdown.vue";
 import ActivityLogsDropdown from "@/Components/ui/navigation/ActivityLogsDropdown.vue";
 import MaintenanceAlertModal from "@/Components/MaintenanceAlertModal.vue";
-import { Link, usePage } from "@inertiajs/vue3";
+import { Link, usePage, router } from "@inertiajs/vue3";
 import { usePermission } from "@/composable/permissions";
 import logger from '@/utils/logger';
 
@@ -252,7 +252,9 @@ async function loadMenuItems() {
             }
         } catch (error) {
             if (error.name === 'AbortError') {
-                logger.error('Menu API request timed out after 15 seconds');
+                // Request was aborted - this could happen during navigation
+                // Don't treat this as a fatal error, just log it
+                logger.debug('Menu API request was aborted (likely due to navigation)');
 
                 // Retry on timeout if we haven't exceeded max retries
                 if (retryCount < maxRetries) {
@@ -264,8 +266,11 @@ async function loadMenuItems() {
             } else {
                 logger.error('Error loading menu items:', error);
             }
-            // Fallback to empty menu if API fails
-            menuItems.value = [];
+            // Fallback to empty menu if API fails, but keep any existing menu items
+            // This prevents the sidebar from appearing empty during retries
+            if (menuItems.value.length === 0) {
+                menuItems.value = [];
+            }
         } finally {
             menuLoading.value = false;
         }
@@ -304,10 +309,31 @@ onMounted(() => {
         currentDateTime.value = new Date(currentDateTime.value.getTime() + 1000);
     }, 1000);
 
+    // Set up Inertia navigation listener to reload menu on page changes
+    // This is important because the layout persists across navigation
+    const unsubscribe = router.on('finish', () => {
+        logger.info('Page navigation finished, reloading menu');
+        menuLoading.value = true;
+        loadMenuItems();
+    });
+
     return () => {
         if (dateTimeIntervalId) clearInterval(dateTimeIntervalId);
+        // Clean up the navigation listener
+        unsubscribe();
     };
 });
+
+// Also watch for URL changes as a fallback
+watch(
+    () => $page.url,
+    () => {
+        logger.info('Page URL changed via watch, ensuring menu is loaded');
+        // Don't reload here if router.on('finish') is already handling it
+        // This is just a safety measure
+    },
+    { immediate: false }
+);
 
 onUnmounted(() => {
     if (intervalId) {
@@ -433,8 +459,9 @@ onUnmounted(() => {
                         size="large" shape="circle" class="sidebar-avatar-medium" />
                 </div>
                 <!-- Dynamic Menu from API (Full Width) -->
-                <ul v-if="!sidebarMinimized && !menuLoading"
-                    class="menu space-y-3 md:space-y-2 mt-2 px-3 pb-3 text-sm md:text-xs w-full text-gray-300 hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block flex-1">
+                <ul v-if="!sidebarMinimized && (menuItems.length > 0 || !menuLoading)"
+                    class="menu space-y-3 md:space-y-2 mt-2 px-3 pb-3 text-sm md:text-xs w-full text-gray-300 hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block flex-1 relative"
+                    :class="{ 'opacity-60 pointer-events-none': menuLoading }">
                     <template v-for="item in menuItems" :key="item.id">
                         <!-- Menu item without children -->
                         <li v-if="!item.children || item.children.length === 0">
@@ -472,13 +499,19 @@ onUnmounted(() => {
                     </template>
                 </ul>
 
-                <!-- Loading state -->
-                <div v-if="menuLoading" class="flex items-center justify-center py-8">
+                <!-- Loading state - only show as full spinner if no menu items exist yet -->
+                <div v-if="menuLoading && menuItems.length === 0" class="flex items-center justify-center py-8 flex-1">
                     <i class="pi pi-spin pi-spinner text-gray-400" style="font-size: 1.5rem"></i>
                 </div>
+
+                <!-- Overlay loading indicator when menu is reloading (not initial load) -->
+                <div v-if="menuLoading && menuItems.length > 0" class="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                    <i class="pi pi-spin pi-spinner text-gray-200" style="font-size: 1.2rem"></i>
+                </div>
                 <!-- Dynamic Menu from API (Minimized Width) -->
-                <ul v-if="sidebarMinimized && !menuLoading"
-                    class="menu space-y-3 mt-2 px-2 pb-4 w-full text-gray-300 hover:text-gray-50 items-center min-h-0 min-w-0 block flex-1 overflow-y-auto overflow-x-hidden">
+                <ul v-if="sidebarMinimized && (menuItems.length > 0 || !menuLoading)"
+                    class="menu space-y-3 mt-2 px-2 pb-4 w-full text-gray-300 hover:text-gray-50 items-center min-h-0 min-w-0 block flex-1 overflow-y-auto overflow-x-hidden relative"
+                    :class="{ 'opacity-60 pointer-events-none': menuLoading }">
                     <template v-for="item in menuItems" :key="item.id">
                         <!-- Single menu item (minimized) -->
                         <li v-if="!item.children || item.children.length === 0">
