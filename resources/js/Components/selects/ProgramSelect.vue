@@ -32,9 +32,6 @@ const loading = ref(false);
 // Local value for v-modelroute('scholarshipprograms.getactivelist')
 const localValue = ref(props.modelValue);
 
-// Fetch data immediately on creation
-fetchData();
-
 // Sync localValue with parent prop
 watch(() => props.modelValue, (val) => {
     localValue.value = val;

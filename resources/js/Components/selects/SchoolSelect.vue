@@ -31,9 +31,6 @@ const { data, error, fetchData } = useApi(route('schools.getactivelist'));
 const schools = ref([]);
 const loading = ref(false);
 
-// Fetch data immediately on creation
-fetchData();
-
 // Computed property to include null option when needed
 const schoolOptions = computed(() => {
     const options = [...(schools.value || [])];

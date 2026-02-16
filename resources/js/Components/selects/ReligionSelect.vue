@@ -5,8 +5,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
+import { useCachedData } from '@/composable/useCachedData';
 import Select from 'primevue/select';
 
 const props = defineProps({
@@ -57,13 +58,12 @@ const fallbackReligionOptions = [
     { label: 'Others', value: 'Others' },
 ];
 
-// Fetch religion options from backend
-const fetchReligionOptions = async () => {
-    loading.value = true;
-    try {
+// Use cached data composable for religion options
+const { data: cachedReligionOptions, loading: cacheLoading, fetchData: fetchReligionOptions } = useCachedData(
+    'religion',
+    async () => {
         const response = await axios.get(route('api.system-options.category', 'religion'));
 
-        // Use backend options if available
         if (response.data && response.data.length > 0) {
             const backendOptions = response.data.map(option => ({
                 label: option.label,
@@ -78,22 +78,29 @@ const fetchReligionOptions = async () => {
                 }
             });
 
-            religionOptions.value = allOptions;
-        } else {
-            // Use fallback if no backend options
-            religionOptions.value = fallbackReligionOptions;
+            return allOptions;
         }
-    } catch (error) {
-        console.error('Failed to fetch religion options:', error);
-        // Use complete fallback list if API fails
-        religionOptions.value = fallbackReligionOptions;
-    } finally {
-        loading.value = false;
-    }
-};
 
-// Fetch data immediately to ensure it's available when component is used in modals
-fetchReligionOptions();
+        return fallbackReligionOptions;
+    }
+);
+
+// Watch cached data and sync to local options
+watch(
+    () => cachedReligionOptions.value,
+    (newData) => {
+        religionOptions.value = newData || fallbackReligionOptions;
+    },
+    { immediate: true }
+);
+
+// Watch cache loading state
+watch(
+    () => cacheLoading.value,
+    (isLoading) => {
+        loading.value = isLoading;
+    }
+);
 
 onMounted(() => {
     fetchReligionOptions();

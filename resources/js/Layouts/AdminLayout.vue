@@ -193,6 +193,7 @@ function scheduleSmartPolling(startTimeStr) {
 
 // Fetch on mount and set interval to refresh
 let intervalId = null;
+let dateTimeIntervalId = null;
 
 // Cache management functions
 function getCachedMenu() {
@@ -398,28 +399,23 @@ onMounted(() => {
     intervalId = setInterval(fetchUnreadCount, 30000);
 
     // Update server time every second (client-side increment for smooth display)
-    const dateTimeIntervalId = setInterval(() => {
+    dateTimeIntervalId = setInterval(() => {
         currentDateTime.value = new Date(currentDateTime.value.getTime() + 1000);
     }, 1000);
 
-    // Set up Inertia navigation listener to reload menu on page changes
-    // This is important because the layout persists across navigation
-    // Use cached menu on navigation (no loading state) - updates happen silently in background
-    const unsubscribe = router.on('finish', () => {
-        logger.info('Page navigation finished, refreshing menu silently');
-        loadMenuItems(false); // false = don't show loading state, use cache
-    });
-
-    return () => {
-        if (dateTimeIntervalId) clearInterval(dateTimeIntervalId);
-        // Clean up the navigation listener
-        unsubscribe();
-    };
+    // Note: We intentionally do NOT refresh menu on navigation because:
+    // 1. Menu doesn't change when navigating between pages
+    // 2. Menu only needs to refresh if permissions/roles change
+    // 3. This prevents extra API calls and keeps navigation fast
+    // Menu will remain cached until cache expires (1 hour) or user logs out
 });
 
 onUnmounted(() => {
     if (intervalId) {
         clearInterval(intervalId);
+    }
+    if (dateTimeIntervalId) {
+        clearInterval(dateTimeIntervalId);
     }
     if (maintenanceCheckIntervalId) {
         clearInterval(maintenanceCheckIntervalId);

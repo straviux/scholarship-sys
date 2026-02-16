@@ -395,6 +395,52 @@ const deletePermission = async () => {
     }
 };
 
+// ============================================
+// PERMISSION CLEANUP
+// ============================================
+const showConfirmCleanupModal = ref(false);
+const isCleaningUp = ref(false);
+const cleanupResults = ref(null);
+const showCleanupResults = ref(false);
+
+const openConfirmCleanupModal = () => {
+    showConfirmCleanupModal.value = true;
+};
+
+const closeConfirmCleanupModal = () => {
+    showConfirmCleanupModal.value = false;
+};
+
+const closeCleanupResultsModal = () => {
+    showCleanupResults.value = false;
+    cleanupResults.value = null;
+    router.reload({ only: ['permissions'] });
+};
+
+const runCleanup = async () => {
+    isCleaningUp.value = true;
+    closeConfirmCleanupModal();
+
+    try {
+        const response = await axios.post(route('permissions.cleanup'));
+
+        if (response.data.success) {
+            cleanupResults.value = response.data.results;
+            showCleanupResults.value = true;
+            toast.success('Permission cleanup completed successfully!');
+        } else {
+            toast.error('Cleanup completed with warnings');
+            cleanupResults.value = response.data.results;
+            showCleanupResults.value = true;
+        }
+    } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to run permission cleanup');
+        console.error('Cleanup error:', error);
+    } finally {
+        isCleaningUp.value = false;
+    }
+};
+
 </script>
 
 <template>
@@ -559,7 +605,7 @@ const deletePermission = async () => {
                                             ]">
                                             <div class="flex items-center justify-between">
                                                 <span class="font-medium text-gray-700 capitalize">{{ role.name
-                                                    }}</span>
+                                                }}</span>
                                                 <Tag v-if="role.permissions" :value="`${role.permissions.length}`"
                                                     severity="info" size="small" />
                                             </div>
@@ -655,7 +701,7 @@ const deletePermission = async () => {
                         <!-- PERMISSIONS MANAGEMENT TAB -->
                         <TabPanel value="2">
                             <!-- Permissions Search and Actions -->
-                            <div class="flex justify-between items-center mb-4">
+                            <div class="flex justify-between items-center mb-4 gap-4">
                                 <div class="flex-1 max-w-md">
                                     <IconField iconPosition="left">
                                         <InputIcon class="pi pi-search" />
@@ -663,8 +709,13 @@ const deletePermission = async () => {
                                             class="w-full" />
                                     </IconField>
                                 </div>
-                                <Button label="New Permission" icon="pi pi-plus" severity="success" raised
-                                    @click="openCreatePermissionModal" />
+                                <div class="flex gap-2">
+                                    <Button label="Cleanup Permissions" icon="pi pi-wrench" severity="warning" raised
+                                        @click="openConfirmCleanupModal"
+                                        v-tooltip.top="'Fix orphaned and duplicate permission records'" />
+                                    <Button label="New Permission" icon="pi pi-plus" severity="success" raised
+                                        @click="openCreatePermissionModal" />
+                                </div>
                             </div>
 
                             <!-- Permissions DataTable -->
@@ -875,6 +926,143 @@ const deletePermission = async () => {
             <template #footer>
                 <Button label="Cancel" severity="secondary" @click="closeDeletePermissionModal" outlined />
                 <Button label="Delete Permission" severity="danger" @click="deletePermission" icon="pi pi-trash" />
+            </template>
+        </Dialog>
+
+        <!-- ============================================ -->
+        <!-- PERMISSION CLEANUP DIALOGS -->
+        <!-- ============================================ -->
+
+        <!-- Confirm Cleanup Dialog -->
+        <Dialog v-model:visible="showConfirmCleanupModal" :style="{ width: '500px' }"
+            header="Confirm Permission Cleanup" :modal="true" :closable="false">
+            <div class="flex items-start gap-4">
+                <i class="pi pi-wrench text-3xl text-amber-500 mt-1"></i>
+                <div class="flex-1">
+                    <p class="text-lg font-semibold text-gray-800 mb-3">
+                        Run Permission System Cleanup?
+                    </p>
+                    <p class="text-gray-600 mb-4">
+                        This will fix permission system issues by:
+                    </p>
+                    <ul class="space-y-2 mb-4 text-sm text-gray-600">
+                        <li class="flex items-center gap-2">
+                            <i class="pi pi-check text-green-500 text-xs"></i>
+                            <span>Removing orphaned role-permission records</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="pi pi-check text-green-500 text-xs"></i>
+                            <span>Removing orphaned user-permission records</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="pi pi-check text-green-500 text-xs"></i>
+                            <span>Removing duplicate permission assignments</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="pi pi-check text-green-500 text-xs"></i>
+                            <span>Clearing permission cache</span>
+                        </li>
+                    </ul>
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-md">
+                        <div class="flex items-center gap-2 mb-1">
+                            <i class="pi pi-info-circle text-amber-600 text-sm"></i>
+                            <span class="font-medium text-sm text-amber-800">Safe Operation</span>
+                        </div>
+                        <p class="text-xs text-amber-700">
+                            This is a maintenance operation that won't delete user accounts or active permissions.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Cancel" severity="secondary" @click="closeConfirmCleanupModal" outlined
+                    :disabled="isCleaningUp" />
+                <Button label="Run Cleanup" severity="warning" icon="pi pi-wrench" @click="runCleanup"
+                    :loading="isCleaningUp" />
+            </template>
+        </Dialog>
+
+        <!-- Cleanup Results Dialog -->
+        <Dialog v-model:visible="showCleanupResults" :style="{ width: '500px' }" header="Permission Cleanup Results"
+            :modal="true">
+            <div v-if="cleanupResults" class="space-y-4">
+                <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <i class="pi pi-check-circle text-2xl text-green-600"></i>
+                    <div>
+                        <p class="font-semibold text-green-800">Cleanup Completed</p>
+                        <p class="text-sm text-green-700">Permission system maintenance finished successfully</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-trash text-sm text-red-600"></i>
+                            <span class="text-sm text-gray-700">Orphaned role permissions removed:</span>
+                        </div>
+                        <span class="font-semibold text-lg text-gray-800 min-w-[50px] text-right">
+                            {{ cleanupResults.orphaned_role_permissions || 0 }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-trash text-sm text-red-600"></i>
+                            <span class="text-sm text-gray-700">Orphaned user permissions removed:</span>
+                        </div>
+                        <span class="font-semibold text-lg text-gray-800 min-w-[50px] text-right">
+                            {{ cleanupResults.orphaned_user_permissions || 0 }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-copy text-sm text-orange-600"></i>
+                            <span class="text-sm text-gray-700">Duplicate role assignments removed:</span>
+                        </div>
+                        <span class="font-semibold text-lg text-gray-800 min-w-[50px] text-right">
+                            {{ cleanupResults.duplicate_role_permissions || 0 }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-copy text-sm text-orange-600"></i>
+                            <span class="text-sm text-gray-700">Duplicate user assignments removed:</span>
+                        </div>
+                        <span class="font-semibold text-lg text-gray-800 min-w-[50px] text-right">
+                            {{ cleanupResults.duplicate_user_permissions || 0 }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-blue-50 rounded border border-blue-200">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-refresh text-sm text-blue-600"></i>
+                            <span class="text-sm text-gray-700 font-medium">Total records cleaned:</span>
+                        </div>
+                        <span class="font-bold text-lg text-blue-800">
+                            {{ (cleanupResults.orphaned_role_permissions || 0) +
+                                (cleanupResults.orphaned_user_permissions || 0) +
+                                (cleanupResults.duplicate_role_permissions || 0) +
+                                (cleanupResults.duplicate_user_permissions || 0) }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <div class="flex items-center gap-2 mb-1">
+                        <i class="pi pi-info-circle text-blue-600 text-sm"></i>
+                        <span class="font-medium text-sm text-blue-800">Permissions Refreshed</span>
+                    </div>
+                    <p class="text-xs text-blue-700">
+                        The permission cache has been cleared. Changes take effect immediately.
+                    </p>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Close" severity="success" @click="closeCleanupResultsModal" />
             </template>
         </Dialog>
     </AdminLayout>

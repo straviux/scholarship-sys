@@ -101,6 +101,7 @@ Route::middleware(['auth', 'check.role:users,access-control', 'maintenance'])->g
     Route::get('/permissions/{permission}/edit', [PermissionController::class, 'edit'])->middleware('check.permission:permissions.manage')->name('permissions.edit');
     Route::put('/permissions/{permission}', [PermissionController::class, 'update'])->middleware('check.permission:permissions.manage')->name('permissions.update');
     Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy'])->middleware('check.permission:permissions.manage')->name('permissions.destroy');
+    Route::post('/permissions/cleanup/run', [PermissionController::class, 'cleanup'])->middleware('check.permission:permissions.manage')->name('permissions.cleanup');
 
     // Role-Permission management (for inline assignments)
     Route::post('/roles/permissions/attach', [RoleController::class, 'attachPermission'])->middleware('check.permission:roles.manage')->name('roles.permissions.attach');

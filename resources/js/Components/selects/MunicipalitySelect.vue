@@ -1,7 +1,9 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue';
+import { useCachedData } from '@/composable/useCachedData';
 import Select from 'primevue/select';
 import MultiSelect from 'primevue/multiselect';
+import axios from 'axios';
 
 const props = defineProps({
     modelValue: {
@@ -30,6 +32,31 @@ const emit = defineEmits(['update:modelValue']);
 const municipalities = ref([]);
 const loading = ref(false);
 
+// Use cached data composable for municipalities
+const { data: cachedMunicipalities, loading: cacheLoading, fetchData: fetchMunicipalities } = useCachedData(
+    'municipalities',
+    async () => {
+        const response = await axios.get(route('api.municipalities.index'));
+        return response.data;
+    }
+);
+
+// Watch cached data and sync to local municipalities
+watch(
+    () => cachedMunicipalities.value,
+    (newData) => {
+        municipalities.value = newData || [];
+        loading.value = false;
+    }
+);
+
+watch(
+    () => cacheLoading.value,
+    (isLoading) => {
+        loading.value = isLoading;
+    }
+);
+
 // Local value for v-model
 const localValue = ref(props.multiple ? (props.modelValue || []) : props.modelValue);
 
@@ -43,19 +70,6 @@ watch(localValue, (val) => {
     emit('update:modelValue', val);
 });
 
-// Fetch municipalities from API
-const fetchMunicipalities = async () => {
-    loading.value = true;
-    try {
-        const response = await axios.get(route('api.municipalities.index'));
-        municipalities.value = response.data;
-    } catch (error) {
-        console.error('Error fetching municipalities:', error);
-        municipalities.value = [];
-    } finally {
-        loading.value = false;
-    }
-};
 
 // Watch for changes in municipalities data and update localValue
 watch(
@@ -114,9 +128,6 @@ watch(
     },
     { immediate: true }
 );
-
-// Fetch data immediately to ensure it's available when component is used in modals
-fetchMunicipalities();
 
 onMounted(fetchMunicipalities);</script>
 

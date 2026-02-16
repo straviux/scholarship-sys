@@ -218,9 +218,6 @@ onMounted(() => {
         return;
     }
 
-    // Initial check
-    fetchMaintenanceStatus();
-
     // Update countdown every second when modal is visible (shows when 5 min remaining)
     countdownInterval.value = setInterval(() => {
         if (showModal.value && announcement.value) {

@@ -147,4 +147,94 @@ class PermissionController extends Controller
             return back()->with('error', 'Failed to delete permission: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Cleanup permissions - fix orphaned records, duplicates, and invalid pivot table entries
+     */
+    public function cleanup(Request $request)
+    {
+        try {
+            $results = [];
+
+            // 1. Remove orphaned entries in role_has_permissions
+            $deletedOrphanedRole = \DB::table('role_has_permissions')
+                ->leftJoin('permissions', 'role_has_permissions.permission_id', '=', 'permissions.id')
+                ->whereNull('permissions.id')
+                ->delete();
+
+            if ($deletedOrphanedRole > 0) {
+                $results['orphaned_role_permissions'] = $deletedOrphanedRole;
+            }
+
+            // 2. Remove orphaned entries in model_has_permissions
+            $deletedOrphanedUser = \DB::table('model_has_permissions')
+                ->leftJoin('permissions', 'model_has_permissions.permission_id', '=', 'permissions.id')
+                ->whereNull('permissions.id')
+                ->delete();
+
+            if ($deletedOrphanedUser > 0) {
+                $results['orphaned_user_permissions'] = $deletedOrphanedUser;
+            }
+
+            // 3. Remove duplicate entries in role_has_permissions
+            $dupRolePerms = \DB::select(
+                "SELECT role_id, permission_id FROM role_has_permissions 
+                GROUP BY role_id, permission_id 
+                HAVING COUNT(*) > 1"
+            );
+
+            $dupRoleCount = 0;
+            foreach ($dupRolePerms as $dup) {
+                $dupRoleCount += \DB::table('role_has_permissions')
+                    ->where('role_id', $dup->role_id)
+                    ->where('permission_id', $dup->permission_id)
+                    ->skip(1)
+                    ->delete();
+            }
+
+            if ($dupRoleCount > 0) {
+                $results['duplicate_role_permissions'] = $dupRoleCount;
+            }
+
+            // 4. Remove duplicate entries in model_has_permissions
+            $dupUserPerms = \DB::select(
+                "SELECT model_id, permission_id FROM model_has_permissions 
+                GROUP BY model_id, permission_id 
+                HAVING COUNT(*) > 1"
+            );
+
+            $dupUserCount = 0;
+            foreach ($dupUserPerms as $dup) {
+                $dupUserCount += \DB::table('model_has_permissions')
+                    ->where('model_id', $dup->model_id)
+                    ->where('permission_id', $dup->permission_id)
+                    ->skip(1)
+                    ->delete();
+            }
+
+            if ($dupUserCount > 0) {
+                $results['duplicate_user_permissions'] = $dupUserCount;
+            }
+
+            // 5. Clear permission cache
+            \Spatie\Permission\PermissionRegistrar::class;
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Permissions cleanup completed successfully!',
+                'results' => $results
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Permission cleanup failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Cleanup failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

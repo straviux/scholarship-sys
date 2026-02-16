@@ -7,23 +7,6 @@ import { ref, onBeforeUnmount, watch, computed, inject } from 'vue';
 import { usePermission } from '@/composable/permissions';
 import axios from 'axios';
 
-// PrimeVue Components
-// import Button from 'primevue/button';
-// import Toolbar from 'primevue/toolbar';
-// import DatePicker from 'primevue/datepicker';
-// import Divider from 'primevue/divider';
-// import InputText from 'primevue/inputtext';
-// import Select from 'primevue/select';
-// import Checkbox from 'primevue/checkbox';
-// import DataTable from 'primevue/datatable';
-// import Column from 'primevue/column';
-// import Panel from 'primevue/panel';
-// import Tag from 'primevue/tag';
-// import IconField from 'primevue/iconfield';
-// import InputIcon from 'primevue/inputicon';
-// import Dialog from 'primevue/dialog';
-// import TabPanel from 'primevue/tabpanel';
-// import Avatar from 'primevue/avatar';
 
 import ApplicantFormModal from '@/Components/modals/ApplicantFormModal.vue';
 import YakapCategoryModal from '@/Components/modals/YakapCategoryModal.vue';
@@ -349,8 +332,11 @@ const closeModal = () => {
     showApplicationFormModal.value = false;
     modalProfile.value = null;
     // Don't reset yakap values - they persist for next new applicant
-    // Refresh the applicants list after modal closes
-    refreshApplicationList();
+    // For UPDATE mode, refresh to show updated data
+    // For CREATE mode, refresh is handled by handleApplicantCreated
+    // if (applicationFormMode.value === 'edit') {
+    //     refreshApplicationList();
+    // }
 }
 
 const handleApplicantCreated = (newProfile) => {
@@ -571,19 +557,6 @@ watch(() => page.props.auth?.user?.permissions, (newPermissions) => {
 const canShowJpmControls = computed(() => {
     return hasPermission('jpm.view') && showJpmColumns.value === true;
 });
-
-// Debug: Log user permissions to console
-console.log('=== JPM PERMISSION DEBUG ===');
-console.log('User ID:', page.props.auth?.user?.id);
-console.log('User Name:', page.props.auth?.user?.name);
-console.log('User Roles:', page.props.auth?.user?.roles);
-console.log('All permissions array:', JSON.stringify(page.props.auth?.user?.permissions || []));
-console.log('Total permissions:', (page.props.auth?.user?.permissions || []).length);
-console.log('jpm.view in array?', (page.props.auth?.user?.permissions || []).includes('jpm.view'));
-console.log('Has jpm.view (hasPermission):', hasPermission('jpm.view'));
-console.log('showJpmColumns:', showJpmColumns.value);
-console.log('canShowJpmControls:', canShowJpmControls.value);
-console.log('============================');
 
 // Simple view toggle - hide action buttons for easier viewing
 const simpleView = ref(localStorage.getItem('simpleView') !== null ? localStorage.getItem('simpleView') === 'true' : true);
@@ -1229,6 +1202,8 @@ const formatDate = (date) => {
                                     <Checkbox v-model="showJpmColumns" inputId="showJpmToggle" binary />
                                     <label for="showJpmToggle" class="text-sm text-gray-600 cursor-pointer">Enable JPM
                                         Tagging</label>
+
+                                    {{ hasPermission('jpm.manage') }}
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <label for="jpmFilter" class="text-sm text-gray-600">JPM Filter:</label>
@@ -1487,21 +1462,21 @@ const formatDate = (date) => {
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Prog. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Cour. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_course || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Sch. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_school_course || '-'
-                                                }}</span>
+                                                    }}</span>
 
                                             </div>
                                         </div>
@@ -1761,7 +1736,7 @@ const formatDate = (date) => {
                         class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows="6" placeholder="Enter remarks here..." />
                     <small v-if="remarksForm.errors.remarks" class="text-red-500">{{ remarksForm.errors.remarks
-                        }}</small>
+                    }}</small>
                 </div>
             </div>
 
@@ -1828,12 +1803,12 @@ const formatDate = (date) => {
                                     getApplicantFullName(selectedApplicantForReview) }}</h3>
                             <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
                                 <span><i class="pi pi-phone mr-1"></i>{{ selectedApplicantForReview.contact_no || 'N/A'
-                                }}</span>
+                                    }}</span>
                                 <span><i class="pi pi-envelope mr-1"></i>{{ selectedApplicantForReview.email || 'N/A'
-                                }}</span>
+                                    }}</span>
                                 <span><i class="pi pi-calendar mr-1"></i>{{
                                     formatDate(selectedApplicantForReview.date_filed)
-                                }}</span>
+                                    }}</span>
                             </div>
                         </div>
                         <!-- Queue Numbers -->
@@ -1927,7 +1902,7 @@ const formatDate = (date) => {
                                             <label class="text-gray-600">Income</label>
                                             <div class="font-medium">{{ selectedApplicantForReview.gross_monthly_income
                                                 || 'N/A'
-                                            }}</div>
+                                                }}</div>
                                         </div>
                                         <div>
                                             <label class="text-gray-600">Address</label>

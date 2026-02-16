@@ -25,11 +25,24 @@ class MaintenanceAnnouncement extends Model
     ];
 
     /**
-     * Get the active maintenance announcement
+     * Get the active maintenance announcement (with in-memory caching)
      */
     public static function getActive()
     {
-        return static::where('is_active', true)->first();
+        // Use static variable to cache within a single request lifecycle
+        static $cached = false;
+        static $maintenance = null;
+
+        // Return cached value if already loaded
+        if ($cached) {
+            return $maintenance;
+        }
+
+        // Load from database and cache
+        $maintenance = static::where('is_active', true)->first();
+        $cached = true;
+
+        return $maintenance;
     }
 
     /**

@@ -17,7 +17,10 @@ class CleanupPermissions extends Command
                             {--remove-from-role= : Remove all permissions from a specific role}
                             {--remove-duplicates : Remove duplicate permission records}
                             {--show-duplicates : Show duplicate permission records}
-                            {--remove-from-user= : Remove all permissions from a specific user (by ID)}';
+                            {--remove-from-user= : Remove all permissions from a specific user (by ID)}
+                            {--clean-pivot-tables : Clean up orphaned and duplicate pivot table records}
+                            {--show-pivot-issues : Show issues in pivot tables}
+                            {--remove-permission= : Remove ALL instances of a specific permission from all roles and users}';
 
     /**
      * The console command description.
@@ -36,9 +39,19 @@ class CleanupPermissions extends Command
             $this->showDuplicates();
         }
 
+        // Show pivot issues
+        if ($this->option('show-pivot-issues')) {
+            $this->showPivotIssues();
+        }
+
         // Remove duplicates
         if ($this->option('remove-duplicates')) {
             $this->removeDuplicates();
+        }
+
+        // Clean pivot tables
+        if ($this->option('clean-pivot-tables')) {
+            $this->cleanPivotTables();
         }
 
         // Remove all permissions from a role
@@ -51,11 +64,19 @@ class CleanupPermissions extends Command
             $this->removeFromUser($this->option('remove-from-user'));
         }
 
+        // Remove a specific permission from all roles and users
+        if ($this->option('remove-permission')) {
+            $this->removePermissionCompletely($this->option('remove-permission'));
+        }
+
         if (
             !$this->option('show-duplicates') &&
+            !$this->option('show-pivot-issues') &&
             !$this->option('remove-duplicates') &&
+            !$this->option('clean-pivot-tables') &&
             !$this->option('remove-from-role') &&
-            !$this->option('remove-from-user')
+            !$this->option('remove-from-user') &&
+            !$this->option('remove-permission')
         ) {
             $this->info('No action specified. Use --help to see available options.');
         }
@@ -188,6 +209,163 @@ class CleanupPermissions extends Command
             $user->syncPermissions([]);
             $this->info("✓ All direct permissions removed from user '{$user->name}'.");
             $this->info("(User still has permissions from their assigned roles)");
+        }
+    }
+
+    /**
+     * Show issues in pivot tables (orphaned or duplicate records)
+     */
+    private function showPivotIssues()
+    {
+        $this->info('Checking for pivot table issues...');
+
+        // Check for orphaned role_permission entries (permission_id doesn't exist)
+        $orphanedRolePerms = \DB::table('role_has_permissions')
+            ->leftJoin('permissions', 'role_has_permissions.permission_id', '=', 'permissions.id')
+            ->whereNull('permissions.id')
+            ->count();
+
+        if ($orphanedRolePerms > 0) {
+            $this->warn("Found {$orphanedRolePerms} orphaned entries in role_has_permissions table");
+        }
+
+        // Check for orphaned user_permission entries (permission_id doesn't exist)
+        $orphanedUserPerms = \DB::table('model_has_permissions')
+            ->leftJoin('permissions', 'model_has_permissions.permission_id', '=', 'permissions.id')
+            ->whereNull('permissions.id')
+            ->count();
+
+        if ($orphanedUserPerms > 0) {
+            $this->warn("Found {$orphanedUserPerms} orphaned entries in model_has_permissions table");
+        }
+
+        // Check for duplicate entries in pivot tables
+        $dupRolePerms = \DB::table('role_has_permissions')
+            ->select('role_id', 'permission_id', \DB::raw('COUNT(*) as count'))
+            ->groupBy('role_id', 'permission_id')
+            ->having('count', '>', 1)
+            ->count();
+
+        if ($dupRolePerms > 0) {
+            $this->warn("Found {$dupRolePerms} duplicate entries in role_has_permissions table");
+        }
+
+        $dupUserPerms = \DB::table('model_has_permissions')
+            ->select('model_id', 'permission_id', \DB::raw('COUNT(*) as count'))
+            ->groupBy('model_id', 'permission_id')
+            ->having('count', '>', 1)
+            ->count();
+
+        if ($dupUserPerms > 0) {
+            $this->warn("Found {$dupUserPerms} duplicate entries in model_has_permissions table");
+        }
+
+        if ($orphanedRolePerms == 0 && $orphanedUserPerms == 0 && $dupRolePerms == 0 && $dupUserPerms == 0) {
+            $this->info('No pivot table issues found.');
+        }
+    }
+
+    /**
+     * Clean up pivot tables - remove orphaned and duplicate records
+     */
+    private function cleanPivotTables()
+    {
+        $this->info('Cleaning pivot tables...');
+
+        // Remove orphaned entries in role_has_permissions
+        $deletedOrphanedRole = \DB::table('role_has_permissions')
+            ->leftJoin('permissions', 'role_has_permissions.permission_id', '=', 'permissions.id')
+            ->whereNull('permissions.id')
+            ->delete();
+
+        if ($deletedOrphanedRole > 0) {
+            $this->info("✓ Removed {$deletedOrphanedRole} orphaned entries from role_has_permissions");
+        }
+
+        // Remove orphaned entries in model_has_permissions
+        $deletedOrphanedUser = \DB::table('model_has_permissions')
+            ->leftJoin('permissions', 'model_has_permissions.permission_id', '=', 'permissions.id')
+            ->whereNull('permissions.id')
+            ->delete();
+
+        if ($deletedOrphanedUser > 0) {
+            $this->info("✓ Removed {$deletedOrphanedUser} orphaned entries from model_has_permissions");
+        }
+
+        // Remove duplicate entries in role_has_permissions (keep only first)
+        $dupRolePerms = \DB::table('role_has_permissions')
+            ->select('role_id', 'permission_id', \DB::raw('MIN(id) as min_id'))
+            ->groupBy('role_id', 'permission_id')
+            ->having(\DB::raw('COUNT(*)'), '>', 1)
+            ->pluck('min_id');
+
+        if ($dupRolePerms->count() > 0) {
+            $deletedDupRole = \DB::table('role_has_permissions')
+                ->where(function ($query) use ($dupRolePerms) {
+                    $query->selectRaw('COUNT(*)')
+                        ->from('role_has_permissions as rp2')
+                        ->whereRaw('rp2.role_id = role_has_permissions.role_id AND rp2.permission_id = role_has_permissions.permission_id')
+                        ->havingRaw('COUNT(*) > 1');
+                })
+                ->whereNotIn('id', $dupRolePerms)
+                ->delete();
+
+            if ($deletedDupRole > 0) {
+                $this->info("✓ Removed {$deletedDupRole} duplicate entries from role_has_permissions");
+            }
+        }
+
+        // Remove duplicate entries in model_has_permissions (keep only first)
+        $dupUserPerms = \DB::table('model_has_permissions')
+            ->select('model_id', 'permission_id', \DB::raw('MIN(id) as min_id'))
+            ->groupBy('model_id', 'permission_id')
+            ->having(\DB::raw('COUNT(*)'), '>', 1)
+            ->pluck('min_id');
+
+        if ($dupUserPerms->count() > 0) {
+            $deletedDupUser = \DB::table('model_has_permissions')
+                ->where(function ($query) use ($dupUserPerms) {
+                    $query->selectRaw('COUNT(*)')
+                        ->from('model_has_permissions as mhp2')
+                        ->whereRaw('mhp2.model_id = model_has_permissions.model_id AND mhp2.permission_id = model_has_permissions.permission_id')
+                        ->havingRaw('COUNT(*) > 1');
+                })
+                ->whereNotIn('id', $dupUserPerms)
+                ->delete();
+
+            if ($deletedDupUser > 0) {
+                $this->info("✓ Removed {$deletedDupUser} duplicate entries from model_has_permissions");
+            }
+        }
+
+        $this->info('Pivot table cleanup complete.');
+    }
+
+    /**
+     * Remove a specific permission from all roles and users completely
+     */
+    private function removePermissionCompletely($permissionName)
+    {
+        $permission = Permission::where('name', $permissionName)->first();
+
+        if (!$permission) {
+            $this->error("Permission '{$permissionName}' not found.");
+            return;
+        }
+
+        // Count how many roles and users have this permission
+        $roleCount = $permission->roles()->count();
+        $userCount = $permission->users()->count();
+
+        $this->warn("Permission '{$permissionName}' is assigned to:");
+        $this->info("  - {$roleCount} roles");
+        $this->info("  - {$userCount} users");
+
+        if ($this->confirm("Remove this permission from all roles and users?")) {
+            $permission->roles()->detach();
+            $permission->users()->detach();
+
+            $this->info("✓ Removed '{$permissionName}' from all roles and users.");
         }
     }
 }

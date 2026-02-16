@@ -339,6 +339,36 @@ import { XMarkIcon } from "@heroicons/vue/20/solid";
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
+// Navigation guard to prevent duplicate requests
+let pendingNavigation = null;
+const safeNavigate = (url) => {
+    console.log('🧭 safeNavigate called with:', url);
+    if (!pendingNavigation) {
+        console.log('✅ Executing navigation NOW');
+        pendingNavigation = url;
+        // Set a flag to ignore any repeated calls within 100ms
+        const navTime = Date.now();
+        router.visit(url, {
+            onStart: () => console.log('🚀 Router visit STARTED'),
+            onProgress: (progress) => console.log('📊 Router progress:', progress.percentage),
+            onSuccess: () => {
+                console.log('✔️ Router visit SUCCESS');
+                pendingNavigation = null;
+            },
+            onError: (errors) => {
+                console.error('❌ Router visit ERROR:', errors);
+                pendingNavigation = null;
+            },
+            onCancel: () => {
+                console.log('🛑 Router visit CANCELLED');
+                pendingNavigation = null;
+            }
+        });
+    } else {
+        console.log('⏭️ Navigation already pending, ignoring duplicate call');
+    }
+};
+
 // COURSE MULTISELECT COMPONENT
 import AcademicInformationFields from '@/Components/forms/fields/AcademicInformationFields.vue';
 import ProfileSelect from "@/Components/selects/ProfileSelect.vue";
@@ -634,9 +664,8 @@ const submit = (closeAfter = false) => {
                 toast.success("Application has been submitted", {
                     position: toast.POSITION.TOP_RIGHT,
                 });
-                setTimeout(() => {
-                    router.visit(route('waitinglist.index', { page: props.page }), { preserveState: true, preserveScroll: true });
-                }, 1200);
+                // Navigate immediately without delay
+                safeNavigate(route('waitinglist.index', { page: props.page }));
             })
             .catch((err) => {
                 console.error('Error submitting application:', err);
@@ -703,15 +732,15 @@ const submit = (closeAfter = false) => {
                 toast.success("Profile has been updated", {
                     position: toast.POSITION.TOP_RIGHT,
                 });
-                setTimeout(() => {
-                    if (props.isInlineModal) {
-                        emit('close');
-                        router.reload();
-                    } else {
-                        router.visit(route('waitinglist.index', { id: profile_id, action: props.action }), { preserveState: true });
-                        if (closeAfter) router.visit(JSON.parse(JSON.stringify(prevPage.value)));
-                    }
-                }, 1200);
+                if (props.isInlineModal) {
+                    emit('close');
+                } else {
+                    // Navigate immediately without delay
+                    const targetRoute = closeAfter
+                        ? prevPage.value
+                        : route('waitinglist.index', { id: profile_id, action: props.action });
+                    safeNavigate(targetRoute);
+                }
             })
             .catch((err) => {
                 console.error('Error updating profile:', err);
