@@ -5,7 +5,7 @@ import { onMounted, ref, watch } from "vue";
 import moment from "moment";
 import { useStorage } from '@vueuse/core';
 import SchoolModal from "@/Pages/School/Modal/SchoolModal.vue";
-import { hasPermission } from '@/composable/permissions';
+import { usePermission } from '@/composable/permissions';
 
 // PrimeVue Components
 import Button from 'primevue/button';
@@ -24,6 +24,8 @@ const props = defineProps({
     schools: Object,
     school: Object
 });
+
+const { hasPermission } = usePermission();
 
 // Search and pagination
 const globalFilter = ref('');
