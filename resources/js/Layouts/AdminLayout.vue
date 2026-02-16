@@ -199,7 +199,7 @@ function getCachedMenu() {
     try {
         const cached = localStorage.getItem(MENU_CACHE_KEY);
         const timestamp = localStorage.getItem(MENU_CACHE_TIMESTAMP_KEY);
-        
+
         if (!cached || !timestamp) {
             return null;
         }
@@ -250,7 +250,7 @@ async function loadMenuItems(showLoadingState = true) {
     if (cachedMenu && cachedMenu.length > 0) {
         logger.info('Restoring menu from cache');
         menuItems.value = cachedMenu;
-        
+
         // Restore expanded state for parent menus
         cachedMenu.forEach(item => {
             if (item.children && Array.isArray(item.children) && item.children.length > 0) {
@@ -603,7 +603,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </SidebarLink>
                         </li>
 
@@ -612,7 +612,7 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </div>
                         </li>
                     </template>
