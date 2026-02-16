@@ -100,24 +100,51 @@ class PermissionController extends Controller
      */
     public function destroy(Request $request, Permission $permission)
     {
-        $permissionData = $permission->getAttributes();
-        $permission->delete();
+        try {
+            $permissionData = $permission->getAttributes();
 
-        // Log permission deletion
-        ActivityLogService::logRecordDeleted(
-            profileId: null,
-            recordData: $permissionData,
-            remarks: "Deleted permission: {$permissionData['name']}"
-        );
+            // ✅ IMPORTANT: Before deleting, detach permission from all roles and users
+            // This prevents foreign key constraint violations
+            if ($permission->roles()->exists()) {
+                $permission->roles()->detach();
+            }
+            if ($permission->users()->exists()) {
+                $permission->users()->detach();
+            }
 
-        // Return JSON if AJAX request
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Permission deleted successfully'
+            // Now safe to delete
+            $permission->delete();
+
+            // Log permission deletion
+            ActivityLogService::logRecordDeleted(
+                profileId: null,
+                recordData: $permissionData,
+                remarks: "Deleted permission: {$permissionData['name']}"
+            );
+
+            // Return JSON if AJAX request
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Permission deleted successfully'
+                ]);
+            }
+
+            return back()->with('success', 'Permission deleted successfully');
+        } catch (\Exception $e) {
+            \Log::error('Permission deletion failed', [
+                'permission_id' => $permission->id,
+                'error' => $e->getMessage()
             ]);
-        }
 
-        return back();
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete permission: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return back()->with('error', 'Failed to delete permission: ' . $e->getMessage());
+        }
     }
 }
