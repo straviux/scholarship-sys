@@ -1,4 +1,6 @@
 <template>
+
+    <Head title="Settings" />
     <AdminLayout>
         <div class="p-4 md:p-6">
             <!-- Header -->

@@ -5,6 +5,7 @@ import { onMounted, ref, watch } from "vue";
 import moment from "moment";
 import { useStorage } from '@vueuse/core';
 import SchoolModal from "@/Pages/School/Modal/SchoolModal.vue";
+import { hasPermission } from '@/composable/permissions';
 
 // PrimeVue Components
 import Button from 'primevue/button';
@@ -183,8 +184,9 @@ const closeDeleteModal = () => {
                             <div class="flex gap-2 justify-center">
                                 <Button icon="pi pi-pen-to-square" severity="info" size="small" rounded outlined
                                     v-tooltip.top="'Edit School'" @click="editSchool(slotProps.data.id)" />
-                                <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
-                                    v-tooltip.top="'Delete School'" @click="confirmDeleteSchool(slotProps.data)" />
+                                <Button v-if="hasPermission('schools.delete')" icon="pi pi-trash" severity="danger"
+                                    size="small" rounded outlined v-tooltip.top="'Delete School'"
+                                    @click="confirmDeleteSchool(slotProps.data)" />
                             </div>
                         </template>
                     </Column>

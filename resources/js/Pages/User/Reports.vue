@@ -140,6 +140,8 @@ const closeModal = () => {
 </script>
 
 <template>
+
+    <Head title="My Reports" />
     <AdminLayout>
         <div class="p-6 space-y-6">
             <!-- Header -->
@@ -207,7 +209,8 @@ const closeModal = () => {
                                 <td class="px-6 py-3 text-gray-700">
                                     {{ new Date(item.date).toLocaleDateString('en-US', {
                                         weekday: 'short', year:
-                                            'numeric', month: 'short', day: 'numeric' }) }}
+                                            'numeric', month: 'short', day: 'numeric'
+                                    }) }}
                                 </td>
                                 <td class="px-6 py-3 text-center">
                                     <span
@@ -270,7 +273,8 @@ const closeModal = () => {
                                     <td class="px-4 py-2 text-gray-600 text-xs">{{ profile.date_filed ? new
                                         Date(profile.date_filed).toLocaleDateString('en-US', {
                                             year: 'numeric', month:
-                                        'short', day: 'numeric' }) : 'N/A' }}</td>
+                                                'short', day: 'numeric'
+                                        }) : 'N/A' }}</td>
                                     <td class="px-4 py-2">
                                         <span
                                             :class="['px-2 py-1 rounded text-xs font-semibold', 'bg-green-100 text-green-700']">
