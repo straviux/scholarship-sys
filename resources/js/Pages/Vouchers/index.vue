@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
 import { Head, usePage } from '@inertiajs/vue3';
+import { useToast } from 'primevue/usetoast';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import VoucherWizard from '@/Components/Obligations/VoucherWizard.vue';
 import { QuillEditor } from '@vueup/vue-quill';

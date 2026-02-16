@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
+import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 import draggable from 'vuedraggable';
 import AdminLayout from '@/Layouts/AdminLayout.vue';

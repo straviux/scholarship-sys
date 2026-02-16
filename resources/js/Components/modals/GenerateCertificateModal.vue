@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue';
+import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 
 const toast = useToast();
