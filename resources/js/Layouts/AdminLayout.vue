@@ -28,6 +28,9 @@ const serverTimezone = ref('');
 const menuItems = ref([]);
 const menuLoading = ref(true);
 const expandedMenus = ref(new Set());
+const MENU_CACHE_KEY = 'scholarship_sidebar_menu_cache';
+const MENU_CACHE_TIMESTAMP_KEY = 'scholarship_sidebar_menu_cache_time';
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
 // Maintenance status state
 const maintenanceStatus = ref(null);
@@ -191,14 +194,87 @@ function scheduleSmartPolling(startTimeStr) {
 // Fetch on mount and set interval to refresh
 let intervalId = null;
 
-// Load menu items from API with retry logic
-async function loadMenuItems() {
+// Cache management functions
+function getCachedMenu() {
+    try {
+        const cached = localStorage.getItem(MENU_CACHE_KEY);
+        const timestamp = localStorage.getItem(MENU_CACHE_TIMESTAMP_KEY);
+        
+        if (!cached || !timestamp) {
+            return null;
+        }
+
+        // Check if cache is expired
+        const cacheAge = Date.now() - parseInt(timestamp);
+        if (cacheAge > CACHE_DURATION) {
+            logger.info('Menu cache expired, will refresh from API');
+            return null;
+        }
+
+        logger.info('Loading menu from cache');
+        return JSON.parse(cached);
+    } catch (error) {
+        logger.warn('Error reading menu cache:', error);
+        return null;
+    }
+}
+
+function setCachedMenu(menu) {
+    try {
+        localStorage.setItem(MENU_CACHE_KEY, JSON.stringify(menu));
+        localStorage.setItem(MENU_CACHE_TIMESTAMP_KEY, Date.now().toString());
+        logger.info('Menu cache updated');
+    } catch (error) {
+        logger.warn('Error saving menu cache:', error);
+    }
+}
+
+function clearMenuCache() {
+    try {
+        localStorage.removeItem(MENU_CACHE_KEY);
+        localStorage.removeItem(MENU_CACHE_TIMESTAMP_KEY);
+        logger.info('Menu cache cleared');
+    } catch (error) {
+        logger.warn('Error clearing menu cache:', error);
+    }
+}
+
+// Load menu items from API with caching
+// Menu is displayed immediately from cache, then refreshed in background
+
+// Load menu items from API with caching
+// Menu is displayed immediately from cache, then refreshed in background
+async function loadMenuItems(showLoadingState = true) {
+    // STEP 1: Try to load from cache immediately
+    const cachedMenu = getCachedMenu();
+    if (cachedMenu && cachedMenu.length > 0) {
+        logger.info('Restoring menu from cache');
+        menuItems.value = cachedMenu;
+        
+        // Restore expanded state for parent menus
+        cachedMenu.forEach(item => {
+            if (item.children && Array.isArray(item.children) && item.children.length > 0) {
+                expandedMenus.value.add(item.id);
+            }
+        });
+
+        // Don't show loading state if we have cached menu on initial load
+        if (showLoadingState) {
+            menuLoading.value = false;
+        }
+    }
+
+    // STEP 2: Fetch fresh menu from API in background
+    // If we loaded from cache, this is a silent background update
     const maxRetries = 3;
     let retryCount = 0;
 
     const attemptLoad = async () => {
         try {
-            menuLoading.value = true;
+            // Only show loading state if we don't have cached data and it's the initial load
+            if (menuItems.value.length === 0 && showLoadingState) {
+                menuLoading.value = true;
+            }
 
             // Set timeout to prevent indefinite loading
             const controller = new AbortController();
@@ -220,7 +296,9 @@ async function loadMenuItems() {
                 if (response.status === 401) {
                     // Unauthorized - user likely needs to log in again
                     logger.warn('User session expired, menu not loaded');
-                    menuItems.value = [];
+                    if (menuItems.value.length === 0) {
+                        menuItems.value = [];
+                    }
                     return;
                 }
 
@@ -238,22 +316,36 @@ async function loadMenuItems() {
             const result = await response.json();
 
             if (result.success && Array.isArray(result.data)) {
-                menuItems.value = result.data;
+                // Only update if data changed (avoid unnecessary re-renders)
+                const newMenuJson = JSON.stringify(result.data);
+                const oldMenuJson = JSON.stringify(menuItems.value);
 
-                // Expand parent menus by default
-                result.data.forEach(item => {
-                    if (item.children && Array.isArray(item.children) && item.children.length > 0) {
-                        expandedMenus.value.add(item.id);
-                    }
-                });
+                if (newMenuJson !== oldMenuJson) {
+                    logger.info('Menu updated from API');
+                    menuItems.value = result.data;
+
+                    // Expand parent menus by default
+                    expandedMenus.value.clear();
+                    result.data.forEach(item => {
+                        if (item.children && Array.isArray(item.children) && item.children.length > 0) {
+                            expandedMenus.value.add(item.id);
+                        }
+                    });
+
+                    // Update cache with fresh menu
+                    setCachedMenu(result.data);
+                } else {
+                    logger.debug('Menu unchanged, cache is current');
+                }
             } else {
                 logger.warn('Invalid menu response format:', result);
-                menuItems.value = [];
+                if (menuItems.value.length === 0) {
+                    menuItems.value = [];
+                }
             }
         } catch (error) {
             if (error.name === 'AbortError') {
                 // Request was aborted - this could happen during navigation
-                // Don't treat this as a fatal error, just log it
                 logger.debug('Menu API request was aborted (likely due to navigation)');
 
                 // Retry on timeout if we haven't exceeded max retries
@@ -266,16 +358,17 @@ async function loadMenuItems() {
             } else {
                 logger.error('Error loading menu items:', error);
             }
-            // Fallback to empty menu if API fails, but keep any existing menu items
-            // This prevents the sidebar from appearing empty during retries
+            // Keep existing menu items on error (don't clear if we have cache)
             if (menuItems.value.length === 0) {
                 menuItems.value = [];
             }
         } finally {
+            // Always hide loading state when API request completes
             menuLoading.value = false;
         }
     };
 
+    // Execute the background fetch
     return attemptLoad();
 }
 
@@ -294,7 +387,7 @@ function getMenuRoute(menuItem) {
 }
 
 onMounted(() => {
-    loadMenuItems();
+    loadMenuItems(true); // true = show loading state on initial load
     fetchUnreadCount();
     fetchServerTime();
 
@@ -311,10 +404,10 @@ onMounted(() => {
 
     // Set up Inertia navigation listener to reload menu on page changes
     // This is important because the layout persists across navigation
+    // Use cached menu on navigation (no loading state) - updates happen silently in background
     const unsubscribe = router.on('finish', () => {
-        logger.info('Page navigation finished, reloading menu');
-        menuLoading.value = true;
-        loadMenuItems();
+        logger.info('Page navigation finished, refreshing menu silently');
+        loadMenuItems(false); // false = don't show loading state, use cache
     });
 
     return () => {
@@ -323,17 +416,6 @@ onMounted(() => {
         unsubscribe();
     };
 });
-
-// Also watch for URL changes as a fallback
-watch(
-    () => $page.url,
-    () => {
-        logger.info('Page URL changed via watch, ensuring menu is loaded');
-        // Don't reload here if router.on('finish') is already handling it
-        // This is just a safety measure
-    },
-    { immediate: false }
-);
 
 onUnmounted(() => {
     if (intervalId) {
