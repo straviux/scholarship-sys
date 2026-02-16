@@ -304,7 +304,7 @@ onMounted(() => {
                     <div class="flex-1">
                         <h3 class="text-lg font-semibold text-gray-900">{{ rc.name }}</h3>
                         <p class="text-sm text-gray-600 mt-1">Code: <span class="font-mono font-medium">{{ rc.code
-                                }}</span></p>
+                        }}</span></p>
                         <p v-if="rc.fiscal_year" class="text-sm text-gray-600 mt-1">Fiscal Year: <span
                                 class="font-medium">{{ rc.fiscal_year }}</span></p>
                     </div>

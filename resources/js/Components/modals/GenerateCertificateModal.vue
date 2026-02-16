@@ -65,7 +65,7 @@ const generateCertificate = async () => {
 
     } catch (error) {
         console.error('Certificate generation failed:', error);
-        
+
         let errorMessage = 'Failed to generate certificate';
         if (error.response?.data?.message) {
             errorMessage = error.response.data.message;
@@ -91,13 +91,7 @@ const onHide = () => {
 </script>
 
 <template>
-    <Dialog
-        :visible="show"
-        @update:visible="onHide"
-        header="Generate Certificate"
-        :modal="true"
-        style="width: 500px"
-    >
+    <Dialog :visible="show" @update:visible="onHide" header="Generate Certificate" :modal="true" style="width: 500px">
         <div v-if="applicant" class="space-y-4">
             <!-- Applicant Info -->
             <div class="bg-blue-50 p-4 rounded border-l-4 border-blue-500">
@@ -114,15 +108,8 @@ const onHide = () => {
                 <label for="template" class="block text-sm font-medium text-gray-700 mb-2">
                     Template
                 </label>
-                <Select
-                    id="template"
-                    v-model="template"
-                    :options="templates"
-                    optionLabel="label"
-                    optionValue="value"
-                    placeholder="Select template"
-                    class="w-full"
-                />
+                <Select id="template" v-model="template" :options="templates" optionLabel="label" optionValue="value"
+                    placeholder="Select template" class="w-full" />
             </div>
 
             <!-- Format Selection -->
@@ -130,15 +117,8 @@ const onHide = () => {
                 <label for="format" class="block text-sm font-medium text-gray-700 mb-2">
                     Output Format
                 </label>
-                <Select
-                    id="format"
-                    v-model="certificateFormat"
-                    :options="formats"
-                    optionLabel="label"
-                    optionValue="value"
-                    placeholder="Select format"
-                    class="w-full"
-                />
+                <Select id="format" v-model="certificateFormat" :options="formats" optionLabel="label"
+                    optionValue="value" placeholder="Select format" class="w-full" />
             </div>
 
             <!-- Loading Progress -->
@@ -146,18 +126,8 @@ const onHide = () => {
         </div>
 
         <template #footer>
-            <Button
-                label="Cancel"
-                severity="secondary"
-                @click="onHide"
-                :disabled="loading"
-            />
-            <Button
-                label="Generate"
-                severity="success"
-                @click="generateCertificate"
-                :loading="loading"
-            />
+            <Button label="Cancel" severity="secondary" @click="onHide" :disabled="loading" />
+            <Button label="Generate" severity="success" @click="generateCertificate" :loading="loading" />
         </template>
     </Dialog>
 </template>
