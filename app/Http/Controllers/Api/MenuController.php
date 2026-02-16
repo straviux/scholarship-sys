@@ -45,6 +45,15 @@ class MenuController extends Controller
         try {
             $user = $request->user();
 
+            // Handle unauthenticated requests
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated',
+                    'data' => []
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
             // Use the service to get role-filtered menu
             $menu = $this->menuService->getSidebarMenu($user);
 
@@ -53,10 +62,16 @@ class MenuController extends Controller
                 'data' => array_values($menu),
             ]);
         } catch (\Exception $e) {
-            \Log::error('Menu API Error: ' . $e->getMessage());
+            \Log::error('Menu API Error: ' . $e->getMessage(), [
+                'request_path' => $request->path(),
+                'user_id' => $request->user() ? $request->user()->id : null,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => 'Error loading menu',
+                'data' => []
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

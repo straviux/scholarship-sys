@@ -63,37 +63,61 @@ class MenuService
      */
     public function getUserMenu($user): array
     {
-        // If user is administrator, show all menus
-        if ($user->hasRole('administrator')) {
-            $menuItems = MenuItem::where('is_active', true)
-                ->whereNull('parent_id')
-                ->orderBy('order')
-                ->with(['children' => function ($query) {
-                    $query->where('is_active', true)->orderBy('order');
-                }])
-                ->get();
-        } else {
-            // Get user's roles
-            $userRoles = $user->roles->pluck('id')->toArray();
+        try {
+            // Validate user
+            if (!$user) {
+                \Log::warning('getUserMenu called with null user');
+                return [];
+            }
 
-            // Get all active parent menu items with their children that are assigned to user's roles
-            $menuItems = MenuItem::where('is_active', true)
-                ->whereNull('parent_id')
-                ->whereHas('roles', function ($query) use ($userRoles) {
-                    $query->whereIn('roles.id', $userRoles);
-                })
-                ->orderBy('order')
-                ->with(['children' => function ($query) use ($userRoles) {
-                    $query->where('is_active', true)
-                        ->whereHas('roles', function ($q) use ($userRoles) {
-                            $q->whereIn('roles.id', $userRoles);
-                        })
-                        ->orderBy('order');
-                }])
-                ->get();
+            // If user is administrator, show all menus
+            if ($user->hasRole('administrator')) {
+                $menuItems = MenuItem::where('is_active', true)
+                    ->whereNull('parent_id')
+                    ->orderBy('order')
+                    ->with(['children' => function ($query) {
+                        $query->where('is_active', true)->orderBy('order');
+                    }])
+                    ->get();
+            } else {
+                // Get user's roles - with error handling
+                try {
+                    $userRoles = $user->roles ? $user->roles->pluck('id')->toArray() : [];
+                } catch (\Exception $e) {
+                    \Log::warning('Error loading user roles: ' . $e->getMessage());
+                    $userRoles = [];
+                }
+
+                // If user has no roles, return empty menu
+                if (empty($userRoles)) {
+                    return [];
+                }
+
+                // Get all active parent menu items with their children that are assigned to user's roles
+                $menuItems = MenuItem::where('is_active', true)
+                    ->whereNull('parent_id')
+                    ->whereHas('roles', function ($query) use ($userRoles) {
+                        $query->whereIn('roles.id', $userRoles);
+                    })
+                    ->orderBy('order')
+                    ->with(['children' => function ($query) use ($userRoles) {
+                        $query->where('is_active', true)
+                            ->whereHas('roles', function ($q) use ($userRoles) {
+                                $q->whereIn('roles.id', $userRoles);
+                            })
+                            ->orderBy('order');
+                    }])
+                    ->get();
+            }
+
+            return $this->buildMenuStructure($menuItems);
+        } catch (\Exception $e) {
+            \Log::error('Error in getUserMenu: ' . $e->getMessage(), [
+                'user_id' => $user ? $user->id : null,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return [];
         }
-
-        return $this->buildMenuStructure($menuItems);
     }
 
     /**
@@ -101,36 +125,59 @@ class MenuService
      */
     private function buildMenuStructure($items): array
     {
-        $menu = [];
-
-        foreach ($items as $item) {
-            $menuData = [
-                'id' => $item->id,
-                'name' => $item->name,
-                'icon' => $item->icon,
-                'route' => $item->route,
-                'order' => $item->order,
-                'is_group' => $item->is_group ?? false,
-            ];
-
-            // Load children if they exist
-            if ($item->children) {
-                $menuData['children'] = $item->children->map(function ($child) {
-                    return [
-                        'id' => $child->id,
-                        'name' => $child->name,
-                        'icon' => $child->icon,
-                        'route' => $child->route,
-                        'order' => $child->order,
-                        'is_group' => $child->is_group ?? false,
-                    ];
-                })->sortBy('order')->values()->toArray();
+        try {
+            if (!$items) {
+                return [];
             }
 
-            $menu[] = $menuData;
-        }
+            $menu = [];
 
-        return $menu;
+            foreach ($items as $item) {
+                try {
+                    // Skip invalid items
+                    if (!$item || !isset($item->id)) {
+                        continue;
+                    }
+
+                    $menuData = [
+                        'id' => $item->id,
+                        'name' => $item->name ?? 'Untitled',
+                        'icon' => $item->icon ?? 'pi pi-chevron-right',
+                        'route' => $item->route ?? null,
+                        'order' => $item->order ?? 0,
+                        'is_group' => $item->is_group ?? false,
+                    ];
+
+                    // Load children if they exist
+                    if ($item->children && $item->children->count() > 0) {
+                        $menuData['children'] = $item->children->map(function ($child) {
+                            return [
+                                'id' => $child->id ?? null,
+                                'name' => $child->name ?? 'Untitled',
+                                'icon' => $child->icon ?? 'pi pi-chevron-right',
+                                'route' => $child->route ?? null,
+                                'order' => $child->order ?? 0,
+                                'is_group' => $child->is_group ?? false,
+                            ];
+                        })->filter(function ($child) {
+                            return $child['id'] !== null; // Filter out invalid children
+                        })->sortBy('order')->values()->toArray();
+                    }
+
+                    $menu[] = $menuData;
+                } catch (\Exception $e) {
+                    \Log::warning('Error processing menu item: ' . $e->getMessage(), [
+                        'item_id' => $item ? $item->id : null
+                    ]);
+                    continue;
+                }
+            }
+
+            return $menu;
+        } catch (\Exception $e) {
+            \Log::error('Error building menu structure: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
@@ -209,14 +256,31 @@ class MenuService
      */
     public function getSidebarMenu($user): array
     {
-        $menu = $this->getUserMenu($user);
+        try {
+            if (!$user) {
+                \Log::warning('getSidebarMenu called with null user');
+                return [];
+            }
 
-        return array_filter($menu, function ($item) {
-            // Include items that have:
-            // 1. A route (regular menu items)
-            // 2. Children (groups with items)
-            // 3. Is marked as a group (empty groups should still show)
-            return !empty($item['route']) || !empty($item['children']) || ($item['is_group'] ?? false);
-        });
+            $menu = $this->getUserMenu($user);
+
+            if (empty($menu)) {
+                return [];
+            }
+
+            return array_filter($menu, function ($item) {
+                // Include items that have:
+                // 1. A route (regular menu items)
+                // 2. Children (groups with items)
+                // 3. Is marked as a group (empty groups should still show)
+                return !empty($item['route']) || !empty($item['children']) || ($item['is_group'] ?? false);
+            });
+        } catch (\Exception $e) {
+            \Log::error('Error in getSidebarMenu: ' . $e->getMessage(), [
+                'user_id' => $user ? $user->id : null,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return [];
+        }
     }
 }

@@ -191,56 +191,87 @@ function scheduleSmartPolling(startTimeStr) {
 // Fetch on mount and set interval to refresh
 let intervalId = null;
 
-// Load menu items from API
+// Load menu items from API with retry logic
 async function loadMenuItems() {
-    try {
-        menuLoading.value = true;
+    const maxRetries = 3;
+    let retryCount = 0;
+    
+    const attemptLoad = async () => {
+        try {
+            menuLoading.value = true;
 
-        // Set timeout to prevent indefinite loading
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+            // Set timeout to prevent indefinite loading
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-        const response = await fetch('/api/menu/sidebar', {
-            signal: controller.signal,
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'include'
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            throw new Error(`API returned ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.success && Array.isArray(result.data)) {
-            menuItems.value = result.data;
-
-            // Expand parent menus by default
-            result.data.forEach(item => {
-                if (item.children && Array.isArray(item.children) && item.children.length > 0) {
-                    expandedMenus.value.add(item.id);
-                }
+            const response = await fetch('/api/menu/sidebar', {
+                signal: controller.signal,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'include'
             });
-        } else {
-            logger.warn('Invalid menu response format:', result);
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                // Handle specific error codes
+                if (response.status === 401) {
+                    // Unauthorized - user likely needs to log in again
+                    logger.warn('User session expired, menu not loaded');
+                    menuItems.value = [];
+                    return;
+                }
+                
+                if (response.status >= 500 && retryCount < maxRetries) {
+                    // Retry on server errors
+                    retryCount++;
+                    logger.warn(`Menu API returned ${response.status}, retrying... (attempt ${retryCount}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Exponential backoff
+                    return attemptLoad();
+                }
+
+                throw new Error(`API returned ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success && Array.isArray(result.data)) {
+                menuItems.value = result.data;
+
+                // Expand parent menus by default
+                result.data.forEach(item => {
+                    if (item.children && Array.isArray(item.children) && item.children.length > 0) {
+                        expandedMenus.value.add(item.id);
+                    }
+                });
+            } else {
+                logger.warn('Invalid menu response format:', result);
+                menuItems.value = [];
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                logger.error('Menu API request timed out after 15 seconds');
+                
+                // Retry on timeout if we haven't exceeded max retries
+                if (retryCount < maxRetries) {
+                    retryCount++;
+                    logger.warn(`Menu API timeout, retrying... (attempt ${retryCount}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+                    return attemptLoad();
+                }
+            } else {
+                logger.error('Error loading menu items:', error);
+            }
+            // Fallback to empty menu if API fails
             menuItems.value = [];
+        } finally {
+            menuLoading.value = false;
         }
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            logger.error('Menu API request timed out after 15 seconds');
-        } else {
-            logger.error('Error loading menu items:', error);
-        }
-        // Fallback to empty menu if API fails
-        menuItems.value = [];
-    } finally {
-        menuLoading.value = false;
-    }
+    };
+
+    return attemptLoad();
 }
 
 // Toggle menu expansion
