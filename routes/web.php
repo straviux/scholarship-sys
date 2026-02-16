@@ -135,7 +135,6 @@ Route::middleware(['auth', 'check.role:system-report,deleted-records,maintenance
     Route::delete('/system-options/{systemOption}', [SystemOptionController::class, 'destroy'])->middleware('check.permission:system-options.manage')->name('system-options.destroy');
     Route::post('/system-options/{systemOption}/toggle-active', [SystemOptionController::class, 'toggleActive'])->middleware('check.permission:system-options.manage')->name('system-options.toggle-active');
     Route::post('/system-options/reorder', [SystemOptionController::class, 'reorder'])->middleware('check.permission:system-options.manage')->name('system-options.reorder');
-    Route::get('/api/system-options/{category}', [SystemOptionController::class, 'getByCategory'])->name('api.system-options.category');
 });
 
 // Form Templates Routes - Available to all authenticated users
@@ -160,6 +159,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/menu-items/reorder', [App\Http\Controllers\Admin\MenuItemController::class, 'reorder'])->name('admin.menu-items.reorder');
     Route::get('/api/menu-items', [App\Http\Controllers\Admin\MenuItemController::class, 'apiIndex'])->name('api.menu-items.index');
     Route::get('/api/menu-items/icons', [App\Http\Controllers\Admin\MenuItemController::class, 'getIcons'])->name('api.menu-items.icons');
+    Route::get('/api/system-options/{category}', [SystemOptionController::class, 'getByCategory'])->name('api.system-options.category');
 
     // Role Menu Management Routes
     Route::get('/admin/role-menus', [App\Http\Controllers\Admin\RoleMenuController::class, 'index'])->name('admin.role-menus.index');
