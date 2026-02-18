@@ -130,17 +130,17 @@ Route::middleware(['auth', 'check.role:system-report,deleted-records,maintenance
     Route::post('/system-options/reorder', [SystemOptionController::class, 'reorder'])->middleware('check.permission:system-options.manage')->name('system-options.reorder');
 });
 
-// Form Templates Routes - Available to all authenticated users
+// Documents Routes - Available to all authenticated users
 Route::middleware(['auth'])->group(function () {
-    Route::get('/form-templates', [\App\Http\Controllers\FormTemplateController::class, 'index'])
-        ->middleware('check.permission:form-templates.view')
-        ->name('form-templates.index');
-    Route::post('/form-templates', [\App\Http\Controllers\FormTemplateController::class, 'store'])->middleware('check.permission:form-templates.upload')->name('form-templates.store');
-    Route::put('/form-templates/{formTemplate}', [\App\Http\Controllers\FormTemplateController::class, 'update'])->middleware('check.permission:form-templates.edit')->name('form-templates.update');
-    Route::delete('/form-templates/{formTemplate}', [\App\Http\Controllers\FormTemplateController::class, 'destroy'])->middleware('check.permission:form-templates.delete')->name('form-templates.destroy');
-    Route::get('/form-templates/{formTemplate}/download', [\App\Http\Controllers\FormTemplateController::class, 'download'])
-        ->middleware('check.permission:form-templates.view')
-        ->name('form-templates.download');
+    Route::get('/documents', [\App\Http\Controllers\DocumentsController::class, 'index'])
+        ->middleware('check.permission:documents.view')
+        ->name('documents.index');
+    Route::post('/documents', [\App\Http\Controllers\DocumentsController::class, 'store'])->middleware('check.permission:documents.upload')->name('documents.store');
+    Route::put('/documents/{document}', [\App\Http\Controllers\DocumentsController::class, 'update'])->middleware('check.permission:documents.edit')->name('documents.update');
+    Route::delete('/documents/{document}', [\App\Http\Controllers\DocumentsController::class, 'destroy'])->middleware('check.permission:documents.delete')->name('documents.destroy');
+    Route::get('/documents/{document}/download', [\App\Http\Controllers\DocumentsController::class, 'download'])
+        ->middleware('check.permission:documents.view')
+        ->name('documents.download');
 });
 
 // Menu Item Management Routes - Available to authenticated administrators
@@ -538,6 +538,26 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/data-export', [\App\Http\Controllers\DataExportController::class, 'index'])->name('data-export.index');
     Route::get('/admin/data-export/summary', [\App\Http\Controllers\DataExportController::class, 'getExportSummary'])->name('data-export.summary');
     Route::get('/admin/data-export/download', [\App\Http\Controllers\DataExportController::class, 'exportToJson'])->name('data-export.download');
+});
+
+// Fallback routes for backward compatibility (old form-templates.* routes)
+// These routes delegate to the new DocumentsController with matching permissions
+Route::middleware(['auth'])->group(function () {
+    Route::get('/form-templates', [\App\Http\Controllers\DocumentsController::class, 'index'])
+        ->middleware('check.permission:documents.view')
+        ->name('form-templates.index');
+    Route::post('/form-templates', [\App\Http\Controllers\DocumentsController::class, 'store'])
+        ->middleware('check.permission:documents.upload')
+        ->name('form-templates.store');
+    Route::put('/form-templates/{document}', [\App\Http\Controllers\DocumentsController::class, 'update'])
+        ->middleware('check.permission:documents.edit')
+        ->name('form-templates.update');
+    Route::delete('/form-templates/{document}', [\App\Http\Controllers\DocumentsController::class, 'destroy'])
+        ->middleware('check.permission:documents.delete')
+        ->name('form-templates.destroy');
+    Route::get('/form-templates/{document}/download', [\App\Http\Controllers\DocumentsController::class, 'download'])
+        ->middleware('check.permission:documents.view')
+        ->name('form-templates.download');
 });
 
 // Error pages

@@ -62,8 +62,8 @@ class CreateProgramManagerRole extends Command
                 'requirements.view',
                 'reports.view',
                 'reports.generate',
-                'form-templates.view',
-                'form-templates.download',
+                'documents.view',
+                'documents.download',
             ];
 
             // Get permission objects

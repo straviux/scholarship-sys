@@ -34,7 +34,7 @@ class MenuItem extends Model {
 
 #### MenuItemSeeder (database/seeders/MenuItemSeeder.php)
 Pre-populates 48 menu items organized into categories:
-- **Main Menu** (7 items): Home, Dashboard, Forms & Letters, Vouchers, System Updates, Help & Instructions
+- **Main Menu** (7 items): Home, Dashboard, Documents and Forms, Vouchers, System Updates, Help & Instructions
 - **Scholarship Dropdown** (3 items): Waiting List, Reviewed Applicants, Profiles
 - **Library Dropdown** (6 items): Programs, Courses, Requirements, Schools, Responsibility Centers, Option Values
 - **Administrator Dropdown** (6 items): Access Control, System Stats, Deleted Records, Data Export, Manage Updates, Maintenance
@@ -171,7 +171,7 @@ Authorization: Bearer {admin_token}
 ```
 ├── Home
 ├── Dashboard
-├── Forms & Letters
+├── Documents and Forms
 ├── Scholarship (dropdown)
 │   ├── Waiting List
 │   ├── Reviewed Applicants

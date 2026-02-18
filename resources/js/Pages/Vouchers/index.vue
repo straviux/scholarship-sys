@@ -4,8 +4,6 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import VoucherWizard from '@/Components/Obligations/VoucherWizard.vue';
-import { QuillEditor } from '@vueup/vue-quill';
-import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import axios from 'axios';
 
 const toast = useToast();

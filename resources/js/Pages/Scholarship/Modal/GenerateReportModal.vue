@@ -109,6 +109,14 @@
                         <small class="text-xs text-gray-500 mt-1">How records should be organized in the report</small>
                     </div>
 
+                    <!-- Sub-Group By Option (only shown when primary grouping is selected) -->
+                    <div v-if="groupBy && groupBy !== 'none'" class="mb-4">
+                        <label class="block mb-2 text-sm font-medium text-gray-700">Sub-Group By (Optional)</label>
+                        <Select v-model="groupBySecondary" :options="secondaryGroupByOptions" optionLabel="label"
+                            optionValue="value" placeholder="No sub-grouping" showClear class="w-full" />
+                        <small class="text-xs text-gray-500 mt-1">Further organize records within each group</small>
+                    </div>
+
                     <!-- Show Sequence Numbers Toggle -->
                     <div class="mb-4 py-3 px-3 bg-gray-50 rounded border border-gray-200">
                         <div class="flex items-center justify-between mb-2">
@@ -227,6 +235,7 @@ const selectedGrantProvision = ref(null);
 // Report Configuration
 const reportType = ref('list');
 const groupBy = ref('none');
+const groupBySecondary = ref('none');
 const showSequenceNumbers = ref(true);
 const enableJpmHighlighting = ref(false);
 const jpmFilter = ref('all');
@@ -261,11 +270,24 @@ const groupByOptions = [
     { label: 'By Grant Provision', value: 'grant_provision' },
 ];
 
+// Secondary Group By Options (excludes the primary grouping)
+const secondaryGroupByOptions = computed(() => {
+    return groupByOptions.filter(option => option.value !== 'none' && option.value !== groupBy.value);
+});
+
 // Watch for JPM highlighting toggle changes
 watch(enableJpmHighlighting, (newValue) => {
     if (!newValue) {
         // Reset JPM filter to 'all' when highlighting is disabled
         jpmFilter.value = 'all';
+    }
+});
+
+// Watch for primary grouping changes
+watch(groupBy, (newValue) => {
+    // Reset secondary grouping when primary grouping changes
+    if (newValue === 'none' || newValue === groupBySecondary.value) {
+        groupBySecondary.value = 'none';
     }
 });
 
@@ -306,6 +328,7 @@ function clearAllFilters() {
     selectedUnifiedStatus.value = null;
     selectedGrantProvision.value = null;
     groupBy.value = 'none';
+    groupBySecondary.value = 'none';
     showSequenceNumbers.value = true;
     enableJpmHighlighting.value = false;
     jpmFilter.value = 'all';
@@ -344,6 +367,7 @@ function generateReport() {
         grant_provision: selectedGrantProvision.value || '',
         report_type: reportType.value,
         group_by: groupBy.value,
+        group_by_secondary: groupBySecondary.value && groupBySecondary.value !== 'none' ? groupBySecondary.value : 'none',
         show_sequence_numbers: showSequenceNumbers.value ? 1 : 0,
         paper_size: 'A4',
         orientation: 'landscape',

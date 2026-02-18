@@ -374,9 +374,26 @@ function toggleMenuExpansion(menuId) {
     }
 }
 
-// Get route name from menu item
-function getMenuRoute(menuItem) {
-    return menuItem.route ? route(menuItem.route) : null;
+// Get route URL from menu item, with error handling for missing routes
+function getMenuItemRoute(menuItem) {
+    if (!menuItem.route) return '#';
+    try {
+        return route(menuItem.route);
+    } catch (error) {
+        // If route doesn't exist in Ziggy, log warning and return # to prevent navigation
+        logger.warn(`Route '${menuItem.route}' not found in route list, item '${menuItem.name}' will be inactive`);
+        return '#';
+    }
+}
+
+// Check if menu item is active, with error handling for missing routes
+function isMenuItemActive(menuItem) {
+    if (!menuItem.route) return false;
+    try {
+        return route().current(menuItem.route);
+    } catch (error) {
+        return false;
+    }
 }
 
 onMounted(() => {
@@ -535,8 +552,7 @@ onUnmounted(() => {
                     <template v-for="item in menuItems" :key="item.id">
                         <!-- Menu item without children -->
                         <li v-if="!item.children || item.children.length === 0">
-                            <SidebarLink :href="item.route ? route(item.route) : '#'"
-                                :active="item.route && route().current(item.route)">
+                            <SidebarLink :href="getMenuItemRoute(item)" :active="item.route && isMenuItemActive(item)">
                                 <i :class="[item.icon, 'mr-2 text-sm']"></i>
                                 <span class="font-medium">{{ item.name }}</span>
                                 <Badge v-if="item.name === 'System Updates' && unreadUpdatesCount > 0"
@@ -558,8 +574,8 @@ onUnmounted(() => {
                             <!-- Children list - show/hide based on expanded state -->
                             <ul v-if="expandedMenus.has(item.id)" class="space-y-1 mt-1 ml-2">
                                 <li v-for="child in item.children" :key="child.id">
-                                    <SidebarLink :href="child.route ? route(child.route) : '#'"
-                                        :active="child.route && route().current(child.route)">
+                                    <SidebarLink :href="getMenuItemRoute(child)"
+                                        :active="child.route && isMenuItemActive(child)">
                                         <i :class="[child.icon, 'mr-2 text-sm']"></i>
                                         <span class="-mr-1 font-medium">{{ child.name }}</span>
                                     </SidebarLink>
@@ -591,7 +607,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </SidebarLink>
                         </li>
 
@@ -600,7 +616,7 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </div>
                         </li>
                     </template>

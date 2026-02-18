@@ -127,13 +127,13 @@ Comprehensive audit of 25+ controllers revealed that **only 3 controllers curren
 ```
 **Impact**: System announcements not logged
 
-#### 11. **FormTemplateController**
+#### 11. **DocumentsController**
 ```php
-- store() - Create template ❌
-- update() - Update template ❌
-- destroy() - Delete template ❌
+- store() - Create document ✅
+- update() - Update document ✅
+- destroy() - Delete document ✅
 ```
-**Impact**: Form template changes not logged
+**Impact**: Document and form changes logged
 
 ### Disbursement & Financial Controllers
 
@@ -192,7 +192,7 @@ Comprehensive audit of 25+ controllers revealed that **only 3 controllers curren
 #### 19. **MobileUploadController** (if applicable)
 - Mobile uploads ❌
 
-#### 20. **FormTemplateController** (already listed)
+#### 20. **DocumentsController** (already listed)
 
 ---
 
@@ -274,7 +274,7 @@ ActivityLogService::
 ### Phase 3 (Standard) - Week 3
 - [ ] SystemOptionController
 - [ ] SystemUpdateController
-- [ ] FormTemplateController
+- [ ] DocumentsController
 - [ ] EducationalBackgroundController
 - [ ] ProfileController
 
@@ -363,7 +363,7 @@ public function destroy(Model $record): RedirectResponse
 ### Priority 3 (Standard)
 11. `app/Http/Controllers/SystemOptionController.php` - 3 methods
 12. `app/Http/Controllers/SystemUpdateController.php` - 2 methods
-13. `app/Http/Controllers/FormTemplateController.php` - 3 methods
+13. `app/Http/Controllers/DocumentsController.php` - 3 methods
 14. `app/Http/Controllers/EducationalBackgroundController.php` - 3 methods
 15. `app/Http/Controllers/ProfileController.php` - 4 methods
 

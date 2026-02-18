@@ -34,8 +34,8 @@ try {
         'requirements.view',
         'reports.view',
         'reports.generate',
-        'form-templates.view',
-        'form-templates.download',
+        'documents.view',
+        'documents.download',
     ];
 
     // Sync permissions to the role

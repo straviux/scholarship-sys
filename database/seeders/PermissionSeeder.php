@@ -84,12 +84,12 @@ class PermissionSeeder extends Seeder
             ['name' => 'priority.view', 'description' => 'View priority levels'],
             ['name' => 'priority.manage', 'description' => 'Manage priority levels'],
 
-            // Forms & Templates
-            ['name' => 'form-templates.view', 'description' => 'View forms and templates'],
-            ['name' => 'form-templates.download', 'description' => 'Download forms and templates'],
-            ['name' => 'form-templates.upload', 'description' => 'Upload new forms and templates'],
-            ['name' => 'form-templates.edit', 'description' => 'Edit forms and templates'],
-            ['name' => 'form-templates.delete', 'description' => 'Delete forms and templates'],
+            // Documents and Forms
+            ['name' => 'documents.view', 'description' => 'View documents and forms'],
+            ['name' => 'documents.download', 'description' => 'Download documents and forms'],
+            ['name' => 'documents.upload', 'description' => 'Upload new documents and forms'],
+            ['name' => 'documents.edit', 'description' => 'Edit documents and forms'],
+            ['name' => 'documents.delete', 'description' => 'Delete documents and forms'],
 
             // Admin Management
             ['name' => 'admin.manage', 'description' => 'Manage admin panel'],
@@ -129,8 +129,8 @@ class PermissionSeeder extends Seeder
             'requirements.view',
             'reports.view',
             'reports.generate',
-            'form-templates.view',
-            'form-templates.download',
+            'documents.view',
+            'documents.download',
         ];
         $programManagerRole->syncPermissions($programManagerPermissions);
 
@@ -155,8 +155,8 @@ class PermissionSeeder extends Seeder
             'requirements.view',
             'reports.view',
             'reports.generate',
-            'form-templates.view',
-            'form-templates.download',
+            'documents.view',
+            'documents.download',
         ];
         $moderatorRole->syncPermissions($moderatorPermissions);
 
@@ -172,8 +172,8 @@ class PermissionSeeder extends Seeder
             'schools.view',
             'requirements.view',
             'reports.view',
-            'form-templates.view',
-            'form-templates.download',
+            'documents.view',
+            'documents.download',
         ];
         $userRole->syncPermissions($userPermissions);
 
@@ -188,8 +188,8 @@ class PermissionSeeder extends Seeder
             'priority.manage',
             'reports.view',
             'reports.generate',
-            'form-templates.view',
-            'form-templates.download',
+            'documents.view',
+            'documents.download',
         ];
         $jpmRole->syncPermissions($jpmPermissions);
 

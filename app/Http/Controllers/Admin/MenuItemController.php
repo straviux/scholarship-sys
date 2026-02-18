@@ -127,7 +127,7 @@ class MenuItemController extends Controller
         $icons = [
             'pi pi-home' => 'Home',
             'pi pi-chart-bar' => 'Dashboard',
-            'pi pi-file' => 'Forms & Letters',
+            'pi pi-file' => 'Documents and Forms',
             'pi pi-graduation-cap' => 'Scholarship',
             'pi pi-clipboard' => 'Waiting List',
             'pi pi-check-circle' => 'Reviewed',

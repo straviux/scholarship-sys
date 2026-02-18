@@ -40,10 +40,10 @@ class MenuItemSeeder extends Seeder
         ]);
 
         MenuItem::create([
-            'name' => 'Forms & Letters',
+            'name' => 'Documents and Forms',
             'icon' => 'pi pi-file',
-            'route' => 'form-templates.index',
-            'permission' => 'form-templates.view',
+            'route' => 'documents.index',
+            'permission' => 'documents.view',
             'order' => 3,
             'is_active' => true,
             'is_group' => false,

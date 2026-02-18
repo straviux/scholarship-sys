@@ -40,8 +40,8 @@ Role::create(['name' => 'program_manager']);
 - `requirements.view` - View requirements
 - `reports.view` - View reports
 - `reports.generate` - Generate reports
-- `forms-templates.view` - View forms and templates
-- `forms-templates.download` - Download forms and templates
+- `documents.view` - View documents and forms
+- `documents.download` - Download documents and forms
 
 ### 3. Vue Component Updates
 

@@ -132,10 +132,10 @@ const faqs = ref([
 
                             <div class="bg-orange-50 p-4 rounded-lg">
                                 <h5 class="font-semibold text-orange-900 mb-2">
-                                    <i class="pi pi-fw pi-book mr-2"></i>Forms & Letters
+                                    <i class="pi pi-fw pi-book mr-2"></i>Documents and Forms
                                 </h5>
                                 <p class="text-sm text-gray-700">
-                                    Manage scholarship program forms, templates, and official correspondence letters.
+                                    Manage scholarship program documents, forms, and official correspondence.
                                 </p>
                             </div>
                         </div>

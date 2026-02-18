@@ -123,8 +123,8 @@ Program Manager has the following permissions:
 - `requirements.view` ✓
 - `reports.view` ✓
 - `reports.generate` ✓
-- `forms-templates.view` ✓
-- `forms-templates.download` ✓
+- `documents.view` ✓
+- `documents.download` ✓
 
 ## Comparison with Other Roles
 

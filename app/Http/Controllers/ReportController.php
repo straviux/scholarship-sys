@@ -52,6 +52,37 @@ class ReportController extends Controller
     }
 
     /**
+     * Get the grouping value for a profile based on the grouping field
+     * 
+     * @param ScholarshipProfile $profile
+     * @param string $groupBy
+     * @return string
+     */
+    private function getGroupValue($profile, $groupBy)
+    {
+        $grant = is_iterable($profile->scholarshipGrant) ? $profile->scholarshipGrant->first() : $profile->scholarshipGrant;
+
+        switch ($groupBy) {
+            case 'unified_status':
+                return ($grant && $grant->unified_status) ? ucwords(str_replace('_', ' ', $grant->unified_status)) : 'No Status';
+            case 'grant_provision':
+                return ($grant && $grant->grant_provision) ? ucwords(str_replace('_', ' ', $grant->grant_provision)) : 'No Provision';
+            case 'school':
+                return ($grant && $grant->school) ? $grant->school->name : 'No School';
+            case 'program':
+                return ($grant && $grant->program) ? $grant->program->name : 'No Program';
+            case 'course':
+                return ($grant && $grant->course) ? $grant->course->name : 'No Course';
+            case 'year_level':
+                return ($grant && $grant->year_level) ? $grant->year_level : 'No Year Level';
+            case 'municipality':
+                return $profile->municipality ?: 'No Municipality';
+            default:
+                return 'All Records';
+        }
+    }
+
+    /**
      * Recursively search for chrome.exe in a directory
      * Compatible with Windows and Unix-like systems
      *
@@ -621,6 +652,8 @@ class ReportController extends Controller
         $profiles = $query->get();
 
         $reportType = $request->input('report_type', 'list');
+        $groupBy = $request->input('group_by', 'none');
+        $groupBySecondary = $request->input('group_by_secondary', 'none');
         $summary = null;
 
         if ($reportType === 'summary') {
@@ -633,7 +666,25 @@ class ReportController extends Controller
                 $summary['by_unified_status'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                     return ($grant && $grant->unified_status) ? ucwords(str_replace('_', ' ', $grant->unified_status)) : 'No Status';
-                })->map(fn($group) => $group->count());
+                })->map(function ($group) use ($groupBy, $groupBySecondary) {
+                    if ($groupBy === 'unified_status' && $groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
+                        $subgroups = $group->groupBy(function ($p) use ($groupBySecondary) {
+                            return $this->getGroupValue($p, $groupBySecondary);
+                        });
+                        if ($groupBySecondary === 'year_level') {
+                            $subgroups = $subgroups->sortBy(function ($count, $name) {
+                                if (preg_match('/\d+/', $name, $matches)) {
+                                    return (int)$matches[0];
+                                }
+                                return PHP_INT_MAX;
+                            });
+                        } else {
+                            $subgroups = $subgroups->sortKeys();
+                        }
+                        return $subgroups->map(fn($subgroup) => $subgroup->count());
+                    }
+                    return $group->count();
+                });
             }
 
             // Grant provision summary
@@ -641,7 +692,25 @@ class ReportController extends Controller
                 $summary['by_grant_provision'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                     return ($grant && $grant->grant_provision) ? ucwords(str_replace('_', ' ', $grant->grant_provision)) : 'No Provision';
-                })->map(fn($group) => $group->count());
+                })->map(function ($group) use ($groupBy, $groupBySecondary) {
+                    if ($groupBy === 'grant_provision' && $groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
+                        $subgroups = $group->groupBy(function ($p) use ($groupBySecondary) {
+                            return $this->getGroupValue($p, $groupBySecondary);
+                        });
+                        if ($groupBySecondary === 'year_level') {
+                            $subgroups = $subgroups->sortBy(function ($count, $name) {
+                                if (preg_match('/\d+/', $name, $matches)) {
+                                    return (int)$matches[0];
+                                }
+                                return PHP_INT_MAX;
+                            });
+                        } else {
+                            $subgroups = $subgroups->sortKeys();
+                        }
+                        return $subgroups->map(fn($subgroup) => $subgroup->count());
+                    }
+                    return $group->count();
+                });
             }
 
             // Program summary
@@ -649,27 +718,99 @@ class ReportController extends Controller
                 $summary['by_program'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                     return ($grant && $grant->program) ? $grant->program->name : 'No Program';
-                })->map(fn($group) => $group->count());
+                })->map(function ($group) use ($groupBy, $groupBySecondary) {
+                    if ($groupBy === 'program' && $groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
+                        $subgroups = $group->groupBy(function ($p) use ($groupBySecondary) {
+                            return $this->getGroupValue($p, $groupBySecondary);
+                        });
+                        if ($groupBySecondary === 'year_level') {
+                            $subgroups = $subgroups->sortBy(function ($count, $name) {
+                                if (preg_match('/\d+/', $name, $matches)) {
+                                    return (int)$matches[0];
+                                }
+                                return PHP_INT_MAX;
+                            });
+                        } else {
+                            $subgroups = $subgroups->sortKeys();
+                        }
+                        return $subgroups->map(fn($subgroup) => $subgroup->count());
+                    }
+                    return $group->count();
+                });
             }
 
             // School summary
             $summary['by_school'] = $profiles->groupBy(function ($p) {
                 $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                 return ($grant && $grant->school) ? $grant->school->name : 'No School';
-            })->map(fn($group) => $group->count());
+            })->map(function ($group) use ($groupBy, $groupBySecondary) {
+                if ($groupBy === 'school' && $groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
+                    $subgroups = $group->groupBy(function ($p) use ($groupBySecondary) {
+                        return $this->getGroupValue($p, $groupBySecondary);
+                    });
+                    if ($groupBySecondary === 'year_level') {
+                        $subgroups = $subgroups->sortBy(function ($count, $name) {
+                            if (preg_match('/\d+/', $name, $matches)) {
+                                return (int)$matches[0];
+                            }
+                            return PHP_INT_MAX;
+                        });
+                    } else {
+                        $subgroups = $subgroups->sortKeys();
+                    }
+                    return $subgroups->map(fn($subgroup) => $subgroup->count());
+                }
+                return $group->count();
+            });
 
             // Course summary
             $summary['by_course'] = $profiles->groupBy(function ($p) {
                 $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                 return ($grant && $grant->course) ? $grant->course->name : 'No Course';
-            })->map(fn($group) => $group->count());
+            })->map(function ($group) use ($groupBy, $groupBySecondary) {
+                if ($groupBy === 'course' && $groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
+                    $subgroups = $group->groupBy(function ($p) use ($groupBySecondary) {
+                        return $this->getGroupValue($p, $groupBySecondary);
+                    });
+                    if ($groupBySecondary === 'year_level') {
+                        $subgroups = $subgroups->sortBy(function ($count, $name) {
+                            if (preg_match('/\d+/', $name, $matches)) {
+                                return (int)$matches[0];
+                            }
+                            return PHP_INT_MAX;
+                        });
+                    } else {
+                        $subgroups = $subgroups->sortKeys();
+                    }
+                    return $subgroups->map(fn($subgroup) => $subgroup->count());
+                }
+                return $group->count();
+            });
 
             // Year level summary
             if (!$request->filled('year_level')) {
                 $summary['by_year_level'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                     return ($grant && $grant->year_level) ? $grant->year_level : 'No Year Level';
-                })->map(fn($group) => $group->count());
+                })->map(function ($group) use ($groupBy, $groupBySecondary) {
+                    if ($groupBy === 'year_level' && $groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
+                        $subgroups = $group->groupBy(function ($p) use ($groupBySecondary) {
+                            return $this->getGroupValue($p, $groupBySecondary);
+                        });
+                        if ($groupBySecondary === 'year_level') {
+                            $subgroups = $subgroups->sortBy(function ($count, $name) {
+                                if (preg_match('/\d+/', $name, $matches)) {
+                                    return (int)$matches[0];
+                                }
+                                return PHP_INT_MAX;
+                            });
+                        } else {
+                            $subgroups = $subgroups->sortKeys();
+                        }
+                        return $subgroups->map(fn($subgroup) => $subgroup->count());
+                    }
+                    return $group->count();
+                });
             }
         }
 
@@ -697,34 +838,26 @@ class ReportController extends Controller
 
         // Handle grouping
         $groupBy = $request->input('group_by', 'none');
+        $groupBySecondary = $request->input('group_by_secondary', 'none');
         $groupedProfiles = null;
 
         if ($reportType === 'list') {
             if ($groupBy === 'none') {
                 $groupedProfiles = collect(['All Records' => $profiles]);
             } else {
+                // Primary grouping
                 $groupedProfiles = $profiles->groupBy(function ($p) use ($groupBy) {
-                    $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
-
-                    switch ($groupBy) {
-                        case 'unified_status':
-                            return ($grant && $grant->unified_status) ? ucwords(str_replace('_', ' ', $grant->unified_status)) : 'No Status';
-                        case 'grant_provision':
-                            return ($grant && $grant->grant_provision) ? ucwords(str_replace('_', ' ', $grant->grant_provision)) : 'No Provision';
-                        case 'school':
-                            return ($grant && $grant->school) ? $grant->school->name : 'No School';
-                        case 'program':
-                            return ($grant && $grant->program) ? $grant->program->name : 'No Program';
-                        case 'course':
-                            return ($grant && $grant->course) ? $grant->course->name : 'No Course';
-                        case 'year_level':
-                            return ($grant && $grant->year_level) ? $grant->year_level : 'No Year Level';
-                        case 'municipality':
-                            return $p->municipality ?: 'No Municipality';
-                        default:
-                            return 'All Records';
-                    }
+                    return $this->getGroupValue($p, $groupBy);
                 })->sortKeys();
+
+                // Secondary grouping (sub-grouping within primary groups)
+                if ($groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
+                    $groupedProfiles = $groupedProfiles->map(function ($group) use ($groupBySecondary) {
+                        return $group->groupBy(function ($p) use ($groupBySecondary) {
+                            return $this->getGroupValue($p, $groupBySecondary);
+                        })->sortKeys();
+                    });
+                }
             }
         }
 
@@ -734,6 +867,7 @@ class ReportController extends Controller
             'profiles' => $profiles,
             'groupedProfiles' => $groupedProfiles,
             'groupBy' => $groupBy,
+            'groupBySecondary' => $groupBySecondary,
             'summary' => $summary,
             'reportType' => $reportType,
             'filters' => $filters,

@@ -107,14 +107,14 @@ const serviceCards = computed(() => {
         });
     }
 
-    if (hasPermission('form-templates.view')) {
+    if (hasPermission('documents.view')) {
         cards.push({
-            id: 'forms',
-            title: 'Downloadables',
-            description: 'Access downloadable forms and templates',
+            id: 'documents',
+            title: 'Documents and Forms',
+            description: 'Access downloadable documents and forms',
             icon: 'pi pi-file-pdf',
             color: 'purple',
-            action: () => router.visit(route('form-templates.index'))
+            action: () => router.visit(route('documents.index'))
         });
     }
 

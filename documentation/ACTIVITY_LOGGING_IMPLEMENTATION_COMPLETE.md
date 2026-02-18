@@ -109,10 +109,10 @@ All 4 standard controllers successfully updated with full CRUD logging:
 - **Key Data:** Update title, type, distribution status
 - **Status:** ✅ Complete
 
-### 3. FormTemplateController
+### 3. DocumentsController
 - **Methods:** store(), update(), destroy()
-- **Logging:** Form templates and letter uploads
-- **Key Data:** Template title, category, file information
+- **Logging:** Document and form uploads
+- **Key Data:** Document title, category, file information
 - **Status:** ✅ Complete
 
 ### 4. ProfileController
@@ -254,7 +254,7 @@ Activity Logs Table: Already exists and functional
 **Phase 3 (4 controllers):**
 - app/Http/Controllers/SystemOptionController.php
 - app/Http/Controllers/SystemUpdateController.php
-- app/Http/Controllers/FormTemplateController.php
+- app/Http/Controllers/DocumentsController.php
 - app/Http/Controllers/ProfileController.php
 
 ---
