@@ -136,6 +136,20 @@ const assignDialogHeader = computed(() => {
     return assigningToGroup.value ? `Add Items to "${assigningToGroup.value.name}"` : 'Add Items to Group';
 });
 
+// Dialog header for create/edit dialog
+const dialogHeader = computed(() => {
+    if (editingMenu.value) {
+        return 'Edit ' + (dialogMode.value === 'group' ? 'Group' : 'Item');
+    } else {
+        if (dialogMode.value === 'group') {
+            return 'Create Menu Group';
+        } else {
+            // Check if it's a link (no parent_id) or item (has parent_id)
+            return form.parent_id ? 'Add Menu Item' : 'Add Menu Link';
+        }
+    }
+});
+
 const form = useForm({
     name: '',
     icon: 'pi pi-home',
@@ -188,6 +202,7 @@ const openGroupDialog = () => {
     editingMenu.value = null;
     dialogMode.value = 'group';
     form.reset();
+    form.icon = 'pi pi-folder'; // Default icon for groups
     form.is_active = true;
     form.parent_id = null; // Groups never have parents
     form.route = ''; // Groups don't need routes
@@ -199,8 +214,20 @@ const openItemDialog = (parentId = null) => {
     editingMenu.value = null;
     dialogMode.value = 'item';
     form.reset();
+    form.icon = 'pi pi-file'; // Default icon for items
     form.is_active = true;
     form.parent_id = parentId; // Set parent if creating under a group
+    form.is_group = false; // Regular items are not groups
+    showDialog.value = true;
+};
+
+const openLinkDialog = () => {
+    editingMenu.value = null;
+    dialogMode.value = 'item';
+    form.reset();
+    form.icon = 'pi pi-link'; // Default icon for links
+    form.is_active = true;
+    form.parent_id = null; // Top-level link
     form.is_group = false; // Regular items are not groups
     showDialog.value = true;
 };
@@ -208,7 +235,7 @@ const openItemDialog = (parentId = null) => {
 const openDialog = (menu = null) => {
     if (menu) {
         editingMenu.value = menu;
-        dialogMode.value = menu.parent_id ? 'item' : 'group';
+        dialogMode.value = menu.is_group ? 'group' : 'item';
         form.name = menu.name;
         form.icon = menu.icon;
         form.route = menu.route || '';
@@ -586,18 +613,24 @@ const debouncedSaveOrder = () => {
             <div class="flex justify-between items-center">
                 <div>
                     <h2 class="text-3xl font-bold text-gray-900">Menu Management</h2>
-                    <p class="text-gray-600 mt-1">Create menu groups, then add items. Drag & drop to reorder.</p>
+                    <p class="text-gray-600 mt-1">Create groups, add standalone links, and add items to groups. Drag &
+                        drop to
+                        reorder.</p>
                 </div>
                 <div class="flex gap-2">
                     <PrimaryButton @click="openGroupDialog" class="flex items-center gap-2">
                         <i class="pi pi-plus"></i>
                         Create Group
                     </PrimaryButton>
+                    <PrimaryButton @click="openLinkDialog()" class="flex items-center gap-2">
+                        <i class="pi pi-plus"></i>
+                        Add Link
+                    </PrimaryButton>
                     <PrimaryButton @click="openItemDialog()" class="flex items-center gap-2"
                         :disabled="groupOptions.length === 0"
                         v-tooltip.bottom="groupOptions.length === 0 ? 'Create a group first' : ''">
                         <i class="pi pi-plus"></i>
-                        Add Item
+                        Add Item to Group
                     </PrimaryButton>
                 </div>
             </div>
@@ -611,9 +644,7 @@ const debouncedSaveOrder = () => {
                                 <h3 class="text-xl font-semibold text-gray-900">Menu Items</h3>
                                 <p class="text-sm text-gray-600 mt-1 flex items-center gap-2">
                                     <i class="pi pi-info-circle"></i>
-                                    Click on groups to expand/collapse. Use
-                                    ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“
-                                    buttons to reorder items within groups.
+                                    Click on groups to expand/collapse.
                                 </p>
                             </div>
                         </div>
@@ -635,7 +666,8 @@ const debouncedSaveOrder = () => {
                                             ]"></i>
                                             <i class="pi pi-grip-vertical text-blue-400 cursor-grab hover:text-blue-600 text-lg"
                                                 @click.stop v-tooltip.bottom="'Drag to reorder'"></i>
-                                            <i :class="[node.data.icon, 'text-lg text-blue-400 font-bold']"></i>
+                                            <i
+                                                :class="[node.data.icon || 'pi pi-folder', 'text-lg text-blue-400 font-bold']"></i>
                                             <div>
                                                 <div class="font-bold text-blue-700">{{ node.data.name }}</div>
                                                 <span
@@ -668,7 +700,8 @@ const debouncedSaveOrder = () => {
                                                 <div class="flex items-center gap-3 flex-1">
                                                     <i class="pi pi-grip-vertical text-blue-400 cursor-grab hover:text-blue-600 text-lg"
                                                         v-tooltip.bottom="'Drag to reorder'"></i>
-                                                    <i :class="[child.data.icon, 'text-lg text-gray-600']"></i>
+                                                    <i
+                                                        :class="[child.data.icon || 'pi pi-link', 'text-lg text-gray-600']"></i>
                                                     <div>
                                                         <div class="text-gray-800 font-medium">{{ child.data.name }}
                                                         </div>
@@ -702,7 +735,7 @@ const debouncedSaveOrder = () => {
                                         <div class="flex items-center gap-3 flex-1">
                                             <i class="pi pi-grip-vertical text-blue-400 cursor-grab hover:text-blue-600 text-lg"
                                                 v-tooltip.bottom="'Drag to reorder'"></i>
-                                            <i :class="[node.data.icon, 'text-lg text-gray-600']"></i>
+                                            <i :class="[node.data.icon || 'pi pi-file', 'text-lg text-gray-600']"></i>
                                             <div>
                                                 <div class="text-gray-800 font-medium">{{ node.data.name }}</div>
                                                 <span
@@ -736,9 +769,7 @@ const debouncedSaveOrder = () => {
         </div>
 
         <!-- Dialog for Creating/Editing Groups and Items -->
-        <Dialog v-model:visible="showDialog"
-            :header="editingMenu ? 'Edit ' + (dialogMode === 'group' ? 'Group' : 'Item') : (dialogMode === 'group' ? 'Create Menu Group' : 'Add Menu Item')"
-            :modal="true" class="w-full md:w-1/2">
+        <Dialog v-model:visible="showDialog" :header="dialogHeader" :modal="true" class="w-full md:w-1/2">
             <form @submit.prevent="submit" class="space-y-4">
                 <!-- Name -->
                 <div>
@@ -756,10 +787,15 @@ const debouncedSaveOrder = () => {
                             <div v-if="value" class="flex items-center gap-2">
                                 <i :class="[value, 'text-lg']"></i>
                             </div>
+                            <div v-else class="flex items-center gap-2 text-gray-500">
+                                <i class="pi pi-circle-fill text-xs"></i>
+                                <span>Select an icon</span>
+                            </div>
                         </template>
                         <template #option="{ option }">
                             <div class="flex items-center gap-2">
                                 <i :class="[option, 'text-lg']"></i>
+                                <span>{{ option }}</span>
                             </div>
                         </template>
                     </Select>
@@ -776,10 +812,10 @@ const debouncedSaveOrder = () => {
 
                 <!-- Parent Group (only when adding items) -->
                 <div v-if="dialogMode === 'item' && !editingMenu">
-                    <InputLabel for="parent_id" value="Parent Group" />
+                    <InputLabel for="parent_id" value="Parent Group (Optional)" />
                     <Select id="parent_id" v-model="form.parent_id"
-                        :options="[{ label: 'Select a group...', value: null }, ...groupOptions]" optionLabel="label"
-                        optionValue="value" class="w-full" />
+                        :options="[{ label: 'None (Top-level link)', value: null }, ...groupOptions]"
+                        optionLabel="label" optionValue="value" class="w-full" />
                     <InputError :message="form.errors.parent_id" class="mt-2" />
                 </div>
 
@@ -808,8 +844,10 @@ const debouncedSaveOrder = () => {
                 <!-- Buttons -->
                 <div class="flex gap-2 justify-end">
                     <SecondaryButton @click="closeDialog">Cancel</SecondaryButton>
-                    <PrimaryButton :disabled="form.processing">
-                        {{ editingMenu ? 'Update' : (dialogMode === 'group' ? 'Create Group' : 'Add Item') }}
+                    <PrimaryButton @click="submit" :disabled="form.processing">
+                        {{ editingMenu ? `Update` : (dialogMode === 'group' ? `Create Group` : (form.parent_id ? `Add
+                        Item` :
+                            `Add Link`)) }}
                     </PrimaryButton>
                 </div>
             </form>

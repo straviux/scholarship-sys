@@ -117,6 +117,15 @@
                         <small class="text-xs text-gray-500 mt-1">Further organize records within each group</small>
                     </div>
 
+                    <!-- Another Sub-Group By Option (only shown when secondary grouping is selected) -->
+                    <div v-if="groupBySecondary && groupBySecondary !== 'none'" class="mb-4">
+                        <label class="block mb-2 text-sm font-medium text-gray-700">Another Sub-Group By
+                            (Optional)</label>
+                        <Select v-model="groupByTertiary" :options="tertiaryGroupByOptions" optionLabel="label"
+                            optionValue="value" placeholder="No third-level grouping" showClear class="w-full" />
+                        <small class="text-xs text-gray-500 mt-1">Organize records within sub-groups</small>
+                    </div>
+
                     <!-- Show Sequence Numbers Toggle -->
                     <div class="mb-4 py-3 px-3 bg-gray-50 rounded border border-gray-200">
                         <div class="flex items-center justify-between mb-2">
@@ -236,6 +245,7 @@ const selectedGrantProvision = ref(null);
 const reportType = ref('list');
 const groupBy = ref('none');
 const groupBySecondary = ref('none');
+const groupByTertiary = ref('none');
 const showSequenceNumbers = ref(true);
 const enableJpmHighlighting = ref(false);
 const jpmFilter = ref('all');
@@ -275,6 +285,11 @@ const secondaryGroupByOptions = computed(() => {
     return groupByOptions.filter(option => option.value !== 'none' && option.value !== groupBy.value);
 });
 
+// Tertiary Group By Options (excludes primary and secondary grouping)
+const tertiaryGroupByOptions = computed(() => {
+    return groupByOptions.filter(option => option.value !== 'none' && option.value !== groupBy.value && option.value !== groupBySecondary.value);
+});
+
 // Watch for JPM highlighting toggle changes
 watch(enableJpmHighlighting, (newValue) => {
     if (!newValue) {
@@ -288,6 +303,15 @@ watch(groupBy, (newValue) => {
     // Reset secondary grouping when primary grouping changes
     if (newValue === 'none' || newValue === groupBySecondary.value) {
         groupBySecondary.value = 'none';
+        groupByTertiary.value = 'none';
+    }
+});
+
+// Watch for secondary grouping changes
+watch(groupBySecondary, (newValue) => {
+    // Reset tertiary grouping when secondary grouping changes
+    if (newValue === 'none' || newValue === groupByTertiary.value) {
+        groupByTertiary.value = 'none';
     }
 });
 
@@ -329,6 +353,7 @@ function clearAllFilters() {
     selectedGrantProvision.value = null;
     groupBy.value = 'none';
     groupBySecondary.value = 'none';
+    groupByTertiary.value = 'none';
     showSequenceNumbers.value = true;
     enableJpmHighlighting.value = false;
     jpmFilter.value = 'all';
@@ -368,6 +393,7 @@ function generateReport() {
         report_type: reportType.value,
         group_by: groupBy.value,
         group_by_secondary: groupBySecondary.value && groupBySecondary.value !== 'none' ? groupBySecondary.value : 'none',
+        group_by_tertiary: groupByTertiary.value && groupByTertiary.value !== 'none' ? groupByTertiary.value : 'none',
         show_sequence_numbers: showSequenceNumbers.value ? 1 : 0,
         paper_size: 'A4',
         orientation: 'landscape',

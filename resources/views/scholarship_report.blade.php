@@ -169,6 +169,26 @@
             table {
                 border: 1px solid #e5e7eb;
             }
+
+            /* For tables with proper thead/tbody structure */
+            thead {
+                display: table-header-group;
+            }
+
+            tbody tr:has(th) {
+                display: table-header-group;
+                page-break-after: avoid;
+                page-break-before: avoid;
+            }
+
+            tr {
+                page-break-inside: avoid;
+            }
+
+            th {
+                page-break-inside: avoid;
+                page-break-after: avoid;
+            }
         }
 
         @media print and (orientation: portrait) {
@@ -202,14 +222,14 @@
         </div>
         <img src="data:image/svg+xml;base64,<?php echo $yakapLogoBase64; ?>" alt="Yakap Logo" style="height: 72px; width: auto; margin-right: 0.5rem;">
     </div>
-    <div class="filters" style="display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-bottom: 0.5rem; font-size: 11px; color: #6b7280;">
+    <div class="filters" style="display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-bottom: 0.5rem; font-size: 11px; color: #444;">
         <span>{{ ucfirst($reportType) }}</span>
         @foreach($filters as $key => $value)
         @if($value && !in_array($key, ['paper_size', 'orientation', 'date_filed']))
         <span style="color:#d1d5db;">•</span>
         @if($key === 'unified_status')
         <!-- Display unified status from request parameter -->
-        <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
+        <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }} Status</span>
         @elseif($key === 'grant_provision')
         <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
         @elseif($key === 'program' && isset($profiles) && count($profiles) && optional($profiles->first()->scholarshipGrant->first())->program)
@@ -246,7 +266,7 @@
         <span>{{ $oldestDate }} to {{ $latestDate }}</span>
         @endif
     </div>
-    <div style="font-size: 10px; color: #9ca3af; margin-bottom: 1rem;">
+    <div style="font-size: 10px; color: #555; margin-bottom: 1rem;">
         Generated: {{ now()->timezone('Asia/Manila')->format('F d, Y h:i A') }}
     </div>
 
@@ -257,7 +277,7 @@
                 <h1 style="margin: 0; font-size: 14px; font-weight: 300; color: #111827;">
                     {{ $reportType === 'summary' ? 'Summary Report' : 'Scholarship Report' }}
                 </h1>
-                <p style="margin: 4px 0 0 0; font-size: 13px; color: #6b7280;">
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: #444;">
                     {{ $profiles->count() }} records
                 </p>
             </div>
@@ -278,516 +298,586 @@
         @endphp
 
         @if(isset($summary['by_unified_status']) && $showUnifiedStatus)
-        <tr>
-            <th>Status</th>
-            <th>Scholars</th>
-            <th>%</th>
-        </tr>
-        @php
-        $statusData = collect($summary['by_unified_status'])->filter(function($count, $name) {
-        return $name !== 'No Status';
-        })->sortKeys();
-        $statusIndex = 1;
-        $isNestedStatus = $statusData->first() instanceof \Illuminate\Support\Collection;
-        @endphp
-        @foreach($statusData as $name => $count)
-        @if($isNestedStatus)
-        {{-- Nested status summary (with secondary grouping) --}}
-        @php
-        $statusTotal = 0;
-        foreach ($count as $subTotal) {
-        $statusTotal += $subTotal;
-        }
-        @endphp
-        <tr style="font-weight: 600; background: #f3f4f6;">
-            <td>{{ $statusIndex++ }}. {{ $name }}</td>
-            <td style="font-size: 1.15em;">{{ $statusTotal }}</td>
-            <td>{{ number_format(($statusTotal / $total) * 100, 1) }}%</td>
-        </tr>
-        @php $subIndex = 1; @endphp
-        @foreach($count as $subName => $subCount)
-        <tr style="padding-left: 1.5rem;">
-            <td style="padding-left: 2rem;">{{ $subName }}</td>
-            <td>{{ $subCount }}</td>
-            <td>{{ number_format(($subCount / $total) * 100, 1) }}%</td>
-        </tr>
-        @endforeach
-        @else
-        {{-- Flat status summary (no secondary grouping) --}}
-        <tr>
-            <td>{{ $statusIndex++ }}. {{ $name }}</td>
-            <td>{{ $count }}</td>
-            <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
-        </tr>
-        @endif
-        @endforeach
-        @if(isset($summary['by_unified_status']['No Status']))
-        <tr>
-            <td><em>{{ $statusIndex }}. No Status</em></td>
-            <td>{{ $summary['by_unified_status']['No Status'] }}</td>
-            <td>{{ number_format(($summary['by_unified_status']['No Status'] / $total) * 100, 1) }}%</td>
-        </tr>
-        @endif
+        <thead>
+            <tr>
+                <th>Status</th>
+                <th>Scholars</th>
+                <th>%</th>
+            </tr>
+        </thead>
+        <tbody>
+            $statusData = collect($summary['by_unified_status'])->filter(function($count, $name) {
+            return $name !== 'No Status';
+            })->sortKeys();
+            $statusIndex = 1;
+            $isNestedStatus = $statusData->first() instanceof \Illuminate\Support\Collection;
+            $isTertiaryStatus = false;
+            if ($isNestedStatus) {
+            $isTertiaryStatus = collect($statusData->first())->first() instanceof \Illuminate\Support\Collection;
+            }
+            @endphp
+            @foreach($statusData as $name => $count)
+            @if($isNestedStatus)
+            {{-- Nested status summary (with secondary/tertiary grouping) --}}
+            @php
+            if ($isTertiaryStatus) {
+            // Three-level nesting
+            $statusTotal = 0;
+            foreach ($count as $secondaryGroups) {
+            foreach ($secondaryGroups as $tertiaryCount) {
+            $statusTotal += $tertiaryCount;
+            }
+            }
+            } else {
+            // Two-level nesting
+            $statusTotal = 0;
+            foreach ($count as $subTotal) {
+            $statusTotal += $subTotal;
+            }
+            }
+            @endphp
+            <tr style="font-weight: 600; background: #f3f4f6;">
+                <td>{{ $statusIndex++ }}. {{ $name }}</td>
+                <td style="font-size: 1.15em;">{{ $statusTotal }}</td>
+                <td>{{ number_format(($statusTotal / $total) * 100, 1) }}%</td>
+            </tr>
+            @php $subIndex = 1; @endphp
+            @foreach($count as $subName => $subCount)
+            @if($isTertiaryStatus)
+            {{-- Tertiary level (three-level nesting) --}}
+            @php
+            $secondaryTotal = 0;
+            foreach ($subCount as $tertiaryCount) {
+            $secondaryTotal += $tertiaryCount;
+            }
+            @endphp
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @php $tertiaryIndex = 1; @endphp
+            @foreach($subCount as $tertiaryName => $tertiaryCount)
+            <tr style="padding-left: 2.5rem;">
+                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @endforeach
+            @else
+            {{-- Secondary level (two-level nesting) --}}
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @endif
+            @endforeach
+            @else
+            {{-- Flat status summary (no secondary grouping) --}}
+            <tr>
+                <td>{{ $statusIndex++ }}. {{ $name }}</td>
+                <td>{{ $count }}</td>
+                <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
+            </tr>
+            @endif
+            @endforeach
+            @if(isset($summary['by_unified_status']['No Status']))
+            <tr>
+                <td><em>{{ $statusIndex }}. No Status</em></td>
+                <td>{{ $summary['by_unified_status']['No Status'] }}</td>
+                <td>{{ number_format(($summary['by_unified_status']['No Status'] / $total) * 100, 1) }}%</td>
+            </tr>
+            @endif
+        </tbody>
         @endif
 
-        @if(isset($summary['by_grant_provision']) && $showGrantProvision)
-        <tr>
-            <th>Grant Provision</th>
-            <th>Scholars</th>
-            <th>%</th>
-        </tr>
-        @php
-        $grantData = collect($summary['by_grant_provision'])->filter(function($count, $name) {
-        return $name !== 'No Provision';
-        })->sortKeys();
-        $grantIndex = 1;
-        $isNestedGrant = $grantData->first() instanceof \Illuminate\Support\Collection;
-        @endphp
-        @foreach($grantData as $name => $count)
-        @if($isNestedGrant)
-        {{-- Nested grant provision summary (with secondary grouping) --}}
-        @php
-        $grantTotal = 0;
-        foreach ($count as $subTotal) {
-        $grantTotal += $subTotal;
-        }
-        @endphp
-        <tr style="font-weight: 600; background: #f3f4f6;">
-            <td>{{ $grantIndex++ }}. {{ $name }}</td>
-            <td style="font-size: 1.15em;">{{ $grantTotal }}</td>
-            <td>{{ number_format(($grantTotal / $total) * 100, 1) }}%</td>
-        </tr>
-        @php $subIndex = 1; @endphp
-        @foreach($count as $subName => $subCount)
-        <tr style="padding-left: 1.5rem;">
-            <td style="padding-left: 2rem;">{{ $subName }}</td>
-            <td>{{ $subCount }}</td>
-            <td>{{ number_format(($subCount / $total) * 100, 1) }}%</td>
-        </tr>
-        @endforeach
-        @else
-        {{-- Flat grant provision summary (no secondary grouping) --}}
-        <tr>
-            <td>{{ $grantIndex++ }}. {{ $name }}</td>
-            <td>{{ $count }}</td>
-            <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
-        </tr>
-        @endif
-        @endforeach
-        @if(isset($summary['by_grant_provision']['No Provision']))
-        <tr>
-            <td><em>{{ $grantIndex }}. No Provision</em></td>
-            <td>{{ $summary['by_grant_provision']['No Provision'] }}</td>
-            <td>{{ number_format(($summary['by_grant_provision']['No Provision'] / $total) * 100, 1) }}%</td>
-        </tr>
-        @endif
+        @if(isset($summary['by_unified_status']) && $showUnifiedStatus)
+        <thead>
+            <tr>
+                <th>Grant Provision</th>
+                <th>Scholars</th>
+                <th>%</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+            $grantData = collect($summary['by_grant_provision'])->filter(function($count, $name) {
+            return $name !== 'No Provision';
+            })->sortKeys();
+            $grantIndex = 1;
+            $isNestedGrant = $grantData->first() instanceof \Illuminate\Support\Collection;
+            $isTertiaryGrant = false;
+            if ($isNestedGrant) {
+            $isTertiaryGrant = collect($grantData->first())->first() instanceof \Illuminate\Support\Collection;
+            }
+            @endphp
+            @foreach($grantData as $name => $count)
+            @if($isNestedGrant)
+            {{-- Nested grant provision summary (with secondary/tertiary grouping) --}}
+            @php
+            if ($isTertiaryGrant) {
+            $grantTotal = 0;
+            foreach ($count as $secondaryGroups) {
+            foreach ($secondaryGroups as $tertiaryCount) {
+            $grantTotal += $tertiaryCount;
+            }
+            }
+            } else {
+            $grantTotal = 0;
+            foreach ($count as $subTotal) {
+            $grantTotal += $subTotal;
+            }
+            }
+            @endphp
+            <tr style="font-weight: 600; background: #f3f4f6;">
+                <td>{{ $grantIndex++ }}. {{ $name }}</td>
+                <td style="font-size: 1.15em;">{{ $grantTotal }}</td>
+                <td>{{ number_format(($grantTotal / $total) * 100, 1) }}%</td>
+            </tr>
+            @php $subIndex = 1; @endphp
+            @foreach($count as $subName => $subCount)
+            @if($isTertiaryGrant)
+            {{-- Tertiary level (three-level nesting) --}}
+            @php
+            $secondaryTotal = 0;
+            foreach ($subCount as $tertiaryCount) {
+            $secondaryTotal += $tertiaryCount;
+            }
+            @endphp
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @php $tertiaryIndex = 1; @endphp
+            @foreach($subCount as $tertiaryName => $tertiaryCount)
+            <tr style="padding-left: 2.5rem;">
+                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @endforeach
+            @else
+            {{-- Secondary level (two-level nesting) --}}
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @endif
+            @endforeach
+            @else
+            {{-- Flat grant provision summary (no secondary grouping) --}}
+            <tr>
+                <td>{{ $grantIndex++ }}. {{ $name }}</td>
+                <td>{{ $count }}</td>
+                <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
+            </tr>
+            @endif
+            @endforeach
+            @if(isset($summary['by_grant_provision']['No Provision']))
+            <tr>
+                <td><em>{{ $grantIndex }}. No Provision</em></td>
+                <td>{{ $summary['by_grant_provision']['No Provision'] }}</td>
+                <td>{{ number_format(($summary['by_grant_provision']['No Provision'] / $total) * 100, 1) }}%</td>
+            </tr>
+            @endif
+        </tbody>
         @endif
 
         @if(isset($summary['by_program']) && $showProgram)
-        <tr>
-            <th>Program</th>
-            <th>Scholars</th>
-            <th>%</th>
-        </tr>
-        @php
-        $programData = collect($summary['by_program'])->filter(function($count, $name) {
-        return $name !== 'No Program';
-        })->sortKeys();
-        $programIndex = 1;
-        $isNestedProgram = $programData->first() instanceof \Illuminate\Support\Collection;
-        @endphp
-        @foreach($programData as $name => $count)
-        @if($isNestedProgram)
-        {{-- Nested program summary (with secondary grouping) --}}
-        @php
-        $programTotal = 0;
-        foreach ($count as $subTotal) {
-        $programTotal += $subTotal;
-        }
-        @endphp
-        <tr style="font-weight: 600; background: #f3f4f6;">
-            <td>{{ $programIndex++ }}. {{ $name }}</td>
-            <td style="font-size: 1.15em;">{{ $programTotal }}</td>
-            <td>{{ number_format(($programTotal / $total) * 100, 1) }}%</td>
-        </tr>
-        @php $subIndex = 1; @endphp
-        @foreach($count as $subName => $subCount)
-        <tr style="padding-left: 1.5rem;">
-            <td style="padding-left: 2rem;">{{ $subName }}</td>
-            <td>{{ $subCount }}</td>
-            <td>{{ number_format(($subCount / $total) * 100, 1) }}%</td>
-        </tr>
-        @endforeach
-        @else
-        {{-- Flat program summary (no secondary grouping) --}}
-        <tr>
-            <td>{{ $programIndex++ }}. {{ $name }}</td>
-            <td>{{ $count }}</td>
-            <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
-        </tr>
-        @endif
-        @endforeach
-        @if(isset($summary['by_program']['No Program']))
-        <tr>
-            <td><em>{{ $programIndex }}. No Program</em></td>
-            <td>{{ $summary['by_program']['No Program'] }}</td>
-            <td>{{ number_format(($summary['by_program']['No Program'] / $total) * 100, 1) }}%</td>
-        </tr>
-        @endif
+        <thead>
+            <tr>
+                <th>Program</th>
+                <th>Scholars</th>
+                <th>%</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+            $programData = collect($summary['by_program'])->filter(function($count, $name) {
+            return $name !== 'No Program';
+            })->sortKeys();
+            $programIndex = 1;
+            $isNestedProgram = $programData->first() instanceof \Illuminate\Support\Collection;
+            $isTertiaryProgram = false;
+            if ($isNestedProgram) {
+            $isTertiaryProgram = collect($programData->first())->first() instanceof \Illuminate\Support\Collection;
+            }
+            @endphp
+            @foreach($programData as $name => $count)
+            @if($isNestedProgram)
+            {{-- Nested program summary (with secondary/tertiary grouping) --}}
+            @php
+            if ($isTertiaryProgram) {
+            $programTotal = 0;
+            foreach ($count as $secondaryGroups) {
+            foreach ($secondaryGroups as $tertiaryCount) {
+            $programTotal += $tertiaryCount;
+            }
+            }
+            } else {
+            $programTotal = 0;
+            foreach ($count as $subTotal) {
+            $programTotal += $subTotal;
+            }
+            }
+            @endphp
+            <tr style="font-weight: 600; background: #f3f4f6;">
+                <td>{{ $programIndex++ }}. {{ $name }}</td>
+                <td style="font-size: 1.15em;">{{ $programTotal }}</td>
+                <td>{{ number_format(($programTotal / $total) * 100, 1) }}%</td>
+            </tr>
+            @php $subIndex = 1; @endphp
+            @foreach($count as $subName => $subCount)
+            @if($isTertiaryProgram)
+            {{-- Tertiary level (three-level nesting) --}}
+            @php
+            $secondaryTotal = 0;
+            foreach ($subCount as $tertiaryCount) {
+            $secondaryTotal += $tertiaryCount;
+            }
+            @endphp
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @php $tertiaryIndex = 1; @endphp
+            @foreach($subCount as $tertiaryName => $tertiaryCount)
+            <tr style="padding-left: 2.5rem;">
+                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @endforeach
+            @else
+            {{-- Secondary level (two-level nesting) --}}
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @endif
+            @endforeach
+            @else
+            {{-- Flat program summary (no secondary grouping) --}}
+            <tr>
+                <td>{{ $programIndex++ }}. {{ $name }}</td>
+                <td>{{ $count }}</td>
+                <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
+            </tr>
+            @endif
+            @endforeach
+            @if(isset($summary['by_program']['No Program']))
+            <tr>
+                <td><em>{{ $programIndex }}. No Program</em></td>
+                <td>{{ $summary['by_program']['No Program'] }}</td>
+                <td>{{ number_format(($summary['by_program']['No Program'] / $total) * 100, 1) }}%</td>
+            </tr>
+            @endif
+        </tbody>
         @endif
 
         @if(isset($summary['by_school']) && $showSchool)
-        <tr>
-            <th>School</th>
-            <th>Scholars</th>
-            <th>%</th>
-        </tr>
-        @php
-        $schoolData = collect($summary['by_school'])->filter(function($count, $name) {
-        return $name !== 'No School';
-        })->sortKeys();
-        $schoolIndex = 1;
-        $isNestedSchool = $schoolData->first() instanceof \Illuminate\Support\Collection;
-        @endphp
-        @foreach($schoolData as $name => $count)
-        @if($isNestedSchool)
-        {{-- Nested school summary (with secondary grouping) --}}
-        @php
-        $schoolTotal = 0;
-        foreach ($count as $subTotal) {
-        $schoolTotal += $subTotal;
-        }
-        @endphp
-        <tr style="font-weight: 600; background: #f3f4f6;">
-            <td>{{ $schoolIndex++ }}. {{ $name }}</td>
-            <td style="font-size: 1.15em;">{{ $schoolTotal }}</td>
-            <td>{{ number_format(($schoolTotal / $total) * 100, 1) }}%</td>
-        </tr>
-        @php $subIndex = 1; @endphp
-        @foreach($count as $subName => $subCount)
-        <tr style="padding-left: 1.5rem;">
-            <td style="padding-left: 2rem;">{{ $subName }}</td>
-            <td>{{ $subCount }}</td>
-            <td></td>
-        </tr>
-        @endforeach
-        @else
-        {{-- Flat school summary (no secondary grouping) --}}
-        <tr>
-            <td>{{ $schoolIndex++ }}. {{ $name }}</td>
-            <td>{{ $count }}</td>
-            <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
-        </tr>
-        @endif
-        @endforeach
-        @if(isset($summary['by_school']['No School']))
-        <tr>
-            <td><em>{{ $schoolIndex }}. No School</em></td>
-            <td>{{ $summary['by_school']['No School'] }}</td>
-            <td>{{ number_format(($summary['by_school']['No School'] / $total) * 100, 1) }}%</td>
-        </tr>
-        @endif
+        <thead>
+            <tr>
+                <th>School</th>
+                <th>Scholars</th>
+                <th>%</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+            $schoolData = collect($summary['by_school'])->filter(function($count, $name) {
+            return $name !== 'No School';
+            })->sortKeys();
+            $schoolIndex = 1;
+            $isNestedSchool = $schoolData->first() instanceof \Illuminate\Support\Collection;
+            $isTertiarySchool = false;
+            if ($isNestedSchool) {
+            $isTertiarySchool = collect($schoolData->first())->first() instanceof \Illuminate\Support\Collection;
+            }
+            @endphp
+            @foreach($schoolData as $name => $count)
+            @if($isNestedSchool)
+            {{-- Nested school summary (with secondary/tertiary grouping) --}}
+            @php
+            if ($isTertiarySchool) {
+            $schoolTotal = 0;
+            foreach ($count as $secondaryGroups) {
+            foreach ($secondaryGroups as $tertiaryCount) {
+            $schoolTotal += $tertiaryCount;
+            }
+            }
+            } else {
+            $schoolTotal = 0;
+            foreach ($count as $subTotal) {
+            $schoolTotal += $subTotal;
+            }
+            }
+            @endphp
+            <tr style="font-weight: 600; background: #f3f4f6;">
+                <td>{{ $schoolIndex++ }}. {{ $name }}</td>
+                <td style="font-size: 1.15em;">{{ $schoolTotal }}</td>
+                <td>{{ number_format(($schoolTotal / $total) * 100, 1) }}%</td>
+            </tr>
+            @php $subIndex = 1; @endphp
+            @foreach($count as $subName => $subCount)
+            @if($isTertiarySchool)
+            {{-- Tertiary level (three-level nesting) --}}
+            @php
+            $secondaryTotal = 0;
+            foreach ($subCount as $tertiaryCount) {
+            $secondaryTotal += $tertiaryCount;
+            }
+            @endphp
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @php $tertiaryIndex = 1; @endphp
+            @foreach($subCount as $tertiaryName => $tertiaryCount)
+            <tr style="padding-left: 2.5rem;">
+                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @endforeach
+            @else
+            {{-- Secondary level (two-level nesting) --}}
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @endif
+            @endforeach
+            @else
+            {{-- Flat school summary (no secondary grouping) --}}
+            <tr>
+                <td>{{ $schoolIndex++ }}. {{ $name }}</td>
+                <td>{{ $count }}</td>
+                <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
+            </tr>
+            @endif
+            @endforeach
+            @if(isset($summary['by_school']['No School']))
+            <tr>
+                <td><em>{{ $schoolIndex }}. No School</em></td>
+                <td>{{ $summary['by_school']['No School'] }}</td>
+                <td>{{ number_format(($summary['by_school']['No School'] / $total) * 100, 1) }}%</td>
+            </tr>
+            @endif
+        </tbody>
         @endif
 
         @if(isset($summary['by_course']) && $showCourse)
-        <tr>
-            <th>Course</th>
-            <th>Scholars</th>
-            <th>%</th>
-        </tr>
-        @php
-        $courseData = collect($summary['by_course'])->filter(function($count, $name) {
-        return $name !== 'No Course';
-        })->sortKeys();
-        $courseIndex = 1;
-        $isNestedCourse = $courseData->first() instanceof \Illuminate\Support\Collection;
-        @endphp
-        @foreach($courseData as $name => $count)
-        @if($isNestedCourse)
-        {{-- Nested course summary (with secondary grouping) --}}
-        @php
-        $courseTotal = 0;
-        foreach ($count as $subTotal) {
-        $courseTotal += $subTotal;
-        }
-        @endphp
-        <tr style="font-weight: 600; background: #f3f4f6;">
-            <td>{{ $courseIndex++ }}. {{ $name }}</td>
-            <td style="font-size: 1.15em;">{{ $courseTotal }}</td>
-            <td>{{ number_format(($courseTotal / $total) * 100, 1) }}%</td>
-        </tr>
-        @php $subIndex = 1; @endphp
-        @foreach($count as $subName => $subCount)
-        <tr style="padding-left: 1.5rem;">
-            <td style="padding-left: 2rem;">{{ $subName }}</td>
-            <td>{{ $subCount }}</td>
-            <td>{{ number_format(($subCount / $total) * 100, 1) }}%</td>
-        </tr>
-        @endforeach
-        @else
-        {{-- Flat course summary (no secondary grouping) --}}
-        <tr>
-            <td>{{ $courseIndex++ }}. {{ $name }}</td>
-            <td>{{ $count }}</td>
-            <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
-        </tr>
-        @endif
-        @endforeach
-        @if(isset($summary['by_course']['No Course']))
-        <tr>
-            <td><em>{{ $courseIndex }}. No Course</em></td>
-            <td>{{ $summary['by_course']['No Course'] }}</td>
-            <td>{{ number_format(($summary['by_course']['No Course'] / $total) * 100, 1) }}%</td>
-        </tr>
-        @endif
+        <thead>
+            <tr>
+                <th>Course</th>
+                <th>Scholars</th>
+                <th>%</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+            $courseData = collect($summary['by_course'])->filter(function($count, $name) {
+            return $name !== 'No Course';
+            })->sortKeys();
+            $courseIndex = 1;
+            $isNestedCourse = $courseData->first() instanceof \Illuminate\Support\Collection;
+            $isTertiaryCourse = false;
+            if ($isNestedCourse) {
+            $isTertiaryCourse = collect($courseData->first())->first() instanceof \Illuminate\Support\Collection;
+            }
+            @endphp
+            @foreach($courseData as $name => $count)
+            @if($isNestedCourse)
+            {{-- Nested course summary (with secondary/tertiary grouping) --}}
+            @php
+            if ($isTertiaryCourse) {
+            $courseTotal = 0;
+            foreach ($count as $secondaryGroups) {
+            foreach ($secondaryGroups as $tertiaryCount) {
+            $courseTotal += $tertiaryCount;
+            }
+            }
+            } else {
+            $courseTotal = 0;
+            foreach ($count as $subTotal) {
+            $courseTotal += $subTotal;
+            }
+            }
+            @endphp
+            <tr style="font-weight: 600; background: #f3f4f6;">
+                <td>{{ $courseIndex++ }}. {{ $name }}</td>
+                <td style="font-size: 1.15em;">{{ $courseTotal }}</td>
+                <td>{{ number_format(($courseTotal / $total) * 100, 1) }}%</td>
+            </tr>
+            @php $subIndex = 1; @endphp
+            @foreach($count as $subName => $subCount)
+            @if($isTertiaryCourse)
+            {{-- Tertiary level (three-level nesting) --}}
+            @php
+            $secondaryTotal = 0;
+            foreach ($subCount as $tertiaryCount) {
+            $secondaryTotal += $tertiaryCount;
+            }
+            @endphp
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @php $tertiaryIndex = 1; @endphp
+            @foreach($subCount as $tertiaryName => $tertiaryCount)
+            <tr style="padding-left: 2.5rem;">
+                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @endforeach
+            @else
+            {{-- Secondary level (two-level nesting) --}}
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @endif
+            @endforeach
+            @else
+            {{-- Flat course summary (no secondary grouping) --}}
+            <tr>
+                <td>{{ $courseIndex++ }}. {{ $name }}</td>
+                <td>{{ $count }}</td>
+                <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
+            </tr>
+            @endif
+            @endforeach
+            @if(isset($summary['by_course']['No Course']))
+            <tr>
+                <td><em>{{ $courseIndex }}. No Course</em></td>
+                <td>{{ $summary['by_course']['No Course'] }}</td>
+                <td>{{ number_format(($summary['by_course']['No Course'] / $total) * 100, 1) }}%</td>
+            </tr>
+            @endif
+        </tbody>
         @endif
 
         @if(isset($summary['by_year_level']) && $showYearLevel)
-        <tr>
-            <th>Year Level</th>
-            <th>Scholars</th>
-            <th>%</th>
-        </tr>
-        @php
-        $yearLevelData = collect($summary['by_year_level'])->filter(function($count, $name) {
-        return $name !== 'No Year Level';
-        });
+        <thead>
+            <tr>
+                <th>Year Level</th>
+                <th>Scholars</th>
+                <th>%</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+            $yearLevelData = collect($summary['by_year_level'])->filter(function($count, $name) {
+            return $name !== 'No Year Level';
+            });
 
-        // Sort year levels numerically ascending, with non-numeric values last
-        $yearLevelData = $yearLevelData->sortBy(function($count, $name) {
-        if (preg_match('/\d+/', $name, $matches)) {
-        return (int)$matches[0];
-        }
-        return PHP_INT_MAX;
-        });
+            // Sort year levels numerically ascending, with non-numeric values last
+            $yearLevelData = $yearLevelData->sortBy(function($count, $name) {
+            if (preg_match('/\d+/', $name, $matches)) {
+            return (int)$matches[0];
+            }
+            return PHP_INT_MAX;
+            });
 
-        $yearLevelIndex = 1;
-        $isNestedYearLevel = $yearLevelData->first() instanceof \Illuminate\Support\Collection;
-        @endphp
-        @foreach($yearLevelData as $name => $count)
-        @if($isNestedYearLevel)
-        {{-- Nested year level summary (with secondary grouping) --}}
-        @php
-        $yearLevelTotal = 0;
-        foreach ($count as $subTotal) {
-        $yearLevelTotal += $subTotal;
-        }
-        @endphp
-        <tr style="font-weight: 600; background: #f3f4f6;">
-            <td>{{ $yearLevelIndex++ }}. {{ $name }}</td>
-            <td style="font-size: 1.15em;">{{ $yearLevelTotal }}</td>
-            <td>{{ number_format(($yearLevelTotal / $total) * 100, 1) }}%</td>
-        </tr>
-        @php $subIndex = 1; @endphp
-        @foreach($count as $subName => $subCount)
-        <tr style="padding-left: 1.5rem;">
-            <td style="padding-left: 2rem;">{{ $subName }}</td>
-            <td>{{ $subCount }}</td>
-            <td>{{ number_format(($subCount / $total) * 100, 1) }}%</td>
-        </tr>
-        @endforeach
-        @else
-        {{-- Flat year level summary (no secondary grouping) --}}
-        <tr>
-            <td>{{ $yearLevelIndex++ }}. {{ $name }}</td>
-            <td>{{ $count }}</td>
-            <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
-        </tr>
-        @endif
-        @endforeach
-        @if(isset($summary['by_year_level']['No Year Level']))
-        <tr>
-            <td><em>{{ $yearLevelIndex }}. No Year Level</em></td>
-            <td>{{ $summary['by_year_level']['No Year Level'] }}</td>
-            <td>{{ number_format(($summary['by_year_level']['No Year Level'] / $total) * 100, 1) }}%</td>
-        </tr>
-        @endif
+            $yearLevelIndex = 1;
+            $isNestedYearLevel = $yearLevelData->first() instanceof \Illuminate\Support\Collection;
+            $isTertiaryYearLevel = false;
+            if ($isNestedYearLevel) {
+            $isTertiaryYearLevel = collect($yearLevelData->first())->first() instanceof \Illuminate\Support\Collection;
+            }
+            @endphp
+            @foreach($yearLevelData as $name => $count)
+            @if($isNestedYearLevel)
+            {{-- Nested year level summary (with secondary/tertiary grouping) --}}
+            @php
+            if ($isTertiaryYearLevel) {
+            $yearLevelTotal = 0;
+            foreach ($count as $secondaryGroups) {
+            foreach ($secondaryGroups as $tertiaryCount) {
+            $yearLevelTotal += $tertiaryCount;
+            }
+            }
+            } else {
+            $yearLevelTotal = 0;
+            foreach ($count as $subTotal) {
+            $yearLevelTotal += $subTotal;
+            }
+            }
+            @endphp
+            <tr style="font-weight: 600; background: #f3f4f6;">
+                <td>{{ $yearLevelIndex++ }}. {{ $name }}</td>
+                <td style="font-size: 1.15em;">{{ $yearLevelTotal }}</td>
+                <td>{{ number_format(($yearLevelTotal / $total) * 100, 1) }}%</td>
+            </tr>
+            @php $subIndex = 1; @endphp
+            @foreach($count as $subName => $subCount)
+            @if($isTertiaryYearLevel)
+            {{-- Tertiary level (three-level nesting) --}}
+            @php
+            $secondaryTotal = 0;
+            foreach ($subCount as $tertiaryCount) {
+            $secondaryTotal += $tertiaryCount;
+            }
+            @endphp
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @php $tertiaryIndex = 1; @endphp
+            @foreach($subCount as $tertiaryName => $tertiaryCount)
+            <tr style="padding-left: 2.5rem;">
+                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @endforeach
+            @else
+            {{-- Secondary level (two-level nesting) --}}
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @endif
+            @endforeach
+            @else
+            {{-- Flat year level summary (no secondary grouping) --}}
+            <tr>
+                <td>{{ $yearLevelIndex++ }}. {{ $name }}</td>
+                <td>{{ $count }}</td>
+                <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
+            </tr>
+            @endif
+            @endforeach
+            @if(isset($summary['by_year_level']['No Year Level']))
+            <tr>
+                <td><em>{{ $yearLevelIndex }}. No Year Level</em></td>
+                <td>{{ $summary['by_year_level']['No Year Level'] }}</td>
+                <td>{{ number_format(($summary['by_year_level']['No Year Level'] / $total) * 100, 1) }}%</td>
+            </tr>
+            @endif
+        </tbody>
         @endif
     </table>
     @else
     @php
     $profilesToIterate = $groupedProfiles ?? collect(['all' => $profiles]);
     $overallIndex = 1;
-    $isNested = false;
-
-    if ($groupBySecondary && $groupBySecondary !== 'none' && $groupedProfiles && $groupedProfiles->count() > 0) {
-    $firstGroup = $groupedProfiles->first();
-    $isNested = $firstGroup instanceof \Illuminate\Support\Collection;
-    }
     @endphp
 
     @foreach($profilesToIterate as $groupName => $groupProfiles)
-    @if($isNested && $groupProfiles instanceof \Illuminate\Support\Collection)
-    {{-- Nested (secondary) grouping --}}
-    @php
-    $groupTotalCount = 0;
-    foreach ($groupProfiles as $subGroup) {
-    $groupTotalCount += is_countable($subGroup) ? count($subGroup) : $subGroup->count();
-    }
-    @endphp
-    <div class="school-header">
-        <div style="display: flex; justify-content: space-between; align-items: baseline;">
-            <h2 style="margin: 0; font-size: 15px; font-weight: 500; color: #111827;">
-                {{ strtoupper($groupName) }}
-            </h2>
-            <span style="font-size: 12px; color: #6b7280;">
-                {{ $groupTotalCount }} records
-            </span>
-        </div>
-    </div>
-
-    {{-- Sub-groups (secondary grouping) --}}
-    @foreach($groupProfiles as $subGroupName => $sortedProfiles)
-    @php
-    $sortedProfiles = collect($sortedProfiles)->sortBy(function($profile) {
-    $grant = optional($profile->scholarshipGrant->first());
-    $unifiedStatus = $grant->unified_status ?? '';
-
-    // For approved/active status, sort alphabetically by school then year level
-    if (in_array($unifiedStatus, ['approved', 'active'])) {
-    $school = optional($grant->school)->name ?? 'ZZZZ';
-    $yearLevel = $grant->year_level ?? 'ZZZZ';
-    return [$school, $yearLevel, $profile->last_name, $profile->first_name];
-    }
-
-    // For other statuses, sort by date filed
-    $dateFiled = $grant->date_filed ? \Carbon\Carbon::parse($grant->date_filed)->format('Y-m-d') : '9999-12-31';
-    $createdAt = $profile->created_at ? \Carbon\Carbon::parse($profile->created_at)->format('Y-m-d H:i:s') : '9999-12-31 23:59:59';
-    return [$dateFiled, $createdAt];
-    });
-    $subGroupCount = $sortedProfiles->count();
-    @endphp
-
-    <table style="table-layout: fixed; width: 100%; margin-bottom: 0; border-top: 1px solid #d1d5db;">
-        <thead>
-            <tr style="background: #f3f4f6;">
-                <th colspan="100" style="padding: 0.2cm; border: none; background: #f3f4f6; text-align: left; font-weight: 500; font-size: 0.9rem; color: #374151;">
-                    <span style="margin-left: 1rem;">{{ $subGroupName }}</span>
-                    <span style="float: right; margin-right: 1rem; font-weight: 400; font-size: 0.85rem; color: #6b7280;">{{ $subGroupCount }} records</span>
-                </th>
-            </tr>
-            <tr>
-                <th style="min-width:20px;width:20px;color:#555;padding-left:0.05cm;padding-right:0.05cm;">#</th>
-                <th style="width:200px">Name</th>
-                <th style="width:80px">Contact No(s).</th>
-                @if(empty($filters['municipality']) && (!isset($groupBy) || $groupBy !== 'municipality') && (!isset($groupBySecondary) || $groupBySecondary !== 'municipality'))
-                <th style="width:110px">Municipality</th>
-                @endif
-                @if(empty($filters['program']) && (!isset($groupBy) || $groupBy !== 'program') && (!isset($groupBySecondary) || $groupBySecondary !== 'program'))
-                <th style="width:85px">Program</th>
-                @endif
-                @if(empty($filters['school']) && (!isset($groupBy) || $groupBy !== 'school') && (!isset($groupBySecondary) || $groupBySecondary !== 'school'))
-                <th style="width:150px">School</th>
-                @endif
-                @if(empty($filters['course']) && empty($filters['courses']) && (!isset($groupBy) || $groupBy !== 'course') && (!isset($groupBySecondary) || $groupBySecondary !== 'course'))
-                <th style="width:130px">Course</th>
-                @endif
-                @if(empty($filters['year_level']) && (!isset($groupBy) || $groupBy !== 'year_level') && (!isset($groupBySecondary) || $groupBySecondary !== 'year_level'))
-                <th style="width:50px">Level</th>
-                @endif
-                @if(empty($filters['unified_status']) && (!isset($groupBy) || $groupBy !== 'unified_status') && (!isset($groupBySecondary) || $groupBySecondary !== 'unified_status'))
-                <th style="width:85px">Status</th>
-                @endif
-                @php
-                $isStatusActive = !empty($filters['unified_status']) && (
-                (is_array($filters['unified_status']) && in_array('active', $filters['unified_status']) && count($filters['unified_status']) === 1) ||
-                (!is_array($filters['unified_status']) && $filters['unified_status'] === 'active')
-                );
-                @endphp
-                @if(empty($filters['grant_provision']) && (!isset($groupBy) || $groupBy !== 'grant_provision') && (!isset($groupBySecondary) || $groupBySecondary !== 'grant_provision') && $isStatusActive)
-                <th style="width:85px">Grant Provision</th>
-                @endif
-                <th style="width:70px">
-                    @php
-                    $showingApproved = false;
-                    if (isset($filters['unified_status'])) {
-                    $statusFilter = is_array($filters['unified_status']) ? $filters['unified_status'] : [$filters['unified_status']];
-                    $showingApproved = in_array('approved', $statusFilter) || in_array('active', $statusFilter);
-                    }
-                    @endphp
-                    {{ $showingApproved ? 'Date Approved' : 'Date Filed' }}
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($sortedProfiles as $profile)
-            @php
-            $grant = optional($profile->scholarshipGrant->first());
-            $dateFiled = $grant->date_filed;
-            $dateApproved = $grant->date_approved;
-            $unifiedStatus = $grant->unified_status ?? '-';
-            $grantProvision = $grant->grant_provision ?? '-';
-
-            $statusClass = '';
-            switch($unifiedStatus) {
-            case 'approved':
-            $statusClass = 'status-approved';
-            break;
-            case 'pending':
-            $statusClass = 'status-pending';
-            break;
-            case 'declined':
-            $statusClass = 'status-declined';
-            break;
-            case 'auto_approved':
-            $statusClass = 'status-auto-approved';
-            break;
-            }
-
-            $isJpm = ($canViewJpm ?? false) && ($profile->is_jpm_member || $profile->is_father_jpm || $profile->is_mother_jpm || $profile->is_guardian_jpm);
-            $rowClass = $isJpm ? 'jpm-row' : '';
-
-            $displayDate = (in_array($unifiedStatus, ['approved', 'active']) && $dateApproved) ? $dateApproved : $dateFiled;
-            @endphp
-            <tr class="{{ $rowClass }}">
-                <td style="font-size:10px;min-width:20px;width:20px;color:#555;padding-left:0.05cm;padding-right:0.05cm;">{{ $overallIndex }}</td>
-                <td style="font-size:11px;">{{ $profile->last_name }}, {{ $profile->first_name }} {{ $profile->middle_name }}</td>
-                <td style="font-size:11px;">
-                    @php
-                    $contacts = array_filter([
-                    $profile->contact_no ?? null,
-                    $profile->contact_no_2 ?? null
-                    ]);
-                    @endphp
-                    {{ count($contacts) ? implode(' / ', $contacts) : '-' }}
-                </td>
-                @if(empty($filters['municipality']) && (!isset($groupBy) || $groupBy !== 'municipality') && (!isset($groupBySecondary) || $groupBySecondary !== 'municipality'))
-                <td style="font-size:11px;">{{ strtoupper($profile->municipality ?? '-') }}</td>
-                @endif
-                @if(empty($filters['program']) && (!isset($groupBy) || $groupBy !== 'program') && (!isset($groupBySecondary) || $groupBySecondary !== 'program'))
-                <td style="font-size:11px;">{{ optional($grant->program)->shortname ?? '-' }}</td>
-                @endif
-                @if(empty($filters['school']) && empty($filters['schools']) && (!isset($groupBy) || $groupBy !== 'school') && (!isset($groupBySecondary) || $groupBySecondary !== 'school'))
-                <td style="font-size:11px;">{{ $grant->school->name ?? '-' }}</td>
-                @endif
-                @if(empty($filters['course']) && empty($filters['courses']) && (!isset($groupBy) || $groupBy !== 'course') && (!isset($groupBySecondary) || $groupBySecondary !== 'course'))
-                <td style="font-size:10px;">{{ $grant->course->name ?? '-' }}</td>
-                @endif
-                @if(empty($filters['year_level']) && (!isset($groupBy) || $groupBy !== 'year_level') && (!isset($groupBySecondary) || $groupBySecondary !== 'year_level'))
-                <td style="font-size:11px;">{{ $grant->year_level ?? '-' }}</td>
-                @endif
-                @if(empty($filters['unified_status']) && (!isset($groupBy) || $groupBy !== 'unified_status') && (!isset($groupBySecondary) || $groupBySecondary !== 'unified_status'))
-                <td style="font-size:11px;">
-                    @if($unifiedStatus !== '-')
-                    <span class="status-tag {{ $statusClass }}">{{ ucwords(str_replace('_', ' ', $unifiedStatus)) }}</span>
-                    @else
-                    -
-                    @endif
-                </td>
-                @endif
-                @if(empty($filters['grant_provision']) && (!isset($groupBy) || $groupBy !== 'grant_provision') && (!isset($groupBySecondary) || $groupBySecondary !== 'grant_provision') && $isStatusActive)
-                <td style="font-size:11px;">{{ $grantProvision !== '-' ? ucwords(str_replace('_', ' ', $grantProvision)) : '-' }}</td>
-                @endif
-                <td style="font-size:11px;">
-                    {{ $displayDate ? \Carbon\Carbon::parse($displayDate)->format('m/d/Y') : '-' }}
-                </td>
-            </tr>
-            @php $overallIndex++; @endphp
-            @endforeach
-        </tbody>
-    </table>
-    @endforeach
-    @else
     {{-- Single level grouping --}}
     @php
     $sortedProfiles = $groupProfiles->sortBy(function($profile) {
@@ -822,7 +912,18 @@
     </div>
     @endif
 
-    <table style="@if($groupedProfiles && $groupBy !== 'none') margin-top: 0; @endif @if(!$loop->last) margin-bottom: 20px; @endif table-layout: fixed; width: 100%;">
+    @php
+    $tableStyle = "table-layout: fixed; width: 100%;";
+    if ($groupedProfiles && $groupBy !== 'none') {
+    $tableStyle .= " margin-top: 0;";
+    }
+    if (!$loop->last) {
+    $tableStyle .= " margin-bottom: 20px;";
+    }
+    @endphp
+
+    <!-- Dynamically styled table -->
+    <table style="{{ $tableStyle }}">
         <thead>
             <tr>
                 <th style="min-width:20px;width:20px;color:#555;padding-left:0.05cm;padding-right:0.05cm;">#</th>
@@ -945,7 +1046,6 @@
             @endforeach
         </tbody>
     </table>
-    @endif
     @endforeach
     @endif
 </body>

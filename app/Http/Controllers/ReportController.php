@@ -654,6 +654,7 @@ class ReportController extends Controller
         $reportType = $request->input('report_type', 'list');
         $groupBy = $request->input('group_by', 'none');
         $groupBySecondary = $request->input('group_by_secondary', 'none');
+        $groupByTertiary = $request->input('group_by_tertiary', 'none');
         $summary = null;
 
         if ($reportType === 'summary') {
@@ -666,7 +667,7 @@ class ReportController extends Controller
                 $summary['by_unified_status'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                     return ($grant && $grant->unified_status) ? ucwords(str_replace('_', ' ', $grant->unified_status)) : 'No Status';
-                })->map(function ($group) use ($groupBy, $groupBySecondary) {
+                })->map(function ($group) use ($groupBy, $groupBySecondary, $groupByTertiary) {
                     if ($groupBy === 'unified_status' && $groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
                         $subgroups = $group->groupBy(function ($p) use ($groupBySecondary) {
                             return $this->getGroupValue($p, $groupBySecondary);
@@ -681,6 +682,27 @@ class ReportController extends Controller
                         } else {
                             $subgroups = $subgroups->sortKeys();
                         }
+
+                        // Handle tertiary grouping
+                        if ($groupByTertiary !== 'none' && $groupByTertiary !== $groupBySecondary && $groupByTertiary !== $groupBy) {
+                            return $subgroups->map(function ($tertiary_group) use ($groupByTertiary) {
+                                $tertiary_subgroups = $tertiary_group->groupBy(function ($p) use ($groupByTertiary) {
+                                    return $this->getGroupValue($p, $groupByTertiary);
+                                });
+                                if ($groupByTertiary === 'year_level') {
+                                    $tertiary_subgroups = $tertiary_subgroups->sortBy(function ($count, $name) {
+                                        if (preg_match('/\d+/', $name, $matches)) {
+                                            return (int)$matches[0];
+                                        }
+                                        return PHP_INT_MAX;
+                                    });
+                                } else {
+                                    $tertiary_subgroups = $tertiary_subgroups->sortKeys();
+                                }
+                                return $tertiary_subgroups->map(fn($tertiary) => $tertiary->count());
+                            });
+                        }
+
                         return $subgroups->map(fn($subgroup) => $subgroup->count());
                     }
                     return $group->count();
@@ -692,7 +714,7 @@ class ReportController extends Controller
                 $summary['by_grant_provision'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                     return ($grant && $grant->grant_provision) ? ucwords(str_replace('_', ' ', $grant->grant_provision)) : 'No Provision';
-                })->map(function ($group) use ($groupBy, $groupBySecondary) {
+                })->map(function ($group) use ($groupBy, $groupBySecondary, $groupByTertiary) {
                     if ($groupBy === 'grant_provision' && $groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
                         $subgroups = $group->groupBy(function ($p) use ($groupBySecondary) {
                             return $this->getGroupValue($p, $groupBySecondary);
@@ -707,6 +729,27 @@ class ReportController extends Controller
                         } else {
                             $subgroups = $subgroups->sortKeys();
                         }
+
+                        // Handle tertiary grouping
+                        if ($groupByTertiary !== 'none' && $groupByTertiary !== $groupBySecondary && $groupByTertiary !== $groupBy) {
+                            return $subgroups->map(function ($tertiary_group) use ($groupByTertiary) {
+                                $tertiary_subgroups = $tertiary_group->groupBy(function ($p) use ($groupByTertiary) {
+                                    return $this->getGroupValue($p, $groupByTertiary);
+                                });
+                                if ($groupByTertiary === 'year_level') {
+                                    $tertiary_subgroups = $tertiary_subgroups->sortBy(function ($count, $name) {
+                                        if (preg_match('/\d+/', $name, $matches)) {
+                                            return (int)$matches[0];
+                                        }
+                                        return PHP_INT_MAX;
+                                    });
+                                } else {
+                                    $tertiary_subgroups = $tertiary_subgroups->sortKeys();
+                                }
+                                return $tertiary_subgroups->map(fn($tertiary) => $tertiary->count());
+                            });
+                        }
+
                         return $subgroups->map(fn($subgroup) => $subgroup->count());
                     }
                     return $group->count();
@@ -718,7 +761,7 @@ class ReportController extends Controller
                 $summary['by_program'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                     return ($grant && $grant->program) ? $grant->program->name : 'No Program';
-                })->map(function ($group) use ($groupBy, $groupBySecondary) {
+                })->map(function ($group) use ($groupBy, $groupBySecondary, $groupByTertiary) {
                     if ($groupBy === 'program' && $groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
                         $subgroups = $group->groupBy(function ($p) use ($groupBySecondary) {
                             return $this->getGroupValue($p, $groupBySecondary);
@@ -733,6 +776,27 @@ class ReportController extends Controller
                         } else {
                             $subgroups = $subgroups->sortKeys();
                         }
+
+                        // Handle tertiary grouping
+                        if ($groupByTertiary !== 'none' && $groupByTertiary !== $groupBySecondary && $groupByTertiary !== $groupBy) {
+                            return $subgroups->map(function ($tertiary_group) use ($groupByTertiary) {
+                                $tertiary_subgroups = $tertiary_group->groupBy(function ($p) use ($groupByTertiary) {
+                                    return $this->getGroupValue($p, $groupByTertiary);
+                                });
+                                if ($groupByTertiary === 'year_level') {
+                                    $tertiary_subgroups = $tertiary_subgroups->sortBy(function ($count, $name) {
+                                        if (preg_match('/\d+/', $name, $matches)) {
+                                            return (int)$matches[0];
+                                        }
+                                        return PHP_INT_MAX;
+                                    });
+                                } else {
+                                    $tertiary_subgroups = $tertiary_subgroups->sortKeys();
+                                }
+                                return $tertiary_subgroups->map(fn($tertiary) => $tertiary->count());
+                            });
+                        }
+
                         return $subgroups->map(fn($subgroup) => $subgroup->count());
                     }
                     return $group->count();
@@ -743,7 +807,7 @@ class ReportController extends Controller
             $summary['by_school'] = $profiles->groupBy(function ($p) {
                 $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                 return ($grant && $grant->school) ? $grant->school->name : 'No School';
-            })->map(function ($group) use ($groupBy, $groupBySecondary) {
+            })->map(function ($group) use ($groupBy, $groupBySecondary, $groupByTertiary) {
                 if ($groupBy === 'school' && $groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
                     $subgroups = $group->groupBy(function ($p) use ($groupBySecondary) {
                         return $this->getGroupValue($p, $groupBySecondary);
@@ -758,6 +822,27 @@ class ReportController extends Controller
                     } else {
                         $subgroups = $subgroups->sortKeys();
                     }
+
+                    // Handle tertiary grouping
+                    if ($groupByTertiary !== 'none' && $groupByTertiary !== $groupBySecondary && $groupByTertiary !== $groupBy) {
+                        return $subgroups->map(function ($tertiary_group) use ($groupByTertiary) {
+                            $tertiary_subgroups = $tertiary_group->groupBy(function ($p) use ($groupByTertiary) {
+                                return $this->getGroupValue($p, $groupByTertiary);
+                            });
+                            if ($groupByTertiary === 'year_level') {
+                                $tertiary_subgroups = $tertiary_subgroups->sortBy(function ($count, $name) {
+                                    if (preg_match('/\d+/', $name, $matches)) {
+                                        return (int)$matches[0];
+                                    }
+                                    return PHP_INT_MAX;
+                                });
+                            } else {
+                                $tertiary_subgroups = $tertiary_subgroups->sortKeys();
+                            }
+                            return $tertiary_subgroups->map(fn($tertiary) => $tertiary->count());
+                        });
+                    }
+
                     return $subgroups->map(fn($subgroup) => $subgroup->count());
                 }
                 return $group->count();
@@ -767,7 +852,7 @@ class ReportController extends Controller
             $summary['by_course'] = $profiles->groupBy(function ($p) {
                 $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                 return ($grant && $grant->course) ? $grant->course->name : 'No Course';
-            })->map(function ($group) use ($groupBy, $groupBySecondary) {
+            })->map(function ($group) use ($groupBy, $groupBySecondary, $groupByTertiary) {
                 if ($groupBy === 'course' && $groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
                     $subgroups = $group->groupBy(function ($p) use ($groupBySecondary) {
                         return $this->getGroupValue($p, $groupBySecondary);
@@ -782,6 +867,27 @@ class ReportController extends Controller
                     } else {
                         $subgroups = $subgroups->sortKeys();
                     }
+
+                    // Handle tertiary grouping
+                    if ($groupByTertiary !== 'none' && $groupByTertiary !== $groupBySecondary && $groupByTertiary !== $groupBy) {
+                        return $subgroups->map(function ($tertiary_group) use ($groupByTertiary) {
+                            $tertiary_subgroups = $tertiary_group->groupBy(function ($p) use ($groupByTertiary) {
+                                return $this->getGroupValue($p, $groupByTertiary);
+                            });
+                            if ($groupByTertiary === 'year_level') {
+                                $tertiary_subgroups = $tertiary_subgroups->sortBy(function ($count, $name) {
+                                    if (preg_match('/\d+/', $name, $matches)) {
+                                        return (int)$matches[0];
+                                    }
+                                    return PHP_INT_MAX;
+                                });
+                            } else {
+                                $tertiary_subgroups = $tertiary_subgroups->sortKeys();
+                            }
+                            return $tertiary_subgroups->map(fn($tertiary) => $tertiary->count());
+                        });
+                    }
+
                     return $subgroups->map(fn($subgroup) => $subgroup->count());
                 }
                 return $group->count();
@@ -792,7 +898,7 @@ class ReportController extends Controller
                 $summary['by_year_level'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
                     return ($grant && $grant->year_level) ? $grant->year_level : 'No Year Level';
-                })->map(function ($group) use ($groupBy, $groupBySecondary) {
+                })->map(function ($group) use ($groupBy, $groupBySecondary, $groupByTertiary) {
                     if ($groupBy === 'year_level' && $groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
                         $subgroups = $group->groupBy(function ($p) use ($groupBySecondary) {
                             return $this->getGroupValue($p, $groupBySecondary);
@@ -807,6 +913,27 @@ class ReportController extends Controller
                         } else {
                             $subgroups = $subgroups->sortKeys();
                         }
+
+                        // Handle tertiary grouping
+                        if ($groupByTertiary !== 'none' && $groupByTertiary !== $groupBySecondary && $groupByTertiary !== $groupBy) {
+                            return $subgroups->map(function ($tertiary_group) use ($groupByTertiary) {
+                                $tertiary_subgroups = $tertiary_group->groupBy(function ($p) use ($groupByTertiary) {
+                                    return $this->getGroupValue($p, $groupByTertiary);
+                                });
+                                if ($groupByTertiary === 'year_level') {
+                                    $tertiary_subgroups = $tertiary_subgroups->sortBy(function ($count, $name) {
+                                        if (preg_match('/\d+/', $name, $matches)) {
+                                            return (int)$matches[0];
+                                        }
+                                        return PHP_INT_MAX;
+                                    });
+                                } else {
+                                    $tertiary_subgroups = $tertiary_subgroups->sortKeys();
+                                }
+                                return $tertiary_subgroups->map(fn($tertiary) => $tertiary->count());
+                            });
+                        }
+
                         return $subgroups->map(fn($subgroup) => $subgroup->count());
                     }
                     return $group->count();
