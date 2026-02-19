@@ -28,6 +28,16 @@ export default defineConfig({
 			host: localIP,
 		},
 	},
+	build: {
+		ssrManifest: false,
+		rollupOptions: {
+			output: {
+				manualChunks: undefined,
+			},
+		},
+		chunkSizeWarningLimit: 1000,
+		minify: 'terser',
+	},
 	plugins: [
 		laravel({
 			input: 'resources/js/app.js',

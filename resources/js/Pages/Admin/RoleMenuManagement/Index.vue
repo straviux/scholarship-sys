@@ -224,11 +224,6 @@ async function selectRole(role) {
             // Get full menu objects
             assignedMenus.value = getAllMenusWithChildren(props.menuItems)
                 .filter(menu => menuIds.includes(menu.id));
-
-            // For administrator role, automatically select ALL menus
-            if (role.name.toLowerCase() === 'administrator') {
-                selectedMenuIds.value = getAllMenusWithChildren(props.menuItems).map(m => m.id);
-            }
         }
     } catch (error) {
         toast.add({
@@ -254,20 +249,15 @@ function getAllMenusWithChildren(menus) {
 
 // Toggle menu selection
 function toggleMenuSelection(menu) {
-    // Check if menu is already assigned
-    const isAlreadyAssigned = assignedMenus.value.some(m => m.id === menu.id);
     const isSelected = selectedMenuIds.value.includes(menu.id);
 
-    // If it's already assigned and we're toggling it off, remove it
-    if (isAlreadyAssigned && isSelected) {
+    if (isSelected) {
+        // Remove from selection
         selectedMenuIds.value = selectedMenuIds.value.filter(id => id !== menu.id);
-    }
-    // If it's not assigned and we're toggling it on, add it
-    else if (!isAlreadyAssigned && !isSelected) {
+    } else {
+        // Add to selection
         selectedMenuIds.value.push(menu.id);
     }
-    // If it's already assigned and not in selectedMenuIds, do nothing (already assigned)
-    // If it's not assigned but in selectedMenuIds, it's being selected for assignment
 }
 
 // Assign menus to role
@@ -277,6 +267,14 @@ async function assignMenusToRole() {
     saving.value = true;
 
     try {
+        // Combine newly selected menus with already assigned menus to preserve existing assignments
+        const allMenuIds = [
+            ...new Set([
+                ...selectedMenuIds.value,
+                ...assignedMenus.value.map(m => m.id)
+            ])
+        ];
+
         const response = await fetch(`/admin/role-menus/${selectedRole.value.id}/assign`, {
             method: 'POST',
             headers: {
@@ -284,7 +282,7 @@ async function assignMenusToRole() {
                 'X-CSRF-TOKEN': getCsrfToken(),
             },
             body: JSON.stringify({
-                menu_ids: selectedMenuIds.value,
+                menu_ids: allMenuIds,
             }),
         });
 
