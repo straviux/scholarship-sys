@@ -77,7 +77,7 @@ class VoucherController extends Controller
             'scholar_ids.*.scholarship_record_id' => 'nullable',
             'notes' => 'nullable|string',
             'remarks' => 'nullable|string',
-            'transaction_status' => 'nullable|in:pending,suspended,completed',
+            'transaction_status' => 'nullable|in:on process,suspended,completed',
         ]);
 
         if ($validator->fails()) {
@@ -112,7 +112,7 @@ class VoucherController extends Controller
                 'scholar_ids' => $request->scholar_ids,
                 'notes' => $request->notes,
                 'remarks' => $request->remarks,
-                'transaction_status' => 'pending',
+                'transaction_status' => 'on process',
                 'created_by' => $userId,
             ]);
 
@@ -139,7 +139,13 @@ class VoucherController extends Controller
         }
 
         try {
-            $vouchers = Voucher::with('creator')->latest()->get();
+            // Get all columns from the table
+            $allColumns = \DB::getSchemaBuilder()->getColumnListing('vouchers');
+
+            $vouchers = Voucher::with('creator')
+                ->select($allColumns)
+                ->latest()
+                ->get();
             return response()->json([
                 'data' => $vouchers
             ], 200);
@@ -207,7 +213,10 @@ class VoucherController extends Controller
                 'scholar_ids.*.scholarship_record_id' => 'nullable',
                 'notes' => 'nullable|string',
                 'remarks' => 'nullable|string',
-                'transaction_status' => 'nullable|in:pending,suspended,completed',
+                'transaction_status' => 'nullable|in:on process,suspended,completed',
+                'fiscal_year' => 'nullable|integer',
+                'obr_no' => 'nullable|string',
+                'dv_no' => 'nullable|string',
             ]);
 
             if ($validator->fails()) {
@@ -238,6 +247,9 @@ class VoucherController extends Controller
                 'notes' => $request->notes,
                 'remarks' => $request->remarks,
                 'transaction_status' => $request->transaction_status,
+                'fiscal_year' => $request->fiscal_year,
+                'obr_no' => $request->obr_no,
+                'dv_no' => $request->dv_no,
             ]);
 
             return response()->json([

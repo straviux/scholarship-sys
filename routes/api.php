@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ScholarshipApiController;
 use App\Http\Controllers\Api\VoucherController;
 use App\Http\Controllers\Admin\MaintenanceController;
+use App\Http\Controllers\OBRTrackingController;
 
 // Voucher endpoints - use web middleware for session-based auth
 Route::middleware(['web'])->group(function () {
@@ -30,6 +31,11 @@ Route::middleware(['web'])->group(function () {
 
     // Scholars endpoint for voucher creation
     Route::get('/scholars', [ScholarshipApiController::class, 'getActiveScholars']);
+
+    // OBR Tracking endpoints
+    Route::get('/obr-tracking', [OBRTrackingController::class, 'getOBRTracking']);
+    Route::get('/obr-tracking/search/{obrNo}', [OBRTrackingController::class, 'searchOBR']);
+    Route::get('/obr-tracking-info', [OBRTrackingController::class, 'getOBRTrackingInfo']);
 });
 
 // Other API endpoints

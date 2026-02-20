@@ -32,6 +32,9 @@ class Voucher extends Model
         'obr_type',
         'transaction_status',
         'created_by',
+        'fiscal_year',
+        'obr_no',
+        'dv_no',
     ];
 
     protected $casts = [

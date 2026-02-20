@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\MaintenanceController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\User\ProfileController as UserProfileController;
 use App\Http\Controllers\User\SettingsController;
+use App\Http\Controllers\TestPageController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -68,6 +69,11 @@ Route::middleware(['auth', 'maintenance'])->group(function () {
         ->middleware('check.permission:dashboard.view')
         ->name('dashboard');
     Route::get('/help', [HelpController::class, 'index'])->name('help.index');
+
+    // Test Pages (Development/Testing)
+    Route::get('/test/obr-tracking', [TestPageController::class, 'obrTest'])
+        ->name('test.obr-tracking')
+        ->middleware('check.role:system-report'); // Restrict to admins
 
     // User Profile, Settings, and Activity Routes
     Route::get('/user/profile', [UserProfileController::class, 'show'])->name('user.profile');
