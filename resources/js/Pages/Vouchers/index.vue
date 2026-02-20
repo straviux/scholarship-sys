@@ -592,7 +592,10 @@ const saveStatus = async () => {
             scholar_ids: voucherData.scholar_ids,
             notes: voucherData.notes,
             remarks: statusForm.remarks,
-            transaction_status: statusForm.transaction_status
+            transaction_status: statusForm.transaction_status,
+            fiscal_year: voucherData.fiscal_year || null,
+            obr_no: voucherData.obr_no || null,
+            dv_no: voucherData.dv_no || null
         });
 
         // Update the voucher in the list
