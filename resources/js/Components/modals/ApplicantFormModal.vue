@@ -601,13 +601,13 @@ const emptyFormState = {
 watch(() => props.yakapCategory, (newValue) => {
     // Always update form when prop changes, regardless of current state
     form.yakap_category = newValue || null;
-    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ yakapCategory prop changed to:', newValue, '| Form updated:', form.yakap_category);
+    console.log('⏱️ yakapCategory prop changed to:', newValue, '| Form updated:', form.yakap_category);
 });
 
 watch(() => props.yakapLocation, (newValue) => {
     // Always update form when prop changes, regardless of current state
     form.yakap_location = newValue || '';
-    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ yakapLocation prop changed to:', newValue, '| Form updated:', form.yakap_location);
+    console.log('⏱️ yakapLocation prop changed to:', newValue, '| Form updated:', form.yakap_location);
 });
 
 // Reset form to initial empty state

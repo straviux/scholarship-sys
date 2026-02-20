@@ -97,26 +97,26 @@
                                                 <span class="font-medium text-gray-900">{{ item.year_level || '-'
                                                     }}</span>
                                             </div>
-                                            <span class="text-gray-300">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
+                                            <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Term:</span>
                                                 <span class="font-medium text-gray-900">{{ item.semester || '-'
                                                     }}</span>
                                             </div>
-                                            <span class="text-gray-300">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
+                                            <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">AY:</span>
                                                 <span class="font-medium text-gray-900">{{ item.academic_year || '-'
                                                     }}</span>
                                             </div>
-                                            <span class="text-gray-300">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
+                                            <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Course:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
                                                 }}</span>
                                             </div>
-                                            <span class="text-gray-300">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
+                                            <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">School:</span>
                                                 <span class="font-medium text-gray-900">{{
@@ -139,7 +139,7 @@
                                                 <span class="font-semibold text-gray-900">{{ item.cheques &&
                                                     item.cheques.length > 0 ? item.cheques[0].cheque_no : '-' }}</span>
                                             </div>
-                                            <span class="text-gray-300">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
+                                            <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-600 mr-1">Released:</span>
                                                 <span class="font-medium text-gray-900">{{ item.cheques &&
@@ -343,7 +343,7 @@
                                 <i :class="getFileIcon(attachment.file_type)" class="text-2xl text-blue-600"></i>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">{{ attachment.file_name }}</p>
-                                    <p class="text-xs text-gray-500">{{ attachment.attachment_type }} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {{
+                                    <p class="text-xs text-gray-500">{{ attachment.attachment_type }} • {{
                                         formatFileSize(attachment.file_size) }}</p>
                                 </div>
                             </div>

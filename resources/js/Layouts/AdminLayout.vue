@@ -140,16 +140,16 @@ function scheduleSmartPolling(startTimeStr) {
     const now = new Date();
     const minutesUntilStart = (startTime - now) / (1000 * 60);
 
-    console.log(`ÃƒÂ¢Ã‚ÂÃ‚Â° Maintenance check scheduled. Minutes until start: ${minutesUntilStart.toFixed(1)}`);
+    console.log(`🔵 Maintenance check scheduled. Minutes until start: ${minutesUntilStart.toFixed(1)}`);
 
     // Determine polling interval based on time remaining
     let newInterval;
     if (minutesUntilStart > 10) {
         newInterval = 5 * 60 * 1000; // 5 minutes if more than 10 mins away
-        console.log('ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¢ 5-minute polling (far away)');
+        console.log('[DEBUG] 5-minute polling (far away)');
     } else if (minutesUntilStart > 0) {
         newInterval = 30 * 1000; // 30 seconds if less than 10 mins away
-        console.log('ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¡ 30-second polling (close)');
+        console.log('[DEBUG] 30-second polling (close)');
     } else {
         newInterval = 10 * 1000; // 10 seconds if maintenance is starting
         console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ 10-second polling (starting soon)');
@@ -607,7 +607,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                }}</span>
+                                    }}</span>
                             </SidebarLink>
                         </li>
 
@@ -616,7 +616,7 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                }}</span>
+                                    }}</span>
                             </div>
                         </li>
                     </template>

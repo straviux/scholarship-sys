@@ -83,9 +83,9 @@ const orientation = ref('landscape');
 
 // Options
 const paperSizeOptions = [
-    { label: 'A4 (210 ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â 297 mm)', value: 'A4' },
-    { label: 'Letter (8.5 ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â 11 in)', value: 'Letter' },
-    { label: 'Legal/Long (8.5 ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â 13 in)', value: 'Legal' },
+    { label: 'A4 (210 × 297 mm)', value: 'A4' },
+    { label: 'Letter (8.5 × 11 in)', value: 'Letter' },
+    { label: 'Legal/Long (8.5 × 13 in)', value: 'Legal' },
 ];
 
 const orientationOptions = [

@@ -585,7 +585,7 @@
                                 <i :class="getFileIcon(attachment.file_type)" class="text-2xl text-blue-600"></i>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">{{ attachment.attachment_name }}</p>
-                                    <p class="text-xs text-gray-500">{{ attachment.file_name }} ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ {{
+                                    <p class="text-xs text-gray-500">{{ attachment.file_name }}  –  {{
                                         formatFileSize(attachment.file_size) }}</p>
                                 </div>
                             </div>

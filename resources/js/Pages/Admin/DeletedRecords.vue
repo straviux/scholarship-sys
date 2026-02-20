@@ -46,11 +46,11 @@
 
             <!-- Info banner -->
             <div v-if="activeTab === 'profiles'" class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p class="text-sm text-blue-800"><strong>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ Tip:</strong> Restoring a profile will restore the entire
+                <p class="text-sm text-blue-800"><strong>✓ Tip:</strong> Restoring a profile will restore the entire
                     profile AND all their deleted scholarship grants.</p>
             </div>
             <div v-if="activeTab === 'records'" class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p class="text-sm text-blue-800"><strong>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ Tip:</strong> Restoring a scholarship grant will restore
+                <p class="text-sm text-blue-800"><strong>✓ Tip:</strong> Restoring a scholarship grant will restore
                     only that individual grant record. The applicant profile must exist to restore this.</p>
             </div>
 

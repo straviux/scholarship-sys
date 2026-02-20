@@ -136,9 +136,9 @@
                                             </div>
                                             <div v-if="params.show_sequence_numbers == 1"
                                                 class="text-xs text-gray-500 mt-1">
-                                                ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂProg.<span class="font-semibold">#{{ item._sequenceProgram }}</span> |
+                                                § Prog.<span class="font-semibold">#{{ item._sequenceProgram }}</span> |
                                                 Sch.<span class="font-semibold">#{{ item._sequenceSchool }}</span> |
-                                                Course<span class="font-semibold">#{{ item._sequenceCourse }}</span>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ
+                                                Course<span class="font-semibold">#{{ item._sequenceCourse }}</span> –
                                             </div>
                                         </td>
                                         <td v-if="!params.municipality && params.group_by !== 'municipality'"

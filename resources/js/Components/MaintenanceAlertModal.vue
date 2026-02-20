@@ -49,7 +49,7 @@
                     <!-- Info Message -->
                     <div class="bg-blue-50 border border-blue-200 rounded p-3 mb-6">
                         <p class="text-xs text-blue-800">
-                            ÃƒÂ¢Ã¢â‚¬Å“Ã‹Å“ Maintenance begins in 5 minutes. Please save your work immediately and log out if
+                            ℹ️ Maintenance begins in 5 minutes. Please save your work immediately and log out if
                             possible.
                         </p>
                     </div>

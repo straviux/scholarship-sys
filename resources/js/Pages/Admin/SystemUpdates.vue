@@ -57,7 +57,7 @@
                                         <div class="text-sm text-gray-500">
                                             Created {{ update.created_at }} by {{ update.created_by_name }}
                                         </div>
-                                        <p class="text-sm text-blue-600 mt-2 font-medium">Click to view details ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢</p>
+                                        <p class="text-sm text-blue-600 mt-2 font-medium">Click to view details ➔</p>
                                     </div>
 
                                     <div class="flex items-center space-x-2 ml-4" @click.stop>

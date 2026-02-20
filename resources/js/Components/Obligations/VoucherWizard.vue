@@ -809,7 +809,7 @@ onMounted(async () => {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                             <div class="relative">
-                                <span class="absolute left-3 top-2.5 text-gray-600 font-medium">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â±</span>
+                                <span class="absolute left-3 top-2.5 text-gray-600 font-medium">₱</span>
                                 <input v-model="voucherData.obligations.amount" type="number" placeholder="0.00"
                                     step="0.01"
                                     class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
@@ -952,7 +952,7 @@ onMounted(async () => {
                                     class="flex justify-between">
                                     <span>{{ scholar.first_name }} {{ scholar.last_name }}</span>
                                     <span class="font-semibold">{{ formatCurrency(voucherData.obligations.amount)
-                                        }}</span>
+                                    }}</span>
                                 </li>
                             </ol>
                             <div v-if="voucherData.scholars.length > 1"
@@ -1044,11 +1044,11 @@ onMounted(async () => {
                         class="flex items-center justify-between bg-green-50 p-3 rounded border border-green-200">
                         <div class="flex-1">
                             <div class="text-sm font-medium text-gray-900">{{ scholar.first_name }} {{ scholar.last_name
-                                }}
+                            }}
                             </div>
                             <div class="text-xs text-gray-500">
                                 <span v-if="scholar.year_level" class="uppercase">{{ formatYearLevel(scholar.year_level)
-                                    }}</span>
+                                }}</span>
                                 <span v-else class="text-red-500">---</span>
                                 {{ scholar.course ? ' | ' + scholar.course : '' }}
                             </div>
@@ -1080,7 +1080,7 @@ onMounted(async () => {
                 <div class="flex justify-between pb-3 border-b border-gray-200">
                     <span class="text-gray-600">Particulars:</span>
                     <span class="font-medium text-gray-900">{{ voucherData.obligations.particulars_name || '---'
-                    }}</span>
+                        }}</span>
                 </div>
 
                 <div class="flex justify-between pb-3 border-b border-gray-200">
