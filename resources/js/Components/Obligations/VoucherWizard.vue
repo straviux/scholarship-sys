@@ -768,7 +768,7 @@ onMounted(async () => {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:items-start">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-start">
 
                     <!-- Column 2: Responsibility Center, Particulars, Account Code, Amount -->
                     <div class="space-y-4">
@@ -815,12 +815,8 @@ onMounted(async () => {
                                     class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Column 3: Academic Year, Term -->
-                    <div class="space-y-4">
-                        <!-- Academic Year -->
-                        <div>
+                        <div class="mt-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year (Optional)</label>
                             <AcademicYearSelect v-model="voucherData.disbursements.academic_year" />
                         </div>
@@ -831,6 +827,9 @@ onMounted(async () => {
                             <TermSelect v-model="voucherData.disbursements.semester" />
                         </div>
                     </div>
+
+                    <!-- Column 3: Academic Year, Term -->
+
 
                     <!-- Column 3: Particulars Description (Quill Editor) -->
                     <div>
@@ -858,15 +857,15 @@ onMounted(async () => {
                         <div class="flex items-center">
                             <input id="disbursements" v-model="voucherData.disbursements.type" type="radio"
                                 value="disbursements"
-                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" />
-                            <label for="disbursements" class="ml-3 text-sm font-medium text-gray-900">
+                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 cursor-pointer" />
+                            <label for="disbursements" class="ml-3 text-sm font-medium text-gray-900  cursor-pointer">
                                 Disbursement Voucher
                             </label>
                         </div>
                         <div class="flex items-center">
                             <input id="payroll" v-model="voucherData.disbursements.type" type="radio" value="payroll"
-                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" />
-                            <label for="payroll" class="ml-3 text-sm font-medium text-gray-900">
+                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 cursor-pointer" />
+                            <label for="payroll" class="ml-3 text-sm font-medium text-gray-900 cursor-pointer">
                                 Payroll
                             </label>
                         </div>
@@ -952,7 +951,7 @@ onMounted(async () => {
                                     class="flex justify-between">
                                     <span>{{ scholar.first_name }} {{ scholar.last_name }}</span>
                                     <span class="font-semibold">{{ formatCurrency(voucherData.obligations.amount)
-                                    }}</span>
+                                        }}</span>
                                 </li>
                             </ol>
                             <div v-if="voucherData.scholars.length > 1"
@@ -1030,9 +1029,8 @@ onMounted(async () => {
     </Dialog>
 
     <!-- Obligation Preview Drawer -->
-    <Drawer :visible="isOpen && step !== 5" :header="step === 1 ? 'Selected Scholars' : 'Obligation Preview'"
-        :modal="false" position="right" :closable="false" :dismissableMask="false"
-        :style="{ width: '400px', zIndex: 1000 }">
+    <Drawer :visible="isOpen && step !== 5" :header="step === 1 ? 'Selected Scholars' : 'Preview'" :modal="false"
+        position="right" :closable="false" :dismissableMask="false" :style="{ width: '400px', zIndex: 1000 }">
         <div class="space-y-4">
             <!-- Step 1: Selected Scholars -->
             <div v-if="step === 1" class="space-y-3">
@@ -1044,11 +1042,11 @@ onMounted(async () => {
                         class="flex items-center justify-between bg-green-50 p-3 rounded border border-green-200">
                         <div class="flex-1">
                             <div class="text-sm font-medium text-gray-900">{{ scholar.first_name }} {{ scholar.last_name
-                            }}
+                                }}
                             </div>
                             <div class="text-xs text-gray-500">
                                 <span v-if="scholar.year_level" class="uppercase">{{ formatYearLevel(scholar.year_level)
-                                }}</span>
+                                    }}</span>
                                 <span v-else class="text-red-500">---</span>
                                 {{ scholar.course ? ' | ' + scholar.course : '' }}
                             </div>
@@ -1080,7 +1078,7 @@ onMounted(async () => {
                 <div class="flex justify-between pb-3 border-b border-gray-200">
                     <span class="text-gray-600">Particulars:</span>
                     <span class="font-medium text-gray-900">{{ voucherData.obligations.particulars_name || '---'
-                        }}</span>
+                    }}</span>
                 </div>
 
                 <div class="flex justify-between pb-3 border-b border-gray-200">
@@ -1119,6 +1117,10 @@ onMounted(async () => {
                 <div v-if="voucherData.obligations.particulars_description" class="py-3 border-t border-gray-200">
                     <p class="text-gray-700 font-medium mb-2 text-xs uppercase">Particulars Description</p>
                     <div class="text-gray-700 text-sm" v-html="voucherData.obligations.particulars_description"></div>
+                </div>
+                <div v-if="voucherData.disbursements.explanation" class="py-3 border-t border-gray-200">
+                    <p class="text-gray-700 font-medium mb-2 text-xs uppercase">Disbursement/Payroll Explanation</p>
+                    <div class="text-gray-700 text-sm" v-html="voucherData.disbursements.explanation"></div>
                 </div>
             </div>
         </div>
