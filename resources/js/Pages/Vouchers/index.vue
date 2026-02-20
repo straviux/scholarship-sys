@@ -812,6 +812,12 @@ const saveOBRTracking = async () => {
                     const currentVoucher = await axios.get(`/api/vouchers/${selectedVoucherForOBRTracking.value.id}`);
                     const voucherData = currentVoucher.data.data;
 
+                    // Validate transaction_status - only send if it's a valid value
+                    const validStatuses = ['on process', 'suspended', 'completed'];
+                    const statusToSend = validStatuses.includes(voucherData.transaction_status) 
+                        ? voucherData.transaction_status 
+                        : 'on process'; // Default to 'on process' if invalid
+
                     // PUT with OBR tracking fields
                     await axios.put(`/api/vouchers/${selectedVoucherForOBRTracking.value.id}`, {
                         voucher_type: voucherData.voucher_type,
@@ -828,7 +834,7 @@ const saveOBRTracking = async () => {
                         scholar_ids: voucherData.scholar_ids,
                         notes: voucherData.notes,
                         remarks: voucherData.remarks,
-                        transaction_status: voucherData.transaction_status,
+                        transaction_status: statusToSend,
                         fiscal_year: parseInt(obrTrackingForm.fiscal_year) || null,
                         obr_no: obrTrackingForm.obr_no || null,
                         dv_no: obrTrackingForm.dv_no || null
