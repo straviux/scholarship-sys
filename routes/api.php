@@ -1,11 +1,9 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ScholarshipApiController;
 use App\Http\Controllers\Api\VoucherController;
 use App\Http\Controllers\Admin\MaintenanceController;
-use App\Http\Controllers\OBRTrackingController;
 
 // Voucher endpoints - use web middleware for session-based auth
 Route::middleware(['web'])->group(function () {
@@ -14,10 +12,6 @@ Route::middleware(['web'])->group(function () {
     Route::get('/vouchers/{id}', [VoucherController::class, 'show']);
     Route::put('/vouchers/{id}', [VoucherController::class, 'update']);
     Route::delete('/vouchers/{id}', [VoucherController::class, 'destroy']);
-
-    // OBR Report generation
-    Route::get('/vouchers/{id}/obr-pdf', [VoucherController::class, 'generateOBRPdf']);
-    Route::get('/vouchers/{id}/obr-excel', [VoucherController::class, 'generateOBRExcel']);
 
     // DV (Disbursement Voucher) Report generation
     Route::get('/vouchers/{id}/dv-pdf', [VoucherController::class, 'generateDVPdf']);
@@ -29,13 +23,12 @@ Route::middleware(['web'])->group(function () {
     // List of Scholars PDF generation
     Route::get('/vouchers/{id}/list-of-scholars-pdf', [VoucherController::class, 'generateListOfScholarsPdf']);
 
+    // OBR (Obligatory Disbursement Report) generation
+    Route::get('/vouchers/{id}/obr-pdf', [VoucherController::class, 'generateOBRPdf']);
+    Route::get('/vouchers/{id}/obr-excel', [VoucherController::class, 'generateOBRExcel']);
+
     // Scholars endpoint for voucher creation
     Route::get('/scholars', [ScholarshipApiController::class, 'getActiveScholars']);
-
-    // OBR Tracking endpoints
-    Route::get('/obr-tracking', [OBRTrackingController::class, 'getOBRTracking']);
-    Route::get('/obr-tracking/search/{obrNo}', [OBRTrackingController::class, 'searchOBR']);
-    Route::get('/obr-tracking-info', [OBRTrackingController::class, 'getOBRTrackingInfo']);
 });
 
 // Other API endpoints

@@ -19,24 +19,30 @@ class ScholarshipReportExport implements FromView, ShouldAutoSize, WithEvents, W
     protected $summary;
     protected $reportType;
     protected $canViewJpm;
+    protected $includeRemarks;
+    protected $includeGrantProvision;
 
-    public function __construct($profiles, $summary, $filters, $reportType, $canViewJpm = false)
+    public function __construct($profiles, $summary, $filters, $reportType, $canViewJpm = false, $includeRemarks = false, $includeGrantProvision = true)
     {
         $this->profiles = $profiles;
         $this->filters = $filters;
         $this->summary = $summary;
         $this->reportType = $reportType;
         $this->canViewJpm = $canViewJpm;
+        $this->includeRemarks = $includeRemarks;
+        $this->includeGrantProvision = $includeGrantProvision;
     }
 
     public function view(): View
     {
-        return view('exports.scholarship_report', [
+        return view('exports.scholarship_report_excel', [
             'profiles' => $this->profiles,
             'summary' => $this->summary,
             'reportType' => $this->reportType,
             'filters' => $this->filters,
             'canViewJpm' => $this->canViewJpm,
+            'includeRemarks' => $this->includeRemarks,
+            'includeGrantProvision' => $this->includeGrantProvision,
         ]);
     }
 

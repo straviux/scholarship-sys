@@ -69,7 +69,7 @@ const voucherData = reactive({
     },
     summary: {
         notes: '',
-        transaction_status: 'pending' // pending, suspended, completed
+        transaction_status: 'pending' // pending, suspended, claimed
     }
 });
 
@@ -215,7 +215,11 @@ const getSelectedScholarsList = () => {
 // Update selected count and voucherData
 const updateSelectedCount = () => {
     selectedScholars.value = scholars.value.filter(s => s.selected);
-    voucherData.scholars = selectedScholars.value;
+    // Initialize individual amounts if not already set
+    voucherData.scholars = selectedScholars.value.map(s => ({
+        ...s,
+        individualAmount: s.individualAmount || parseFloat(voucherData.obligations.amount) || 0
+    }));
 };
 
 // Get step title
@@ -312,6 +316,15 @@ const loadEditData = async () => {
             });
             updateSelectedCount();
 
+            // Set individual amounts from loaded data if available
+            scholarIds.forEach(sid => {
+                const scholarId = typeof sid === 'object' ? sid.profile_id : sid;
+                const scholarData = voucherData.scholars.find(s => s.profile_id === scholarId);
+                if (scholarData && typeof sid === 'object' && sid.amount) {
+                    scholarData.individualAmount = parseFloat(sid.amount);
+                }
+            });
+
             // In edit mode, populate filteredScholars with the selected scholars for display
             filteredScholars.value = scholars.value.filter(s => s.selected);
             logger.info(`Selected ${selectedScholars.value.length} scholars in edit mode`);
@@ -368,10 +381,14 @@ const handleSubmit = async () => {
             transaction_status: voucherData.summary.transaction_status
         };
 
-        // For scholar_ids, send as JSON string if it's an array, otherwise as array/object
+        // For scholar_ids, include individual amounts for each scholar
         const selectedScholars = voucherData.scholars.filter(s => s.selected);
         if (selectedScholars.length > 0) {
-            payload.scholar_ids = selectedScholars.map(s => s.profile_id);
+            payload.scholar_ids = selectedScholars.map(s => ({
+                profile_id: s.profile_id,
+                name: `${s.first_name} ${s.last_name}`,
+                amount: parseFloat(s.individualAmount) || 0
+            }));
         } else {
             payload.scholar_ids = [];
         }
@@ -468,6 +485,22 @@ watch(
     }
 );
 
+// Watch for amount changes and auto-populate individual amounts
+watch(
+    () => voucherData.obligations.amount,
+    (newAmount) => {
+        const amount = parseFloat(newAmount) || 0;
+        if (amount > 0 && voucherData.scholars.length > 0) {
+            voucherData.scholars.forEach(scholar => {
+                // Only auto-populate if individual amount is not yet set or is zero
+                if (!scholar.individualAmount || scholar.individualAmount === 0) {
+                    scholar.individualAmount = amount;
+                }
+            });
+        }
+    }
+);
+
 // Get selected scholar for payee
 const selectedPayeeScholar = computed(() => {
     if (voucherData.obligations.payee_type !== 'scholar' || !voucherData.obligations.payee_id) {
@@ -490,11 +523,11 @@ const getPayeeDisplay = () => {
     }
 };
 
-// Calculate total amount (per head * number of scholars)
+// Calculate total amount (sum of all individual amounts)
 const totalAmount = computed(() => {
-    const perHeadAmount = parseFloat(voucherData.obligations.amount || 0);
-    const scholarsCount = voucherData.scholars.length;
-    return perHeadAmount * scholarsCount;
+    return voucherData.scholars.reduce((sum, scholar) => {
+        return sum + (parseFloat(scholar.individualAmount) || 0);
+    }, 0);
 });
 
 // Format amount as currency
@@ -807,7 +840,10 @@ onMounted(async () => {
 
                         <!-- Amount -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Default Amount per
+                                Scholar</label>
+                            <p class="text-xs text-gray-500 mb-2">This amount will be applied to each scholar. You can
+                                customize individual amounts in Step 4.</p>
                             <div class="relative">
                                 <span class="absolute left-3 top-2.5 text-gray-600 font-medium">₱</span>
                                 <input v-model="voucherData.obligations.amount" type="number" placeholder="0.00"
@@ -886,18 +922,35 @@ onMounted(async () => {
 
             <!-- Step 4: List of Scholars -->
             <div v-if="step === 4" class="space-y-4">
+                <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                    <p class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>Set individual amounts for
+                        each scholar. The amounts will be summed up to create the total disbursement.</p>
+                </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-900 mb-3">
                         Selected Scholars ({{ voucherData.scholars.length }})
                     </label>
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4 max-h-48 overflow-y-auto">
-                        <ul class="text-sm text-blue-800 space-y-2">
-                            <li v-for="scholar in voucherData.scholars" :key="scholar.profile_id"
-                                class="flex items-center">
-                                <i class="pi pi-check text-green-600 mr-2 text-xs"></i>
-                                {{ scholar.first_name }} {{ scholar.last_name }}
-                            </li>
-                        </ul>
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+                        <div class="text-sm text-blue-800 space-y-3">
+                            <div v-for="scholar in voucherData.scholars" :key="scholar.profile_id"
+                                class="flex items-center justify-between p-3 bg-white rounded border border-blue-200">
+                                <div class="flex items-center flex-1">
+                                    <i class="pi pi-check text-green-600 mr-3 text-xs"></i>
+                                    <span class="font-medium">{{ scholar.first_name }} {{ scholar.last_name }}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gray-600 text-sm">₱</span>
+                                    <input v-model.number="scholar.individualAmount" type="number" placeholder="0.00"
+                                        step="0.01"
+                                        class="w-24 px-2 py-1 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="voucherData.scholars.length > 1"
+                            class="mt-4 pt-4 border-t border-blue-200 flex justify-between items-center">
+                            <span class="font-semibold text-blue-900">Total Amount:</span>
+                            <span class="text-lg font-bold text-blue-600">{{ formatCurrency(totalAmount) }}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -950,13 +1003,14 @@ onMounted(async () => {
                                 <li v-for="(scholar, i) in voucherData.scholars" :key="scholar.profile_id"
                                     class="flex justify-between">
                                     <span>{{ scholar.first_name }} {{ scholar.last_name }}</span>
-                                    <span class="font-semibold">{{ formatCurrency(voucherData.obligations.amount)
-                                        }}</span>
+                                    <span class="font-semibold">{{ formatCurrency(scholar.individualAmount || 0)
+                                    }}</span>
                                 </li>
                             </ol>
-                            <div v-if="voucherData.scholars.length > 1"
+                            <div
                                 class="flex justify-between mt-2 pt-2 border-t border-gray-300 text-gray-900 font-bold">
-                                <span>Total Amount ({{ voucherData.scholars.length }} scholars):</span>
+                                <span>Total Amount ({{ voucherData.scholars.length }} scholar{{
+                                    voucherData.scholars.length > 1 ? 's' : '' }}):</span>
                                 <span class="text-blue-600 text-lg">{{ formatCurrency(totalAmount) }}</span>
                             </div>
                         </div>
@@ -1042,11 +1096,11 @@ onMounted(async () => {
                         class="flex items-center justify-between bg-green-50 p-3 rounded border border-green-200">
                         <div class="flex-1">
                             <div class="text-sm font-medium text-gray-900">{{ scholar.first_name }} {{ scholar.last_name
-                                }}
+                            }}
                             </div>
                             <div class="text-xs text-gray-500">
                                 <span v-if="scholar.year_level" class="uppercase">{{ formatYearLevel(scholar.year_level)
-                                    }}</span>
+                                }}</span>
                                 <span v-else class="text-red-500">---</span>
                                 {{ scholar.course ? ' | ' + scholar.course : '' }}
                             </div>
@@ -1078,7 +1132,7 @@ onMounted(async () => {
                 <div class="flex justify-between pb-3 border-b border-gray-200">
                     <span class="text-gray-600">Particulars:</span>
                     <span class="font-medium text-gray-900">{{ voucherData.obligations.particulars_name || '---'
-                    }}</span>
+                        }}</span>
                 </div>
 
                 <div class="flex justify-between pb-3 border-b border-gray-200">

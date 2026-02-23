@@ -538,7 +538,9 @@ class ReportController extends Controller
     public function generateScholarshipPdf(Request $request)
     {
         // Build query based on filters
-        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant']);
+        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) {
+            $q->with(['scholarshipStatus']);
+        }]);
 
         // Filter by unified status (pending, approved, denied, active, completed)
         if ($request->filled('unified_status')) {
@@ -989,8 +991,10 @@ class ReportController extends Controller
         }
 
         $showSequenceNumbers = $request->filled('show_sequence_numbers') && in_array($request->show_sequence_numbers, [1, '1', true, 'true'], true);
+        $includeRemarks = $request->filled('include_remarks') && in_array($request->include_remarks, [1, '1', true, 'true'], true);
+        $includeGrantProvision = $request->filled('include_grant_provision') && in_array($request->include_grant_provision, [1, '1', true, 'true'], true);
 
-        $html = View::make('scholarship_report', [
+        $html = View::make('scholarship_report_pdf', [
             'profiles' => $profiles,
             'groupedProfiles' => $groupedProfiles,
             'groupBy' => $groupBy,
@@ -1000,6 +1004,8 @@ class ReportController extends Controller
             'filters' => $filters,
             'canViewJpm' => $canViewJpm,
             'showSequenceNumbers' => $showSequenceNumbers,
+            'includeRemarks' => $includeRemarks,
+            'includeGrantProvision' => $includeGrantProvision,
         ])->render();
 
         $paperSize = $request->get('paper_size', 'A4');
@@ -1049,7 +1055,9 @@ class ReportController extends Controller
     public function generateScholarshipExcel(Request $request)
     {
         // Build query based on filters
-        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant']);
+        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) {
+            $q->with(['scholarshipStatus']);
+        }]);
 
         // Filter by unified status
         if ($request->filled('unified_status')) {
@@ -1237,11 +1245,15 @@ class ReportController extends Controller
         $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm;
         $canViewJpm = $request->user() && $request->user()->can('jpm.view') && !$showJpmOnly && !$hideJpm;
 
+        // Include remarks and grant provision
+        $includeRemarks = $request->filled('include_remarks') && in_array($request->include_remarks, [1, '1', true, 'true'], true);
+        $includeGrantProvision = $request->filled('include_grant_provision') && in_array($request->include_grant_provision, [1, '1', true, 'true'], true);
+
         // Generate filename with current date and time
         $currentDateTime = \Carbon\Carbon::now()->format('Y-m-d_H-i-s');
         $filename = "scholarship_report_{$currentDateTime}.xlsx";
 
-        return Excel::download(new ScholarshipReportExport($profiles, $summary, $filters, $reportType, $canViewJpm), $filename);
+        return Excel::download(new ScholarshipReportExport($profiles, $summary, $filters, $reportType, $canViewJpm, $includeRemarks, $includeGrantProvision), $filename);
     }
 
     /**
@@ -1267,6 +1279,8 @@ class ReportController extends Controller
 
         $paperSize = $request->input('paper_size', 'A4');
         $orientation = $request->input('orientation', 'landscape');
+        $includeRemarks = filter_var($request->input('include_remarks', false), FILTER_VALIDATE_BOOLEAN);
+        $includeGrantProvision = filter_var($request->input('include_grant_provision', true), FILTER_VALIDATE_BOOLEAN);
 
         // Build filters array (empty for selected applicants)
         $filters = [];
@@ -1286,6 +1300,8 @@ class ReportController extends Controller
             'canViewJpm' => $canViewJpm,
             'paperSize' => $paperSize,
             'orientation' => $orientation,
+            'includeRemarks' => $includeRemarks,
+            'includeGrantProvision' => $includeGrantProvision,
         ])->render();
 
         try {
@@ -1356,22 +1372,26 @@ class ReportController extends Controller
         // Check if user has permission to view JPM highlighting
         $canViewJpm = $request->user() && $request->user()->can('jpm.view');
 
+        // Get toggle parameters
+        $includeRemarks = filter_var($request->input('include_remarks', false), FILTER_VALIDATE_BOOLEAN);
+        $includeGrantProvision = filter_var($request->input('include_grant_provision', true), FILTER_VALIDATE_BOOLEAN);
+
         $currentDateTime = \Carbon\Carbon::now()->format('Y-m-d_H-i-s');
         $filename = "selected-applicants_{$currentDateTime}.xlsx";
 
         // Store the file temporarily
         $path = 'exports/' . $filename;
         Excel::store(
-            new ScholarshipReportExport($profiles, null, $filters, $reportType, $canViewJpm),
+            new ScholarshipReportExport($profiles, null, $filters, $reportType, $canViewJpm, $includeRemarks, $includeGrantProvision),
             $path,
             'local'
         );
 
         // Read and return the file with inline disposition (view in browser)
-        $file = \Storage::disk('local')->get($path);
+        $file = Storage::disk('local')->get($path);
 
         // Clean up the temporary file
-        \Storage::disk('local')->delete($path);
+        Storage::disk('local')->delete($path);
 
         return response($file)
             ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')

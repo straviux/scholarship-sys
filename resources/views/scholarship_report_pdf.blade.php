@@ -81,7 +81,19 @@
             margin-bottom: 0.4em;
         }
 
-        /* Minimalist Filter Badge */
+        .table-fixed {
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .table-no-top-margin {
+            margin-top: 0;
+        }
+
+        .table-bottom-margin {
+            margin-bottom: 20px;
+        }
+
         .filters {
             margin-bottom: 0.2rem;
             padding: 0.2rem 0.3rem;
@@ -153,204 +165,6 @@
             color: #1e40af;
         }
 
-        /* Header and layout classes */
-        .report-header-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-        }
-
-        .report-logo {
-            height: 72px;
-            width: auto;
-        }
-
-        .report-logo-left {
-            margin-left: 0.5rem;
-        }
-
-        .report-logo-right {
-            margin-right: 0.5rem;
-        }
-
-        .report-center {
-            flex: 1;
-            text-align: center;
-        }
-
-        .report-header-title {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 500;
-            color: #333;
-        }
-
-        .filters-extended {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-            align-items: center;
-            margin-bottom: 0.5rem;
-            font-size: 11px;
-            color: #444;
-        }
-
-        .filter-separator {
-            color: #d1d5db;
-        }
-
-        .generated-timestamp {
-            font-size: 10px;
-            color: #555;
-            margin-bottom: 1rem;
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-        }
-
-        .report-header-title-h1 {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 300;
-            color: #111827;
-        }
-
-        .record-count {
-            margin: 4px 0 0 0;
-            font-size: 13px;
-            color: #444;
-        }
-
-        .group-header-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-        }
-
-        .group-name {
-            margin: 0;
-            font-size: 15px;
-            font-weight: 500;
-            color: #111827;
-        }
-
-        .group-count {
-            font-size: 12px;
-            color: #6b7280;
-        }
-
-        /* Summary table row styles */
-        .summary-row-header {
-            font-weight: 600;
-            background: #f3f4f6;
-        }
-
-        .summary-row-large {
-            font-size: 1.15em;
-        }
-
-        .summary-row-indented-1 {
-            padding-left: 1.5rem;
-        }
-
-        .summary-cell-indented-1 {
-            padding-left: 2rem;
-        }
-
-        .summary-row-indented-2 {
-            padding-left: 2.5rem;
-        }
-
-        .summary-cell-indented-2 {
-            padding-left: 3.5rem;
-        }
-
-        /* Table cell styles */
-        .table-number {
-            font-size: 10px;
-            min-width: 20px;
-            width: 20px;
-            color: #555;
-            padding-left: 0.05cm;
-            padding-right: 0.05cm;
-        }
-
-        .table-name {
-            font-size: 11px;
-        }
-
-        .table-small {
-            font-size: 10px;
-        }
-
-        .table-fixed {
-            table-layout: fixed;
-            width: 100%;
-        }
-
-        .table-fixed-no-margin {
-            table-layout: fixed;
-            width: 100%;
-            margin-top: 0;
-        }
-
-        /* Columm widths */
-        .col-number {
-            min-width: 20px;
-            width: 20px;
-            color: #555;
-            padding-left: 0.05cm;
-            padding-right: 0.05cm;
-        }
-
-        .col-name {
-            width: 200px;
-        }
-
-        .col-contact {
-            width: 80px;
-        }
-
-        .col-municipality {
-            width: 110px;
-        }
-
-        .col-program {
-            width: 85px;
-        }
-
-        .col-school {
-            width: 150px;
-        }
-
-        .col-course {
-            width: 130px;
-        }
-
-        .col-level {
-            width: 50px;
-        }
-
-        .col-status {
-            width: 85px;
-        }
-
-        .col-date {
-            width: 70px;
-        }
-
-        .col-grant {
-            width: 100px;
-        }
-
-        .col-remarks {
-            width: 150px;
-        }
-
         @media print {
             body {
                 padding-bottom: 0.2cm;
@@ -410,21 +224,21 @@
     $pgpLogoBase64 = base64_encode($pgpLogoSvg);
     $yakapLogoBase64 = base64_encode($yakapLogoSvg);
     ?>
-    <div class="report-header-container">
-        <img src="data:image/svg+xml;base64,<?php echo $pgpLogoBase64; ?>" alt="PGP Logo" class="report-logo report-logo-left">
-        <div class="report-center">
-            <h1 class="report-header-title">Republic of the Philippines</h1>
-            <h1 class="report-header-title">Provincial Government of Palawan</h1>
-            <h1 class="report-header-title">Akbay sa Mag-Aaral Yaman ng Kinabukasan</h1>
-            <h1 class="report-header-title">(Programang Pang-Edukasyon para sa Palaweño)</h1>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+        <img src="data:image/svg+xml;base64,<?php echo $pgpLogoBase64; ?>" alt="PGP Logo" style="height: 72px; width: auto; margin-left: 0.5rem;">
+        <div style="flex: 1; text-align: center;">
+            <h1 style="margin:0; font-size:14px; font-weight:500; color:#333;">Republic of the Philippines</h1>
+            <h1 style="margin:0; font-size:14px; font-weight:500; color:#333;">Provincial Government of Palawan</h1>
+            <h1 style="margin:0; font-size:14px; font-weight:600; color:#333;">Akbay sa Mag-Aaral Yaman ng Kinabukasan</h1>
+            <h1 style="margin:0; font-size:14px; font-weight:600; color:#333;">(Programang Pang-Edukasyon para sa Palaweño)</h1>
         </div>
-        <img src="data:image/svg+xml;base64,<?php echo $yakapLogoBase64; ?>" alt="Yakap Logo" class="report-logo report-logo-right">
+        <img src="data:image/svg+xml;base64,<?php echo $yakapLogoBase64; ?>" alt="Yakap Logo" style="height: 72px; width: auto; margin-right: 0.5rem;">
     </div>
-    <div class="filters filters-extended">
+    <div class="filters" style="display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-bottom: 0.5rem; font-size: 11px; color: #444;">
         <span>{{ ucfirst($reportType) }}</span>
         @foreach($filters as $key => $value)
         @if($value && !in_array($key, ['paper_size', 'orientation', 'date_filed']))
-        <span class="filter-separator">•</span>
+        <span style="color:#d1d5db;">•</span>
         @if($key === 'unified_status')
         <!-- Display unified status from request parameter -->
         <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }} Status</span>
@@ -460,22 +274,22 @@
         }
         @endphp
         @if(isset($oldestDate) && isset($latestDate))
-        <span class="filter-separator">•</span>
+        <span style="color:#d1d5db;">•</span>
         <span>{{ $oldestDate }} to {{ $latestDate }}</span>
         @endif
     </div>
-    <div class="generated-timestamp">
+    <div style="font-size: 10px; color: #555; margin-bottom: 1rem;">
         Generated: {{ now()->timezone('Asia/Manila')->format('F d, Y h:i A') }}
     </div>
 
     <!-- Minimalist Report Header -->
     <div class="report-header">
-        <div class="header-content">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
             <div>
-                <h1 class="report-header-title-h1">
+                <h1 style="margin: 0; font-size: 14px; font-weight: 300; color: #111827;">
                     {{ $reportType === 'summary' ? 'Summary Report' : 'Scholarship Report' }}
                 </h1>
-                <p class="record-count">
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: #444;">
                     {{ $profiles->count() }} records
                 </p>
             </div>
@@ -504,6 +318,7 @@
             </tr>
         </thead>
         <tbody>
+            @php
             $statusData = collect($summary['by_unified_status'])->filter(function($count, $name) {
             return $name !== 'No Status';
             })->sortKeys();
@@ -534,9 +349,9 @@
             }
             }
             @endphp
-            <tr class="summary-row-header">
+            <tr style="font-weight: 600; background: #f3f4f6;">
                 <td>{{ $statusIndex++ }}. {{ $name }}</td>
-                <td class="summary-row-large">{{ $statusTotal }}</td>
+                <td style="font-size: 1.15em;">{{ $statusTotal }}</td>
                 <td>{{ number_format(($statusTotal / $total) * 100, 1) }}%</td>
             </tr>
             @php $subIndex = 1; @endphp
@@ -549,23 +364,23 @@
             $secondaryTotal += $tertiaryCount;
             }
             @endphp
-            <tr class="summary-row-indented-1">
-                <td class="summary-cell-indented-1">{{ $subName }} ({{ $secondaryTotal }})</td>
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
                 <td></td>
                 <td></td>
             </tr>
             @php $tertiaryIndex = 1; @endphp
             @foreach($subCount as $tertiaryName => $tertiaryCount)
-            <tr class="summary-row-indented-2">
-                <td class="summary-cell-indented-2">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+            <tr style="padding-left: 2.5rem;">
+                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
                 <td></td>
                 <td></td>
             </tr>
             @endforeach
             @else
             {{-- Secondary level (two-level nesting) --}}
-            <tr class="summary-row-indented-1">
-                <td class="summary-cell-indented-1">{{ $subName }} ({{ $subCount }})</td>
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -628,9 +443,9 @@
             }
             }
             @endphp
-            <tr class="summary-row-header">
+            <tr style="font-weight: 600; background: #f3f4f6;">
                 <td>{{ $grantIndex++ }}. {{ $name }}</td>
-                <td class="summary-row-large">{{ $grantTotal }}</td>
+                <td style="font-size: 1.15em;">{{ $grantTotal }}</td>
                 <td>{{ number_format(($grantTotal / $total) * 100, 1) }}%</td>
             </tr>
             @php $subIndex = 1; @endphp
@@ -643,23 +458,23 @@
             $secondaryTotal += $tertiaryCount;
             }
             @endphp
-            <tr class="summary-row-indented-1">
-                <td class="summary-cell-indented-1">{{ $subName }} ({{ $secondaryTotal }})</td>
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
                 <td></td>
                 <td></td>
             </tr>
             @php $tertiaryIndex = 1; @endphp
             @foreach($subCount as $tertiaryName => $tertiaryCount)
-            <tr class="summary-row-indented-2">
-                <td class="summary-cell-indented-2">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+            <tr style="padding-left: 2.5rem;">
+                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
                 <td></td>
                 <td></td>
             </tr>
             @endforeach
             @else
             {{-- Secondary level (two-level nesting) --}}
-            <tr class="summary-row-indented-1">
-                <td class="summary-cell-indented-1">{{ $subName }} ({{ $subCount }})</td>
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -722,9 +537,9 @@
             }
             }
             @endphp
-            <tr class="summary-row-header">
+            <tr style="font-weight: 600; background: #f3f4f6;">
                 <td>{{ $programIndex++ }}. {{ $name }}</td>
-                <td class="summary-row-large">{{ $programTotal }}</td>
+                <td style="font-size: 1.15em;">{{ $programTotal }}</td>
                 <td>{{ number_format(($programTotal / $total) * 100, 1) }}%</td>
             </tr>
             @php $subIndex = 1; @endphp
@@ -737,23 +552,23 @@
             $secondaryTotal += $tertiaryCount;
             }
             @endphp
-            <tr class="summary-row-indented-1">
-                <td class="summary-cell-indented-1">{{ $subName }} ({{ $secondaryTotal }})</td>
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
                 <td></td>
                 <td></td>
             </tr>
             @php $tertiaryIndex = 1; @endphp
             @foreach($subCount as $tertiaryName => $tertiaryCount)
-            <tr class="summary-row-indented-2">
-                <td class="summary-cell-indented-2">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+            <tr style="padding-left: 2.5rem;">
+                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
                 <td></td>
                 <td></td>
             </tr>
             @endforeach
             @else
             {{-- Secondary level (two-level nesting) --}}
-            <tr class="summary-row-indented-1">
-                <td class="summary-cell-indented-1">{{ $subName }} ({{ $subCount }})</td>
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -816,9 +631,9 @@
             }
             }
             @endphp
-            <tr class="summary-row-header">
+            <tr style="font-weight: 600; background: #f3f4f6;">
                 <td>{{ $schoolIndex++ }}. {{ $name }}</td>
-                <td class="summary-row-large">{{ $schoolTotal }}</td>
+                <td style="font-size: 1.15em;">{{ $schoolTotal }}</td>
                 <td>{{ number_format(($schoolTotal / $total) * 100, 1) }}%</td>
             </tr>
             @php $subIndex = 1; @endphp
@@ -831,23 +646,23 @@
             $secondaryTotal += $tertiaryCount;
             }
             @endphp
-            <tr class="summary-row-indented-1">
-                <td class="summary-cell-indented-1">{{ $subName }} ({{ $secondaryTotal }})</td>
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
                 <td></td>
                 <td></td>
             </tr>
             @php $tertiaryIndex = 1; @endphp
             @foreach($subCount as $tertiaryName => $tertiaryCount)
-            <tr class="summary-row-indented-2">
-                <td class="summary-cell-indented-2">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+            <tr style="padding-left: 2.5rem;">
+                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
                 <td></td>
                 <td></td>
             </tr>
             @endforeach
             @else
             {{-- Secondary level (two-level nesting) --}}
-            <tr class="summary-row-indented-1">
-                <td class="summary-cell-indented-1">{{ $subName }} ({{ $subCount }})</td>
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -910,9 +725,9 @@
             }
             }
             @endphp
-            <tr class="summary-row-header">
+            <tr style="font-weight: 600; background: #f3f4f6;">
                 <td>{{ $courseIndex++ }}. {{ $name }}</td>
-                <td class="summary-row-large">{{ $courseTotal }}</td>
+                <td style="font-size: 1.15em;">{{ $courseTotal }}</td>
                 <td>{{ number_format(($courseTotal / $total) * 100, 1) }}%</td>
             </tr>
             @php $subIndex = 1; @endphp
@@ -925,23 +740,23 @@
             $secondaryTotal += $tertiaryCount;
             }
             @endphp
-            <tr class="summary-row-indented-1">
-                <td class="summary-cell-indented-1">{{ $subName }} ({{ $secondaryTotal }})</td>
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
                 <td></td>
                 <td></td>
             </tr>
             @php $tertiaryIndex = 1; @endphp
             @foreach($subCount as $tertiaryName => $tertiaryCount)
-            <tr class="summary-row-indented-2">
-                <td class="summary-cell-indented-2">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+            <tr style="padding-left: 2.5rem;">
+                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
                 <td></td>
                 <td></td>
             </tr>
             @endforeach
             @else
             {{-- Secondary level (two-level nesting) --}}
-            <tr class="summary-row-indented-1">
-                <td class="summary-cell-indented-1">{{ $subName }} ({{ $subCount }})</td>
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -1013,9 +828,9 @@
             }
             }
             @endphp
-            <tr class="summary-row-header">
+            <tr style="font-weight: 600; background: #f3f4f6;">
                 <td>{{ $yearLevelIndex++ }}. {{ $name }}</td>
-                <td class="summary-row-large">{{ $yearLevelTotal }}</td>
+                <td style="font-size: 1.15em;">{{ $yearLevelTotal }}</td>
                 <td>{{ number_format(($yearLevelTotal / $total) * 100, 1) }}%</td>
             </tr>
             @php $subIndex = 1; @endphp
@@ -1028,23 +843,23 @@
             $secondaryTotal += $tertiaryCount;
             }
             @endphp
-            <tr class="summary-row-indented-1">
-                <td class="summary-cell-indented-1">{{ $subName }} ({{ $secondaryTotal }})</td>
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
                 <td></td>
                 <td></td>
             </tr>
             @php $tertiaryIndex = 1; @endphp
             @foreach($subCount as $tertiaryName => $tertiaryCount)
-            <tr class="summary-row-indented-2">
-                <td class="summary-cell-indented-2">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+            <tr style="padding-left: 2.5rem;">
+                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
                 <td></td>
                 <td></td>
             </tr>
             @endforeach
             @else
             {{-- Secondary level (two-level nesting) --}}
-            <tr class="summary-row-indented-1">
-                <td class="summary-cell-indented-1">{{ $subName }} ({{ $subCount }})</td>
+            <tr style="padding-left: 1.5rem;">
+                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -1099,53 +914,43 @@
 
     @if($groupedProfiles && $groupBy !== 'none')
     <div class="school-header">
-        <div class="group-header-flex">
-            <h2 class="group-name">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <h2 style="margin: 0; font-size: 15px; font-weight: 500; color: #111827;">
                 {{ strtoupper($groupName) }}
             </h2>
-            <span class="group-count">
+            <span style="font-size: 12px; color: #6b7280;">
                 {{ $groupCount }} records
             </span>
         </div>
     </div>
     @endif
 
-    @php
-    $tableStyle = "table-layout: fixed; width: 100%;";
-    if ($groupedProfiles && $groupBy !== 'none') {
-    $tableStyle .= " margin-top: 0;";
-    }
-    if (!$loop->last) {
-    $tableStyle .= " margin-bottom: 20px;";
-    }
-    @endphp
-
     <!-- Dynamically styled table -->
-    <table class="table-fixed">
+    <table @class(['table-fixed', 'table-no-top-margin'=> ($groupedProfiles ?? false) && ($groupBy ?? 'none') !== 'none', 'table-bottom-margin' => !$loop->last])>
         <thead>
             <tr>
-                <th class="col-number">#</th>
-                <th class="col-name">Name</th>
-                <th class="col-contact">Contact No(s).</th>
+                <th style="min-width:20px;width:20px;color:#555;padding-left:0.05cm;padding-right:0.05cm;">#</th>
+                <th style="width:200px">Name</th>
+                <th style="width:80px">Contact No(s).</th>
                 @if(empty($filters['municipality']) && (!isset($groupBy) || $groupBy !== 'municipality'))
-                <th class="col-municipality">Municipality</th>
+                <th style="width:110px">Municipality</th>
                 @endif
                 @if(empty($filters['program']) && (!isset($groupBy) || $groupBy !== 'program'))
-                <th class="col-program">Program</th>
+                <th style="width:85px">Program</th>
                 @endif
                 @if(empty($filters['school']) && (!isset($groupBy) || $groupBy !== 'school'))
-                <th class="col-school">School</th>
+                <th style="width:150px">School</th>
                 @endif
                 @if(empty($filters['course']) && empty($filters['courses']) && (!isset($groupBy) || $groupBy !== 'course'))
-                <th class="col-course">Course</th>
+                <th style="width:130px">Course</th>
                 @endif
                 @if(empty($filters['year_level']) && (!isset($groupBy) || $groupBy !== 'year_level'))
-                <th class="col-level">Level</th>
+                <th style="width:50px">Level</th>
                 @endif
                 @if(empty($filters['unified_status']) && (!isset($groupBy) || $groupBy !== 'unified_status'))
-                <th class="col-status">Status</th>
+                <th style="width:85px">Status</th>
                 @endif
-                <th class="col-date">
+                <th style="width:70px">
                     @php
                     $showingApproved = false;
                     if (isset($filters['unified_status'])) {
@@ -1156,10 +961,10 @@
                     {{ $showingApproved ? 'Date Approved' : 'Date Filed' }}
                 </th>
                 @if($includeGrantProvision ?? false)
-                <th class="col-grant">Grant Provision</th>
+                <th style="width:100px">Grant Provision</th>
                 @endif
                 @if($includeRemarks ?? false)
-                <th class="col-remarks">Remarks</th>
+                <th style="width:150px">Remarks</th>
                 @endif
             </tr>
         </thead>
@@ -1196,9 +1001,9 @@
             $displayDate = (in_array($unifiedStatus, ['approved', 'active']) && $dateApproved) ? $dateApproved : $dateFiled;
             @endphp
             <tr class="{{ $rowClass }}">
-                <td class="table-number">{{ $overallIndex }}</td>
-                <td class="table-name">{{ $profile->last_name }}, {{ $profile->first_name }} {{ $profile->middle_name }}</td>
-                <td class="table-name">
+                <td style="font-size:10px;min-width:20px;width:20px;color:#555;padding-left:0.05cm;padding-right:0.05cm;">{{ $overallIndex }}</td>
+                <td style="font-size:11px;">{{ $profile->last_name }}, {{ $profile->first_name }} {{ $profile->middle_name }}</td>
+                <td style="font-size:11px;">
                     @php
                     $contacts = array_filter([
                     $profile->contact_no ?? null,
@@ -1208,22 +1013,22 @@
                     {{ count($contacts) ? implode(' / ', $contacts) : '-' }}
                 </td>
                 @if(empty($filters['municipality']) && (!isset($groupBy) || $groupBy !== 'municipality'))
-                <td class="table-name">{{ strtoupper($profile->municipality ?? '-') }}</td>
+                <td style="font-size:11px;">{{ strtoupper($profile->municipality ?? '-') }}</td>
                 @endif
                 @if(empty($filters['program']) && (!isset($groupBy) || $groupBy !== 'program'))
-                <td class="table-name">{{ optional($grant->program)->shortname ?? '-' }}</td>
+                <td style="font-size:11px;">{{ optional($grant->program)->shortname ?? '-' }}</td>
                 @endif
                 @if(empty($filters['school']) && empty($filters['schools']) && (!isset($groupBy) || $groupBy !== 'school'))
-                <td class="table-name">{{ $grant->school->name ?? '-' }}</td>
+                <td style="font-size:11px;">{{ $grant->school->name ?? '-' }}</td>
                 @endif
                 @if(empty($filters['course']) && empty($filters['courses']) && (!isset($groupBy) || $groupBy !== 'course'))
-                <td class="table-small">{{ $grant->course->name ?? '-' }}</td>
+                <td style="font-size:10px;">{{ $grant->course->name ?? '-' }}</td>
                 @endif
                 @if(empty($filters['year_level']) && (!isset($groupBy) || $groupBy !== 'year_level'))
-                <td class="table-name">{{ $grant->year_level ?? '-' }}</td>
+                <td style="font-size:11px;">{{ $grant->year_level ?? '-' }}</td>
                 @endif
                 @if(empty($filters['unified_status']) && (!isset($groupBy) || $groupBy !== 'unified_status'))
-                <td class="table-name">
+                <td style="font-size:11px;">
                     @if($unifiedStatus !== '-')
                     <span class="status-tag {{ $statusClass }}">{{ ucwords(str_replace('_', ' ', $unifiedStatus)) }}</span>
                     @else
@@ -1231,14 +1036,14 @@
                     @endif
                 </td>
                 @endif
-                <td class="table-name">
+                <td style="font-size:11px;">
                     {{ $displayDate ? \Carbon\Carbon::parse($displayDate)->format('m/d/Y') : '-' }}
                 </td>
                 @if($includeGrantProvision ?? false)
-                <td class="table-name">{{ $grantProvision !== '-' ? ucwords(str_replace('_', ' ', $grantProvision)) : '-' }}</td>
+                <td style="font-size:11px;">{{ $grantProvision !== '-' ? ucwords(str_replace('_', ' ', $grantProvision)) : '-' }}</td>
                 @endif
                 @if($includeRemarks ?? false)
-                <td class="table-name">{{ $remarks }}</td>
+                <td style="font-size:11px;">{{ $remarks }}</td>
                 @endif
             </tr>
             @php $overallIndex++; @endphp

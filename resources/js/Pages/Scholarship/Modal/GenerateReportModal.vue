@@ -136,6 +136,26 @@
                         </p>
                     </div>
 
+                    <!-- Include Remarks Toggle -->
+                    <div class="mb-4 py-3 px-3 bg-gray-50 rounded border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-sm font-medium text-gray-700">Include Remarks</label>
+                            <ToggleSwitch v-model="includeRemarks" />
+                        </div>
+                        <p class="text-xs text-gray-500">Display remarks/notes for each scholarship record in the report
+                        </p>
+                    </div>
+
+                    <!-- Include Grant Provision Toggle -->
+                    <div class="mb-4 py-3 px-3 bg-gray-50 rounded border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-sm font-medium text-gray-700">Include Grant Provision</label>
+                            <ToggleSwitch v-model="includeGrantProvision" />
+                        </div>
+                        <p class="text-xs text-gray-500">Display grant provision details (Full, Partial, etc.) for each
+                            record</p>
+                    </div>
+
                     <!-- JPM Highlighting Toggle -->
                     <div v-if="canEnableJpmHighlighting"
                         class="mb-4 py-3 px-3 bg-gray-50 rounded border border-gray-200">
@@ -221,7 +241,7 @@ const currentUser = computed(() => page.props.auth.user);
 const canEnableJpmHighlighting = computed(() => {
     if (!currentUser.value) return false;
     const userRoles = currentUser.value.roles || [];
-    const allowedRoles = ['administrator', 'jpm_moderator', 'program_manager'];
+    const allowedRoles = ['administrator', 'jpm_admin', 'program_manager'];
     return userRoles.some(role => allowedRoles.includes(role.name || role));
 });
 
@@ -249,6 +269,8 @@ const groupByTertiary = ref('none');
 const showSequenceNumbers = ref(true);
 const enableJpmHighlighting = ref(false);
 const jpmFilter = ref('all');
+const includeRemarks = ref(true);
+const includeGrantProvision = ref(false);
 
 // Status composable
 const { statusOptions } = useScholarshipStatus();
@@ -357,6 +379,8 @@ function clearAllFilters() {
     showSequenceNumbers.value = true;
     enableJpmHighlighting.value = false;
     jpmFilter.value = 'all';
+    includeRemarks.value = false;
+    includeGrantProvision.value = true;
 }
 
 function generateReport() {
@@ -395,6 +419,8 @@ function generateReport() {
         group_by_secondary: groupBySecondary.value && groupBySecondary.value !== 'none' ? groupBySecondary.value : 'none',
         group_by_tertiary: groupByTertiary.value && groupByTertiary.value !== 'none' ? groupByTertiary.value : 'none',
         show_sequence_numbers: showSequenceNumbers.value ? 1 : 0,
+        include_remarks: includeRemarks.value ? 1 : 0,
+        include_grant_provision: includeGrantProvision.value ? 1 : 0,
         paper_size: 'A4',
         orientation: 'landscape',
         enable_jpm_highlighting: enableJpmHighlighting.value ? 1 : 0,

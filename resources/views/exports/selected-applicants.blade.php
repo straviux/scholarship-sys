@@ -200,13 +200,22 @@
                     <th style="width:60px">School</th>
                     <th style="width:70px">Course</th>
                     <th style="width:40px">Level</th>
+                    @if($includeGrantProvision ?? true)
+                    <th style="width:80px">Grant Provision</th>
+                    @endif
+                    @if($includeRemarks ?? false)
                     <th style="width:180px">Remarks</th>
+                    @endif
                     <th style="width:70px">Date Filed</th>
                 </tr>
             </thead>
             <tbody>
                 @php
                 $profiles = $profiles ?? collect([]);
+                $canViewJpm = $canViewJpm ?? false;
+                $includeRemarks = $includeRemarks ?? false;
+                $includeGrantProvision = $includeGrantProvision ?? true;
+
                 $sortedProfiles = $profiles->sortBy(function($profile) {
                 $dateFiled = optional($profile->scholarshipGrant->first())->date_filed;
                 return [$dateFiled, $profile->created_at];
@@ -281,7 +290,12 @@
                     <td style="font-size:10px;">{{ optional($grant->school)->shortname ?? '-' }}</td>
                     <td style="font-size:10px;">{{ optional($grant->course)->shortname ?? optional($grant->course)->name ?? '-' }}</td>
                     <td style="font-size:10px;">{{ $grant->year_level ?? '-' }}</td>
+                    @if($includeGrantProvision ?? true)
+                    <td style="font-size:10px;">{{ $grant->grant_provision ? ucwords(str_replace('_', ' ', $grant->grant_provision)) : '-' }}</td>
+                    @endif
+                    @if($includeRemarks ?? false)
                     <td style="font-size:10px;">{{ $profile->remarks ?? '-' }}</td>
+                    @endif
                     <td style="font-size:10px;">{{ $dateFiled ? \Carbon\Carbon::parse($dateFiled)->format('M d, Y') : '-' }}</td>
                 </tr>
                 @php $overallIndex++; @endphp

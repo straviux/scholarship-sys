@@ -68,6 +68,29 @@
                         <small class="text-xs text-gray-500 mt-1">Choose portrait or landscape layout</small>
                     </div>
 
+                    <!-- Report Options -->
+                    <div class="mb-4 p-3 bg-amber-50 rounded border border-amber-200">
+                        <h5 class="text-sm font-semibold text-amber-900 mb-3">Report Options</h5>
+
+                        <!-- Include Remarks Toggle -->
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 block">Include Remarks</label>
+                                <small class="text-xs text-gray-500">Add remarks column to report</small>
+                            </div>
+                            <InputSwitch v-model="includeRemarks" />
+                        </div>
+
+                        <!-- Include Grant Provision Toggle -->
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 block">Include Grant Provision</label>
+                                <small class="text-xs text-gray-500">Add grant provision column to report</small>
+                            </div>
+                            <InputSwitch v-model="includeGrantProvision" />
+                        </div>
+                    </div>
+
                     <!-- Export Summary -->
                     <div class="mb-4 p-3 bg-gray-50 rounded border border-gray-200">
                         <p class="text-xs uppercase tracking-wide text-gray-600 mb-2 font-medium">
@@ -111,6 +134,8 @@ const emit = defineEmits(['update:show', 'export']);
 const reportType = ref('list');
 const paperSize = ref('A4');
 const orientation = ref('landscape');
+const includeRemarks = ref(false);
+const includeGrantProvision = ref(true);
 
 // Options
 const paperSizeOptions = [
@@ -141,7 +166,9 @@ const exportAs = (format) => {
         profile_ids: profileIds,
         report_type: reportType.value,
         paper_size: paperSize.value,
-        orientation: orientation.value
+        orientation: orientation.value,
+        include_remarks: includeRemarks.value ? 1 : 0,
+        include_grant_provision: includeGrantProvision.value ? 1 : 0
     });
 
     if (format === 'pdf') {
