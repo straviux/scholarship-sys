@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\ScholarshipRecord;
 use App\Models\ScholarshipProfile;
-use App\Models\Voucher;
+use App\Models\FundTransaction;
 use App\Models\ScholarshipProgram;
 use App\Models\Course;
 use App\Models\School;
@@ -454,7 +454,7 @@ class ProfileController extends Controller
             ->select('scholarship_profiles.*', 'scholarship_records.unified_status')
             ->distinct()
             ->get();
-        $vouchers = Voucher::where('created_by', $user->id)->get();
+        $vouchers = FundTransaction::where('created_by', $user->id)->get();
 
         // Get all scholarship records created by user (for legacy stats)
         $allRecords = ScholarshipRecord::where('created_by', $user->id)

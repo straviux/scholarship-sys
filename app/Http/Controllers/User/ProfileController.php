@@ -5,7 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Scholar;
 use App\Models\Applicant;
-use App\Models\Voucher;
+use App\Models\FundTransaction;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 
@@ -45,14 +45,14 @@ class ProfileController extends Controller
             // Admin sees all data
             $query['total_applicants'] = Applicant::count();
             $query['total_scholars'] = Scholar::where('status', 'active')->count();
-            $query['total_vouchers'] = Voucher::count();
+            $query['total_vouchers'] = FundTransaction::count();
             $query['pending_applications'] = Applicant::where('status', 'pending')->count();
         } elseif ($user->hasRole('program_manager')) {
             // Program manager sees their program's data
             $programs = $user->programs()->pluck('id');
             $query['total_applicants'] = Applicant::whereIn('program_id', $programs)->count();
             $query['total_scholars'] = Scholar::whereIn('program_id', $programs)->where('status', 'active')->count();
-            $query['total_vouchers'] = Voucher::whereIn('program_id', $programs)->count();
+            $query['total_vouchers'] = FundTransaction::whereIn('program_id', $programs)->count();
             $query['pending_applications'] = Applicant::whereIn('program_id', $programs)->where('status', 'pending')->count();
         }
 
@@ -79,7 +79,7 @@ class ProfileController extends Controller
                 ->limit(10)
                 ->get();
 
-            $data['vouchers'] = Voucher::with('program')
+            $data['vouchers'] = FundTransaction::with('program')
                 ->latest()
                 ->limit(10)
                 ->get();
@@ -100,7 +100,7 @@ class ProfileController extends Controller
                 ->limit(10)
                 ->get();
 
-            $data['vouchers'] = Voucher::whereIn('program_id', $programs)
+            $data['vouchers'] = FundTransaction::whereIn('program_id', $programs)
                 ->with('program')
                 ->latest()
                 ->limit(10)
