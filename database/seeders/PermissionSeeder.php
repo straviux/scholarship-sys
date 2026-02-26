@@ -91,6 +91,13 @@ class PermissionSeeder extends Seeder
             ['name' => 'documents.edit', 'description' => 'Edit documents and forms'],
             ['name' => 'documents.delete', 'description' => 'Delete documents and forms'],
 
+            // Return of Service (ROS) Module
+            ['name' => 'return-of-service.view', 'description' => 'View return of service records'],
+            ['name' => 'return-of-service.create', 'description' => 'Create return of service records'],
+            ['name' => 'return-of-service.edit', 'description' => 'Edit return of service records'],
+            ['name' => 'return-of-service.delete', 'description' => 'Delete return of service records'],
+            ['name' => 'return-of-service.export', 'description' => 'Export return of service data'],
+
             // Admin Management
             ['name' => 'admin.manage', 'description' => 'Manage admin panel'],
             ['name' => 'admin.access', 'description' => 'Access admin panel'],
@@ -131,6 +138,10 @@ class PermissionSeeder extends Seeder
             'reports.generate',
             'documents.view',
             'documents.download',
+            'return-of-service.view',
+            'return-of-service.create',
+            'return-of-service.edit',
+            'return-of-service.export',
         ];
         $programManagerRole->syncPermissions($programManagerPermissions);
 
@@ -157,6 +168,7 @@ class PermissionSeeder extends Seeder
             'reports.generate',
             'documents.view',
             'documents.download',
+            'return-of-service.view',
         ];
         $moderatorRole->syncPermissions($moderatorPermissions);
 
@@ -174,6 +186,7 @@ class PermissionSeeder extends Seeder
             'reports.view',
             'documents.view',
             'documents.download',
+            'return-of-service.view',
         ];
         $userRole->syncPermissions($userPermissions);
 

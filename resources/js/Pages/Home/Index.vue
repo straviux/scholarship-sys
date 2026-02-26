@@ -98,12 +98,12 @@ const serviceCards = computed(() => {
 
     if (hasPermission('disbursements.view')) {
         cards.push({
-            id: 'vouchers',
-            title: 'Vouchers',
-            description: 'View and generate disbursement vouchers',
+            id: 'fund_transactions',
+            title: 'Fund Transactions',
+            description: 'View and generate fund transactions',
             icon: 'pi pi-credit-card',
             color: 'orange',
-            action: () => router.visit(route('vouchers.index'))
+            action: () => router.visit(route('fund_transactions.index'))
         });
     }
 

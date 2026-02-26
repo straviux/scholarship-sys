@@ -81,6 +81,22 @@ class ScholarshipProfile extends Model
         'priority_assigned_at' => 'datetime',
     ];
 
+    protected $appends = ['full_name'];
+
+    /**
+     * Accessors
+     */
+    public function getFullNameAttribute()
+    {
+        $nameParts = array_filter([
+            $this->first_name,
+            $this->middle_name,
+            $this->last_name,
+            $this->extension_name,
+        ]);
+        return implode(' ', $nameParts) ?: 'N/A';
+    }
+
     public function educationalBackgrounds()
     {
         return $this->hasMany(EducationalBackground::class, 'profile_id');

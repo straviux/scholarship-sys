@@ -2,30 +2,30 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ScholarshipApiController;
-use App\Http\Controllers\Api\VoucherController;
+use App\Http\Controllers\Api\FundTransactionController;
 use App\Http\Controllers\Admin\MaintenanceController;
 
-// Voucher endpoints - use web middleware for session-based auth
+// Fund Transaction endpoints - use web middleware for session-based auth
 Route::middleware(['web'])->group(function () {
-    Route::post('/vouchers', [VoucherController::class, 'store']);
-    Route::get('/vouchers', [VoucherController::class, 'index']);
-    Route::get('/vouchers/{id}', [VoucherController::class, 'show']);
-    Route::put('/vouchers/{id}', [VoucherController::class, 'update']);
-    Route::delete('/vouchers/{id}', [VoucherController::class, 'destroy']);
+    Route::post('/fund-transactions', [FundTransactionController::class, 'store']);
+    Route::get('/fund-transactions', [FundTransactionController::class, 'index']);
+    Route::get('/fund-transactions/{id}', [FundTransactionController::class, 'show']);
+    Route::put('/fund-transactions/{id}', [FundTransactionController::class, 'update']);
+    Route::delete('/fund-transactions/{id}', [FundTransactionController::class, 'destroy']);
 
     // DV (Disbursement Voucher) Report generation
-    Route::get('/vouchers/{id}/dv-pdf', [VoucherController::class, 'generateDVPdf']);
-    Route::get('/vouchers/{id}/dv-excel', [VoucherController::class, 'generateDVExcel']);
+    Route::get('/fund-transactions/{id}/dv-pdf', [FundTransactionController::class, 'generateDVPdf']);
+    Route::get('/fund-transactions/{id}/dv-excel', [FundTransactionController::class, 'generateDVExcel']);
 
     // Payroll Report generation
-    Route::get('/vouchers/{id}/payroll-pdf', [VoucherController::class, 'generatePayrollPdf']);
+    Route::get('/fund-transactions/{id}/payroll-pdf', [FundTransactionController::class, 'generatePayrollPdf']);
 
     // List of Scholars PDF generation
-    Route::get('/vouchers/{id}/list-of-scholars-pdf', [VoucherController::class, 'generateListOfScholarsPdf']);
+    Route::get('/fund-transactions/{id}/list-of-scholars-pdf', [FundTransactionController::class, 'generateListOfScholarsPdf']);
 
     // OBR (Obligatory Disbursement Report) generation
-    Route::get('/vouchers/{id}/obr-pdf', [VoucherController::class, 'generateOBRPdf']);
-    Route::get('/vouchers/{id}/obr-excel', [VoucherController::class, 'generateOBRExcel']);
+    Route::get('/fund-transactions/{id}/obr-pdf', [FundTransactionController::class, 'generateOBRPdf']);
+    Route::get('/fund-transactions/{id}/obr-excel', [FundTransactionController::class, 'generateOBRExcel']);
 
     // Scholars endpoint for voucher creation
     Route::get('/scholars', [ScholarshipApiController::class, 'getActiveScholars']);

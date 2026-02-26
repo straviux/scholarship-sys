@@ -88,7 +88,7 @@ const handleScholarSelection = (scholars, type) => {
 const fetchVouchers = async () => {
     loading.value = true;
     try {
-        const response = await axios.get('/api/vouchers');
+        const response = await axios.get('/api/fund-transactions');
         vouchers.value = response.data.data || [];
 
         // Fetch and cache scholars for school payees
@@ -300,7 +300,7 @@ const viewVoucher = async (voucherId) => {
 const editVoucher = async (voucherId) => {
     try {
         // Fetch fresh voucher data from API to ensure we have all fields
-        const response = await axios.get(`/api/vouchers/${voucherId}`);
+        const response = await axios.get(`/api/fund-transactions/${voucherId}`);
         const voucher = response.data.data;
 
         // Set up edit data
@@ -327,7 +327,7 @@ const saveVoucher = async () => {
 
     editingId.value = editFormData.value.id;
     try {
-        await axios.put(`/api/vouchers/${editFormData.value.id}`, editFormData.value);
+        await axios.put(`/api/fund-transactions/${editFormData.value.id}`, editFormData.value);
 
         // Update the voucher in the list
         const index = vouchers.value.findIndex(v => v.id === editFormData.value.id);
@@ -367,16 +367,16 @@ const generateDocument = async (docType) => {
         let fileType = '';
 
         if (docType === 'OBR') {
-            url = `/api/vouchers/${selectedVoucher.value.id}/obr-pdf`;
+            url = `/api/fund-transactions/${selectedVoucher.value.id}/obr-pdf`;
             fileType = 'pdf';
         } else if (docType === 'DV') {
-            url = `/api/vouchers/${selectedVoucher.value.id}/dv-pdf`;
+            url = `/api/fund-transactions/${selectedVoucher.value.id}/dv-pdf`;
             fileType = 'pdf';
         } else if (docType === 'PR') {
-            url = `/api/vouchers/${selectedVoucher.value.id}/payroll-pdf`;
+            url = `/api/fund-transactions/${selectedVoucher.value.id}/payroll-pdf`;
             fileType = 'pdf';
         } else if (docType === 'LOS') {
-            url = `/api/vouchers/${selectedVoucher.value.id}/list-of-scholars-pdf`;
+            url = `/api/fund-transactions/${selectedVoucher.value.id}/list-of-scholars-pdf`;
             fileType = 'pdf';
         }
 
@@ -414,7 +414,7 @@ const confirmDelete = async () => {
 
     deletingId.value = voucherToDelete.value;
     try {
-        await axios.delete(`/api/vouchers/${voucherToDelete.value}`);
+        await axios.delete(`/api/fund-transactions/${voucherToDelete.value}`);
         vouchers.value = vouchers.value.filter(v => v.id !== voucherToDelete.value);
         showDeleteConfirmDialog.value = false;
         toast.add({
@@ -504,11 +504,11 @@ const saveRemarks = async () => {
     savingRemarks.value = true;
     try {
         // GET the current voucher data
-        const currentVoucher = await axios.get(`/api/vouchers/${selectedVoucherForRemarks.value.id}`);
+        const currentVoucher = await axios.get(`/api/fund-transactions/${selectedVoucherForRemarks.value.id}`);
         const voucherData = currentVoucher.data.data;
 
         // PUT with all required fields plus updated remarks
-        await axios.put(`/api/vouchers/${selectedVoucherForRemarks.value.id}`, {
+        await axios.put(`/api/fund-transactions/${selectedVoucherForRemarks.value.id}`, {
             voucher_type: voucherData.voucher_type,
             explanation: voucherData.explanation,
             payee_type: voucherData.payee_type,
@@ -573,11 +573,11 @@ const saveStatus = async () => {
     savingStatus.value = true;
     try {
         // GET the current voucher data
-        const currentVoucher = await axios.get(`/api/vouchers/${selectedVoucherForStatus.value.id}`);
+        const currentVoucher = await axios.get(`/api/fund-transactions/${selectedVoucherForStatus.value.id}`);
         const voucherData = currentVoucher.data.data;
 
         // PUT with all required fields plus updated transaction_status and remarks
-        await axios.put(`/api/vouchers/${selectedVoucherForStatus.value.id}`, {
+        await axios.put(`/api/fund-transactions/${selectedVoucherForStatus.value.id}`, {
             voucher_type: voucherData.voucher_type,
             explanation: voucherData.explanation,
             payee_type: voucherData.payee_type,
@@ -657,11 +657,26 @@ const formatAmount = (amount) => {
     }).format(amount || 0);
 };
 
-// Calculate total amount (number of scholars * amount)
+// Calculate total amount (sum of individual line item amounts if available, otherwise header amount)
 const calculateTotalAmount = (voucher) => {
     if (!voucher) return 0;
-    const scholarsCount = voucher.scholar_ids?.length || 0;
-    return (scholarsCount * (voucher.amount || 0));
+    
+    // If scholar_ids is an array of objects with amounts, sum them up
+    if (Array.isArray(voucher.scholar_ids) && voucher.scholar_ids.length > 0) {
+        // Check if the first item is an object with an amount property
+        if (typeof voucher.scholar_ids[0] === 'object' && voucher.scholar_ids[0].amount !== undefined) {
+            return voucher.scholar_ids.reduce((sum, scholar) => {
+                return sum + (parseFloat(scholar.amount) || 0);
+            }, 0);
+        }
+    }
+    
+    // Fallback: use header amount or scholars count * amount
+    if (voucher.amount) {
+        return parseFloat(voucher.amount);
+    }
+    
+    return 0;
 };
 
 // Get status color for badge
@@ -812,7 +827,7 @@ const saveOBRTracking = async () => {
             if (selectedVoucherForOBRTracking.value) {
                 try {
                     // GET current voucher data
-                    const currentVoucher = await axios.get(`/api/vouchers/${selectedVoucherForOBRTracking.value.id}`);
+                    const currentVoucher = await axios.get(`/api/fund-transactions/${selectedVoucherForOBRTracking.value.id}`);
                     const voucherData = currentVoucher.data.data;
 
                     // Validate transaction_status - only send if it's a valid value
@@ -822,7 +837,7 @@ const saveOBRTracking = async () => {
                         : 'on process'; // Default to 'on process' if invalid
 
                     // PUT with OBR tracking fields
-                    await axios.put(`/api/vouchers/${selectedVoucherForOBRTracking.value.id}`, {
+                    await axios.put(`/api/fund-transactions/${selectedVoucherForOBRTracking.value.id}`, {
                         voucher_type: voucherData.voucher_type,
                         explanation: voucherData.explanation,
                         payee_type: voucherData.payee_type,
@@ -913,7 +928,7 @@ onMounted(() => {
 
 <template>
 
-    <Head title="Vouchers" />
+    <Head title="Fund Transactions" />
 
     <AdminLayout>
 
@@ -926,8 +941,8 @@ onMounted(() => {
                             <i class="pi pi-credit-card text-indigo-900" style="font-size: 2rem;"></i>
                         </div>
                         <div>
-                            <h1 class="text-2xl font-bold text-gray-700">Vouchers Management</h1>
-                            <p class="text-gray-600 mt-1">Create and manage obligations and vouchers for scholars
+                            <h1 class="text-2xl font-bold text-gray-700">Fund Transactions Management</h1>
+                            <p class="text-gray-600 mt-1">Create and manage financial transactions for scholars
                                 disbursements
                                 and payroll</p>
                         </div>
@@ -937,7 +952,7 @@ onMounted(() => {
                     <button @click="handleCreateVoucher"
                         class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
                         <i class="pi pi-plus mr-2 text-sm"></i>
-                        <span>Create Voucher</span>
+                        <span>Create Fund Transaction</span>
                     </button>
                 </template>
             </Toolbar>
@@ -1010,7 +1025,7 @@ onMounted(() => {
                             <tr v-else-if="vouchers.length === 0" class="hover:bg-gray-50">
                                 <td colspan="9" class="px-6 py-8 text-center text-sm text-gray-500">
                                     <p>No vouchers created yet.</p>
-                                    <p class="text-xs text-gray-400 mt-1">Click the "Create Voucher" button to get
+                                    <p class="text-xs text-gray-400 mt-1">Click the "Create Fund Transaction" button to get
                                         started</p>
                                 </td>
                             </tr>
@@ -1063,7 +1078,7 @@ onMounted(() => {
                                 </td>
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">{{
                                     formatAmount(calculateTotalAmount(voucher))
-                                    }}</td>
+                                }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ voucher.creator?.name || '---' }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ formatDate(voucher.created_at) }}</td>
                                 <td class="px-6 py-4 text-sm">
@@ -1080,7 +1095,7 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Voucher Wizard (Create & Edit) -->
+        <!-- Fund Transaction Wizard (Create & Edit) -->
         <VoucherWizard v-if="showWizard" :visible="showWizard" :mode="editingId ? 'edit' : 'create'"
             :voucherId="editingId" :initialData="editFormData" @close="handleWizardClose"
             @scholar-selected="handleScholarSelection" />
@@ -1109,10 +1124,10 @@ onMounted(() => {
             </template>
         </Dialog>
 
-        <!-- View Voucher Dialog -->
-        <Dialog v-model:visible="showViewDialog" modal header="Voucher Details" :style="{ width: '700px' }">
+        <!-- View Fund Transaction Dialog -->
+        <Dialog v-model:visible="showViewDialog" modal header="Fund Transaction Details" :style="{ width: '700px' }">
             <div v-if="selectedVoucher" class="space-y-4">
-                <!-- Voucher Info -->
+                <!-- Fund Transaction Info -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <p class="text-xs font-semibold text-gray-600 uppercase">OBR Number</p>
@@ -1170,7 +1185,7 @@ onMounted(() => {
                 <div class="bg-white border border-gray-200 rounded p-4">
                     <p class="text-sm font-semibold text-gray-900 mb-2">Scholars ({{ selectedVoucher.scholar_ids?.length
                         || 0
-                    }})</p>
+                        }})</p>
                     <div v-if="loadingScholars" class="text-center py-2">
                         <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span class="text-xs">Loading...</span>
                     </div>
@@ -1179,7 +1194,7 @@ onMounted(() => {
                         <div v-for="(scholar, index) in scholarsDetails" :key="index"
                             class="text-xs text-gray-700 py-1 px-2 bg-gray-50 rounded flex items-center justify-between gap-2">
                             <span class="font-medium">{{ index + 1 }}. {{ scholar.first_name }} {{ scholar.last_name
-                            }}</span>
+                                }}</span>
                             <span class="text-gray-600 whitespace-nowrap">
                                 <span v-if="scholar.course_name">{{ scholar.course_name }}</span>
                                 <span v-if="scholar.year_level" class="ml-1">| {{
@@ -1187,7 +1202,7 @@ onMounted(() => {
                                         scholar.year_level
                                 }}</span>
                                 <span v-if="scholar.academic_year" class="ml-1">| {{ scholar.academic_year
-                                }}</span>
+                                    }}</span>
                                 <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                             </span>
                         </div>

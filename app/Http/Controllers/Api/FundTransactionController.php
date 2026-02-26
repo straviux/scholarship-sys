@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Voucher;
+use App\Models\FundTransaction;
 use App\Traits\ManagesChromeForPdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Spatie\Browsershot\Browsershot;
 use Maatwebsite\Excel\Facades\Excel;
 
-class VoucherController extends Controller
+class FundTransactionController extends Controller
 {
     use ManagesChromeForPdf;
     /**
@@ -23,8 +23,8 @@ class VoucherController extends Controller
         $month = date('m');
         $prefix = sprintf('DV-%s%s-', $year, $month);
 
-        // Find the highest sequence number for this month, excluding soft-deleted vouchers
-        $lastVoucher = Voucher::withoutTrashed()
+        // Find the highest sequence number for this month, excluding soft-deleted transactions
+        $lastVoucher = FundTransaction::withoutTrashed()
             ->where('voucher_number', 'like', $prefix . '%')
             ->orderBy('voucher_number', 'desc')
             ->first();
@@ -91,8 +91,8 @@ class VoucherController extends Controller
             // Generate unique voucher number
             $voucherNumber = $this->generateVoucherNumber();
 
-            // Create the voucher
-            $voucher = Voucher::create([
+            // Create the transaction
+            $voucher = FundTransaction::create([
                 'voucher_number' => $voucherNumber,
                 'voucher_type' => $request->voucher_type,
                 'explanation' => $request->explanation,
@@ -140,9 +140,9 @@ class VoucherController extends Controller
 
         try {
             // Get all columns from the table
-            $allColumns = \DB::getSchemaBuilder()->getColumnListing('vouchers');
+            $allColumns = \DB::getSchemaBuilder()->getColumnListing('fund_transactions');
 
-            $vouchers = Voucher::with('creator')
+            $vouchers = FundTransaction::with('creator')
                 ->select($allColumns)
                 ->latest()
                 ->get();
@@ -167,13 +167,13 @@ class VoucherController extends Controller
         }
 
         try {
-            $voucher = Voucher::with('creator')->findOrFail($id);
+            $voucher = FundTransaction::with('creator')->findOrFail($id);
             return response()->json([
                 'data' => $voucher
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Voucher not found',
+                'message' => 'Fund transaction not found',
                 'error' => $e->getMessage()
             ], 404);
         }
@@ -189,7 +189,7 @@ class VoucherController extends Controller
         }
 
         try {
-            $voucher = Voucher::findOrFail($id);
+            $voucher = FundTransaction::findOrFail($id);
 
             // Validate incoming data
             $validator = Validator::make($request->all(), [
@@ -280,7 +280,7 @@ class VoucherController extends Controller
         }
 
         try {
-            $voucher = Voucher::findOrFail($id);
+            $voucher = FundTransaction::findOrFail($id);
             $voucher->delete(); // Soft delete
 
             return response()->json([
@@ -304,7 +304,7 @@ class VoucherController extends Controller
         }
 
         try {
-            $voucher = Voucher::findOrFail($id);
+            $voucher = FundTransaction::findOrFail($id);
 
             // Render the view to HTML
             $html = view('vouchers.obr', ['voucher' => $voucher])->render();
@@ -346,7 +346,7 @@ class VoucherController extends Controller
         }
 
         try {
-            $voucher = Voucher::findOrFail($id);
+            $voucher = FundTransaction::findOrFail($id);
 
             $filename = 'OBR-' . $voucher->voucher_number . '.xlsx';
 
@@ -373,7 +373,7 @@ class VoucherController extends Controller
         }
 
         try {
-            $voucher = Voucher::findOrFail($id);
+            $voucher = FundTransaction::findOrFail($id);
 
             // Render the view to HTML
             $html = view('vouchers.disbursement', ['voucher' => $voucher])->render();
@@ -415,7 +415,7 @@ class VoucherController extends Controller
         }
 
         try {
-            $voucher = Voucher::findOrFail($id);
+            $voucher = FundTransaction::findOrFail($id);
 
             $filename = 'DV-' . $voucher->voucher_number . '.xlsx';
 
@@ -442,7 +442,7 @@ class VoucherController extends Controller
         }
 
         try {
-            $voucher = Voucher::findOrFail($id);
+            $voucher = FundTransaction::findOrFail($id);
 
             // Render the view to HTML
             $html = view('vouchers.payroll', ['voucher' => $voucher])->render();
@@ -486,7 +486,7 @@ class VoucherController extends Controller
         }
 
         try {
-            $voucher = Voucher::findOrFail($id);
+            $voucher = FundTransaction::findOrFail($id);
 
             // Render the view to HTML
             $html = view('vouchers.list_of_scholars', ['voucher' => $voucher])->render();

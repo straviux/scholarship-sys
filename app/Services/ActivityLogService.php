@@ -321,4 +321,26 @@ class ActivityLogService
             remarks: $remarks
         );
     }
+
+    /**
+     * Generic log method for various activities
+     */
+    public static function log($description, $activityType, $recordId, $action = 'updated', $details = [], $remarks = null, $profileId = null)
+    {
+        $logDetails = array_merge($details, ['record_id' => $recordId]);
+
+        // Use provided profile_id, fall back to user's profile_id, or user_id if neither available
+        $logProfileId = $profileId ?? Auth::user()?->profile_id;
+
+        ActivityLog::create([
+            'profile_id' => $logProfileId,
+            'user_id' => Auth::id(),
+            'activity_type' => $activityType,
+            'action' => $action,
+            'description' => $description,
+            'details' => $logDetails,
+            'remarks' => $remarks,
+            'performed_at' => now(),
+        ]);
+    }
 }

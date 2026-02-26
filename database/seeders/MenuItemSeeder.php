@@ -80,11 +80,21 @@ class MenuItemSeeder extends Seeder
         ]);
 
         MenuItem::create([
-            'name' => 'Vouchers',
+            'name' => 'Fund Transactions',
             'icon' => 'pi pi-credit-card',
-            'route' => 'vouchers.index',
-            'permission' => 'vouchers.view',
+            'route' => 'fund_transactions.index',
+            'permission' => 'fund_transactions.view',
             'order' => 7,
+            'is_active' => true,
+            'is_group' => false,
+        ]);
+
+        MenuItem::create([
+            'name' => 'Return of Service',
+            'icon' => 'pi pi-graduation-cap',
+            'route' => 'return-of-service.index',
+            'permission' => 'return-of-service.view',
+            'order' => 8,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -93,7 +103,7 @@ class MenuItemSeeder extends Seeder
             'name' => 'System Updates',
             'icon' => 'pi pi-bell',
             'route' => 'system-updates.index',
-            'order' => 8,
+            'order' => 9,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -102,7 +112,7 @@ class MenuItemSeeder extends Seeder
             'name' => 'Help & Instructions',
             'icon' => 'pi pi-question-circle',
             'route' => 'help.index',
-            'order' => 9,
+            'order' => 10,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -112,7 +122,7 @@ class MenuItemSeeder extends Seeder
             'icon' => 'pi pi-book',
             'route' => 'scholarshipprograms.index',
             'permission' => 'programs.view',
-            'order' => 10,
+            'order' => 11,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -122,7 +132,7 @@ class MenuItemSeeder extends Seeder
             'icon' => 'pi pi-graduation-cap',
             'route' => 'courses.index',
             'permission' => 'courses.view',
-            'order' => 11,
+            'order' => 12,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -132,7 +142,7 @@ class MenuItemSeeder extends Seeder
             'icon' => 'pi pi-list',
             'route' => 'program_requirements.index',
             'permission' => 'requirements.view',
-            'order' => 12,
+            'order' => 13,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -142,7 +152,7 @@ class MenuItemSeeder extends Seeder
             'icon' => 'pi pi-building',
             'route' => 'school.index',
             'permission' => 'schools.view',
-            'order' => 13,
+            'order' => 14,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -152,7 +162,7 @@ class MenuItemSeeder extends Seeder
             'icon' => 'pi pi-code',
             'route' => 'responsibility-centers.index',
             'permission' => 'responsibility-centers.view',
-            'order' => 14,
+            'order' => 15,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -161,7 +171,7 @@ class MenuItemSeeder extends Seeder
             'name' => 'Option Values',
             'icon' => 'pi pi-sliders-h',
             'route' => 'system-options.index',
-            'order' => 15,
+            'order' => 16,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -170,7 +180,7 @@ class MenuItemSeeder extends Seeder
             'name' => 'Access Control',
             'icon' => 'pi pi-lock',
             'route' => 'access-control.index',
-            'order' => 16,
+            'order' => 17,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -179,7 +189,7 @@ class MenuItemSeeder extends Seeder
             'name' => 'System Stats',
             'icon' => 'pi pi-chart-bar',
             'route' => 'admin.system-report',
-            'order' => 17,
+            'order' => 18,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -188,7 +198,7 @@ class MenuItemSeeder extends Seeder
             'name' => 'Deleted Records',
             'icon' => 'pi pi-trash',
             'route' => 'admin.deleted-records',
-            'order' => 18,
+            'order' => 19,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -197,7 +207,7 @@ class MenuItemSeeder extends Seeder
             'name' => 'Data Export',
             'icon' => 'pi pi-download',
             'route' => 'data-export.index',
-            'order' => 19,
+            'order' => 20,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -206,7 +216,7 @@ class MenuItemSeeder extends Seeder
             'name' => 'Manage Updates',
             'icon' => 'pi pi-megaphone',
             'route' => 'admin.system-updates',
-            'order' => 20,
+            'order' => 21,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -215,7 +225,7 @@ class MenuItemSeeder extends Seeder
             'name' => 'Maintenance',
             'icon' => 'pi pi-cog',
             'route' => 'admin.maintenance.index',
-            'order' => 21,
+            'order' => 22,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -224,7 +234,7 @@ class MenuItemSeeder extends Seeder
             'name' => 'Menu Item Management',
             'icon' => 'pi pi-list',
             'route' => 'admin.menu-items.index',
-            'order' => 22,
+            'order' => 23,
             'is_active' => true,
             'is_group' => false,
         ]);
@@ -233,7 +243,7 @@ class MenuItemSeeder extends Seeder
             'name' => 'Role Menu Management',
             'icon' => 'pi pi-align-justify',
             'route' => 'admin.role-menus.index',
-            'order' => 23,
+            'order' => 24,
             'is_active' => true,
             'is_group' => false,
         ]);

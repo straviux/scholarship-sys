@@ -334,11 +334,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/scholarship/{record}/decline', [ScholarshipProfileController::class, 'decline'])
         ->name('scholarship.record.decline');
 
-    // Vouchers routes
-    Route::get('/vouchers', function () {
-        return inertia('Vouchers/index');
-    })->middleware('check.permission:vouchers.view')
-        ->name('vouchers.index');
+    // Fund Transactions routes
+    Route::get('/fund-transactions', function () {
+        return inertia('FundTransactions/index');
+    })->middleware('check.permission:fund_transactions.view')
+        ->name('fund_transactions.index');
 
     Route::patch('/scholarship/{record}/update-status', [ScholarshipProfileController::class, 'updateStatus'])
         ->name('scholarship.record.update-status');
@@ -544,6 +544,53 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/data-export', [\App\Http\Controllers\DataExportController::class, 'index'])->name('data-export.index');
     Route::get('/admin/data-export/summary', [\App\Http\Controllers\DataExportController::class, 'getExportSummary'])->name('data-export.summary');
     Route::get('/admin/data-export/download', [\App\Http\Controllers\DataExportController::class, 'exportToJson'])->name('data-export.download');
+});
+
+// Return of Service (ROS) Routes - Batch-first approach
+Route::middleware(['auth'])->group(function () {
+    // Main ROS page with batches
+    Route::get('/return-of-service', [App\Http\Controllers\ReturnOfServiceController::class, 'index'])
+        ->middleware('check.permission:return-of-service.view')
+        ->name('return-of-service.index');
+
+    // Batch operations
+    Route::post('/return-of-service/batch', [App\Http\Controllers\ReturnOfServiceController::class, 'storeBatch'])
+        ->middleware('check.permission:return-of-service.create')
+        ->name('return-of-service.batch.store');
+
+    Route::put('/return-of-service/batch/{batch}', [App\Http\Controllers\ReturnOfServiceController::class, 'updateBatch'])
+        ->middleware('check.permission:return-of-service.edit')
+        ->name('return-of-service.batch.update');
+
+    Route::delete('/return-of-service/batch/{batch}', [App\Http\Controllers\ReturnOfServiceController::class, 'destroyBatch'])
+        ->middleware('check.permission:return-of-service.delete')
+        ->name('return-of-service.batch.destroy');
+
+    Route::get('/api/return-of-service/batch/{batch}', [App\Http\Controllers\ReturnOfServiceController::class, 'batchShow'])
+        ->middleware('check.permission:return-of-service.view')
+        ->name('return-of-service.batch.show');
+
+    // Scholar operations
+    Route::post('/return-of-service/scholar', [App\Http\Controllers\ReturnOfServiceController::class, 'storeScholar'])
+        ->middleware('check.permission:return-of-service.create')
+        ->name('return-of-service.scholar.store');
+
+    Route::put('/return-of-service/scholar/{record}', [App\Http\Controllers\ReturnOfServiceController::class, 'updateScholar'])
+        ->middleware('check.permission:return-of-service.edit')
+        ->name('return-of-service.scholar.update');
+
+    Route::delete('/return-of-service/scholar/{record}', [App\Http\Controllers\ReturnOfServiceController::class, 'destroyScholar'])
+        ->middleware('check.permission:return-of-service.delete')
+        ->name('return-of-service.scholar.destroy');
+
+    // API endpoints
+    Route::get('/api/return-of-service/search-records', [App\Http\Controllers\ReturnOfServiceController::class, 'searchRecords'])
+        ->middleware('check.permission:return-of-service.create')
+        ->name('return-of-service.search-records');
+
+    Route::get('/return-of-service/export/csv', [App\Http\Controllers\ReturnOfServiceController::class, 'export'])
+        ->middleware('check.permission:return-of-service.export')
+        ->name('return-of-service.export');
 });
 
 // Fallback routes for backward compatibility (old form-templates.* routes)
