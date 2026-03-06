@@ -360,17 +360,20 @@
         }
 
         function closeTab() {
-            // Try different close methods for mobile/browser compatibility
-            if (window.opener) {
-                // If opened from another window, close this window
-                window.close();
-            } else if (window.history.length > 1) {
-                // Go back to previous page
-                window.history.back();
-            } else {
-                // Fallback: redirect to home or show message
-                window.location.href = '/';
-            }
+            // For mobile: Go back to the app that opened this browser
+            // (e.g., QR code scanner app)
+            // The browser's back stack includes the launching app
+
+            // Small delay to ensure upload is processed
+            setTimeout(() => {
+                if (window.history.length > 1) {
+                    // Go back through browser history to the QR scanner app
+                    window.history.back();
+                } else {
+                    // Fallback: try to close the tab
+                    window.close();
+                }
+            }, 500);
         }
     </script>
 </body>
