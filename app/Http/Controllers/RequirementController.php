@@ -102,7 +102,22 @@ class RequirementController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        try {
+            $requirement = Requirement::findOrFail($id);
+            $requirementName = $requirement->name;
+            
+            $requirement->delete();
+            
+            return redirect()->back()->with('success', "Requirement '$requirementName' has been deleted successfully.");
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->back()->with('error', 'Requirement not found.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error deleting requirement', [
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+            return redirect()->back()->with('error', 'Failed to delete requirement: ' . $e->getMessage());
+        }
     }
 
     public function getRequirementsApi(): JsonResponse
