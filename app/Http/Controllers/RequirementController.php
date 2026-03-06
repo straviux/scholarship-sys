@@ -105,9 +105,9 @@ class RequirementController extends Controller
         try {
             $requirement = Requirement::findOrFail($id);
             $requirementName = $requirement->name;
-            
+
             $requirement->delete();
-            
+
             return redirect()->back()->with('success', "Requirement '$requirementName' has been deleted successfully.");
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'Requirement not found.');
