@@ -452,8 +452,9 @@ Route::middleware(['auth'])->controller(CourseController::class)->group(function
 
 Route::middleware(['auth'])->controller(RequirementController::class)->group(function () {
     Route::get('/program_requirements/{action?}/{id?}', 'index')->name('program_requirements.index');
-    Route::post('/program_requirements', 'store')->middleware('check.permission:requirements.create')->name('program_requirements.store');
-    Route::put('/program_requirements/{program_requirement}', 'update')->middleware('check.permission:requirements.edit')->name('program_requirements.update');
+    Route::post('/program_requirements', 'store')->middleware('check.permission:requirements.manage')->name('program_requirements.store');
+    Route::put('/program_requirements/{program_requirement}', 'update')->middleware('check.permission:requirements.manage')->name('program_requirements.update');
+    Route::delete('/program_requirements/{program_requirement}', 'destroy')->middleware('check.permission:requirements.manage')->name('program_requirements.destroy');
     // Route::resource('/program_requirements', ProgramRequirementController::class);
 
     Route::get('/program_requirements-list-api', 'getRequirementsApi')->name('program_requirements-api.list');
