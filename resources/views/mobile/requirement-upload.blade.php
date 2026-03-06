@@ -360,7 +360,17 @@
         }
 
         function closeTab() {
-            window.close();
+            // Try different close methods for mobile/browser compatibility
+            if (window.opener) {
+                // If opened from another window, close this window
+                window.close();
+            } else if (window.history.length > 1) {
+                // Go back to previous page
+                window.history.back();
+            } else {
+                // Fallback: redirect to home or show message
+                window.location.href = '/';
+            }
         }
     </script>
 </body>
