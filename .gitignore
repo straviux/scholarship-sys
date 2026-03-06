@@ -24,3 +24,6 @@ yarn-error.log
 /storage/app/public/profile-photos
 /storage/app/public/disbursements
 /storage/app/public/scholarship-records
+
+# Exclude seeders from production
+/database/seeders

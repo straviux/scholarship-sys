@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'mobile/upload/disbursement/*',
             'mobile/upload/scholarship-record/*',
+            'mobile/upload/requirement/*',
         ]);
         //
     })

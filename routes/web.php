@@ -45,6 +45,10 @@ Route::get('/mobile/upload/profile/{token}', [ProfileController::class, 'showMob
     ->name('mobile.profile.upload');
 Route::post('/mobile/upload/profile/{token}', [ProfileController::class, 'processMobileUpload'])
     ->name('mobile.profile.upload.submit');
+Route::get('/mobile/upload/requirement/{token}', [MobileUploadController::class, 'showRequirementUpload'])
+    ->name('mobile.requirement.upload');
+Route::post('/mobile/upload/requirement/{token}', [MobileUploadController::class, 'uploadRequirementFile'])
+    ->name('mobile.requirement.upload.submit');
 
 // Public API routes (no authentication required)
 Route::get('/api/server-time', function () {
@@ -220,6 +224,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/applicants-export', [WaitingListController::class, 'export'])->middleware('check.permission:applicants.export')->name('waitinglist.export');
     Route::put('/applicants/{id}/jpm-status', [WaitingListController::class, 'updateJpmStatus'])->middleware('check.permission:applicants.edit')->name('waitinglist.updateJpmStatus');
     Route::put('/applicants/{id}/jpm-remarks', [WaitingListController::class, 'updateJpmRemarks'])->middleware('check.permission:applicants.edit')->name('waitinglist.updateJpmRemarks');
+    Route::post('/applicants/requirement/generate-qr', [WaitingListController::class, 'generateRequirementQrCode'])->middleware('check.permission:applicants.view')->name('applicants.requirement.generate-qr');
     // Generic route MUST come last to catch all remaining /applicants patterns
     Route::get('/applicants/{action?}/{id?}', [WaitingListController::class, 'index'])->middleware('check.permission:applicants.view')->name('waitinglist.index'); // Accepts filter values via query string: ?applied_course=...&municipality=...&name=...&per_page=...
 
@@ -259,6 +264,12 @@ Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->gro
     Route::put('/scholarship_records.update-status/{scholarship_records}', 'updateScholarshipStatusApi')->middleware('check.permission:scholarships.edit')->name('scholarship_records-api.updatestatus');
     Route::put('/scholarship_records.update-remarks/{scholarship_records}', 'updateRemarks')->middleware('check.permission:scholarships.edit')->name('scholarship_records-api.updateremarks');
     Route::post('/scholarship_records/{record}/requirements/upload', 'uploadRequirement')->middleware('check.permission:scholarships.edit')->name('scholarship.requirements.upload');
+
+    // Requirements Checklist Routes (Profile-based) - under WaitingListController
+    Route::get('/scholarship-profiles/{profile}/requirements-checklist', [WaitingListController::class, 'getProfileRequirementsChecklist'])->middleware('check.permission:applicants.view')->name('scholarship.profile.requirements-checklist');
+    Route::post('/scholarship-profiles/{profile}/check-requirement', [WaitingListController::class, 'checkProfileRequirement'])->middleware('check.permission:applicants.edit')->name('scholarship.profile.check-requirement');
+    Route::post('/scholarship-profiles/{profile}/uncheck-requirement', [WaitingListController::class, 'uncheckProfileRequirement'])->middleware('check.permission:applicants.edit')->name('scholarship.profile.uncheck-requirement');
+    Route::post('/scholarship-profiles/{profile}/upload-requirement', [WaitingListController::class, 'uploadProfileRequirement'])->middleware('check.permission:applicants.edit')->name('scholarship.profile.upload-requirement');
 });
 
 // Enhanced Scholarship Workflow Routes

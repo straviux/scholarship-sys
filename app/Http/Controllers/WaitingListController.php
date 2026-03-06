@@ -5,11 +5,16 @@ namespace App\Http\Controllers;
 use App\Http\Resources\ScholarshipProfileResource;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipProgram;
+use App\Models\ScholarshipProfileRequirement;
+use App\Models\Requirement;
 use App\Services\SequenceNumberCalculator;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Browsershot\Browsershot;
@@ -43,6 +48,11 @@ class WaitingListController extends Controller
         $query = ScholarshipProfile::distinct()
             // Join with scholarship_records to access date_filed and filtering
             ->join('scholarship_records', 'scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
+            // Eager load relationships - only load PENDING scholarship records to match the filter
+            ->with(['createdBy', 'scholarshipGrant' => function ($q) {
+                $q->where('unified_status', 'pending')
+                    ->with(['program', 'course', 'requirements', 'school']);
+            }])
             // OPTIMIZATION: Only select columns needed for display (not all 50+ columns)
             // This reduces memory usage and data transfer by ~80%
             ->select(
@@ -903,6 +913,253 @@ class WaitingListController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create test applicants: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get requirements checklist for a scholarship profile
+     * Returns ALL requirements with their checked status based on database records
+     */
+    public function getProfileRequirementsChecklist(ScholarshipProfile $profile): JsonResponse
+    {
+        try {
+            // Get ALL requirements from database
+            $allRequirements = Requirement::all();
+
+            // Get checked requirements for this profile (those with database records)
+            $checkedRequirements = $profile->profileRequirements()
+                ->pluck('requirement_id')
+                ->toArray();
+
+            $requirementsData = $allRequirements->map(function ($requirement) use ($profile, $checkedRequirements) {
+                $isChecked = in_array($requirement->id, $checkedRequirements);
+
+                $submission = $isChecked
+                    ? $profile->profileRequirements()->where('requirement_id', $requirement->id)->first()
+                    : null;
+
+                return [
+                    'id' => $submission?->id,
+                    'name' => $requirement->name,
+                    'description' => $requirement->description,
+                    'requirement_id' => $requirement->id,
+                    'is_checked' => $isChecked,
+                    'is_submitted' => $submission && $submission->file_path ? true : false,
+                    'file_name' => $submission?->file_name,
+                    'file_path' => $submission?->file_path,
+                    'submitted_at' => $submission?->created_at
+                ];
+            });
+
+            return response()->json([
+                'profile_id' => $profile->profile_id,
+                'profile_name' => $profile->first_name . ' ' . $profile->last_name,
+                'requirements' => $requirementsData
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting requirements checklist: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to load requirements'], 500);
+        }
+    }
+
+    /**
+     * Upload a requirement file for a scholarship profile
+     */
+    public function uploadProfileRequirement(Request $request, ScholarshipProfile $profile): JsonResponse
+    {
+        try {
+            $request->validate([
+                'requirement_id' => 'required|integer|exists:requirements,id',
+                'file' => 'required|file|max:5120'
+            ]);
+
+            // Delete old file if exists
+            $existing = ScholarshipProfileRequirement::where('profile_id', $profile->profile_id)
+                ->where('requirement_id', $request->requirement_id)
+                ->first();
+
+            if ($existing && $existing->file_path && Storage::exists($existing->file_path)) {
+                Storage::delete($existing->file_path);
+            }
+
+            // Store the file
+            $file = $request->file('file');
+            $path = $file->store(
+                "scholarship_profiles/{$profile->profile_id}/requirements",
+                'public'
+            );
+
+            $requirement = Requirement::find($request->requirement_id);
+
+            // Create or update the submission record
+            $submission = ScholarshipProfileRequirement::updateOrCreate(
+                [
+                    'profile_id' => $profile->profile_id,
+                    'requirement_id' => $request->requirement_id,
+                ],
+                [
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => Storage::url($path),
+                ]
+            );
+
+            // Log activity
+            ActivityLogService::logRecordUpdated(
+                profileId: $profile->profile_id,
+                oldData: [],
+                newData: ['requirement' => $requirement->name, 'file' => $file->getClientOriginalName()],
+                remarks: "Uploaded requirement: {$requirement->name}"
+            );
+
+            return response()->json([
+                'message' => 'Requirement uploaded successfully',
+                'requirement' => [
+                    'id' => $submission->id,
+                    'name' => $requirement->name,
+                    'description' => $requirement->description,
+                    'requirement_id' => $requirement->id,
+                    'is_submitted' => true,
+                    'file_name' => $submission->file_name,
+                    'file_path' => $submission->file_path,
+                    'submitted_at' => $submission->created_at
+                ]
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['error' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Error uploading requirement: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to upload requirement'], 500);
+        }
+    }
+
+    /**
+     * Mark a requirement as checked (add to profile)
+     */
+    public function checkProfileRequirement(Request $request, ScholarshipProfile $profile): JsonResponse
+    {
+        try {
+            $request->validate([
+                'requirement_id' => 'required|integer|exists:requirements,id'
+            ]);
+
+            $requirement = Requirement::find($request->requirement_id);
+
+            $submission = ScholarshipProfileRequirement::updateOrCreate(
+                [
+                    'profile_id' => $profile->profile_id,
+                    'requirement_id' => $request->requirement_id,
+                ],
+                [
+                    'file_name' => null,
+                    'file_path' => null,
+                ]
+            );
+
+            return response()->json([
+                'message' => 'Requirement checked',
+                'requirement' => [
+                    'id' => $submission->id,
+                    'name' => $requirement->name,
+                    'description' => $requirement->description,
+                    'requirement_id' => $requirement->id,
+                    'is_checked' => true,
+                    'is_submitted' => false,
+                    'file_name' => null,
+                    'file_path' => null
+                ]
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['error' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Error checking requirement: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to check requirement'], 500);
+        }
+    }
+
+    /**
+     * Mark a requirement as unchecked (remove from profile and delete file)
+     */
+    public function uncheckProfileRequirement(Request $request, ScholarshipProfile $profile): JsonResponse
+    {
+        try {
+            $request->validate([
+                'requirement_id' => 'required|integer|exists:requirements,id'
+            ]);
+
+            $submission = ScholarshipProfileRequirement::where('profile_id', $profile->profile_id)
+                ->where('requirement_id', $request->requirement_id)
+                ->first();
+
+            if ($submission) {
+                // Delete file if it exists
+                if ($submission->file_path && Storage::exists($submission->file_path)) {
+                    Storage::delete($submission->file_path);
+                }
+
+                // Delete the record
+                $submission->delete();
+            }
+
+            return response()->json([
+                'message' => 'Requirement unchecked and file deleted'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['error' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Error unchecking requirement: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to uncheck requirement'], 500);
+        }
+    }
+
+    /**
+     * Generate QR code for requirement file upload.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function generateRequirementQrCode(Request $request)
+    {
+        try {
+            $requirementId = $request->input('requirement_id');
+            $profileId = $request->input('profile_id');
+
+            if (!$requirementId || !$profileId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Missing requirement_id or profile_id'
+                ], 422);
+            }
+
+            // Get or create the requirement upload entry
+            $profileRequirement = ScholarshipProfileRequirement::where('profile_id', $profileId)
+                ->where('requirement_id', $requirementId)
+                ->first();
+
+            if (!$profileRequirement) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Requirement not found'
+                ], 404);
+            }
+
+            // Generate upload token
+            $profileRequirement->generateUploadToken(5);
+
+            return response()->json([
+                'qr_code_svg' => $profileRequirement->getUploadQrCode(250),
+                'url' => $profileRequirement->getMobileUploadUrl(),
+                'expires_at' => $profileRequirement->upload_token_expires_at,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to generate QR code for requirement', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate QR code'
             ], 500);
         }
     }

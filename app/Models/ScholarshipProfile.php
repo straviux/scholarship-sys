@@ -169,6 +169,22 @@ class ScholarshipProfile extends Model
         return $this->hasMany(ScholarshipRecord::class, 'profile_id', 'profile_id');
     }
 
+    public function profileRequirements()
+    {
+        return $this->hasMany(ScholarshipProfileRequirement::class, 'profile_id', 'profile_id');
+    }
+
+    public function requirements()
+    {
+        return $this->belongsToMany(
+            Requirement::class,
+            'scholarship_profile_requirements',
+            'profile_id',
+            'requirement_id',
+            'profile_id'
+        )->withPivot('file_name', 'file_path', 'created_at', 'updated_at');
+    }
+
     public static function boot()
     {
         parent::boot();

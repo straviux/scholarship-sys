@@ -289,8 +289,8 @@ class ProfileController extends Controller
         try {
             $user = $request->user();
 
-            // Generate upload token (30 days expiry)
-            $user->generateUploadToken(43200);
+            // Generate upload token (5 minutes expiry)
+            $user->generateUploadToken(5);
 
             return response()->json([
                 'qr_code_svg' => $user->getUploadQrCode(250),

@@ -423,4 +423,205 @@ class MobileUploadController extends Controller
             'size_reduction' => round((1 - strlen($processedContent) / $originalSize) * 100, 2) . '%',
         ]);
     }
+
+    /**
+     * Show the mobile upload page for requirement
+     */
+    public function showRequirementUpload($token)
+    {
+        $requirement = \App\Models\ScholarshipProfileRequirement::where('upload_token', $token)->first();
+
+        if (!$requirement) {
+            Log::warning('Requirement not found for token', ['token' => substr($token, 0, 10) . '...']);
+            return view('mobile.upload-expired');
+        }
+
+        if (!$requirement->upload_token_expires_at) {
+            Log::warning('Requirement has no expiry date', ['id' => $requirement->id]);
+            return view('mobile.upload-expired');
+        }
+
+        if ($requirement->upload_token_expires_at->isPast()) {
+            Log::info('Requirement token expired', [
+                'id' => $requirement->id,
+                'expires_at' => $requirement->upload_token_expires_at,
+                'now' => now(),
+            ]);
+            return view('mobile.upload-expired');
+        }
+
+        $requirement->load('profile', 'requirement');
+
+        return view('mobile.requirement-upload', compact('requirement'));
+    }
+
+    /**
+     * Handle file upload for requirement
+     */
+    public function uploadRequirementFile(Request $request, $token)
+    {
+        $requirement = \App\Models\ScholarshipProfileRequirement::where('upload_token', $token)
+            ->with('profile', 'requirement')
+            ->first();
+
+        if (!$requirement) {
+            return response()->json(['error' => 'Requirement not found'], 404);
+        }
+
+        if ($requirement->upload_token_expires_at->isPast()) {
+            return response()->json(['error' => 'Token has expired'], 403);
+        }
+
+        try {
+            $validated = $request->validate([
+                'file' => 'required|file|max:25600', // 25MB max
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Requirement mobile upload validation failed', [
+                'errors' => $e->errors(),
+            ]);
+            return response()->json([
+                'error' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        }
+
+        $file = $request->file('file');
+        $originalFileName = $file->getClientOriginalName();
+        $originalSize = $file->getSize();
+        $mimeType = $file->getMimeType();
+
+        try {
+            $fileContent = file_get_contents($file->getRealPath());
+            $processedContent = $fileContent;
+            $extension = '';
+            $isImage = false;
+
+            // Try to load as image
+            $image = @imagecreatefromstring($fileContent);
+
+            if ($image !== false) {
+                $isImage = true;
+
+                // Fix image orientation based on EXIF data
+                if (function_exists('exif_read_data')) {
+                    $exif = @exif_read_data($file->getRealPath());
+                    if ($exif && isset($exif['Orientation'])) {
+                        switch ($exif['Orientation']) {
+                            case 3:
+                                $image = imagerotate($image, 180, 0);
+                                break;
+                            case 6:
+                                $image = imagerotate($image, -90, 0);
+                                break;
+                            case 8:
+                                $image = imagerotate($image, 90, 0);
+                                break;
+                        }
+                    }
+                }
+
+                // Aggressive resize for mobile uploads - max 1280px height
+                $width = imagesx($image);
+                $height = imagesy($image);
+
+                // Force portrait orientation (height > width)
+                if ($width > $height) {
+                    $image = imagerotate($image, 90, 0);
+                    $temp = $width;
+                    $width = $height;
+                    $height = $temp;
+                }
+
+                $maxDimension = 1280;
+                if ($height > $maxDimension) {
+                    $newHeight = $maxDimension;
+                    $newWidth = intval($width * ($maxDimension / $height));
+
+                    $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
+                    imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                    imagedestroy($image);
+                    $image = $resizedImage;
+                }
+
+                // High compression JPEG
+                ob_start();
+                imagejpeg($image, null, 40);
+                $processedContent = ob_get_clean();
+                imagedestroy($image);
+                $extension = '.jpg';
+                $mimeType = 'image/jpeg';
+            } elseif ($mimeType === 'application/pdf') {
+                // Compress PDFs with gzip
+                $processedContent = gzencode($fileContent, 9);
+                $extension = '.gz';
+            }
+
+            // Get profile and requirement info
+            $profile = $requirement->profile;
+            if (!$profile) {
+                return response()->json(['error' => 'Profile not found'], 404);
+            }
+
+            $uniqueId = $profile->unique_id;
+
+            // Get scholar name for filename
+            $scholarName = preg_replace('/[^A-Za-z0-9_]/', '_', $profile->first_name . '_' . $profile->last_name);
+            $requirementName = $requirement->requirement ? preg_replace('/[^A-Za-z0-9_]/', '_', $requirement->requirement->name) : 'requirement';
+
+            // Create short timestamp
+            $timestamp = date('YmdHis');
+
+            // Get file extension
+            $fileExtension = pathinfo($originalFileName, PATHINFO_EXTENSION);
+            if ($isImage) {
+                $fileExtension = 'jpg';
+            } elseif ($extension === '.gz') {
+                $fileExtension = 'pdf.gz';
+            }
+
+            // Generate filename: requirement_[scholar_name]_[requirement_name]_[timestamp].[extension]
+            $fileName = "requirement_{$scholarName}_{$requirementName}_{$timestamp}.{$fileExtension}";
+
+            // Store file in: attachments/[unique_id]/
+            $filePath = "attachments/{$uniqueId}/" . $fileName;
+
+            // Store the file
+            Storage::disk('public')->put($filePath, $processedContent);
+
+            // Update requirement record with the public URL
+            $requirement->update([
+                'file_name' => $fileName,
+                'file_path' => Storage::url($filePath),
+            ]);
+
+            Log::info('Requirement file uploaded successfully', [
+                'profile_id' => $requirement->profile_id,
+                'requirement_id' => $requirement->requirement_id,
+                'file_name' => $fileName,
+                'file_path' => $filePath,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'File uploaded successfully',
+                'file_name' => $fileName,
+                'file_path' => $filePath,
+                'original_size' => $originalSize,
+                'optimized_size' => strlen($processedContent),
+                'size_reduction' => round((1 - strlen($processedContent) / $originalSize) * 100, 2) . '%',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Requirement file upload error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'requirement_id' => $requirement->id,
+                'profile_id' => $requirement->profile_id,
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to upload file: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

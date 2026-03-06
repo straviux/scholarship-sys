@@ -14,6 +14,7 @@ import GenerateReportModal from './Modal/GenerateReportModal.vue';
 import ExportSelectedModal from './Modal/ExportSelectedModal.vue';
 import PriorityModal from './Modal/PriorityModal.vue';
 import JpmModal from './Modal/JpmModal.vue';
+import RequirementsChecklistModal from './Modal/RequirementsChecklistModal.vue';
 import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
 import GridView from '@/Components/GridView.vue';
 import ApplicantGridCard from '@/Components/ApplicantGridCard.vue';
@@ -582,6 +583,11 @@ const buildContextMenu = (rowData) => {
             icon: 'pi pi-id-card',
             command: () => openProfileReviewModal(rowData)
         });
+        items.push({
+            label: 'View Requirements',
+            icon: 'pi pi-check-circle',
+            command: () => openRequirementsModal(rowData)
+        });
     }
 
     if (hasPermission('applicants.edit')) {
@@ -734,6 +740,7 @@ const selectedApplicant = ref(null);
 const showProfileReviewModal = ref(false);
 const selectedApplication = ref(null);
 const selectedApplicantForReview = ref(null);
+const reviewRequirements = ref([]);
 const currentProfileIndex = ref(-1);
 const hasPreviousProfile = ref(false);
 const hasNextProfile = ref(true);
@@ -760,6 +767,10 @@ const profileMenuItems = ref([
 // Priority modal state
 const showPriorityModal = ref(false);
 const selectedApplicantForPriority = ref(null);
+
+// Requirements Checklist Modal state
+const showRequirementsChecklistModal = ref(false);
+const selectedApplicantForRequirements = ref(null);
 
 const confirmDeleteApplicant = (applicant) => {
     selectedApplicant.value = applicant;
@@ -824,6 +835,42 @@ const openProfileReviewModal = (applicant) => {
     checkNavigationAvailability();
 
     showProfileReviewModal.value = true;
+
+    // Load requirements for this applicant
+    loadRequirementsForReview(applicant.profile_id);
+};
+
+const loadRequirementsForReview = async (profileId) => {
+    try {
+        const response = await axios.get(
+            route('scholarship.profile.requirements-checklist', profileId)
+        );
+        reviewRequirements.value = response.data.requirements || [];
+    } catch (error) {
+        console.error('Error loading requirements:', error);
+        reviewRequirements.value = [];
+    }
+};
+
+const previewRequirementFile = (requirement) => {
+    if (!requirement.file_path) return;
+    // Open file in preview (you can implement a preview modal if needed)
+    window.open(requirement.file_path, '_blank');
+};
+
+const downloadRequirementFile = (requirement) => {
+    if (!requirement.file_path) return;
+
+    const link = document.createElement('a');
+    link.href = requirement.file_path;
+    link.download = requirement.file_name || requirement.name;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+
+    setTimeout(() => {
+        link.click();
+        document.body.removeChild(link);
+    }, 0);
 };
 
 const goToPreviousProfile = () => {
@@ -846,6 +893,7 @@ const closeProfileReviewModal = () => {
     showProfileReviewModal.value = false;
     selectedApplication.value = null;
     selectedApplicantForReview.value = null;
+    reviewRequirements.value = [];
 };
 
 const markAsApproved = () => {
@@ -947,11 +995,25 @@ const removePriority = (applicant) => {
     });
 };
 
+// Requirements Checklist Modal functions
+const openRequirementsModal = (applicant) => {
+    selectedApplicantForRequirements.value = applicant;
+    showRequirementsChecklistModal.value = true;
+};
+
+const closeRequirementsModal = () => {
+    showRequirementsChecklistModal.value = false;
+    selectedApplicantForRequirements.value = null;
+};
+
 // Handle grid card actions
 const handleCardAction = ({ action, applicant }) => {
     switch (action) {
         case 'review':
             openProfileReviewModal(applicant);
+            break;
+        case 'requirements':
+            openRequirementsModal(applicant);
             break;
         case 'jpm-tag':
             openJpmModal(applicant);
@@ -1462,21 +1524,21 @@ const formatDate = (date) => {
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Prog. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Cour. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_course || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Sch. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_school_course || '-'
-                                                }}</span>
+                                                    }}</span>
 
                                             </div>
                                         </div>
@@ -1654,6 +1716,11 @@ const formatDate = (date) => {
                                         @click="openUpdateYakapModal(slotProps.data)"
                                         v-if="hasPermission('applicants.edit')" />
 
+                                    <Button icon="pi pi-check-circle" severity="info" size="small" rounded outlined
+                                        v-tooltip.top="'View Requirements Checklist'"
+                                        @click="openRequirementsModal(slotProps.data)"
+                                        v-if="hasPermission('applicants.view')" />
+
                                     <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
                                         v-tooltip.top="'Delete Applicant'"
                                         @click="confirmDeleteApplicant(slotProps.data)"
@@ -1736,7 +1803,7 @@ const formatDate = (date) => {
                         class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows="6" placeholder="Enter remarks here..." />
                     <small v-if="remarksForm.errors.remarks" class="text-red-500">{{ remarksForm.errors.remarks
-                        }}</small>
+                    }}</small>
                 </div>
             </div>
 
@@ -1803,12 +1870,12 @@ const formatDate = (date) => {
                                     getApplicantFullName(selectedApplicantForReview) }}</h3>
                             <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
                                 <span><i class="pi pi-phone mr-1"></i>{{ selectedApplicantForReview.contact_no || 'N/A'
-                                }}</span>
+                                    }}</span>
                                 <span><i class="pi pi-envelope mr-1"></i>{{ selectedApplicantForReview.email || 'N/A'
-                                }}</span>
+                                    }}</span>
                                 <span><i class="pi pi-calendar mr-1"></i>{{
                                     formatDate(selectedApplicantForReview.date_filed)
-                                }}</span>
+                                    }}</span>
                             </div>
                         </div>
                         <!-- Queue Numbers -->
@@ -1846,20 +1913,12 @@ const formatDate = (date) => {
                 </div>
 
                 <!-- Tabbed Content -->
-                <Tabs value="applicationReview">
+                <Tabs value="requirements">
                     <TabList>
-                        <Tab value="applicationReview">Review</Tab>
+                        <Tab value="requirements">Requirements</Tab>
                         <Tab value="profileInformation">Profile</Tab>
-                        <Tab value="attachments">Attachments</Tab>
                     </TabList>
                     <TabPanels>
-                        <TabPanel value="applicationReview" header="Application Review">
-                            <ApprovalWorkflow v-if="selectedApplication" :application="selectedApplication"
-                                :decline-reasons="props.declineReasons || {}" :show-applicant-name="false"
-                                @approved="handleApprovalAction" @declined="handleApprovalAction"
-                                @conditionalApproval="handleApprovalAction" @refresh="refreshApplicationList" />
-                        </TabPanel>
-
                         <TabPanel value="profileInformation" header="Profile Information">
                             <!-- Personal & Academic Information -->
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -1902,7 +1961,7 @@ const formatDate = (date) => {
                                             <label class="text-gray-600">Income</label>
                                             <div class="font-medium">{{ selectedApplicantForReview.gross_monthly_income
                                                 || 'N/A'
-                                            }}</div>
+                                                }}</div>
                                         </div>
                                         <div>
                                             <label class="text-gray-600">Address</label>
@@ -2058,6 +2117,61 @@ const formatDate = (date) => {
                                                 <div class="font-medium">{{
                                                     selectedApplicantForReview.guardian_contact_no ||
                                                     'N/A' }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </TabPanel>
+
+                        <TabPanel value="requirements" header="Requirements">
+                            <div v-if="selectedApplicantForReview" class="space-y-4">
+
+                                <!-- Requirements List -->
+                                <div class="border rounded-lg overflow-hidden">
+                                    <div class="bg-gray-50 p-3 font-semibold text-sm border-b">Requirements Checklist
+                                    </div>
+                                    <div v-if="reviewRequirements.length === 0" class="p-6 text-center text-gray-500">
+                                        <i class="pi pi-inbox text-3xl mb-2 block"></i>
+                                        No requirements found
+                                    </div>
+                                    <div v-else class="divide-y">
+                                        <div v-for="req in reviewRequirements" :key="req.id"
+                                            class="p-3 flex items-center justify-between hover:bg-gray-50"
+                                            :class="{ 'opacity-60': !req.is_checked }">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center gap-2">
+                                                    <div v-if="req.is_checked" class="flex-shrink-0">
+                                                        <span
+                                                            class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100">
+                                                            <i class="pi pi-check text-green-600 text-xs"></i>
+                                                        </span>
+                                                    </div>
+                                                    <div v-else class="flex-shrink-0">
+                                                        <span
+                                                            class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200">
+                                                            <i class="pi pi-circle text-gray-400 text-xs"></i>
+                                                        </span>
+                                                    </div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="font-medium text-sm text-gray-900">{{ req.name }}</p>
+                                                        <p v-if="req.file_path" class="text-xs text-gray-600 truncate">
+                                                            {{
+                                                                req.file_name }}</p>
+                                                        <p v-else-if="req.is_checked" class="text-xs text-gray-500">No
+                                                            files
+                                                            uploaded</p>
+                                                        <p v-else class="text-xs text-gray-400">Pending submission</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex gap-2 ml-3 flex-shrink-0">
+                                                <Button v-if="req.file_path && req.is_checked" icon="pi pi-eye"
+                                                    severity="info" text rounded size="small"
+                                                    @click="previewRequirementFile(req)" v-tooltip="'Preview'" />
+                                                <Button v-if="req.file_path && req.is_checked" icon="pi pi-download"
+                                                    severity="success" text rounded size="small"
+                                                    @click="downloadRequirementFile(req)" v-tooltip="'Download'" />
                                             </div>
                                         </div>
                                     </div>
@@ -2281,6 +2395,10 @@ const formatDate = (date) => {
         <!-- Priority Modal -->
         <PriorityModal :show="showPriorityModal" :applicant="selectedApplicantForPriority"
             @update:show="showPriorityModal = $event" @success="handlePrioritySuccess" />
+
+        <!-- Requirements Checklist Modal -->
+        <RequirementsChecklistModal :visible="showRequirementsChecklistModal"
+            :applicant="selectedApplicantForRequirements" @update:visible="showRequirementsChecklistModal = $event" />
 
         <!-- Export Selected Rows Modal -->
         <ExportSelectedModal :show="showExportModal" :selected-rows="selectedRows"
