@@ -62,9 +62,9 @@ class PaymentMonitoringController extends Controller
                     }
                 }
 
-                // If no individual amount found, use null/empty
+                // If no individual amount found, fall back to transaction amount
                 if ($individualAmount === '') {
-                    $individualAmount = null;
+                    $individualAmount = $fundTransaction->amount ?? null;
                 }
             }
 

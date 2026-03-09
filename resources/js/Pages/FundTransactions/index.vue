@@ -678,6 +678,11 @@ const calculateTotalAmount = (voucher) => {
         if (hasAmounts) {
             return total;
         }
+        
+        // If scholar_ids exist but no individual amounts, fall back to header amount
+        if (voucher.amount) {
+            return parseFloat(voucher.amount);
+        }
     }
 
     // Fallback: use header amount
