@@ -948,24 +948,23 @@ onMounted(() => {
 
         <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
             <!-- Header -->
-            <Toolbar class="border-0 bg-transparent p-0">
+            <Toolbar class="border-0 bg-transparent p-0 flex-col sm:flex-row gap-4">
                 <template #start>
-                    <div class="flex items-center gap-4">
-                        <div class="flex items-center justify-center w-16 h-16">
-                            <i class="pi pi-credit-card text-indigo-900" style="font-size: 2rem;"></i>
+                    <div class="flex items-center gap-4 w-full">
+                        <div class="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
+                            <i class="pi pi-credit-card text-indigo-900" style="font-size: 1.5rem;"></i>
                         </div>
-                        <div>
-                            <h1 class="text-2xl font-bold text-gray-700">Fund Transactions Management</h1>
-                            <p class="text-gray-600 mt-1">Create and manage financial transactions for scholars
-                                disbursements
-                                and payroll</p>
+                        <div class="min-w-0">
+                            <h1 class="text-xl sm:text-2xl font-bold text-gray-700">Fund Transactions Management</h1>
+                            <p class="text-xs sm:text-sm text-gray-600 mt-1 truncate">Create and manage financial
+                                transactions</p>
                         </div>
                     </div>
                 </template>
                 <template #end>
                     <button @click="handleCreateVoucher"
-                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
-                        <i class="pi pi-plus mr-2 text-sm"></i>
+                        class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer text-sm">
+                        <i class="pi pi-plus mr-2 text-xs"></i>
                         <span>Create Fund Transaction</span>
                     </button>
                 </template>
@@ -973,71 +972,85 @@ onMounted(() => {
 
 
             <!-- List/Summary Section -->
-            <div class="bg-white rounded-lg shadow p-6 mt-8">
-                <div class="flex items-center justify-between gap-4 mb-4 flex-col sm:flex-row">
-                    <div class="flex-1 w-full">
-                        <input v-model="searchQuery" type="text"
-                            placeholder="Search by voucher #, payee, type, creator, or scholar name..."
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            <div class="bg-white rounded-lg shadow p-4 sm:p-6 mt-8 overflow-hidden">
+                <div class="flex flex-col gap-4 mb-4">
+                    <div class="w-full">
+                        <input v-model="searchQuery" type="text" placeholder="Search voucher, payee, or scholar..."
+                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                     </div>
-                    <select v-model="statusFilter"
-                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent whitespace-nowrap">
-                        <option value="">All Status</option>
-                        <option value="on process">On Process</option>
-                        <option value="suspended">Suspended</option>
-                        <option value="completed">Completed</option>
-                    </select>
-                    <div class="flex gap-2">
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="flex flex-wrap gap-3 items-center">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="statusFilter" type="radio" value=""
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">All Status</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="statusFilter" type="radio" value="on process"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">On Process</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="statusFilter" type="radio" value="suspended"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">Suspended</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="statusFilter" type="radio" value="completed"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">Completed</span>
+                            </label>
+                        </div>
                         <button @click="fetchVouchers" :disabled="loading"
-                            class="inline-flex items-center px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50 whitespace-nowrap">
-                            <i class="pi pi-refresh mr-2" :class="{ 'animate-spin': loading }"></i>
-                            Refresh
+                            class="inline-flex items-center justify-center px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50 whitespace-nowrap">
+                            <i class="pi pi-refresh mr-2 text-xs" :class="{ 'animate-spin': loading }"></i>
+                            <span class="hidden sm:inline">Refresh</span>
                         </button>
                     </div>
                 </div>
-                <div class="overflow-x-auto -mx-6">
-                    <table class="w-full divide-y divide-gray-200 px-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full divide-y divide-gray-200 text-xs sm:text-sm">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     OBR No</th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Payee</th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     OBR Type</th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Disbursement Type</th>
 
 
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Status</th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Total Amount</th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Created By</th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Date</th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <tr v-if="loading" class="hover:bg-gray-50">
-                                <td colspan="9" class="px-6 py-8 text-center text-sm text-gray-500">
+                                <td colspan="9" class="px-2 sm:px-6 py-8 text-center text-sm text-gray-500">
                                     <i class="pi pi-spin pi-spinner mr-2"></i> Loading vouchers...
                                 </td>
                             </tr>
                             <tr v-else-if="vouchers.length === 0" class="hover:bg-gray-50">
-                                <td colspan="9" class="px-6 py-8 text-center text-sm text-gray-500">
+                                <td colspan="9" class="px-2 sm:px-6 py-8 text-center text-sm text-gray-500">
                                     <p>No vouchers created yet.</p>
                                     <p class="text-xs text-gray-400 mt-1">Click the "Create Fund Transaction" button to
                                         get
@@ -1045,7 +1058,7 @@ onMounted(() => {
                                 </td>
                             </tr>
                             <tr v-else-if="filteredVouchers.length === 0" class="hover:bg-gray-50">
-                                <td colspan="9" class="px-6 py-8 text-center text-sm text-gray-500">
+                                <td colspan="9" class="px-2 sm:px-6 py-8 text-center text-sm text-gray-500">
                                     <p>No vouchers match your search.</p>
                                     <p class="text-xs text-gray-400 mt-1">Try adjusting your search criteria</p>
                                 </td>
@@ -1053,16 +1066,17 @@ onMounted(() => {
                             <tr v-for="voucher in filteredVouchers" :key="voucher.id"
                                 class="hover:bg-gray-50 transition"
                                 @contextmenu.prevent="openContextMenu($event, voucher)">
-                                <td class="px-6 py-4 text-sm font-medium text-blue-600">{{ voucher.obr_no || '---' }}
+                                <td class="px-2 sm:px-6 py-4 text-sm font-medium text-blue-600">{{ voucher.obr_no ||
+                                    '---' }}
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-900">
+                                <td class="px-2 sm:px-6 py-4 text-sm text-gray-900">
                                     <div>{{ voucher.payee_name }}</div>
                                     <div v-if="isPayeeSchool(voucher)"
                                         class="text-xs font-bold italic text-gray-600 mt-1">
                                         {{ getFirstScholarNameFromCache(voucher) || '---' }}
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 text-sm">
+                                <td class="px-2 sm:px-6 py-4 text-sm">
                                     <span :class="{
                                         'px-3 py-1 rounded-full text-xs font-medium': true,
                                         ' text-gray-800': voucher.obr_type === 'REGULAR',
@@ -1072,7 +1086,7 @@ onMounted(() => {
                                         {{ voucher.obr_type || '---' }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-900">
+                                <td class="px-2 sm:px-6 py-4 text-sm text-gray-900">
                                     <span :class="{
                                         'px-3 py-1 rounded-full text-xs font-medium': true,
                                         ' text-blue-800': voucher.voucher_type === 'disbursements',
@@ -1084,19 +1098,21 @@ onMounted(() => {
                                 </td>
 
 
-                                <td class="px-6 py-4 text-sm">
+                                <td class="px-2 sm:px-6 py-4 text-sm">
                                     <span
                                         :class="['px-3 py-1 rounded-full text-xs font-medium', getStatusColor(voucher.transaction_status)]">
                                         {{ (voucher.transaction_status || 'on process').charAt(0).toUpperCase() +
                                             (voucher.transaction_status || 'on process').slice(1) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-sm font-medium text-gray-900">{{
+                                <td class="px-2 sm:px-6 py-4 text-sm font-medium text-gray-900">{{
                                     formatAmount(calculateTotalAmount(voucher))
-                                    }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-600">{{ voucher.creator?.name || '---' }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-600">{{ formatDate(voucher.created_at) }}</td>
-                                <td class="px-6 py-4 text-sm">
+                                }}</td>
+                                <td class="px-2 sm:px-6 py-4 text-sm text-gray-600">{{ voucher.creator?.name || '---' }}
+                                </td>
+                                <td class="px-2 sm:px-6 py-4 text-sm text-gray-600">{{ formatDate(voucher.created_at) }}
+                                </td>
+                                <td class="px-2 sm:px-6 py-4 text-sm">
                                     <button @click="(e) => openContextMenu(e, voucher)"
                                         class="text-gray-500 hover:text-gray-700 font-medium text-lg cursor-pointer"
                                         title="Actions">
@@ -1116,7 +1132,8 @@ onMounted(() => {
             @scholar-selected="handleScholarSelection" />
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showDeleteConfirmDialog" modal header="Confirm Delete" :style="{ width: '500px' }">
+        <Dialog v-model:visible="showDeleteConfirmDialog" modal header="Confirm Delete" class="w-11/12 sm:w-96"
+            :style="{ maxWidth: '500px' }">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
                     <i class="pi pi-exclamation-triangle text-2xl text-red-500"></i>
@@ -1140,7 +1157,8 @@ onMounted(() => {
         </Dialog>
 
         <!-- View Fund Transaction Dialog -->
-        <Dialog v-model:visible="showViewDialog" modal header="Fund Transaction Details" :style="{ width: '700px' }">
+        <Dialog v-model:visible="showViewDialog" modal header="Fund Transaction Details" class="w-11/12 sm:max-w-2xl"
+            :style="{ maxWidth: '700px' }">
             <div v-if="selectedVoucher" class="space-y-4">
                 <!-- Fund Transaction Info -->
                 <div class="grid grid-cols-2 gap-4">
@@ -1200,7 +1218,7 @@ onMounted(() => {
                 <div class="bg-white border border-gray-200 rounded p-4">
                     <p class="text-sm font-semibold text-gray-900 mb-2">Scholars ({{ selectedVoucher.scholar_ids?.length
                         || 0
-                    }})</p>
+                        }})</p>
                     <div v-if="loadingScholars" class="text-center py-2">
                         <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span class="text-xs">Loading...</span>
                     </div>
@@ -1209,7 +1227,7 @@ onMounted(() => {
                         <div v-for="(scholar, index) in scholarsDetails" :key="index"
                             class="text-xs text-gray-700 py-1 px-2 bg-gray-50 rounded flex items-center justify-between gap-2">
                             <span class="font-medium">{{ index + 1 }}. {{ scholar.first_name }} {{ scholar.last_name
-                            }}</span>
+                                }}</span>
                             <span class="text-gray-600 whitespace-nowrap">
                                 <span v-if="scholar.course_name">{{ scholar.course_name }}</span>
                                 <span v-if="scholar.year_level" class="ml-1">| {{
@@ -1217,7 +1235,7 @@ onMounted(() => {
                                         scholar.year_level
                                 }}</span>
                                 <span v-if="scholar.academic_year" class="ml-1">| {{ scholar.academic_year
-                                }}</span>
+                                    }}</span>
                                 <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                             </span>
                         </div>
@@ -1278,7 +1296,8 @@ onMounted(() => {
         <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
 
         <!-- Remarks Dialog -->
-        <Dialog v-model:visible="showRemarksDialog" modal header="Add/Edit Remarks" :style="{ width: '600px' }">
+        <Dialog v-model:visible="showRemarksDialog" modal header="Add/Edit Remarks" class="w-11/12 sm:max-w-xl"
+            :style="{ maxWidth: '600px' }">
             <div v-if="selectedVoucherForRemarks" class="space-y-4">
                 <div>
                     <p class="text-sm font-medium text-gray-700 mb-2">Voucher: {{
@@ -1300,7 +1319,8 @@ onMounted(() => {
         </Dialog>
 
         <!-- Transaction Status Dialog -->
-        <Dialog v-model:visible="showStatusDialog" modal header="Update Transaction Status" :style="{ width: '500px' }">
+        <Dialog v-model:visible="showStatusDialog" modal header="Update Transaction Status" class="w-11/12 sm:w-96"
+            :style="{ maxWidth: '500px' }">
             <div v-if="selectedVoucherForStatus" class="space-y-4">
                 <div>
                     <p class="text-sm font-medium text-gray-700 mb-2">Voucher: {{
@@ -1336,7 +1356,8 @@ onMounted(() => {
         </Dialog>
 
         <!-- OBR Tracking Dialog -->
-        <Dialog v-model:visible="showOBRTrackingDialog" modal header="Update OBR Info" :style="{ width: '600px' }">
+        <Dialog v-model:visible="showOBRTrackingDialog" modal header="Update OBR Info" class="w-11/12 sm:max-w-xl"
+            :style="{ maxWidth: '600px' }">
             <div class="space-y-4">
                 <div v-if="selectedVoucherForOBRTracking" class="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
                     <p class="text-xs font-medium text-blue-900 mb-1">VOUCHER</p>
@@ -1394,7 +1415,7 @@ onMounted(() => {
 
         <!-- Tracking History Dialog -->
         <Dialog v-model:visible="showTrackingHistoryDialog" modal header="Tracking Timeline"
-            :style="{ width: '720px' }">
+            class="w-11/12 sm:max-w-2xl" :style="{ maxWidth: '720px' }">
             <div v-if="trackingHistoryData" class="space-y-0">
                 <!-- Tracking Timeline -->
                 <div v-if="trackingHistoryData.tracking_information && trackingHistoryData.tracking_information.length > 0"

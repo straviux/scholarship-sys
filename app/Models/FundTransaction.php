@@ -20,6 +20,7 @@ class FundTransaction extends Model
         'course',
         'academic_year',
         'semester',
+        'obr_type',
         'payee_type',
         'payee_name',
         'payee_address',
@@ -31,12 +32,13 @@ class FundTransaction extends Model
         'scholar_ids',
         'notes',
         'remarks',
-        'obr_type',
         'transaction_status',
         'created_by',
+        'updated_by',
         'fiscal_year',
         'obr_no',
         'dv_no',
+        'date_obligated',
     ];
 
     protected $casts = [

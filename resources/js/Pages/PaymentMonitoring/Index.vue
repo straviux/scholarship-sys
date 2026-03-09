@@ -104,11 +104,15 @@ const clearFilters = () => {
 
 // Status badge styling
 const getStatusBadgeClass = (status) => {
-    const baseClass = 'px-3 py-1 rounded-full text-xs font-semibold';
+    const baseClass = 'px-2 sm:px-3 py-1 rounded-full text-xs font-semibold';
     const statusMap = {
-        'on process': 'bg-blue-100 text-blue-800',
-        'suspended': 'bg-yellow-100 text-yellow-800',
-        'completed': 'bg-green-100 text-green-800',
+        'LOA': 'bg-blue-100 text-blue-800',
+        'IRREGULAR': 'bg-yellow-100 text-yellow-800',
+        'TRANSFERRED': 'bg-purple-100 text-purple-800',
+        'CLAIMED': 'bg-indigo-100 text-indigo-800',
+        'PAID': 'bg-green-100 text-green-800',
+        'ON PROCESS': 'bg-orange-100 text-orange-800',
+        'DENIED': 'bg-red-100 text-red-800',
         '': 'bg-gray-100 text-gray-800',
     };
     return `${baseClass} ${statusMap[status] || statusMap['']}`;
@@ -132,14 +136,16 @@ const formatDate = (date) => {
     <AdminLayout>
         <template #header>Payment Monitoring</template>
 
-        <div class="max-w-8xl mx-auto py-4">
-            <Toolbar class="mb-6 bg-white rounded-lg shadow-sm">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-8">
+            <Toolbar class="mb-6 bg-white rounded-lg shadow-sm flex-col sm:flex-row gap-4">
                 <template #start>
-                    <div class="flex items-center gap-3">
-                        <i class="pi pi-dollar text-2xl text-blue-600"></i>
-                        <div>
-                            <h1 class="text-xl font-bold text-gray-800">Payment Monitoring</h1>
-                            <p class="text-sm text-gray-500">Track OBR status for active scholarship records</p>
+                    <div class="flex items-center gap-3 w-full">
+                        <i class="pi pi-dollar text-lg sm:text-2xl text-blue-600 flex-shrink-0"
+                            style="font-size: 1.5rem;"></i>
+                        <div class="min-w-0">
+                            <h1 class="text-lg sm:text-xl font-bold text-gray-800">Payment Monitoring</h1>
+                            <p class="text-xs sm:text-sm text-gray-500 truncate">Track OBR status for active scholarship
+                                records</p>
                         </div>
                     </div>
                 </template>
@@ -147,80 +153,128 @@ const formatDate = (date) => {
 
             <!-- Filters Panel -->
             <Panel class="mb-6" header="Filters" :toggleable="true" :collapsed="false">
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4">
                     <!-- Search by Scholar Name -->
-                    <div class="flex flex-col gap-2">
-                        <label for="search" class="text-sm font-medium text-gray-700">Scholar Name</label>
-                        <InputText id="search" v-model="searchInput" placeholder="Search by name" class="w-full" />
+                    <div class="flex flex-col gap-2 md:col-span-2">
+                        <label for="search" class="text-xs sm:text-sm font-medium text-gray-700">Scholar Name</label>
+                        <InputText id="search" v-model="searchInput" placeholder="Search by name"
+                            class="w-full text-xs sm:text-sm" />
                     </div>
 
-                    <!-- Filter by OBR Status -->
-                    <div class="flex flex-col gap-2">
-                        <label for="status" class="text-sm font-medium text-gray-700">OBR Status</label>
-                        <Select id="status" v-model="selectedStatus" :options="statusOptionsWithNoOBR"
-                            optionLabel="label" optionValue="value" placeholder="Select Status" showClear
-                            class="w-full" />
-                    </div>
 
                     <!-- Filter by Academic Year -->
                     <div class="flex flex-col gap-2">
-                        <label class="text-sm font-medium text-gray-700">Academic Year</label>
+                        <label class="text-xs sm:text-sm font-medium text-gray-700">Academic Year</label>
                         <AcademicYearSelect v-model="selectedAcademicYear" />
                     </div>
 
                     <!-- Filter by Term/Semester -->
                     <div class="flex flex-col gap-2">
-                        <label class="text-sm font-medium text-gray-700">Term</label>
+                        <label class="text-xs sm:text-sm font-medium text-gray-700">Term</label>
                         <TermSelect v-model="selectedSemester" />
                     </div>
 
+                    <!-- Filter by Transaction Status -->
+                    <div class="flex flex-col gap-3 md:col-span-3">
+                        <label class="text-xs sm:text-sm font-medium text-gray-700">Transaction Status</label>
+                        <div class="flex flex-wrap gap-2 sm:gap-3">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="selectedStatus" type="radio" value=""
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">All</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="selectedStatus" type="radio" value="no-obr"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">No OBR</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="selectedStatus" type="radio" value="LOA"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">LOA</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="selectedStatus" type="radio" value="IRREGULAR"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Irregular</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="selectedStatus" type="radio" value="TRANSFERRED"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Transferred</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="selectedStatus" type="radio" value="CLAIMED"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Claimed</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="selectedStatus" type="radio" value="PAID"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Paid</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="selectedStatus" type="radio" value="ON PROCESS"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">On Process</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="selectedStatus" type="radio" value="DENIED"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Denied</span>
+                            </label>
+                        </div>
+                    </div>
                     <!-- Action Buttons -->
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-medium text-gray-700">&nbsp;</label>
-                        <Button label="Clear All Filters" icon="pi pi-times" severity="secondary" @click="clearFilters"
-                            class="w-full" />
+                    <div class="flex flex-col gap-2 md:col-span-1 items-end justify-end">
+                        <label class="text-xs sm:text-sm font-medium text-gray-700">&nbsp;</label>
+                        <Button label="Clear Filters" icon="pi pi-times" severity="secondary" @click="clearFilters"
+                            class="w-1/2 text-xs sm:text-sm" size="small" />
                     </div>
                 </div>
             </Panel>
             <!-- Summary -->
-            <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
-                    <p class="text-sm text-gray-600">Total Active Records</p>
-                    <p class="text-2xl font-bold text-blue-700">{{ paymentData.length }}</p>
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                <div class="shadow rounded-lg p-3 sm:p-4 border-l-4 border-blue-500">
+                    <p class="text-xs sm:text-sm text-gray-600">Total Active Records</p>
+                    <p class="text-xl sm:text-2xl font-bold text-blue-700 mt-1">{{ paymentData.length }}</p>
                 </div>
-                <div class="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
-                    <p class="text-sm text-gray-600">With OBR Assigned</p>
-                    <p class="text-2xl font-bold text-green-700">
+                <div class="shadow rounded-lg p-3 sm:p-4 border-l-4 border-green-500">
+                    <p class="text-xs sm:text-sm text-gray-600">With OBR Assigned</p>
+                    <p class="text-xl sm:text-2xl font-bold text-green-700 mt-1">
                         {{paymentData.filter(item => item.transaction_status).length}}
                     </p>
                 </div>
-                <div class="bg-yellow-50 rounded-lg p-4 border-l-4 border-yellow-500">
-                    <p class="text-sm text-gray-600">Pending OBR Assignment</p>
-                    <p class="text-2xl font-bold text-yellow-700">
+                <div class="shadow rounded-lg p-3 sm:p-4 border-l-4 border-yellow-500">
+                    <p class="text-xs sm:text-sm text-gray-600">Pending OBR Assignment</p>
+                    <p class="text-xl sm:text-2xl font-bold text-yellow-700 mt-1">
                         {{paymentData.filter(item => !item.transaction_status).length}}
                     </p>
                 </div>
             </div>
 
             <!-- Data Table -->
-            <div class="bg-white rounded-lg shadow mt-6">
+            <div class="bg-white rounded-lg shadow mt-6 overflow-auto">
                 <DataTable :value="filteredData" :paginator="true" :rows="10" :rows-per-page-options="[5, 10, 20, 50]"
-                    responsive-layout="scroll" class="w-full">
-                    <Column field="scholar_name" header="Scholar Name" :sortable="true" style="min-width: 200px" />
-                    <Column field="unified_status" header="Status" :sortable="true" style="min-width: 100px">
+                    responsive-layout="scroll" class="w-full text-xs sm:text-sm">
+                    <Column field="scholar_name" header="Scholar Name" :sortable="true" style="min-width: 160px" />
+                    <Column field="voucher_type" header="Disbursement Type" :sortable="true" style="min-width: 100px">
                         <template #body="{ data }">
-                            <div class="px-3 py-1 rounded-full text-xs font-semibold inline-block"
-                                :class="data.unified_status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'">
-                                {{ data.unified_status }}
-                            </div>
+                            <span v-if="data.voucher_type"
+                                class="px-2 sm:px-3 py-1 rounded-full text-xs font-semibold inline-block"
+                                :class="data.voucher_type === 'disbursements' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'">
+                                {{ data.voucher_type === 'disbursements' ? 'Disbursement' : (data.voucher_type ===
+                                    'payroll' ? 'Payroll' : data.voucher_type) }}
+                            </span>
+                            <span v-else class="text-gray-400 text-xs">—</span>
                         </template>
                     </Column>
-                    <Column field="academic_year" header="Academic Year" :sortable="true" style="min-width: 120px" />
-                    <Column field="year_level" header="Year Level" :sortable="true" style="min-width: 100px" />
-                    <Column field="term" header="Term" :sortable="true" style="min-width: 100px" />
+                    <Column field="academic_year" header="Academic Year" :sortable="true" style="min-width: 100px" />
+                    <Column field="year_level" header="Year Level" :sortable="true" style="min-width: 80px" />
+                    <Column field="term" header="Term" :sortable="true" style="min-width: 80px" />
 
-                    <!-- OBR Status -->
-                    <Column header="OBR Status" style="min-width: 140px">
+                    <!-- Transaction Status -->
+                    <Column header="Transaction Status" style="min-width: 140px">
                         <template #body="{ data }">
                             <div v-if="data.transaction_status" :class="getStatusBadgeClass(data.transaction_status)">
                                 {{ data.transaction_status }}
@@ -232,9 +286,9 @@ const formatDate = (date) => {
                     </Column>
 
                     <!-- Amount -->
-                    <Column header="Amount" style="min-width: 120px">
+                    <Column header="Amount" style="min-width: 100px">
                         <template #body="{ data }">
-                            <span v-if="data.amount" class="font-semibold text-green-700">
+                            <span v-if="data.amount" class="font-semibold text-green-700 text-xs sm:text-sm">
                                 ₱{{ parseFloat(data.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
                             </span>
                             <span v-else class="text-gray-400">—</span>
@@ -242,9 +296,9 @@ const formatDate = (date) => {
                     </Column>
 
                     <!-- OBR Date -->
-                    <Column header="OBR Date" style="min-width: 120px">
+                    <Column header="OBR Date" style="min-width: 100px">
                         <template #body="{ data }">
-                            <span v-if="data.date_obligated" class="text-sm text-gray-700">
+                            <span v-if="data.date_obligated" class="text-xs sm:text-sm text-gray-700">
                                 {{ formatDate(data.date_obligated) }}
                             </span>
                             <span v-else class="text-gray-400">—</span>
@@ -252,17 +306,18 @@ const formatDate = (date) => {
                     </Column>
 
                     <!-- Remarks -->
-                    <Column field="remarks" header="Remarks" style="min-width: 200px">
+                    <Column field="remarks" header="Remarks" style="min-width: 160px">
                         <template #body="{ data }">
-                            <span v-if="data.remarks" class="text-sm text-gray-600">{{ data.remarks }}</span>
+                            <span v-if="data.remarks" class="text-xs sm:text-sm text-gray-600">{{ data.remarks }}</span>
                             <span v-else class="text-gray-400">—</span>
                         </template>
                     </Column>
 
                     <!-- OBR No -->
-                    <Column field="obr_no" header="OBR No." style="min-width: 150px">
+                    <Column field="obr_no" header="OBR No." style="min-width: 120px">
                         <template #body="{ data }">
-                            <span v-if="data.obr_no" class="text-sm font-mono text-blue-700">{{ data.obr_no }}</span>
+                            <span v-if="data.obr_no" class="text-xs sm:text-sm font-mono text-blue-700">{{ data.obr_no
+                                }}</span>
                             <span v-else class="text-gray-400">—</span>
                         </template>
                     </Column>

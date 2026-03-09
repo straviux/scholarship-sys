@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\User\ProfileController as UserProfileController;
 use App\Http\Controllers\User\SettingsController;
 use App\Http\Controllers\PaymentMonitoringController;
+use App\Http\Controllers\DisbursementManagementController;
 use App\Http\Controllers\TestPageController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
@@ -356,6 +357,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/payment-monitoring', [PaymentMonitoringController::class, 'index'])
         ->middleware('check.permission:payment-monitoring.view')
         ->name('payment-monitoring.index');
+
+    // Disbursement Management routes (temporary mapping interface)
+    Route::get('/disbursement-management', [DisbursementManagementController::class, 'index'])
+        ->middleware('check.permission:payment-monitoring.view')
+        ->name('disbursement-management.index');
+    Route::get('/disbursement-management/{obrNo}', [DisbursementManagementController::class, 'show'])
+        ->middleware('check.permission:payment-monitoring.view')
+        ->name('disbursement-management.show');
+    Route::post('/disbursement-management', [DisbursementManagementController::class, 'store'])
+        ->middleware('check.permission:payment-monitoring.view')
+        ->name('disbursement-management.store');
 
     Route::patch('/scholarship/{record}/update-status', [ScholarshipProfileController::class, 'updateStatus'])
         ->name('scholarship.record.update-status');

@@ -31,60 +31,89 @@ class PaymentMonitoringController extends Controller
             ->get();
 
         // Map records and fetch OBR data from fund_transactions
-        $paymentData = $records->map(function ($record) {
+        $paymentData = $records->flatMap(function ($record) {
             $profileId = $record->profile_id;
 
-            // Find fund_transactions where this profile_id is in the scholar_ids JSON array
-            $fundTransaction = FundTransaction::where(function ($query) use ($profileId) {
+            // Find ALL fund_transactions where this profile_id is in the scholar_ids JSON array
+            $fundTransactions = FundTransaction::where(function ($query) use ($profileId) {
                 $query->whereJsonContains('scholar_ids', $profileId)
                     ->orWhereJsonContains('scholar_ids', ['profile_id' => $profileId]);
             })
-                ->first();
+                ->orderBy('created_at', 'desc')
+                ->get();
 
-            // Get individual scholar amount from scholar_ids
-            $individualAmount = '';
-            if ($fundTransaction && $fundTransaction->scholar_ids) {
-                $scholarIds = is_array($fundTransaction->scholar_ids) ? $fundTransaction->scholar_ids : json_decode($fundTransaction->scholar_ids, true);
+            // If no OBRs, create one row with empty OBR data
+            if ($fundTransactions->isEmpty()) {
+                return [[
+                    'id' => $record->id,
+                    'profile_id' => $profileId,
+                    'scholar_name' => $record->profile->full_name ?? 'N/A',
+                    'record_id' => $record->id,
+                    'academic_year' => $record->academic_year,
+                    'year_level' => $record->year_level,
+                    'term' => $record->term,
+                    'unified_status' => $record->unified_status,
+                    // OBR data (blank if no fund transaction)
+                    'obr_no' => '',
+                    'transaction_status' => '',
+                    'voucher_type' => '',
+                    'amount' => '',
+                    'date_obligated' => '',
+                    'remarks' => '',
+                ]];
+            }
 
-                // Look for the current scholar's individual amount
-                foreach ($scholarIds as $scholar) {
-                    if (is_array($scholar)) {
-                        if (($scholar['profile_id'] ?? null) == $profileId) {
-                            // Check for different possible keys: 'amount' or 'individualAmount'
-                            if (isset($scholar['amount'])) {
-                                $individualAmount = $scholar['amount'];
-                                break;
-                            } elseif (isset($scholar['individualAmount'])) {
-                                $individualAmount = $scholar['individualAmount'];
-                                break;
+            // Create a row for each OBR
+            return $fundTransactions->map(function ($fundTransaction) use ($record, $profileId) {
+                // Get individual scholar amount from scholar_ids
+                $individualAmount = '';
+                if ($fundTransaction->scholar_ids) {
+                    $scholarIds = is_array($fundTransaction->scholar_ids) ? $fundTransaction->scholar_ids : json_decode($fundTransaction->scholar_ids, true);
+
+                    // Look for the current scholar's individual amount
+                    foreach ($scholarIds as $scholar) {
+                        if (is_array($scholar)) {
+                            if (($scholar['profile_id'] ?? null) == $profileId) {
+                                // Check for different possible keys: 'amount' or 'individualAmount'
+                                if (isset($scholar['amount'])) {
+                                    $individualAmount = $scholar['amount'];
+                                    break;
+                                } elseif (isset($scholar['individualAmount'])) {
+                                    $individualAmount = $scholar['individualAmount'];
+                                    break;
+                                }
                             }
                         }
                     }
+
+                    // If no individual amount found, fall back to transaction amount
+                    if ($individualAmount === '') {
+                        $individualAmount = $fundTransaction->amount ?? null;
+                    }
                 }
 
-                // If no individual amount found, fall back to transaction amount
-                if ($individualAmount === '') {
-                    $individualAmount = $fundTransaction->amount ?? null;
-                }
-            }
+                return [
+                    'id' => $record->id,
+                    'profile_id' => $profileId,
+                    'scholar_name' => $record->profile->full_name ?? 'N/A',
+                    'record_id' => $record->id,
+                    'academic_year' => $record->academic_year,
+                    'year_level' => $record->year_level,
+                    'term' => $record->term,
+                    'unified_status' => $record->unified_status,
+                    // OBR data
+                    'obr_no' => $fundTransaction->obr_no ?? '',
+                    'transaction_status' => $fundTransaction->transaction_status ?? '',
+                    'voucher_type' => $fundTransaction->voucher_type ?? '',
+                    'amount' => $individualAmount,
+                    'date_obligated' => $fundTransaction->date_obligated ?? $fundTransaction->created_at ?? '',
+                    'remarks' => $fundTransaction->remarks ?? '',
+                ];
+            })->toArray();
+        })->values();
 
-            return [
-                'id' => $record->id,
-                'profile_id' => $profileId,
-                'scholar_name' => $record->profile->full_name ?? 'N/A',
-                'record_id' => $record->id,
-                'academic_year' => $record->academic_year,
-                'year_level' => $record->year_level,
-                'term' => $record->term,
-                'unified_status' => $record->unified_status,
-                // OBR data (blank if no fund transaction)
-                'obr_no' => $fundTransaction?->obr_no ?? '',
-                'transaction_status' => $fundTransaction?->transaction_status ?? '',
-                'amount' => $individualAmount,
-                'date_obligated' => $fundTransaction?->created_at ?? '',
-                'remarks' => $fundTransaction?->remarks ?? '',
-            ];
-        });
+        // Convert to collection for filtering operations
+        $paymentData = collect($paymentData);
 
         // Apply search filter
         if ($searchQuery) {
@@ -120,14 +149,16 @@ class PaymentMonitoringController extends Controller
             });
         }
 
-        // Get unique transaction statuses for filter dropdown
-        $statuses = FundTransaction::whereNotNull('transaction_status')
-            ->distinct()
-            ->pluck('transaction_status')
-            ->map(function ($status) {
-                return ['label' => $status, 'value' => $status];
-            })
-            ->toArray();
+        // Define transaction status options (enum values from disbursements.obr_status)
+        $statuses = [
+            ['label' => 'LOA', 'value' => 'LOA'],
+            ['label' => 'IRREGULAR', 'value' => 'IRREGULAR'],
+            ['label' => 'TRANSFERRED', 'value' => 'TRANSFERRED'],
+            ['label' => 'CLAIMED', 'value' => 'CLAIMED'],
+            ['label' => 'PAID', 'value' => 'PAID'],
+            ['label' => 'ON PROCESS', 'value' => 'ON PROCESS'],
+            ['label' => 'DENIED', 'value' => 'DENIED'],
+        ];
 
         return Inertia::render('PaymentMonitoring/Index', [
             'paymentData' => $paymentData->values(),
