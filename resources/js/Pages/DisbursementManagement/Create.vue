@@ -113,7 +113,7 @@
                                 option-value="value" placeholder="Select Payee Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_type }" />
                             <div v-if="errors.payee_type" class="text-red-600 text-xs mt-1">{{ errors.payee_type[0]
-                                }}</div>
+                            }}</div>
                         </div>
 
                         <!-- Payee Name -->
@@ -122,7 +122,7 @@
                             <InputText v-model="form.payee_name" placeholder="Name of payee" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_name }" />
                             <div v-if="errors.payee_name" class="text-red-600 text-xs mt-1">{{ errors.payee_name[0]
-                                }}</div>
+                            }}</div>
                         </div>
 
                         <!-- Payee Address -->
@@ -139,7 +139,7 @@
                                 option-value="value" placeholder="Select Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.voucher_type }" />
                             <div v-if="errors.voucher_type" class="text-red-600 text-xs mt-1">{{ errors.voucher_type[0]
-                                }}</div>
+                            }}</div>
                         </div>
 
                         <!-- Explanation -->
@@ -243,23 +243,24 @@
                     </div>
 
                     <!-- File Not Available -->
-                    <div v-else-if="!selectedAttachment.path"
-                        class="flex items-center justify-center gap-3 p-8 bg-white rounded border-2 border-dashed border-gray-300">
-                        <i class="pi pi-exclamation-circle text-3xl text-gray-400"></i>
-                        <div>
-                            <p class="text-sm font-semibold text-gray-600">File Not Available</p>
-                            <p class="text-xs text-gray-500">The file is missing from storage</p>
+                    <div v-if="!selectedAttachment.path"
+                        class="flex flex-col items-center justify-center gap-4 p-12 bg-white rounded border-2 border-dashed border-gray-300 min-h-96">
+                        <div
+                            class="w-24 h-24 bg-gradient-to-br from-amber-100 to-amber-50 rounded-lg flex items-center justify-center">
+                            <i class="pi pi-exclamation-circle text-4xl text-amber-500"></i>
                         </div>
-                    </div>
-
-                    <!-- Preview Not Supported -->
-                    <div v-else
-                        class="flex items-center justify-center gap-3 p-8 bg-white rounded border-2 border-dashed border-gray-300">
-                        <i class="pi pi-file text-3xl text-gray-400"></i>
-                        <div>
-                            <p class="text-sm font-semibold text-gray-600">Preview Not Available</p>
-                            <p class="text-xs text-gray-500">This file type cannot be previewed. Please download to
-                                view.</p>
+                        <div class="text-center max-w-sm">
+                            <p class="text-lg font-bold text-gray-900">File Not Available</p>
+                            <p class="text-sm text-gray-600 mt-2">This file exists in the database but is not currently
+                                available in the production environment.</p>
+                            <div class="mt-4 p-3 bg-amber-50 rounded border border-amber-200">
+                                <p class="text-xs text-amber-800"><strong>File Name:</strong> {{ selectedAttachment.name
+                                    }}</p>
+                                <p class="text-xs text-amber-800 mt-1"><strong>Type:</strong> {{ selectedAttachment.type
+                                    }}</p>
+                                <p class="text-xs text-amber-800 mt-1"><strong>Size:</strong> {{
+                                    formatFileSize(selectedAttachment.size) }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -273,7 +274,7 @@
                     <div>
                         <p class="text-xs text-slate-500 font-medium">FILE SIZE</p>
                         <p class="text-sm font-semibold text-slate-900 mt-1">{{ formatFileSize(selectedAttachment.size)
-                        }}</p>
+                            }}</p>
                     </div>
                     <div>
                         <p class="text-xs text-slate-500 font-medium">ATTACHMENT TYPE</p>
