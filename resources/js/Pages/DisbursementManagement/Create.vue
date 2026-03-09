@@ -113,7 +113,7 @@
                                 option-value="value" placeholder="Select Payee Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_type }" />
                             <div v-if="errors.payee_type" class="text-red-600 text-xs mt-1">{{ errors.payee_type[0]
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <!-- Payee Name -->
@@ -122,7 +122,7 @@
                             <InputText v-model="form.payee_name" placeholder="Name of payee" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_name }" />
                             <div v-if="errors.payee_name" class="text-red-600 text-xs mt-1">{{ errors.payee_name[0]
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <!-- Payee Address -->
@@ -139,7 +139,7 @@
                                 option-value="value" placeholder="Select Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.voucher_type }" />
                             <div v-if="errors.voucher_type" class="text-red-600 text-xs mt-1">{{ errors.voucher_type[0]
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <!-- Explanation -->
@@ -228,19 +228,18 @@
                 <!-- File Preview Section -->
                 <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg">
                     <p class="text-xs text-slate-500 font-medium mb-3">FILE PREVIEW</p>
-                    
+
                     <!-- Image Preview -->
-                    <div v-if="isImageFile(selectedAttachment.type) && selectedAttachment.path" 
+                    <div v-if="isImageFile(selectedAttachment.type) && selectedAttachment.path"
                         class="flex justify-center bg-white rounded border border-slate-200 p-4">
-                        <img :src="selectedAttachment.path" :alt="selectedAttachment.name" 
+                        <img :src="selectedAttachment.path" :alt="selectedAttachment.name"
                             class="max-w-full max-h-96 object-contain rounded" />
                     </div>
 
                     <!-- PDF Preview -->
                     <div v-else-if="isPdfFile(selectedAttachment.type) && selectedAttachment.path"
                         class="bg-white rounded border border-slate-200">
-                        <embed :src="selectedAttachment.path" type="application/pdf" 
-                            class="w-full h-96 rounded" />
+                        <embed :src="selectedAttachment.path" type="application/pdf" class="w-full h-96 rounded" />
                     </div>
 
                     <!-- File Not Available -->
@@ -259,7 +258,8 @@
                         <i class="pi pi-file text-3xl text-gray-400"></i>
                         <div>
                             <p class="text-sm font-semibold text-gray-600">Preview Not Available</p>
-                            <p class="text-xs text-gray-500">This file type cannot be previewed. Please download to view.</p>
+                            <p class="text-xs text-gray-500">This file type cannot be previewed. Please download to
+                                view.</p>
                         </div>
                     </div>
                 </div>
@@ -273,7 +273,7 @@
                     <div>
                         <p class="text-xs text-slate-500 font-medium">FILE SIZE</p>
                         <p class="text-sm font-semibold text-slate-900 mt-1">{{ formatFileSize(selectedAttachment.size)
-                            }}</p>
+                        }}</p>
                     </div>
                     <div>
                         <p class="text-xs text-slate-500 font-medium">ATTACHMENT TYPE</p>
