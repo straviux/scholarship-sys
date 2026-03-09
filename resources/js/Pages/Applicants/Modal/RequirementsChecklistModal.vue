@@ -81,7 +81,7 @@ const loadRequirements = async () => {
         const newRequirements = response.data.requirements || [];
 
         // Check if any new files were uploaded
-        let newUploads = 0;
+        let newUploads = 0; K
         for (const newReq of newRequirements) {
             const oldReq = previousRequirements.find(r => r.id === newReq.id);
             if (oldReq && !oldReq.file_path && newReq.file_path) {

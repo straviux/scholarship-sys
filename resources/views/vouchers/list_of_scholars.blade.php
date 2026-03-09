@@ -296,6 +296,7 @@
                         foreach($voucher->scholar_ids as $scholarData) {
                         $profileId = is_array($scholarData) ? $scholarData['profile_id'] : $scholarData;
                         $recordId = is_array($scholarData) ? ($scholarData['scholarship_record_id'] ?? null) : null;
+                        $individualAmount = is_array($scholarData) && isset($scholarData['amount']) ? $scholarData['amount'] : $voucher->amount;
 
                         if($profileId) {
                         $profile = \App\Models\ScholarshipProfile::find($profileId);
@@ -330,7 +331,7 @@
                         $scholars[] = [
                         'name' => $scholarName,
                         'year' => $year,
-                        'amount' => $voucher->amount
+                        'amount' => $individualAmount
                         ];
                         }
                         }

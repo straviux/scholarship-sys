@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\MaintenanceController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\User\ProfileController as UserProfileController;
 use App\Http\Controllers\User\SettingsController;
+use App\Http\Controllers\PaymentMonitoringController;
 use App\Http\Controllers\TestPageController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
@@ -336,7 +337,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/scholarship-attachments/{attachment_id}/view', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'view'])
         ->middleware('check.permission:scholarships.view')
         ->name('scholarship.records.attachments.view');
-    Route::post('/scholarship-records/{scholarship_record_id}/generate-qr', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'generateQrCode'])
+    Route::match(['get', 'post'], '/scholarship-records/{scholarship_record_id}/generate-qr', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'generateQrCode'])
         ->name('scholarship.records.generate-qr');
 
     Route::post('/scholarship/{record}/approve', [ScholarshipProfileController::class, 'approve'])
@@ -350,6 +351,11 @@ Route::middleware(['auth'])->group(function () {
         return inertia('FundTransactions/index');
     })->middleware('check.permission:fund_transactions.view')
         ->name('fund_transactions.index');
+
+    // Payment Monitoring routes
+    Route::get('/payment-monitoring', [PaymentMonitoringController::class, 'index'])
+        ->middleware('check.permission:payment-monitoring.view')
+        ->name('payment-monitoring.index');
 
     Route::patch('/scholarship/{record}/update-status', [ScholarshipProfileController::class, 'updateStatus'])
         ->name('scholarship.record.update-status');

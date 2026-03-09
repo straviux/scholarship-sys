@@ -56,7 +56,7 @@ const findYearObject = (val) => {
 const localValue = ref(
     props.modelValue
         ? findYearObject(props.modelValue) || defaultYearObj.value
-        : defaultYearObj.value
+        : null
 );
 
 // Sync localValue with parent prop
@@ -66,8 +66,8 @@ watch(() => props.modelValue, (val) => {
         const selected = findYearObject(val);
         localValue.value = selected || defaultYearObj.value;
     } else {
-        // Default to current academic year if not set
-        localValue.value = defaultYearObj.value;
+        // Keep as null when cleared
+        localValue.value = null;
     }
 }, { immediate: true });
 
