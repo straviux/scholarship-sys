@@ -225,6 +225,45 @@
                     </div>
                 </div>
 
+                <!-- File Preview Section -->
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                    <p class="text-xs text-slate-500 font-medium mb-3">FILE PREVIEW</p>
+                    
+                    <!-- Image Preview -->
+                    <div v-if="isImageFile(selectedAttachment.type) && selectedAttachment.path" 
+                        class="flex justify-center bg-white rounded border border-slate-200 p-4">
+                        <img :src="selectedAttachment.path" :alt="selectedAttachment.name" 
+                            class="max-w-full max-h-96 object-contain rounded" />
+                    </div>
+
+                    <!-- PDF Preview -->
+                    <div v-else-if="isPdfFile(selectedAttachment.type) && selectedAttachment.path"
+                        class="bg-white rounded border border-slate-200">
+                        <embed :src="selectedAttachment.path" type="application/pdf" 
+                            class="w-full h-96 rounded" />
+                    </div>
+
+                    <!-- File Not Available -->
+                    <div v-else-if="!selectedAttachment.path"
+                        class="flex items-center justify-center gap-3 p-8 bg-white rounded border-2 border-dashed border-gray-300">
+                        <i class="pi pi-exclamation-circle text-3xl text-gray-400"></i>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-600">File Not Available</p>
+                            <p class="text-xs text-gray-500">The file is missing from storage</p>
+                        </div>
+                    </div>
+
+                    <!-- Preview Not Supported -->
+                    <div v-else
+                        class="flex items-center justify-center gap-3 p-8 bg-white rounded border-2 border-dashed border-gray-300">
+                        <i class="pi pi-file text-3xl text-gray-400"></i>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-600">Preview Not Available</p>
+                            <p class="text-xs text-gray-500">This file type cannot be previewed. Please download to view.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- File Details -->
                 <div class="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
                     <div>
@@ -446,5 +485,14 @@ function formatFileSize(bytes) {
 function openAttachmentModal(attachment) {
     selectedAttachment.value = attachment;
     showAttachmentModal.value = true;
+}
+
+function isImageFile(mimeType) {
+    const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    return imageTypes.includes(mimeType);
+}
+
+function isPdfFile(mimeType) {
+    return mimeType === 'application/pdf';
 }
 </script>
