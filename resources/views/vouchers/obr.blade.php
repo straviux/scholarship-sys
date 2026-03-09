@@ -459,6 +459,12 @@
 
         <!-- OBR Total Row -->
         @if($voucher->scholar_ids && count($voucher->scholar_ids) > 0)
+        @php
+        $totalAmount = 0;
+        foreach($scholars as $scholar) {
+            $totalAmount += $scholar['amount'];
+        }
+        @endphp
         @endif
 
         <!-- Bottom Section -->
@@ -472,7 +478,7 @@
                 <div class="column_5">
                     <div class="fpp" style="border: none;"></div>
                     <div class="account-code" style="border: none;"></div>
-                    <div class="amount" style="font-weight: bold;border: none;font-size:11pt">₱ {{ number_format($voucher->amount * count($voucher->scholar_ids), 2) }}</div>
+                    <div class="amount" style="font-weight: bold;border: none;font-size:11pt">₱ {{ number_format($totalAmount, 2) }}</div>
                 </div>
             </div>
             @endif

@@ -661,17 +661,26 @@ const formatAmount = (amount) => {
 const calculateTotalAmount = (voucher) => {
     if (!voucher) return 0;
 
-    // If scholar_ids is an array of objects with amounts, sum them up
+    // If scholar_ids is an array, try to sum individual amounts
     if (Array.isArray(voucher.scholar_ids) && voucher.scholar_ids.length > 0) {
-        // Check if the first item is an object with an amount property
-        if (typeof voucher.scholar_ids[0] === 'object' && voucher.scholar_ids[0].amount !== undefined) {
-            return voucher.scholar_ids.reduce((sum, scholar) => {
-                return sum + (parseFloat(scholar.amount) || 0);
-            }, 0);
+        let hasAmounts = false;
+        let total = 0;
+        
+        for (const scholar of voucher.scholar_ids) {
+            // Check if scholar has an amount property
+            if (typeof scholar === 'object' && scholar !== null && typeof scholar.amount !== 'undefined') {
+                total += parseFloat(scholar.amount) || 0;
+                hasAmounts = true;
+            }
+        }
+        
+        // If we found amounts in the scholar objects, return the sum
+        if (hasAmounts) {
+            return total;
         }
     }
 
-    // Fallback: use header amount or scholars count * amount
+    // Fallback: use header amount
     if (voucher.amount) {
         return parseFloat(voucher.amount);
     }
