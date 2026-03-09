@@ -678,7 +678,7 @@ const calculateTotalAmount = (voucher) => {
         if (hasAmounts) {
             return total;
         }
-        
+
         // If scholar_ids exist but no individual amounts, fall back to header amount
         if (voucher.amount) {
             return parseFloat(voucher.amount);
@@ -1093,7 +1093,7 @@ onMounted(() => {
                                 </td>
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">{{
                                     formatAmount(calculateTotalAmount(voucher))
-                                }}</td>
+                                    }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ voucher.creator?.name || '---' }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ formatDate(voucher.created_at) }}</td>
                                 <td class="px-6 py-4 text-sm">
@@ -1200,7 +1200,7 @@ onMounted(() => {
                 <div class="bg-white border border-gray-200 rounded p-4">
                     <p class="text-sm font-semibold text-gray-900 mb-2">Scholars ({{ selectedVoucher.scholar_ids?.length
                         || 0
-                        }})</p>
+                    }})</p>
                     <div v-if="loadingScholars" class="text-center py-2">
                         <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span class="text-xs">Loading...</span>
                     </div>
@@ -1209,7 +1209,7 @@ onMounted(() => {
                         <div v-for="(scholar, index) in scholarsDetails" :key="index"
                             class="text-xs text-gray-700 py-1 px-2 bg-gray-50 rounded flex items-center justify-between gap-2">
                             <span class="font-medium">{{ index + 1 }}. {{ scholar.first_name }} {{ scholar.last_name
-                                }}</span>
+                            }}</span>
                             <span class="text-gray-600 whitespace-nowrap">
                                 <span v-if="scholar.course_name">{{ scholar.course_name }}</span>
                                 <span v-if="scholar.year_level" class="ml-1">| {{
@@ -1217,7 +1217,7 @@ onMounted(() => {
                                         scholar.year_level
                                 }}</span>
                                 <span v-if="scholar.academic_year" class="ml-1">| {{ scholar.academic_year
-                                    }}</span>
+                                }}</span>
                                 <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                             </span>
                         </div>
