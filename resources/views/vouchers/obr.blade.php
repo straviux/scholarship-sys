@@ -462,7 +462,7 @@
         @php
         $totalAmount = 0;
         foreach($scholars as $scholar) {
-            $totalAmount += $scholar['amount'];
+        $totalAmount += $scholar['amount'];
         }
         @endphp
         @endif
