@@ -43,6 +43,10 @@ const error = ref('');
 const responsibilityCenters = ref([]);
 const selectedRCParticulars = ref([]);
 
+// Apply-to-all scholarship amount functionality
+const applyToAllChecked = ref(false);
+const applyToAllAmount = ref('');
+
 // Form data for all sections
 const voucherData = reactive({
     voucher_number: '',
@@ -485,21 +489,7 @@ watch(
     }
 );
 
-// Watch for amount changes and auto-populate individual amounts
-watch(
-    () => voucherData.obligations.amount,
-    (newAmount) => {
-        const amount = parseFloat(newAmount) || 0;
-        if (amount > 0 && voucherData.scholars.length > 0) {
-            voucherData.scholars.forEach(scholar => {
-                // Only auto-populate if individual amount is not yet set or is zero
-                if (!scholar.individualAmount || scholar.individualAmount === 0) {
-                    scholar.individualAmount = amount;
-                }
-            });
-        }
-    }
-);
+
 
 // Get selected scholar for payee
 const selectedPayeeScholar = computed(() => {
@@ -549,6 +539,16 @@ const getSelectedParticularName = () => {
     return selectedParticular.value?.name || 'N/A';
 };
 
+// Apply the same amount to all scholars
+const applyAmountToAll = () => {
+    const amount = parseFloat(applyToAllAmount.value) || 0;
+    if (amount > 0 && voucherData.scholars.length > 0) {
+        voucherData.scholars.forEach(scholar => {
+            scholar.individualAmount = amount;
+        });
+    }
+};
+
 // Close wizard
 // Reset voucherData to initial state
 const resetVoucherData = () => {
@@ -586,6 +586,10 @@ const resetVoucherData = () => {
     searchQuery.value = '';
     step.value = 1;
     error.value = '';
+    
+    // Reset apply-to-all values
+    applyToAllChecked.value = false;
+    applyToAllAmount.value = '';
 };
 
 // Close wizard
@@ -838,19 +842,7 @@ onMounted(async () => {
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed" />
                         </div>
 
-                        <!-- Amount -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Default Amount per
-                                Scholar</label>
-                            <p class="text-xs text-gray-500 mb-2">This amount will be applied to each scholar. You can
-                                customize individual amounts in Step 4.</p>
-                            <div class="relative">
-                                <span class="absolute left-3 top-2.5 text-gray-600 font-medium">₱</span>
-                                <input v-model="voucherData.obligations.amount" type="number" placeholder="0.00"
-                                    step="0.01"
-                                    class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                            </div>
-                        </div>
+
 
                         <div class="mt-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year (Optional)</label>
@@ -930,6 +922,27 @@ onMounted(async () => {
                     <label class="block text-sm font-medium text-gray-900 mb-3">
                         Selected Scholars ({{ voucherData.scholars.length }})
                     </label>
+
+                    <!-- Apply Same Amount to All Scholars -->
+                    <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-center gap-3 mb-3">
+                            <input id="applyToAll" v-model="applyToAllChecked" type="checkbox"
+                                class="w-4 h-4 text-green-600 rounded focus:ring-2 focus:ring-green-500 cursor-pointer" />
+                            <label for="applyToAll" class="text-sm font-medium text-gray-900 cursor-pointer">
+                                Apply Same Amount to All Scholars
+                            </label>
+                        </div>
+                        <div v-if="applyToAllChecked" class="flex items-center gap-2">
+                            <span class="text-gray-600 text-sm">₱</span>
+                            <input v-model="applyToAllAmount" type="number" placeholder="0.00" step="0.01"
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+                            <button @click="applyAmountToAll"
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
+                                Apply
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
                         <div class="text-sm text-blue-800 space-y-3">
                             <div v-for="scholar in voucherData.scholars" :key="scholar.profile_id"
@@ -1158,7 +1171,7 @@ onMounted(async () => {
                                     <td class="py-2 px-2">{{ voucherData.disbursements.academic_year || '---' }}</td>
                                     <td class="py-2 px-2">{{ voucherData.disbursements.semester || '---' }}</td>
                                     <td class="py-2 text-right font-semibold">{{
-                                        formatCurrency(voucherData.obligations.amount) }}</td>
+                                        formatCurrency(scholar.individualAmount || 0) }}</td>
                                 </tr>
                             </tbody>
                         </table>
