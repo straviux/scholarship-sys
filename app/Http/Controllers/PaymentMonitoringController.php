@@ -45,7 +45,7 @@ class PaymentMonitoringController extends Controller
             $individualAmount = '';
             if ($fundTransaction && $fundTransaction->scholar_ids) {
                 $scholarIds = is_array($fundTransaction->scholar_ids) ? $fundTransaction->scholar_ids : json_decode($fundTransaction->scholar_ids, true);
-                
+
                 // Look for the current scholar's individual amount
                 foreach ($scholarIds as $scholar) {
                     if (is_array($scholar)) {
@@ -61,7 +61,7 @@ class PaymentMonitoringController extends Controller
                         }
                     }
                 }
-                
+
                 // If no individual amount found, use null/empty
                 if ($individualAmount === '') {
                     $individualAmount = null;

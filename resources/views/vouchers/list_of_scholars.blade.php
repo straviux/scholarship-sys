@@ -323,10 +323,10 @@
                         if($profile) {
                         $scholarName = $profile->last_name . ', ' . $profile->first_name;
                         if($profile->middle_name) {
-                            $scholarName .= ' ' . $profile->middle_name;
+                        $scholarName .= ' ' . $profile->middle_name;
                         }
                         if($profile->ext) {
-                            $scholarName .= ' ' . $profile->ext;
+                        $scholarName .= ' ' . $profile->ext;
                         }
                         $scholars[] = [
                         'name' => $scholarName,
