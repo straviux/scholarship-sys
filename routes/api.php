@@ -11,6 +11,7 @@ Route::middleware(['web'])->group(function () {
     Route::get('/fund-transactions', [FundTransactionController::class, 'index']);
     Route::get('/fund-transactions/{id}', [FundTransactionController::class, 'show']);
     Route::put('/fund-transactions/{id}', [FundTransactionController::class, 'update']);
+    Route::patch('/fund-transactions/{id}/update-status', [FundTransactionController::class, 'updateStatus']);
     Route::delete('/fund-transactions/{id}', [FundTransactionController::class, 'destroy']);
 
     // DV (Disbursement Voucher) Report generation
@@ -26,6 +27,32 @@ Route::middleware(['web'])->group(function () {
     // OBR (Obligatory Disbursement Report) generation
     Route::get('/fund-transactions/{id}/obr-pdf', [FundTransactionController::class, 'generateOBRPdf']);
     Route::get('/fund-transactions/{id}/obr-excel', [FundTransactionController::class, 'generateOBRExcel']);
+
+    // OBR Tracking Info endpoint - proxy to external service
+    Route::get('/obr-tracking-info', function (Illuminate\Http\Request $request) {
+        try {
+            $client = new \GuzzleHttp\Client();
+            $response = $client->get('https://tracking.pgpict.com/api/obr-tracking-info', [
+                'query' => $request->query(),
+                'timeout' => 10,
+                'verify' => false
+            ]);
+
+            $trackingData = json_decode($response->getBody(), true);
+
+            // Wrap the response in success format for frontend consistency
+            return response()->json([
+                'success' => true,
+                'data' => $trackingData
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to fetch tracking information from server. Please try again later.',
+                'error' => $e->getMessage()
+            ], 503);
+        }
+    });
 
     // Scholars endpoint for voucher creation
     Route::get('/scholars', [ScholarshipApiController::class, 'getActiveScholars']);

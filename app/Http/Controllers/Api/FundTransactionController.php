@@ -226,8 +226,15 @@ class FundTransactionController extends Controller
                 ], 422);
             }
 
+            // Log the update attempt
+            \Log::debug('FundTransaction update attempt', [
+                'id' => $id,
+                'transaction_status' => $request->transaction_status,
+                'remarks' => $request->remarks
+            ]);
+
             // Update the voucher
-            $voucher->update([
+            $updateResult = $voucher->update([
                 'voucher_type' => $request->voucher_type,
                 'explanation' => $request->explanation,
                 'los_course' => $request->los_course,
@@ -252,6 +259,14 @@ class FundTransactionController extends Controller
                 'dv_no' => $request->dv_no,
             ]);
 
+            \Log::debug('FundTransaction update result', [
+                'updateResult' => $updateResult,
+                'transaction_status_after' => $voucher->transaction_status
+            ]);
+
+            // Refresh the model to get the latest data
+            $voucher->refresh();
+
             return response()->json([
                 'message' => 'Voucher updated successfully',
                 'data' => $voucher
@@ -259,6 +274,67 @@ class FundTransactionController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error updating voucher',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update only the status and remarks of a voucher.
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        try {
+            $voucher = FundTransaction::findOrFail($id);
+
+            // Validate only the status and remarks
+            $validator = Validator::make($request->all(), [
+                'transaction_status' => 'nullable|in:No OBR,LOA,Irregular,Transferred,Claimed,Paid,On Process,Denied',
+                'remarks' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            \Log::debug('Updating status for voucher ' . $id, [
+                'transaction_status' => $request->transaction_status,
+                'remarks' => $request->remarks
+            ]);
+
+            // Update only the status and remarks fields
+            $voucher->update([
+                'transaction_status' => $request->transaction_status,
+                'remarks' => $request->remarks,
+            ]);
+
+            // Refresh to get the updated values from DB
+            $voucher->refresh();
+
+            \Log::debug('Status updated for voucher ' . $id, [
+                'transaction_status' => $voucher->transaction_status,
+                'remarks' => $voucher->remarks
+            ]);
+
+            return response()->json([
+                'message' => 'Transaction status updated successfully',
+                'data' => $voucher
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('Error updating status for voucher ' . $id, [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Error updating transaction status',
                 'error' => $e->getMessage()
             ], 500);
         }

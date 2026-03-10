@@ -47,6 +47,24 @@ class FundTransaction extends Model
         'amount' => 'decimal:2',
     ];
 
+    protected $appends = ['obr_status'];
+
+    /**
+     * Get obr_status as an alias for transaction_status.
+     */
+    public function getObrStatusAttribute()
+    {
+        return $this->attributes['transaction_status'] ?? null;
+    }
+
+    /**
+     * Set obr_status by setting transaction_status.
+     */
+    public function setObrStatusAttribute($value)
+    {
+        $this->attributes['transaction_status'] = $value;
+    }
+
     /**
      * Get the user who created the voucher.
      */

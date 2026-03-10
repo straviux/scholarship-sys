@@ -242,9 +242,11 @@ const fetchTrackingHistory = async (voucher) => {
 
         const response = await axios.get('/api/obr-tracking-info', { params });
 
+        console.log('Tracking history response:', response.data);
+
         if (response.data.success) {
-            // Store the tracking data - use response.data.data if available, otherwise use response.data
-            trackingHistoryData.value = response.data.data || response.data;
+            // Store the tracking data from wrapped response
+            trackingHistoryData.value = response.data.data;
 
             // If DV number was auto-fetched, update the voucher in the list
             if (response.data.used_dv_no && !voucher.dv_no) {
@@ -572,50 +574,35 @@ const saveStatus = async () => {
 
     savingStatus.value = true;
     try {
-        // GET the current voucher data
-        const currentVoucher = await axios.get(`/api/fund-transactions/${selectedVoucherForStatus.value.id}`);
-        const voucherData = currentVoucher.data.data;
-
         console.log('Saving status - Current form data:', {
             obr_status: statusForm.obr_status,
             remarks: statusForm.remarks
         });
 
-        // PUT with all required fields plus updated transaction_status and remarks
-        const response = await axios.put(`/api/fund-transactions/${selectedVoucherForStatus.value.id}`, {
-            voucher_type: voucherData.voucher_type,
-            explanation: voucherData.explanation,
-            payee_type: voucherData.payee_type,
-            payee_name: voucherData.payee_name,
-            payee_address: voucherData.payee_address,
-            responsibility_center: voucherData.responsibility_center,
-            account_code: voucherData.account_code,
-            particulars_name: voucherData.particulars_name,
-            particulars_description: voucherData.particulars_description,
-            amount: voucherData.amount,
-            obr_type: voucherData.obr_type,
-            scholar_ids: voucherData.scholar_ids,
-            notes: voucherData.notes,
-            remarks: statusForm.remarks,
-            transaction_status: statusForm.obr_status,
-            fiscal_year: voucherData.fiscal_year || null,
-            obr_no: voucherData.obr_no || null,
-            dv_no: voucherData.dv_no || null
-        });
+        // Just send the status and remarks - minimal update
+        const response = await axios.patch(
+            `/api/fund-transactions/${selectedVoucherForStatus.value.id}/update-status`,
+            {
+                transaction_status: statusForm.obr_status,
+                remarks: statusForm.remarks
+            }
+        );
 
         console.log('Status update response:', response.data);
+        console.log('Response obr_status value:', response.data.data?.obr_status);
+        console.log('Response remarks value:', response.data.data?.remarks);
 
-        // Update the voucher in the list
+        // Update the voucher in the list with the actual returned values
         const voucherIndex = vouchers.value.findIndex(v => v.id === selectedVoucherForStatus.value.id);
         if (voucherIndex > -1) {
-            vouchers.value[voucherIndex].obr_status = statusForm.obr_status;
-            vouchers.value[voucherIndex].remarks = statusForm.remarks;
+            vouchers.value[voucherIndex].obr_status = response.data.data?.obr_status;
+            vouchers.value[voucherIndex].remarks = response.data.data?.remarks;
         }
 
         // Also update the currently viewed voucher if it's the same one
         if (selectedVoucher.value?.id === selectedVoucherForStatus.value.id) {
-            selectedVoucher.value.obr_status = statusForm.obr_status;
-            selectedVoucher.value.remarks = statusForm.remarks;
+            selectedVoucher.value.obr_status = response.data.data?.obr_status;
+            selectedVoucher.value.remarks = response.data.data?.remarks;
         }
 
         showStatusDialog.value = false;
@@ -1146,7 +1133,7 @@ onMounted(() => {
                                 </td>
                                 <td class="px-2 sm:px-6 py-4 text-sm font-medium text-gray-900">{{
                                     formatAmount(calculateTotalAmount(voucher))
-                                }}</td>
+                                    }}</td>
                                 <td class="px-2 sm:px-6 py-4 text-sm text-gray-600">{{ voucher.creator?.name || '---' }}
                                 </td>
                                 <td class="px-2 sm:px-6 py-4 text-sm text-gray-600">{{ formatDate(voucher.created_at) }}
@@ -1256,7 +1243,7 @@ onMounted(() => {
                 <div class="bg-white border border-gray-200 rounded p-4">
                     <p class="text-sm font-semibold text-gray-900 mb-2">Scholars ({{ selectedVoucher.scholar_ids?.length
                         || 0
-                        }})</p>
+                    }})</p>
                     <div v-if="loadingScholars" class="text-center py-2">
                         <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span class="text-xs">Loading...</span>
                     </div>
@@ -1265,7 +1252,7 @@ onMounted(() => {
                         <div v-for="(scholar, index) in scholarsDetails" :key="index"
                             class="text-xs text-gray-700 py-1 px-2 bg-gray-50 rounded flex items-center justify-between gap-2">
                             <span class="font-medium">{{ index + 1 }}. {{ scholar.first_name }} {{ scholar.last_name
-                                }}</span>
+                            }}</span>
                             <span class="text-gray-600 whitespace-nowrap">
                                 <span v-if="scholar.course_name">{{ scholar.course_name }}</span>
                                 <span v-if="scholar.year_level" class="ml-1">| {{
@@ -1273,7 +1260,7 @@ onMounted(() => {
                                         scholar.year_level
                                 }}</span>
                                 <span v-if="scholar.academic_year" class="ml-1">| {{ scholar.academic_year
-                                    }}</span>
+                                }}</span>
                                 <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                             </span>
                         </div>
@@ -1450,18 +1437,12 @@ onMounted(() => {
                 <div v-if="trackingHistoryData.tracking_information && trackingHistoryData.tracking_information.length > 0"
                     class="space-y-0 max-h-[80vh] overflow-y-auto">
                     <div v-for="(entry, index) in trackingHistoryData.tracking_information" :key="index"
-                        class="relative pl-10 py-3 border-l-2" :class="entry.trn_remarks?.includes('Treasury- ATM fund transfer uploaded') ||
-                            trackingHistoryData.tracking_information.slice(0, index).some(e => e.trn_remarks?.includes('Treasury- ATM fund transfer uploaded'))
-                            ? 'border-green-400' : 'border-gray-300'">
+                        class="relative pl-10 py-3 border-l-2 border-blue-300">
 
-                        <!-- Status icon -->
-                        <div class="absolute top-3 left-4" :class="entry.trn_remarks?.includes('Treasury- ATM fund transfer uploaded') ||
-                            trackingHistoryData.tracking_information.slice(0, index).some(e => e.trn_remarks?.includes('Treasury- ATM fund transfer uploaded'))
-                            ? 'w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs'
-                            : 'w-6 h-6 bg-gray-300 rounded-full'">
-                            <i v-if="entry.trn_remarks?.includes('Treasury- ATM fund transfer uploaded') ||
-                                trackingHistoryData.tracking_information.slice(0, index).some(e => e.trn_remarks?.includes('Treasury- ATM fund transfer uploaded'))"
-                                class="pi pi-check text-xs font-bold"></i>
+                        <!-- Status icon - checkmark for all entries -->
+                        <div
+                            class="absolute top-3 left-4 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white">
+                            <i class="pi pi-check text-xs font-bold"></i>
                         </div>
 
                         <div class="flex items-start justify-between gap-2 pl-2">
