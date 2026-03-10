@@ -81,6 +81,22 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
+        return Str::transliterate(Str::lower($this->string('username')) . '|' . $this->ip());
+    }
+
+    /**
+     * Get the proper failed validation response for Inertia.
+     */
+    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
+    {
+        throw ValidationException::withMessages($validator->errors()->toArray());
+    }
+
+    /**
+     * Get the proper failed response for the request.
+     */
+    protected function response(array $errors)
+    {
+        return redirect()->back()->withErrors($errors)->withInput();
     }
 }

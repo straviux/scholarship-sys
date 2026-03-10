@@ -88,6 +88,16 @@ function refreshActivityLogs() {
 // Provide refresh function to child components
 provide('refreshActivityLogs', refreshActivityLogs);
 
+// Handle logout with full page reload
+function handleLogout() {
+    router.post(route('logout'), {}, {
+        onFinish: () => {
+            // Force a full page reload to clear Inertia state
+            window.location.href = '/login';
+        }
+    });
+}
+
 // Fetch unread updates count
 async function fetchUnreadCount() {
     try {
@@ -723,11 +733,11 @@ onUnmounted(() => {
 
                                 <!-- Footer -->
                                 <div class="px-4 py-2 border-t border-gray-100 bg-gray-50">
-                                    <Link :href="route('logout')" method="post" as="button"
+                                    <button @click="handleLogout"
                                         class="w-full flex items-center justify-center gap-2 px-4 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors duration-200">
                                         <i class="pi pi-sign-out"></i>
                                         <span class="text-sm font-medium">Sign Out</span>
-                                    </Link>
+                                    </button>
                                 </div>
                             </Popover>
                         </div>

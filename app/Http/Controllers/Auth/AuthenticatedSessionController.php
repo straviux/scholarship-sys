@@ -43,10 +43,11 @@ class AuthenticatedSessionController extends Controller
     {
         Auth::guard('web')->logout();
 
-        $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        $request->session()->invalidate();
+
+        // Redirect with a full page reload to clear client-side Inertia state
+        return redirect('/login')->header('X-Force-Reload', 'true');
     }
 }
