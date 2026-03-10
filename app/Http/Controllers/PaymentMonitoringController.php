@@ -21,13 +21,27 @@ class PaymentMonitoringController extends Controller
         $transactionStatusFilter = $request->input('transaction_status', '');
         $academicYearFilter = $request->input('academic_year', '');
         $semesterFilter = $request->input('semester', '');
+        $programFilter = $request->input('program', '');
+        $courseFilter = $request->input('course', '');
+        $schoolFilter = $request->input('school', '');
 
-        // Get all active scholarship records with their profiles
+        // Get all active scholarship records with their profiles, courses, programs, and schools
         $records = ScholarshipRecord::where('unified_status', 'active')
-            ->with(['profile' => function ($query) {
-                $query->select('profile_id', 'first_name', 'last_name', 'middle_name', 'extension_name', 'email');
-            }])
-            ->select('id', 'profile_id', 'academic_year', 'year_level', 'course_id', 'unified_status', 'term')
+            ->with([
+                'profile' => function ($query) {
+                    $query->select('profile_id', 'first_name', 'last_name', 'middle_name', 'extension_name', 'email');
+                },
+                'course' => function ($query) {
+                    $query->select('id', 'name', 'scholarship_program_id');
+                },
+                'course.scholarshipProgram' => function ($query) {
+                    $query->select('id', 'name');
+                },
+                'school' => function ($query) {
+                    $query->select('id', 'name');
+                }
+            ])
+            ->select('id', 'profile_id', 'academic_year', 'year_level', 'course_id', 'program_id', 'school_id', 'unified_status', 'term')
             ->get();
 
         // Map records and fetch OBR data from fund_transactions
@@ -53,6 +67,9 @@ class PaymentMonitoringController extends Controller
                     'year_level' => $record->year_level,
                     'term' => $record->term,
                     'unified_status' => $record->unified_status,
+                    'program' => $record->course?->scholarshipProgram?->name ?? '',
+                    'course' => $record->course?->name ?? '',
+                    'school' => $record->school?->name ?? '',
                     // OBR data (blank if no fund transaction)
                     'obr_no' => '',
                     'transaction_status' => '',
@@ -101,6 +118,9 @@ class PaymentMonitoringController extends Controller
                     'year_level' => $record->year_level,
                     'term' => $record->term,
                     'unified_status' => $record->unified_status,
+                    'program' => $record->course?->scholarshipProgram?->name ?? '',
+                    'course' => $record->course?->name ?? '',
+                    'school' => $record->school?->name ?? '',
                     // OBR data
                     'obr_no' => $fundTransaction->obr_no ?? '',
                     'transaction_status' => $fundTransaction->transaction_status ?? '',
@@ -149,6 +169,31 @@ class PaymentMonitoringController extends Controller
             });
         }
 
+        // Apply program filter
+        if ($programFilter) {
+            $paymentData = $paymentData->filter(function ($item) use ($programFilter) {
+                return $item['program'] === $programFilter;
+            });
+        }
+
+        // Apply course filter
+        if ($courseFilter) {
+            $courseFilter = is_array($courseFilter) ? $courseFilter : [$courseFilter];
+            $courseFilter = array_filter($courseFilter); // Remove empty values
+            if (count($courseFilter) > 0) {
+                $paymentData = $paymentData->filter(function ($item) use ($courseFilter) {
+                    return in_array($item['course'], $courseFilter);
+                });
+            }
+        }
+
+        // Apply school filter
+        if ($schoolFilter) {
+            $paymentData = $paymentData->filter(function ($item) use ($schoolFilter) {
+                return $item['school'] === $schoolFilter;
+            });
+        }
+
         // Define transaction status options (enum values from disbursements.obr_status)
         $statuses = [
             ['label' => 'LOA', 'value' => 'LOA'],
@@ -168,6 +213,9 @@ class PaymentMonitoringController extends Controller
                 'transaction_status' => $transactionStatusFilter,
                 'academic_year' => $academicYearFilter,
                 'semester' => $semesterFilter,
+                'program' => $programFilter,
+                'course' => $courseFilter,
+                'school' => $schoolFilter,
             ],
         ]);
     }

@@ -46,6 +46,7 @@ const obrStatuses = ['No OBR', 'LOA', 'Irregular', 'Transferred', 'Claimed', 'Pa
 const showOBRTrackingDialog = ref(false);
 const selectedVoucherForOBRTracking = ref(null);
 const statusFilter = ref('');  // Status filter
+const userFilter = ref('');  // User filter - '' for all, 'my-records' for current user
 const obrTrackingForm = reactive({
     fiscal_year: new Date().getFullYear(),
     obr_no: '',
@@ -171,6 +172,14 @@ const fetchScholarsDetails = async (scholarIds) => {
 const totalVouchers = computed(() => vouchers.value.length);
 const filteredVouchers = computed(() => {
     let filtered = vouchers.value;
+
+    // Filter by creator if "My Records" selected
+    if (userFilter.value === 'my-records') {
+        const currentUserId = page.props.auth?.user?.id;
+        if (currentUserId) {
+            filtered = filtered.filter(v => v.creator?.id === currentUserId);
+        }
+    }
 
     // Filter by status if selected
     if (statusFilter.value) {
@@ -982,6 +991,17 @@ onMounted(() => {
                     <div class="flex flex-col sm:flex-row gap-3">
                         <div class="flex flex-wrap gap-3 items-center">
                             <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="userFilter" type="radio" value=""
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">All Records</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="userFilter" type="radio" value="my-records"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">My Records</span>
+                            </label>
+                            <span class="text-gray-300 mx-1">|</span>
+                            <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="statusFilter" type="radio" value=""
                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
                                 <span class="text-sm text-gray-700">All Status</span>
@@ -1133,7 +1153,7 @@ onMounted(() => {
                                 </td>
                                 <td class="px-2 sm:px-6 py-4 text-sm font-medium text-gray-900">{{
                                     formatAmount(calculateTotalAmount(voucher))
-                                    }}</td>
+                                }}</td>
                                 <td class="px-2 sm:px-6 py-4 text-sm text-gray-600">{{ voucher.creator?.name || '---' }}
                                 </td>
                                 <td class="px-2 sm:px-6 py-4 text-sm text-gray-600">{{ formatDate(voucher.created_at) }}
@@ -1243,7 +1263,7 @@ onMounted(() => {
                 <div class="bg-white border border-gray-200 rounded p-4">
                     <p class="text-sm font-semibold text-gray-900 mb-2">Scholars ({{ selectedVoucher.scholar_ids?.length
                         || 0
-                    }})</p>
+                        }})</p>
                     <div v-if="loadingScholars" class="text-center py-2">
                         <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span class="text-xs">Loading...</span>
                     </div>
@@ -1252,7 +1272,7 @@ onMounted(() => {
                         <div v-for="(scholar, index) in scholarsDetails" :key="index"
                             class="text-xs text-gray-700 py-1 px-2 bg-gray-50 rounded flex items-center justify-between gap-2">
                             <span class="font-medium">{{ index + 1 }}. {{ scholar.first_name }} {{ scholar.last_name
-                            }}</span>
+                                }}</span>
                             <span class="text-gray-600 whitespace-nowrap">
                                 <span v-if="scholar.course_name">{{ scholar.course_name }}</span>
                                 <span v-if="scholar.year_level" class="ml-1">| {{
@@ -1260,7 +1280,7 @@ onMounted(() => {
                                         scholar.year_level
                                 }}</span>
                                 <span v-if="scholar.academic_year" class="ml-1">| {{ scholar.academic_year
-                                }}</span>
+                                    }}</span>
                                 <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                             </span>
                         </div>

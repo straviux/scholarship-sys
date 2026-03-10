@@ -9,8 +9,12 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Panel from 'primevue/panel';
+import Badge from 'primevue/badge';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
+import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
+import CourseSelect from '@/Components/selects/CourseSelect.vue';
+import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 
 const props = defineProps({
     paymentData: {
@@ -28,12 +32,56 @@ const searchInput = ref(props.filters.search);
 const selectedStatus = ref(props.filters.transaction_status);
 const selectedAcademicYear = ref(props.filters.academic_year);
 const selectedSemester = ref(props.filters.semester);
+const selectedProgram = ref(props.filters.program || '');
+const selectedCourse = ref(props.filters.course ? (Array.isArray(props.filters.course) ? props.filters.course : []) : []);
+const selectedSchool = ref(props.filters.school || '');
 
-// Watch for changes and apply filters
-watch(searchInput, () => applyFilters());
-watch(selectedStatus, () => applyFilters());
-watch(selectedAcademicYear, () => applyFilters());
-watch(selectedSemester, () => applyFilters());
+// Watch for program changes and clear course selection
+watch(selectedProgram, () => {
+    selectedCourse.value = [];
+});
+
+// Debounce timer to prevent infinite filter loops
+let filterTimeout;
+
+// Methods
+const applyFilters = () => {
+    clearTimeout(filterTimeout);
+    filterTimeout = setTimeout(() => {
+        // Extract course names from objects if needed
+        const courseValues = selectedCourse.value ? selectedCourse.value.map(course =>
+            typeof course === 'object' ? course.name : course
+        ) : [];
+
+        router.get(route('payment-monitoring.index'), {
+            search: searchInput.value,
+            transaction_status: selectedStatus.value,
+            academic_year: selectedAcademicYear.value,
+            semester: selectedSemester.value,
+            program: typeof selectedProgram.value === 'object' ? selectedProgram.value?.name : selectedProgram.value,
+            course: courseValues.length > 0 ? courseValues : [],
+            school: typeof selectedSchool.value === 'object' ? selectedSchool.value?.name : selectedSchool.value,
+        }, {
+            preserveState: false,
+            replace: true,
+        });
+    }, 300);
+};
+
+const clearFilters = () => {
+    clearTimeout(filterTimeout);
+    searchInput.value = '';
+    selectedStatus.value = '';
+    selectedAcademicYear.value = '';
+    selectedSemester.value = '';
+    selectedProgram.value = '';
+    selectedCourse.value = [];
+    selectedSchool.value = '';
+    router.get(route('payment-monitoring.index'), {}, {
+        preserveState: false,
+        replace: true,
+    });
+};
 
 // Computed property for status options including "No OBR assigned"
 const statusOptionsWithNoOBR = computed(() => {
@@ -45,6 +93,24 @@ const statusOptionsWithNoOBR = computed(() => {
         { label: 'Completed', value: 'completed' }
     ];
 });
+
+// Computed property for status counts
+const statusCounts = computed(() => {
+    const counts = {
+        all: props.paymentData.length,
+        'no-obr': props.paymentData.filter(item => !item.transaction_status).length,
+        'LOA': props.paymentData.filter(item => item.transaction_status === 'LOA').length,
+        'IRREGULAR': props.paymentData.filter(item => item.transaction_status === 'IRREGULAR').length,
+        'TRANSFERRED': props.paymentData.filter(item => item.transaction_status === 'TRANSFERRED').length,
+        'CLAIMED': props.paymentData.filter(item => item.transaction_status === 'CLAIMED').length,
+        'PAID': props.paymentData.filter(item => item.transaction_status === 'PAID').length,
+        'ON PROCESS': props.paymentData.filter(item => item.transaction_status === 'ON PROCESS').length,
+        'DENIED': props.paymentData.filter(item => item.transaction_status === 'DENIED').length,
+    };
+    return counts;
+});
+
+
 
 // Computed property for filtered data
 const filteredData = computed(() => {
@@ -72,35 +138,28 @@ const filteredData = computed(() => {
         data = data.filter((item) => item.term === selectedSemester.value);
     }
 
+    if (selectedProgram.value && selectedProgram.value !== '') {
+        const programValue = typeof selectedProgram.value === 'object' ? selectedProgram.value.name : selectedProgram.value;
+        data = data.filter((item) => item.program === programValue);
+    }
+
+    if (selectedCourse.value && Array.isArray(selectedCourse.value) && selectedCourse.value.length > 0) {
+        const courseNames = selectedCourse.value.map(course =>
+            typeof course === 'object' ? course.name : course
+        );
+        data = data.filter((item) => courseNames.includes(item.course));
+    }
+
+    if (selectedSchool.value && selectedSchool.value !== '') {
+        const schoolValue = typeof selectedSchool.value === 'object' ? selectedSchool.value.name : selectedSchool.value;
+        data = data.filter((item) => item.school === schoolValue);
+    }
+
     // Sort alphabetically by scholar name
     data = data.sort((a, b) => a.scholar_name.localeCompare(b.scholar_name));
 
     return data;
 });
-
-// Methods
-const applyFilters = () => {
-    router.get(route('payment-monitoring.index'), {
-        search: searchInput.value,
-        transaction_status: selectedStatus.value,
-        academic_year: selectedAcademicYear.value,
-        semester: selectedSemester.value,
-    }, {
-        preserveState: false,
-        replace: true,
-    });
-};
-
-const clearFilters = () => {
-    searchInput.value = '';
-    selectedStatus.value = '';
-    selectedAcademicYear.value = '';
-    selectedSemester.value = '';
-    router.get(route('payment-monitoring.index'), {}, {
-        preserveState: false,
-        replace: true,
-    });
-};
 
 // Status badge styling
 const getStatusBadgeClass = (status) => {
@@ -174,84 +233,97 @@ const formatDate = (date) => {
                         <TermSelect v-model="selectedSemester" />
                     </div>
 
+                    <!-- Filter by Program -->
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs sm:text-sm font-medium text-gray-700">Program</label>
+                        <ProgramSelect v-model="selectedProgram" />
+                    </div>
+
+                    <!-- Filter by Course -->
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs sm:text-sm font-medium text-gray-700">Course</label>
+                        <CourseSelect v-model="selectedCourse" :scholarship-program-id="selectedProgram?.id"
+                            :multiple="true" />
+                    </div>
+
+                    <!-- Filter by School -->
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs sm:text-sm font-medium text-gray-700">School</label>
+                        <SchoolSelect v-model="selectedSchool" />
+                    </div>
+
                     <!-- Filter by Transaction Status -->
-                    <div class="flex flex-col gap-3 md:col-span-3">
+                    <div class="flex flex-col gap-2 md:col-span-3">
                         <label class="text-xs sm:text-sm font-medium text-gray-700">Transaction Status</label>
                         <div class="flex flex-wrap gap-2 sm:gap-3">
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="selectedStatus" type="radio" value=""
                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
                                 <span class="text-sm text-gray-700">All</span>
+                                <Badge :value="statusCounts.all" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="selectedStatus" type="radio" value="no-obr"
                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">No OBR</span>
+                                <Badge :value="statusCounts['no-obr']" severity="warning"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="selectedStatus" type="radio" value="LOA"
                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">LOA</span>
+                                <Badge :value="statusCounts['LOA']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="selectedStatus" type="radio" value="IRREGULAR"
                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Irregular</span>
+                                <Badge :value="statusCounts['IRREGULAR']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="selectedStatus" type="radio" value="TRANSFERRED"
                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Transferred</span>
+                                <Badge :value="statusCounts['TRANSFERRED']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="selectedStatus" type="radio" value="CLAIMED"
                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Claimed</span>
+                                <Badge :value="statusCounts['CLAIMED']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="selectedStatus" type="radio" value="PAID"
                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Paid</span>
+                                <Badge :value="statusCounts['PAID']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="selectedStatus" type="radio" value="ON PROCESS"
                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">On Process</span>
+                                <Badge :value="statusCounts['ON PROCESS']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="selectedStatus" type="radio" value="DENIED"
                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Denied</span>
+                                <Badge :value="statusCounts['DENIED']" severity="secondary"></Badge>
                             </label>
                         </div>
                     </div>
                     <!-- Action Buttons -->
                     <div class="flex flex-col gap-2 md:col-span-1 items-end justify-end">
                         <label class="text-xs sm:text-sm font-medium text-gray-700">&nbsp;</label>
-                        <Button label="Clear Filters" icon="pi pi-times" severity="secondary" @click="clearFilters"
-                            class="w-1/2 text-xs sm:text-sm" size="small" />
+                        <div class="flex gap-2 w-full">
+                            <Button label="Apply Filters" icon="pi pi-check" severity="success" @click="applyFilters"
+                                class="flex-1 text-xs sm:text-sm" size="small" />
+                            <Button label="Clear" icon="pi pi-times" severity="secondary" @click="clearFilters"
+                                class="flex-1 text-xs sm:text-sm" size="small" />
+                        </div>
                     </div>
                 </div>
             </Panel>
-            <!-- Summary -->
-            <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-                <div class="shadow rounded-lg p-3 sm:p-4 border-l-4 border-blue-500">
-                    <p class="text-xs sm:text-sm text-gray-600">Total Active Records</p>
-                    <p class="text-xl sm:text-2xl font-bold text-blue-700 mt-1">{{ paymentData.length }}</p>
-                </div>
-                <div class="shadow rounded-lg p-3 sm:p-4 border-l-4 border-green-500">
-                    <p class="text-xs sm:text-sm text-gray-600">With OBR Assigned</p>
-                    <p class="text-xl sm:text-2xl font-bold text-green-700 mt-1">
-                        {{paymentData.filter(item => item.transaction_status).length}}
-                    </p>
-                </div>
-                <div class="shadow rounded-lg p-3 sm:p-4 border-l-4 border-yellow-500">
-                    <p class="text-xs sm:text-sm text-gray-600">Pending OBR Assignment</p>
-                    <p class="text-xl sm:text-2xl font-bold text-yellow-700 mt-1">
-                        {{paymentData.filter(item => !item.transaction_status).length}}
-                    </p>
-                </div>
-            </div>
 
             <!-- Data Table -->
             <div class="bg-white rounded-lg shadow mt-6 overflow-auto">
@@ -317,7 +389,7 @@ const formatDate = (date) => {
                     <Column field="obr_no" header="OBR No." style="min-width: 120px">
                         <template #body="{ data }">
                             <span v-if="data.obr_no" class="text-xs sm:text-sm font-mono text-blue-700">{{ data.obr_no
-                                }}</span>
+                            }}</span>
                             <span v-else class="text-gray-400">—</span>
                         </template>
                     </Column>
