@@ -113,7 +113,7 @@
                                 option-value="value" placeholder="Select Payee Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_type }" />
                             <div v-if="errors.payee_type" class="text-red-600 text-xs mt-1">{{ errors.payee_type[0]
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <!-- Payee Name -->
@@ -122,7 +122,7 @@
                             <InputText v-model="form.payee_name" placeholder="Name of payee" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_name }" />
                             <div v-if="errors.payee_name" class="text-red-600 text-xs mt-1">{{ errors.payee_name[0]
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <!-- Payee Address -->
@@ -139,7 +139,7 @@
                                 option-value="value" placeholder="Select Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.voucher_type }" />
                             <div v-if="errors.voucher_type" class="text-red-600 text-xs mt-1">{{ errors.voucher_type[0]
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <!-- Explanation -->
@@ -209,8 +209,8 @@
         </div>
 
         <!-- Attachment Preview Modal -->
-        <Dialog v-model:visible="showAttachmentModal" modal
-            :style="{ width: '90vw' }" :maximizable="true" class="p-fluid">
+        <Dialog v-model:visible="showAttachmentModal" modal :style="{ width: '90vw' }" :maximizable="true"
+            class="p-fluid">
             <template #header>
                 <div class="flex items-center justify-between w-full gap-3">
                     <span>{{ selectedAttachment?.name }}</span>
