@@ -209,11 +209,22 @@
         </div>
 
         <!-- Attachment Preview Modal -->
-        <Dialog v-model:visible="showAttachmentModal" modal :header="selectedAttachment?.name"
+        <Dialog v-model:visible="showAttachmentModal" modal
             :style="{ width: '90vw' }" :maximizable="true" class="p-fluid">
+            <template #header>
+                <div class="flex items-center justify-between w-full gap-3">
+                    <span>{{ selectedAttachment?.name }}</span>
+                    <a v-if="selectedAttachment?.path" :href="getAttachmentUrl(selectedAttachment)" target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex items-center gap-2 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                        v-tooltip.bottom="'Download'">
+                        <i class="pi pi-download text-sm"></i>
+                    </a>
+                </div>
+            </template>
             <div v-if="selectedAttachment" class="flex flex-col">
                 <!-- Zoom Controls -->
-                <div class="flex gap-2 mb-4 pb-4 border-b border-slate-200">
+                <div class="flex justify-center gap-2 mb-4 pb-4 border-b border-slate-200">
                     <Button icon="pi pi-minus" @click="zoomOut" severity="secondary" size="small" rounded text
                         v-tooltip.bottom="'Zoom Out'" />
                     <span
@@ -250,16 +261,6 @@
                                 environment.</p>
                         </div>
                     </div>
-                </div>
-
-                <!-- Footer Actions -->
-                <div class="flex gap-3 justify-end pt-4 mt-4 border-t border-slate-200">
-                    <Button label="Close" severity="secondary" @click="showAttachmentModal = false" size="small" />
-                    <a v-if="selectedAttachment.path" :href="getAttachmentUrl(selectedAttachment)" target="_blank"
-                        rel="noopener noreferrer"
-                        class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded inline-flex items-center gap-2">
-                        <i class="pi pi-download text-sm"></i> Download
-                    </a>
                 </div>
             </div>
         </Dialog>
