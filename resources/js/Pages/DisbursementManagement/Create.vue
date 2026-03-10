@@ -208,111 +208,59 @@
             </div>
         </div>
 
-        <!-- Attachment Details Modal -->
-        <Dialog v-model:visible="showAttachmentModal" modal header="Attachment Details" :style="{ width: '90vw' }"
+        <!-- Attachment Preview Modal -->
+        <Dialog v-model:visible="showAttachmentModal" modal :header="selectedAttachment?.name" :style="{ width: '90vw' }"
             :maximizable="true" class="p-fluid">
-            <div v-if="selectedAttachment" class="space-y-6">
-                <!-- File Icon and Name -->
-                <div class="flex items-center gap-4">
-                    <div
-                        class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg flex items-center justify-center">
-                        <i class="pi pi-file text-3xl text-blue-600"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold text-slate-900">{{ selectedAttachment.name }}</h3>
-                        <p class="text-sm text-slate-600 mt-1">{{ selectedAttachment.attachment_type }} • {{
-                            formatFileSize(selectedAttachment.size) }}</p>
-                    </div>
+            <div v-if="selectedAttachment" class="flex flex-col">
+                <!-- Zoom Controls -->
+                <div class="flex gap-2 mb-4 pb-4 border-b border-slate-200">
+                    <Button icon="pi pi-minus" @click="zoomOut" severity="secondary" size="small" rounded text
+                        v-tooltip.bottom="'Zoom Out'" />
+                    <span class="px-3 py-2 text-sm font-medium text-slate-900 bg-slate-100 rounded min-w-16 text-center">
+                        {{ Math.round(attachmentZoom * 100) }}%
+                    </span>
+                    <Button icon="pi pi-plus" @click="zoomIn" severity="secondary" size="small" rounded text
+                        v-tooltip.bottom="'Zoom In'" />
+                    <Button icon="pi pi-refresh" @click="resetZoom" severity="secondary" size="small" rounded text
+                        v-tooltip.bottom="'Reset Zoom'" />
                 </div>
 
-                <!-- File Preview Section -->
-                <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg">
-                    <p class="text-xs text-slate-500 font-medium mb-3">FILE PREVIEW</p>
-
+                <!-- Preview Container -->
+                <div class="flex justify-center overflow-auto bg-slate-100 rounded p-4" style="max-height: 70vh;">
                     <!-- Image Preview -->
                     <div v-if="isImageFile(selectedAttachment.type) && selectedAttachment.path"
-                        class="flex justify-center bg-white rounded border border-slate-200 p-4">
+                        class="flex items-center justify-center">
                         <img :src="getAttachmentUrl(selectedAttachment)" :alt="selectedAttachment.name"
-                            class="max-w-full max-h-96 object-contain rounded" />
+                            :style="{ transform: `scale(${attachmentZoom})` }"
+                            class="object-contain transition-transform duration-200" />
                     </div>
 
                     <!-- PDF Preview -->
                     <div v-else-if="isPdfFile(selectedAttachment.type) && selectedAttachment.path"
-                        class="bg-white rounded border border-slate-200">
+                        class="w-full">
                         <embed :src="getAttachmentUrl(selectedAttachment)" type="application/pdf"
-                            class="w-full h-96 rounded" />
+                            class="w-full" />
                     </div>
 
                     <!-- File Not Available -->
-                    <div v-if="!selectedAttachment.path"
-                        class="flex flex-col items-center justify-center gap-4 p-12 bg-white rounded border-2 border-dashed border-gray-300 min-h-96">
-                        <div
-                            class="w-24 h-24 bg-gradient-to-br from-amber-100 to-amber-50 rounded-lg flex items-center justify-center">
-                            <i class="pi pi-exclamation-circle text-4xl text-amber-500"></i>
-                        </div>
-                        <div class="text-center max-w-sm">
-                            <p class="text-lg font-bold text-gray-900">File Not Available</p>
-                            <p class="text-sm text-gray-600 mt-2">This file exists in the database but is not currently
-                                available in the production environment.</p>
-                            <div class="mt-4 p-3 bg-amber-50 rounded border border-amber-200">
-                                <p class="text-xs text-amber-800"><strong>File Name:</strong> {{ selectedAttachment.name
-                                }}</p>
-                                <p class="text-xs text-amber-800 mt-1"><strong>Type:</strong> {{ selectedAttachment.type
-                                }}</p>
-                                <p class="text-xs text-amber-800 mt-1"><strong>Size:</strong> {{
-                                    formatFileSize(selectedAttachment.size) }}</p>
-                            </div>
+                    <div v-else
+                        class="flex flex-col items-center justify-center gap-4 p-12 text-center">
+                        <i class="pi pi-exclamation-circle text-5xl text-amber-500"></i>
+                        <div>
+                            <p class="font-semibold text-slate-900">File Not Available</p>
+                            <p class="text-sm text-slate-600 mt-1">This file is not available in the current environment.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- File Details -->
-                <div class="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <div>
-                        <p class="text-xs text-slate-500 font-medium">FILE TYPE</p>
-                        <p class="text-sm font-semibold text-slate-900 mt-1">{{ selectedAttachment.type }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-500 font-medium">FILE SIZE</p>
-                        <p class="text-sm font-semibold text-slate-900 mt-1">{{ formatFileSize(selectedAttachment.size)
-                        }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-500 font-medium">ATTACHMENT TYPE</p>
-                        <p class="text-sm font-semibold text-slate-900 mt-1">{{ selectedAttachment.attachment_type }}
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-500 font-medium">STATUS</p>
-                        <div v-if="selectedAttachment.file_exists" class="mt-1">
-                            <span
-                                class="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded">Available</span>
-                        </div>
-                        <div v-else class="mt-1">
-                            <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded">File
-                                Missing</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- File Path Info -->
-                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p class="text-xs text-blue-700 font-medium mb-2">FILE PATH</p>
-                    <p class="text-xs text-blue-600 break-all font-mono">{{ selectedAttachment.file_path }}</p>
-                </div>
-
-                <!-- Download Button -->
-                <div class="flex gap-3 justify-end pt-4 border-t border-slate-200">
-                    <Button label="Close" severity="secondary" @click="showAttachmentModal = false" class="text-sm" />
+                <!-- Footer Actions -->
+                <div class="flex gap-3 justify-end pt-4 mt-4 border-t border-slate-200">
+                    <Button label="Close" severity="secondary" @click="showAttachmentModal = false" size="small" />
                     <a v-if="selectedAttachment.path" :href="getAttachmentUrl(selectedAttachment)" target="_blank"
                         rel="noopener noreferrer"
                         class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded inline-flex items-center gap-2">
-                        <i class="pi pi-download text-sm"></i> Download File
+                        <i class="pi pi-download text-sm"></i> Download
                     </a>
-                    <div v-else
-                        class="px-4 py-2 bg-gray-300 text-gray-600 text-sm font-medium rounded inline-flex items-center gap-2 cursor-not-allowed">
-                        <i class="pi pi-exclamation-circle text-sm"></i> File Not Available
-                    </div>
                 </div>
             </div>
         </Dialog>
@@ -346,6 +294,7 @@ const props = defineProps({
 const submitting = ref(false);
 const showAttachmentModal = ref(false);
 const selectedAttachment = ref(null);
+const attachmentZoom = ref(1);
 const selectededProfileIds = ref(props.existingTransaction?.scholar_ids || props.disbursements.map(d => d.profile_id));
 const selectAllChecked = computed({
     get: () => selectededProfileIds.value.length === props.disbursements.length,
@@ -486,7 +435,24 @@ function formatFileSize(bytes) {
 
 function openAttachmentModal(attachment) {
     selectedAttachment.value = attachment;
+    attachmentZoom.value = 1;
     showAttachmentModal.value = true;
+}
+
+function zoomIn() {
+    if (attachmentZoom.value < 3) {
+        attachmentZoom.value = Math.min(3, attachmentZoom.value + 0.2);
+    }
+}
+
+function zoomOut() {
+    if (attachmentZoom.value > 0.5) {
+        attachmentZoom.value = Math.max(0.5, attachmentZoom.value - 0.2);
+    }
+}
+
+function resetZoom() {
+    attachmentZoom.value = 1;
 }
 
 function isImageFile(mimeType) {
