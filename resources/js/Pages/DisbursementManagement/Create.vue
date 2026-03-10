@@ -113,7 +113,7 @@
                                 option-value="value" placeholder="Select Payee Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_type }" />
                             <div v-if="errors.payee_type" class="text-red-600 text-xs mt-1">{{ errors.payee_type[0]
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <!-- Payee Name -->
@@ -122,7 +122,7 @@
                             <InputText v-model="form.payee_name" placeholder="Name of payee" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_name }" />
                             <div v-if="errors.payee_name" class="text-red-600 text-xs mt-1">{{ errors.payee_name[0]
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <!-- Payee Address -->
@@ -139,7 +139,7 @@
                                 option-value="value" placeholder="Select Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.voucher_type }" />
                             <div v-if="errors.voucher_type" class="text-red-600 text-xs mt-1">{{ errors.voucher_type[0]
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <!-- Explanation -->
@@ -239,7 +239,8 @@
                     <!-- PDF Preview -->
                     <div v-else-if="isPdfFile(selectedAttachment.type) && selectedAttachment.path"
                         class="bg-white rounded border border-slate-200">
-                        <embed :src="getAttachmentUrl(selectedAttachment)" type="application/pdf" class="w-full h-96 rounded" />
+                        <embed :src="getAttachmentUrl(selectedAttachment)" type="application/pdf"
+                            class="w-full h-96 rounded" />
                     </div>
 
                     <!-- File Not Available -->
@@ -255,9 +256,9 @@
                                 available in the production environment.</p>
                             <div class="mt-4 p-3 bg-amber-50 rounded border border-amber-200">
                                 <p class="text-xs text-amber-800"><strong>File Name:</strong> {{ selectedAttachment.name
-                                    }}</p>
+                                }}</p>
                                 <p class="text-xs text-amber-800 mt-1"><strong>Type:</strong> {{ selectedAttachment.type
-                                    }}</p>
+                                }}</p>
                                 <p class="text-xs text-amber-800 mt-1"><strong>Size:</strong> {{
                                     formatFileSize(selectedAttachment.size) }}</p>
                             </div>
@@ -274,7 +275,7 @@
                     <div>
                         <p class="text-xs text-slate-500 font-medium">FILE SIZE</p>
                         <p class="text-sm font-semibold text-slate-900 mt-1">{{ formatFileSize(selectedAttachment.size)
-                            }}</p>
+                        }}</p>
                     </div>
                     <div>
                         <p class="text-xs text-slate-500 font-medium">ATTACHMENT TYPE</p>
@@ -501,7 +502,7 @@ function getAttachmentUrl(attachment) {
     if (!attachment.path) {
         return '';
     }
-    
+
     // If the path is already a full URL, reconstruct it with current host
     if (attachment.path.startsWith('http://') || attachment.path.startsWith('https://')) {
         // Extract the path part (everything after the domain)
@@ -510,12 +511,12 @@ function getAttachmentUrl(attachment) {
         // Return with current host
         return window.location.origin + pathPart;
     }
-    
+
     // If it's a relative path, ensure it starts with /
     if (!attachment.path.startsWith('/')) {
         return '/' + attachment.path;
     }
-    
+
     return attachment.path;
 }
 </script>
