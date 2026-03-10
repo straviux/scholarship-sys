@@ -38,11 +38,11 @@ const contextMenuItems = ref([]);
 const showStatusDialog = ref(false);
 const selectedVoucherForStatus = ref(null);
 const statusForm = reactive({
-    transaction_status: 'on process',
+    obr_status: 'on process',
     remarks: ''
 });
 const savingStatus = ref(false);
-const transactionStatuses = ['on process', 'suspended', 'completed'];
+const obrStatuses = ['No OBR', 'LOA', 'Irregular', 'Transferred', 'Claimed', 'Paid', 'On Process', 'Denied'];
 const showOBRTrackingDialog = ref(false);
 const selectedVoucherForOBRTracking = ref(null);
 const statusFilter = ref('');  // Status filter
@@ -174,7 +174,7 @@ const filteredVouchers = computed(() => {
 
     // Filter by status if selected
     if (statusFilter.value) {
-        filtered = filtered.filter(v => v.transaction_status === statusFilter.value);
+        filtered = filtered.filter(v => v.obr_status === statusFilter.value);
     }
 
     // Filter by search query
@@ -561,7 +561,7 @@ const saveRemarks = async () => {
 // Open transaction status modal
 const openStatusModal = (voucher) => {
     selectedVoucherForStatus.value = voucher;
-    statusForm.transaction_status = voucher.transaction_status || 'on process';
+    statusForm.obr_status = voucher.obr_status || 'On Process';
     statusForm.remarks = voucher.remarks || '';
     showStatusDialog.value = true;
 };
@@ -576,8 +576,13 @@ const saveStatus = async () => {
         const currentVoucher = await axios.get(`/api/fund-transactions/${selectedVoucherForStatus.value.id}`);
         const voucherData = currentVoucher.data.data;
 
+        console.log('Saving status - Current form data:', {
+            obr_status: statusForm.obr_status,
+            remarks: statusForm.remarks
+        });
+
         // PUT with all required fields plus updated transaction_status and remarks
-        await axios.put(`/api/fund-transactions/${selectedVoucherForStatus.value.id}`, {
+        const response = await axios.put(`/api/fund-transactions/${selectedVoucherForStatus.value.id}`, {
             voucher_type: voucherData.voucher_type,
             explanation: voucherData.explanation,
             payee_type: voucherData.payee_type,
@@ -592,22 +597,24 @@ const saveStatus = async () => {
             scholar_ids: voucherData.scholar_ids,
             notes: voucherData.notes,
             remarks: statusForm.remarks,
-            transaction_status: statusForm.transaction_status,
+            transaction_status: statusForm.obr_status,
             fiscal_year: voucherData.fiscal_year || null,
             obr_no: voucherData.obr_no || null,
             dv_no: voucherData.dv_no || null
         });
 
+        console.log('Status update response:', response.data);
+
         // Update the voucher in the list
         const voucherIndex = vouchers.value.findIndex(v => v.id === selectedVoucherForStatus.value.id);
         if (voucherIndex > -1) {
-            vouchers.value[voucherIndex].transaction_status = statusForm.transaction_status;
+            vouchers.value[voucherIndex].obr_status = statusForm.obr_status;
             vouchers.value[voucherIndex].remarks = statusForm.remarks;
         }
 
         // Also update the currently viewed voucher if it's the same one
         if (selectedVoucher.value?.id === selectedVoucherForStatus.value.id) {
-            selectedVoucher.value.transaction_status = statusForm.transaction_status;
+            selectedVoucher.value.obr_status = statusForm.obr_status;
             selectedVoucher.value.remarks = statusForm.remarks;
         }
 
@@ -696,9 +703,14 @@ const calculateTotalAmount = (voucher) => {
 // Get status color for badge
 const getStatusColor = (status) => {
     const statusColors = {
-        'pending': 'bg-blue-100 text-blue-800',
-        'suspended': 'bg-yellow-100 text-yellow-800',
-        'completed': 'bg-green-100 text-green-800'
+        'No OBR': 'bg-gray-100 text-gray-800',
+        'LOA': 'bg-blue-100 text-blue-800',
+        'Irregular': 'bg-orange-100 text-orange-800',
+        'Transferred': 'bg-purple-100 text-purple-800',
+        'Claimed': 'bg-indigo-100 text-indigo-800',
+        'Paid': 'bg-green-100 text-green-800',
+        'On Process': 'bg-yellow-100 text-yellow-800',
+        'Denied': 'bg-red-100 text-red-800'
     };
     return statusColors[status] || 'bg-gray-100 text-gray-800';
 };
@@ -844,11 +856,11 @@ const saveOBRTracking = async () => {
                     const currentVoucher = await axios.get(`/api/fund-transactions/${selectedVoucherForOBRTracking.value.id}`);
                     const voucherData = currentVoucher.data.data;
 
-                    // Validate transaction_status - only send if it's a valid value
-                    const validStatuses = ['on process', 'suspended', 'completed'];
-                    const statusToSend = validStatuses.includes(voucherData.transaction_status)
-                        ? voucherData.transaction_status
-                        : 'on process'; // Default to 'on process' if invalid
+                    // Validate obr_status - preserve existing status
+                    const validStatuses = ['No OBR', 'LOA', 'Irregular', 'Transferred', 'Claimed', 'Paid', 'On Process', 'Denied'];
+                    const statusToSend = voucherData.obr_status && validStatuses.includes(voucherData.obr_status)
+                        ? voucherData.obr_status
+                        : (voucherData.obr_status || 'On Process'); // Keep existing status or default to 'On Process' if none
 
                     // PUT with OBR tracking fields
                     await axios.put(`/api/fund-transactions/${selectedVoucherForOBRTracking.value.id}`, {
@@ -878,6 +890,7 @@ const saveOBRTracking = async () => {
                         vouchers.value[voucherIndex].fiscal_year = obrTrackingForm.fiscal_year;
                         vouchers.value[voucherIndex].obr_no = obrTrackingForm.obr_no;
                         vouchers.value[voucherIndex].dv_no = obrTrackingForm.dv_no;
+                        vouchers.value[voucherIndex].obr_status = statusToSend;
                     }
 
                     // Also update selectedVoucher if it's the same voucher
@@ -885,6 +898,7 @@ const saveOBRTracking = async () => {
                         selectedVoucher.value.fiscal_year = obrTrackingForm.fiscal_year;
                         selectedVoucher.value.obr_no = obrTrackingForm.obr_no;
                         selectedVoucher.value.dv_no = obrTrackingForm.dv_no;
+                        selectedVoucher.value.obr_status = statusToSend;
                     }
 
                     toast.add({
@@ -986,19 +1000,45 @@ onMounted(() => {
                                 <span class="text-sm text-gray-700">All Status</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="statusFilter" type="radio" value="on process"
+                                <input v-model="statusFilter" type="radio" value="On Process"
                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
                                 <span class="text-sm text-gray-700">On Process</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="statusFilter" type="radio" value="suspended"
+                                <input v-model="statusFilter" type="radio" value="No OBR"
                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
-                                <span class="text-sm text-gray-700">Suspended</span>
+                                <span class="text-sm text-gray-700">No OBR</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="statusFilter" type="radio" value="completed"
+                                <input v-model="statusFilter" type="radio" value="LOA"
                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
-                                <span class="text-sm text-gray-700">Completed</span>
+                                <span class="text-sm text-gray-700">LOA</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="statusFilter" type="radio" value="Irregular"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">Irregular</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="statusFilter" type="radio" value="Transferred"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">Transferred</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="statusFilter" type="radio" value="Claimed"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">Claimed</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="statusFilter" type="radio" value="Paid"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">Paid</span>
+                            </label>
+
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input v-model="statusFilter" type="radio" value="Denied"
+                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">Denied</span>
                             </label>
                         </div>
                         <button @click="fetchVouchers" :disabled="loading"
@@ -1100,14 +1140,13 @@ onMounted(() => {
 
                                 <td class="px-2 sm:px-6 py-4 text-sm">
                                     <span
-                                        :class="['px-3 py-1 rounded-full text-xs font-medium', getStatusColor(voucher.transaction_status)]">
-                                        {{ (voucher.transaction_status || 'on process').charAt(0).toUpperCase() +
-                                            (voucher.transaction_status || 'on process').slice(1) }}
+                                        :class="['px-3 py-1 rounded-full text-xs font-medium', getStatusColor(voucher.obr_status)]">
+                                        {{ voucher.obr_status || 'On Process' }}
                                     </span>
                                 </td>
                                 <td class="px-2 sm:px-6 py-4 text-sm font-medium text-gray-900">{{
                                     formatAmount(calculateTotalAmount(voucher))
-                                }}</td>
+                                    }}</td>
                                 <td class="px-2 sm:px-6 py-4 text-sm text-gray-600">{{ voucher.creator?.name || '---' }}
                                 </td>
                                 <td class="px-2 sm:px-6 py-4 text-sm text-gray-600">{{ formatDate(voucher.created_at) }}
@@ -1199,11 +1238,10 @@ onMounted(() => {
                         <p class="text-sm text-gray-900 font-medium">{{ selectedVoucher.obr_type || '---' }}</p>
                     </div>
                     <div>
-                        <p class="text-xs font-semibold text-gray-600 uppercase">Transaction Status</p>
+                        <p class="text-xs font-semibold text-gray-600 uppercase">OBR Status</p>
                         <span
-                            :class="['px-3 py-1 rounded-full text-xs font-medium inline-block', getStatusColor(selectedVoucher.transaction_status)]">
-                            {{ (selectedVoucher.transaction_status || 'on process').charAt(0).toUpperCase() +
-                                (selectedVoucher.transaction_status || 'on process').slice(1) }}
+                            :class="['px-3 py-1 rounded-full text-xs font-medium inline-block', getStatusColor(selectedVoucher.obr_status)]">
+                            {{ selectedVoucher.obr_status || 'On Process' }}
                         </span>
                     </div>
                 </div>
@@ -1218,7 +1256,7 @@ onMounted(() => {
                 <div class="bg-white border border-gray-200 rounded p-4">
                     <p class="text-sm font-semibold text-gray-900 mb-2">Scholars ({{ selectedVoucher.scholar_ids?.length
                         || 0
-                        }})</p>
+                    }})</p>
                     <div v-if="loadingScholars" class="text-center py-2">
                         <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span class="text-xs">Loading...</span>
                     </div>
@@ -1227,7 +1265,7 @@ onMounted(() => {
                         <div v-for="(scholar, index) in scholarsDetails" :key="index"
                             class="text-xs text-gray-700 py-1 px-2 bg-gray-50 rounded flex items-center justify-between gap-2">
                             <span class="font-medium">{{ index + 1 }}. {{ scholar.first_name }} {{ scholar.last_name
-                                }}</span>
+                            }}</span>
                             <span class="text-gray-600 whitespace-nowrap">
                                 <span v-if="scholar.course_name">{{ scholar.course_name }}</span>
                                 <span v-if="scholar.year_level" class="ml-1">| {{
@@ -1235,7 +1273,7 @@ onMounted(() => {
                                         scholar.year_level
                                 }}</span>
                                 <span v-if="scholar.academic_year" class="ml-1">| {{ scholar.academic_year
-                                    }}</span>
+                                }}</span>
                                 <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                             </span>
                         </div>
@@ -1329,18 +1367,9 @@ onMounted(() => {
                     <p class="text-xs text-gray-500">Change the transaction status for this voucher</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Transaction Status</label>
-                    <div class="flex gap-3">
-                        <div v-for="status in transactionStatuses" :key="status" class="flex items-center">
-                            <input type="radio" :id="`status-${status}`" :value="status"
-                                v-model="statusForm.transaction_status" :name="status"
-                                class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
-                            <label :for="`status-${status}`"
-                                class="ml-2 block text-sm text-gray-900 capitalize cursor-pointer">
-                                {{ status }}
-                            </label>
-                        </div>
-                    </div>
+                    <label class="block text-sm font-medium text-gray-900 mb-2">OBR Status</label>
+                    <Dropdown v-model="statusForm.obr_status" :options="obrStatuses" placeholder="Select a status"
+                        class="w-full" />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-900 mb-2">Remarks (Optional)</label>

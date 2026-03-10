@@ -77,7 +77,7 @@ class FundTransactionController extends Controller
             'scholar_ids.*.scholarship_record_id' => 'nullable',
             'notes' => 'nullable|string',
             'remarks' => 'nullable|string',
-            'transaction_status' => 'nullable|in:on process,suspended,completed',
+            'transaction_status' => 'nullable|in:No OBR,LOA,Irregular,Transferred,Claimed,Paid,On Process,Denied',
         ]);
 
         if ($validator->fails()) {
@@ -213,7 +213,7 @@ class FundTransactionController extends Controller
                 'scholar_ids.*.scholarship_record_id' => 'nullable',
                 'notes' => 'nullable|string',
                 'remarks' => 'nullable|string',
-                'transaction_status' => 'nullable|in:on process,suspended,completed',
+                'transaction_status' => 'nullable|in:No OBR,LOA,Irregular,Transferred,Claimed,Paid,On Process,Denied',
                 'fiscal_year' => 'nullable|integer',
                 'obr_no' => 'nullable|string',
                 'dv_no' => 'nullable|string',
