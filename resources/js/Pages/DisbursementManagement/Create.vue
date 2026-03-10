@@ -232,14 +232,14 @@
                     <!-- Image Preview -->
                     <div v-if="isImageFile(selectedAttachment.type) && selectedAttachment.path"
                         class="flex justify-center bg-white rounded border border-slate-200 p-4">
-                        <img :src="selectedAttachment.path" :alt="selectedAttachment.name"
+                        <img :src="getAttachmentUrl(selectedAttachment)" :alt="selectedAttachment.name"
                             class="max-w-full max-h-96 object-contain rounded" />
                     </div>
 
                     <!-- PDF Preview -->
                     <div v-else-if="isPdfFile(selectedAttachment.type) && selectedAttachment.path"
                         class="bg-white rounded border border-slate-200">
-                        <embed :src="selectedAttachment.path" type="application/pdf" class="w-full h-96 rounded" />
+                        <embed :src="getAttachmentUrl(selectedAttachment)" type="application/pdf" class="w-full h-96 rounded" />
                     </div>
 
                     <!-- File Not Available -->
@@ -303,7 +303,7 @@
                 <!-- Download Button -->
                 <div class="flex gap-3 justify-end pt-4 border-t border-slate-200">
                     <Button label="Close" severity="secondary" @click="showAttachmentModal = false" class="text-sm" />
-                    <a v-if="selectedAttachment.path" :href="selectedAttachment.path" target="_blank"
+                    <a v-if="selectedAttachment.path" :href="getAttachmentUrl(selectedAttachment)" target="_blank"
                         rel="noopener noreferrer"
                         class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded inline-flex items-center gap-2">
                         <i class="pi pi-download text-sm"></i> Download File
@@ -495,5 +495,27 @@ function isImageFile(mimeType) {
 
 function isPdfFile(mimeType) {
     return mimeType === 'application/pdf';
+}
+
+function getAttachmentUrl(attachment) {
+    if (!attachment.path) {
+        return '';
+    }
+    
+    // If the path is already a full URL, reconstruct it with current host
+    if (attachment.path.startsWith('http://') || attachment.path.startsWith('https://')) {
+        // Extract the path part (everything after the domain)
+        const urlObj = new URL(attachment.path);
+        const pathPart = urlObj.pathname + urlObj.search + urlObj.hash;
+        // Return with current host
+        return window.location.origin + pathPart;
+    }
+    
+    // If it's a relative path, ensure it starts with /
+    if (!attachment.path.startsWith('/')) {
+        return '/' + attachment.path;
+    }
+    
+    return attachment.path;
 }
 </script>
