@@ -667,6 +667,11 @@ const onRowContextMenu = (event) => {
     contextMenu.value.show(event.originalEvent);
 };
 
+const showRowContextMenu = (event, rowData) => {
+    contextMenuItems.value = buildContextMenu(rowData);
+    contextMenu.value.show(event);
+};
+
 // Filter state
 const showAllFilters = ref(false);
 
@@ -1444,7 +1449,7 @@ const formatDate = (date) => {
                     </div>
 
                     <!-- Context Menu -->
-                    <ContextMenu ref="contextMenu" :model="contextMenuItems" />
+                    <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
 
                     <!-- Table View -->
                     <DataTable v-if="viewMode === 'table'" :value="applicants" stripedRows showGridlines
@@ -1460,9 +1465,9 @@ const formatDate = (date) => {
                         <Column selectionMode="multiple" :exportable="false" style="width: 3rem"></Column>
 
                         <!-- Date Filed Column -->
-                        <Column header="Date Filed" style="min-width: 90px">
+                        <Column header="Date Filed" style="width: 110px">
                             <template #body="slotProps">
-                                <div class="text-sm font-medium">
+                                <div class="text-xs font-medium">
                                     {{ formatDateFiled(slotProps.data.date_filed) }}
                                 </div>
                             </template>
@@ -1513,10 +1518,7 @@ const formatDate = (date) => {
                                                         class="w-3 h-3 rounded-full bg-blue-500"></div>
                                                 </div>
                                             </div>
-                                            <div class="ml-1 text-xs text-gray-500 mt-0.5 flex items-center gap-3 ">
-                                                <i class="pi pi-phone" style="font-size: 0.75rem;"></i>
-                                                <span>{{ slotProps.data.contact_no || 'No contact no.' }}</span>
-                                            </div>
+
                                         </div>
                                     </div>
                                     <div class="flex gap-1">
@@ -1524,21 +1526,21 @@ const formatDate = (date) => {
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Prog. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Cour. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_course || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Sch. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_school_course || '-'
-                                                    }}</span>
+                                                }}</span>
 
                                             </div>
                                         </div>
@@ -1554,19 +1556,18 @@ const formatDate = (date) => {
                             </template>
                         </Column>
 
-                        <!-- Education Details Column -->
-                        <Column header="Education Details" style="min-width: 200px">
+                        <!-- Academic Column -->
+                        <Column header="Academic" style="min-width: 200px">
                             <template #body="slotProps">
-                                <div v-if="slotProps.data.scholarship_grant[0]" class="flex flex-col gap-0.5">
-                                    <div class="text-sm font-medium" v-if="slotProps.data.scholarship_grant[0]?.school">
+                                <div v-if="slotProps.data.scholarship_grant[0]" class="text-xs flex flex-col gap-0.5">
+                                    <div class="font-medium" v-if="slotProps.data.scholarship_grant[0]?.school">
                                         {{ slotProps.data.scholarship_grant[0].school.shortname }}
                                     </div>
-                                    <div class="text-sm" v-if="slotProps.data.scholarship_grant[0]?.course">
+                                    <div v-if="slotProps.data.scholarship_grant[0]?.course">
                                         {{ slotProps.data.scholarship_grant[0].course.shortname }}
                                     </div>
-                                    <div class="text-xs text-gray-600"
-                                        v-if="slotProps.data.scholarship_grant[0]?.year_level">
-                                        Year {{ slotProps.data.scholarship_grant[0].year_level }}
+                                    <div class="text-gray-600" v-if="slotProps.data.scholarship_grant[0]?.year_level">
+                                        Year: {{ slotProps.data.scholarship_grant[0].year_level }}
                                     </div>
                                 </div>
                                 <span v-else class="text-gray-400">-</span>
@@ -1576,11 +1577,18 @@ const formatDate = (date) => {
                         <!-- Address Column -->
                         <Column header="Address" style="min-width: 150px">
                             <template #body="slotProps">
-                                <div class="text-sm font-medium" v-if="slotProps.data.municipality">
-                                    {{ slotProps.data.municipality }}{{ slotProps.data.barangay ? `,
-                                    ${slotProps.data.barangay}` : '' }}
+
+                                <div class="ml-1 text-xs  mt-0.5 flex items-center gap-3 "
+                                    v-if="slotProps.data.municipality">
+                                    <i class="pi pi-map text-gray-500" style="font-size: 0.75rem;"></i>
+                                    <span>{{ slotProps.data.municipality }}{{ slotProps.data.barangay ? `,
+                                        ${slotProps.data.barangay}` : '' }}</span>
                                 </div>
                                 <span v-else class="text-gray-400">-</span>
+                                <div class="ml-1 text-xs  mt-0.5 flex items-center gap-3 ">
+                                    <i class="pi pi-phone text-gray-500" style="font-size: 0.75rem;"></i>
+                                    <span>{{ slotProps.data.contact_no || 'No contact no.' }}</span>
+                                </div>
                             </template>
                         </Column>
 
@@ -1588,18 +1596,18 @@ const formatDate = (date) => {
                         <Column header="Parent/Guardian" v-if="hasPermission('jpm.view') && showJpmColumns"
                             style="min-width: 200px">
                             <template #body="slotProps">
-                                <div class="text-sm space-y-1">
+                                <div class="text-xs space-y-1">
                                     <div v-if="slotProps.data.father_name">
                                         <span class="font-medium">{{ slotProps.data.father_name }}</span>
-                                        <span class="text-gray-500 italic text-xs"> (father)</span>
+                                        <span class="text-gray-500 italic"> (father)</span>
                                     </div>
                                     <div v-if="slotProps.data.mother_name">
                                         <span class="font-medium">{{ slotProps.data.mother_name }}</span>
-                                        <span class="text-gray-500 italic text-xs"> (mother)</span>
+                                        <span class="text-gray-500 italic"> (mother)</span>
                                     </div>
                                     <div v-if="slotProps.data.guardian_name">
                                         <span class="font-medium">{{ slotProps.data.guardian_name }}</span>
-                                        <span class="text-gray-500 italic text-xs"> (guardian)</span>
+                                        <span class="text-gray-500 italic"> (guardian)</span>
                                     </div>
                                     <span
                                         v-if="!slotProps.data.father_name && !slotProps.data.mother_name && !slotProps.data.guardian_name"
@@ -1629,14 +1637,15 @@ const formatDate = (date) => {
                         </Column>
 
                         <!-- Remarks Column (hidden when JPM columns visible) -->
-                        <Column header="Remarks" v-if="!showJpmColumns" style="min-width: 150px">
+                        <Column header="Remarks" v-if="!showJpmColumns" style="max-width: 150px">
                             <template #body="slotProps">
                                 <div class="text-xs">{{ slotProps.data.remarks || '-' }}</div>
                             </template>
                         </Column>
 
                         <!-- Encoded By Column (only visible for admins) -->
-                        <Column header="Encoded By" v-if="hasRole('administrator')" style="min-width: 180px">
+                        <!-- <Column header="Encoded" v-if="hasRole('administrator')" style="min-width: 180px"> -->
+                        <Column header="Encoder" style="min-width: 180px">
                             <template #body="slotProps">
                                 <div class="flex flex-col gap-1 text-xs">
                                     <div v-if="slotProps.data.created_by" class="font-medium text-gray-700">
@@ -1670,10 +1679,10 @@ const formatDate = (date) => {
                         </Column>
 
                         <!-- Priority Column -->
-                        <Column header="Priority" style="width: 180px"
+                        <Column header="Priority" style="width: 150px"
                             v-if="hasPermission('priority.manage') && !simpleView">
                             <template #body="slotProps">
-                                <div class="flex items-center gap-2 justify-between">
+                                <div class="flex items-center gap-2">
                                     <div
                                         v-if="slotProps.data.priority_level && slotProps.data.priority_level !== 'normal'">
                                         <Tag :severity="getPrioritySeverity(slotProps.data.priority_level)"
@@ -1681,50 +1690,17 @@ const formatDate = (date) => {
                                             v-tooltip.top="slotProps.data.priority_reason" />
                                     </div>
                                     <span v-else class="text-gray-400 text-sm">Normal</span>
-
-                                    <!-- Priority Actions -->
-                                    <div class="flex">
-                                        <Button icon="pi pi-star" severity="warn" size="small" rounded outlined
-                                            v-tooltip.top="'Assign Priority'"
-                                            @click="openPriorityModal(slotProps.data)" />
-
-                                        <Button icon="pi pi-star-fill" severity="secondary" size="small" rounded
-                                            outlined v-tooltip.top="'Remove Priority'"
-                                            @click="removePriority(slotProps.data)"
-                                            v-if="slotProps.data.priority_level && slotProps.data.priority_level !== 'normal'" />
-                                    </div>
                                 </div>
                             </template>
                         </Column>
 
                         <!-- Actions Column -->
-                        <Column header="Actions" style="width: 250px" v-if="!simpleView">
+                        <Column header="Actions" style="width: 60px" v-if="!simpleView">
                             <template #body="slotProps">
-
-                                <div class="flex gap-1 justify-center flex-wrap">
-                                    <Button icon="pi pi-id-card" severity="success" size="small" rounded outlined
-                                        v-tooltip.top="'Review Application & View Profile'"
-                                        @click="openProfileReviewModal(slotProps.data)"
-                                        v-if="hasPermission('applicants.view')" />
-
-                                    <Button icon="pi pi-user-edit" severity="help" size="small" rounded outlined
-                                        v-tooltip.top="'Edit Applicant'" @click="editApplicant(slotProps.data)"
-                                        v-if="hasPermission('applicants.edit')" />
-
-                                    <Button icon="pi pi-heart" severity="success" size="small" rounded outlined
-                                        v-tooltip.top="'Update YAKAP Category'"
-                                        @click="openUpdateYakapModal(slotProps.data)"
-                                        v-if="hasPermission('applicants.edit')" />
-
-                                    <Button icon="pi pi-check-circle" severity="info" size="small" rounded outlined
-                                        v-tooltip.top="'View Requirements Checklist'"
-                                        @click="openRequirementsModal(slotProps.data)"
-                                        v-if="hasPermission('applicants.view')" />
-
-                                    <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
-                                        v-tooltip.top="'Delete Applicant'"
-                                        @click="confirmDeleteApplicant(slotProps.data)"
-                                        v-if="hasPermission('applicants.delete')" />
+                                <div class="flex justify-center">
+                                    <Button icon="pi pi-ellipsis-v" rounded text severity="secondary" size="small"
+                                        @click="(event) => showRowContextMenu(event, slotProps.data)"
+                                        v-tooltip.top="'More actions'" />
                                 </div>
                             </template>
                         </Column>
@@ -1803,7 +1779,7 @@ const formatDate = (date) => {
                         class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows="6" placeholder="Enter remarks here..." />
                     <small v-if="remarksForm.errors.remarks" class="text-red-500">{{ remarksForm.errors.remarks
-                    }}</small>
+                        }}</small>
                 </div>
             </div>
 
@@ -1870,12 +1846,12 @@ const formatDate = (date) => {
                                     getApplicantFullName(selectedApplicantForReview) }}</h3>
                             <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
                                 <span><i class="pi pi-phone mr-1"></i>{{ selectedApplicantForReview.contact_no || 'N/A'
-                                    }}</span>
+                                }}</span>
                                 <span><i class="pi pi-envelope mr-1"></i>{{ selectedApplicantForReview.email || 'N/A'
-                                    }}</span>
+                                }}</span>
                                 <span><i class="pi pi-calendar mr-1"></i>{{
                                     formatDate(selectedApplicantForReview.date_filed)
-                                    }}</span>
+                                }}</span>
                             </div>
                         </div>
                         <!-- Queue Numbers -->
@@ -1961,7 +1937,7 @@ const formatDate = (date) => {
                                             <label class="text-gray-600">Income</label>
                                             <div class="font-medium">{{ selectedApplicantForReview.gross_monthly_income
                                                 || 'N/A'
-                                                }}</div>
+                                            }}</div>
                                         </div>
                                         <div>
                                             <label class="text-gray-600">Address</label>
