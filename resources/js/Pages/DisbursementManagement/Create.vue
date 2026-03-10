@@ -113,7 +113,7 @@
                                 option-value="value" placeholder="Select Payee Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_type }" />
                             <div v-if="errors.payee_type" class="text-red-600 text-xs mt-1">{{ errors.payee_type[0]
-                                }}</div>
+                            }}</div>
                         </div>
 
                         <!-- Payee Name -->
@@ -122,7 +122,7 @@
                             <InputText v-model="form.payee_name" placeholder="Name of payee" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_name }" />
                             <div v-if="errors.payee_name" class="text-red-600 text-xs mt-1">{{ errors.payee_name[0]
-                                }}</div>
+                            }}</div>
                         </div>
 
                         <!-- Payee Address -->
@@ -139,7 +139,7 @@
                                 option-value="value" placeholder="Select Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.voucher_type }" />
                             <div v-if="errors.voucher_type" class="text-red-600 text-xs mt-1">{{ errors.voucher_type[0]
-                                }}</div>
+                            }}</div>
                         </div>
 
                         <!-- Explanation -->
@@ -209,14 +209,15 @@
         </div>
 
         <!-- Attachment Preview Modal -->
-        <Dialog v-model:visible="showAttachmentModal" modal :header="selectedAttachment?.name" :style="{ width: '90vw' }"
-            :maximizable="true" class="p-fluid">
+        <Dialog v-model:visible="showAttachmentModal" modal :header="selectedAttachment?.name"
+            :style="{ width: '90vw' }" :maximizable="true" class="p-fluid">
             <div v-if="selectedAttachment" class="flex flex-col">
                 <!-- Zoom Controls -->
                 <div class="flex gap-2 mb-4 pb-4 border-b border-slate-200">
                     <Button icon="pi pi-minus" @click="zoomOut" severity="secondary" size="small" rounded text
                         v-tooltip.bottom="'Zoom Out'" />
-                    <span class="px-3 py-2 text-sm font-medium text-slate-900 bg-slate-100 rounded min-w-16 text-center">
+                    <span
+                        class="px-3 py-2 text-sm font-medium text-slate-900 bg-slate-100 rounded min-w-16 text-center">
                         {{ Math.round(attachmentZoom * 100) }}%
                     </span>
                     <Button icon="pi pi-plus" @click="zoomIn" severity="secondary" size="small" rounded text
@@ -236,19 +237,17 @@
                     </div>
 
                     <!-- PDF Preview -->
-                    <div v-else-if="isPdfFile(selectedAttachment.type) && selectedAttachment.path"
-                        class="w-full">
-                        <embed :src="getAttachmentUrl(selectedAttachment)" type="application/pdf"
-                            class="w-full" />
+                    <div v-else-if="isPdfFile(selectedAttachment.type) && selectedAttachment.path" class="w-full">
+                        <embed :src="getAttachmentUrl(selectedAttachment)" type="application/pdf" class="w-full" />
                     </div>
 
                     <!-- File Not Available -->
-                    <div v-else
-                        class="flex flex-col items-center justify-center gap-4 p-12 text-center">
+                    <div v-else class="flex flex-col items-center justify-center gap-4 p-12 text-center">
                         <i class="pi pi-exclamation-circle text-5xl text-amber-500"></i>
                         <div>
                             <p class="font-semibold text-slate-900">File Not Available</p>
-                            <p class="text-sm text-slate-600 mt-1">This file is not available in the current environment.</p>
+                            <p class="text-sm text-slate-600 mt-1">This file is not available in the current
+                                environment.</p>
                         </div>
                     </div>
                 </div>
