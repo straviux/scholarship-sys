@@ -3,14 +3,108 @@
         <!-- Backdrop overlay when viewer modal is open -->
         <div v-if="showViewerModal" class="fixed inset-0 bg-black/30 z-[999]" style="margin: -1.5rem;"></div>
 
-        <!-- Header with Add Button -->
+        <!-- Header with Add Button and Summary Toggle -->
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h3 class="text-xl font-semibold text-gray-900">Disbursements & Cheques</h3>
                 <p class="text-sm text-gray-500 mt-1">Manage disbursements and cheque processing</p>
             </div>
-            <Button v-if="hasPermission('applicants.edit')" icon="pi pi-plus" label="Add Disbursement"
-                @click="showAddModal = true" severity="success" size="small" raised />
+            <div class="flex gap-2">
+                <Button :icon="showSummary ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+                    :label="showSummary ? 'Hide Summary' : 'Show Summary'" outlined severity="secondary" size="small"
+                    @click="showSummary = !showSummary" />
+                <Button v-if="hasPermission('applicants.edit')" icon="pi pi-plus" label="Add Disbursement"
+                    @click="showAddModal = true" severity="success" size="small" raised />
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div v-if="showSummary" class="mb-6">
+            <!-- Total Amount Card -->
+            <div
+                class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 shadow-sm mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-blue-700 font-medium">Total Disbursements</p>
+                        <p class="text-2xl font-bold text-blue-900 mt-1">{{ formatCurrency(totalAmount) }}</p>
+                        <p class="text-xs text-blue-600 mt-1">{{ disbursements.length }} transactions</p>
+                    </div>
+                    <i class="pi pi-money-bill text-4xl text-blue-300"></i>
+                </div>
+            </div>
+
+            <!-- Summary by Year -->
+            <div class="mb-4 flex gap-2">
+                <Button label="Expand All Years" icon="pi pi-expand" size="small" text rounded
+                    @click="Object.keys(semesterSummary).forEach(year => expandedYears[year] = true)" />
+                <Button label="Collapse All Years" icon="pi pi-compress" size="small" text rounded
+                    @click="Object.keys(semesterSummary).forEach(year => expandedYears[year] = false)" />
+            </div>
+
+            <div class="space-y-4">
+                <template v-for="(yearData, year) in semesterSummary" :key="year">
+                    <!-- Year Card (Collapsible) -->
+                    <div
+                        class="bg-white border-2 border-gray-300 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        <!-- Year Header -->
+                        <button @click="expandedYears[year] = !expandedYears[year]"
+                            class="w-full px-4 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-300 hover:from-gray-100 hover:to-gray-150 transition-colors text-left">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3 flex-1">
+                                    <i :class="expandedYears[year] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                                        class="text-gray-600"></i>
+                                    <div>
+                                        <p class="text-sm font-bold text-gray-800">Academic Year: {{ year }}</p>
+                                        <p class="text-xs text-gray-600 mt-0.5">{{ yearData.count }} transactions • {{
+                                            formatCurrency(yearData.total) }}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-lg font-bold text-gray-900">{{ formatCurrency(yearData.total) }}</p>
+                                </div>
+                            </div>
+                        </button>
+
+                        <!-- Semesters (Collapsible) -->
+                        <template v-if="expandedYears[year]">
+                            <div class="p-4 space-y-3 bg-gray-50">
+                                <template v-for="(semData, semester) in yearData.semesters"
+                                    :key="`${year}-${semester}`">
+                                    <!-- Semester Card -->
+                                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                                        <!-- Semester Header -->
+                                        <div class="mb-3 pb-3 border-b border-gray-200">
+                                            <p class="text-sm font-bold text-gray-800">{{ semester }}</p>
+                                            <p class="text-lg font-bold text-gray-900 mt-1">{{
+                                                formatCurrency(semData.total) }}</p>
+                                            <p class="text-xs text-gray-600 mt-0.5">{{ semData.count }} transactions</p>
+                                        </div>
+
+                                        <!-- Status Breakdown -->
+                                        <div class="space-y-2">
+                                            <template v-for="(statusData, status) in semData.byStatus"
+                                                :key="`${year}-${semester}-${status}`">
+                                                <div class="flex items-center justify-between p-2 rounded"
+                                                    :class="getStatusBgClass(status)">
+                                                    <div class="flex flex-col">
+                                                        <p class="text-xs font-semibold"
+                                                            :class="getStatusTextClass(status)">{{ status }}</p>
+                                                        <p class="text-xs" :class="getStatusTextClass(status)">{{
+                                                            statusData.count }} item{{ statusData.count !== 1 ? 's' : ''
+                                                            }}</p>
+                                                    </div>
+                                                    <p class="text-sm font-bold" :class="getStatusTextClass(status)">{{
+                                                        formatCurrency(statusData.amount) }}</p>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
         </div>
 
         <!-- Disbursements List -->
@@ -39,7 +133,7 @@
                                         <p class="text-xs font-medium">OBR Date</p>
                                         <p class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
                                             item.date_obligated ? formatDate(item.date_obligated) : '-'
-                                        }}</p>
+                                            }}</p>
                                     </div>
                                     <div v-if="item.obr_no" class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">OBR No.</p>
@@ -95,33 +189,33 @@
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Year:</span>
                                                 <span class="font-medium text-gray-900">{{ item.year_level || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Term:</span>
                                                 <span class="font-medium text-gray-900">{{ item.semester || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">AY:</span>
                                                 <span class="font-medium text-gray-900">{{ item.academic_year || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Course:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">School:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -509,7 +603,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, onUnmounted } from 'vue';
+import { ref, onMounted, watch, onUnmounted, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
@@ -537,6 +631,8 @@ const showDeleteDialog = ref(false);
 const showAttachmentsModal = ref(false);
 const showViewerModal = ref(false);
 const showQrModal = ref(false);
+const showSummary = ref(true);
+const expandedYears = ref({});
 const qrCodeData = ref(null);
 const qrCountdown = ref('');
 const qrCountdownInterval = ref(null);
@@ -904,6 +1000,45 @@ const getObrStatusClass = (status) => {
     return classes[status] || '';
 };
 
+const getStatusCardClass = (status) => {
+    const classes = {
+        'LOA': 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200',
+        'IRREGULAR': 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200',
+        'TRANSFERRED': 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200',
+        'CLAIMED': 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200',
+        'PAID': 'bg-gradient-to-br from-green-50 to-green-100 border-green-200',
+        'ON PROCESS': 'bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200',
+        'DENIED': 'bg-gradient-to-br from-red-50 to-red-100 border-red-200',
+    };
+    return classes[status] || 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200';
+};
+
+const getStatusBgClass = (status) => {
+    const classes = {
+        'LOA': 'bg-orange-50',
+        'IRREGULAR': 'bg-yellow-50',
+        'TRANSFERRED': 'bg-blue-50',
+        'CLAIMED': 'bg-purple-50',
+        'PAID': 'bg-green-50',
+        'ON PROCESS': 'bg-cyan-50',
+        'DENIED': 'bg-red-50',
+    };
+    return classes[status] || 'bg-gray-50';
+};
+
+const getStatusTextClass = (status) => {
+    const classes = {
+        'LOA': 'text-orange-700',
+        'IRREGULAR': 'text-yellow-700',
+        'TRANSFERRED': 'text-blue-700',
+        'CLAIMED': 'text-purple-700',
+        'PAID': 'text-green-700',
+        'ON PROCESS': 'text-cyan-700',
+        'DENIED': 'text-red-700',
+    };
+    return classes[status] || 'text-gray-700';
+};
+
 const getFileIcon = (fileType) => {
     if (fileType?.includes('pdf')) return 'pi pi-file-pdf';
     if (fileType?.includes('image')) return 'pi pi-image';
@@ -1181,6 +1316,70 @@ watch(showViewerModal, (newValue) => {
         imageZoom.value = 1;
         imagePosition.value = { x: 0, y: 0 };
     }
+});
+
+// Computed properties for summary
+const totalAmount = computed(() => {
+    return disbursements.value.reduce((sum, item) => {
+        return sum + (parseFloat(item.amount) || 0);
+    }, 0);
+});
+
+const semesterSummary = computed(() => {
+    const yearSummary = {};
+
+    disbursements.value.forEach(item => {
+        const year = item.academic_year || 'N/A';
+        const semester = item.semester || 'N/A';
+
+        // Initialize year if not exists
+        if (!yearSummary[year]) {
+            yearSummary[year] = {
+                academicYear: year,
+                total: 0,
+                count: 0,
+                semesters: {}
+            };
+        }
+
+        // Initialize semester within year if not exists
+        if (!yearSummary[year].semesters[semester]) {
+            yearSummary[year].semesters[semester] = {
+                semester: semester,
+                total: 0,
+                count: 0,
+                byStatus: {}
+            };
+        }
+
+        const status = item.obr_status || 'ON PROCESS';
+        const amount = parseFloat(item.amount) || 0;
+
+        // Update year totals
+        yearSummary[year].total += amount;
+        yearSummary[year].count++;
+
+        // Update semester totals
+        yearSummary[year].semesters[semester].total += amount;
+        yearSummary[year].semesters[semester].count++;
+
+        // Update status breakdown for semester
+        if (!yearSummary[year].semesters[semester].byStatus[status]) {
+            yearSummary[year].semesters[semester].byStatus[status] = {
+                count: 0,
+                amount: 0
+            };
+        }
+        yearSummary[year].semesters[semester].byStatus[status].count++;
+        yearSummary[year].semesters[semester].byStatus[status].amount += amount;
+    });
+
+    // Sort by year descending
+    return Object.fromEntries(
+        Object.entries(yearSummary).sort(([yearA], [yearB]) => {
+            return yearB.localeCompare(yearA);
+        })
+    );
 });
 
 // Load data on mount

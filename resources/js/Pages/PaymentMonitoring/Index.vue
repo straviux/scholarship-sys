@@ -266,7 +266,7 @@ const formatDate = (date) => {
                                 <input v-model="selectedStatus" type="radio" value="no-obr"
                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">No OBR</span>
-                                <Badge :value="statusCounts['no-obr']" severity="warning"></Badge>
+                                <Badge :value="statusCounts['no-obr']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="selectedStatus" type="radio" value="LOA"
@@ -326,10 +326,18 @@ const formatDate = (date) => {
             </Panel>
 
             <!-- Data Table -->
-            <div class="bg-white rounded-lg shadow mt-6 overflow-auto">
+            <div class="bg-white rounded-lg shadow mt-8 overflow-auto">
                 <DataTable :value="filteredData" :paginator="true" :rows="10" :rows-per-page-options="[5, 10, 20, 50]"
                     responsive-layout="scroll" class="w-full text-xs sm:text-sm">
-                    <Column field="scholar_name" header="Scholar Name" :sortable="true" style="min-width: 160px" />
+                    <Column field="scholar_name" header="Scholar Name" :sortable="true" style="min-width: 160px">
+                        <template #body="{ data }">
+                            <a :href="route('scholarship.profile.show', data.profile_id)" target="_blank"
+                                class="text-gray-600 hover:text-gray-800 hover:underline font-medium">
+                                {{ data.scholar_name }}
+                                <i class="pi pi-external-link ml-1" style="font-size: 9pt;"></i>
+                            </a>
+                        </template>
+                    </Column>
                     <Column field="voucher_type" header="Disbursement Type" :sortable="true" style="min-width: 100px">
                         <template #body="{ data }">
                             <span v-if="data.voucher_type"
@@ -389,7 +397,7 @@ const formatDate = (date) => {
                     <Column field="obr_no" header="OBR No." style="min-width: 120px">
                         <template #body="{ data }">
                             <span v-if="data.obr_no" class="text-xs sm:text-sm font-mono text-blue-700">{{ data.obr_no
-                            }}</span>
+                                }}</span>
                             <span v-else class="text-gray-400">—</span>
                         </template>
                     </Column>

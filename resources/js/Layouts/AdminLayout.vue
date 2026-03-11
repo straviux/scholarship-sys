@@ -396,14 +396,67 @@ function getMenuItemRoute(menuItem) {
     }
 }
 
-// Check if menu item is active, with error handling for missing routes
-function isMenuItemActive(menuItem) {
-    if (!menuItem.route) return false;
+// Check if a route matches a menu item's route pattern (including prefix matching)
+function routeMatches(menuRoute) {
+    if (!menuRoute) return false;
     try {
-        return route().current(menuItem.route);
+        const currentRoute = route().current();
+
+        // Exact match first
+        if (currentRoute === menuRoute) return true;
+
+        // Handle scholarship routes specifically:
+        // Menu route 'scholarship.profiles' should match current routes like:
+        // - scholarship.profile.show
+        // - scholarship.profile.edit
+        // - scholarship.profile.update
+        // etc.
+        if (menuRoute === 'scholarship.profiles') {
+            return currentRoute && currentRoute.startsWith('scholarship.profile');
+        }
+
+        // Generic pattern matching for other routes
+        const menuParts = menuRoute.split('.');
+        const currentParts = currentRoute.split('.');
+
+        // If menu route has 2+ parts, check if current route shares the same base
+        if (menuParts.length >= 2) {
+            const menuBase = menuParts.slice(0, -1).join('.');
+            const currentBase = currentParts.slice(0, -1).join('.');
+
+            if (currentBase === menuBase || currentRoute.startsWith(menuBase + '.')) {
+                return true;
+            }
+        }
+
+        return false;
     } catch (error) {
         return false;
     }
+}
+
+// Check if menu item is active, with error handling for missing routes
+function isMenuItemActive(menuItem) {
+    if (!menuItem.route) return false;
+    return routeMatches(menuItem.route);
+}
+
+// Check if parent menu item should be active (either itself or any children)
+function isParentMenuItemActive(menuItem) {
+    // First check if the parent itself is active
+    if (isMenuItemActive(menuItem)) return true;
+
+    // Then check if any of its children are active
+    if (menuItem.children && Array.isArray(menuItem.children)) {
+        return menuItem.children.some(child => isMenuItemActive(child));
+    }
+
+    // Also check if the current route matches the parent's route pattern
+    if (menuItem.route && routeMatches(menuItem.route)) {
+        return true;
+    }
+
+    return false;
 }
 
 onMounted(() => {
@@ -573,7 +626,8 @@ onUnmounted(() => {
                         <!-- Menu item with children (dropdown) -->
                         <li v-else>
                             <div @click="toggleMenuExpansion(item.id)"
-                                class="cursor-pointer flex items-center justify-between py-1 px-2 rounded hover:bg-gray-700 transition-colors">
+                                class="cursor-pointer flex items-center justify-between py-1 px-2 rounded transition-colors"
+                                :class="isParentMenuItemActive(item) ? 'bg-gray-700 text-white' : 'hover:bg-gray-700'">
                                 <span class="flex items-center flex-1">
                                     <i :class="[item.icon, 'mr-2 text-sm']"></i>
                                     <span class="-mr-1 font-medium">{{ item.name }}</span>
@@ -617,7 +671,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                }}</span>
+                                    }}</span>
                             </SidebarLink>
                         </li>
 
@@ -626,7 +680,7 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                }}</span>
+                                    }}</span>
                             </div>
                         </li>
                     </template>

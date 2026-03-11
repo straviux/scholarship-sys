@@ -228,6 +228,28 @@ const isAdmin = computed(() => {
     return user.roles?.includes('administrator') ?? false;
 });
 
+// Computed property for status counts
+const statusCounts = computed(() => {
+    return {
+        'On Process': vouchers.value.filter(v => v.obr_status === 'On Process').length,
+        'No OBR': vouchers.value.filter(v => !v.obr_status || v.obr_status === '').length,
+        'LOA': vouchers.value.filter(v => v.obr_status === 'LOA').length,
+        'Irregular': vouchers.value.filter(v => v.obr_status === 'Irregular').length,
+        'Transferred': vouchers.value.filter(v => v.obr_status === 'Transferred').length,
+        'Claimed': vouchers.value.filter(v => v.obr_status === 'Claimed').length,
+        'Paid': vouchers.value.filter(v => v.obr_status === 'Paid').length,
+        'Denied': vouchers.value.filter(v => v.obr_status === 'Denied').length
+    };
+});
+
+// Computed property for user record counts
+const myRecordsCount = computed(() => {
+    const userId = page.props.auth?.user?.id;
+    return userId ? vouchers.value.filter(v => v.creator_id === userId).length : 0;
+});
+
+const totalRecordsCount = computed(() => vouchers.value.length);
+
 // Fetch tracking history for a voucher
 const fetchTrackingHistory = async (voucher) => {
     if (!voucher.fiscal_year || !voucher.obr_no) {
@@ -986,66 +1008,76 @@ onMounted(() => {
                 <div class="flex flex-col gap-4 mb-4">
                     <div class="w-full">
                         <input v-model="searchQuery" type="text" placeholder="Search voucher, payee, or scholar..."
-                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:border-transparent" />
                     </div>
                     <div class="flex flex-col sm:flex-row gap-3">
                         <div class="flex flex-wrap gap-3 items-center">
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="userFilter" type="radio" value=""
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
                                 <span class="text-sm text-gray-700">All Records</span>
+                                <Badge :value="totalRecordsCount" severity="secondary" />
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="userFilter" type="radio" value="my-records"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
                                 <span class="text-sm text-gray-700">My Records</span>
+                                <Badge :value="myRecordsCount" severity="secondary" />
                             </label>
                             <span class="text-gray-300 mx-1">|</span>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="statusFilter" type="radio" value=""
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
                                 <span class="text-sm text-gray-700">All Status</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="statusFilter" type="radio" value="On Process"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
                                 <span class="text-sm text-gray-700">On Process</span>
+                                <Badge :value="statusCounts['On Process']" severity="secondary" />
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="statusFilter" type="radio" value="No OBR"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
                                 <span class="text-sm text-gray-700">No OBR</span>
+                                <Badge :value="statusCounts['No OBR']" severity="secondary" />
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="statusFilter" type="radio" value="LOA"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
                                 <span class="text-sm text-gray-700">LOA</span>
+                                <Badge :value="statusCounts['LOA']" severity="secondary" />
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="statusFilter" type="radio" value="Irregular"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
                                 <span class="text-sm text-gray-700">Irregular</span>
+                                <Badge :value="statusCounts['Irregular']" severity="secondary" />
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="statusFilter" type="radio" value="Transferred"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
                                 <span class="text-sm text-gray-700">Transferred</span>
+                                <Badge :value="statusCounts['Transferred']" severity="secondary" />
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="statusFilter" type="radio" value="Claimed"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
                                 <span class="text-sm text-gray-700">Claimed</span>
+                                <Badge :value="statusCounts['Claimed']" severity="secondary" />
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="statusFilter" type="radio" value="Paid"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
                                 <span class="text-sm text-gray-700">Paid</span>
+                                <Badge :value="statusCounts['Paid']" severity="secondary" />
                             </label>
 
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input v-model="statusFilter" type="radio" value="Denied"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
                                 <span class="text-sm text-gray-700">Denied</span>
+                                <Badge :value="statusCounts['Denied']" severity="secondary" />
                             </label>
                         </div>
                         <button @click="fetchVouchers" :disabled="loading"
@@ -1056,7 +1088,7 @@ onMounted(() => {
                     </div>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full divide-y divide-gray-200 text-xs sm:text-sm">
+                    <table class="w-full divide-y divide-gray-200 text-xs sm:text-sm mt-8">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th
@@ -1068,20 +1100,20 @@ onMounted(() => {
                                 <th
                                     class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     OBR Type</th>
-                                <th
-                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    style="min-width: 150px">
                                     Disbursement Type</th>
 
 
-                                <th
-                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    style="min-width: 140px">
                                     Status</th>
                                 <th
                                     class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Total Amount</th>
                                 <th
                                     class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Created By</th>
+                                    Processed By</th>
                                 <th
                                     class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Date</th>
@@ -1116,10 +1148,10 @@ onMounted(() => {
                                 <td class="px-2 sm:px-6 py-4 text-sm font-medium text-blue-600">{{ voucher.obr_no ||
                                     '---' }}
                                 </td>
-                                <td class="px-2 sm:px-6 py-4 text-sm text-gray-900">
+                                <td class="px-2 sm:px-6 py-4 text-sm font-semibold text-gray-800">
                                     <div>{{ voucher.payee_name }}</div>
                                     <div v-if="isPayeeSchool(voucher)"
-                                        class="text-xs font-bold italic text-gray-600 mt-1">
+                                        class="text-xs font-medium italic text-gray-600 mt-1">
                                         {{ getFirstScholarNameFromCache(voucher) || '---' }}
                                     </div>
                                 </td>
@@ -1128,24 +1160,20 @@ onMounted(() => {
                                         'px-3 py-1 rounded-full text-xs font-medium': true,
                                         ' text-gray-800': voucher.obr_type === 'REGULAR',
                                         ' text-yellow-800': voucher.obr_type === 'FINANCIAL ASSISTANCE',
-                                        ' text-red-800': voucher.obr_type === 'REIMBURSEMENT'
+                                        ' text-purple-800': voucher.obr_type === 'REIMBURSEMENT'
                                     }">
                                         {{ voucher.obr_type || '---' }}
                                     </span>
                                 </td>
-                                <td class="px-2 sm:px-6 py-4 text-sm text-gray-900">
-                                    <span :class="{
-                                        'px-3 py-1 rounded-full text-xs font-medium': true,
-                                        ' text-blue-800': voucher.voucher_type === 'disbursements',
-                                        ' text-green-800': voucher.voucher_type === 'payroll'
-                                    }">
-                                        {{ voucher.voucher_type === 'disbursements' ? 'Disbursement Voucher' :
+                                <td class="px-2 sm:px-6 py-4 text-gray-900" style="min-width: 150px">
+                                    <span class="text-xs font-medium uppercase">
+                                        {{ voucher.voucher_type === 'disbursements' ? 'DV' :
                                             (voucher.voucher_type === 'payroll' ? 'Payroll' : voucher.voucher_type) }}
                                     </span>
                                 </td>
 
 
-                                <td class="px-2 sm:px-6 py-4 text-sm">
+                                <td class="px-2 sm:px-6 py-4 text-sm" style="min-width: 140px">
                                     <span
                                         :class="['px-3 py-1 rounded-full text-xs font-medium', getStatusColor(voucher.obr_status)]">
                                         {{ voucher.obr_status || 'On Process' }}
@@ -1153,10 +1181,12 @@ onMounted(() => {
                                 </td>
                                 <td class="px-2 sm:px-6 py-4 text-sm font-medium text-gray-900">{{
                                     formatAmount(calculateTotalAmount(voucher))
-                                }}</td>
-                                <td class="px-2 sm:px-6 py-4 text-sm text-gray-600">{{ voucher.creator?.name || '---' }}
+                                    }}</td>
+                                <td class="px-2 sm:px-6 py-4 text-xs font-semibold text-gray-600">{{
+                                    voucher.creator?.name
+                                    || '---' }}
                                 </td>
-                                <td class="px-2 sm:px-6 py-4 text-sm text-gray-600">{{ formatDate(voucher.created_at) }}
+                                <td class="px-2 sm:px-6 py-4 text-xs text-gray-600">{{ formatDate(voucher.created_at) }}
                                 </td>
                                 <td class="px-2 sm:px-6 py-4 text-sm">
                                     <button @click="(e) => openContextMenu(e, voucher)"
@@ -1263,7 +1293,7 @@ onMounted(() => {
                 <div class="bg-white border border-gray-200 rounded p-4">
                     <p class="text-sm font-semibold text-gray-900 mb-2">Scholars ({{ selectedVoucher.scholar_ids?.length
                         || 0
-                        }})</p>
+                    }})</p>
                     <div v-if="loadingScholars" class="text-center py-2">
                         <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span class="text-xs">Loading...</span>
                     </div>
@@ -1272,7 +1302,7 @@ onMounted(() => {
                         <div v-for="(scholar, index) in scholarsDetails" :key="index"
                             class="text-xs text-gray-700 py-1 px-2 bg-gray-50 rounded flex items-center justify-between gap-2">
                             <span class="font-medium">{{ index + 1 }}. {{ scholar.first_name }} {{ scholar.last_name
-                                }}</span>
+                            }}</span>
                             <span class="text-gray-600 whitespace-nowrap">
                                 <span v-if="scholar.course_name">{{ scholar.course_name }}</span>
                                 <span v-if="scholar.year_level" class="ml-1">| {{
@@ -1280,7 +1310,7 @@ onMounted(() => {
                                         scholar.year_level
                                 }}</span>
                                 <span v-if="scholar.academic_year" class="ml-1">| {{ scholar.academic_year
-                                    }}</span>
+                                }}</span>
                                 <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                             </span>
                         </div>
