@@ -402,31 +402,19 @@ function routeMatches(menuRoute) {
     try {
         const currentRoute = route().current();
 
-        // Exact match first
+        // Exact match
         if (currentRoute === menuRoute) return true;
 
-        // Handle scholarship routes specifically:
-        // Menu route 'scholarship.profiles' should match current routes like:
-        // - scholarship.profile.show
-        // - scholarship.profile.edit
-        // - scholarship.profile.update
-        // etc.
-        if (menuRoute === 'scholarship.profiles') {
-            return currentRoute && currentRoute.startsWith('scholarship.profile');
+        // Current route is a direct sub-route of the menu route
+        // e.g., menu 'scholarship.profiles' matches 'scholarship.profiles.show'
+        if (currentRoute && currentRoute.startsWith(menuRoute + '.')) {
+            return true;
         }
 
-        // Generic pattern matching for other routes
-        const menuParts = menuRoute.split('.');
-        const currentParts = currentRoute.split('.');
-
-        // If menu route has 2+ parts, check if current route shares the same base
-        if (menuParts.length >= 2) {
-            const menuBase = menuParts.slice(0, -1).join('.');
-            const currentBase = currentParts.slice(0, -1).join('.');
-
-            if (currentBase === menuBase || currentRoute.startsWith(menuBase + '.')) {
-                return true;
-            }
+        // Handle plural menu route matching singular sub-routes
+        // e.g., 'scholarship.profiles' should also match 'scholarship.profile.show'
+        if (menuRoute === 'scholarship.profiles') {
+            return currentRoute && currentRoute.startsWith('scholarship.profile.');
         }
 
         return false;
@@ -459,7 +447,25 @@ function isParentMenuItemActive(menuItem) {
     return false;
 }
 
+// Close mobile sidebar on Inertia navigation
+let removeNavigateListener = null;
+
+// Auto-hide content scrollbar on idle
+const contentRef = ref(null);
+let scrollTimer = null;
+function onContentScroll() {
+    contentRef.value?.classList.add('is-scrolling');
+    if (scrollTimer) clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(() => {
+        contentRef.value?.classList.remove('is-scrolling');
+    }, 1000);
+}
+
 onMounted(() => {
+    // Attach scroll listener to content area (not window)
+    if (contentRef.value) {
+        contentRef.value.addEventListener('scroll', onContentScroll, { passive: true });
+    }
     loadMenuItems(true); // true = show loading state on initial load
     fetchUnreadCount();
     fetchServerTime();
@@ -474,6 +480,11 @@ onMounted(() => {
     dateTimeIntervalId = setInterval(() => {
         currentDateTime.value = new Date(currentDateTime.value.getTime() + 1000);
     }, 1000);
+
+    // Close mobile menu when navigating to a new page
+    removeNavigateListener = router.on('navigate', () => {
+        toggleMenu.value = false;
+    });
 
     // Note: We intentionally do NOT refresh menu on navigation because:
     // 1. Menu doesn't change when navigating between pages
@@ -495,6 +506,13 @@ onUnmounted(() => {
     if (maintenanceAdjustIntervalId) {
         clearInterval(maintenanceAdjustIntervalId);
     }
+    if (removeNavigateListener) {
+        removeNavigateListener();
+    }
+    if (contentRef.value) {
+        contentRef.value.removeEventListener('scroll', onContentScroll);
+    }
+    if (scrollTimer) clearTimeout(scrollTimer);
 });
 </script>
 
@@ -509,11 +527,7 @@ onUnmounted(() => {
         <div class="max-w-md w-full mx-4 text-center flex flex-col items-center justify-center">
             <!-- Icon -->
             <div class="mb-6">
-                <svg class="w-20 h-20 mx-auto text-yellow-500 animate-pulse" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 9v2m0 4v2m0 4v2M8 5h8a2 2 0 012 2v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7a2 2 0 012-2z"></path>
-                </svg>
+                <i class="pi pi-exclamation-triangle text-yellow-500 animate-pulse" style="font-size: 5rem"></i>
             </div>
 
             <!-- Title -->
@@ -563,10 +577,16 @@ onUnmounted(() => {
     </div>
 
     <div v-if="!shouldBlockNonAdminAccess()" class="w-full h-full flex">
+        <!-- Mobile Backdrop -->
+        <div v-if="toggleMenu" @click="toggleMenu = false" class="fixed inset-0 bg-black/50 z-20 md:hidden" />
+
         <!-- Floating Sidebar -->
         <aside
-            class="hidden fixed z-10 top-20 left-4 md:flex flex-col bg-[#222831] transition-all duration-300 rounded-xl shadow-xl min-w-0 h-[calc(100vh-96px)]"
-            :class="[sidebarMinimized ? 'md:w-[110px] w-[110px]' : 'md:w-[220px] w-[220px]', toggleMenu ? 'flex!' : '']">
+            class="fixed z-30 md:z-10 top-0 left-0 md:top-20 md:left-4 flex flex-col bg-[#222831] transition-all duration-300 md:rounded-xl shadow-xl min-w-0 h-full md:h-[calc(100vh-96px)]"
+            :class="[
+                sidebarMinimized ? 'md:w-[110px]' : 'md:w-[220px]',
+                toggleMenu ? 'w-[280px] translate-x-0' : '-translate-x-full md:translate-x-0',
+            ]">
 
             <div class="flex-1 flex flex-col min-h-0 min-w-0 p-0 overflow-hidden">
                 <Button v-slot="slotProps" asChild>
@@ -671,7 +691,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </SidebarLink>
                         </li>
 
@@ -680,22 +700,52 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </div>
                         </li>
                     </template>
                 </ul>
+
+                <!-- Mobile-only: Quick Actions at bottom of sidebar -->
+                <div class="md:hidden border-t border-gray-700 p-3 space-y-1">
+                    <Link :href="route('help.index')" @click="toggleMenu = false"
+                        class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm">
+                        <i class="pi pi-question-circle"></i>
+                        <span>Help</span>
+                    </Link>
+                    <Link :href="route('user.settings')" @click="toggleMenu = false"
+                        class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm">
+                        <i class="pi pi-cog"></i>
+                        <span>Settings</span>
+                    </Link>
+                    <Link :href="route('user-activity-logs.index')" @click="toggleMenu = false"
+                        class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm">
+                        <i class="pi pi-chart-line"></i>
+                        <span>Activity</span>
+                    </Link>
+                    <button @click="handleLogout"
+                        class="flex items-center gap-3 px-3 py-2 rounded-md text-red-400 hover:text-red-300 hover:bg-gray-700 transition-colors text-sm w-full">
+                        <i class="pi pi-sign-out"></i>
+                        <span>Sign Out</span>
+                    </button>
+                </div>
             </div>
         </aside>
 
-        <div class="w-full min-w-0 flex flex-col">
-            <div class="sticky z-10 top-0 h-16 border-b bg-[#222831] lg:py-2.5">
-                <div class="px-6 flex items-center justify-between space-x-4">
+        <div class="w-full min-w-0 flex flex-col h-screen overflow-hidden">
+            <div class="flex-shrink-0 z-10 h-16 border-b bg-[#222831] lg:py-2.5">
+                <div class="px-4 md:px-6 flex items-center justify-between space-x-2 md:space-x-4 h-full">
+                    <!-- Mobile hamburger -->
+                    <button @click="toggleMenu = !toggleMenu"
+                        class="md:hidden flex-shrink-0 p-2 text-gray-300 hover:text-white cursor-pointer">
+                        <i class="pi text-lg" :class="toggleMenu ? 'pi-times' : 'pi-bars'"></i>
+                    </button>
                     <!-- Logo and App Name -->
-                    <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-3 flex-1 min-w-0">
                         <div class="flex items-center space-x-2">
                             <img src="/images/pgp-logo.png" class="w-8 h-8 object-contain" alt="logo" />
-                            <span class="text-lg font-semibold text-gray-200">Scholarship Program</span>
+                            <span class="text-lg font-semibold text-gray-200 hidden sm:inline">Scholarship
+                                Program</span>
                         </div>
                         <div class="hidden md:block w-px h-6 bg-gray-600"></div>
                         <!-- Server Date/Time Display -->
@@ -711,10 +761,10 @@ onUnmounted(() => {
                             </div>
                         </div>
                     </div>
-                    <button @click="toggleMenu = !toggleMenu"
-                        class="md:hidden text-gray-300 hover:text-white focus:outline-none p-2">
-                        <i class="pi" :class="toggleMenu ? 'pi-times' : 'pi-bars'"></i>
-                    </button>
+                    <!-- Mobile notification icon -->
+                    <NotificationDropdown class="md:hidden flex-shrink-0"
+                        :unread-count="($page.props.auth.user && $page.props.auth.user.unread_notifications_count) || 0"
+                        :class="{ 'animate-shake': ($page.props.auth.user && $page.props.auth.user.unread_notifications_count) > 0 }" />
                     <div class="space-x-6 hidden md:flex items-center justify-center">
                         <!-- Help Link -->
                         <Link :href="route('help.index')"
@@ -787,11 +837,8 @@ onUnmounted(() => {
 
                                 <!-- Footer -->
                                 <div class="px-4 py-2 border-t border-gray-100 bg-gray-50">
-                                    <button @click="handleLogout"
-                                        class="w-full flex items-center justify-center gap-2 px-4 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors duration-200">
-                                        <i class="pi pi-sign-out"></i>
-                                        <span class="text-sm font-medium">Sign Out</span>
-                                    </button>
+                                    <Button @click="handleLogout" label="Sign Out" icon="pi pi-sign-out"
+                                        severity="danger" variant="text" class="w-full" />
                                 </div>
                             </Popover>
                         </div>
@@ -800,7 +847,8 @@ onUnmounted(() => {
                 </div>
             </div>
 
-            <div class="px-4 md:px-6 pt-6" :class="sidebarMinimized ? 'md:ml-[130px]' : 'md:ml-[240px]'">
+            <div ref="contentRef" class="content-scroll flex-1 overflow-y-auto px-4 md:px-6 pt-6"
+                :class="sidebarMinimized ? 'md:ml-[130px]' : 'md:ml-[240px]'">
                 <!-- <ToastList /> -->
                 <slot />
             </div>
@@ -864,17 +912,66 @@ aside {
     font-size: 1.25rem !important;
 }
 
-/* Hide scrollbar but maintain scroll functionality */
+/* Auto-hide scrollbar: visible on hover, hidden when idle */
 .menu {
-    /* Hide scrollbar for Chrome, Safari and Opera */
-    scrollbar-width: none;
-    /* Firefox */
-    -ms-overflow-style: none;
-    /* Internet Explorer 10+ */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s;
+}
+
+.menu:hover {
+    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
 }
 
 .menu::-webkit-scrollbar {
-    display: none;
-    /* Safari and Chrome */
+    width: 4px;
+}
+
+.menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.menu::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 4px;
+}
+
+.menu:hover::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+}
+
+/* Auto-hide content area scrollbar */
+.content-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s;
+}
+
+.content-scroll.is-scrolling {
+    scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+}
+
+.content-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.content-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.content-scroll::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 4px;
+}
+
+.content-scroll.is-scrolling::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.4);
+}
+
+/* Disable html/body scroll — content area handles it */
+html,
+body {
+    overflow: hidden;
+    height: 100%;
 }
 </style>

@@ -15,7 +15,7 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\ScholarshipProfileController;
 use App\Http\Controllers\ScholarController;
-use App\Http\Controllers\WaitingListController;
+use App\Http\Controllers\ApplicantController;
 use App\Http\Controllers\SystemReportController;
 use App\Http\Controllers\SystemUpdateController;
 use App\Http\Controllers\SystemOptionController;
@@ -42,15 +42,25 @@ Route::post('/mobile/upload/disbursement/{token}', [MobileUploadController::clas
 Route::get('/mobile/upload/scholarship-record/{token}', [MobileUploadController::class, 'showScholarshipRecordUpload'])
     ->name('mobile.scholarship-record.upload');
 Route::post('/mobile/upload/scholarship-record/{token}', [MobileUploadController::class, 'uploadScholarshipRecordFile'])
-    ->name('mobile.scholarship-record.upload.submit');
+    ->name('mobile.scholarship-record.upload.submit')
+    ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 Route::get('/mobile/upload/profile/{token}', [ProfileController::class, 'showMobileUpload'])
     ->name('mobile.profile.upload');
 Route::post('/mobile/upload/profile/{token}', [ProfileController::class, 'processMobileUpload'])
-    ->name('mobile.profile.upload.submit');
+    ->name('mobile.profile.upload.submit')
+    ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 Route::get('/mobile/upload/requirement/{token}', [MobileUploadController::class, 'showRequirementUpload'])
     ->name('mobile.requirement.upload');
 Route::post('/mobile/upload/requirement/{token}', [MobileUploadController::class, 'uploadRequirementFile'])
-    ->name('mobile.requirement.upload.submit');
+    ->name('mobile.requirement.upload.submit')
+    ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+Route::get('/mobile/upload/fund-transaction/{token}', [MobileUploadController::class, 'showFundTransactionUpload'])
+    ->name('mobile.upload.fund-transaction');
+Route::get('/mobile/upload/fund-transaction/{token}/{doc_type}', [MobileUploadController::class, 'showFundTransactionUpload'])
+    ->name('mobile.upload.fund-transaction.with-type');
+Route::post('/mobile/upload/fund-transaction/{token}', [MobileUploadController::class, 'uploadFundTransactionFile'])
+    ->name('mobile.upload.fund-transaction.submit')
+    ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 
 // Public API routes (no authentication required)
 Route::get('/api/server-time', function () {
@@ -62,7 +72,7 @@ Route::get('/api/server-time', function () {
 })->name('server-time.public');
 
 // TEST ROUTE: Create mock applicants (only in debug mode, auth required but CSRF exempt)
-Route::middleware(['auth'])->post('/test-add-applicants', [WaitingListController::class, 'testAddApplicants'])->name('waitinglist.testAddApplicants')->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+Route::middleware(['auth'])->post('/test-add-applicants', [ApplicantController::class, 'testAddApplicants'])->name('applicants.testAddApplicants')->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 
 // Broadcasting Authentication
 Broadcast::routes(['middleware' => ['auth']]);
@@ -215,22 +225,22 @@ Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->gr
     Route::delete('/profiles/delete-educational-background/{id}', 'deleteEducationBackgroundApi')->name('profile-api.deleteeducation');
 });
 
-// WAITING LIST ROUTES - Accessible to all authenticated users
+// APPLICANT ROUTES - Accessible to all authenticated users
 // Access is controlled via permission gates in the controller
 Route::middleware(['auth'])->group(function () {
-    // Dedicated routes for waiting list management
+    // Dedicated routes for applicant management
     // Specific routes MUST come before generic {action?}/{id?} route
-    Route::post('/applicants', [ScholarshipProfileController::class, 'storeApplicant'])->middleware('check.permission:applicants.create')->name('waitinglist.store');
-    Route::put('/applicants/{id}', [ScholarshipProfileController::class, 'updateApplicant'])->middleware('check.permission:applicants.edit')->name('waitinglist.update');
-    Route::delete('/applicants/{id}', [WaitingListController::class, 'destroy'])->middleware('check.permission:applicants.delete')->name('waitinglist.destroy');
-    Route::get('/applicants-export', [WaitingListController::class, 'export'])->middleware('check.permission:applicants.export')->name('waitinglist.export');
-    Route::put('/applicants/{id}/jpm-status', [WaitingListController::class, 'updateJpmStatus'])->middleware('check.permission:applicants.edit')->name('waitinglist.updateJpmStatus');
-    Route::put('/applicants/{id}/jpm-remarks', [WaitingListController::class, 'updateJpmRemarks'])->middleware('check.permission:applicants.edit')->name('waitinglist.updateJpmRemarks');
-    Route::post('/applicants/requirement/generate-qr', [WaitingListController::class, 'generateRequirementQrCode'])->middleware('check.permission:applicants.view')->name('applicants.requirement.generate-qr');
+    Route::post('/applicants', [ScholarshipProfileController::class, 'storeApplicant'])->middleware('check.permission:applicants.create')->name('applicants.store');
+    Route::put('/applicants/{id}', [ScholarshipProfileController::class, 'updateApplicant'])->middleware('check.permission:applicants.edit')->name('applicants.update');
+    Route::delete('/applicants/{id}', [ApplicantController::class, 'destroy'])->middleware('check.permission:applicants.delete')->name('applicants.destroy');
+    Route::get('/applicants-export', [ApplicantController::class, 'export'])->middleware('check.permission:applicants.export')->name('applicants.export');
+    Route::put('/applicants/{id}/jpm-status', [ApplicantController::class, 'updateJpmStatus'])->middleware('check.permission:applicants.edit')->name('applicants.updateJpmStatus');
+    Route::put('/applicants/{id}/jpm-remarks', [ApplicantController::class, 'updateJpmRemarks'])->middleware('check.permission:applicants.edit')->name('applicants.updateJpmRemarks');
+    Route::post('/applicants/requirement/generate-qr', [ApplicantController::class, 'generateRequirementQrCode'])->middleware('check.permission:applicants.view')->name('applicants.requirement.generate-qr');
     // Generic route MUST come last to catch all remaining /applicants patterns
-    Route::get('/applicants/{action?}/{id?}', [WaitingListController::class, 'index'])->middleware('check.permission:applicants.view')->name('waitinglist.index'); // Accepts filter values via query string: ?applied_course=...&municipality=...&name=...&per_page=...
+    Route::get('/applicants/{action?}/{id?}', [ApplicantController::class, 'index'])->middleware('check.permission:applicants.view')->name('applicants.index'); // Accepts filter values via query string: ?applied_course=...&municipality=...&name=...&per_page=...
 
-    Route::get('/get-user-encoded-records', [WaitingListController::class, 'getUserEncodedRecords'])->name('waitinglist.getUserEncodedRecords');
+    Route::get('/get-user-encoded-records', [ApplicantController::class, 'getUserEncodedRecords'])->name('applicants.getUserEncodedRecords');
 });
 
 // SCHOLAR ROUTES - Accessible to all authenticated users
@@ -267,11 +277,11 @@ Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->gro
     Route::put('/scholarship_records.update-remarks/{scholarship_records}', 'updateRemarks')->middleware('check.permission:scholarships.edit')->name('scholarship_records-api.updateremarks');
     Route::post('/scholarship_records/{record}/requirements/upload', 'uploadRequirement')->middleware('check.permission:scholarships.edit')->name('scholarship.requirements.upload');
 
-    // Requirements Checklist Routes (Profile-based) - under WaitingListController
-    Route::get('/scholarship-profiles/{profile}/requirements-checklist', [WaitingListController::class, 'getProfileRequirementsChecklist'])->middleware('check.permission:applicants.view')->name('scholarship.profile.requirements-checklist');
-    Route::post('/scholarship-profiles/{profile}/check-requirement', [WaitingListController::class, 'checkProfileRequirement'])->middleware('check.permission:applicants.edit')->name('scholarship.profile.check-requirement');
-    Route::post('/scholarship-profiles/{profile}/uncheck-requirement', [WaitingListController::class, 'uncheckProfileRequirement'])->middleware('check.permission:applicants.edit')->name('scholarship.profile.uncheck-requirement');
-    Route::post('/scholarship-profiles/{profile}/upload-requirement', [WaitingListController::class, 'uploadProfileRequirement'])->middleware('check.permission:applicants.edit')->name('scholarship.profile.upload-requirement');
+    // Requirements Checklist Routes (Profile-based) - under ApplicantController
+    Route::get('/scholarship-profiles/{profile}/requirements-checklist', [ApplicantController::class, 'getProfileRequirementsChecklist'])->middleware('check.permission:applicants.view')->name('scholarship.profile.requirements-checklist');
+    Route::post('/scholarship-profiles/{profile}/check-requirement', [ApplicantController::class, 'checkProfileRequirement'])->middleware('check.permission:applicants.edit')->name('scholarship.profile.check-requirement');
+    Route::post('/scholarship-profiles/{profile}/uncheck-requirement', [ApplicantController::class, 'uncheckProfileRequirement'])->middleware('check.permission:applicants.edit')->name('scholarship.profile.uncheck-requirement');
+    Route::post('/scholarship-profiles/{profile}/upload-requirement', [ApplicantController::class, 'uploadProfileRequirement'])->middleware('check.permission:applicants.edit')->name('scholarship.profile.upload-requirement');
 });
 
 // Enhanced Scholarship Workflow Routes
@@ -372,9 +382,9 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/scholarship/{record}/update-status', [ScholarshipProfileController::class, 'updateStatus'])
         ->name('scholarship.record.update-status');
 
-    Route::get('/reviewed-applicants', [ScholarshipProfileController::class, 'showReviewedApplicants'])
+    Route::get('/interviewed-applicants', [ScholarshipProfileController::class, 'showInterviewedApplicants'])
         ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.reviewed-applicants');
+        ->name('scholarship.interviewed-applicants');
 
     // Completion status update route
     Route::post('/scholarship/{record}/completion-status', [ScholarshipProfileController::class, 'updateCompletionStatus'])
@@ -510,10 +520,10 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ScholarshipProfileController::class, 'generateReportPdf']);
-// Report PDF generation route (Waiting List / Applicants)
-Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ReportController::class, 'generateWaitinglist'])->name('report.generatePdf');
-// Report Excel generation route (Waiting List / Applicants)
-Route::middleware(['auth'])->get('/api/report/excel', [App\Http\Controllers\ReportController::class, 'generateExcelWaitingList'])->name('report.generateExcelWaitingList');
+// Report PDF generation route (Applicants)
+Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ReportController::class, 'generateApplicantReport'])->name('report.generatePdf');
+// Report Excel generation route (Applicants)
+Route::middleware(['auth'])->get('/api/report/excel', [App\Http\Controllers\ReportController::class, 'generateExcelApplicants'])->name('report.generateExcelApplicants');
 
 // Export Selected Rows PDF/Excel generation routes
 Route::middleware(['auth'])->get('/api/export-selected/pdf', [App\Http\Controllers\ReportController::class, 'exportSelectedPdf'])->name('export-selected.pdf');
@@ -523,6 +533,10 @@ Route::middleware(['auth'])->get('/api/export-selected/excel', [App\Http\Control
 Route::middleware(['auth'])->get('/api/report/scholarship/pdf', [App\Http\Controllers\ReportController::class, 'generateScholarshipPdf'])->name('report.scholarship.pdf');
 // Scholarship Report Excel generation route
 Route::middleware(['auth'])->get('/api/report/scholarship/excel', [App\Http\Controllers\ReportController::class, 'generateScholarshipExcel'])->name('report.scholarship.excel');
+
+// Interviewed Applicants Report routes
+Route::middleware(['auth'])->get('/api/interviewed-applicants/export/pdf', [App\Http\Controllers\ReportController::class, 'exportInterviewedPdf'])->name('interviewed.export.pdf');
+Route::middleware(['auth'])->get('/api/interviewed-applicants/export/excel', [App\Http\Controllers\ReportController::class, 'exportInterviewedExcel'])->name('interviewed.export.excel');
 
 // System Updates API Routes
 Route::middleware(['auth'])->group(function () {

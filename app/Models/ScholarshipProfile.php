@@ -190,8 +190,8 @@ class ScholarshipProfile extends Model
         parent::boot();
         static::creating(function ($model) {
             $user = Auth::user();
-            $model->created_by = $user->id;
-            $model->updated_by = $user->id;
+            $model->created_by = $user?->id;
+            $model->updated_by = $user?->id;
             // Generate 8-char unique_id: initials + last 5 digits of timestamp
             $year = date('y');
             $last = strtoupper(substr($model->last_name, 0, 1));
@@ -210,7 +210,7 @@ class ScholarshipProfile extends Model
         });
         static::updating(function ($model) {
             $user = Auth::user();
-            $model->updated_by = $user->id;
+            $model->updated_by = $user?->id;
         });
     }
 }

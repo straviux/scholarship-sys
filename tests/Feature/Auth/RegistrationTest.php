@@ -1,5 +1,7 @@
 <?php
 
+use Spatie\Permission\Models\Role;
+
 test('registration screen can be rendered', function () {
     $response = $this->get('/register');
 
@@ -7,9 +9,11 @@ test('registration screen can be rendered', function () {
 });
 
 test('new users can register', function () {
+    Role::create(['name' => 'user']);
+
     $response = $this->post('/register', [
         'name' => 'Test User',
-        'email' => 'test@example.com',
+        'username' => 'testuser',
         'password' => 'password',
         'password_confirmation' => 'password',
     ]);

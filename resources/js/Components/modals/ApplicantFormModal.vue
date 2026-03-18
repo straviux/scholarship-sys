@@ -52,6 +52,46 @@
                                         {{ validationError }}
                                     </p>
                                 </div>
+
+                                <!-- Duplicate Name Confirmation Dialog -->
+                                <Dialog v-model:visible="showDuplicateDialog" modal header="Possible Duplicate Found"
+                                    :style="{ width: '550px' }">
+                                    <div class="space-y-3">
+                                        <p class="text-sm text-gray-700">
+                                            <i class="pi pi-exclamation-triangle text-yellow-500 mr-1"></i>
+                                            The following existing record(s) match the name
+                                            <strong>{{ form.first_name }} {{ form.last_name }}</strong>:
+                                        </p>
+                                        <div class="max-h-60 overflow-y-auto border rounded divide-y">
+                                            <div v-for="match in duplicateMatches" :key="match.profile_id"
+                                                class="p-3 flex items-center gap-3 hover:bg-gray-50">
+                                                <i class="pi pi-user text-gray-400"></i>
+                                                <div class="flex-1 text-sm">
+                                                    <div class="font-semibold text-gray-800">
+                                                        {{ match.last_name }}, {{ match.first_name }} {{
+                                                        match.middle_name || ''
+                                                        }} {{ match.extension_name || '' }}
+                                                    </div>
+                                                    <div class="text-xs text-gray-500">
+                                                        {{ match.municipality || 'No address' }}{{ match.barangay ? `,
+                                                        ${match.barangay}` : '' }}
+                                                        <span v-if="match.contact_no" class="ml-2">· {{ match.contact_no
+                                                            }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-gray-500">Are you sure this is a different person? You
+                                            may
+                                            proceed or cancel to review.</p>
+                                    </div>
+                                    <template #footer>
+                                        <Button label="Cancel" severity="secondary" @click="showDuplicateDialog = false"
+                                            outlined />
+                                        <Button label="Proceed Anyway" icon="pi pi-arrow-right" severity="warn"
+                                            @click="proceedDespiteDuplicate" />
+                                    </template>
+                                </Dialog>
                             </div>
                             <div class="flex pt-6 justify-end">
                                 <Button label="Next" icon="pi pi-arrow-right" iconPos="right" @click="handleNextStep1"
@@ -171,6 +211,8 @@ const emit = defineEmits(['update:visible', 'success', 'applicant-created']);
 const activeStep = ref('1');
 const isValidating = ref(false);
 const validationError = ref('');
+const showDuplicateDialog = ref(false);
+const duplicateMatches = ref([]);
 
 // Helper function to format date for DatePicker
 const formatDateForPicker = (dateString) => {
@@ -327,15 +369,9 @@ const handleNextStep1 = async () => {
         console.log('API response:', response.data);
 
         if (response.data.exists) {
-            console.log('Duplicate name found - blocking progression');
-            validationError.value = `A record with the name "${form.first_name} ${form.last_name}" already exists in the system. Please verify if this is a different person before proceeding.`;
-            toast.warning('A record with this name already exists. Please verify before proceeding.', {
-                position: toast.POSITION.TOP_RIGHT,
-            });
-            // Do NOT proceed to step 2
+            duplicateMatches.value = response.data.matches || [];
+            showDuplicateDialog.value = true;
         } else {
-            console.log('No duplicate found - proceeding to step 2');
-            // Validation passed, proceed to next step
             activeStep.value = '2';
         }
     } catch (error) {
@@ -348,6 +384,11 @@ const handleNextStep1 = async () => {
     } finally {
         isValidating.value = false;
     }
+};
+
+const proceedDespiteDuplicate = () => {
+    showDuplicateDialog.value = false;
+    activeStep.value = '2';
 };
 
 const closeModal = () => {
@@ -502,7 +543,7 @@ const handleSubmit = () => {
         console.log('Updating profile with ID:', profileId);
         console.log('Submitting data:', submitData);
 
-        form.transform(() => submitData).put(route('waitinglist.update', profileId), {
+        form.transform(() => submitData).put(route('applicants.update', profileId), {
             preserveScroll: true,
             onSuccess: () => {
                 toast.success('Application updated successfully!', {
@@ -523,7 +564,7 @@ const handleSubmit = () => {
         // Create new profile
         console.log('Creating new profile with data:', submitData);
 
-        form.transform(() => submitData).post(route('waitinglist.store'), {
+        form.transform(() => submitData).post(route('applicants.store'), {
             preserveScroll: true,
             onSuccess: (response) => {
                 toast.success('Application submitted successfully!', {

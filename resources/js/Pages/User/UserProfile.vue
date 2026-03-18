@@ -382,13 +382,7 @@ const loadRecordsSummaryForMonth = async () => {
                             </div>
                             <button @click="openProfilePhotoModal"
                                 class="absolute -bottom-1 -right-1 w-6 h-6 bg-indigo-600 hover:bg-indigo-700 rounded-full flex items-center justify-center shadow-lg transition-colors cursor-pointer">
-                                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
-                                    </path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                </svg>
+                                <i class="pi pi-camera text-white" style="font-size: 0.75rem"></i>
                             </button>
                             <!-- <div class="absolute -bottom-1 -right-1 w-6 h-6">
                                 <Button @click="openProfilePhotoModal" icon="pi pi-user" severity="info" rounded
@@ -405,10 +399,7 @@ const loadRecordsSummaryForMonth = async () => {
                                 'username' }}
                             </p>
                             <div class="flex items-center text-sm text-gray-500">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
+                                <i class="pi pi-clock w-4 h-4 mr-1"></i>
                                 Profile updated {{ formatDate(reportData?.generated_at) }}
                             </div>
                         </div>
@@ -455,11 +446,7 @@ const loadRecordsSummaryForMonth = async () => {
                             </div>
                             <div
                                 class="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                    </path>
-                                </svg>
+                                <i class="pi pi-calendar text-white" style="font-size: 1.5rem"></i>
                             </div>
                         </div>
                     </div>
@@ -475,11 +462,7 @@ const loadRecordsSummaryForMonth = async () => {
                             </div>
                             <div
                                 class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                    </path>
-                                </svg>
+                                <i class="pi pi-file text-white" style="font-size: 1.5rem"></i>
                             </div>
                         </div>
                     </div>
@@ -495,10 +478,7 @@ const loadRecordsSummaryForMonth = async () => {
                             </div>
                             <div
                                 class="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
+                                <i class="pi pi-plus text-white" style="font-size: 1.5rem"></i>
                             </div>
                         </div>
                     </div>
@@ -514,11 +494,7 @@ const loadRecordsSummaryForMonth = async () => {
                             </div>
                             <div
                                 class="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg flex items-center justify-center">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                    </path>
-                                </svg>
+                                <i class="pi pi-pencil text-white" style="font-size: 1.5rem"></i>
                             </div>
                         </div>
                     </div>
@@ -534,10 +510,7 @@ const loadRecordsSummaryForMonth = async () => {
                             </div>
                             <div
                                 class="w-12 h-12 bg-gradient-to-r from-rose-500 to-pink-600 rounded-lg flex items-center justify-center">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
+                                <i class="pi pi-check-circle text-white" style="font-size: 1.5rem"></i>
                             </div>
                         </div>
                     </div>
@@ -553,10 +526,7 @@ const loadRecordsSummaryForMonth = async () => {
                             </div>
                             <div
                                 class="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
+                                <i class="pi pi-clock text-white" style="font-size: 1.5rem"></i>
                             </div>
                         </div>
                     </div>
@@ -567,8 +537,7 @@ const loadRecordsSummaryForMonth = async () => {
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-lg font-semibold text-gray-900">Application Breakdown</h3>
                         <div class="flex items-center space-x-2">
-                            <input id="currentMonthFilter" type="checkbox" v-model="showCurrentMonthOnly"
-                                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                            <Checkbox v-model="showCurrentMonthOnly" :binary="true" inputId="currentMonthFilter" />
                             <label for="currentMonthFilter" class="text-sm font-medium text-gray-700">
                                 Current Month Only
                             </label>
@@ -792,8 +761,8 @@ const loadRecordsSummaryForMonth = async () => {
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Or copy this link:</label>
                         <div class="flex gap-2">
-                            <input type="text" :value="qrCodeData.url" readonly
-                                class="flex-1 px-3 py-2 text-xs border border-gray-300 rounded-md bg-gray-50" />
+                            <InputText type="text" :value="qrCodeData.url" readonly
+                                class="flex-1 text-xs" />
                             <Button icon="pi pi-copy" size="small" @click="copyToClipboard(qrCodeData.url)"
                                 v-tooltip.top="'Copy link'" />
                         </div>

@@ -43,10 +43,10 @@ class PermissionSeeder extends Seeder
             ['name' => 'disbursements.export', 'description' => 'Export disbursement data'],
             ['name' => 'disbursements.approve', 'description' => 'Approve disbursements'],
 
-            // Waiting List Module
-            ['name' => 'waiting-list.view', 'description' => 'View waiting list'],
-            ['name' => 'waiting-list.manage', 'description' => 'Manage waiting list'],
-            ['name' => 'waiting-list.export', 'description' => 'Export waiting list'],
+            // Applicants Module
+            ['name' => 'waiting-list.view', 'description' => 'View applicants'],
+            ['name' => 'waiting-list.manage', 'description' => 'Manage applicants'],
+            ['name' => 'waiting-list.export', 'description' => 'Export applicants'],
 
             // Programs & Courses
             ['name' => 'programs.view', 'description' => 'View programs'],

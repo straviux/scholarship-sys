@@ -46,7 +46,7 @@
                     <div class="flex items-start justify-between">
                         <div>
                             <h1 class="text-3xl font-light text-gray-900 mb-2">
-                                {{ reportType === 'list' ? 'Waiting List' : 'Summary Report' }}
+                                {{ reportType === 'list' ? 'Applicants' : 'Summary Report' }}
                             </h1>
                         </div>
                         <div class="text-right text-sm text-gray-500">

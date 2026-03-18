@@ -222,7 +222,7 @@
         <thead>
             <tr>
                 <th colspan="{{ $colCount }}">
-                    <h2>Waiting List</h2>
+                    <h2>Applicants</h2>
                 </th>
             </tr>
             <tr>

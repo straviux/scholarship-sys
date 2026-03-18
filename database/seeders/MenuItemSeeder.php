@@ -50,9 +50,9 @@ class MenuItemSeeder extends Seeder
         ]);
 
         MenuItem::create([
-            'name' => 'Waiting List',
+            'name' => 'Applicants',
             'icon' => 'pi pi-clipboard',
-            'route' => 'waitinglist.index',
+            'route' => 'applicants.index',
             'permission' => 'applicants.view',
             'order' => 4,
             'is_active' => true,
@@ -60,9 +60,9 @@ class MenuItemSeeder extends Seeder
         ]);
 
         MenuItem::create([
-            'name' => 'Reviewed Applicants',
+            'name' => 'Interviewed Applicants',
             'icon' => 'pi pi-check-circle',
-            'route' => 'scholarship.reviewed-applicants',
+            'route' => 'scholarship.interviewed-applicants',
             'permission' => 'applicants.approve',
             'order' => 5,
             'is_active' => true,

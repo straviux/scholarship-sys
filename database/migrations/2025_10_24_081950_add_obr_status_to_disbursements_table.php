@@ -12,7 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('disbursements', function (Blueprint $table) {
-            $table->enum('obr_status', ['LOA', 'IRREGULAR', 'TRANSFERRED', 'CLAIMED', 'PAID', 'ON PROCESS', 'DENIED'])->nullable()->after('obr_no');
+            if (!Schema::hasColumn('disbursements', 'obr_no')) {
+                $table->string('obr_no')->nullable()->after('remarks');
+            }
+            if (!Schema::hasColumn('disbursements', 'obr_status')) {
+                $table->enum('obr_status', ['LOA', 'IRREGULAR', 'TRANSFERRED', 'CLAIMED', 'PAID', 'ON PROCESS', 'DENIED'])->nullable()->after('obr_no');
+            }
         });
     }
 
@@ -23,6 +28,9 @@ return new class extends Migration
     {
         Schema::table('disbursements', function (Blueprint $table) {
             $table->dropColumn('obr_status');
+            if (Schema::hasColumn('disbursements', 'obr_no')) {
+                $table->dropColumn('obr_no');
+            }
         });
     }
 };

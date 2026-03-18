@@ -14,11 +14,9 @@
             <div class="mb-6">
                 <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-3">
                     <i class="pi pi-search text-gray-500"></i>
-                    <input v-model="searchQuery" type="text" placeholder="Search by name..."
-                        class="flex-1 outline-none text-gray-700 placeholder-gray-400" />
-                    <button v-if="searchQuery" @click="searchQuery = ''" class="text-gray-500 hover:text-gray-700">
-                        <i class="pi pi-times"></i>
-                    </button>
+                    <InputText v-model="searchQuery" type="text" placeholder="Search by name..."
+                        class="flex-1" />
+                    <Button v-if="searchQuery" @click="searchQuery = ''" icon="pi pi-times" severity="secondary" variant="text" size="small" />
                 </div>
             </div>
 

@@ -367,31 +367,22 @@ onMounted(() => {
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Code</label>
-                    <input v-model="formData.code" type="text" placeholder="e.g., CC001"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <InputText v-model="formData.code" type="text" placeholder="e.g., CC001" class="w-full" />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <input v-model="formData.name" type="text" placeholder="e.g., Scholarship Center"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <InputText v-model="formData.name" type="text" placeholder="e.g., Scholarship Center" class="w-full" />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Fiscal Year</label>
-                    <input v-model="formData.fiscal_year" type="text" placeholder="e.g., 2024-2025"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <InputText v-model="formData.fiscal_year" type="text" placeholder="e.g., 2024-2025" class="w-full" />
                 </div>
             </div>
 
             <template #footer>
                 <div class="space-x-2">
-                    <button @click="showModal = false" :disabled="processing"
-                        class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                        Cancel
-                    </button>
-                    <button @click="saveRC" :disabled="processing"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                        {{ processing ? 'Saving...' : 'Save' }}
-                    </button>
+                    <Button @click="showModal = false" :disabled="processing" label="Cancel" severity="secondary" />
+                    <Button @click="saveRC" :disabled="processing" :label="processing ? 'Saving...' : 'Save'" />
                 </div>
             </template>
         </Dialog>
@@ -403,26 +394,18 @@ onMounted(() => {
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Particulars Name</label>
-                    <input v-model="particularFormData.name" type="text" placeholder="e.g., Tuition Fee"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <InputText v-model="particularFormData.name" type="text" placeholder="e.g., Tuition Fee" class="w-full" />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Account Code</label>
-                    <input v-model="particularFormData.account_code" type="text" placeholder="e.g., 5010-001"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <InputText v-model="particularFormData.account_code" type="text" placeholder="e.g., 5010-001" class="w-full" />
                 </div>
             </div>
 
             <template #footer>
                 <div class="space-x-2">
-                    <button @click="showParticularsModal = false" :disabled="processing"
-                        class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                        Cancel
-                    </button>
-                    <button @click="saveParticular" :disabled="processing"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                        {{ processing ? 'Saving...' : 'Save' }}
-                    </button>
+                    <Button @click="showParticularsModal = false" :disabled="processing" label="Cancel" severity="secondary" />
+                    <Button @click="saveParticular" :disabled="processing" :label="processing ? 'Saving...' : 'Save'" />
                 </div>
             </template>
         </Dialog>
@@ -440,15 +423,9 @@ onMounted(() => {
 
             <template #footer>
                 <div class="space-x-2">
-                    <button @click="showDeleteConfirmModal = false" :disabled="processing"
-                        class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                        Cancel
-                    </button>
-                    <button @click="deleteConfirmType === 'rc' ? confirmDeleteRC() : executeDeleteParticular()"
-                        :disabled="processing"
-                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                        {{ processing ? 'Deleting...' : 'Delete' }}
-                    </button>
+                    <Button @click="showDeleteConfirmModal = false" :disabled="processing" label="Cancel" severity="secondary" />
+                    <Button @click="deleteConfirmType === 'rc' ? confirmDeleteRC() : executeDeleteParticular()"
+                        :disabled="processing" :label="processing ? 'Deleting...' : 'Delete'" severity="danger" />
                 </div>
             </template>
         </Dialog>

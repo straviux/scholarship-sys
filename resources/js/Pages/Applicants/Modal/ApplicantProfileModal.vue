@@ -1,322 +1,244 @@
 <template>
-    <TransitionRoot appear :show="isOpen" as="template">
-        <Dialog as="div" class="relative z-10">
-            <TransitionChild as="template" enter="duration-300 ease-out" enter-from="opacity-0" enter-to="opacity-100"
-                leave="duration-200 ease-in" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-black/75" />
-            </TransitionChild>
-
-            <div class="fixed inset-0 overflow-y-auto">
-                <div class="flex justify-center p-4 text-center items-center min-h-screen">
-                    <TransitionChild as="template" enter="duration-300 ease-out" enter-from="opacity-0 scale-95"
-                        enter-to="opacity-100 scale-100" leave="duration-200 ease-in" leave-from="opacity-100 scale-100"
-                        leave-to="opacity-0 scale-95">
-                        <DialogPanel
-                            class="w-full max-w-5xl transform overflow-hidden rounded-sm  text-left align-middle shadow-xl transition-all">
-                            <DialogTitle as="h3"
-                                class="text-lg font-medium leading-6 bg-[#222831] text-white flex justify-between px-4 py-2 items-center">
-                                <span v-if="action == 'create'">New Applicant Form</span>
-                                <span v-if="action == 'update'">Update Applicant Form</span>
-                                <span v-if="action == 'add-existing'">Applicant Form</span>
-
-                                <!-- Close button - handle both inline modal and route navigation -->
-                                <button v-if="isInlineModal" class="-mr-2 cursor-pointer" @click="emit('close')">
-                                    <XMarkIcon class="h-6 w-6 text-red-500" />
-                                </button>
-                                <Link v-else class="-mr-2" :href="prevPage">
-                                    <XMarkIcon class="h-6 w-6 text-red-500" />
-                                </Link>
-                            </DialogTitle>
-                            <div class="p-6 bg-white">
-                                <Stepper :value="activeStep" linear>
-                                    <StepList>
-                                        <Step value="1">Personal Information</Step>
-                                        <Step value="2">Family Information</Step>
-                                        <Step value="3">Academic Information</Step>
-                                    </StepList>
-                                    <StepPanels>
-                                        <StepPanel v-slot="{ activateCallback }" value="1">
-                                            <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
-                                                <h2
-                                                    class="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                                    <span
-                                                        class="inline-block w-2 h-5 bg-blue-500 rounded mr-2"></span>Personal
-                                                    Information
-                                                </h2>
-                                                <div class="flex gap-3 mb-2 items-end"
-                                                    v-if="action == 'create' || action == 'update'">
-                                                    <div class="flex-1">
-                                                        <InputLabel class="mb-1" for="lastname" value="Last Name" />
-                                                        <TextInput autofocus id="lastname" type="text"
-                                                            class="w-full block uppercase" v-model="form.last_name"
-                                                            :required="true" />
-                                                        <InputError class="mt-1" :message="form.errors.last_name" />
-                                                    </div>
-                                                    <div class="flex-1">
-                                                        <InputLabel class="mb-1" for="firstname" value="First Name" />
-                                                        <TextInput id="firstname" type="text"
-                                                            class="w-full block uppercase" v-model="form.first_name"
-                                                            :required="true" />
-                                                        <InputError class="mt-1" :message="form.errors.first_name" />
-                                                    </div>
-                                                    <div class="flex-1">
-                                                        <InputLabel class="mb-1" for="middlename" value="Middle Name" />
-                                                        <TextInput id="middlename" type="text"
-                                                            class="w-full block uppercase" v-model="form.middle_name" />
-                                                        <InputError class="mt-1" :message="form.errors.middle_name" />
-                                                    </div>
-                                                    <div style="max-width: 110px;">
-                                                        <InputLabel class="mb-1" for="extension" value="Extension" />
-                                                        <TextInput id="extension" type="text"
-                                                            class="w-full block uppercase"
-                                                            v-model="form.extension_name" />
-                                                        <InputError class="mt-1"
-                                                            :message="form.errors.extension_name" />
-                                                    </div>
-                                                </div>
-                                                <div class="flex gap-3 mb-2 items-end" v-else>
-                                                    <ProfileSelect v-model="form.selectedProfile" />
-                                                </div>
-                                                <div class="flex gap-3 mb-2 items-end">
-                                                    <div class="flex-1">
-                                                        <InputLabel class="mb-1" for="contact" value="Contact No." />
-                                                        <TextInput id="contact" type="text"
-                                                            class="w-full block uppercase" v-model="form.contact_no" />
-                                                        <InputError class="mt-1" :message="form.errors.contact_no" />
-                                                    </div>
-                                                    <div class="flex-1">
-                                                        <InputLabel class="mb-1" for="contact_no_2"
-                                                            value="Contact No. 2" />
-                                                        <TextInput id="contact_no_2" type="text"
-                                                            class="w-full block uppercase"
-                                                            v-model="form.contact_no_2" />
-                                                        <InputError class="mt-1" :message="form.errors.contact_no_2" />
-                                                    </div>
-                                                    <div class="flex-1">
-                                                        <InputLabel class="mb-1" for="email" value="Email" />
-                                                        <TextInput id="email" type="email" class="w-full block"
-                                                            v-model="form.email" />
-                                                        <InputError class="mt-1" :message="form.errors.email" />
-                                                    </div>
-                                                </div>
-                                                <div class="grid grid-cols-2 gap-3 mb-8 mt-8">
-                                                    <div>
-                                                        <InputLabel class="mb-1" for="gender" value="Gender" />
-                                                        <div class="flex gap-2 mt-1">
-                                                            <label class="flex items-center cursor-pointer">
-                                                                <input v-model="form.gender" type="radio" name="gender"
-                                                                    value="M"
-                                                                    class="h-4 w-4 border-gray-300 focus:ring-2 focus:ring-blue-300" />
-                                                                <span class="ml-2">Male</span>
-                                                            </label>
-                                                            <label class="flex items-center cursor-pointer">
-                                                                <input v-model="form.gender" type="radio" name="gender"
-                                                                    value="F"
-                                                                    class="h-4 w-4 border-gray-300 focus:ring-2 focus:ring-blue-300" />
-                                                                <span class="ml-2">Female</span>
-                                                            </label>
-                                                        </div>
-                                                        <InputError class="mt-1" :message="form.errors.gender" />
-                                                    </div>
-                                                </div>
-                                                <div class="grid grid-cols-2 gap-3 mb-2">
-
-                                                    <div>
-                                                        <InputLabel class="mb-1" for="municipality"
-                                                            value="Municipality" />
-                                                        <MunicipalitySelect v-model="form.municipality"
-                                                            custom-placeholder="Select Municipality" />
-                                                        <InputError class="mt-1" :message="form.errors.municipality" />
-                                                    </div>
-                                                    <div>
-                                                        <InputLabel class="mb-1" for="barangay" value="Barangay" />
-                                                        <BarangaySelect v-model="form.barangay"
-                                                            :municipalityId="form.municipality"
-                                                            custom-placeholder="Select Barangay" />
-                                                        <InputError class="mt-1" :message="form.errors.barangay" />
-                                                    </div>
-                                                    <div>
-                                                        <InputLabel class="mb-1" for="street"
-                                                            value="Purok/Street/Landmark" />
-                                                        <TextInput id="street" type="text"
-                                                            class="w-full block uppercase" v-model="form.address" />
-                                                        <InputError class="mt-1" :message="form.errors.address" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="flex pt-4 justify-between gap-8">
-                                                <Button label="Skip to Academic Info" severity="secondary"
-                                                    @click="activeStep = '3'" :disabled="hasPendingOrOngoing" />
-                                                <Button label="Save and Close" icon="pi pi-save" iconPos="right"
-                                                    @click.prevent="submit" severity="success" size="small" />
-                                                <Button label="Next" severity="secondary" icon="pi pi-arrow-right"
-                                                    @click="activeStep = '2'" :disabled="hasPendingOrOngoing" />
-
-                                            </div>
-                                        </StepPanel>
-
-                                        <StepPanel v-slot="{ activateCallback }" value="2">
-                                            <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
-                                                <h2
-                                                    class="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                                    <span
-                                                        class="inline-block w-2 h-5 bg-green-500 rounded mr-2"></span>Parent's
-                                                    Information
-                                                </h2>
-                                                <div class="grid grid-cols-3 gap-3 mb-2">
-                                                    <div>
-                                                        <InputLabel class="mb-1" for="father_name" value="Father" />
-                                                        <TextInput id="father_name" type="text"
-                                                            class="w-full block uppercase" v-model="form.father_name" />
-                                                        <InputError class="mt-1" :message="form.errors.father_name" />
-                                                    </div>
-                                                    <div>
-                                                        <InputLabel class="mb-1" for="father_occupation"
-                                                            value="Occupation" />
-                                                        <TextInput id="father_occupation" type="text"
-                                                            class="w-full block uppercase"
-                                                            v-model="form.father_occupation" />
-                                                        <InputError class="mt-1"
-                                                            :message="form.errors.father_occupation" />
-                                                    </div>
-                                                    <div>
-                                                        <InputLabel class="mb-1" for="father_contact_no"
-                                                            value="Contact #" />
-                                                        <TextInput id="father_contact_no" type="text"
-                                                            class="w-full block uppercase"
-                                                            v-model="form.father_contact_no" />
-                                                        <InputError class="mt-1"
-                                                            :message="form.errors.father_contact_no" />
-                                                    </div>
-                                                </div>
-                                                <div class="grid grid-cols-3 gap-3 mb-2">
-                                                    <div>
-                                                        <InputLabel class="mb-1" for="mother_name" value="Mother" />
-                                                        <TextInput id="mother_name" type="text"
-                                                            class="w-full block uppercase" v-model="form.mother_name" />
-                                                        <InputError class="mt-1" :message="form.errors.mother_name" />
-                                                    </div>
-                                                    <div>
-                                                        <InputLabel class="mb-1" for="mother_occupation"
-                                                            value="Occupation" />
-                                                        <TextInput id="mother_occupation" type="text"
-                                                            class="w-full block uppercase"
-                                                            v-model="form.mother_occupation" />
-                                                        <InputError class="mt-1"
-                                                            :message="form.errors.mother_occupation" />
-                                                    </div>
-                                                    <div>
-                                                        <InputLabel class="mb-1" for="mother_contact_no"
-                                                            value="Contact #" />
-                                                        <TextInput id="mother_contact_no" type="text"
-                                                            class="w-full block uppercase"
-                                                            v-model="form.mother_contact_no" />
-                                                        <InputError class="mt-1"
-                                                            :message="form.errors.mother_contact_no" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
-                                                <h2
-                                                    class="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                                    <span
-                                                        class="inline-block w-2 h-5 bg-purple-500 rounded mr-2"></span>Guardian
-                                                    Information
-                                                </h2>
-                                                <div class="grid grid-cols-2 gap-3 mb-2">
-                                                    <div>
-                                                        <InputLabel class="mb-1" for="guardian_name"
-                                                            value="Guardian Name" />
-                                                        <TextInput id="guardian_name" type="text"
-                                                            class="w-full block uppercase"
-                                                            v-model="form.guardian_name" />
-                                                        <InputError class="mt-1" :message="form.errors.guardian_name" />
-                                                    </div>
-                                                    <div>
-                                                        <InputLabel class="mb-1" for="guardian_relationship"
-                                                            value="Relationship" />
-                                                        <TextInput id="guardian_relationship" type="text"
-                                                            class="w-full block uppercase"
-                                                            v-model="form.guardian_relationship" />
-                                                        <InputError class="mt-1"
-                                                            :message="form.errors.guardian_relationship" />
-                                                    </div>
-                                                    <div>
-                                                        <InputLabel class="mb-1" for="guardian_contact_no"
-                                                            value="Contact #" />
-                                                        <TextInput id="guardian_contact_no" type="text"
-                                                            class="w-full block uppercase"
-                                                            v-model="form.guardian_contact_no" />
-                                                        <InputError class="mt-1"
-                                                            :message="form.errors.guardian_contact_no" />
-                                                    </div>
-                                                    <div>
-                                                        <InputLabel class="mb-1" for="guardian_occupation"
-                                                            value="Guardian Occupation" />
-                                                        <TextInput id="guardian_occupation" type="text"
-                                                            class="w-full block uppercase"
-                                                            v-model="form.guardian_occupation" />
-                                                        <InputError class="mt-1"
-                                                            :message="form.errors.guardian_occupation" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
-                                                <h2
-                                                    class="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                                    <span
-                                                        class="inline-block w-2 h-5 bg-yellow-500 rounded mr-2"></span>Parents/Guardian
-                                                    Gross Monthly Income
-                                                </h2>
-                                                <div class="grid grid-cols-1 gap-3">
-                                                    <div>
-                                                        <InputLabel class="mb-1"
-                                                            for="parents_guardian_gross_monthly_income"
-                                                            value="Gross Monthly Income" />
-                                                        <TextInput id="parents_guardian_gross_monthly_income"
-                                                            type="number" class="w-1/3 block"
-                                                            v-model="form.parents_guardian_gross_monthly_income" />
-                                                        <InputError class="mt-1"
-                                                            :message="form.errors.parents_guardian_gross_monthly_income" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="flex pt-4 justify-between">
-                                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                                    @click="activeStep = '1'" />
-                                                <Button label="Save and Close" icon="pi pi-save" iconPos="right"
-                                                    @click.prevent="submit" severity="success" size="small" />
-                                                <Button label="Next" severity="secondary" icon="pi pi-arrow-right"
-                                                    @click="activeStep = '3'" :disabled="hasPendingOrOngoing" />
-
-                                            </div>
-                                        </StepPanel>
-                                        <StepPanel v-slot="{ activateCallback }" value="3">
-                                            <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
-                                                <AcademicInformationFields v-model:program="form.program"
-                                                    v-model:school="form.school" v-model:course="form.course"
-                                                    v-model:year_level="form.year_level" v-model:term="form.term"
-                                                    v-model:academic_year="form.academic_year"
-                                                    v-model:remarks="form.remarks" />
-                                            </div>
-                                            <div class="mt-12 flex justify-between">
-                                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                                    @click="activeStep = '2'" />
-                                                <Button label="Save and Close" icon="pi pi-save" iconPos="right"
-                                                    @click.prevent="submit" severity="success" size="small" />
-                                                <div class="hidden"></div>
-                                            </div>
-                                        </StepPanel>
-
-                                    </StepPanels>
-                                </Stepper>
+    <Dialog :visible="isOpen" modal :style="{ width: '1100px' }" @update:visible="isInlineModal ? emit('close') : null"
+        :header="action == 'create' ? 'New Applicant Form' : action == 'update' ? 'Update Applicant Form' : 'Applicant Form'">
+        <div class="p-2">
+            <Stepper :value="activeStep" linear>
+                <StepList>
+                    <Step value="1">Personal Information</Step>
+                    <Step value="2">Family Information</Step>
+                    <Step value="3">Academic Information</Step>
+                </StepList>
+                <StepPanels>
+                    <StepPanel v-slot="{ activateCallback }" value="1">
+                        <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
+                            <h2 class="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                <span class="inline-block w-2 h-5 bg-blue-500 rounded mr-2"></span>Personal
+                                Information
+                            </h2>
+                            <div class="flex gap-3 mb-2 items-end" v-if="action == 'create' || action == 'update'">
+                                <div class="flex-1">
+                                    <InputLabel class="mb-1" for="lastname" value="Last Name" />
+                                    <TextInput autofocus id="lastname" type="text" class="w-full block uppercase"
+                                        v-model="form.last_name" :required="true" />
+                                    <InputError class="mt-1" :message="form.errors.last_name" />
+                                </div>
+                                <div class="flex-1">
+                                    <InputLabel class="mb-1" for="firstname" value="First Name" />
+                                    <TextInput id="firstname" type="text" class="w-full block uppercase"
+                                        v-model="form.first_name" :required="true" />
+                                    <InputError class="mt-1" :message="form.errors.first_name" />
+                                </div>
+                                <div class="flex-1">
+                                    <InputLabel class="mb-1" for="middlename" value="Middle Name" />
+                                    <TextInput id="middlename" type="text" class="w-full block uppercase"
+                                        v-model="form.middle_name" />
+                                    <InputError class="mt-1" :message="form.errors.middle_name" />
+                                </div>
+                                <div style="max-width: 110px;">
+                                    <InputLabel class="mb-1" for="extension" value="Extension" />
+                                    <TextInput id="extension" type="text" class="w-full block uppercase"
+                                        v-model="form.extension_name" />
+                                    <InputError class="mt-1" :message="form.errors.extension_name" />
+                                </div>
                             </div>
-                        </DialogPanel>
-                    </TransitionChild>
-                </div>
-            </div>
-        </Dialog>
-    </TransitionRoot>
+                            <div class="flex gap-3 mb-2 items-end" v-else>
+                                <ProfileSelect v-model="form.selectedProfile" />
+                            </div>
+                            <div class="flex gap-3 mb-2 items-end">
+                                <div class="flex-1">
+                                    <InputLabel class="mb-1" for="contact" value="Contact No." />
+                                    <TextInput id="contact" type="text" class="w-full block uppercase"
+                                        v-model="form.contact_no" />
+                                    <InputError class="mt-1" :message="form.errors.contact_no" />
+                                </div>
+                                <div class="flex-1">
+                                    <InputLabel class="mb-1" for="contact_no_2" value="Contact No. 2" />
+                                    <TextInput id="contact_no_2" type="text" class="w-full block uppercase"
+                                        v-model="form.contact_no_2" />
+                                    <InputError class="mt-1" :message="form.errors.contact_no_2" />
+                                </div>
+                                <div class="flex-1">
+                                    <InputLabel class="mb-1" for="email" value="Email" />
+                                    <TextInput id="email" type="email" class="w-full block" v-model="form.email" />
+                                    <InputError class="mt-1" :message="form.errors.email" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 mb-8 mt-8">
+                                <div>
+                                    <InputLabel class="mb-1" for="gender" value="Gender" />
+                                    <div class="flex gap-4 mt-1">
+                                        <div class="flex items-center gap-2">
+                                            <RadioButton v-model="form.gender" inputId="gender_m" name="gender"
+                                                value="M" />
+                                            <label for="gender_m" class="cursor-pointer">Male</label>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <RadioButton v-model="form.gender" inputId="gender_f" name="gender"
+                                                value="F" />
+                                            <label for="gender_f" class="cursor-pointer">Female</label>
+                                        </div>
+                                    </div>
+                                    <InputError class="mt-1" :message="form.errors.gender" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 mb-2">
+
+                                <div>
+                                    <InputLabel class="mb-1" for="municipality" value="Municipality" />
+                                    <MunicipalitySelect v-model="form.municipality"
+                                        custom-placeholder="Select Municipality" />
+                                    <InputError class="mt-1" :message="form.errors.municipality" />
+                                </div>
+                                <div>
+                                    <InputLabel class="mb-1" for="barangay" value="Barangay" />
+                                    <BarangaySelect v-model="form.barangay" :municipalityId="form.municipality"
+                                        custom-placeholder="Select Barangay" />
+                                    <InputError class="mt-1" :message="form.errors.barangay" />
+                                </div>
+                                <div>
+                                    <InputLabel class="mb-1" for="street" value="Purok/Street/Landmark" />
+                                    <TextInput id="street" type="text" class="w-full block uppercase"
+                                        v-model="form.address" />
+                                    <InputError class="mt-1" :message="form.errors.address" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex pt-4 justify-between gap-8">
+                            <Button label="Skip to Academic Info" severity="secondary" @click="activeStep = '3'"
+                                :disabled="hasPendingOrOngoing" />
+                            <Button label="Save and Close" icon="pi pi-save" iconPos="right" @click.prevent="submit"
+                                severity="success" size="small" />
+                            <Button label="Next" severity="secondary" icon="pi pi-arrow-right" @click="activeStep = '2'"
+                                :disabled="hasPendingOrOngoing" />
+
+                        </div>
+                    </StepPanel>
+
+                    <StepPanel v-slot="{ activateCallback }" value="2">
+                        <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
+                            <h2 class="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                <span class="inline-block w-2 h-5 bg-green-500 rounded mr-2"></span>Parent's
+                                Information
+                            </h2>
+                            <div class="grid grid-cols-3 gap-3 mb-2">
+                                <div>
+                                    <InputLabel class="mb-1" for="father_name" value="Father" />
+                                    <TextInput id="father_name" type="text" class="w-full block uppercase"
+                                        v-model="form.father_name" />
+                                    <InputError class="mt-1" :message="form.errors.father_name" />
+                                </div>
+                                <div>
+                                    <InputLabel class="mb-1" for="father_occupation" value="Occupation" />
+                                    <TextInput id="father_occupation" type="text" class="w-full block uppercase"
+                                        v-model="form.father_occupation" />
+                                    <InputError class="mt-1" :message="form.errors.father_occupation" />
+                                </div>
+                                <div>
+                                    <InputLabel class="mb-1" for="father_contact_no" value="Contact #" />
+                                    <TextInput id="father_contact_no" type="text" class="w-full block uppercase"
+                                        v-model="form.father_contact_no" />
+                                    <InputError class="mt-1" :message="form.errors.father_contact_no" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3 mb-2">
+                                <div>
+                                    <InputLabel class="mb-1" for="mother_name" value="Mother" />
+                                    <TextInput id="mother_name" type="text" class="w-full block uppercase"
+                                        v-model="form.mother_name" />
+                                    <InputError class="mt-1" :message="form.errors.mother_name" />
+                                </div>
+                                <div>
+                                    <InputLabel class="mb-1" for="mother_occupation" value="Occupation" />
+                                    <TextInput id="mother_occupation" type="text" class="w-full block uppercase"
+                                        v-model="form.mother_occupation" />
+                                    <InputError class="mt-1" :message="form.errors.mother_occupation" />
+                                </div>
+                                <div>
+                                    <InputLabel class="mb-1" for="mother_contact_no" value="Contact #" />
+                                    <TextInput id="mother_contact_no" type="text" class="w-full block uppercase"
+                                        v-model="form.mother_contact_no" />
+                                    <InputError class="mt-1" :message="form.errors.mother_contact_no" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
+                            <h2 class="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                <span class="inline-block w-2 h-5 bg-purple-500 rounded mr-2"></span>Guardian
+                                Information
+                            </h2>
+                            <div class="grid grid-cols-2 gap-3 mb-2">
+                                <div>
+                                    <InputLabel class="mb-1" for="guardian_name" value="Guardian Name" />
+                                    <TextInput id="guardian_name" type="text" class="w-full block uppercase"
+                                        v-model="form.guardian_name" />
+                                    <InputError class="mt-1" :message="form.errors.guardian_name" />
+                                </div>
+                                <div>
+                                    <InputLabel class="mb-1" for="guardian_relationship" value="Relationship" />
+                                    <TextInput id="guardian_relationship" type="text" class="w-full block uppercase"
+                                        v-model="form.guardian_relationship" />
+                                    <InputError class="mt-1" :message="form.errors.guardian_relationship" />
+                                </div>
+                                <div>
+                                    <InputLabel class="mb-1" for="guardian_contact_no" value="Contact #" />
+                                    <TextInput id="guardian_contact_no" type="text" class="w-full block uppercase"
+                                        v-model="form.guardian_contact_no" />
+                                    <InputError class="mt-1" :message="form.errors.guardian_contact_no" />
+                                </div>
+                                <div>
+                                    <InputLabel class="mb-1" for="guardian_occupation" value="Guardian Occupation" />
+                                    <TextInput id="guardian_occupation" type="text" class="w-full block uppercase"
+                                        v-model="form.guardian_occupation" />
+                                    <InputError class="mt-1" :message="form.errors.guardian_occupation" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
+                            <h2 class="text-base font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                <span class="inline-block w-2 h-5 bg-yellow-500 rounded mr-2"></span>Parents/Guardian
+                                Gross Monthly Income
+                            </h2>
+                            <div class="grid grid-cols-1 gap-3">
+                                <div>
+                                    <InputLabel class="mb-1" for="parents_guardian_gross_monthly_income"
+                                        value="Gross Monthly Income" />
+                                    <TextInput id="parents_guardian_gross_monthly_income" type="number"
+                                        class="w-1/3 block" v-model="form.parents_guardian_gross_monthly_income" />
+                                    <InputError class="mt-1"
+                                        :message="form.errors.parents_guardian_gross_monthly_income" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex pt-4 justify-between">
+                            <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                @click="activeStep = '1'" />
+                            <Button label="Save and Close" icon="pi pi-save" iconPos="right" @click.prevent="submit"
+                                severity="success" size="small" />
+                            <Button label="Next" severity="secondary" icon="pi pi-arrow-right" @click="activeStep = '3'"
+                                :disabled="hasPendingOrOngoing" />
+
+                        </div>
+                    </StepPanel>
+                    <StepPanel v-slot="{ activateCallback }" value="3">
+                        <div class="bg-white rounded-lg shadow p-4 border border-gray-200 mb-4">
+                            <AcademicInformationFields v-model:program="form.program" v-model:school="form.school"
+                                v-model:course="form.course" v-model:year_level="form.year_level"
+                                v-model:term="form.term" v-model:academic_year="form.academic_year"
+                                v-model:remarks="form.remarks" />
+                        </div>
+                        <div class="mt-12 flex justify-between">
+                            <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                @click="activeStep = '2'" />
+                            <Button label="Save and Close" icon="pi pi-save" iconPos="right" @click.prevent="submit"
+                                severity="success" size="small" />
+                            <div class="hidden"></div>
+                        </div>
+                    </StepPanel>
+
+                </StepPanels>
+            </Stepper>
+        </div>
+    </Dialog>
 </template>
 
 <script setup>
@@ -324,18 +246,9 @@
 import { ref, computed, watch } from "vue";
 import { Link, useForm, router, usePage } from "@inertiajs/vue3";
 import axios from "axios";
-import {
-    TransitionRoot,
-    TransitionChild,
-    Dialog,
-    DialogPanel,
-    DialogTitle,
-} from "@headlessui/vue";
 import InputError from "@/Components/ui/inputs/InputError.vue";
 import InputLabel from "@/Components/ui/inputs/InputLabel.vue";
 import TextInput from "@/Components/ui/inputs/TextInput.vue";
-import VueMultiselect from "vue-multiselect";
-import { XMarkIcon } from "@heroicons/vue/20/solid";
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
@@ -656,14 +569,14 @@ const submit = (closeAfter = false) => {
         console.log('Final data being sent to backend (CREATE):', submitData);
 
         // Use axios directly to ensure all fields are sent
-        axios.post(route("waitinglist.store"), submitData)
+        axios.post(route("applicants.store"), submitData)
             .then((response) => {
                 form.reset();
                 toast.success("Application has been submitted", {
                     position: toast.POSITION.TOP_RIGHT,
                 });
                 // Navigate immediately without delay
-                safeNavigate(route('waitinglist.index', { page: props.page }));
+                safeNavigate(route('applicants.index', { page: props.page }));
             })
             .catch((err) => {
                 console.error('Error submitting application:', err);
@@ -725,7 +638,7 @@ const submit = (closeAfter = false) => {
         console.log('Final data being sent to backend:', submitData);
 
         // Use axios directly to send all fields
-        axios.put(route("waitinglist.update", profile_id), submitData)
+        axios.put(route("applicants.update", profile_id), submitData)
             .then((response) => {
                 toast.success("Profile has been updated", {
                     position: toast.POSITION.TOP_RIGHT,
@@ -736,7 +649,7 @@ const submit = (closeAfter = false) => {
                     // Navigate immediately without delay
                     const targetRoute = closeAfter
                         ? prevPage.value
-                        : route('waitinglist.index', { id: profile_id, action: props.action });
+                        : route('applicants.index', { id: profile_id, action: props.action });
                     safeNavigate(targetRoute);
                 }
             })

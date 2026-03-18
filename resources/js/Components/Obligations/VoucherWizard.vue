@@ -677,8 +677,8 @@ onMounted(async () => {
 
                         <!-- Search Input -->
                         <div class="relative">
-                            <input v-model="searchQuery" type="text" placeholder="Search by name or email..."
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                            <InputText v-model="searchQuery" type="text" placeholder="Search by name or email..."
+                                class="w-full" />
                             <div v-if="searchLoading" class="absolute right-3 top-2.5">
                                 <i class="pi pi-spin pi-spinner text-blue-600"></i>
                             </div>
@@ -697,9 +697,7 @@ onMounted(async () => {
 
                         <!-- Select All Checkbox -->
                         <div v-if="!loading" class="flex items-center">
-                            <input id="select-all" v-model="selectAll" type="checkbox"
-                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                                @change="toggleSelectAll" />
+                            <Checkbox id="select-all" v-model="selectAll" :binary="true" @change="toggleSelectAll" />
                             <label for="select-all" class="ml-3 text-sm font-medium text-gray-900">
                                 Select All ({{ filteredScholars.length }} found)
                             </label>
@@ -714,9 +712,8 @@ onMounted(async () => {
                             </div>
                             <div v-for="scholar in filteredScholars" :key="scholar.profile_id"
                                 class="flex items-center hover:bg-gray-50 p-2 rounded">
-                                <input :id="`scholar-${scholar.profile_id}`" v-model="scholar.selected" type="checkbox"
-                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                                    @change="updateSelectedCount" />
+                                <Checkbox :inputId="`scholar-${scholar.profile_id}`" v-model="scholar.selected"
+                                    :binary="true" @change="updateSelectedCount" />
                                 <label :for="`scholar-${scholar.profile_id}`"
                                     class="ml-3 text-sm text-gray-700 flex-1 cursor-pointer">
                                     <div class="font-medium">{{ scholar.first_name }} {{ scholar.middle_name }} {{
@@ -754,22 +751,16 @@ onMounted(async () => {
                     <!-- OBR Type and Payee Type -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">OBR Type</label>
-                        <select v-model="voucherData.obligations.obr_type"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
-                            <option value="">Select OBR Type</option>
-                            <option value="REGULAR">REGULAR</option>
-                            <option value="FINANCIAL ASSISTANCE">FINANCIAL ASSISTANCE</option>
-                            <option value="REIMBURSEMENT">REIMBURSEMENT</option>
-                        </select>
+                        <Select v-model="voucherData.obligations.obr_type"
+                            :options="[{ value: 'REGULAR', label: 'REGULAR' }, { value: 'FINANCIAL ASSISTANCE', label: 'FINANCIAL ASSISTANCE' }, { value: 'REIMBURSEMENT', label: 'REIMBURSEMENT' }]"
+                            optionLabel="label" optionValue="value" placeholder="Select OBR Type" class="w-full" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Payee Type</label>
-                        <select v-model="voucherData.obligations.payee_type"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
-                            <option value="scholar">Scholar</option>
-                            <option value="school">School</option>
-                        </select>
+                        <Select v-model="voucherData.obligations.payee_type"
+                            :options="[{ value: 'scholar', label: 'Scholar' }, { value: 'school', label: 'School' }]"
+                            optionLabel="label" optionValue="value" class="w-full" />
                     </div>
                 </div>
 
@@ -779,29 +770,32 @@ onMounted(async () => {
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Payee</label>
                         <!-- Scholar Dropdown -->
-                        <select v-if="voucherData.obligations.payee_type === 'scholar'"
-                            v-model="voucherData.obligations.payee_id"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
-                            <option value="">Select Payee</option>
-                            <option v-for="scholar in voucherData.scholars" :key="scholar.profile_id"
-                                :value="scholar.profile_id">
-                                {{ scholar.first_name }} {{ scholar.last_name }}{{ voucherData.scholars.length > 1 ?
-                                    ` &
-                                CO.` : '' }}
-                            </option>
-                        </select>
+                        <Select v-if="voucherData.obligations.payee_type === 'scholar'"
+                            v-model="voucherData.obligations.payee_id" :options="voucherData.scholars"
+                            optionValue="profile_id" placeholder="Select Payee" class="w-full">
+                            <template #option="{ option }">
+                                {{ option.first_name }} {{ option.last_name }}{{ voucherData.scholars.length > 1 ? ' &
+                                CO.' : '' }}
+                            </template>
+                            <template #value="{ value, placeholder }">
+                                <template v-if="value != null && value !== ''">
+                                    {{voucherData.scholars.find(s => s.profile_id === value)?.first_name}}
+                                    {{voucherData.scholars.find(s => s.profile_id === value)?.last_name}}{{
+                                        voucherData.scholars.length > 1 ? ' & CO.' : '' }}
+                                </template>
+                                <span v-else>{{ placeholder }}</span>
+                            </template>
+                        </Select>
                         <!-- School Input -->
-                        <input v-else v-model="voucherData.obligations.payee_id" type="text"
-                            placeholder="Enter school name..."
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                        <InputText v-else v-model="voucherData.obligations.payee_id" type="text"
+                            placeholder="Enter school name..." class="w-full" />
                     </div>
 
                     <!-- Payee Address -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Payee Address</label>
-                        <input v-model="voucherData.obligations.payee_address" type="text"
-                            placeholder="Enter payee address..."
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                        <InputText v-model="voucherData.obligations.payee_address" type="text"
+                            placeholder="Enter payee address..." class="w-full" />
                     </div>
                 </div>
 
@@ -812,34 +806,25 @@ onMounted(async () => {
                         <!-- Responsibility Center -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Responsibility Center</label>
-                            <select v-model="voucherData.obligations.responsibility_center"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
-                                <option value="">Select Responsibility Center</option>
-                                <option v-for="rc in responsibilityCenters" :key="rc.id" :value="rc.code">
-                                    {{ rc.code }}
-                                </option>
-                            </select>
+                            <Select v-model="voucherData.obligations.responsibility_center"
+                                :options="responsibilityCenters" optionLabel="code" optionValue="code"
+                                placeholder="Select Responsibility Center" class="w-full" />
                         </div>
 
                         <!-- Particular Selection -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Particulars</label>
-                            <select v-model="voucherData.obligations.account_code"
-                                :disabled="!voucherData.obligations.responsibility_center"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed cursor-pointer">
-                                <option value="">Select Particular</option>
-                                <option v-for="particular in currentParticulars" :key="particular.id"
-                                    :value="particular.account_code">
-                                    {{ particular.name }}
-                                </option>
-                            </select>
+                            <Select v-model="voucherData.obligations.account_code"
+                                :disabled="!voucherData.obligations.responsibility_center" :options="currentParticulars"
+                                optionLabel="name" optionValue="account_code" placeholder="Select Particular"
+                                class="w-full" />
                         </div>
 
                         <!-- Account Code Display -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Account Code</label>
-                            <input :value="voucherData.obligations.account_code || '---'" type="text" readonly
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed" />
+                            <InputText :value="voucherData.obligations.account_code || '---'" type="text" readonly
+                                class="w-full" />
                         </div>
 
 
@@ -883,16 +868,15 @@ onMounted(async () => {
                     </label>
                     <div class="space-y-3">
                         <div class="flex items-center">
-                            <input id="disbursements" v-model="voucherData.disbursements.type" type="radio"
-                                value="disbursements"
-                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 cursor-pointer" />
+                            <RadioButton v-model="voucherData.disbursements.type" inputId="disbursements"
+                                name="disbursementType" value="disbursements" />
                             <label for="disbursements" class="ml-3 text-sm font-medium text-gray-900  cursor-pointer">
                                 Disbursement Voucher
                             </label>
                         </div>
                         <div class="flex items-center">
-                            <input id="payroll" v-model="voucherData.disbursements.type" type="radio" value="payroll"
-                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 cursor-pointer" />
+                            <RadioButton v-model="voucherData.disbursements.type" inputId="payroll"
+                                name="disbursementType" value="payroll" />
                             <label for="payroll" class="ml-3 text-sm font-medium text-gray-900 cursor-pointer">
                                 Payroll
                             </label>
@@ -926,20 +910,16 @@ onMounted(async () => {
                     <!-- Apply Same Amount to All Scholars -->
                     <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                         <div class="flex items-center gap-3 mb-3">
-                            <input id="applyToAll" v-model="applyToAllChecked" type="checkbox"
-                                class="w-4 h-4 text-green-600 rounded focus:ring-2 focus:ring-green-500 cursor-pointer" />
+                            <Checkbox id="applyToAll" v-model="applyToAllChecked" :binary="true" />
                             <label for="applyToAll" class="text-sm font-medium text-gray-900 cursor-pointer">
                                 Apply Same Amount to All Scholars
                             </label>
                         </div>
                         <div v-if="applyToAllChecked" class="flex items-center gap-2">
                             <span class="text-gray-600 text-sm">₱</span>
-                            <input v-model="applyToAllAmount" type="number" placeholder="0.00" step="0.01"
-                                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />
-                            <button @click="applyAmountToAll"
-                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
-                                Apply
-                            </button>
+                            <InputText v-model="applyToAllAmount" type="number" placeholder="0.00" step="0.01"
+                                class="flex-1" />
+                            <Button label="Apply" severity="success" @click="applyAmountToAll" />
                         </div>
                     </div>
 
@@ -953,9 +933,8 @@ onMounted(async () => {
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <span class="text-gray-600 text-sm">₱</span>
-                                    <input v-model.number="scholar.individualAmount" type="number" placeholder="0.00"
-                                        step="0.01"
-                                        class="w-24 px-2 py-1 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                                    <InputText v-model.number="scholar.individualAmount" type="number"
+                                        placeholder="0.00" step="0.01" class="w-24" />
                                 </div>
                             </div>
                         </div>
@@ -971,8 +950,7 @@ onMounted(async () => {
                     <!-- Course -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Course (Optional)</label>
-                        <input v-model="voucherData.disbursements.course" type="text"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        <InputText v-model="voucherData.disbursements.course" type="text" class="w-full"
                             placeholder="e.g., BS Information Technology" />
                     </div>
                 </div>
@@ -1017,7 +995,7 @@ onMounted(async () => {
                                     class="flex justify-between">
                                     <span>{{ scholar.first_name }} {{ scholar.last_name }}</span>
                                     <span class="font-semibold">{{ formatCurrency(scholar.individualAmount || 0)
-                                    }}</span>
+                                        }}</span>
                                 </li>
                             </ol>
                             <div
@@ -1067,29 +1045,16 @@ onMounted(async () => {
         <!-- Footer Actions -->
         <template #footer>
             <div class="flex justify-between gap-2 pt-4 border-t">
-                <button v-if="step > 1" @click="previousStep"
-                    class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer">
-                    Previous
-                </button>
+                <Button v-if="step > 1" label="Previous" severity="secondary" icon="pi pi-arrow-left"
+                    @click="previousStep" />
                 <div v-else></div>
 
                 <div class="space-x-3">
-                    <button @click="closeWizard"
-                        class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer">
-                        Cancel
-                    </button>
-                    <button v-if="step < 5" @click="nextStep" :disabled="step === 1 && selectedCount === 0"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-                        Next
-                    </button>
-                    <button v-if="step === 5" @click="handleSubmit" :disabled="loading"
-                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-                        <span v-if="loading" class="flex items-center gap-2">
-                            <i class="pi pi-spinner pi-spin"></i>
-                            Saving...
-                        </span>
-                        <span v-else>{{ props.mode === 'edit' ? 'Update Voucher' : 'Create Voucher' }}</span>
-                    </button>
+                    <Button label="Cancel" severity="secondary" @click="closeWizard" />
+                    <Button v-if="step < 5" label="Next" icon="pi pi-arrow-right" iconPos="right" @click="nextStep"
+                        :disabled="step === 1 && selectedCount === 0" />
+                    <Button v-if="step === 5" :label="props.mode === 'edit' ? 'Update Voucher' : 'Create Voucher'"
+                        severity="success" @click="handleSubmit" :disabled="loading" :loading="loading" />
                 </div>
             </div>
         </template>
@@ -1109,11 +1074,11 @@ onMounted(async () => {
                         class="flex items-center justify-between bg-green-50 p-3 rounded border border-green-200">
                         <div class="flex-1">
                             <div class="text-sm font-medium text-gray-900">{{ scholar.first_name }} {{ scholar.last_name
-                            }}
+                                }}
                             </div>
                             <div class="text-xs text-gray-500">
                                 <span v-if="scholar.year_level" class="uppercase">{{ formatYearLevel(scholar.year_level)
-                                }}</span>
+                                    }}</span>
                                 <span v-else class="text-red-500">---</span>
                                 {{ scholar.course ? ' | ' + scholar.course : '' }}
                             </div>
@@ -1145,7 +1110,7 @@ onMounted(async () => {
                 <div class="flex justify-between pb-3 border-b border-gray-200">
                     <span class="text-gray-600">Particulars:</span>
                     <span class="font-medium text-gray-900">{{ voucherData.obligations.particulars_name || '---'
-                        }}</span>
+                    }}</span>
                 </div>
 
                 <div class="flex justify-between pb-3 border-b border-gray-200">

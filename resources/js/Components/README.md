@@ -98,7 +98,7 @@ import PersonalInformationFields from '@/Components/forms/fields/PersonalInforma
 
 Dialog and modal components for user interactions.
 
-- **ApplicantFormModal.vue** - For creating/editing applicants (waiting list)
+- **ApplicantFormModal.vue** - For creating/editing applicants
 - **ScholarFormModal.vue** - For creating/editing active scholars
 - **AddApplicantModal.vue** - Quick add applicant modal
 - **AddExistingModal.vue** - Add existing profile modal

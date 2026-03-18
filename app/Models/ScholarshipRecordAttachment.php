@@ -20,6 +20,9 @@ class ScholarshipRecordAttachment extends Model
         'file_path',
         'file_type',
         'file_size',
+        'original_size',
+        'compression_ratio',
+        'page_number',
     ];
 
     /**

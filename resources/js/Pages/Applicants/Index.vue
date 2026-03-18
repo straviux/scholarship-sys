@@ -5,6 +5,7 @@ import moment from 'moment'
 import { Head, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref, onBeforeUnmount, watch, computed, inject } from 'vue';
 import { usePermission } from '@/composable/permissions';
+import { useFilterManager } from '@/composables/useFilterManager';
 import axios from 'axios';
 
 
@@ -16,14 +17,17 @@ import PriorityModal from './Modal/PriorityModal.vue';
 import JpmModal from './Modal/JpmModal.vue';
 import RequirementsChecklistModal from './Modal/RequirementsChecklistModal.vue';
 import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
-import GridView from '@/Components/GridView.vue';
-import ApplicantGridCard from '@/Components/ApplicantGridCard.vue';
+import InterviewAssessmentModal from './Modal/InterviewAssessmentModal.vue';
+import ProfileReviewModal from './Modal/ProfileReviewModal.vue';
+
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
+import BarangaySelect from '@/Components/selects/BarangaySelect.vue';
 import RecordsSelect from '@/Components/selects/RecordsSelect.vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
+import TermSelect from '@/Components/selects/TermSelect.vue';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
@@ -63,69 +67,129 @@ const props = defineProps({
     }
 });
 
-const form = useForm({
-    course: props.filter.course || "",
-    municipality: props.filter.municipality || "",
-    name: props.filter.name || "",
-    records: props.records || 10,
-    sort: {
-        date_filed: props.sort.date_filed || "",
-        last_name: props.sort.last_name || "",
-        school: props.sort.school || "",
-        course: props.sort.course || "",
-        year_level: props.sort.year_level || "",
-    },
-});
-
-const toDate = (val) => val ? new Date(val) : null;
-
-// Get records from URL if not provided by backend
-const getRecordsFromUrl = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlRecords = urlParams.get('records');
-    return urlRecords ? parseInt(urlRecords) : 10;
-};
-
 // Determine initial JPM filter value from props
 const getInitialJpmFilter = () => {
-    if (props.filter.show_jpm_only === true || props.filter.show_jpm_only === 'true' || props.filter.show_jpm_only === '1') {
-        return 'jpm_only';
-    }
-    if (props.filter.hide_jpm === true || props.filter.hide_jpm === 'true' || props.filter.hide_jpm === '1') {
-        return 'hide_jpm';
-    }
-    if (props.filter.hide_all_tagged === true || props.filter.hide_all_tagged === 'true' || props.filter.hide_all_tagged === '1') {
-        return 'hide_all_tagged';
-    }
+    const f = props.filter || {};
+    if (f.show_jpm_only === true || f.show_jpm_only === 'true' || f.show_jpm_only === '1') return 'jpm_only';
+    if (f.hide_jpm === true || f.hide_jpm === 'true' || f.hide_jpm === '1') return 'hide_jpm';
+    if (f.hide_all_tagged === true || f.hide_all_tagged === 'true' || f.hide_all_tagged === '1') return 'hide_all_tagged';
     return 'all';
 };
 
-const filter = useForm({
-    records: parseInt(props.records) || getRecordsFromUrl(),
-    name: props.filter.name || "",
-    parent_name: props.filter.parent_name || "",
-    program: props.filter.program || "",
-    school: props.filter.school || "",
-    course: props.filter.course || "",
-    municipality: props.filter.municipality || "",
-    year_level: props.filter.year_level || "",
-    yakap_category: props.filter.yakap_category === "All Categories" ? "" : (props.filter.yakap_category || ""),
-    date_from: props.filter.date_from ? toDate(props.filter.date_from) : null,
-    date_to: props.filter.date_to ? toDate(props.filter.date_to) : null,
-    remarks: props.filter.remarks || "",
-    global_search: props.filter.global_search || "",
-    jpm_filter: getInitialJpmFilter(),
-    page: props.filter.page || 1,
-})
+// Filter management via composable
+const {
+    filters: filter,
+    globalFilter,
+    records,
+    rows,
+    first,
+    totalRecords,
+    showAllFilters,
+    search: triggerSearch,
+    clear: clearFilter,
+    onPageChange,
+} = useFilterManager({
+    routeName: 'applicants.index',
+    props,
+    filterPropName: 'filter',
+    routerOptions: { replace: true },
+    filterDefs: [
+        { key: 'name', type: 'text', default: '' },
+        { key: 'parent_name', type: 'text', default: '' },
+        { key: 'program', type: 'select', default: '', extract: v => v?.shortname?.toLowerCase() },
+        { key: 'school', type: 'select', default: '', extract: v => v?.shortname?.toLowerCase() },
+        { key: 'course', type: 'select', default: '', extract: v => v?.name?.toLowerCase() },
+        { key: 'municipality', type: 'select', default: '', extract: v => v?.name?.toLowerCase() },
+        { key: 'barangay', type: 'select', default: '', extract: v => v?.name?.toLowerCase() },
+        { key: 'year_level', type: 'select', default: '', extract: v => v?.value?.toLowerCase() },
+        { key: 'academic_year', type: 'text', default: '' },
+        { key: 'term', type: 'select', default: '', extract: v => v?.value?.toLowerCase() },
+        { key: 'yakap_category', type: 'text', default: '' },
+        { key: 'priority_level', type: 'text', default: '' },
+        { key: 'date_from', type: 'date', default: null },
+        { key: 'date_to', type: 'date', default: null },
+        { key: 'encoded_from', type: 'date', default: null },
+        { key: 'encoded_to', type: 'date', default: null },
+        { key: 'remarks', type: 'text', default: '' },
+        { key: 'jpm_filter', type: 'text', default: getInitialJpmFilter() },
+    ],
+    beforeSearch(params, filterValues) {
+        // JPM filter → convert to special backend params
+        const jpm = filterValues.jpm_filter;
+        delete params.jpm_filter;
+        if (jpm === 'jpm_only') params.show_jpm_only = 1;
+        else if (jpm === 'hide_jpm') params.hide_jpm = 1;
+        else if (jpm === 'hide_all_tagged') params.hide_all_tagged = 1;
+
+        // Include sort params if set
+        if (form.sort && Object.values(form.sort).some(v => v)) {
+            params.sort = form.sort;
+        }
+    },
+});
+
+// Computed: active filter tags for display
+const activeFilterTags = computed(() => {
+    const tags = [];
+    const f = filter.value;
+    const labelMap = {
+        name: 'Name',
+        parent_name: 'Parent/Guardian',
+        program: 'Program',
+        school: 'School',
+        course: 'Course',
+        municipality: 'Municipality',
+        barangay: 'Barangay',
+        year_level: 'Year Level',
+        academic_year: 'Academic Year',
+        term: 'Term',
+        yakap_category: 'YAKAP',
+        priority_level: 'Priority',
+        date_from: 'Date Filed From',
+        date_to: 'Date Filed To',
+        encoded_from: 'Date Encoded From',
+        encoded_to: 'Date Encoded To',
+        remarks: 'Remarks',
+    };
+    for (const [key, label] of Object.entries(labelMap)) {
+        const val = f[key];
+        if (!val) continue;
+        let display;
+        if (val instanceof Date) {
+            display = moment(val).format('MMM DD, YYYY');
+        } else if (typeof val === 'object') {
+            display = val.shortname || val.name || val.value || JSON.stringify(val);
+        } else {
+            display = String(val);
+        }
+        tags.push({ key, label, display });
+    }
+    return tags;
+});
+
+const removeFilter = (key) => {
+    const nullKeys = ['date_from', 'date_to', 'encoded_from', 'encoded_to', 'academic_year', 'term'];
+    filter.value[key] = nullKeys.includes(key) ? null : '';
+    triggerSearch();
+};
+
+// Auto-trigger search when basic filters change
+watch(
+    () => [filter.value.program, filter.value.course, filter.value.year_level, filter.value.date_from, filter.value.date_to],
+    () => { triggerSearch(); },
+);
+
+const form = useForm({
+    sort: {
+        date_filed: props.sort?.date_filed || "",
+        last_name: props.sort?.last_name || "",
+        school: props.sort?.school || "",
+        course: props.sort?.course || "",
+        year_level: props.sort?.year_level || "",
+    },
+});
 
 const searchInput = ref(null);
-// View mode: 'table' or 'grid' - persisted in localStorage
-const viewMode = ref(localStorage.getItem('applicants_view_mode') || 'table');
-
-// Watch for viewMode changes and persist to localStorage
-watch(viewMode, (newValue) => {
-    localStorage.setItem('applicants_view_mode', newValue);
-});
 
 // JPM Filter Options
 const jpmFilterOptions = [
@@ -140,6 +204,13 @@ const yakapCategoryOptions = [
     { label: 'YAKAP Capitol', value: 'yakap-capitol' },
     { label: 'YAKAP School', value: 'yakap-school' },
     { label: 'YAKAP Field', value: 'yakap-field' }
+];
+
+// Priority Filter Options
+const priorityFilterOptions = [
+    { label: 'Urgent', value: 'urgent' },
+    { label: 'High', value: 'high' },
+    { label: 'Normal', value: 'normal' },
 ];
 
 // Applicant Modal state
@@ -372,90 +443,7 @@ const handleYakapCategorySelected = (data) => {
 //     modalAction.value = '';
 // }
 
-const filterList = (resetToPage1 = false) => {
-    // Prepare filter values
-    const program = filter.program?.shortname?.toLowerCase() || "";
-    const parent_name = filter.parent_name.toLowerCase() || "";
-    const course = filter.course?.name?.toLowerCase() || "";
-    const municipality = filter.municipality?.name?.toLowerCase() || "";
-    const name = filter.name.toLowerCase() || "";
-    const school = filter.school?.shortname?.toLowerCase() || "";
-    const year_level = filter.year_level?.value?.toLowerCase() || "";
-    // Note: yakap_category can be an empty string (meaning "All Categories"), only filter if it has a non-empty value
-    const yakap_category = filter.yakap_category && filter.yakap_category !== '' ? filter.yakap_category : "";
-    const remarks = filter.remarks.toLowerCase() || "";
-    const global_search = globalFilter.value.toLowerCase() || "";
-    const records = filter.records;
-    const sort = form.sort;
-
-    // Use date_from and date_to directly
-    let date_from = filter.date_from ? moment(filter.date_from).format('YYYY-MM-DD') : "";
-    let date_to = filter.date_to ? moment(filter.date_to).format('YYYY-MM-DD') : "";
-
-    // Reset to page 1 only when filtering/searching, otherwise use current page
-    let currentPage = resetToPage1 ? 1 : filter.page;
-
-    const params = {};
-    if (program) params.program = program;
-    if (course) params.course = course;
-    if (school) params.school = school;
-    if (municipality) params.municipality = municipality;
-    if (name) params.name = name;
-    if (parent_name) params.parent_name = parent_name;
-    if (year_level) params.year_level = year_level;
-    // Only add yakap_category if it's not empty (empty means "All Categories")
-    if (yakap_category && yakap_category.trim() !== '') {
-        params.yakap_category = yakap_category;
-    }
-    if (date_from) params.date_from = date_from;
-    if (date_to) params.date_to = date_to;
-    if (remarks) params.remarks = remarks;
-    if (global_search) params.global_search = global_search;
-
-    // Handle JPM filter
-    if (filter.jpm_filter === 'jpm_only') {
-        params.show_jpm_only = 1;
-    } else if (filter.jpm_filter === 'hide_jpm') {
-        params.hide_jpm = 1;
-    } else if (filter.jpm_filter === 'hide_all_tagged') {
-        params.hide_all_tagged = 1;
-    }
-    // If 'all', don't add any JPM filter parameters
-
-    params.records = records; // Always include records to persist pagination
-    if (sort && Object.values(sort).some(v => v)) params.sort = sort;
-    params.page = currentPage;
-
-    router.get(route('waitinglist.index'), params, {
-        preserveState: true,
-        preserveScroll: true,
-        replace: true, // Replace URL without adding to history
-    });
-}
-
-const clearFilter = () => {
-    filter.name = null;
-    filter.parent_name = null;
-    filter.program = null;
-    filter.school = null;
-    filter.course = null;
-    filter.municipality = null;
-    filter.year_level = null;
-    filter.yakap_category = null;
-    filter.remarks = null;
-    filter.date_from = null;
-    filter.date_to = null;
-    filter.records = 10;
-    filter.global_search = '';
-    filter.jpm_filter = 'all';
-    filter.page = 1;
-    globalFilter.value = ''; // Clear global search
-    // Clear URL params by reloading the page with no query params
-    router.get(route('waitinglist.index'), {}, {
-        replace: true,
-        preserveScroll: true,
-    });
-}
+// filterList and clearFilter are provided by useFilterManager as triggerSearch and clearFilter
 
 
 
@@ -471,16 +459,7 @@ onBeforeUnmount(() => {
     window.removeEventListener('keydown', handleKeydown);
 });
 
-// Only trigger filterList from filter changes, not both form and filter
-let filterListTimeout = null;
-
-// Removed auto-trigger watcher for filter changes - manual search button required
-// This prevents auto-filtering while typing
-
-// Manual search trigger function
-const triggerSearch = () => {
-    filterList(true); // Reset to page 1 when searching
-};
+// triggerSearch and clearFilter are provided by useFilterManager composable
 
 // Combined JPM Tagging & Remarks functionality
 const showJpmModal = ref(false);
@@ -558,6 +537,56 @@ watch(() => page.props.auth?.user?.permissions, (newPermissions) => {
 const canShowJpmControls = computed(() => {
     return hasPermission('jpm.view') && showJpmColumns.value === true;
 });
+
+// Filter drawer state
+const showFilterDrawer = ref(false);
+
+// Academic Year Options
+const academicYearOptions = computed(() => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = currentYear; i >= currentYear - 10; i--) {
+        years.push({ label: `${i}-${i + 1}`, value: `${i}-${i + 1}` });
+    }
+    for (let i = currentYear; i >= currentYear - 10; i--) {
+        years.push({ label: i.toString(), value: i.toString() });
+    }
+    return years;
+});
+
+// Separate drawer filter model (only applied on submit)
+const drawerFilter = ref({});
+
+const drawerFilterKeys = ['parent_name', 'program', 'course', 'school', 'municipality', 'barangay', 'year_level', 'academic_year', 'term', 'yakap_category', 'priority_level', 'date_from', 'date_to', 'encoded_from', 'encoded_to'];
+
+const openDrawer = () => {
+    // Snapshot current applied filters into drawer model
+    const snapshot = {};
+    for (const key of drawerFilterKeys) {
+        const val = filter.value[key];
+        snapshot[key] = val instanceof Date ? new Date(val) : val;
+    }
+    drawerFilter.value = snapshot;
+    showFilterDrawer.value = true;
+};
+
+const applyDrawerFilters = () => {
+    for (const key of drawerFilterKeys) {
+        filter.value[key] = drawerFilter.value[key];
+    }
+    triggerSearch();
+    showFilterDrawer.value = false;
+};
+
+const clearDrawerFilters = () => {
+    const dateKeys = ['date_from', 'date_to', 'encoded_from', 'encoded_to'];
+    const nullKeys = ['academic_year', 'term'];
+    for (const key of drawerFilterKeys) {
+        if (dateKeys.includes(key)) drawerFilter.value[key] = null;
+        else if (nullKeys.includes(key)) drawerFilter.value[key] = null;
+        else drawerFilter.value[key] = '';
+    }
+};
 
 // Simple view toggle - hide action buttons for easier viewing
 const simpleView = ref(localStorage.getItem('simpleView') !== null ? localStorage.getItem('simpleView') === 'true' : true);
@@ -672,13 +701,8 @@ const showRowContextMenu = (event, rowData) => {
     contextMenu.value.show(event);
 };
 
-// Filter state
-const showAllFilters = ref(false);
-
-// DataTable properties - disable client-side filtering and pagination
-const globalFilter = ref(props.filter.global_search || '');
-const first = ref(0);
-const rows = ref(parseInt(props.records) || 10);
+// showAllFilters, globalFilter, first, rows, totalRecords, onPageChange
+// are all provided by useFilterManager composable above
 
 // Row selection state
 const selectedRows = ref([]);
@@ -686,44 +710,6 @@ const showBatchYakapModal = ref(false);
 const batchYakapForm = useForm({
     yakap_category: '',
     yakap_location: ''
-});
-
-// Watch for changes in globalFilter and trigger backend search only
-watch(globalFilter, (newValue) => {
-    // Update the filter object for backend search
-    filter.global_search = newValue;
-    // Trigger backend search with debouncing
-    if (filterListTimeout) clearTimeout(filterListTimeout);
-    filterListTimeout = setTimeout(() => {
-        filterList(true); // Reset to page 1 when searching
-        filterListTimeout = null;
-    }, 500);
-});
-
-// Watch for changes in filter.records and sync with DataTable rows
-watch(() => filter.records, (newValue) => {
-    rows.value = parseInt(newValue) || 10;
-}, { immediate: true });
-
-// Handle pagination change
-const onPageChange = (event) => {
-    const page = event.page + 1; // PrimeVue uses 0-based indexing, backend uses 1-based
-    filter.page = page;
-    // Call filterList immediately without debouncing for pagination
-    filterList(false); // Don't reset to page 1, use current page
-};
-
-// Calculate total records for pagination
-const totalRecords = computed(() => props.profiles_total || 0);
-
-// Sync first with current page
-watch(() => filter.page, (newPage) => {
-    first.value = (newPage - 1) * rows.value;
-}, { immediate: true });
-
-// Update first value when rows change
-watch(() => rows.value, () => {
-    first.value = (filter.page - 1) * rows.value;
 });
 
 // Memoization cache for expensive computations
@@ -743,17 +729,11 @@ const selectedApplicant = ref(null);
 
 // Combined profile and review modal state
 const showProfileReviewModal = ref(false);
-const selectedApplication = ref(null);
 const selectedApplicantForReview = ref(null);
-const reviewRequirements = ref([]);
-const currentProfileIndex = ref(-1);
-const hasPreviousProfile = ref(false);
-const hasNextProfile = ref(true);
 
-// Approval confirmation modal state
-const showApprovalConfirmModal = ref(false);
-const approvalAction = ref(null); // 'approve' or 'deny'
-const approvalRemarks = ref('');
+// Interview assessment modal state
+const showInterviewModal = ref(false);
+const interviewRecordId = ref(null);
 
 // Profile menu items for dropdown
 const profileMenuItems = ref([
@@ -807,145 +787,23 @@ const deleteApplicant = () => {
 
 // Combined profile and review modal methods
 const openProfileReviewModal = (applicant) => {
-    // Find the index of the applicant in the current list
-    currentProfileIndex.value = applicants.value.findIndex(a => a.profile_id === applicant.profile_id);
-
-    // Store the full profile data
     selectedApplicantForReview.value = applicant;
-
-    // Convert applicant data to application format expected by ApprovalWorkflow
-    selectedApplication.value = {
-        id: applicant.scholarship_grant?.[0]?.id || applicant.profile_id,
-        profile_id: applicant.profile_id,
-        profile: applicant,
-        program: applicant.scholarship_grant?.[0]?.program || null,
-        course: applicant.scholarship_grant?.[0]?.course || null,
-        school: applicant.scholarship_grant?.[0]?.school || null,
-        year_level: applicant.scholarship_grant?.[0]?.year_level || null,
-        unified_status: applicant.scholarship_grant?.[0]?.unified_status || 'pending',
-        created_at: applicant.scholarship_grant?.[0]?.created_at || applicant.created_at,
-        conditional_requirements: applicant.scholarship_grant?.[0]?.conditional_requirements || null,
-        conditional_deadline: applicant.scholarship_grant?.[0]?.conditional_deadline || null,
-        conditional_deadline_notified_at: applicant.scholarship_grant?.[0]?.conditional_deadline_notified_at || null,
-        conditional_deadline_expired: applicant.scholarship_grant?.[0]?.conditional_deadline_expired || false,
-        approval_remarks: applicant.scholarship_grant?.[0]?.approval_remarks || null
-    };
-
-    // Check if there are previous/next profiles on current page
-    const checkNavigationAvailability = () => {
-        hasPreviousProfile.value = currentProfileIndex.value > 0;
-        hasNextProfile.value = currentProfileIndex.value < applicants.value.length - 1;
-    };
-
-    checkNavigationAvailability();
-
     showProfileReviewModal.value = true;
-
-    // Load requirements for this applicant
-    loadRequirementsForReview(applicant.profile_id);
-};
-
-const loadRequirementsForReview = async (profileId) => {
-    try {
-        const response = await axios.get(
-            route('scholarship.profile.requirements-checklist', profileId)
-        );
-        reviewRequirements.value = response.data.requirements || [];
-    } catch (error) {
-        console.error('Error loading requirements:', error);
-        reviewRequirements.value = [];
-    }
-};
-
-const previewRequirementFile = (requirement) => {
-    if (!requirement.file_path) return;
-    // Open file in preview (you can implement a preview modal if needed)
-    window.open(requirement.file_path, '_blank');
-};
-
-const downloadRequirementFile = (requirement) => {
-    if (!requirement.file_path) return;
-
-    const link = document.createElement('a');
-    link.href = requirement.file_path;
-    link.download = requirement.file_name || requirement.name;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-
-    setTimeout(() => {
-        link.click();
-        document.body.removeChild(link);
-    }, 0);
-};
-
-const goToPreviousProfile = () => {
-    if (currentProfileIndex.value <= 0) return;
-
-    currentProfileIndex.value--;
-    const previousApplicant = applicants.value[currentProfileIndex.value];
-    openProfileReviewModal(previousApplicant);
-};
-
-const goToNextProfile = () => {
-    if (currentProfileIndex.value >= applicants.value.length - 1) return;
-
-    currentProfileIndex.value++;
-    const nextApplicant = applicants.value[currentProfileIndex.value];
-    openProfileReviewModal(nextApplicant);
 };
 
 const closeProfileReviewModal = () => {
     showProfileReviewModal.value = false;
-    selectedApplication.value = null;
     selectedApplicantForReview.value = null;
-    reviewRequirements.value = [];
 };
 
-const markAsApproved = () => {
-    if (!selectedApplicantForReview.value) return;
-    approvalAction.value = 'approve';
-    approvalRemarks.value = '';
-    showApprovalConfirmModal.value = true;
+const handleProfileReviewInterview = (applicant) => {
+    interviewRecordId.value = applicant.scholarship_grant?.[0]?.id;
+    showInterviewModal.value = true;
 };
 
-const markAsDenied = () => {
-    if (!selectedApplicantForReview.value) return;
-    approvalAction.value = 'deny';
-    approvalRemarks.value = '';
-    showApprovalConfirmModal.value = true;
-};
-
-const confirmApprovalAction = () => {
-    if (!selectedApplicantForReview.value) return;
-
-    const data = {
-        unified_status: approvalAction.value === 'approve' ? 'approved' : 'denied'
-    };
-
-    router.patch(route('scholarship.record.update-status', selectedApplicantForReview.value.scholarship_grant[0].id), data, {
-        onSuccess: () => {
-            const message = approvalAction.value === 'approve'
-                ? 'Application marked as approved for review'
-                : 'Application marked as denied';
-            toast.success(message);
-            closeApprovalConfirmModal();
-            closeProfileReviewModal();
-            refreshApplicationList();
-        },
-        onError: (errors) => {
-            const message = approvalAction.value === 'approve'
-                ? 'Failed to mark application as approved'
-                : 'Failed to mark application as denied';
-            toast.error(message);
-            console.error(errors);
-        }
-    });
-};
-
-const closeApprovalConfirmModal = () => {
-    showApprovalConfirmModal.value = false;
-    approvalAction.value = null;
-    approvalRemarks.value = '';
+const onInterviewSubmitted = () => {
+    closeProfileReviewModal();
+    refreshApplicationList();
 };
 
 const handleApprovalAction = () => {
@@ -1009,32 +867,6 @@ const openRequirementsModal = (applicant) => {
 const closeRequirementsModal = () => {
     showRequirementsChecklistModal.value = false;
     selectedApplicantForRequirements.value = null;
-};
-
-// Handle grid card actions
-const handleCardAction = ({ action, applicant }) => {
-    switch (action) {
-        case 'review':
-            openProfileReviewModal(applicant);
-            break;
-        case 'requirements':
-            openRequirementsModal(applicant);
-            break;
-        case 'jpm-tag':
-            openJpmModal(applicant);
-            break;
-        case 'assign-priority':
-            openPriorityModal(applicant);
-            break;
-        case 'edit':
-            editApplicant(applicant);
-            break;
-        case 'delete':
-            confirmDeleteApplicant(applicant);
-            break;
-        default:
-            console.warn('Unknown action:', action);
-    }
 };
 
 // Export Selected Rows Modal state
@@ -1288,7 +1120,7 @@ const formatDate = (date) => {
                             v-tooltip.bottom="'Add New Applicant'" />
                         <!-- <Button as="a" label="Existing" icon="pi pi-user"
                             v-if="hasPermission('applicants.create') && !hasRole('user')"
-                            :href="route('waitinglist.index', { action: 'add-existing' })" severity="secondary"
+                            :href="route('applicants.index', { action: 'add-existing' })" severity="secondary"
                             size="small" /> -->
                     </div>
                 </template>
@@ -1301,97 +1133,158 @@ const formatDate = (date) => {
                     <!-- Filter Controls Header -->
                     <div class="flex justify-between items-center py-1">
                         <div class="flex items-center gap-3">
-
-                            <Button :label="showAllFilters ? 'Show Basic Filters' : 'Show All Filters'"
-                                icon="pi pi-filter" severity="secondary" size="small" outlined
-                                @click="showAllFilters = !showAllFilters" />
-                            <!-- <Button label="Search" icon="pi pi-search" severity="primary" size="small"
-                                @click="triggerSearch" v-tooltip.bottom="'Apply filters and search'" /> -->
+                            <Button label="More Filters" icon="pi pi-filter" severity="secondary" size="small" outlined
+                                @click="openDrawer()" />
                         </div>
                         <div class="flex items-center gap-3">
                             <Button severity="secondary" outlined size="small" icon="pi pi-history" @click="clearFilter"
                                 v-tooltip.bottom="'Clear Filters'" />
-                            <Button label="Apply Filter" icon="pi pi-filter-fill" severity="info" size="small"
-                                @click="triggerSearch" v-tooltip.bottom="'Apply filters and search'" />
                         </div>
                     </div>
 
-                    <!-- All Filters in grouped rows -->
-                    <div class="space-y-3">
-                        <!-- Default Filters Row: Applicant Name, Program, Date From, Date To -->
-                        <div class="grid grid-cols-2 gap-2 md:grid-cols-4 lg:gap-8">
-                            <div class="flex flex-col">
-                                <label class="text-xs font-medium text-gray-600 mb-1">Applicant Name</label>
-                                <InputText v-model="filter.name" placeholder="Search applicant name..." class="w-full"
-                                    size="small" />
-                            </div>
-                            <div class="flex flex-col">
-                                <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
-                                <ProgramSelect v-model="filter.program" label="shortname"
-                                    custom-placeholder="All Programs" size="small" class="w-full" />
-                            </div>
-                            <div class="flex flex-col">
-                                <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
-                                <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses"
-                                    size="small" class="w-full" :scholarship-program-id="filter.program?.id" />
-                            </div>
-                            <div class="flex flex-col">
-                                <label class="text-xs font-medium text-gray-600 mb-1">Date Filed</label>
-                                <div class="flex gap-2">
-                                    <!-- <FloatLabel label="Date From" class="w-full">
-                                        <DatePicker v-model="filter.date_from" placeholder="Date From" size="small"
-                                            class="w-full" :show-icon="true" date-format="M dd, yy" />
-                                    </FloatLabel> -->
-                                    <InputGroup>
-                                        <InputGroupAddon>
-                                            <span class="text-xs">From</span>
-                                        </InputGroupAddon>
-                                        <DatePicker v-model="filter.date_from" size="small" class="w-full"
-                                            :show-icon="true" iconDisplay="input" date-format="M dd, yy" />
-                                    </InputGroup>
-                                    <InputGroup>
-                                        <InputGroupAddon>
-                                            <span class="text-xs">To</span>
-                                        </InputGroupAddon>
-                                        <DatePicker v-model="filter.date_to" size="small" class="w-full"
-                                            :show-icon="true" iconDisplay="input" date-format="M dd, yy" />
-                                    </InputGroup>
-                                </div>
+                    <!-- Basic Filters Row: Program, Course, Year Level, Date Filed -->
+                    <div class="grid grid-cols-1 gap-2 md:grid-cols-4 lg:gap-8">
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
+                            <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="All Programs"
+                                size="small" class="w-full" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
+                            <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses"
+                                size="small" class="w-full" :scholarship-program-id="filter.program?.id" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
+                            <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
+                                size="small" class="w-full" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Date Filed</label>
+                            <div class="flex gap-2">
+                                <InputGroup>
+                                    <InputGroupAddon>
+                                        <span class="text-xs">From</span>
+                                    </InputGroupAddon>
+                                    <DatePicker v-model="filter.date_from" size="small" class="w-full"
+                                        date-format="M dd, yy" />
+                                </InputGroup>
+                                <InputGroup>
+                                    <InputGroupAddon>
+                                        <span class="text-xs">To</span>
+                                    </InputGroupAddon>
+                                    <DatePicker v-model="filter.date_to" size="small" class="w-full"
+                                        date-format="M dd, yy" />
+                                </InputGroup>
                             </div>
                         </div>
-
-                        <!-- Additional Filters (shown when showAllFilters is true) -->
-                        <template v-if="showAllFilters">
-                            <!-- Second Row: School, Municipality, Course, Year Level -->
-                            <div class="grid grid-cols-2 gap-2 md:grid-cols-4 lg:gap-8">
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">School</label>
-                                    <SchoolSelect v-model="filter.school" label="shortname"
-                                        custom-placeholder="All Schools" size="small" class="w-full"
-                                        :multiple="false" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Municipality</label>
-                                    <MunicipalitySelect v-model="filter.municipality"
-                                        custom-placeholder="All Municipalities" size="small" class="w-full" />
-                                </div>
-
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
-                                    <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
-                                        size="small" class="w-full" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">YAKAP Category</label>
-                                    <Select v-model="filter.yakap_category" :options="yakapCategoryOptions"
-                                        optionLabel="label" optionValue="value" placeholder="All Categories"
-                                        size="small" class="w-full" />
-                                </div>
-                            </div>
-                        </template>
                     </div>
                 </div>
             </Panel>
+
+            <!-- Active Filter Tags -->
+            <div v-if="activeFilterTags.length" class="flex flex-wrap items-center gap-2 mt-2">
+                <span class="text-xs text-gray-500">Active Filters:</span>
+                <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="info" rounded class="cursor-pointer"
+                    @click="removeFilter(tag.key)">
+                    <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
+                    <i class="pi pi-times ml-1" style="font-size: 0.6rem"></i>
+                </Tag>
+            </div>
+
+            <!-- Filter Drawer -->
+            <Drawer v-model:visible="showFilterDrawer" header="All Filters" position="right" class="!w-[600px]">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
+                        <ProgramSelect v-model="drawerFilter.program" label="shortname"
+                            custom-placeholder="All Programs" size="small" class="w-full" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
+                        <CourseSelect v-model="drawerFilter.course" label="name" custom-placeholder="All Courses"
+                            size="small" class="w-full" :scholarship-program-id="drawerFilter.program?.id" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">School</label>
+                        <SchoolSelect v-model="drawerFilter.school" label="shortname" custom-placeholder="All Schools"
+                            size="small" class="w-full" :multiple="false" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
+                        <YearLevelSelect v-model="drawerFilter.year_level" custom-placeholder="All Year Levels"
+                            size="small" class="w-full" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Academic Year</label>
+                        <Select v-model="drawerFilter.academic_year" :options="academicYearOptions" optionLabel="label"
+                            optionValue="value" placeholder="All Academic Years" size="small" class="w-full"
+                            showClear />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Term</label>
+                        <TermSelect v-model="drawerFilter.term" size="small" class="w-full" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Municipality</label>
+                        <MunicipalitySelect v-model="drawerFilter.municipality" custom-placeholder="All Municipalities"
+                            size="small" class="w-full" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Barangay</label>
+                        <BarangaySelect v-model="drawerFilter.barangay" :municipality-id="drawerFilter.municipality?.id"
+                            custom-placeholder="All Barangays" size="small" class="w-full" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">YAKAP Category</label>
+                        <Select v-model="drawerFilter.yakap_category" :options="yakapCategoryOptions"
+                            optionLabel="label" optionValue="value" placeholder="All Categories" size="small"
+                            class="w-full" showClear />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Priority</label>
+                        <Select v-model="drawerFilter.priority_level" :options="priorityFilterOptions"
+                            optionLabel="label" optionValue="value" placeholder="All Priorities" size="small"
+                            class="w-full" showClear />
+                    </div>
+                    <div class="flex flex-col col-span-2">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Date Filed</label>
+                        <div class="flex gap-2">
+                            <InputGroup>
+                                <InputGroupAddon><span class="text-xs">From</span></InputGroupAddon>
+                                <DatePicker v-model="drawerFilter.date_from" size="small" class="w-full"
+                                    date-format="M dd, yy" showIcon iconDisplay="input" />
+                            </InputGroup>
+                            <InputGroup>
+                                <InputGroupAddon><span class="text-xs">To</span></InputGroupAddon>
+                                <DatePicker v-model="drawerFilter.date_to" size="small" class="w-full"
+                                    date-format="M dd, yy" showIcon iconDisplay="input" />
+                            </InputGroup>
+                        </div>
+                    </div>
+                    <div class="flex flex-col col-span-2">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Date Encoded</label>
+                        <div class="flex gap-2">
+                            <InputGroup>
+                                <InputGroupAddon><span class="text-xs">From</span></InputGroupAddon>
+                                <DatePicker v-model="drawerFilter.encoded_from" size="small" class="w-full"
+                                    date-format="M dd, yy" showIcon iconDisplay="input" />
+                            </InputGroup>
+                            <InputGroup>
+                                <InputGroupAddon><span class="text-xs">To</span></InputGroupAddon>
+                                <DatePicker v-model="drawerFilter.encoded_to" size="small" class="w-full"
+                                    date-format="M dd, yy" showIcon iconDisplay="input" />
+                            </InputGroup>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-2 justify-end mt-6 pt-4 border-t">
+                    <Button severity="secondary" outlined size="small" icon="pi pi-history" label="Clear"
+                        @click="clearDrawerFilters" />
+                    <Button label="Apply" icon="pi pi-filter-fill" severity="info" size="small"
+                        @click="applyDrawerFilters" />
+                </div>
+            </Drawer>
 
             <!-- Applicants DataTable -->
             <div class="mt-8">
@@ -1418,43 +1311,38 @@ const formatDate = (date) => {
 
                 <Panel>
                     <!-- Info Bar -->
-                    <div class="md:grid hidden grid-cols-3 items-center mb-4 bg-gray-50 rounded -mt-2 p-2">
-
-                        <div class="flex gap-4 items-center">
-                            <IconField iconPosition="left" class="w-full">
-                                <InputIcon class="pi pi-search" />
-                                <InputText v-model="globalFilter" placeholder="Search across all fields..."
-                                    class="w-full" />
+                    <div class="md:flex hidden items-center justify-between gap-4 mb-4 p-3 bg-gray-50 rounded-lg -mt-2">
+                        <div class="flex-1 max-w-md">
+                            <IconField iconPosition="left">
+                                <InputIcon class="pi pi-search text-gray-400" />
+                                <InputText v-model="globalFilter" placeholder="Search..." class="w-full" size="small" />
                             </IconField>
                         </div>
-                        <div class="text-sm text-gray-600 text-center">
-                            Showing
-                            <RecordsSelect v-model="filter.records" label="label" class="w-24" size="small" /> of {{
-                                props.profiles_total || 0 }} records
+                        <div class="flex">
+                            <span class="text-sm opacity-60" v-if="simpleView">Right click on applicant row to show
+                                context
+                                menu</span>
                         </div>
-                        <div class="flex gap-2 justify-end mr-2 items-center">
-                            <div class="flex items-center gap-2 mr-3" v-if="viewMode === 'table'">
+                        <div class="flex items-center justify-center gap-4">
+                            <div class="text-sm text-gray-600 flex items-center justify-center gap-2">
+                                <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
+                                <span>/ <strong>{{ totalRecords }}</strong></span>
+                            </div>
+                            <div class="flex items-center gap-2">
                                 <Checkbox v-model="simpleView" inputId="simpleViewToggle" binary />
                                 <label for="simpleViewToggle" class="text-xs text-gray-600 cursor-pointer">Simple
                                     View</label>
                             </div>
-                            <Button icon="pi pi-list" :severity="viewMode === 'table' ? 'primary' : 'secondary'"
-                                :outlined="viewMode !== 'table'" @click="viewMode = 'table'" size="small"
-                                v-tooltip.bottom="'Table View'" />
-                            <Button icon="pi pi-th-large" :severity="viewMode === 'grid' ? 'primary' : 'secondary'"
-                                :outlined="viewMode !== 'grid'" @click="viewMode = 'grid'" size="small"
-                                v-tooltip.bottom="'Grid View'" />
                         </div>
-
                     </div>
 
                     <!-- Context Menu -->
                     <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
 
                     <!-- Table View -->
-                    <DataTable v-if="viewMode === 'table'" :value="applicants" stripedRows showGridlines
-                        responsiveLayout="scroll" :emptyMessage="'No applicants to display'" :lazy="true" paginator
-                        :rows="rows" :totalRecords="totalRecords" :first="first" @page="onPageChange"
+                    <DataTable :value="applicants" stripedRows showGridlines responsiveLayout="scroll"
+                        :emptyMessage="'No applicants to display'" :lazy="true" paginator :rows="rows"
+                        :totalRecords="totalRecords" :first="first" @page="onPageChange"
                         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                         :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
                         v-model:selection="selectedRows" dataKey="profile_id"
@@ -1526,21 +1414,21 @@ const formatDate = (date) => {
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Prog. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Cour. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_course || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div class="px-1">
                                             <div class="text-xs font-semibold text-gray-500">
                                                 Sch. <span class="font-bold text-gray-600">#{{
                                                     slotProps.data.sequence_number_by_school_course || '-'
-                                                }}</span>
+                                                    }}</span>
 
                                             </div>
                                         </div>
@@ -1706,54 +1594,7 @@ const formatDate = (date) => {
                         </Column>
                     </DataTable>
 
-                    <!-- Grid View -->
-                    <GridView v-else-if="viewMode === 'grid'" :items="applicants" :total-records="totalRecords"
-                        :rows="rows" :first="first" :columns="{ xs: 1, md: 2, lg: 3, xl: 4 }"
-                        empty-message="No applicants to display" empty-icon="pi pi-users" @page-change="onPageChange">
-                        <template #default="{ item: applicant }">
-                            <ApplicantGridCard :applicant="applicant"
-                                :show-jpm-badge="showJpmColumns && getJpmStatus(applicant)"
-                                :jpm-details="getJpmMemberDetails(applicant)" :actions="[
-                                    {
-                                        name: 'review',
-                                        icon: 'pi pi-check-circle',
-                                        label: 'Review',
-                                        severity: 'success',
-                                        condition: () => hasPermission('applicants.view')
-                                    },
-                                    {
-                                        name: 'jpm-tag',
-                                        icon: 'pi pi-tags',
-                                        severity: 'info',
-                                        tooltip: 'JPM Tagging',
-                                        outlined: true,
-                                        condition: () => hasPermission('jpm.view') && showJpmColumns && hasPermission('jpm.manage')
-                                    },
-                                    {
-                                        name: 'assign-priority',
-                                        icon: 'pi pi-star',
-                                        severity: 'warn',
-                                        tooltip: 'Assign Priority',
-                                        outlined: true,
-                                        condition: () => hasPermission('priority.manage')
-                                    },
-                                    {
-                                        name: 'edit',
-                                        icon: 'pi pi-user-edit',
-                                        severity: 'help',
-                                        tooltip: 'Edit',
-                                        condition: () => hasPermission('applicants.edit')
-                                    },
-                                    {
-                                        name: 'delete',
-                                        icon: 'pi pi-trash',
-                                        severity: 'danger',
-                                        tooltip: 'Delete',
-                                        condition: () => hasPermission('applicants.delete')
-                                    }
-                                ]" @action="handleCardAction" />
-                        </template>
-                    </GridView>
+
                 </Panel>
             </div>
         </div>
@@ -1775,11 +1616,10 @@ const formatDate = (date) => {
 
                 <div class="flex flex-col gap-3">
                     <label for="remarks-textarea" class="font-medium text-gray-700">Remarks:</label>
-                    <textarea v-model="remarksForm.remarks" id="remarks-textarea"
-                        class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows="6" placeholder="Enter remarks here..." />
+                    <Textarea v-model="remarksForm.remarks" id="remarks-textarea" class="w-full" rows="6"
+                        placeholder="Enter remarks here..." />
                     <small v-if="remarksForm.errors.remarks" class="text-red-500">{{ remarksForm.errors.remarks
-                        }}</small>
+                    }}</small>
                 </div>
             </div>
 
@@ -1826,351 +1666,8 @@ const formatDate = (date) => {
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" />
 
         <!-- Integrated Profile & Review Modal -->
-        <Dialog v-model:visible="showProfileReviewModal" modal :style="{ width: '50vw' }"
-            :breakpoints="{ '1199px': '75vw', '575px': '90vw' }" :maximizable="true" class="p-fluid">
-
-            <template #header>
-                <span>Application Review & Applicant Profile</span>
-            </template>
-
-            <div v-if="selectedApplicantForReview">
-                <!-- Header Summary -->
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <div class="flex items-center gap-4">
-                        <Avatar :label="getApplicantInitials(selectedApplicantForReview)" size="large" shape="circle"
-                            class="bg-blue-600 text-white" />
-                        <div class="flex-1">
-                            <h3 class="text-xl font-bold text-gray-900"
-                                @click="router.visit(route('scholarship.profile.show', selectedApplicantForReview.profile_id))">
-                                {{
-                                    getApplicantFullName(selectedApplicantForReview) }}</h3>
-                            <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
-                                <span><i class="pi pi-phone mr-1"></i>{{ selectedApplicantForReview.contact_no || 'N/A'
-                                }}</span>
-                                <span><i class="pi pi-envelope mr-1"></i>{{ selectedApplicantForReview.email || 'N/A'
-                                }}</span>
-                                <span><i class="pi pi-calendar mr-1"></i>{{
-                                    formatDate(selectedApplicantForReview.date_filed)
-                                }}</span>
-                            </div>
-                        </div>
-                        <!-- Queue Numbers -->
-                        <div class="flex items-center gap-2">
-                            <div class="text-center px-2 py-1 bg-indigo-100 rounded border border-indigo-200">
-                                <div class="text-sm font-bold text-indigo-600">#{{
-                                    selectedApplicantForReview.sequence_number ||
-                                    '-' }}</div>
-                                <div class="text-xs text-indigo-700">{{
-                                    selectedApplicantForReview.scholarship_grant?.[0]?.program?.shortname }}</div>
-                            </div>
-                            <div class="text-center px-2 py-1 bg-purple-100 rounded border border-purple-200">
-                                <div class="text-sm font-bold text-purple-600">#{{
-                                    selectedApplicantForReview.sequence_number_by_course || '-' }}</div>
-                                <div class="text-xs text-purple-700">{{
-                                    selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname }}</div>
-                            </div>
-                            <div class="text-center px-2 py-1 bg-green-100 rounded border border-green-200">
-                                <div class="text-sm font-bold text-green-600">#{{
-                                    selectedApplicantForReview.sequence_number_by_school_course || '-' }}</div>
-                                <div class="text-xs text-green-700">{{
-                                    selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Action Buttons -->
-                <div v-if="hasRole('administrator') || hasRole('program_manager')"
-                    class="flex gap-2 mb-4 pt-3 border-t">
-                    <Button label="Mark as Approved" icon="pi pi-check" severity="success" size="small"
-                        @click="markAsApproved" />
-                    <Button label="Mark as Denied" icon="pi pi-times" severity="danger" size="small"
-                        @click="markAsDenied" />
-                </div>
-
-                <!-- Tabbed Content -->
-                <Tabs value="requirements">
-                    <TabList>
-                        <Tab value="requirements">Requirements</Tab>
-                        <Tab value="profileInformation">Profile</Tab>
-                    </TabList>
-                    <TabPanels>
-                        <TabPanel value="profileInformation" header="Profile Information">
-                            <!-- Personal & Academic Information -->
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                                <!-- Personal Information -->
-                                <div class="border rounded p-3">
-                                    <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                                        <i class="pi pi-user text-blue-600 text-sm"></i>
-                                        Personal
-                                    </h4>
-                                    <div class="space-y-2 text-xs">
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label class="text-gray-600">Full Name</label>
-                                                <div class="font-medium">{{
-                                                    getApplicantFullName(selectedApplicantForReview) }}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label class="text-gray-600">Gender</label>
-                                                <div class="font-medium">{{ selectedApplicantForReview.gender === 'M' ?
-                                                    'Male' :
-                                                    selectedApplicantForReview.gender === 'F' ? 'Female' : 'N/A' }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label class="text-gray-600">Contact</label>
-                                                <div class="font-medium">{{ selectedApplicantForReview.contact_no ||
-                                                    'N/A' }}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label class="text-gray-600">Email</label>
-                                                <div class="font-medium">{{ selectedApplicantForReview.email || 'N/A' }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label class="text-gray-600">Income</label>
-                                            <div class="font-medium">{{ selectedApplicantForReview.gross_monthly_income
-                                                || 'N/A'
-                                            }}</div>
-                                        </div>
-                                        <div>
-                                            <label class="text-gray-600">Address</label>
-                                            <div class="font-medium">{{
-                                                getApplicantFullAddress(selectedApplicantForReview) }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Academic Information -->
-                                <div class="border rounded p-3">
-                                    <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                                        <i class="pi pi-graduation-cap text-green-600 text-sm"></i>
-                                        Academic
-                                    </h4>
-                                    <div class="space-y-2 text-xs">
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label class="text-gray-600">Program</label>
-                                                <div class="font-medium">{{
-                                                    selectedApplicantForReview.scholarship_grant?.[0]?.program?.shortname
-                                                    ||
-                                                    'N/A' }}</div>
-                                            </div>
-                                            <div>
-                                                <label class="text-gray-600">School</label>
-                                                <div class="font-medium">{{
-                                                    selectedApplicantForReview.scholarship_grant?.[0]?.school?.shortname
-                                                    ||
-                                                    'N/A' }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label class="text-gray-600">Course</label>
-                                                <div class="font-medium">{{
-                                                    selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname
-                                                    ||
-                                                    'N/A' }}</div>
-                                            </div>
-                                            <div>
-                                                <label class="text-gray-600">Year Level</label>
-                                                <div class="font-medium">{{
-                                                    selectedApplicantForReview.scholarship_grant?.[0]?.year_level ||
-                                                    'N/A' }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label class="text-gray-600">Academic Year</label>
-                                                <div class="font-medium">{{
-                                                    selectedApplicantForReview.scholarship_grant?.[0]?.academic_year ||
-                                                    'N/A' }}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label class="text-gray-600">Term</label>
-                                                <div class="font-medium">{{
-                                                    selectedApplicantForReview.scholarship_grant?.[0]?.term || 'N/A' }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label class="text-gray-600">Remarks</label>
-                                            <div class="font-medium">{{ selectedApplicantForReview.remarks || `No
-                                                remarks` }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Family Information -->
-                            <div class="border rounded p-3 mt-3">
-                                <h4 class="text-sm font-semibold text-gray-700 mb-2">Family</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                                    <!-- Father -->
-                                    <div>
-                                        <h5 class="text-xs font-medium text-blue-600 mb-1 flex items-center gap-1">
-                                            <i class="pi pi-user text-xs"></i> Father
-                                        </h5>
-                                        <div class="space-y-1">
-                                            <div>
-                                                <label class="text-gray-600">Name</label>
-                                                <div class="font-medium">{{ selectedApplicantForReview.father_name ||
-                                                    'N/A' }}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label class="text-gray-600">Occupation</label>
-                                                <div class="font-medium">{{ selectedApplicantForReview.father_occupation
-                                                    ||
-                                                    'N/A' }}</div>
-                                            </div>
-                                            <div>
-                                                <label class="text-gray-600">Contact</label>
-                                                <div class="font-medium">{{ selectedApplicantForReview.father_contact_no
-                                                    ||
-                                                    'N/A' }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Mother -->
-                                    <div>
-                                        <h5 class="text-xs font-medium text-pink-600 mb-1 flex items-center gap-1">
-                                            <i class="pi pi-user text-xs"></i> Mother
-                                        </h5>
-                                        <div class="space-y-1">
-                                            <div>
-                                                <label class="text-gray-600">Name</label>
-                                                <div class="font-medium">{{ selectedApplicantForReview.mother_name ||
-                                                    'N/A' }}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label class="text-gray-600">Occupation</label>
-                                                <div class="font-medium">{{ selectedApplicantForReview.mother_occupation
-                                                    ||
-                                                    'N/A' }}</div>
-                                            </div>
-                                            <div>
-                                                <label class="text-gray-600">Contact</label>
-                                                <div class="font-medium">{{ selectedApplicantForReview.mother_contact_no
-                                                    ||
-                                                    'N/A' }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Guardian -->
-                                    <div>
-                                        <h5 class="text-xs font-medium text-purple-600 mb-1 flex items-center gap-1">
-                                            <i class="pi pi-users text-xs"></i> Guardian
-                                        </h5>
-                                        <div class="space-y-1">
-                                            <div>
-                                                <label class="text-gray-600">Name</label>
-                                                <div class="font-medium">{{ selectedApplicantForReview.guardian_name ||
-                                                    'N/A' }}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label class="text-gray-600">Occupation</label>
-                                                <div class="font-medium">{{
-                                                    selectedApplicantForReview.guardian_occupation ||
-                                                    'N/A' }}</div>
-                                            </div>
-                                            <div>
-                                                <label class="text-gray-600">Contact</label>
-                                                <div class="font-medium">{{
-                                                    selectedApplicantForReview.guardian_contact_no ||
-                                                    'N/A' }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </TabPanel>
-
-                        <TabPanel value="requirements" header="Requirements">
-                            <div v-if="selectedApplicantForReview" class="space-y-4">
-
-                                <!-- Requirements List -->
-                                <div class="border rounded-lg overflow-hidden">
-                                    <div class="bg-gray-50 p-3 font-semibold text-sm border-b">Requirements Checklist
-                                    </div>
-                                    <div v-if="reviewRequirements.length === 0" class="p-6 text-center text-gray-500">
-                                        <i class="pi pi-inbox text-3xl mb-2 block"></i>
-                                        No requirements found
-                                    </div>
-                                    <div v-else class="divide-y">
-                                        <div v-for="req in reviewRequirements" :key="req.id"
-                                            class="p-3 flex items-center justify-between hover:bg-gray-50"
-                                            :class="{ 'opacity-60': !req.is_checked }">
-                                            <div class="flex-1 min-w-0">
-                                                <div class="flex items-center gap-2">
-                                                    <div v-if="req.is_checked" class="flex-shrink-0">
-                                                        <span
-                                                            class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100">
-                                                            <i class="pi pi-check text-green-600 text-xs"></i>
-                                                        </span>
-                                                    </div>
-                                                    <div v-else class="flex-shrink-0">
-                                                        <span
-                                                            class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200">
-                                                            <i class="pi pi-circle text-gray-400 text-xs"></i>
-                                                        </span>
-                                                    </div>
-                                                    <div class="flex-1 min-w-0">
-                                                        <p class="font-medium text-sm text-gray-900">{{ req.name }}</p>
-                                                        <p v-if="req.file_path" class="text-xs text-gray-600 truncate">
-                                                            {{
-                                                                req.file_name }}</p>
-                                                        <p v-else-if="req.is_checked" class="text-xs text-gray-500">No
-                                                            files
-                                                            uploaded</p>
-                                                        <p v-else class="text-xs text-gray-400">Pending submission</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="flex gap-2 ml-3 flex-shrink-0">
-                                                <Button v-if="req.file_path && req.is_checked" icon="pi pi-eye"
-                                                    severity="info" text rounded size="small"
-                                                    @click="previewRequirementFile(req)" v-tooltip="'Preview'" />
-                                                <Button v-if="req.file_path && req.is_checked" icon="pi pi-download"
-                                                    severity="success" text rounded size="small"
-                                                    @click="downloadRequirementFile(req)" v-tooltip="'Download'" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </TabPanel>
-                    </TabPanels>
-                </Tabs>
-            </div>
-
-            <template #footer>
-                <div class="flex items-center justify-between w-full">
-                    <div></div>
-                    <div class="flex opacity-75">({{ currentProfileIndex + 1 }}/{{ applicants.length }})</div>
-                    <div class="flex gap-2">
-                        <Button icon="pi pi-chevron-left" label="Previous" @click="goToPreviousProfile"
-                            :disabled="!hasPreviousProfile" severity="info" />
-                        <Button icon="pi pi-chevron-right" iconPos="right" label="Next" @click="goToNextProfile"
-                            :disabled="!hasNextProfile" severity="info" />
-                    </div>
-                </div>
-            </template>
-        </Dialog>
+        <ProfileReviewModal v-model:visible="showProfileReviewModal" :applicant="selectedApplicantForReview"
+            :applicants="applicants" @interview="handleProfileReviewInterview" @closed="closeProfileReviewModal" />
 
         <!-- YAKAP Category Modal - for selecting category when creating new applicant -->
         <YakapCategoryModal v-model:visible="showYakapCategoryModal" @selected="handleYakapCategorySelected" />
@@ -2215,57 +1712,9 @@ const formatDate = (date) => {
             </template>
         </Dialog>
 
-        <!-- Approval Confirmation Modal -->
-        <Dialog v-model:visible="showApprovalConfirmModal" modal
-            :header="`Confirm ${approvalAction === 'approve' ? 'Approval' : 'Denial'}`" :style="{ width: '500px' }">
-            <div v-if="selectedApplicantForReview" class="space-y-4">
-                <!-- Applicant Info -->
-                <div class="p-3 bg-blue-50 border border-blue-200 rounded">
-                    <div class="font-semibold text-blue-900">
-                        {{ selectedApplicantForReview.last_name }}, {{ selectedApplicantForReview.first_name }}
-                    </div>
-                    <div class="text-sm text-gray-600">
-                        {{ selectedApplicantForReview.scholarship_grant?.[0]?.program?.shortname }} -
-                        {{ selectedApplicantForReview.scholarship_grant?.[0]?.course?.shortname }}
-                    </div>
-                </div>
-
-                <!-- Action Message -->
-                <div v-if="approvalAction === 'approve'" class="p-3 bg-green-50 border border-green-200 rounded">
-                    <p class="text-sm text-green-800">
-                        <strong>What happens next:</strong>
-                    </p>
-                    <ul class="text-sm text-green-700 mt-2 ml-4 list-disc space-y-1">
-                        <li>Application will be moved to the "Reviewed Applicants" page</li>
-                        <li>Applicant will be removed from the waiting list</li>
-                        <li>Status will be marked as "Approved Pending"</li>
-                        <li>Further processing can be done from the Reviewed Applicants page</li>
-                        <li><strong>The record must still be approved under Reviewed Applicants before it can be
-                                recorded as an active scholar.</strong></li>
-                    </ul>
-                </div>
-
-                <div v-else class="p-3 bg-red-50 border border-red-200 rounded">
-                    <p class="text-sm text-red-800">
-                        <strong>What happens next:</strong>
-                    </p>
-                    <ul class="text-sm text-red-700 mt-2 ml-4 list-disc space-y-1">
-                        <li>Application will be moved to the "Reviewed Applicants" page</li>
-                        <li>Applicant will be removed from the waiting list</li>
-                        <li>Status will be marked as "Denied"</li>
-                        <li>Further confirmation can be done from the Reviewed Applicants page</li>
-                        <li><strong>Record still needs to be confirmed in Reviewed Applicants for the denial to be
-                                finalized</strong></li>
-                    </ul>
-                </div>
-            </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeApprovalConfirmModal" />
-                <Button :label="`Confirm ${approvalAction === 'approve' ? 'Approval' : 'Denial'}`"
-                    :severity="approvalAction === 'approve' ? 'success' : 'danger'" @click="confirmApprovalAction" />
-            </template>
-        </Dialog>
+        <!-- Interview Assessment Modal -->
+        <InterviewAssessmentModal v-model="showInterviewModal" :applicant="selectedApplicantForReview"
+            :recordId="interviewRecordId" @submitted="onInterviewSubmitted" />
 
         <!-- Batch Update YAKAP Category Modal -->
         <Dialog v-model:visible="showBatchYakapModal" modal header="Batch Update YAKAP Category"

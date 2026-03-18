@@ -77,7 +77,7 @@ const serviceCards = computed(() => {
             description: 'Submit a new scholarship application',
             icon: 'pi pi-file-edit',
             color: 'blue',
-            action: () => router.visit(route('waitinglist.index')),
+            action: () => router.visit(route('applicants.index')),
             badge: props.pendingApplicants > 0 ? props.pendingApplicants : null,
             badgeLabel: 'To Review'
         });
@@ -90,7 +90,7 @@ const serviceCards = computed(() => {
             description: 'View and manage scholarship profiles',
             icon: 'pi pi-list',
             color: 'green',
-            action: () => router.visit(route('waitinglist.index')),
+            action: () => router.visit(route('applicants.index')),
             badge: props.activeApplications > 0 ? props.activeApplications : null,
             badgeLabel: 'Active'
         });

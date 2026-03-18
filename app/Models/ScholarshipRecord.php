@@ -13,7 +13,7 @@ use Carbon\Carbon;
 
 class ScholarshipRecord extends Model
 {
-    /** @use HasFactory<\Database\Factories\ApplicantFactory> */
+    /** @use HasFactory<\Database\Factories\ScholarshipRecordFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
@@ -41,6 +41,13 @@ class ScholarshipRecord extends Model
         'date_approved',
         'upload_token',
         'upload_token_expires_at',
+        'academic_potential',
+        'financial_need_level',
+        'communication_skills',
+        'recommendation',
+        'interview_remarks',
+        'interviewed_by',
+        'interviewed_at',
     ];
 
     protected $casts = [
@@ -51,6 +58,7 @@ class ScholarshipRecord extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'upload_token_expires_at' => 'datetime',
+        'interviewed_at' => 'datetime',
     ];
 
     /**
@@ -137,15 +145,6 @@ class ScholarshipRecord extends Model
     }
 
     /**
-     * Check if scholarship is on waiting list
-     * @return bool
-     */
-    public function isOnWaitingList(): bool
-    {
-        return $this->unified_status === 'pending';
-    }
-
-    /**
      * Set date_filed - Handle timezone properly
      * When a date string is received from the frontend (e.g., "2026-01-12"),
      * it's in the user's local timezone (Asia/Manila).
@@ -197,6 +196,11 @@ class ScholarshipRecord extends Model
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by')->select(['id', 'name']);
+    }
+
+    public function interviewer()
+    {
+        return $this->belongsTo(User::class, 'interviewed_by')->select(['id', 'name']);
     }
 
     public function scholarshipStatus()

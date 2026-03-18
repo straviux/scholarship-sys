@@ -865,9 +865,8 @@ const debouncedSaveOrder = () => {
                             <p>No items available to add</p>
                         </div>
                         <div v-for="item in assignableItems" :key="item.value" class="flex items-center">
-                            <input type="checkbox" :id="`item_${item.value}`" :value="item.value"
-                                v-model="selectedItemsToAssign"
-                                class="rounded border-gray-300 text-blue-600 cursor-pointer" />
+                            <Checkbox :inputId="`item_${item.value}`" :value="item.value"
+                                v-model="selectedItemsToAssign" />
                             <label :for="`item_${item.value}`" class="ml-3 cursor-pointer flex-1">
                                 {{ item.label }}
                             </label>

@@ -288,11 +288,8 @@ const displayLoading = computed(() => {
                         Use the <strong>"Open in Tracking System"</strong> button to view OBR details directly.
                     </p>
                     <div class="flex gap-2">
-                        <button @click="window.open('https://tracking.pgpict.com', '_blank')"
-                            class="flex-1 py-2 px-3 bg-yellow-700 text-white rounded hover:bg-yellow-800 text-sm font-medium transition-colors">
-                            <i class="pi pi-external-link mr-2"></i>
-                            Go to Tracking System
-                        </button>
+                        <Button label="Go to Tracking System" icon="pi pi-external-link" severity="warning"
+                            class="flex-1" @click="window.open('https://tracking.pgpict.com', '_blank')" />
                         <a href="/documentation/OBR_SESSION_AUTHENTICATION.md" target="_blank"
                             class="flex-1 py-2 px-3 bg-yellow-100 text-yellow-900 rounded hover:bg-yellow-200 text-sm font-medium transition-colors text-center">
                             <i class="pi pi-question-circle mr-2"></i>
@@ -310,9 +307,8 @@ const displayLoading = computed(() => {
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             OBR Number
                         </label>
-                        <input v-model="testState.searchObrNo" type="text" placeholder="e.g., 200-25-12-24188"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            @keyup.enter="handleSearchOBR" />
+                        <InputText v-model="testState.searchObrNo" type="text" placeholder="e.g., 200-25-12-24188"
+                            class="w-full" @keyup.enter="handleSearchOBR" />
                     </div>
 
                     <!-- Sample OBR Numbers -->
@@ -329,16 +325,10 @@ const displayLoading = computed(() => {
 
                     <!-- Action Buttons -->
                     <div class="grid grid-cols-2 gap-2">
-                        <button @click="handleSearchOBR" :disabled="testState.searchLoading"
-                            class="py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors">
-                            <i v-if="testState.searchLoading" class="pi pi-spin pi-spinner mr-2"></i>
-                            {{ testState.searchLoading ? 'Searching...' : 'Search' }}
-                        </button>
-                        <button @click="openInTrackingSystem"
-                            class="py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium transition-colors">
-                            <i class="pi pi-external-link mr-2"></i>
-                            Open in System
-                        </button>
+                        <Button label="Search" icon="pi pi-search" :loading="testState.searchLoading"
+                            @click="handleSearchOBR" />
+                        <Button label="Open in System" icon="pi pi-external-link" severity="warning"
+                            @click="openInTrackingSystem" />
                     </div>
 
                     <!-- Error -->
@@ -356,76 +346,57 @@ const displayLoading = computed(() => {
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                            <select v-model="testState.filters.type"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="GF">GF</option>
-                                <option value="BUR">BUR</option>
-                                <option value="DV">DV</option>
-                            </select>
+                            <Select v-model="testState.filters.type"
+                                :options="[{ value: 'GF', label: 'GF' }, { value: 'BUR', label: 'BUR' }, { value: 'DV', label: 'DV' }]"
+                                optionLabel="label" optionValue="value" class="w-full" />
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Fiscal Year</label>
-                            <input v-model.number="testState.filters.fiscal_year" type="number"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                            <InputText v-model.number="testState.filters.fiscal_year" type="number" class="w-full" />
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Sort Field</label>
-                            <select v-model="testState.filters.sortField"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="obrDate">OBR Date</option>
-                                <option value="payee">Payee</option>
-                                <option value="amount">Amount</option>
-                            </select>
+                            <Select v-model="testState.filters.sortField"
+                                :options="[{ value: 'obrDate', label: 'OBR Date' }, { value: 'payee', label: 'Payee' }, { value: 'amount', label: 'Amount' }]"
+                                optionLabel="label" optionValue="value" class="w-full" />
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Direction</label>
-                            <select v-model="testState.filters.sortDirection"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="asc">Ascending</option>
-                                <option value="desc">Descending</option>
-                            </select>
+                            <Select v-model="testState.filters.sortDirection"
+                                :options="[{ value: 'asc', label: 'Ascending' }, { value: 'desc', label: 'Descending' }]"
+                                optionLabel="label" optionValue="value" class="w-full" />
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page Size</label>
-                            <input v-model.number="testState.filters.pageSize" type="number"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                            <InputText v-model.number="testState.filters.pageSize" type="number" class="w-full" />
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Page</label>
-                            <input v-model.number="testState.filters.page" type="number"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                            <InputText v-model.number="testState.filters.page" type="number" class="w-full" />
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">OBR Number (optional)</label>
-                        <input v-model="testState.filters.obrNo" type="text" placeholder="e.g., 200-25-12-24188"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                        <InputText v-model="testState.filters.obrNo" type="text" placeholder="e.g., 200-25-12-24188" class="w-full" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Payee (optional)</label>
-                        <input v-model="testState.filters.payee" type="text" placeholder="Payee name"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                        <InputText v-model="testState.filters.payee" type="text" placeholder="Payee name" class="w-full" />
                     </div>
 
                     <!-- Filter Buttons -->
                     <div class="grid grid-cols-2 gap-2">
-                        <button @click="handleFilterSearch" :disabled="testState.filterLoading"
-                            class="py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors">
-                            <i v-if="testState.filterLoading" class="pi pi-spin pi-spinner mr-2"></i>
-                            {{ testState.filterLoading ? 'Filtering...' : 'Apply Filter' }}
-                        </button>
-                        <button @click="openInTrackingSystem"
-                            class="py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium transition-colors">
-                            <i class="pi pi-external-link mr-2"></i>
-                            Open in System
-                        </button>
+                        <Button label="Apply Filter" icon="pi pi-filter" :loading="testState.filterLoading"
+                            @click="handleFilterSearch" />
+                        <Button label="Open in System" icon="pi pi-external-link" severity="warning"
+                            @click="openInTrackingSystem" />
                     </div>
 
                     <!-- Error -->
@@ -444,45 +415,34 @@ const displayLoading = computed(() => {
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Fiscal Year</label>
-                            <input v-model.number="testState.trackingInfoParams.fiscal_year" type="number"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                            <InputText v-model.number="testState.trackingInfoParams.fiscal_year" type="number" class="w-full" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                            <select v-model="testState.trackingInfoParams.type"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="GF">GF</option>
-                                <option value="BUR">BUR</option>
-                                <option value="DV">DV</option>
-                            </select>
+                            <Select v-model="testState.trackingInfoParams.type"
+                                :options="[{ value: 'GF', label: 'GF' }, { value: 'BUR', label: 'BUR' }, { value: 'DV', label: 'DV' }]"
+                                optionLabel="label" optionValue="value" class="w-full" />
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">OBR Number *</label>
-                        <input v-model="testState.trackingInfoParams.obr_no" type="text"
-                            placeholder="e.g., 200-25-12-24188"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                        <InputText v-model="testState.trackingInfoParams.obr_no" type="text"
+                            placeholder="e.g., 200-25-12-24188" class="w-full" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">DV Number *</label>
-                        <input v-model="testState.trackingInfoParams.dv_no" type="text" placeholder="e.g., 25-12-23743"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                        <InputText v-model="testState.trackingInfoParams.dv_no" type="text" placeholder="e.g., 25-12-23743"
+                            class="w-full" />
                     </div>
 
                     <!-- Get Tracking Info Buttons -->
                     <div class="grid grid-cols-2 gap-2">
-                        <button @click="handleGetTrackingInfo" :disabled="testState.trackingInfoLoading"
-                            class="py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors">
-                            <i v-if="testState.trackingInfoLoading" class="pi pi-spin pi-spinner mr-2"></i>
-                            {{ testState.trackingInfoLoading ? 'Loading...' : 'Get Info' }}
-                        </button>
-                        <button @click="openInTrackingSystem"
-                            class="py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium transition-colors">
-                            <i class="pi pi-external-link mr-2"></i>
-                            Open in System
-                        </button>
+                        <Button label="Get Info" icon="pi pi-info-circle" :loading="testState.trackingInfoLoading"
+                            @click="handleGetTrackingInfo" />
+                        <Button label="Open in System" icon="pi pi-external-link" severity="warning"
+                            @click="openInTrackingSystem" />
                     </div>
 
                     <!-- Error -->
@@ -525,14 +485,10 @@ const displayLoading = computed(() => {
 
                         <!-- Copy & Download -->
                         <div class="flex gap-2">
-                            <button @click="copyToClipboard(testState.trackingInfoData.tracking_information)"
-                                class="flex-1 py-2 px-4 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium transition-colors text-sm">
-                                <i class="pi pi-copy mr-2"></i>Copy Data
-                            </button>
-                            <button @click="exportResults"
-                                class="flex-1 py-2 px-4 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 font-medium transition-colors text-sm">
-                                <i class="pi pi-download mr-2"></i>Export
-                            </button>
+                            <Button label="Copy Data" icon="pi pi-copy" severity="info" outlined class="flex-1"
+                                @click="copyToClipboard(testState.trackingInfoData.tracking_information)" />
+                            <Button label="Export" icon="pi pi-download" severity="success" outlined class="flex-1"
+                                @click="exportResults" />
                         </div>
                     </div>
                 </div>
@@ -540,20 +496,13 @@ const displayLoading = computed(() => {
                 <!-- Action Buttons -->
                 <div class="bg-white rounded-lg shadow-md p-4 space-y-2">
                     <div class="flex gap-2">
-                        <button @click="exportResults" :disabled="displayResults.length === 0"
-                            class="flex-1 py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors text-sm">
-                            <i class="pi pi-download mr-2"></i>Export
-                        </button>
-                        <button @click="clearAll"
-                            class="flex-1 py-2 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium transition-colors text-sm">
-                            <i class="pi pi-times mr-2"></i>Clear
-                        </button>
+                        <Button label="Export" icon="pi pi-download" severity="success" class="flex-1"
+                            :disabled="displayResults.length === 0" @click="exportResults" />
+                        <Button label="Clear" icon="pi pi-times" severity="secondary" class="flex-1"
+                            @click="clearAll" />
                     </div>
-                    <button @click="openInTrackingSystem"
-                        class="w-full py-2 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors text-sm">
-                        <i class="pi pi-external-link mr-2"></i>
-                        Open in Tracking System
-                    </button>
+                    <Button label="Open in Tracking System" icon="pi pi-external-link"
+                        class="w-full" severity="help" @click="openInTrackingSystem" />
                 </div>
             </div>
 
@@ -654,10 +603,8 @@ const displayLoading = computed(() => {
                             </div>
                         </div>
 
-                        <button @click="copyToClipboard(displayResults)"
-                            class="w-full mt-4 py-2 px-4 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium transition-colors">
-                            <i class="pi pi-copy mr-2"></i>Copy to Clipboard
-                        </button>
+                        <Button label="Copy to Clipboard" icon="pi pi-copy" severity="info" outlined class="w-full mt-4"
+                            @click="copyToClipboard(displayResults)" />
                     </div>
                 </div>
 

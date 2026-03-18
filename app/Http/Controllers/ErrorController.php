@@ -2,37 +2,39 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
+
 class ErrorController extends Controller
 {
     /**
      * Show the 403 Forbidden page
      */
-    public function forbidden()
+    public function forbidden(): JsonResponse
     {
-        return response('Access Forbidden', 403);
+        return $this->error('Access Forbidden', code: 403);
     }
 
     /**
      * Show the 404 Not Found page
      */
-    public function notFound()
+    public function notFound(string $message = 'Not found'): JsonResponse
     {
-        return response('Page Not Found', 404);
+        return parent::notFound($message);
     }
 
     /**
      * Show the 500 Server Error page
      */
-    public function serverError()
+    public function serverError(): JsonResponse
     {
-        return response('Internal Server Error', 500);
+        return $this->error('Internal Server Error', code: 500);
     }
 
     /**
      * Show the 429 Too Many Requests page
      */
-    public function tooManyRequests()
+    public function tooManyRequests(): JsonResponse
     {
-        return response('Too Many Requests', 429);
+        return $this->error('Too Many Requests', code: 429);
     }
 }

@@ -586,8 +586,8 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Or copy this link:</label>
                         <div class="flex gap-2">
-                            <input type="text" :value="qrCodeData.url" readonly
-                                class="flex-1 px-3 py-2 text-xs border border-gray-300 rounded-md bg-gray-50" />
+                            <InputText type="text" :value="qrCodeData.url" readonly
+                                class="flex-1 text-xs" />
                             <Button icon="pi pi-copy" size="small" @click="copyToClipboard(qrCodeData.url)"
                                 v-tooltip.top="'Copy link'" />
                         </div>

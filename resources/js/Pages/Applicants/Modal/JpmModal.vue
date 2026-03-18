@@ -140,7 +140,7 @@ const saveJpmData = () => {
         jpm_remarks: jpmForm.value.jpm_remarks
     };
 
-    router.put(route('waitinglist.updateJpmStatus', props.profile.profile_id), payload, {
+    router.put(route('applicants.updateJpmStatus', props.profile.profile_id), payload, {
         preserveScroll: true,
         preserveState: false,  // Changed to false to reload fresh data
         onSuccess: () => {

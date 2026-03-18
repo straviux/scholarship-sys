@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ScholarshipProfileRequirement extends Model
 {
+    use HasFactory;
+
     protected $table = 'scholarship_profile_requirements';
 
     protected $fillable = [

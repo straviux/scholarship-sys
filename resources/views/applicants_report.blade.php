@@ -449,7 +449,7 @@
             $courseSeqNum = $courseSequences[$courseName];
 
             // Calculate Queue Numbers (Q#) per Program, School, and Course
-            // These represent the position in the waiting list for each grouping
+            // These represent the position in the applicant list for each grouping
             // Exclude records without valid program/school/course from queue numbers
 
             // Q# for Program (per program by date filed) - only if program exists

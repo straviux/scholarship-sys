@@ -57,6 +57,35 @@ const obrTrackingResult = ref(null);
 const showTrackingHistoryDialog = ref(false);
 const trackingHistoryData = ref(null);
 const loadingTrackingHistory = ref(false);
+const showFileUploadDialog = ref(false);
+const selectedVoucherForUpload = ref(null);
+const uploadedFiles = ref({
+    obr: null,
+    dv_payroll: null,
+    los: null,
+    cheque: null
+});
+const fileInputs = ref({
+    obr: null,
+    dv_payroll: null,
+    los: null,
+    cheque: null
+});
+const uploadingFile = ref(null);
+const voucherDocuments = ref(new Map()); // Map to store documents by voucher ID
+
+// Preview state
+const showPreviewModal = ref(false);
+const previewData = ref(null);
+const previewZoom = ref(100); // Zoom level for preview images
+
+// QR Code state
+const showQrModal = ref(false);
+const qrCodeData = ref(null);
+const qrCountdown = ref('');
+const qrCountdownInterval = ref(null);
+const uploadPollingInterval = ref(null);
+
 const quillToolbar = [
     [{ align: [] }],
     ['bold', 'italic', 'underline'],
@@ -78,6 +107,289 @@ const handleWizardClose = () => {
     currentStep.value = 1;
     selectedScholars.value = [];
     fetchVouchers();
+};
+
+// Open file upload dialog
+const openFileUploadDialog = (voucher) => {
+    selectedVoucherForUpload.value = voucher;
+    uploadedFiles.value = {
+        obr: null,
+        dv_payroll: null,
+        los: null,
+        cheque: null
+    };
+    showFileUploadDialog.value = true;
+
+    // Fetch existing documents for this voucher
+    loadVoucherDocuments(voucher.id);
+};
+
+// Load documents for a specific voucher from the API
+const loadVoucherDocuments = async (voucherId) => {
+    try {
+        const response = await axios.get(`/api/fund-transactions/${voucherId}/documents`);
+        if (response.data.success && response.data.data) {
+            const documentsMap = {};
+            response.data.data.forEach(doc => {
+                documentsMap[doc.document_type] = doc;
+            });
+            voucherDocuments.value.set(voucherId, documentsMap);
+        }
+    } catch (error) {
+        console.error('Error loading documents:', error);
+    }
+};
+
+// Handle file selection
+const handleFileSelect = (docType, event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+        // Validate file size (max 10MB)
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+            toast.add({
+                severity: 'error',
+                summary: 'File Too Large',
+                detail: `Maximum file size is 10MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+                life: 5000
+            });
+            event.target.value = '';
+            return;
+        }
+        uploadedFiles.value[docType] = file;
+        event.target.value = ''; // Reset input
+    }
+};
+
+// Upload file to server
+const uploadFile = async (docType) => {
+    if (!selectedVoucherForUpload.value || !uploadedFiles.value[docType]) return;
+
+    uploadingFile.value = docType;
+    try {
+        const formData = new FormData();
+        formData.append('document', uploadedFiles.value[docType]);
+        formData.append('document_type', docType);
+
+        const response = await axios.post(
+            `/api/fund-transactions/${selectedVoucherForUpload.value.id}/upload-document`,
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            }
+        );
+
+        toast.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: `${docType.toUpperCase()} document uploaded successfully`,
+            life: 3000
+        });
+
+        // Store the uploaded file info in cache
+        if (!voucherDocuments.value.has(selectedVoucherForUpload.value.id)) {
+            voucherDocuments.value.set(selectedVoucherForUpload.value.id, {
+                obr: null,
+                dv_payroll: null,
+                los: null,
+                cheque: null
+            });
+        }
+        const docs = voucherDocuments.value.get(selectedVoucherForUpload.value.id);
+        docs[docType] = response.data.data;
+        uploadedFiles.value[docType] = null;
+    } catch (error) {
+        console.error(`Error uploading ${docType}:`, error);
+        const errorMsg = error.response?.data?.message || error.message;
+        toast.add({
+            severity: 'error',
+            summary: 'Upload Failed',
+            detail: `Failed to upload ${docType}: ${errorMsg}`,
+            life: 5000
+        });
+    } finally {
+        uploadingFile.value = null;
+    }
+};
+
+// Remove uploaded document
+const removeDocument = async (docType) => {
+    if (!selectedVoucherForUpload.value) return;
+
+    try {
+        await axios.delete(
+            `/api/fund-transactions/${selectedVoucherForUpload.value.id}/document/${docType}`
+        );
+
+        toast.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: `${docType.toUpperCase()} document removed successfully`,
+            life: 3000
+        });
+
+        if (voucherDocuments.value.has(selectedVoucherForUpload.value.id)) {
+            const docs = voucherDocuments.value.get(selectedVoucherForUpload.value.id);
+            docs[docType] = null;
+        }
+        uploadedFiles.value[docType] = null;
+    } catch (error) {
+        console.error(`Error removing ${docType}:`, error);
+        const errorMsg = error.response?.data?.message || error.message;
+        toast.add({
+            severity: 'error',
+            summary: 'Remove Failed',
+            detail: `Failed to remove ${docType}: ${errorMsg}`,
+            life: 5000
+        });
+    }
+};
+
+// Download document
+const downloadDocument = (docType) => {
+    if (!selectedVoucherForUpload.value) return;
+    const url = `/api/fund-transactions/${selectedVoucherForUpload.value.id}/document/${docType}/download`;
+    window.open(url, '_blank');
+};
+
+// Preview document
+const previewDocument = async (docType) => {
+    if (!selectedVoucherForUpload.value) return;
+
+    const doc = voucherDocuments.value.get(selectedVoucherForUpload.value.id)?.[docType];
+    if (!doc) {
+        console.error('Document not found:', docType);
+        return;
+    }
+
+    console.log('Preview document:', doc);
+
+    const downloadUrl = doc.download_url || `/api/fund-transactions/${selectedVoucherForUpload.value.id}/document/${docType}/download`;
+
+    previewData.value = {
+        docType: docType,
+        filename: doc.filename,
+        mimeType: doc.mime_type,
+        url: downloadUrl,
+        path: downloadUrl // For images and PDFs, use the download URL
+    };
+
+    previewZoom.value = 100; // Reset zoom when opening new preview
+    console.log('Preview data:', previewData.value);
+    showPreviewModal.value = true;
+};
+
+// Show QR code for mobile upload
+const showQrCode = async (voucher, docType = null) => {
+    try {
+        console.log('Generating QR code for voucher:', voucher, 'docType:', docType);
+        const response = await axios.post(`/api/fund-transactions/${voucher.id}/generate-qr`, {
+            doc_type: docType
+        });
+        console.log('QR Code Response:', response.data);
+        console.log('QR Code SVG Type:', typeof response.data.qr_code_svg);
+        console.log('QR Code SVG Value:', response.data.qr_code_svg);
+
+        if (!response.data.qr_code_svg) {
+            throw new Error('No QR code SVG in response');
+        }
+
+        const qrSvg = response.data.qr_code_svg;
+
+        qrCodeData.value = {
+            qrCode: qrSvg,
+            url: response.data.url,
+            expiresAt: response.data.expires_at,
+            voucher: voucher,
+            docType: docType
+        };
+        console.log('QR Code Data Set:', qrCodeData.value);
+        showQrModal.value = true;
+        startQrCountdown();
+    } catch (error) {
+        console.error('Failed to generate QR code:', error);
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: error.response?.data?.message || error.message || 'Failed to generate QR code',
+            life: 5000
+        });
+    }
+};
+
+// Start countdown timer for QR code expiration
+const startQrCountdown = () => {
+    if (qrCountdownInterval.value) {
+        clearInterval(qrCountdownInterval.value);
+    }
+
+    const updateCountdown = () => {
+        if (!qrCodeData.value) return;
+
+        const now = new Date();
+        const expiresAt = new Date(qrCodeData.value.expiresAt);
+        const diff = expiresAt - now;
+
+        if (diff <= 0) {
+            qrCountdown.value = 'EXPIRED';
+            clearInterval(qrCountdownInterval.value);
+            return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        if (days > 0) {
+            qrCountdown.value = `${days}d ${hours}h`;
+        } else if (hours > 0) {
+            qrCountdown.value = `${hours}h ${minutes}m`;
+        } else {
+            qrCountdown.value = `${minutes}m ${seconds}s`;
+        }
+    };
+
+    updateCountdown();
+    qrCountdownInterval.value = setInterval(updateCountdown, 1000);
+};
+
+// Copy URL to clipboard
+const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+        toast.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'URL copied to clipboard',
+            life: 2000
+        });
+    }).catch(() => {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to copy to clipboard',
+            life: 3000
+        });
+    });
+};
+
+// Start polling for uploads while QR modal is open
+const startUploadPolling = () => {
+    uploadPollingInterval.value = setInterval(() => {
+        if (showQrModal.value && qrCodeData.value?.voucher?.id) {
+            fetchVouchers();
+        }
+    }, 3000);
+};
+
+// Stop polling when modal closes
+const stopUploadPolling = () => {
+    if (uploadPollingInterval.value) {
+        clearInterval(uploadPollingInterval.value);
+        uploadPollingInterval.value = null;
+    }
 };
 
 const handleScholarSelection = (scholars, type) => {
@@ -484,6 +796,11 @@ const openContextMenu = (event, voucher) => {
             label: 'Edit',
             icon: 'pi pi-pencil',
             command: () => editVoucher(voucher.id)
+        },
+        {
+            label: 'Upload Documents',
+            icon: 'pi pi-upload',
+            command: () => openFileUploadDialog(voucher)
         },
         {
             label: 'Add/Edit Remarks',
@@ -965,6 +1282,24 @@ watch(
     }
 );
 
+// Handle QR modal show/hide - manage countdown and polling
+watch(
+    () => showQrModal.value,
+    (newValue) => {
+        if (newValue) {
+            // Modal opened - start polling for uploads
+            startUploadPolling();
+        } else {
+            // Modal closed - cleanup countdown and polling
+            if (qrCountdownInterval.value) {
+                clearInterval(qrCountdownInterval.value);
+                qrCountdownInterval.value = null;
+            }
+            stopUploadPolling();
+        }
+    }
+);
+
 // Fetch on mount
 onMounted(() => {
     fetchVouchers();
@@ -994,11 +1329,7 @@ onMounted(() => {
                     </div>
                 </template>
                 <template #end>
-                    <button @click="handleCreateVoucher"
-                        class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer text-sm">
-                        <i class="pi pi-plus mr-2 text-xs"></i>
-                        <span>Create Fund Transaction</span>
-                    </button>
+                    <Button label="Create Fund Transaction" icon="pi pi-plus" @click="handleCreateVoucher" />
                 </template>
             </Toolbar>
 
@@ -1007,84 +1338,78 @@ onMounted(() => {
             <div class="bg-white rounded-lg shadow p-4 sm:p-6 mt-8 overflow-hidden">
                 <div class="flex flex-col gap-4 mb-4">
                     <div class="w-full">
-                        <input v-model="searchQuery" type="text" placeholder="Search voucher, payee, or scholar..."
-                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:border-transparent" />
+                        <InputText v-model="searchQuery" type="text" placeholder="Search voucher, payee, or scholar..."
+                            class="w-full" />
                     </div>
                     <div class="flex flex-col sm:flex-row gap-3">
                         <div class="flex flex-wrap gap-3 items-center">
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="userFilter" type="radio" value=""
-                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
+                                <RadioButton v-model="userFilter" name="userFilter" value="" inputId="uf-all" />
                                 <span class="text-sm text-gray-700">All Records</span>
                                 <Badge :value="totalRecordsCount" severity="secondary" />
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="userFilter" type="radio" value="my-records"
-                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
+                                <RadioButton v-model="userFilter" name="userFilter" value="my-records"
+                                    inputId="uf-my" />
                                 <span class="text-sm text-gray-700">My Records</span>
                                 <Badge :value="myRecordsCount" severity="secondary" />
                             </label>
                             <span class="text-gray-300 mx-1">|</span>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="statusFilter" type="radio" value=""
-                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
+                                <RadioButton v-model="statusFilter" name="statusFilter" value="" inputId="sf-all" />
                                 <span class="text-sm text-gray-700">All Status</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="statusFilter" type="radio" value="On Process"
-                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
+                                <RadioButton v-model="statusFilter" name="statusFilter" value="On Process"
+                                    inputId="sf-process" />
                                 <span class="text-sm text-gray-700">On Process</span>
                                 <Badge :value="statusCounts['On Process']" severity="secondary" />
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="statusFilter" type="radio" value="No OBR"
-                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
+                                <RadioButton v-model="statusFilter" name="statusFilter" value="No OBR"
+                                    inputId="sf-noobr" />
                                 <span class="text-sm text-gray-700">No OBR</span>
                                 <Badge :value="statusCounts['No OBR']" severity="secondary" />
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="statusFilter" type="radio" value="LOA"
-                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
+                                <RadioButton v-model="statusFilter" name="statusFilter" value="LOA" inputId="sf-loa" />
                                 <span class="text-sm text-gray-700">LOA</span>
                                 <Badge :value="statusCounts['LOA']" severity="secondary" />
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="statusFilter" type="radio" value="Irregular"
-                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
+                                <RadioButton v-model="statusFilter" name="statusFilter" value="Irregular"
+                                    inputId="sf-irregular" />
                                 <span class="text-sm text-gray-700">Irregular</span>
                                 <Badge :value="statusCounts['Irregular']" severity="secondary" />
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="statusFilter" type="radio" value="Transferred"
-                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
+                                <RadioButton v-model="statusFilter" name="statusFilter" value="Transferred"
+                                    inputId="sf-transferred" />
                                 <span class="text-sm text-gray-700">Transferred</span>
                                 <Badge :value="statusCounts['Transferred']" severity="secondary" />
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="statusFilter" type="radio" value="Claimed"
-                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
+                                <RadioButton v-model="statusFilter" name="statusFilter" value="Claimed"
+                                    inputId="sf-claimed" />
                                 <span class="text-sm text-gray-700">Claimed</span>
                                 <Badge :value="statusCounts['Claimed']" severity="secondary" />
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="statusFilter" type="radio" value="Paid"
-                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
+                                <RadioButton v-model="statusFilter" name="statusFilter" value="Paid"
+                                    inputId="sf-paid" />
                                 <span class="text-sm text-gray-700">Paid</span>
                                 <Badge :value="statusCounts['Paid']" severity="secondary" />
                             </label>
 
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="statusFilter" type="radio" value="Denied"
-                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-2 focus:ring-gray-500">
+                                <RadioButton v-model="statusFilter" name="statusFilter" value="Denied"
+                                    inputId="sf-denied" />
                                 <span class="text-sm text-gray-700">Denied</span>
                                 <Badge :value="statusCounts['Denied']" severity="secondary" />
                             </label>
                         </div>
-                        <button @click="fetchVouchers" :disabled="loading"
-                            class="inline-flex items-center justify-center px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50 whitespace-nowrap">
-                            <i class="pi pi-refresh mr-2 text-xs" :class="{ 'animate-spin': loading }"></i>
-                            <span class="hidden sm:inline">Refresh</span>
-                        </button>
+                        <Button label="Refresh" icon="pi pi-refresh" severity="secondary" @click="fetchVouchers"
+                            :disabled="loading" :loading="loading" />
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -1181,7 +1506,7 @@ onMounted(() => {
                                 </td>
                                 <td class="px-2 sm:px-6 py-4 text-sm font-medium text-gray-900">{{
                                     formatAmount(calculateTotalAmount(voucher))
-                                    }}</td>
+                                }}</td>
                                 <td class="px-2 sm:px-6 py-4 text-xs font-semibold text-gray-600">{{
                                     voucher.creator?.name
                                     || '---' }}
@@ -1189,11 +1514,8 @@ onMounted(() => {
                                 <td class="px-2 sm:px-6 py-4 text-xs text-gray-600">{{ formatDate(voucher.created_at) }}
                                 </td>
                                 <td class="px-2 sm:px-6 py-4 text-sm">
-                                    <button @click="(e) => openContextMenu(e, voucher)"
-                                        class="text-gray-500 hover:text-gray-700 font-medium text-lg cursor-pointer"
-                                        title="Actions">
-                                        <i class="pi pi-ellipsis-v"></i>
-                                    </button>
+                                    <Button icon="pi pi-ellipsis-v" @click="(e) => openContextMenu(e, voucher)" text
+                                        rounded size="small" v-tooltip="'Actions'" />
                                 </td>
                             </tr>
                         </tbody>
@@ -1293,7 +1615,7 @@ onMounted(() => {
                 <div class="bg-white border border-gray-200 rounded p-4">
                     <p class="text-sm font-semibold text-gray-900 mb-2">Scholars ({{ selectedVoucher.scholar_ids?.length
                         || 0
-                    }})</p>
+                        }})</p>
                     <div v-if="loadingScholars" class="text-center py-2">
                         <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span class="text-xs">Loading...</span>
                     </div>
@@ -1302,7 +1624,7 @@ onMounted(() => {
                         <div v-for="(scholar, index) in scholarsDetails" :key="index"
                             class="text-xs text-gray-700 py-1 px-2 bg-gray-50 rounded flex items-center justify-between gap-2">
                             <span class="font-medium">{{ index + 1 }}. {{ scholar.first_name }} {{ scholar.last_name
-                            }}</span>
+                                }}</span>
                             <span class="text-gray-600 whitespace-nowrap">
                                 <span v-if="scholar.course_name">{{ scholar.course_name }}</span>
                                 <span v-if="scholar.year_level" class="ml-1">| {{
@@ -1310,7 +1632,7 @@ onMounted(() => {
                                         scholar.year_level
                                 }}</span>
                                 <span v-if="scholar.academic_year" class="ml-1">| {{ scholar.academic_year
-                                }}</span>
+                                    }}</span>
                                 <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                             </span>
                         </div>
@@ -1361,9 +1683,246 @@ onMounted(() => {
                 <div v-else-if="selectedVoucher" class="border-t pt-4 text-xs text-gray-500">
                     <p>No OBR info available</p>
                 </div>
+
+                <!-- File Upload Section -->
+                <div class="border-t pt-4">
+                    <p class="text-sm font-semibold text-gray-900 mb-3">Documents</p>
+                    <Button label="Upload Documents" @click="openFileUploadDialog(selectedVoucher)" class="w-full"
+                        severity="warning">
+                        <template #icon>
+                            <i class="pi pi-upload"></i>
+                        </template>
+                    </Button>
+                </div>
             </div>
             <template #footer>
                 <Button label="Close" severity="secondary" @click="showViewDialog = false" outlined />
+            </template>
+        </Dialog>
+
+        <!-- File Upload Dialog -->
+        <Dialog v-model:visible="showFileUploadDialog" modal header="Upload Documents" class="w-11/12 sm:max-w-2xl"
+            :style="{ maxWidth: '700px' }">
+            <div v-if="selectedVoucherForUpload" class="space-y-6">
+                <div class="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+                    <p class="text-xs font-medium text-blue-900 mb-1">VOUCHER</p>
+                    <p class="text-sm font-semibold text-blue-900">{{ selectedVoucherForUpload.voucher_number }}</p>
+                    <p class="text-xs text-blue-800 mt-1">{{ selectedVoucherForUpload.payee_name }}</p>
+                </div>
+
+                <p class="text-sm text-gray-600">Upload up to four documents: OBR, DV/Payroll, LOS, and Cheque.
+                    Maximum 10MB per file.</p>
+
+                <!-- OBR Document -->
+                <div class="border rounded-lg p-4 bg-gray-50">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-file-pdf text-red-600 text-lg"></i>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">OBR</p>
+                                <p class="text-xs text-gray-600">Obligation Request</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input ref="fileInputs.obr" type="file" accept=".pdf,.doc,.docx"
+                                @change="(e) => handleFileSelect('obr', e)" style="display: none;" />
+                            <Button icon="pi pi-folder-open" @click="$refs['fileInputs.obr'][0]?.click()"
+                                severity="info" text size="small" v-tooltip="'Select File'" />
+                            <Button icon="pi pi-qrcode" @click="showQrCode(selectedVoucherForUpload, 'obr')"
+                                severity="info" text size="small" v-tooltip="'QR Code for OBR'" />
+                            <Badge v-if="uploadedFiles.obr || voucherDocuments.get(selectedVoucherForUpload.id)?.obr"
+                                value="✓" severity="success" />
+                        </div>
+                    </div>
+                    <div v-if="uploadedFiles.obr"
+                        class="mb-3 flex items-center justify-between bg-white p-2 rounded border border-gray-200">
+                        <p class="text-xs text-gray-700 flex-1 truncate">{{ uploadedFiles.obr.name }}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <Button v-if="uploadedFiles.obr || voucherDocuments.get(selectedVoucherForUpload.id)?.obr"
+                            @click="uploadFile('obr')" icon="pi pi-cloud-upload" severity="info" text
+                            :loading="uploadingFile === 'obr'" />
+                        <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.obr"
+                            @click="previewDocument('obr')" icon="pi pi-eye" severity="warning" text
+                            v-tooltip="'Preview'" />
+                        <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.obr"
+                            @click="downloadDocument('obr')" icon="pi pi-download" severity="success" text />
+                        <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.obr"
+                            @click="removeDocument('obr')" icon="pi pi-trash" severity="danger" text />
+                    </div>
+                </div>
+
+                <!-- DV/Payroll Document -->
+                <div class="border rounded-lg p-4 bg-gray-50">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-file-pdf text-red-600 text-lg"></i>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">DV/Payroll</p>
+                                <p class="text-xs text-gray-600">Disbursement Voucher or Payroll</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input ref="fileInputs.dv_payroll" type="file" accept=".pdf,.doc,.docx"
+                                @change="(e) => handleFileSelect('dv_payroll', e)" style="display: none;" />
+                            <Button icon="pi pi-folder-open" @click="$refs['fileInputs.dv_payroll'][0]?.click()"
+                                severity="info" text size="small" v-tooltip="'Select File'" />
+                            <Button icon="pi pi-qrcode" @click="showQrCode(selectedVoucherForUpload, 'dv_payroll')"
+                                severity="info" text size="small" v-tooltip="'QR Code for DV/Payroll'" />
+                            <Badge
+                                v-if="uploadedFiles.dv_payroll || voucherDocuments.get(selectedVoucherForUpload.id)?.dv_payroll"
+                                value="✓" severity="success" />
+                        </div>
+                    </div>
+                    <div v-if="uploadedFiles.dv_payroll"
+                        class="mb-3 flex items-center justify-between bg-white p-2 rounded border border-gray-200">
+                        <p class="text-xs text-gray-700 flex-1 truncate">{{ uploadedFiles.dv_payroll.name }}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <Button
+                            v-if="uploadedFiles.dv_payroll || voucherDocuments.get(selectedVoucherForUpload.id)?.dv_payroll"
+                            @click="uploadFile('dv_payroll')" icon="pi pi-cloud-upload" severity="info" text
+                            :loading="uploadingFile === 'dv_payroll'" />
+                        <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.dv_payroll"
+                            @click="previewDocument('dv_payroll')" icon="pi pi-eye" severity="warning" text
+                            v-tooltip="'Preview'" />
+                        <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.dv_payroll"
+                            @click="downloadDocument('dv_payroll')" icon="pi pi-download" severity="success" text />
+                        <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.dv_payroll"
+                            @click="removeDocument('dv_payroll')" icon="pi pi-trash" severity="danger" text />
+                    </div>
+                </div>
+
+                <!-- LOS Document -->
+                <div class="border rounded-lg p-4 bg-gray-50">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-file-pdf text-red-600 text-lg"></i>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">List of Scholars</p>
+                                <p class="text-xs text-gray-600">List of Scholars</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input ref="fileInputs.los" type="file" accept=".pdf,.doc,.docx"
+                                @change="(e) => handleFileSelect('los', e)" style="display: none;" />
+                            <Button icon="pi pi-folder-open" @click="$refs['fileInputs.los'][0]?.click()"
+                                severity="info" text size="small" v-tooltip="'Select File'" />
+                            <Button icon="pi pi-qrcode" @click="showQrCode(selectedVoucherForUpload, 'los')"
+                                severity="info" text size="small" v-tooltip="'QR Code for LOS'" />
+                            <Badge v-if="uploadedFiles.los || voucherDocuments.get(selectedVoucherForUpload.id)?.los"
+                                value="✓" severity="success" />
+                        </div>
+                    </div>
+                    <div v-if="uploadedFiles.los"
+                        class="mb-3 flex items-center justify-between bg-white p-2 rounded border border-gray-200">
+                        <p class="text-xs text-gray-700 flex-1 truncate">{{ uploadedFiles.los.name }}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <Button v-if="uploadedFiles.los || voucherDocuments.get(selectedVoucherForUpload.id)?.los"
+                            @click="uploadFile('los')" icon="pi pi-cloud-upload" severity="info" text
+                            :loading="uploadingFile === 'los'" />
+                        <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.los"
+                            @click="previewDocument('los')" icon="pi pi-eye" severity="warning" text
+                            v-tooltip="'Preview'" />
+                        <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.los"
+                            @click="downloadDocument('los')" icon="pi pi-download" severity="success" text />
+                        <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.los"
+                            @click="removeDocument('los')" icon="pi pi-trash" severity="danger" text />
+                    </div>
+                </div>
+
+                <!-- Cheque Document -->
+                <div class="border rounded-lg p-4 bg-gray-50">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-file-pdf text-red-600 text-lg"></i>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Cheques</p>
+                                <p class="text-xs text-gray-600">Cheque Copy or Payment Proof</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input ref="fileInputs.cheque" type="file" accept=".pdf,.doc,.docx"
+                                @change="(e) => handleFileSelect('cheque', e)" style="display: none;" />
+                            <Button icon="pi pi-folder-open" @click="$refs['fileInputs.cheque'][0]?.click()"
+                                severity="info" text size="small" v-tooltip="'Select File'" />
+                            <Button icon="pi pi-qrcode" @click="showQrCode(selectedVoucherForUpload, 'cheque')"
+                                severity="info" text size="small" v-tooltip="'QR Code for Cheque'" />
+                            <Badge
+                                v-if="uploadedFiles.cheque || voucherDocuments.get(selectedVoucherForUpload.id)?.cheque"
+                                value="✓" severity="success" />
+                        </div>
+                    </div>
+                    <div v-if="uploadedFiles.cheque"
+                        class="mb-3 flex items-center justify-between bg-white p-2 rounded border border-gray-200">
+                        <p class="text-xs text-gray-700 flex-1 truncate">{{ uploadedFiles.cheque.name }}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <Button v-if="uploadedFiles.cheque || voucherDocuments.get(selectedVoucherForUpload.id)?.cheque"
+                            @click="uploadFile('cheque')" icon="pi pi-cloud-upload" severity="info" text
+                            :loading="uploadingFile === 'cheque'" />
+                        <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.cheque"
+                            @click="previewDocument('cheque')" icon="pi pi-eye" severity="warning" text
+                            v-tooltip="'Preview'" />
+                        <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.cheque"
+                            @click="downloadDocument('cheque')" icon="pi pi-download" severity="success" text />
+                        <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.cheque"
+                            @click="removeDocument('cheque')" icon="pi pi-trash" severity="danger" text />
+                    </div>
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Close" severity="secondary" @click="showFileUploadDialog = false" outlined />
+            </template>
+        </Dialog>
+
+        <!-- QR Code Modal -->
+        <Dialog v-model:visible="showQrModal" modal header="Mobile Upload QR Code" class="w-11/12 sm:max-w-2xl"
+            :style="{ maxWidth: '600px' }">
+            <div v-if="qrCodeData" class="text-center space-y-4">
+                <!-- QR Code -->
+                <div class="bg-white p-6 rounded-lg border-2 border-gray-200 inline-block">
+                    <div v-if="qrCodeData.qrCode" v-html="qrCodeData.qrCode"></div>
+                    <div v-else class="text-gray-500 py-8">
+                        <i class="pi pi-exclamation-triangle text-2xl"></i>
+                        <p class="text-sm mt-2">QR code could not be generated</p>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="text-left space-y-3">
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                        <p class="text-sm font-semibold text-gray-900 mb-2">
+                            <i class="pi pi-info-circle mr-2"></i>How to use:
+                        </p>
+                        <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                            <li>Scan this QR code with your mobile device</li>
+                            <li>Select document type (OBR, DV/Payroll, LOS, or Cheque)</li>
+                            <li>Take a photo or select from gallery</li>
+                            <li>Upload the document</li>
+                            <li>Document appears in the system automatically</li>
+                        </ol>
+                    </div>
+
+                    <!-- Expiration Notice -->
+                    <div class="bg-amber-50 border border-amber-200 rounded p-3">
+                        <p class="text-xs text-amber-800">
+                            <i class="pi pi-info-circle mr-1"></i>
+                            <span class="font-semibold">Expires in: {{ qrCountdown }}</span>
+                        </p>
+                    </div>
+
+                    <!-- Copy URL -->
+                    <div class="flex gap-2">
+                        <InputText type="text" :value="qrCodeData.url" readonly class="flex-1" />
+                        <Button icon="pi pi-copy" size="small" @click="copyToClipboard(qrCodeData.url)"
+                            v-tooltip="'Copy upload link'" />
+                    </div>
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Close" severity="secondary" @click="showQrModal = false" outlined />
             </template>
         </Dialog>
 
@@ -1382,9 +1941,7 @@ onMounted(() => {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-900 mb-2">Remarks</label>
-                    <textarea v-model="remarksForm.remarks" rows="6"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                        placeholder="Enter remarks..." />
+                    <Textarea v-model="remarksForm.remarks" rows="6" class="w-full" placeholder="Enter remarks..." />
                 </div>
             </div>
             <template #footer>
@@ -1410,8 +1967,7 @@ onMounted(() => {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-900 mb-2">Remarks (Optional)</label>
-                    <textarea v-model="statusForm.remarks" rows="4"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    <Textarea v-model="statusForm.remarks" rows="4" class="w-full"
                         placeholder="Add or update remarks..." />
                 </div>
             </div>
@@ -1441,20 +1997,17 @@ onMounted(() => {
                 <div v-if="!obrTrackingResult">
                     <div>
                         <label class="block text-sm font-medium text-gray-900 mb-2">Fiscal Year *</label>
-                        <input v-model.number="obrTrackingForm.fiscal_year" type="number"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        <InputText v-model.number="obrTrackingForm.fiscal_year" type="number" class="w-full"
                             placeholder="e.g., 2025" />
                     </div>
                     <div class="mt-4">
                         <label class="block text-sm font-medium text-gray-900 mb-2">OBR Number *</label>
-                        <input v-model="obrTrackingForm.obr_no" type="text"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        <InputText v-model="obrTrackingForm.obr_no" type="text" class="w-full"
                             placeholder="e.g., 200-25-12-24188" />
                     </div>
                     <div class="mt-4">
                         <label class="block text-sm font-medium text-gray-900 mb-2">DV Number (Optional)</label>
-                        <input v-model="obrTrackingForm.dv_no" type="text"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        <InputText v-model="obrTrackingForm.dv_no" type="text" class="w-full"
                             placeholder="e.g., 25-12-23743" />
                         <p class="text-xs text-gray-500 mt-1">If not provided, it will be auto-fetched from the OBR</p>
                     </div>
@@ -1518,6 +2071,78 @@ onMounted(() => {
 
             <template #footer>
                 <Button label="Close" severity="secondary" @click="showTrackingHistoryDialog = false" />
+            </template>
+        </Dialog>
+
+        <!-- Document Preview Modal -->
+        <Dialog v-model:visible="showPreviewModal" modal header="Document Preview" class="w-11/12 sm:max-w-4xl"
+            :style="{ maxWidth: '1000px', maxHeight: '90vh' }" :maximizable="true">
+            <div v-if="previewData" class="space-y-4 h-full">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-gray-900">{{ previewData.filename }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Document Type: {{ previewData.docType }} | {{
+                            previewData.mimeType
+                            }}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <!-- Zoom Controls for Images -->
+                        <div v-if="previewData.mimeType && previewData.mimeType.startsWith('image/')"
+                            class="flex items-center gap-2 bg-gray-100 rounded px-2 py-1">
+                            <Button icon="pi pi-minus" @click="previewZoom -= 10" :disabled="previewZoom <= 50" text
+                                size="small" />
+                            <span class="text-xs font-medium w-12 text-center">{{ previewZoom }}%</span>
+                            <Button icon="pi pi-plus" @click="previewZoom += 10" :disabled="previewZoom >= 200" text
+                                size="small" />
+                            <Button icon="pi pi-home" @click="previewZoom = 100" text size="small"
+                                v-tooltip="'Reset Zoom'" />
+                        </div>
+                        <a :href="previewData.url" download :download="previewData.filename"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                            <i class="pi pi-download text-sm"></i>
+                            <span>Download</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Image Preview with Scroll -->
+                <div v-if="previewData.mimeType && previewData.mimeType.startsWith('image/')"
+                    class="overflow-auto border border-gray-200 rounded-lg bg-gray-50 p-4"
+                    style="max-height: calc(90vh - 200px)">
+                    <div class="flex justify-center">
+                        <img :src="previewData.path" :alt="previewData.filename"
+                            class="rounded-lg border border-gray-200"
+                            :style="{ width: previewZoom + '%', maxWidth: 'none' }" @error="() => {
+                                console.error('Failed to load image:', previewData.path);
+                                toast.add({
+                                    severity: 'warn',
+                                    summary: 'Image Load Error',
+                                    detail: 'Could not display image. Try downloading instead.',
+                                    life: 3000
+                                });
+                            }">
+                    </div>
+                </div>
+
+                <!-- PDF Preview -->
+                <div v-else-if="previewData.mimeType && previewData.mimeType.includes('pdf')" class="space-y-2">
+                    <p class="text-xs text-gray-600">PDFs open in a new window for best viewing experience</p>
+                    <Button label="Open PDF in Viewer" @click="() => window.open(previewData.url, '_blank')"
+                        icon="pi pi-external-link" class="w-full" severity="info" />
+                    <p class="text-xs text-gray-500">Or download to view on your computer</p>
+                </div>
+
+                <!-- Other File Types -->
+                <div v-else class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+                    <i class="pi pi-file text-5xl text-gray-400 mb-4"></i>
+                    <p class="text-sm text-gray-600 mb-4">Preview not available for this file type</p>
+                    <p class="text-xs text-gray-500 mb-6">{{ previewData.mimeType || 'File type unknown' }}</p>
+                    <Button label="Download File" @click="() => window.open(previewData.url, '_blank')"
+                        icon="pi pi-download" class="w-full" />
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Close" severity="secondary" @click="showPreviewModal = false" />
             </template>
         </Dialog>
 

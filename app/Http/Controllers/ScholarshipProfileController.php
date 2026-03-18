@@ -38,7 +38,7 @@ class ScholarshipProfileController extends Controller
         }
 
         $validated = $request->validated();
-        // is_on_waiting_list is now managed through scholarship_records.application_status
+        // is_on_waiting_list is now managed through scholarship_records.application_status (pending status)
         $new_profile = ScholarshipProfile::create($validated);
 
         // Log profile creation
@@ -374,18 +374,17 @@ class ScholarshipProfileController extends Controller
         $request->validate([
             'first_name' => 'required|string',
             'last_name' => 'required|string',
-            'middle_name' => 'nullable|string',
         ]);
 
         $firstName = trim($request->input('first_name'));
         $lastName = trim($request->input('last_name'));
 
-        // ✅ OPTIMIZED: Use simple string comparison with COLLATE for case-insensitive matching
-        // This works better with indexes and is more reliable
         try {
-            $exists = ScholarshipProfile::whereRaw('LOWER(TRIM(first_name)) = LOWER(?)', [$firstName])
+            $matches = ScholarshipProfile::whereRaw('LOWER(TRIM(first_name)) = LOWER(?)', [$firstName])
                 ->whereRaw('LOWER(TRIM(last_name)) = LOWER(?)', [$lastName])
-                ->exists();
+                ->select('profile_id', 'first_name', 'middle_name', 'last_name', 'extension_name', 'contact_no', 'municipality', 'barangay')
+                ->limit(20)
+                ->get();
         } catch (\Exception $e) {
             Log::error('Name validation error:', [
                 'error' => $e->getMessage(),
@@ -394,20 +393,16 @@ class ScholarshipProfileController extends Controller
             ]);
             return response()->json([
                 'exists' => false,
+                'matches' => [],
                 'message' => 'Name validation check failed. Please try again.'
             ], 500);
         }
 
-        Log::info('Name validation check', [
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'exists' => $exists
-        ]);
-
         return response()->json([
-            'exists' => $exists,
-            'message' => $exists
-                ? 'A record with this name (first and last name) already exists in the system.'
+            'exists' => $matches->isNotEmpty(),
+            'matches' => $matches,
+            'message' => $matches->isNotEmpty()
+                ? 'Existing records with the same name were found.'
                 : 'Name is available.'
         ]);
     }
@@ -1045,7 +1040,7 @@ class ScholarshipProfileController extends Controller
         }
 
         $request->validate([
-            'unified_status' => 'required|string|in:pending,approved,denied,active,completed,withdrawn,loa,suspended,unknown',
+            'unified_status' => 'required|string|in:pending,interviewed,approved,denied,active,completed,withdrawn,loa,suspended,unknown',
         ]);
 
         try {
@@ -1064,15 +1059,51 @@ class ScholarshipProfileController extends Controller
     }
 
     /**
-     * Display reviewed applicants (marked as approved/denied during review phase)
+     * Submit interview assessment for a scholarship record
      */
-    public function showReviewedApplicants(Request $request)
+    public function submitInterview(Request $request, ScholarshipRecord $record)
     {
         if (!Gate::allows('applicants.approve')) {
-            abort(403, 'You do not have permission to view reviewed applicants.');
+            abort(403, 'Unauthorized action.');
         }
 
-        $query = ScholarshipRecord::whereIn('unified_status', ['approved', 'denied'])
+        $validated = $request->validate([
+            'academic_potential' => 'required|string|in:excellent,good,fair',
+            'financial_need_level' => 'required|string|in:high,moderate,low',
+            'communication_skills' => 'required|string|in:excellent,good,fair',
+            'recommendation' => 'required|string|in:recommended,further_evaluation,not_recommended',
+            'interview_remarks' => 'nullable|string|max:2000',
+        ]);
+
+        try {
+            $record->update([
+                ...$validated,
+                'unified_status' => 'interviewed',
+                'interviewed_by' => Auth::id(),
+                'interviewed_at' => now(),
+            ]);
+
+            return response()->json(['message' => 'Interview assessment submitted successfully.']);
+        } catch (\Exception $e) {
+            Log::error('Interview assessment failed', [
+                'record_id' => $record->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json(['message' => 'Failed to submit interview assessment.'], 500);
+        }
+    }
+
+    /**
+     * Display interviewed applicants for approval management
+     */
+    public function showInterviewedApplicants(Request $request)
+    {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'You do not have permission to view interviewed applicants.');
+        }
+
+        $query = ScholarshipRecord::where('unified_status', 'interviewed')
             ->with([
                 'profile' => function ($q) {
                     $q->select('profile_id', 'first_name', 'last_name', 'middle_name', 'contact_no');
@@ -1085,12 +1116,13 @@ class ScholarshipProfileController extends Controller
                 },
                 'school' => function ($q) {
                     $q->select('schools.id', 'schools.name', 'schools.shortname');
-                }
+                },
+                'interviewer'
             ]);
 
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('unified_status', $request->status);
+        // Filter by recommendation
+        if ($request->filled('recommendation')) {
+            $query->where('recommendation', $request->recommendation);
         }
 
         // Filter by name
@@ -1110,11 +1142,11 @@ class ScholarshipProfileController extends Controller
             $query->where('program_id', $request->program);
         }
 
-        // Sort by date filed (newest first)
-        $reviewed = $query->orderBy('date_filed', 'desc')->get();
+        // Sort by interview date (newest first)
+        $reviewed = $query->orderBy('interviewed_at', 'desc')->get();
 
-        return Inertia::render('ReviewedApplicants/Index', [
-            'reviewed_applicants' => $reviewed,
+        return Inertia::render('InterviewedApplicants/Index', [
+            'interviewed_applicants' => $reviewed,
             'decline_reasons' => config('scholarship.decline_reasons'),
         ]);
     }

@@ -198,9 +198,10 @@ class ScholarshipApprovalService
                 // Create system user if it doesn't exist
                 $systemUser = User::create([
                     'name' => 'System Auto-Approval',
+                    'username' => 'system_auto_approval',
                     'email' => 'system@scholarship.local',
                     'password' => bcrypt('system_auto_approval_' . uniqid()),
-                    'email_verified_at' => now()
+                    'user_verified_at' => now()
                 ]);
             }
 

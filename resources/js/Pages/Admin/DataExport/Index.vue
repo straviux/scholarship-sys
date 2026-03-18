@@ -14,12 +14,7 @@
                         <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-700">
                             <div class="flex">
                                 <div class="flex-shrink-0">
-                                    <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd"
-                                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                                            clip-rule="evenodd" />
-                                    </svg>
+                                    <i class="pi pi-info-circle text-blue-400"></i>
                                 </div>
                                 <div class="ml-3">
                                     <p class="text-sm">
@@ -42,13 +37,9 @@
                                     <label for="program" class="block text-sm font-medium text-gray-700 mb-1">
                                         Scholarship Program
                                     </label>
-                                    <select id="program" v-model="filters.program_id"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                        <option :value="null">All Programs</option>
-                                        <option v-for="program in programs" :key="program.id" :value="program.id">
-                                            {{ program.name }}
-                                        </option>
-                                    </select>
+                                    <Select id="program" v-model="filters.program_id"
+                                        :options="[{ id: null, name: 'All Programs' }, ...programs]" optionLabel="name"
+                                        optionValue="id" placeholder="All Programs" class="w-full" />
                                 </div>
 
                                 <!-- School Filter -->
@@ -56,13 +47,9 @@
                                     <label for="school" class="block text-sm font-medium text-gray-700 mb-1">
                                         School
                                     </label>
-                                    <select id="school" v-model="filters.school_id"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                        <option :value="null">All Schools</option>
-                                        <option v-for="school in schools" :key="school.id" :value="school.id">
-                                            {{ school.name }}
-                                        </option>
-                                    </select>
+                                    <Select id="school" v-model="filters.school_id"
+                                        :options="[{ id: null, name: 'All Schools' }, ...schools]" optionLabel="name"
+                                        optionValue="id" placeholder="All Schools" class="w-full" />
                                 </div>
 
                                 <!-- Status Filter -->
@@ -70,15 +57,10 @@
                                     <label for="status" class="block text-sm font-medium text-gray-700 mb-1">
                                         Status
                                     </label>
-                                    <select id="status" v-model="filters.status"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                        <option :value="null">All Statuses</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="approved">Approved</option>
-                                        <option value="declined">Declined</option>
-                                        <option value="conditional">Conditional</option>
-                                        <option value="completed">Completed</option>
-                                    </select>
+                                    <Select id="status" v-model="filters.status"
+                                        :options="[{ value: null, label: 'All Statuses' }, { value: 'pending', label: 'Pending' }, { value: 'approved', label: 'Approved' }, { value: 'declined', label: 'Declined' }, { value: 'conditional', label: 'Conditional' }, { value: 'completed', label: 'Completed' }]"
+                                        optionLabel="label" optionValue="value" placeholder="All Statuses"
+                                        class="w-full" />
                                 </div>
 
                                 <!-- Date From -->
@@ -86,8 +68,7 @@
                                     <label for="date_from" class="block text-sm font-medium text-gray-700 mb-1">
                                         Date From
                                     </label>
-                                    <input id="date_from" v-model="filters.date_from" type="date"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                                    <InputText id="date_from" v-model="filters.date_from" type="date" class="w-full" />
                                 </div>
 
                                 <!-- Date To -->
@@ -95,28 +76,14 @@
                                     <label for="date_to" class="block text-sm font-medium text-gray-700 mb-1">
                                         Date To
                                     </label>
-                                    <input id="date_to" v-model="filters.date_to" type="date"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                                    <InputText id="date_to" v-model="filters.date_to" type="date" class="w-full" />
                                 </div>
                             </div>
 
                             <div class="mt-4 flex justify-end space-x-3">
-                                <button @click="clearFilters" type="button"
-                                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    Clear Filters
-                                </button>
-                                <button @click="loadSummary" type="button"
-                                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                            stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                        </path>
-                                    </svg>
-                                    Preview Export
-                                </button>
+                                <Button label="Clear Filters" severity="secondary" outlined @click="clearFilters" />
+                                <Button label="Preview Export" icon="pi pi-search" :loading="loading"
+                                    @click="loadSummary" />
                             </div>
                         </div>
 
@@ -183,25 +150,8 @@
 
                         <!-- Export Button -->
                         <div v-if="summary" class="flex justify-end">
-                            <button @click="downloadExport" :disabled="exporting || summary.total_records === 0"
-                                type="button"
-                                class="inline-flex items-center px-6 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                <svg v-if="exporting" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                        stroke-width="4">
-                                    </circle>
-                                    <path class="opacity-75" fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                    </path>
-                                </svg>
-                                <svg v-else class="-ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                Download JSON Export
-                            </button>
+                            <Button label="Download JSON Export" icon="pi pi-download" severity="success"
+                                :loading="exporting" :disabled="summary.total_records === 0" @click="downloadExport" />
                         </div>
                     </div>
                 </div>

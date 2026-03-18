@@ -12,8 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Drop the check constraint that was preventing 'RLE and Tuition'
-        DB::statement("ALTER TABLE scholarship_records DROP CONSTRAINT scholarship_records_grant_provision_check");
+        // Drop the check constraint if it exists (may not exist on fresh migrations)
+        try {
+            DB::statement("ALTER TABLE scholarship_records DROP CONSTRAINT scholarship_records_grant_provision_check");
+        } catch (\Throwable $e) {
+            // Constraint doesn't exist, skip
+        }
     }
 
     /**

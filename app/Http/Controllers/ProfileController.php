@@ -46,7 +46,7 @@ class ProfileController extends Controller
         $user->fill($request->validated());
 
         if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
+            $user->user_verified_at = null;
         }
 
         $user->save();
@@ -827,7 +827,7 @@ class ProfileController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching records by date: ' . $e->getMessage(), [
-                'user_id' => auth()->id(),
+                'user_id' => $user->id ?? Auth::id(),
                 'date' => $request->query('date'),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -886,7 +886,7 @@ class ProfileController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching records summary by month: ' . $e->getMessage(), [
-                'user_id' => auth()->id(),
+                'user_id' => $user->id ?? Auth::id(),
                 'year' => $request->query('year'),
                 'month' => $request->query('month')
             ]);

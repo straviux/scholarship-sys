@@ -126,6 +126,15 @@
 		padding: 1rem;
 	}
 
+	/* Context menu item colors */
+	.p-menuitem-success > .p-menuitem-content .p-menuitem-link {
+		color: var(--p-green-600) !important;
+	}
+
+	.p-menuitem-danger > .p-menuitem-content .p-menuitem-link {
+		color: var(--p-red-600) !important;
+	}
+
 	/* Menu sizing */
 	.p-menu,
 	.p-dropdown-items {

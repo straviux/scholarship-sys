@@ -131,24 +131,19 @@ const clearAll = () => {
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Fiscal Year</label>
-                            <input v-model.number="state.params.fiscal_year" type="number"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                            <InputText v-model.number="state.params.fiscal_year" type="number" class="w-full" />
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                            <select v-model="state.params.type"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="GF">GF</option>
-                                <option value="BUR">BUR</option>
-                                <option value="DV">DV</option>
-                            </select>
+                            <Select v-model="state.params.type"
+                                :options="[{ value: 'GF', label: 'GF' }, { value: 'BUR', label: 'BUR' }, { value: 'DV', label: 'DV' }]"
+                                optionLabel="label" optionValue="value" class="w-full" />
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">OBR Number *</label>
-                            <input v-model="state.params.obr_no" type="text" placeholder="e.g., 200-25-12-24188"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                            <InputText v-model="state.params.obr_no" type="text" placeholder="e.g., 200-25-12-24188" class="w-full" />
                         </div>
 
                         <div>
@@ -157,23 +152,15 @@ const clearAll = () => {
                                 <span v-if="state.params.dv_no && state.rawResponse?.used_dv_no"
                                     class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Auto-fetched</span>
                             </div>
-                            <input v-model="state.params.dv_no" type="text" placeholder="e.g., 25-12-23743 (optional)"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                            <InputText v-model="state.params.dv_no" type="text" placeholder="e.g., 25-12-23743 (optional)" class="w-full" />
                         </div>
 
                         <!-- Get Timeline Button -->
-                        <button @click="getTrackingInfo" :disabled="state.loading"
-                            class="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors">
-                            <i v-if="state.loading" class="pi pi-spin pi-spinner mr-2"></i>
-                            {{ state.loading ? 'Loading...' : 'Get Timeline' }}
-                        </button>
+                        <Button label="Get Timeline" icon="pi pi-search" :loading="state.loading"
+                            class="w-full" @click="getTrackingInfo" />
 
                         <!-- Action Buttons -->
-                        <button @click="clearAll"
-                            class="w-full py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium transition-colors text-sm">
-                            <i class="pi pi-times mr-2"></i>
-                            Clear
-                        </button>
+                        <Button label="Clear" icon="pi pi-times" severity="secondary" class="w-full" @click="clearAll" />
 
                         <!-- Error -->
                         <div v-if="state.error"
@@ -209,14 +196,11 @@ const clearAll = () => {
                     <div v-else-if="!state.trackingData" class="bg-white rounded-lg shadow-md p-8 text-center">
                         <i class="pi pi-inbox text-5xl text-gray-400 mb-4"></i>
                         <p class="text-gray-600 mb-4">Enter OBR and DV numbers above to view tracking timeline</p>
-                        <button @click="() => {
+                        <Button label="Load Sample Data" severity="info" @click="() => {
                             state.params.obr_no = '200-25-12-24188';
                             state.params.dv_no = '25-12-23743';
                             getTrackingInfo();
-                        }"
-                            class="inline-block py-2 px-4 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium">
-                            Load Sample Data
-                        </button>
+                        }" />
                     </div>
 
                     <div v-else-if="state.trackingData && state.trackingData.tracking_information"
@@ -262,14 +246,10 @@ const clearAll = () => {
 
                         <!-- Export Buttons -->
                         <div class="mt-6 flex gap-2 pt-4 border-t border-gray-200">
-                            <button @click="copyToClipboard(state.trackingData.tracking_information)"
-                                class="flex-1 py-2 px-4 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium transition-colors text-sm">
-                                <i class="pi pi-copy mr-2"></i>Copy Data
-                            </button>
-                            <button @click="exportData"
-                                class="flex-1 py-2 px-4 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 font-medium transition-colors text-sm">
-                                <i class="pi pi-download mr-2"></i>Export JSON
-                            </button>
+                            <Button label="Copy Data" icon="pi pi-copy" severity="info" outlined class="flex-1"
+                                @click="copyToClipboard(state.trackingData.tracking_information)" />
+                            <Button label="Export JSON" icon="pi pi-download" severity="success" outlined class="flex-1"
+                                @click="exportData" />
                         </div>
                     </div>
                 </div>

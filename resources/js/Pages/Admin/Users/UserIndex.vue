@@ -5,7 +5,6 @@ import { ref, watch } from "vue";
 import ChangePasswordModal from "@/Pages/Admin/Users/ChangePasswordModal.vue";
 import CreateUserModal from "@/Pages/Admin/Users/CreateUserModal.vue";
 import EditUserModal from "@/Pages/Admin/Users/EditUserModal.vue";
-import { UserPlusIcon } from "@heroicons/vue/20/solid";
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 

@@ -257,56 +257,47 @@ const formatDate = (date) => {
                         <label class="text-xs sm:text-sm font-medium text-gray-700">Transaction Status</label>
                         <div class="flex flex-wrap gap-2 sm:gap-3">
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="selectedStatus" type="radio" value=""
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="" inputId="pm-all" />
                                 <span class="text-sm text-gray-700">All</span>
                                 <Badge :value="statusCounts.all" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="selectedStatus" type="radio" value="no-obr"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="no-obr" inputId="pm-noobr" />
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">No OBR</span>
                                 <Badge :value="statusCounts['no-obr']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="selectedStatus" type="radio" value="LOA"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="LOA" inputId="pm-loa" />
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">LOA</span>
                                 <Badge :value="statusCounts['LOA']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="selectedStatus" type="radio" value="IRREGULAR"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="IRREGULAR" inputId="pm-irregular" />
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Irregular</span>
                                 <Badge :value="statusCounts['IRREGULAR']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="selectedStatus" type="radio" value="TRANSFERRED"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="TRANSFERRED" inputId="pm-transferred" />
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Transferred</span>
                                 <Badge :value="statusCounts['TRANSFERRED']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="selectedStatus" type="radio" value="CLAIMED"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="CLAIMED" inputId="pm-claimed" />
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Claimed</span>
                                 <Badge :value="statusCounts['CLAIMED']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="selectedStatus" type="radio" value="PAID"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="PAID" inputId="pm-paid" />
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Paid</span>
                                 <Badge :value="statusCounts['PAID']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="selectedStatus" type="radio" value="ON PROCESS"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="ON PROCESS" inputId="pm-onprocess" />
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">On Process</span>
                                 <Badge :value="statusCounts['ON PROCESS']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input v-model="selectedStatus" type="radio" value="DENIED"
-                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="DENIED" inputId="pm-denied" />
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Denied</span>
                                 <Badge :value="statusCounts['DENIED']" severity="secondary"></Badge>
                             </label>

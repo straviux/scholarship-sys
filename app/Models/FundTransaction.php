@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class FundTransaction extends Model
 {
@@ -39,12 +41,15 @@ class FundTransaction extends Model
         'obr_no',
         'dv_no',
         'date_obligated',
+        'upload_token',
+        'upload_token_expires_at',
     ];
 
     protected $casts = [
         'scholar_ids' => 'array',
         'particulars_description' => 'array',
         'amount' => 'decimal:2',
+        'upload_token_expires_at' => 'datetime',
     ];
 
     protected $appends = ['obr_status'];
@@ -75,11 +80,16 @@ class FundTransaction extends Model
 
     /**
      * Get the associated scholars.
+     *
+     * NOTE: This is NOT an Eloquent relationship. It returns a Collection
+     * based on the scholar_ids JSON column. Do not use with eager loading.
+     *
+     * @return \Illuminate\Support\Collection|array
      */
-    public function scholars()
+    public function getScholars()
     {
         if (empty($this->scholar_ids)) {
-            return [];
+            return collect();
         }
         return ScholarshipProfile::whereIn('profile_id', $this->scholar_ids)->get();
     }
@@ -90,5 +100,68 @@ class FundTransaction extends Model
     public function responsibilityCenter()
     {
         return $this->belongsTo(ResponsibilityCenter::class, 'responsibility_center', 'id');
+    }
+
+    /**
+     * Get all documents for this fund transaction
+     */
+    public function documents()
+    {
+        return $this->hasMany(FundTransactionDocument::class, 'fund_transaction_id');
+    }
+
+    /**
+     * Get a specific document by type
+     */
+    public function getDocument($documentType)
+    {
+        return $this->documents()->where('document_type', $documentType)->first();
+    }
+
+    /**
+     * Generate upload token for QR-based document uploads
+     */
+    public function generateUploadToken($expiresInMinutes = 5)
+    {
+        $this->upload_token = Str::random(64);
+        $this->upload_token_expires_at = now()->addMinutes($expiresInMinutes);
+        $this->save();
+        return $this->upload_token;
+    }
+
+    /**
+     * Get the mobile upload URL
+     */
+    public function getMobileUploadUrl($docType = null)
+    {
+        if ($docType) {
+            return route('mobile.upload.fund-transaction.with-type', ['token' => $this->upload_token, 'doc_type' => $docType]);
+        }
+        return route('mobile.upload.fund-transaction', $this->upload_token);
+    }
+
+    /**
+     * Get the upload QR code as SVG
+     */
+    public function getUploadQrCode($size = 250, $docType = null)
+    {
+        $qrCode = QrCode::format('svg')
+            ->size($size)
+            ->generate($this->getMobileUploadUrl($docType));
+
+        // Ensure we return a string, not an object
+        return is_string($qrCode) ? $qrCode : (string) $qrCode;
+    }
+
+    /**
+     * Get the upload QR code as data URI (base64 PNG)
+     */
+    public function getUploadQrCodeDataUri($size = 250, $docType = null)
+    {
+        $qrCode = QrCode::format('png')
+            ->size($size)
+            ->generate($this->getMobileUploadUrl($docType));
+
+        return is_string($qrCode) ? $qrCode : (string) $qrCode;
     }
 }

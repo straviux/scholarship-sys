@@ -12,7 +12,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithDrawings;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
-class WaitingListExport implements FromView, ShouldAutoSize, WithEvents, WithDrawings
+class ApplicantExport implements FromView, ShouldAutoSize, WithEvents, WithDrawings
 {
     protected $profiles;
     protected $filters;
@@ -31,7 +31,7 @@ class WaitingListExport implements FromView, ShouldAutoSize, WithEvents, WithDra
 
     public function view(): View
     {
-        return view('exports.waiting_list', [
+        return view('exports.applicants', [
             'profiles' => $this->profiles,
             'summary' => $this->summary,
             'reportType' => $this->reportType,

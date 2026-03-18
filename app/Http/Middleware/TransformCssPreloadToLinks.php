@@ -29,7 +29,9 @@ class TransformCssPreloadToLinks
                 $content
             );
 
-            $response->setContent($transformed);
+            if ($transformed !== $content) {
+                $response->setContent($transformed);
+            }
         }
 
         return $response;

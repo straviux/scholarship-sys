@@ -34,7 +34,6 @@ const qrModalRequirement = ref(null);
 const qrCodeData = ref(null);
 const qrCountdown = ref('');
 const qrCountdownInterval = ref(null);
-const uploadPollingInterval = ref(null);
 const showPreviewModal = ref(false);
 const previewFile = ref(null);
 const pendingUncheck = ref(null);
@@ -289,9 +288,6 @@ const showQrUpload = async (requirement) => {
         };
         showQrModal.value = true;
         startQrCountdown();
-
-        // Start polling for uploads while QR modal is open
-        startUploadPolling();
     } catch (error) {
         console.error('Error generating QR code:', error);
         toast.error('Failed to generate QR code');
@@ -299,21 +295,7 @@ const showQrUpload = async (requirement) => {
 };
 
 
-const startUploadPolling = () => {
-    // Check for uploads every 3 seconds while QR modal is open
-    uploadPollingInterval.value = setInterval(() => {
-        if (showQrModal.value) {
-            loadRequirements();
-        }
-    }, 3000);
-};
 
-const stopUploadPolling = () => {
-    if (uploadPollingInterval.value) {
-        clearInterval(uploadPollingInterval.value);
-        uploadPollingInterval.value = null;
-    }
-};
 
 const zoomIn = () => {
     if (previewZoom.value < 300) {
@@ -392,8 +374,30 @@ const startQrCountdown = () => {
 };
 
 const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    toast.success('URL copied to clipboard');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            toast.success('URL copied to clipboard');
+        }).catch((err) => {
+            console.error('Clipboard copy failed:', err);
+            toast.error('Failed to copy to clipboard');
+        });
+    } else {
+        // Fallback for older browsers or non-HTTPS contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            toast.success('URL copied to clipboard');
+        } catch (err) {
+            console.error('Fallback copy failed:', err);
+            toast.error('Failed to copy to clipboard');
+        }
+        document.body.removeChild(textArea);
+    }
 };
 
 // Watchers and hooks
@@ -402,11 +406,10 @@ watch(showQrModal, (newValue) => {
         if (qrCountdownInterval.value) {
             clearInterval(qrCountdownInterval.value);
         }
-        stopUploadPolling();
         // Reload requirements after QR modal closes (user has completed upload)
         setTimeout(() => {
             loadRequirements();
-        }, 1000);
+        }, 500);
     }
 });
 
@@ -415,7 +418,6 @@ watch(visibleDialog, (newValue) => {
         if (qrCountdownInterval.value) {
             clearInterval(qrCountdownInterval.value);
         }
-        stopUploadPolling();
     }
 });
 
@@ -528,8 +530,8 @@ onMounted(() => {
             <div class="bg-gray-50 rounded-lg p-3">
                 <p class="text-xs text-gray-600 mb-2">Or use this link on mobile:</p>
                 <div class="flex gap-2">
-                    <input type="text" :value="qrCodeData.url" readonly
-                        class="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-xs text-gray-700"
+                    <InputText type="text" :value="qrCodeData.url" readonly
+                        class="flex-1 text-xs"
                         @click="$event.target.select()" />
                     <Button icon="pi pi-copy" size="small" @click="copyToClipboard(qrCodeData.url)"
                         v-tooltip="'Copy URL'" />

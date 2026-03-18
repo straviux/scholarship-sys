@@ -23,7 +23,7 @@ class ScholarController extends Controller
      * Scholars are different from applicants:
      * - All academic fields are REQUIRED
      * - scholarship_status is set to 1 (approved/active) by default
-     * - is_on_waiting_list is false
+     * - unified_status is set to approved/active
      * - Creates both profile and scholarship record
      */
     public function store(CreateScholarshipProfileRequest $request): RedirectResponse
@@ -55,7 +55,7 @@ class ScholarController extends Controller
         try {
             $validated = $request->validated();
 
-            // is_on_waiting_list is now managed through scholarship_records.application_status
+            // is_on_waiting_list is now managed through scholarship_records.application_status (pending status)
 
             // Create the scholarship profile
             $new_profile = ScholarshipProfile::create($validated);
@@ -153,7 +153,7 @@ class ScholarController extends Controller
 
             // Update profile information
             $validated = $request->validated();
-            // is_on_waiting_list is now managed through scholarship_records.application_status
+            // is_on_waiting_list is now managed through scholarship_records.application_status (pending status)
             $profile->update($validated);
 
             // Get course - prefer ID, fallback to name lookup

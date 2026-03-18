@@ -12,23 +12,26 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('disbursements', function (Blueprint $table) {
-            $table->id();
-            $table->foreignIdFor(App\Models\Scholar::class, 'scholar_id');
-            $table->string('disbursement_amount')->nullable();
-            $table->string('disbursement_track_code')->nullable();
-            $table->string('disbursement_type')->nullable();
-            $table->string('disbursement_status')->nullable();
-            $table->date('disbursement_date')->nullable();
-            $table->string('disbursement_remarks')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->date('disbursement_verified_at')->nullable();
-            $table->date('disbursement_approved_at')->nullable();
-            $table->date('disbursement_rejected_at')->nullable();
-            $table->boolean('is_approved')->default(false);
-            $table->boolean('is_rejected')->default(false);
-            $table->foreignIdFor(App\Models\User::class, 'created_by')->nullable();
-            $table->foreignIdFor(App\Models\User::class, 'updated_by')->nullable();
+            $table->bigIncrements('disbursement_id');
+            $table->uuid('profile_id');
+            $table->string('disbursement_type');
+            $table->string('payee');
+            $table->date('date_obligated')->nullable();
+            $table->string('year_level')->nullable();
+            $table->string('semester')->nullable();
+            $table->string('academic_year')->nullable();
+            $table->decimal('amount', 10, 2)->default(0);
+            $table->text('remarks')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->foreign('profile_id')
+                ->references('profile_id')->on('scholarship_profiles')
+                ->onDelete('cascade');
+            $table->foreign('created_by')
+                ->references('id')->on('users')
+                ->onDelete('set null');
         });
     }
 

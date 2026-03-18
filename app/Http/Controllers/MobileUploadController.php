@@ -3,16 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\Disbursement;
-use App\Models\DisbursementAttachment;
 use App\Models\ScholarshipRecord;
-use App\Models\ScholarshipRecordAttachment;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use App\Models\ScholarshipProfileRequirement;
+use App\Models\FundTransaction;
+use App\Http\Requests\DisbursementUploadRequest;
+use App\Http\Requests\ScholarshipRecordUploadRequest;
+use App\Http\Requests\RequirementUploadRequest;
+use App\Http\Requests\FundTransactionUploadRequest;
+use App\Services\FileUploadService;
+use App\Services\DisbursementFileService;
+use App\Services\ScholarshipRecordFileService;
+use App\Services\FundTransactionFileService;
+use App\Traits\TokenValidation;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class MobileUploadController extends Controller
 {
+    use TokenValidation;
+
+    public function __construct(
+        private FileUploadService $fileUploadService,
+        private DisbursementFileService $disbursementFileService,
+        private ScholarshipRecordFileService $scholarshipRecordFileService,
+        private FundTransactionFileService $fundTransactionFileService,
+    ) {}
+
     /**
      * Show the mobile upload page for disbursement
      */
@@ -21,20 +37,16 @@ class MobileUploadController extends Controller
         $disbursement = Disbursement::where('upload_token', $token)->first();
 
         if (!$disbursement) {
-            Log::warning('Disbursement not found for token', ['token' => $token]);
+            Log::warning('disbursement_not_found', ['token' => substr($token, 0, 10) . '...']);
             return view('mobile.upload-expired');
         }
 
-        if (!$disbursement->upload_token_expires_at) {
-            Log::warning('Disbursement has no expiry date', ['disbursement_id' => $disbursement->disbursement_id]);
-            return view('mobile.upload-expired');
-        }
-
-        if ($disbursement->upload_token_expires_at->isPast()) {
-            Log::info('Disbursement token expired', [
+        try {
+            $this->validateUploadToken($disbursement, 'disbursement');
+        } catch (\Exception $e) {
+            Log::info('disbursement_token_expired', [
                 'disbursement_id' => $disbursement->disbursement_id,
-                'expires_at' => $disbursement->upload_token_expires_at,
-                'now' => now(),
+                'error' => $e->getMessage(),
             ]);
             return view('mobile.upload-expired');
         }
@@ -49,39 +61,19 @@ class MobileUploadController extends Controller
      */
     public function showScholarshipRecordUpload($token)
     {
-        // Clear any query cache
-        DB::connection()->disableQueryLog();
-
         $scholarshipRecord = ScholarshipRecord::where('upload_token', $token)->first();
 
         if (!$scholarshipRecord) {
-            Log::warning('Scholarship record not found for token', ['token' => substr($token, 0, 10) . '...']);
+            Log::warning('scholarship_record_not_found', ['token' => substr($token, 0, 10) . '...']);
             return view('mobile.upload-expired');
         }
 
-        if (!$scholarshipRecord->upload_token_expires_at) {
-            Log::warning('Scholarship record has no expiry date', ['id' => $scholarshipRecord->id]);
-            return view('mobile.upload-expired');
-        }
-
-        // Debug logging
-        Log::info('Mobile upload page accessed', [
-            'id' => $scholarshipRecord->id,
-            'token' => substr($token, 0, 10) . '...',
-            'expires_at' => $scholarshipRecord->upload_token_expires_at->toDateTimeString(),
-            'expires_at_timestamp' => $scholarshipRecord->upload_token_expires_at->timestamp,
-            'now' => now()->toDateTimeString(),
-            'now_timestamp' => now()->timestamp,
-            'diff_seconds' => now()->diffInSeconds($scholarshipRecord->upload_token_expires_at, false),
-            'is_past' => $scholarshipRecord->upload_token_expires_at->isPast(),
-            'is_future' => $scholarshipRecord->upload_token_expires_at->isFuture(),
-        ]);
-
-        if ($scholarshipRecord->upload_token_expires_at->isPast()) {
-            Log::info('Scholarship record token expired', [
+        try {
+            $this->validateUploadToken($scholarshipRecord, 'scholarship_record');
+        } catch (\Exception $e) {
+            Log::info('scholarship_record_token_expired', [
                 'id' => $scholarshipRecord->id,
-                'expires_at' => $scholarshipRecord->upload_token_expires_at,
-                'now' => now(),
+                'error' => $e->getMessage(),
             ]);
             return view('mobile.upload-expired');
         }
@@ -94,358 +86,120 @@ class MobileUploadController extends Controller
     /**
      * Handle file upload for disbursement
      */
-    public function uploadDisbursementFile(Request $request, $token)
+    public function uploadDisbursementFile(DisbursementUploadRequest $request, $token)
     {
-        $disbursement = Disbursement::where('upload_token', $token)->first();
-
-        if (!$disbursement || $disbursement->upload_token_expires_at->isPast()) {
-            return response()->json(['error' => 'Invalid or expired token'], 403);
-        }
-
-        // Debug: Log what we're receiving
-        Log::info('Mobile upload request received', [
-            'has_file' => $request->hasFile('file'),
-            'all_files' => $request->allFiles(),
-            'all_input' => $request->except('file'),
-            'content_type' => $request->header('Content-Type'),
-        ]);
-
         try {
-            $request->validate([
-                'attachment_type' => 'required|in:voucher,cheque,receipt',
-                'file' => 'required|file|mimes:pdf,jpg,jpeg,png,exe|max:25600', // 25MB max
-            ]);
+            // Find and validate disbursement
+            $disbursement = Disbursement::where('upload_token', $token)->first();
+
+            if (!$disbursement) {
+                Log::warning('disbursement_not_found', ['token' => substr($token, 0, 10) . '...']);
+                return $this->notFound('Disbursement not found');
+            }
+
+            // Validate token hasn't expired
+            $this->validateUploadToken($disbursement, 'disbursement');
+
+            // Process and store file
+            $attachment = $this->disbursementFileService->storeAttachment(
+                $disbursement,
+                $request->file('file'),
+                $request->input('attachment_type')
+            );
+
+            return $this->success([
+                'file_id' => $attachment->attachment_id,
+                'filename' => $attachment->file_name,
+                'size' => $attachment->file_size,
+                'original_size' => $attachment->original_size,
+                'compression_ratio' => $attachment->compression_ratio . '%',
+            ], 'File uploaded successfully', 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Mobile upload validation failed', [
+            Log::warning('disbursement_validation_failed', [
                 'errors' => $e->errors(),
-                'file_info' => $request->hasFile('file') ? [
-                    'size' => $request->file('file')->getSize(),
-                    'mime' => $request->file('file')->getMimeType(),
-                    'original_name' => $request->file('file')->getClientOriginalName(),
-                ] : 'No file uploaded'
+                'token' => substr($token, 0, 10) . '...',
             ]);
-            return response()->json([
-                'error' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
+            return $this->unprocessable('Validation failed', $e->errors());
+        } catch (\Exception $e) {
+            Log::error('disbursement_upload_error', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'user_id' => Auth::id(),
+            ]);
+            return $this->error('Upload failed: ' . $e->getMessage(), code: 500);
         }
-
-        $file = $request->file('file');
-        $originalFileName = $file->getClientOriginalName();
-        $originalSize = $file->getSize();
-        $mimeType = $file->getMimeType();
-
-        $fileContent = file_get_contents($file->getRealPath());
-        $processedContent = $fileContent;
-        $extension = '';
-
-        // Try to load as image
-        $image = @imagecreatefromstring($fileContent);
-
-        if ($image !== false) {
-            // Fix image orientation based on EXIF data
-            if (function_exists('exif_read_data')) {
-                $exif = @exif_read_data($file->getRealPath());
-                if ($exif && isset($exif['Orientation'])) {
-                    switch ($exif['Orientation']) {
-                        case 3:
-                            $image = imagerotate($image, 180, 0);
-                            break;
-                        case 6:
-                            $image = imagerotate($image, -90, 0);
-                            break;
-                        case 8:
-                            $image = imagerotate($image, 90, 0);
-                            break;
-                    }
-                }
-            }
-
-            // Successfully loaded as image - highly compress it
-            $width = imagesx($image);
-            $height = imagesy($image);
-
-            // Force portrait orientation (height > width)
-            if ($width > $height) {
-                // Rotate landscape to portrait
-                $image = imagerotate($image, 90, 0);
-                $temp = $width;
-                $width = $height;
-                $height = $temp;
-            }
-
-            // Aggressive resize for mobile uploads - max 1280px height
-            $maxDimension = 1280;
-            if ($height > $maxDimension) {
-                $newHeight = $maxDimension;
-                $newWidth = intval($width * ($maxDimension / $height));
-
-                $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
-
-                // Enable smooth scaling for better quality at lower file size
-                imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                imagedestroy($image);
-                $image = $resizedImage;
-            }
-
-            // High compression JPEG - quality 40% for smaller file size
-            ob_start();
-            imagejpeg($image, null, 40);
-            $processedContent = ob_get_clean();
-            imagedestroy($image);
-            $extension = '.jpg';
-        } else {
-            // PDF - use gzip compression
-            $processedContent = gzencode($fileContent, 9);
-            $extension = '.gz';
-        }
-
-        // Get scholar unique_id
-        $profile = $disbursement->profile;
-        $uniqueId = $profile->unique_id;
-
-        // Get scholar name for filename
-        $scholarName = $profile->first_name . '_' . $profile->last_name;
-        // Clean scholar name (remove spaces, special characters)
-        $scholarName = preg_replace('/[^A-Za-z0-9_]/', '_', $scholarName);
-
-        // Get attachment type
-        $attachmentType = $request->attachment_type;
-
-        // Create short timestamp (YmdHis format)
-        $timestamp = date('YmdHis');
-
-        // Determine file extension
-        if ($extension === '.jpg') {
-            $fileExtension = 'jpg';
-        } elseif ($extension === '.gz') {
-            $fileExtension = 'pdf.gz';
-        } else {
-            $fileExtension = pathinfo($originalFileName, PATHINFO_EXTENSION);
-        }
-
-        // Generate file path: disbursement_[scholar_name]_[attachment_type]_[timestamp].[extension]
-        $fileName = "disbursement_{$scholarName}_{$attachmentType}_{$timestamp}.{$fileExtension}";
-
-        // Store file in: attachments/[unique_id]/
-        $filePath = "attachments/{$uniqueId}/" . $fileName;
-
-        // Store the file
-        Storage::disk('public')->put($filePath, $processedContent);
-
-        // Create attachment record
-        $attachment = DisbursementAttachment::create([
-            'disbursement_id' => $disbursement->disbursement_id,
-            'attachment_type' => $request->attachment_type,
-            'file_name' => $fileName, // Use formatted filename instead of original
-            'file_path' => $filePath,
-            'file_type' => $mimeType,
-            'file_size' => strlen($processedContent),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'File uploaded successfully',
-            'attachment' => $attachment,
-            'original_size' => $originalSize,
-            'optimized_size' => strlen($processedContent),
-            'size_reduction' => round((1 - strlen($processedContent) / $originalSize) * 100, 2) . '%',
-        ]);
     }
+
 
     /**
      * Handle file upload for scholarship record
      */
-    public function uploadScholarshipRecordFile(Request $request, $token)
+    public function uploadScholarshipRecordFile(ScholarshipRecordUploadRequest $request, $token)
     {
-        $scholarshipRecord = ScholarshipRecord::where('upload_token', $token)->first();
-
-        if (!$scholarshipRecord || $scholarshipRecord->upload_token_expires_at->isPast()) {
-            return response()->json(['error' => 'Invalid or expired token'], 403);
-        }
-
-        // Debug: Log what we're receiving
-        Log::info('Mobile upload request received (scholarship)', [
-            'has_file' => $request->hasFile('file'),
-            'all_files' => $request->allFiles(),
-            'all_input' => $request->except('file'),
-            'content_type' => $request->header('Content-Type'),
-        ]);
-
         try {
-            $request->validate([
-                'attachment_name' => 'required|string|max:255',
-                'page_number' => 'nullable|integer|min:1',
-                'file' => 'required|file|mimes:pdf,jpg,jpeg,png,exe|max:25600', // 25MB max
-            ]);
+            // Find and validate scholarship record
+            $record = ScholarshipRecord::where('upload_token', $token)->first();
+
+            if (!$record) {
+                Log::warning('scholarship_record_not_found', ['token' => substr($token, 0, 10) . '...']);
+                return $this->notFound('Scholarship record not found');
+            }
+
+            // Validate token hasn't expired
+            $this->validateUploadToken($record, 'scholarship_record');
+
+            // Process and store file
+            $attachment = $this->scholarshipRecordFileService->storeAttachment(
+                $record,
+                $request->file('file'),
+                $request->input('attachment_name'),
+                $request->input('page_number')
+            );
+
+            return $this->success([
+                'file_id' => $attachment->attachment_id,
+                'filename' => $attachment->file_name,
+                'size' => $attachment->file_size,
+                'original_size' => $attachment->original_size,
+                'compression_ratio' => $attachment->compression_ratio . '%',
+            ], 'File uploaded successfully', 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Mobile upload validation failed (scholarship record)', [
+            Log::warning('scholarship_record_validation_failed', [
                 'errors' => $e->errors(),
-                'file_info' => $request->hasFile('file') ? [
-                    'size' => $request->file('file')->getSize(),
-                    'mime' => $request->file('file')->getMimeType(),
-                    'original_name' => $request->file('file')->getClientOriginalName(),
-                ] : 'No file uploaded'
+                'token' => substr($token, 0, 10) . '...',
             ]);
-            return response()->json([
-                'error' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
+            return $this->unprocessable('Validation failed', $e->errors());
+        } catch (\Exception $e) {
+            Log::error('scholarship_record_upload_error', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'user_id' => Auth::id(),
+            ]);
+            return $this->error('Upload failed: ' . $e->getMessage(), code: 500);
         }
-
-        $file = $request->file('file');
-        $originalFileName = $file->getClientOriginalName();
-        $originalSize = $file->getSize();
-        $mimeType = $file->getMimeType();
-
-        $fileContent = file_get_contents($file->getRealPath());
-        $processedContent = $fileContent;
-        $extension = '';
-
-        // Try to load as image
-        $image = @imagecreatefromstring($fileContent);
-
-        if ($image !== false) {
-            // Fix image orientation based on EXIF data
-            if (function_exists('exif_read_data')) {
-                $exif = @exif_read_data($file->getRealPath());
-                if ($exif && isset($exif['Orientation'])) {
-                    switch ($exif['Orientation']) {
-                        case 3:
-                            $image = imagerotate($image, 180, 0);
-                            break;
-                        case 6:
-                            $image = imagerotate($image, -90, 0);
-                            break;
-                        case 8:
-                            $image = imagerotate($image, 90, 0);
-                            break;
-                    }
-                }
-            }
-
-            // Successfully loaded as image - highly compress it
-            $width = imagesx($image);
-            $height = imagesy($image);
-
-            // Force portrait orientation (height > width)
-            if ($width > $height) {
-                // Rotate landscape to portrait
-                $image = imagerotate($image, 90, 0);
-                $temp = $width;
-                $width = $height;
-                $height = $temp;
-            }
-
-            // Aggressive resize for mobile uploads - max 1280px height
-            $maxDimension = 1280;
-            if ($height > $maxDimension) {
-                $newHeight = $maxDimension;
-                $newWidth = intval($width * ($maxDimension / $height));
-
-                $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
-
-                // Enable smooth scaling for better quality at lower file size
-                imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                imagedestroy($image);
-                $image = $resizedImage;
-            }
-
-            // High compression JPEG - quality 40% for smaller file size
-            ob_start();
-            imagejpeg($image, null, 40);
-            $processedContent = ob_get_clean();
-            imagedestroy($image);
-            $mimeType = 'image/jpeg';
-        } elseif ($mimeType === 'application/pdf') {
-            // Compress PDFs with gzip
-            $processedContent = gzencode($fileContent, 9);
-            $extension = '.gz';
-        }
-
-        // Get scholar unique_id
-        $profile = $scholarshipRecord->profile;
-        $uniqueId = $profile->unique_id;
-
-        // Get scholar name for filename
-        $scholarName = $profile->first_name . '_' . $profile->last_name;
-        // Clean scholar name (remove spaces, special characters)
-        $scholarName = preg_replace('/[^A-Za-z0-9_]/', '_', $scholarName);
-
-        // Get attachment name (clean it)
-        $attachmentName = preg_replace('/[^A-Za-z0-9_]/', '_', $request->attachment_name);
-
-        // Create short timestamp (YmdHis format)
-        $timestamp = date('YmdHis');
-
-        // Add page number suffix for contracts
-        $pageNumberSuffix = '';
-        if (strtolower($request->attachment_name) === 'contract' && $request->has('page_number')) {
-            $pageNumberSuffix = '_page_' . $request->page_number;
-        }
-
-        // Get file extension from original filename or determine from mime type
-        $fileExtension = pathinfo($originalFileName, PATHINFO_EXTENSION);
-        if (empty($fileExtension)) {
-            // Determine extension from mime type
-            if (strpos($mimeType, 'image/') === 0) {
-                $fileExtension = 'jpg';
-            } elseif ($mimeType === 'application/pdf') {
-                $fileExtension = 'pdf';
-            }
-        }
-
-        // Create new filename: scholarship_record_[scholar_name]_[attachment_name]_[timestamp][page_suffix].[extension]
-        $fileName = "scholarship_record_{$scholarName}_{$attachmentName}_{$timestamp}{$pageNumberSuffix}" . ($extension ?: ".{$fileExtension}");
-
-        // Store file in: attachments/[unique_id]/
-        $filePath = "attachments/{$uniqueId}/" . $fileName;
-
-        // Store the file
-        Storage::disk('public')->put($filePath, $processedContent);
-
-        // Create attachment record
-        $attachment = ScholarshipRecordAttachment::create([
-            'scholarship_record_id' => $scholarshipRecord->id,
-            'attachment_name' => $request->attachment_name,
-            'file_name' => $fileName, // Use formatted filename instead of original
-            'file_path' => $filePath,
-            'file_type' => $mimeType,
-            'file_size' => strlen($processedContent),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'File uploaded successfully',
-            'attachment' => $attachment,
-            'original_size' => $originalSize,
-            'optimized_size' => strlen($processedContent),
-            'size_reduction' => round((1 - strlen($processedContent) / $originalSize) * 100, 2) . '%',
-        ]);
     }
+
 
     /**
      * Show the mobile upload page for requirement
      */
     public function showRequirementUpload($token)
     {
-        $requirement = \App\Models\ScholarshipProfileRequirement::where('upload_token', $token)->first();
+        $requirement = ScholarshipProfileRequirement::where('upload_token', $token)->first();
 
         if (!$requirement) {
-            Log::warning('Requirement not found for token', ['token' => substr($token, 0, 10) . '...']);
+            Log::warning('requirement_not_found', ['token' => substr($token, 0, 10) . '...']);
             return view('mobile.upload-expired');
         }
 
-        if (!$requirement->upload_token_expires_at) {
-            Log::warning('Requirement has no expiry date', ['id' => $requirement->id]);
-            return view('mobile.upload-expired');
-        }
-
-        if ($requirement->upload_token_expires_at->isPast()) {
-            Log::info('Requirement token expired', [
+        try {
+            $this->validateUploadToken($requirement, 'requirement');
+        } catch (\Exception $e) {
+            Log::info('requirement_token_expired', [
                 'id' => $requirement->id,
-                'expires_at' => $requirement->upload_token_expires_at,
-                'now' => now(),
+                'error' => $e->getMessage(),
             ]);
             return view('mobile.upload-expired');
         }
@@ -458,170 +212,165 @@ class MobileUploadController extends Controller
     /**
      * Handle file upload for requirement
      */
-    public function uploadRequirementFile(Request $request, $token)
+    public function uploadRequirementFile(RequirementUploadRequest $request, $token)
     {
-        $requirement = \App\Models\ScholarshipProfileRequirement::where('upload_token', $token)
-            ->with('profile', 'requirement')
-            ->first();
-
-        if (!$requirement) {
-            return response()->json(['error' => 'Requirement not found'], 404);
-        }
-
-        if ($requirement->upload_token_expires_at->isPast()) {
-            return response()->json(['error' => 'Token has expired'], 403);
-        }
-
         try {
-            $validated = $request->validate([
-                'file' => 'required|file|max:25600', // 25MB max
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Requirement mobile upload validation failed', [
-                'errors' => $e->errors(),
-            ]);
-            return response()->json([
-                'error' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
-        }
+            // Find and validate requirement
+            $requirement = ScholarshipProfileRequirement::where('upload_token', $token)
+                ->with('profile', 'requirement')
+                ->first();
 
-        $file = $request->file('file');
-        $originalFileName = $file->getClientOriginalName();
-        $originalSize = $file->getSize();
-        $mimeType = $file->getMimeType();
-
-        try {
-            $fileContent = file_get_contents($file->getRealPath());
-            $processedContent = $fileContent;
-            $extension = '';
-            $isImage = false;
-
-            // Try to load as image
-            $image = @imagecreatefromstring($fileContent);
-
-            if ($image !== false) {
-                $isImage = true;
-
-                // Fix image orientation based on EXIF data
-                if (function_exists('exif_read_data')) {
-                    $exif = @exif_read_data($file->getRealPath());
-                    if ($exif && isset($exif['Orientation'])) {
-                        switch ($exif['Orientation']) {
-                            case 3:
-                                $image = imagerotate($image, 180, 0);
-                                break;
-                            case 6:
-                                $image = imagerotate($image, -90, 0);
-                                break;
-                            case 8:
-                                $image = imagerotate($image, 90, 0);
-                                break;
-                        }
-                    }
-                }
-
-                // Aggressive resize for mobile uploads - max 1280px height
-                $width = imagesx($image);
-                $height = imagesy($image);
-
-                // Force portrait orientation (height > width)
-                if ($width > $height) {
-                    $image = imagerotate($image, 90, 0);
-                    $temp = $width;
-                    $width = $height;
-                    $height = $temp;
-                }
-
-                $maxDimension = 1280;
-                if ($height > $maxDimension) {
-                    $newHeight = $maxDimension;
-                    $newWidth = intval($width * ($maxDimension / $height));
-
-                    $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
-                    imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                    imagedestroy($image);
-                    $image = $resizedImage;
-                }
-
-                // High compression JPEG
-                ob_start();
-                imagejpeg($image, null, 40);
-                $processedContent = ob_get_clean();
-                imagedestroy($image);
-                $extension = '.jpg';
-                $mimeType = 'image/jpeg';
-            } elseif ($mimeType === 'application/pdf') {
-                // Compress PDFs with gzip
-                $processedContent = gzencode($fileContent, 9);
-                $extension = '.gz';
+            if (!$requirement) {
+                Log::warning('requirement_not_found', ['token' => substr($token, 0, 10) . '...']);
+                return $this->notFound('Requirement not found');
             }
 
-            // Get profile and requirement info
+            // Validate token hasn't expired
+            $this->validateUploadToken($requirement, 'requirement');
+
+            // Process file
+            $result = $this->fileUploadService->processUpload($request->file('file'));
+
+            if (!$result->isSuccess()) {
+                Log::error('requirement_file_processing_failed', [
+                    'requirement_id' => $requirement->id,
+                    'error' => $result->getErrorMessage(),
+                ]);
+                return $this->error('File processing failed', code: 422);
+            }
+
+            // Store file and update requirement
             $profile = $requirement->profile;
-            if (!$profile) {
-                return response()->json(['error' => 'Profile not found'], 404);
-            }
-
             $uniqueId = $profile->unique_id;
+            $scholarName = preg_replace(
+                '/[^A-Za-z0-9_]/',
+                '_',
+                $profile->first_name . '_' . $profile->last_name
+            );
+            $requirementName = $requirement->requirement
+                ? preg_replace('/[^A-Za-z0-9_]/', '_', $requirement->requirement->name)
+                : 'requirement';
 
-            // Get scholar name for filename
-            $scholarName = preg_replace('/[^A-Za-z0-9_]/', '_', $profile->first_name . '_' . $profile->last_name);
-            $requirementName = $requirement->requirement ? preg_replace('/[^A-Za-z0-9_]/', '_', $requirement->requirement->name) : 'requirement';
-
-            // Create short timestamp
             $timestamp = date('YmdHis');
-
-            // Get file extension
-            $fileExtension = pathinfo($originalFileName, PATHINFO_EXTENSION);
-            if ($isImage) {
-                $fileExtension = 'jpg';
-            } elseif ($extension === '.gz') {
-                $fileExtension = 'pdf.gz';
-            }
-
-            // Generate filename: requirement_[scholar_name]_[requirement_name]_[timestamp].[extension]
-            $fileName = "requirement_{$scholarName}_{$requirementName}_{$timestamp}.{$fileExtension}";
-
-            // Store file in: attachments/[unique_id]/
+            $fileName = "requirement_{$scholarName}_{$requirementName}_{$timestamp}.{$result->extension}";
             $filePath = "attachments/{$uniqueId}/" . $fileName;
 
-            // Store the file
-            Storage::disk('public')->put($filePath, $processedContent);
+            // Store file
+            \Illuminate\Support\Facades\Storage::disk('public')->put($filePath, $result->content);
 
-            // Update requirement record with the public URL
+            // Update requirement record
             $requirement->update([
                 'file_name' => $fileName,
-                'file_path' => Storage::url($filePath),
+                'file_path' => \Illuminate\Support\Facades\Storage::url($filePath),
             ]);
 
-            Log::info('Requirement file uploaded successfully', [
-                'profile_id' => $requirement->profile_id,
-                'requirement_id' => $requirement->requirement_id,
-                'file_name' => $fileName,
-                'file_path' => $filePath,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'File uploaded successfully',
-                'file_name' => $fileName,
-                'file_path' => $filePath,
-                'original_size' => $originalSize,
-                'optimized_size' => strlen($processedContent),
-                'size_reduction' => round((1 - strlen($processedContent) / $originalSize) * 100, 2) . '%',
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Requirement file upload error', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+            Log::info('requirement_file_uploaded', [
                 'requirement_id' => $requirement->id,
-                'profile_id' => $requirement->profile_id,
+                'profile_id' => $profile->id,
+                'file_size' => $result->compressedSize,
+                'compression_ratio' => $result->getCompressionRatio(),
             ]);
 
-            return response()->json([
-                'error' => 'Failed to upload file: ' . $e->getMessage()
-            ], 500);
+            return $this->success([
+                'file_id' => $requirement->id,
+                'filename' => $fileName,
+                'size' => $result->compressedSize,
+                'original_size' => $result->originalSize,
+                'compression_ratio' => $result->getCompressionRatio(),
+            ], 'File uploaded successfully', 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('requirement_validation_failed', [
+                'errors' => $e->errors(),
+                'token' => substr($token, 0, 10) . '...',
+            ]);
+            return $this->unprocessable('Validation failed', $e->errors());
+        } catch (\Exception $e) {
+            Log::error('requirement_upload_error', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'user_id' => Auth::id(),
+            ]);
+            return $this->error('Upload failed: ' . $e->getMessage(), code: 500);
+        }
+    }
+
+
+    /**
+     * Show the mobile upload page for fund transaction
+     */
+    public function showFundTransactionUpload($token, $docType = null)
+    {
+        $transaction = FundTransaction::where('upload_token', $token)->first();
+
+        if (!$transaction) {
+            Log::warning('fund_transaction_not_found', ['token' => substr($token, 0, 10) . '...']);
+            return view('mobile.upload-expired');
+        }
+
+        try {
+            $this->validateUploadToken($transaction, 'fund_transaction');
+        } catch (\Exception $e) {
+            Log::info('fund_transaction_token_expired', [
+                'id' => $transaction->id,
+                'error' => $e->getMessage(),
+            ]);
+            return view('mobile.upload-expired');
+        }
+
+        // Validate document type if provided
+        $validDocTypes = ['obr', 'dv_payroll', 'los', 'cheque'];
+        if ($docType && !in_array($docType, $validDocTypes)) {
+            $docType = null;
+        }
+
+        return view('mobile.fund-transaction-upload', compact('transaction', 'docType'));
+    }
+
+    /**
+     * Handle file upload for fund transaction
+     */
+    public function uploadFundTransactionFile(FundTransactionUploadRequest $request, $token)
+    {
+        try {
+            // Find transaction
+            $transaction = FundTransaction::where('upload_token', $token)->first();
+
+            if (!$transaction) {
+                return $this->notFound('Fund transaction not found');
+            }
+
+            // Validate token hasn't expired
+            $this->validateUploadToken($transaction, 'fund_transaction');
+
+            // Store document using service
+            $document = $this->fundTransactionFileService->storeDocument(
+                $transaction,
+                $request->file('file'),
+                $request->input('document_type')
+            );
+
+            return $this->success([
+                'document_id' => $document->id,
+                'document_type' => $document->document_type,
+                'filename' => $document->filename,
+                'size' => $document->file_size,
+                'original_size' => $document->original_file_size ?? $document->file_size,
+            ], 'File uploaded successfully', 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('fund_transaction_validation_failed', [
+                'errors' => $e->errors(),
+                'token' => substr($token, 0, 10) . '...',
+            ]);
+            return $this->unprocessable('Validation failed', $e->errors());
+        } catch (\Exception $e) {
+            Log::error('fund_transaction_upload_error', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'user_id' => Auth::id(),
+            ]);
+            return $this->error('Upload failed: ' . $e->getMessage(), code: 500);
         }
     }
 }

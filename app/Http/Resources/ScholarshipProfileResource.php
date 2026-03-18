@@ -57,7 +57,7 @@ class ScholarshipProfileResource extends JsonResource
             'is_mother_jpm' => $this->is_mother_jpm,
             'is_guardian_jpm' => $this->is_guardian_jpm,
             'is_not_jpm' => $this->is_not_jpm,
-            // is_on_waiting_list is now managed through scholarship_records.application_status
+            // is_on_waiting_list is now managed through scholarship_records.application_status (pending status)
             'jpm_remarks' => $this->jpm_remarks,
             'date_filed' => $this->date_filed,
             'created_by' => $this->createdBy ? [

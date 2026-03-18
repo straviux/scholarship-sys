@@ -15,11 +15,8 @@
                             <i class="pi pi-bell text-blue-600"></i>
                             <h3 class="text-base font-semibold text-gray-900">System Updates</h3>
                         </div>
-                        <button v-if="unreadCount > 0" @click="markAllAsRead" :disabled="isMarkingAllAsRead"
-                            class="text-xs text-blue-600 hover:text-blue-800 focus:outline-none disabled:opacity-50 font-medium transition-colors duration-200">
-                            <span v-if="isMarkingAllAsRead">Marking...</span>
-                            <span v-else>Mark all</span>
-                        </button>
+                        <Button v-if="unreadCount > 0" @click="markAllAsRead" :disabled="isMarkingAllAsRead"
+                            :label="isMarkingAllAsRead ? 'Marking...' : 'Mark all'" severity="info" variant="text" size="small" />
                     </div>
                     <p class="text-xs text-gray-500 mt-1">
                         {{ unreadCount }} unread
@@ -72,11 +69,9 @@
 
                                     <div class="flex items-center ml-2 flex-shrink-0">
                                         <!-- Mark as read button -->
-                                        <button v-if="!notification.is_read" @click.stop="markAsRead(notification)"
-                                            class="p-1 text-gray-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full transition-colors duration-200"
-                                            title="Mark as read">
-                                            <i class="pi pi-check-circle" style="font-size: 1rem"></i>
-                                        </button>
+                                        <Button v-if="!notification.is_read" @click.stop="markAsRead(notification)"
+                                            icon="pi pi-check-circle" severity="info" variant="text" rounded size="small"
+                                            v-tooltip.top="'Mark as read'" />
                                         <!-- Type Icon -->
                                         <i :class="[getTypeIcon(notification.type), getTypeIconClass(notification.type)]"
                                             style="font-size: 0.75rem; margin-left: 0.25rem"></i>
@@ -100,10 +95,7 @@
                 <!-- Footer -->
                 <div v-if="notifications.length > 0"
                     class="px-4 py-2 border-t border-gray-100 bg-gray-50 flex-shrink-0">
-                    <button @click="viewAllNotifications"
-                        class="w-full text-center text-xs text-blue-600 hover:text-blue-800 focus:outline-none font-medium transition-colors duration-200">
-                        View all
-                    </button>
+                    <Button @click="viewAllNotifications" label="View all" severity="info" variant="text" size="small" class="w-full" />
                 </div>
             </div>
         </Popover>

@@ -35,61 +35,52 @@
                     <!-- Active Toggle -->
                     <div class="flex items-center justify-between p-4 bg-gray-50 rounded">
                         <label class="flex items-center cursor-pointer">
-                            <input type="checkbox" v-model="form.is_active" class="w-5 h-5 rounded" />
+                            <Checkbox v-model="form.is_active" :binary="true" inputId="is_active" />
                             <span class="ml-3 font-semibold">Enable Maintenance Mode</span>
                         </label>
-                        <button v-if="isActive" type="button" @click="deactivateMaintenance"
-                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                            Deactivate Now
-                        </button>
+                        <Button v-if="isActive" type="button" label="Deactivate Now" severity="success"
+                            @click="deactivateMaintenance" />
                     </div>
 
                     <!-- Title -->
                     <div>
                         <label class="block text-sm font-medium mb-2">Title</label>
-                        <input v-model="form.title" type="text"
-                            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="System Maintenance" />
+                        <InputText v-model="form.title" type="text" class="w-full" placeholder="System Maintenance" />
                     </div>
 
                     <!-- Message -->
                     <div>
                         <label class="block text-sm font-medium mb-2">Message</label>
-                        <textarea v-model="form.message"
-                            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            rows="4" placeholder="We are performing scheduled maintenance..."></textarea>
+                        <Textarea v-model="form.message" class="w-full" rows="4"
+                            placeholder="We are performing scheduled maintenance..." />
                     </div>
 
                     <!-- Start Time -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-2">Start Time</label>
-                            <input v-model="form.start_time" type="datetime-local"
-                                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            <InputText v-model="form.start_time" type="datetime-local" class="w-full" />
                         </div>
 
                         <!-- End Time -->
                         <div>
                             <label class="block text-sm font-medium mb-2">End Time</label>
-                            <input v-model="form.end_time" type="datetime-local"
-                                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            <InputText v-model="form.end_time" type="datetime-local" class="w-full" />
                         </div>
                     </div>
 
                     <!-- Type -->
                     <div>
                         <label class="block text-sm font-medium mb-2">Alert Type</label>
-                        <select v-model="form.type"
-                            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="info">Info</option>
-                            <option value="warning">Warning</option>
-                            <option value="critical">Critical</option>
-                        </select>
+                        <Select v-model="form.type"
+                            :options="[{ value: 'info', label: 'Info' }, { value: 'warning', label: 'Warning' }, { value: 'critical', label: 'Critical' }]"
+                            optionLabel="label" optionValue="value" class="w-full" />
                     </div>
 
                     <!-- Admin Access -->
                     <div class="flex items-center p-4 bg-blue-50 rounded">
-                        <input type="checkbox" v-model="form.allow_admin_access" class="w-5 h-5 rounded" disabled />
+                        <Checkbox v-model="form.allow_admin_access" :binary="true" inputId="allow_admin_access"
+                            disabled />
                         <label class="ml-3 font-semibold text-blue-900">
                             Allow admin access during maintenance (Always enabled)
                         </label>
@@ -97,14 +88,8 @@
 
                     <!-- Buttons -->
                     <div class="flex gap-4 pt-4">
-                        <button type="submit"
-                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                            Save Changes
-                        </button>
-                        <button type="button" @click="resetForm"
-                            class="px-6 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition">
-                            Reset
-                        </button>
+                        <Button type="submit" label="Save Changes" icon="pi pi-check" />
+                        <Button type="button" label="Reset" severity="secondary" @click="resetForm" />
                     </div>
                 </form>
             </div>

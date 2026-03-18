@@ -2,16 +2,13 @@
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import InputError from "@/Components/ui/inputs/InputError.vue";
 import InputLabel from "@/Components/ui/inputs/InputLabel.vue";
-import PrimaryButton from "@/Components/ui/buttons/PrimaryButton.vue";
 import TextInput from "@/Components/ui/inputs/TextInput.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
-import VueMultiselect from "vue-multiselect";
 import Table from "@/Components/ui/table/Table.vue";
 import TableRow from "@/Components/ui/table/TableRow.vue";
 import TableHeaderCell from "@/Components/ui/table/TableHeaderCell.vue";
 import TableDataCell from "@/Components/ui/table/TableDataCell.vue";
 import { onMounted, computed } from "vue";
-import { ArrowUturnLeftIcon } from "@heroicons/vue/20/solid";
 
 const props = defineProps({
     user: { type: Object, required: true },
@@ -56,7 +53,7 @@ const submit = () => {
                 </h1>
                 <Link :href="route('users.index')"
                     class="text-slate-500 underline font-bold px-3 py-2 bg-none rounded-sm flex items-center justify-center gap-1">
-                    <ArrowUturnLeftIcon class="h-4 w-4" />
+                    <i class="pi pi-arrow-left" />
                     <span>Back</span>
                 </Link>
             </div>
@@ -91,19 +88,15 @@ const submit = () => {
 
                     <div class="mt-4">
                         <InputLabel for="roles" value="Role" />
-                        <VueMultiselect v-model="form.roles" :options="availableRoles" :close-on-select="true"
-                            placeholder="Select role" label="name" track-by="name" />
+                        <Select v-model="form.roles" :options="availableRoles" optionLabel="name"
+                            placeholder="Select role" class="w-full" />
                     </div>
 
                     <div class="flex items-center justify-end mt-4">
-                        <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }"
-                            :disabled="form.processing">
-                            Update
-                        </PrimaryButton>
+                        <Button type="submit" label="Update" icon="pi pi-check" :loading="form.processing" />
                     </div>
                 </form>
             </div>
         </div>
     </AdminLayout>
 </template>
-<style src="vue-multiselect/dist/vue-multiselect.css"></style>

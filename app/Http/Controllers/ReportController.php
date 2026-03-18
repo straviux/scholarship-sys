@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\WaitingListExport;
+use App\Exports\ApplicantExport;
 use App\Exports\ScholarshipReportExport;
 use Illuminate\Http\Request;
 use App\Models\ScholarshipProfile;
+use App\Models\ScholarshipRecord;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Browsershot\Browsershot;
@@ -108,9 +109,9 @@ class ReportController extends Controller
     }
 
     /**
-     * Generate a PDF waiting list report using Spatie/Browsershot.
+     * Generate a PDF applicants report using Spatie/Browsershot.
      */
-    public function generateWaitinglist(Request $request)
+    public function generateApplicantReport(Request $request)
     {
         // Build query based on filters
         // $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) {
@@ -305,7 +306,7 @@ class ReportController extends Controller
         // Get show_sequence_numbers parameter
         $showSequenceNumbers = $request->filled('show_sequence_numbers') && in_array($request->show_sequence_numbers, [1, '1', true, 'true'], true);
 
-        $html = View::make('waiting_list_report', [
+        $html = View::make('applicants_report', [
             'profiles' => $profiles,
             'groupedProfiles' => $groupedProfiles,
             'groupBy' => $groupBy,
@@ -359,9 +360,9 @@ class ReportController extends Controller
     }
 
     /**
-     * Generate an excel waiting list report using Laravel Excel.
+     * Generate an excel applicants report using Laravel Excel.
      */
-    public function generateExcelWaitinglist(Request $request)
+    public function generateExcelApplicants(Request $request)
     {
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant'])
             ->whereHas('scholarshipGrant', function ($q) {
@@ -518,12 +519,12 @@ class ReportController extends Controller
 
         // Generate filename with current date and time
         $currentDateTime = \Carbon\Carbon::now()->format('Y-m-d_H-i-s');
-        $filename = "scholarship_waiting_list_{$currentDateTime}.xlsx";
+        $filename = "scholarship_applicants_{$currentDateTime}.xlsx";
 
-        return Excel::download(new WaitingListExport($profiles, $summary, $filters, $reportType, $canViewJpm), $filename);
+        return Excel::download(new ApplicantExport($profiles, $summary, $filters, $reportType, $canViewJpm), $filename);
 
 
-        // $html = Excel::download('waiting_list_report', [
+        // $html = Excel::download('applicants_report', [
         //     'profiles' => $profiles,
         //     'summary' => $summary,
         //     'reportType' => $reportType,
@@ -1396,5 +1397,197 @@ class ReportController extends Controller
         return response($file)
             ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+    }
+
+    /**
+     * Export interviewed applicants as PDF
+     */
+    public function exportInterviewedPdf(Request $request)
+    {
+        $records = $this->getInterviewedRecords($request);
+
+        if ($records->isEmpty()) {
+            return response()->json(['error' => 'No records found'], 404);
+        }
+
+        $paperSize = $request->input('paper_size', 'A4');
+        $orientation = $request->input('orientation', 'landscape');
+        $includeAssessment = filter_var($request->input('include_assessment', true), FILTER_VALIDATE_BOOLEAN);
+        $reportType = $request->input('report_type', 'list');
+        $groupBy = $request->input('group_by', 'none');
+
+        $html = View::make('exports.interviewed-applicants', [
+            'records' => $records,
+            'reportType' => $reportType,
+            'groupBy' => $groupBy,
+            'includeAssessment' => $includeAssessment,
+            'paperSize' => $paperSize,
+            'orientation' => $orientation,
+        ])->render();
+
+        try {
+            $browsershot = Browsershot::html($html);
+
+            $chromePath = $this->getChromePath();
+            if ($chromePath) {
+                $browsershot->setChromePath($chromePath);
+            }
+
+            $browsershot->showBackground()
+                ->showBrowserHeaderAndFooter()
+                ->footerHtml('<div style="font-size: 9px; color: #444; position:fixed; right:0.5cm; bottom:0.1cm;">
+                    <span>Generated on <span class="date"></span></span>
+                    <span> - Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+                </div>')
+                ->margins(4, 4, 4, 4);
+
+            if ($orientation === 'landscape') {
+                $browsershot->landscape();
+            }
+
+            if ($paperSize === 'Legal') {
+                $browsershot->setPaperSize(215.9, 330.2);
+            } else {
+                $browsershot->format($paperSize);
+            }
+
+            $pdf = $browsershot->pdf();
+
+            return response($pdf)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="interviewed-applicants.pdf"');
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to generate PDF: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Export interviewed applicants as Excel
+     */
+    public function exportInterviewedExcel(Request $request)
+    {
+        $records = $this->getInterviewedRecords($request);
+
+        if ($records->isEmpty()) {
+            return response()->json(['error' => 'No records found'], 404);
+        }
+
+        $includeAssessment = filter_var($request->input('include_assessment', true), FILTER_VALIDATE_BOOLEAN);
+
+        $currentDateTime = \Carbon\Carbon::now()->format('Y-m-d_H-i-s');
+        $filename = "interviewed-applicants_{$currentDateTime}.xlsx";
+
+        // Build spreadsheet data
+        $headers = ['#', 'Last Name', 'First Name', 'Program', 'Course', 'Recommendation', 'Interview Date', 'Interviewer'];
+        if ($includeAssessment) {
+            array_splice($headers, 6, 0, ['Academic Potential', 'Financial Need', 'Communication Skills']);
+        }
+
+        $rows = [];
+        foreach ($records as $idx => $record) {
+            $row = [
+                $idx + 1,
+                $record->profile->last_name ?? '',
+                $record->profile->first_name ?? '',
+                $record->program->shortname ?? 'N/A',
+                $record->course->shortname ?? 'N/A',
+            ];
+            if ($includeAssessment) {
+                $row[] = ucfirst($record->academic_potential ?? 'N/A');
+                $row[] = ucfirst($record->financial_need_level ?? 'N/A');
+                $row[] = ucfirst($record->communication_skills ?? 'N/A');
+            }
+            $row[] = $this->formatRecommendationLabel($record->recommendation);
+            $row[] = $record->interviewed_at ? \Carbon\Carbon::parse($record->interviewed_at)->format('M d, Y') : 'N/A';
+            $row[] = $record->interviewer->name ?? 'N/A';
+            $rows[] = $row;
+        }
+
+        // Create a simple Excel export using PhpSpreadsheet
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Interviewed Applicants');
+
+        // Write headers
+        foreach ($headers as $colIdx => $header) {
+            $sheet->setCellValue([$colIdx + 1, 1], $header);
+        }
+
+        // Style headers
+        $headerStyle = $sheet->getStyle([1, 1, count($headers), 1]);
+        $headerStyle->getFont()->setBold(true);
+        $headerStyle->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
+        $headerStyle->getFill()->getStartColor()->setRGB('E2E8F0');
+
+        // Write rows
+        foreach ($rows as $rowIdx => $row) {
+            foreach ($row as $colIdx => $value) {
+                $sheet->setCellValue([$colIdx + 1, $rowIdx + 2], $value);
+            }
+        }
+
+        // Auto-size columns
+        foreach (range(1, count($headers)) as $col) {
+            $sheet->getColumnDimensionByColumn($col)->setAutoSize(true);
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $path = storage_path("app/exports/{$filename}");
+        if (!is_dir(dirname($path))) {
+            mkdir(dirname($path), 0755, true);
+        }
+        $writer->save($path);
+
+        $file = file_get_contents($path);
+        unlink($path);
+
+        return response($file)
+            ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+    }
+
+    /**
+     * Get interviewed records based on request filters
+     */
+    private function getInterviewedRecords(Request $request)
+    {
+        $ids = array_filter(array_map('trim', explode(',', $request->input('ids', ''))));
+
+        $query = ScholarshipRecord::with([
+            'profile' => function ($q) {
+                $q->select('profile_id', 'first_name', 'last_name', 'middle_name', 'contact_no');
+            },
+            'program' => function ($q) {
+                $q->select('scholarship_programs.id', 'scholarship_programs.name', 'scholarship_programs.shortname');
+            },
+            'course' => function ($q) {
+                $q->select('courses.id', 'courses.name', 'courses.shortname');
+            },
+            'school' => function ($q) {
+                $q->select('schools.id', 'schools.name', 'schools.shortname');
+            },
+            'interviewer'
+        ]);
+
+        if (!empty($ids)) {
+            $query->whereIn('id', $ids);
+        } else {
+            $query->where('unified_status', 'interviewed');
+        }
+
+        return $query->orderBy('interviewed_at', 'desc')->get();
+    }
+
+    /**
+     * Format recommendation label
+     */
+    private function formatRecommendationLabel($value)
+    {
+        $labels = [
+            'recommended' => 'Recommended for Approval',
+            'further_evaluation' => 'For Further Evaluation',
+            'not_recommended' => 'Not Recommended',
+        ];
+        return $labels[$value] ?? 'N/A';
     }
 }

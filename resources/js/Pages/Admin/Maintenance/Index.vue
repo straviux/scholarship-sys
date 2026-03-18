@@ -71,24 +71,20 @@
                                     class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200">
                                     <div>
                                         <label class="flex items-center cursor-pointer gap-3">
-                                            <input type="checkbox" v-model="form.is_active"
-                                                class="w-5 h-5 rounded cursor-pointer accent-blue-600" />
+                                            <Checkbox v-model="form.is_active" :binary="true" />
                                             <span class="font-semibold text-gray-900">Enable Maintenance Mode</span>
                                         </label>
                                         <p class="text-xs text-gray-500 mt-1 ml-8">Users will see a banner with your
                                             message</p>
                                     </div>
-                                    <button v-if="isActive" type="button" @click="showDeactivateDialog"
-                                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm">
-                                        Deactivate Now
-                                    </button>
+                                    <Button v-if="isActive" type="button" @click="showDeactivateDialog"
+                                        label="Deactivate Now" severity="success" size="small" />
                                 </div>
 
                                 <!-- Title -->
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-900 mb-2">Banner Title</label>
-                                    <input v-model="form.title" type="text"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    <InputText v-model="form.title" type="text" class="w-full"
                                         placeholder="e.g., Scheduled System Maintenance" maxlength="100" />
                                     <p class="text-xs text-gray-500 mt-1">{{ form.title.length }}/100 characters</p>
                                 </div>
@@ -96,10 +92,9 @@
                                 <!-- Message -->
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-900 mb-2">Message</label>
-                                    <textarea v-model="form.message"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                    <Textarea v-model="form.message" class="w-full"
                                         rows="4" placeholder="Inform users about what's happening..."
-                                        maxlength="500"></textarea>
+                                        maxlength="500" />
                                     <p class="text-xs text-gray-500 mt-1">{{ form.message.length }}/500 characters</p>
                                 </div>
 
@@ -107,15 +102,13 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-semibold text-gray-900 mb-2">Start Time</label>
-                                        <input v-model="form.start_time" type="datetime-local"
-                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        <InputText v-model="form.start_time" type="datetime-local" class="w-full"
                                             :min="minStartTime" required />
                                         <p class="text-xs text-gray-500 mt-1">Minimum 10 minutes from now</p>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-semibold text-gray-900 mb-2">End Time</label>
-                                        <input v-model="form.end_time" type="datetime-local"
-                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        <InputText v-model="form.end_time" type="datetime-local" class="w-full"
                                             :min="form.start_time" required />
                                         <p class="text-xs text-gray-500 mt-1">Must be after start time</p>
                                     </div>
@@ -176,14 +169,8 @@
 
                                 <!-- Action Buttons -->
                                 <div class="flex gap-3 pt-4 border-t">
-                                    <button type="submit"
-                                        class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
-                                        Save Configuration
-                                    </button>
-                                    <button type="button" @click="resetForm"
-                                        class="px-6 py-3 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition font-semibold">
-                                        Reset
-                                    </button>
+                                    <Button type="submit" label="Save Configuration" class="flex-1" />
+                                    <Button type="button" @click="resetForm" label="Reset" severity="secondary" />
                                 </div>
                             </form>
                         </div>
@@ -282,18 +269,10 @@
                         <p class="text-gray-600 text-sm mt-2 text-center">{{ dialogMessage }}</p>
                     </div>
                     <div class="flex gap-3 p-6 bg-gray-50 border-t">
-                        <button @click="closeDialog"
-                            class="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition font-semibold">
-                            Cancel
-                        </button>
-                        <button @click="confirmDialog" :class="[
-                            'flex-1 px-4 py-2 text-white rounded-lg transition font-semibold',
-                            dialogType === 'deactivate'
-                                ? 'bg-green-600 hover:bg-green-700'
-                                : 'bg-blue-600 hover:bg-blue-700'
-                        ]">
-                            {{ dialogAction }}
-                        </button>
+                        <Button @click="closeDialog" label="Cancel" severity="secondary" class="flex-1" />
+                        <Button @click="confirmDialog" :class="[
+                            'flex-1',
+                        ]" :severity="dialogType === 'deactivate' ? 'success' : 'primary'" :label="dialogAction" />
                     </div>
                 </div>
             </div>

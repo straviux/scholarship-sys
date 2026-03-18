@@ -154,28 +154,18 @@ const closeModal = () => {
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Date Range</h3>
                 <div class="flex flex-wrap items-end gap-3">
-                    <button @click="setDateRange(7)"
-                        class="px-3 py-2 text-sm bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 font-medium transition cursor-pointer">Last
-                        7 Days</button>
-                    <button @click="setDateRange(30)"
-                        class="px-3 py-2 text-sm bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 font-medium transition cursor-pointer">Last
-                        30 Days</button>
-                    <button @click="setDateRange(90)"
-                        class="px-3 py-2 text-sm bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 font-medium transition cursor-pointer">Last
-                        90 Days</button>
-                    <button @click="setDateRange(365)"
-                        class="px-3 py-2 text-sm bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 font-medium transition cursor-pointer">Last
-                        Year</button>
+                    <Button @click="setDateRange(7)" label="Last 7 Days" severity="info" outlined size="small" />
+                    <Button @click="setDateRange(30)" label="Last 30 Days" severity="info" outlined size="small" />
+                    <Button @click="setDateRange(90)" label="Last 90 Days" severity="info" outlined size="small" />
+                    <Button @click="setDateRange(365)" label="Last Year" severity="info" outlined size="small" />
 
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">From</label>
-                        <input v-model="startDate" type="date"
-                            class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <InputText v-model="startDate" type="date" />
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">To</label>
-                        <input v-model="endDate" type="date"
-                            class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <InputText v-model="endDate" type="date" />
                     </div>
                 </div>
             </div>

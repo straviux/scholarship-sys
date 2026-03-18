@@ -10,7 +10,7 @@
 
         <div class="space-y-4">
             <p class="text-sm text-gray-600">
-                Add a new applicant to the waiting list. Complete all sections to create a comprehensive applicant
+                Add a new applicant to the system. Complete all sections to create a comprehensive applicant
                 record.
             </p>
 

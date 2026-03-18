@@ -4,11 +4,7 @@
             <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in">
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-orange-500 to-red-600 px-6 py-6 text-center">
-                    <svg class="w-12 h-12 mx-auto text-white mb-3" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+                    <i class="pi pi-exclamation-circle text-white mb-3" style="font-size: 3rem"></i>
                     <h2 class="text-xl font-bold text-white">Scheduled Maintenance</h2>
                 </div>
 

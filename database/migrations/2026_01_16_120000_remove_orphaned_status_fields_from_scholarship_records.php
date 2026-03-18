@@ -14,14 +14,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('scholarship_records', function (Blueprint $table) {
-            // First, drop foreign key constraints
-            $table->dropForeign(['approved_by']);
-            $table->dropForeign(['declined_by']);
-            $table->dropForeign(['resubmission_allowed_by']);
-            $table->dropForeign(['previous_scholarship_id']);
+            // Drop foreign key constraints if they exist
+            $fks = ['approved_by', 'declined_by', 'resubmission_allowed_by', 'previous_scholarship_id'];
+            foreach ($fks as $fk) {
+                if (Schema::hasColumn('scholarship_records', $fk)) {
+                    try {
+                        $table->dropForeign([$fk]);
+                    } catch (\Throwable $e) {
+                        // FK may not exist
+                    }
+                }
+            }
+        });
 
+        Schema::table('scholarship_records', function (Blueprint $table) {
             // Drop old approval workflow fields
-            $table->dropColumn([
+            $approvalCols = [
                 'approval_status',
                 'approved_by',
                 'approved_at',
@@ -29,18 +37,30 @@ return new class extends Migration
                 'declined_by',
                 'declined_at',
                 'decline_reason',
-            ]);
+            ];
+            $existing = array_filter($approvalCols, fn($col) => Schema::hasColumn('scholarship_records', $col));
+            if ($existing) {
+                $table->dropColumn($existing);
+            }
+        });
 
+        Schema::table('scholarship_records', function (Blueprint $table) {
             // Drop conditional approval fields
-            $table->dropColumn([
+            $conditionalCols = [
                 'conditional_requirements',
                 'conditional_deadline',
                 'conditional_deadline_notified_at',
                 'conditional_deadline_expired',
-            ]);
+            ];
+            $existing = array_filter($conditionalCols, fn($col) => Schema::hasColumn('scholarship_records', $col));
+            if ($existing) {
+                $table->dropColumn($existing);
+            }
+        });
 
+        Schema::table('scholarship_records', function (Blueprint $table) {
             // Drop resubmission workflow fields
-            $table->dropColumn([
+            $resubmissionCols = [
                 'resubmitted_at',
                 'resubmission_notes',
                 'resubmission_allowed_by',
@@ -48,28 +68,42 @@ return new class extends Migration
                 'resubmission_deadline',
                 'resubmission_requirements',
                 'resubmission_count',
-            ]);
+            ];
+            $existing = array_filter($resubmissionCols, fn($col) => Schema::hasColumn('scholarship_records', $col));
+            if ($existing) {
+                $table->dropColumn($existing);
+            }
+        });
 
+        Schema::table('scholarship_records', function (Blueprint $table) {
             // Drop old status fields (replaced by unified_status)
-            $table->dropColumn([
+            $statusCols = [
                 'scholarship_status',
                 'scholarship_status_remarks',
                 'scholarship_status_date',
-            ]);
+            ];
+            $existing = array_filter($statusCols, fn($col) => Schema::hasColumn('scholarship_records', $col));
+            if ($existing) {
+                $table->dropColumn($existing);
+            }
+        });
 
+        Schema::table('scholarship_records', function (Blueprint $table) {
             // Drop completion fields (now in scholarship_completions table)
-            $table->dropColumn([
-                'completion_status',
-                'completion_date',
-                'completion_remarks',
-            ]);
+            $completionCols = ['completion_status', 'completion_date', 'completion_remarks'];
+            $existing = array_filter($completionCols, fn($col) => Schema::hasColumn('scholarship_records', $col));
+            if ($existing) {
+                $table->dropColumn($existing);
+            }
+        });
 
+        Schema::table('scholarship_records', function (Blueprint $table) {
             // Drop next-application workflow fields (incomplete feature)
-            $table->dropColumn([
-                'application_cycle',
-                'previous_scholarship_id',
-                'next_degree_level',
-            ]);
+            $nextAppCols = ['application_cycle', 'previous_scholarship_id', 'next_degree_level'];
+            $existing = array_filter($nextAppCols, fn($col) => Schema::hasColumn('scholarship_records', $col));
+            if ($existing) {
+                $table->dropColumn($existing);
+            }
         });
     }
 

@@ -98,7 +98,7 @@ const faqs = ref([
                         <div class="space-y-3">
                             <div class="bg-blue-50 p-4 rounded-lg">
                                 <h5 class="font-semibold text-blue-900 mb-2">
-                                    <i class="pi pi-fw pi-clipboard mr-2"></i>Waiting List
+                                    <i class="pi pi-fw pi-clipboard mr-2"></i>Applicants
                                 </h5>
                                 <p class="text-sm text-gray-700">
                                     The entry point for new scholarship applicants. All new applicants begin their
@@ -110,7 +110,7 @@ const faqs = ref([
 
                             <div class="bg-green-50 p-4 rounded-lg">
                                 <h5 class="font-semibold text-green-900 mb-2">
-                                    <i class="pi pi-fw pi-check-circle mr-2"></i>Reviewed Applicants
+                                    <i class="pi pi-fw pi-check-circle mr-2"></i>Interviewed Applicants
                                 </h5>
                                 <p class="text-sm text-gray-700">
                                     Applicants who have been reviewed by program managers and are ready for final
@@ -158,10 +158,10 @@ const faqs = ref([
                                 <h5 class="font-semibold text-gray-900 flex items-center gap-2">
                                     <span
                                         class="bg-gray-200 text-gray-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">1</span>
-                                    Navigate to Waiting List
+                                    Navigate to Applicants
                                 </h5>
                                 <p class="text-sm text-gray-700 mt-1">
-                                    Go to the Scholarship menu and select "Waiting List" from the sidebar.
+                                    Go to the Scholarship menu and select "Applicants" from the sidebar.
                                 </p>
                             </div>
 
@@ -210,7 +210,7 @@ const faqs = ref([
                                     Submit the Application
                                 </h5>
                                 <p class="text-sm text-gray-700 mt-1">
-                                    Click "Save" or "Submit" to add the applicant to the waiting list.
+                                    Click "Save" or "Submit" to add the applicant to the applicant list.
                                 </p>
                             </div>
                         </div>
@@ -240,10 +240,11 @@ const faqs = ref([
 
                         <div class="space-y-3">
                             <div class="bg-white border border-gray-200 p-4 rounded-lg">
-                                <h5 class="font-semibold text-gray-900 mb-2">Stage 1: Waiting List (Initial Submission)
+                                <h5 class="font-semibold text-gray-900 mb-2">Stage 1: Applicants (Initial Submission)
                                 </h5>
                                 <p class="text-sm text-gray-700">
-                                    Applicants are added to the waiting list. Their documents are verified to ensure all
+                                    Applicants are added to the applicant list. Their documents are verified to ensure
+                                    all
                                     required
                                     files are present.
                                     The system checks for completeness and compliance with program requirements.
@@ -266,7 +267,7 @@ const faqs = ref([
                                 <p class="text-sm text-gray-700 mt-2">
                                     <strong>The program manager then makes the approval or denial decision</strong> and
                                     moves the
-                                    applicant to the "Reviewed Applicants" list with their decision recorded.
+                                    applicant to the "Interviewed Applicants" list with their decision recorded.
                                 </p>
                             </div>
 
@@ -368,7 +369,7 @@ const faqs = ref([
                                         class="px-3 py-1 bg-yellow-500 text-white rounded-full text-sm font-semibold">PENDING</span>
                                 </div>
                                 <p class="text-sm text-gray-700">
-                                    Applicant has been added to the waiting list. Documents are being verified and
+                                    Applicant has been added to the applicant list. Documents are being verified and
                                     initial
                                     screening is in progress. Waiting for review by program manager.
                                 </p>
@@ -553,7 +554,7 @@ const faqs = ref([
                                     <i class="pi pi-fw pi-plus mr-2"></i>Add a New Applicant
                                 </h5>
                                 <ol class="text-sm text-red-800 space-y-1 list-decimal list-inside">
-                                    <li>Go to Scholarship ✏️ Waiting List</li>
+                                    <li>Go to Scholarship ✏️ Applicants</li>
                                     <li>Click "Add New" button</li>
                                     <li>Fill in all required information</li>
                                     <li>Upload required documents</li>
@@ -591,7 +592,7 @@ const faqs = ref([
                                     <i class="pi pi-fw pi-check-circle mr-2"></i>Mark as Reviewed
                                 </h5>
                                 <p class="text-sm text-gray-700 mb-2">
-                                    To move an applicant from Waiting List to Reviewed Applicants:
+                                    To move an applicant from Applicants to Interviewed Applicants:
                                 </p>
                                 <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
                                     <li>Open the applicant's profile</li>
@@ -606,7 +607,7 @@ const faqs = ref([
                                     <i class="pi pi-fw pi-star mr-2"></i>Approve or Deny an Applicant
                                 </h5>
                                 <p class="text-sm text-gray-700 mb-2">
-                                    In the Reviewed Applicants list:
+                                    In the Interviewed Applicants list:
                                 </p>
                                 <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
                                     <li>Click on the applicant</li>

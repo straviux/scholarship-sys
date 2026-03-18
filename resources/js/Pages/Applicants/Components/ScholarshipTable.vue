@@ -80,7 +80,7 @@
                     <label v-if="hasPermission('edit-scholar-profile')">
                         <p
                             class="px-2 text-sm font-medium leading-normal text-blue-500 cursor-pointer underline underline-offset-2 flex items-center gap-1">
-                            <CloudArrowUpIcon class="h-4 w-4" /> upload file
+                            <i class="pi pi-cloud-upload" /> upload file
                         </p>
                         <input type='file' class="hidden" />
                     </label>
@@ -91,7 +91,7 @@
                     <label v-if="hasPermission('edit-scholar-profile')">
                         <p
                             class="px-2 text-sm font-medium leading-normal text-blue-500 cursor-pointer underline underline-offset-2 flex items-center gap-1">
-                            <CloudArrowUpIcon class="h-4 w-4" /> upload file
+                            <i class="pi pi-cloud-upload" /> upload file
                         </p>
                         <input type='file' class="hidden" />
                     </label>
@@ -102,7 +102,7 @@
                     <label v-if="hasPermission('edit-scholar-profile')">
                         <p
                             class="px-2 text-sm font-medium leading-normal text-blue-500 cursor-pointer underline underline-offset-2 flex items-center gap-1">
-                            <CloudArrowUpIcon class="h-4 w-4" /> upload file
+                            <i class="pi pi-cloud-upload" /> upload file
                         </p>
                         <input type='file' class="hidden" />
                     </label>
@@ -112,7 +112,7 @@
                     <label v-if="hasPermission('edit-scholar-profile')">
                         <p
                             class="px-2 text-sm font-medium leading-normal text-blue-500 cursor-pointer underline underline-offset-2 flex items-center gap-1">
-                            <CloudArrowUpIcon class="h-4 w-4" /> upload file
+                            <i class="pi pi-cloud-upload" /> upload file
                         </p>
                         <input type='file' class="hidden" />
                     </label>
@@ -124,7 +124,6 @@
 
 <script setup>
 import { usePermission } from '@/composable/permissions';
-import { CloudArrowUpIcon } from "@heroicons/vue/20/solid";
 const props = defineProps({
     profile: Object,
     action: String,

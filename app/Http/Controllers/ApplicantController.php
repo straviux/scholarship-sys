@@ -19,10 +19,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Browsershot\Browsershot;
 
-class WaitingListController extends Controller
+class ApplicantController extends Controller
 {
     /**
-     * Display the waiting list of scholarship applicants
+     * Display the list of scholarship applicants
      */
     public function index(Request $request, $action = null, $id = null): Response
     {
@@ -116,22 +116,22 @@ class WaitingListController extends Controller
             $query->where('scholarship_records.program_id', $programId);
         }
 
-        // Filter by date range (date_filed) - pending status already guaranteed by INNER JOIN
+        // Filter by date range (date_filed)
         if ($request->filled('date_from') && $request->filled('date_to')) {
-            $query->where(function ($q) use ($request) {
-                $q->whereBetween('scholarship_records.date_filed', [$request->date_from, $request->date_to])
-                    ->orWhereBetween('scholarship_profiles.created_at', [$request->date_from, $request->date_to]);
-            });
+            $query->whereBetween('scholarship_records.date_filed', [$request->date_from, $request->date_to]);
         } elseif ($request->filled('date_from')) {
-            $query->where(function ($q) use ($request) {
-                $q->whereDate('scholarship_records.date_filed', '>=', $request->date_from)
-                    ->orWhereDate('scholarship_profiles.created_at', '>=', $request->date_from);
-            });
+            $query->whereDate('scholarship_records.date_filed', '>=', $request->date_from);
         } elseif ($request->filled('date_to')) {
-            $query->where(function ($q) use ($request) {
-                $q->whereDate('scholarship_records.date_filed', '<=', $request->date_to)
-                    ->orWhereDate('scholarship_profiles.created_at', '<=', $request->date_to);
-            });
+            $query->whereDate('scholarship_records.date_filed', '<=', $request->date_to);
+        }
+
+        // Filter by date encoded (created_at)
+        if ($request->filled('encoded_from') && $request->filled('encoded_to')) {
+            $query->whereBetween('scholarship_profiles.created_at', [$request->encoded_from, $request->encoded_to]);
+        } elseif ($request->filled('encoded_from')) {
+            $query->whereDate('scholarship_profiles.created_at', '>=', $request->encoded_from);
+        } elseif ($request->filled('encoded_to')) {
+            $query->whereDate('scholarship_profiles.created_at', '<=', $request->encoded_to);
         }
 
         // Filter by school - use leftJoin to avoid duplicate rows
@@ -160,6 +160,11 @@ class WaitingListController extends Controller
             $query->where('scholarship_records.yakap_category', $request->yakap_category);
         }
 
+        // Filter by priority_level
+        if ($request->filled('priority_level')) {
+            $query->where('scholarship_profiles.priority_level', $request->priority_level);
+        }
+
         // Filter by course - use leftJoin to avoid duplicate rows
         if ($request->filled('course')) {
             $query->leftJoin('courses', 'scholarship_records.course_id', '=', 'courses.id')
@@ -179,6 +184,11 @@ class WaitingListController extends Controller
         // Filter by municipality
         if ($request->filled('municipality')) {
             $query->where('scholarship_profiles.municipality', 'like', '%' . $request->municipality . '%');
+        }
+
+        // Filter by barangay
+        if ($request->filled('barangay')) {
+            $query->where('scholarship_profiles.barangay', 'like', '%' . $request->barangay . '%');
         }
 
         // Filter by name (first_name, last_name, or full name)
@@ -386,11 +396,15 @@ class WaitingListController extends Controller
                 'school' => $request->get('school', ''),
                 'course' => $request->get('course', ''),
                 'municipality' => $request->get('municipality', ''),
+                'barangay' => $request->get('barangay', ''),
                 'year_level' => $request->get('year_level', ''),
                 'yakap_category' => $request->get('yakap_category', ''),
+                'priority_level' => $request->get('priority_level', ''),
                 'parent_name' => $request->get('parent_name', ''),
                 'date_from' => $request->get('date_from', ''),
                 'date_to' => $request->get('date_to', ''),
+                'encoded_from' => $request->get('encoded_from', ''),
+                'encoded_to' => $request->get('encoded_to', ''),
                 'remarks' => $request->get('remarks', ''),
                 'global_search' => $request->get('global_search', ''),
                 'page' => $request->get('page', 1),
@@ -427,10 +441,14 @@ class WaitingListController extends Controller
             'school' => $request->get('school', ''),
             'course' => $request->get('course', ''),
             'municipality' => $request->get('municipality', ''),
+            'barangay' => $request->get('barangay', ''),
             'year_level' => $request->get('year_level', ''),
+            'priority_level' => $request->get('priority_level', ''),
             'parent_name' => $request->get('parent_name', ''),
             'date_from' => $request->get('date_from', ''),
             'date_to' => $request->get('date_to', ''),
+            'encoded_from' => $request->get('encoded_from', ''),
+            'encoded_to' => $request->get('encoded_to', ''),
             'remarks' => $request->get('remarks', ''),
             'global_search' => $request->get('global_search', ''),
             'show_jpm_only' => $request->get('show_jpm_only', ''),
@@ -738,8 +756,8 @@ class WaitingListController extends Controller
 
         // Return appropriate format
         if ($exportFormat === 'pdf') {
-            // Generate HTML from waiting_list_report view
-            $html = view('waiting_list_report', [
+            // Generate HTML from applicants_report view
+            $html = view('applicants_report', [
                 'profiles' => $profiles,
                 'summary' => [
                     'total' => $profiles->count(),
@@ -788,7 +806,7 @@ class WaitingListController extends Controller
         }
 
         // Excel export using Maatwebsite Excel
-        $export = new \App\Exports\WaitingListExport($profiles, $summary, $filters, 'list', $canViewJpm);
+        $export = new \App\Exports\ApplicantExport($profiles, $summary, $filters, 'list', $canViewJpm);
         return \Maatwebsite\Excel\Facades\Excel::download($export, $filename . '.xlsx');
     }
 

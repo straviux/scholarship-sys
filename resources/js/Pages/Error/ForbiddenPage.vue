@@ -21,11 +21,7 @@ defineProps({
             <div class="text-center mb-8">
                 <div
                     class="inline-flex items-center justify-center w-24 h-24 bg-red-100 dark:bg-red-900/30 rounded-full mb-6">
-                    <svg class="w-12 h-12 text-red-600 dark:text-red-400" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v2m0 4v2m0 0a9 9 0 11-9-9m9 9a9 9 0 1-9 9m2.25-9a6.75 6.75 0 1113.5 0H12z"></path>
-                    </svg>
+                    <i class="pi pi-lock text-red-600 dark:text-red-400" style="font-size: 3rem"></i>
                 </div>
 
                 <!-- Status Code -->
@@ -53,11 +49,7 @@ defineProps({
                 class="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 mb-8 shadow-sm">
                 <div class="flex items-start">
                     <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zm-11-1a1 1 0 11-2 0 1 1 0 012 0zM8 8a1 1 0 000 2h6a1 1 0 000-2H8zm0 4a1 1 0 000 2h3a1 1 0 000-2H8z"
-                                clip-rule="evenodd"></path>
-                        </svg>
+                        <i class="pi pi-info-circle h-5 w-5 text-blue-500"></i>
                     </div>
                     <div class="ml-3">
                         <h3 class="text-sm font-medium text-gray-900 dark:text-white">
@@ -80,22 +72,11 @@ defineProps({
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link :href="route('home')"
                     class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M3 12l2-3m0 0l7-4 7 4M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9m-9 11l4-4m0 0l4 4m-4-4V3">
-                        </path>
-                    </svg>
+                    <i class="pi pi-home w-5 h-5 mr-2"></i>
                     Go to Home
                 </Link>
 
-                <button @click="window.history.back()"
-                    class="inline-flex items-center justify-center px-6 py-3 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-900 dark:text-white font-medium rounded-lg transition-all duration-200">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Go Back
-                </button>
+                <Button @click="window.history.back()" label="Go Back" icon="pi pi-arrow-left" severity="secondary" />
             </div>
 
             <!-- Support Text -->

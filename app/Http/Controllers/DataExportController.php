@@ -173,7 +173,7 @@ class DataExportController extends Controller
         }
 
         // Pre-calculate queue numbers across ALL pending profiles (matching ReportController logic)
-        // This matches the waiting_list_report.blade.php exact logic
+        // This matches the applicants_report.blade.php exact logic
         $allPendingProfiles = ScholarshipProfile::with([
             'scholarshipGrant' => function ($query) {
                 $query->where('unified_status', 'pending');
@@ -448,7 +448,7 @@ class DataExportController extends Controller
         }
 
         // Count applicants
-        // is_on_waiting_list is now managed through scholarship_records.unified_status
+        // is_on_waiting_list is now managed through scholarship_records.unified_status (pending status)
         $applicantsQuery = ScholarshipProfile::whereHas('scholarshipGrant', function ($q) {
             $q->where('unified_status', 'pending'); // pending = Waiting List
         });

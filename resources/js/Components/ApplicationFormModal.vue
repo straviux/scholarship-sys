@@ -434,7 +434,7 @@ const handleSubmit = () => {
         console.log('Updating profile with ID:', profileId);
         console.log('Submitting data:', submitData);
 
-        form.transform(() => submitData).put(route('waitinglist.update', profileId), {
+        form.transform(() => submitData).put(route('applicants.update', profileId), {
             preserveScroll: true,
             onSuccess: () => {
                 toast.success('Application updated successfully!', {
@@ -455,7 +455,7 @@ const handleSubmit = () => {
         // Create new profile
         console.log('Creating new profile with data:', submitData);
 
-        form.transform(() => submitData).post(route('waitinglist.store'), {
+        form.transform(() => submitData).post(route('applicants.store'), {
             preserveScroll: true,
             onSuccess: () => {
                 toast.success('Application submitted successfully!', {

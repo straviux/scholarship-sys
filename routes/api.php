@@ -4,9 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ScholarshipApiController;
 use App\Http\Controllers\Api\FundTransactionController;
 use App\Http\Controllers\Admin\MaintenanceController;
+use App\Http\Controllers\ScholarshipProfileController;
 
 // Fund Transaction endpoints - use web middleware for session-based auth
-Route::middleware(['web'])->group(function () {
+Route::middleware(['web', 'auth'])->group(function () {
     Route::post('/fund-transactions', [FundTransactionController::class, 'store']);
     Route::get('/fund-transactions', [FundTransactionController::class, 'index']);
     Route::get('/fund-transactions/{id}', [FundTransactionController::class, 'show']);
@@ -28,34 +29,22 @@ Route::middleware(['web'])->group(function () {
     Route::get('/fund-transactions/{id}/obr-pdf', [FundTransactionController::class, 'generateOBRPdf']);
     Route::get('/fund-transactions/{id}/obr-excel', [FundTransactionController::class, 'generateOBRExcel']);
 
+    // Document Upload/Download/Delete endpoints
+    Route::post('/fund-transactions/{id}/upload-document', [FundTransactionController::class, 'uploadDocument']);
+    Route::get('/fund-transactions/{id}/document/{docType}/download', [FundTransactionController::class, 'downloadDocument']);
+    Route::delete('/fund-transactions/{id}/document/{docType}', [FundTransactionController::class, 'deleteDocument']);
+    Route::post('/fund-transactions/{id}/verify-qr', [FundTransactionController::class, 'verifyDocumentQR']);
+    Route::get('/fund-transactions/{id}/documents', [FundTransactionController::class, 'getDocuments']);
+    Route::post('/fund-transactions/{id}/generate-qr', [FundTransactionController::class, 'generateQrCode']);
+
     // OBR Tracking Info endpoint - proxy to external service
-    Route::get('/obr-tracking-info', function (Illuminate\Http\Request $request) {
-        try {
-            $client = new \GuzzleHttp\Client();
-            $response = $client->get('https://tracking.pgpict.com/api/obr-tracking-info', [
-                'query' => $request->query(),
-                'timeout' => 10,
-                'verify' => false
-            ]);
-
-            $trackingData = json_decode($response->getBody(), true);
-
-            // Wrap the response in success format for frontend consistency
-            return response()->json([
-                'success' => true,
-                'data' => $trackingData
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unable to fetch tracking information from server. Please try again later.',
-                'error' => $e->getMessage()
-            ], 503);
-        }
-    });
+    Route::get('/obr-tracking-info', [FundTransactionController::class, 'getObrTrackingInfo']);
 
     // Scholars endpoint for voucher creation
     Route::get('/scholars', [ScholarshipApiController::class, 'getActiveScholars']);
+
+    // Interview assessment submission
+    Route::post('/scholarship/{record}/interview', [ScholarshipProfileController::class, 'submitInterview']);
 });
 
 // Other API endpoints

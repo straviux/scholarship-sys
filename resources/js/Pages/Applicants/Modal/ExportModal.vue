@@ -137,7 +137,7 @@ function exportData() {
 
     // Build URL with query parameters
     const queryString = new URLSearchParams(params).toString();
-    const exportUrl = route('waitinglist.export') + (queryString ? '?' + queryString : '');
+    const exportUrl = route('applicants.export') + (queryString ? '?' + queryString : '');
 
     // Open export URL in new tab (for download)
     window.open(exportUrl, '_blank');

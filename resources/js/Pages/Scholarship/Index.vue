@@ -64,98 +64,125 @@
                     <!-- Filter Controls Header -->
                     <div class="flex justify-between items-center py-1">
                         <div class="flex items-center gap-3">
-                            <Button :label="showAllFilters ? 'Show Basic Filters' : 'Show All Filters'"
-                                icon="pi pi-filter" severity="secondary" size="small" outlined
-                                @click="showAllFilters = !showAllFilters" />
-                            <!-- <Button label="Search" icon="pi pi-search" severity="primary" size="small"
-                                @click="triggerSearch" v-tooltip.bottom="'Apply filters and search'" /> -->
+                            <Button label="More Filters" icon="pi pi-filter" severity="secondary" size="small" outlined
+                                @click="openDrawer()" />
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="opacity-60 text-sm">Click Apply Filter after changing any filter</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <!-- <Tag :value="`${totalRecords} profiles`" severity="info" /> -->
                             <Button severity="secondary" outlined size="small" icon="pi pi-history"
-                                @click="clearFilters" v-tooltip.bottom="'Clear Filters'" />
-                            <Button label="Apply Filter" icon="pi pi-filter-fill" severity="info" size="small"
-                                @click="triggerSearch" v-tooltip.bottom="'Apply filters and search'" />
+                                @click="clearAllFilters" v-tooltip.bottom="'Clear Filters'" />
                         </div>
                     </div>
 
-                    <!-- All Filters -->
-                    <div class="space-y-3">
-                        <!-- Default Filters Row -->
-                        <div class="grid grid-cols-2 gap-2 md:grid-cols-4 lg:gap-8">
-                            <div class="flex flex-col">
-                                <label class="text-xs font-medium text-gray-600 mb-1">Applicant Name</label>
-                                <InputText v-model="filter.name" placeholder="Search applicant name..." class="w-full"
-                                    size="small" />
-                            </div>
-                            <div class="flex flex-col">
-                                <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
-                                <ProgramSelect v-model="filter.program" label="shortname"
-                                    custom-placeholder="All Programs" size="small" class="w-full" />
-                            </div>
-                            <div class="flex flex-col">
-                                <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
-                                <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses"
-                                    size="small" class="w-full" />
-                            </div>
-                            <!-- Only show Unified Status filter when profileType is 'all' -->
-                            <div class="flex flex-col" v-if="profileType === 'all'">
-                                <label class="text-xs font-medium text-gray-600 mb-1">Status</label>
-                                <Select v-model="filter.unified_status" :options="unifiedStatusOptions"
-                                    optionLabel="label" optionValue="value" placeholder="All Statuses" showClear
-                                    class="w-full" size="small" />
-                            </div>
+                    <!-- Basic Filters Row -->
+                    <div class="grid grid-cols-2 gap-2 md:grid-cols-4 lg:gap-8">
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
+                            <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="All Programs"
+                                size="small" class="w-full" />
                         </div>
-
-                        <!-- Additional Filters (shown when showAllFilters is true) -->
-                        <template v-if="showAllFilters">
-                            <div class="grid grid-cols-2 gap-2 md:grid-cols-4 lg:gap-8">
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">School</label>
-                                    <SchoolSelect v-model="filter.school" label="shortname"
-                                        custom-placeholder="All Schools" size="small" class="w-full" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Municipality</label>
-                                    <MunicipalitySelect v-model="filter.municipality"
-                                        custom-placeholder="All Municipalities" size="small" class="w-full" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
-                                    <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
-                                        size="small" class="w-full" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Academic Year</label>
-                                    <Select v-model="filter.academic_year" :options="academicYearOptions"
-                                        optionLabel="label" optionValue="value" placeholder="All Years" showClear
-                                        size="small" class="w-full" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Grant Provision</label>
-                                    <Select v-model="filter.grant_provision" :options="grantProvisionOptions"
-                                        placeholder="All Provisions" size="small" class="w-full" showClear />
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Contract</label>
-                                    <Select v-model="filter.contract_status" :options="attachmentStatusOptions"
-                                        placeholder="All" size="small" class="w-full" showClear optionLabel="label"
-                                        optionValue="value" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Voucher</label>
-                                    <Select v-model="filter.voucher_status" :options="attachmentStatusOptions"
-                                        placeholder="All" size="small" class="w-full" showClear optionLabel="label"
-                                        optionValue="value" />
-                                </div>
-                            </div>
-                        </template>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
+                            <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses"
+                                size="small" class="w-full" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
+                            <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
+                                size="small" class="w-full" />
+                        </div>
+                        <!-- Only show Unified Status filter when profileType is 'all' -->
+                        <div class="flex flex-col" v-if="profileType === 'all'">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Status</label>
+                            <Select v-model="filter.unified_status" :options="unifiedStatusOptions" optionLabel="label"
+                                optionValue="value" placeholder="All Statuses" showClear class="w-full" size="small" />
+                        </div>
                     </div>
                 </div>
             </Panel>
+
+            <!-- Active Filter Tags -->
+            <div v-if="activeFilterTags.length" class="flex flex-wrap items-center gap-2 mt-2">
+                <span class="text-xs text-gray-500">Active Filters:</span>
+                <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="info" rounded class="cursor-pointer"
+                    @click="removeFilter(tag.key)">
+                    <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
+                    <i class="pi pi-times ml-1" style="font-size: 0.6rem"></i>
+                </Tag>
+            </div>
+
+            <!-- Filter Drawer -->
+            <Drawer v-model:visible="showFilterDrawer" header="All Filters" position="right" class="!w-[600px]">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
+                        <ProgramSelect v-model="drawerFilter.program" label="shortname"
+                            custom-placeholder="All Programs" size="small" class="w-full" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
+                        <CourseSelect v-model="drawerFilter.course" label="name" custom-placeholder="All Courses"
+                            size="small" class="w-full" :scholarship-program-id="drawerFilter.program?.id" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">School</label>
+                        <SchoolSelect v-model="drawerFilter.school" label="shortname" custom-placeholder="All Schools"
+                            size="small" class="w-full" :multiple="false" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
+                        <YearLevelSelect v-model="drawerFilter.year_level" custom-placeholder="All Year Levels"
+                            size="small" class="w-full" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Academic Year</label>
+                        <Select v-model="drawerFilter.academic_year" :options="academicYearOptions" optionLabel="label"
+                            optionValue="value" placeholder="All Years" showClear size="small" class="w-full" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Term</label>
+                        <TermSelect v-model="drawerFilter.term" size="small" class="w-full" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Municipality</label>
+                        <MunicipalitySelect v-model="drawerFilter.municipality" custom-placeholder="All Municipalities"
+                            size="small" class="w-full" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Barangay</label>
+                        <BarangaySelect v-model="drawerFilter.barangay" :municipality-id="drawerFilter.municipality?.id"
+                            custom-placeholder="All Barangays" size="small" class="w-full" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Grant Provision</label>
+                        <Select v-model="drawerFilter.grant_provision" :options="grantProvisionOptions"
+                            placeholder="All Provisions" size="small" class="w-full" showClear />
+                    </div>
+                    <div class="flex flex-col" v-if="profileType === 'all'">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Status</label>
+                        <Select v-model="drawerFilter.unified_status" :options="unifiedStatusOptions"
+                            optionLabel="label" optionValue="value" placeholder="All Statuses" showClear size="small"
+                            class="w-full" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Contract</label>
+                        <Select v-model="drawerFilter.contract_status" :options="attachmentStatusOptions"
+                            placeholder="All" size="small" class="w-full" showClear optionLabel="label"
+                            optionValue="value" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Voucher</label>
+                        <Select v-model="drawerFilter.voucher_status" :options="attachmentStatusOptions"
+                            placeholder="All" size="small" class="w-full" showClear optionLabel="label"
+                            optionValue="value" />
+                    </div>
+                </div>
+                <div class="flex gap-2 justify-end mt-6 pt-4 border-t">
+                    <Button severity="secondary" outlined size="small" icon="pi pi-history" label="Clear"
+                        @click="clearDrawerFilters" />
+                    <Button label="Apply" icon="pi pi-filter-fill" severity="info" size="small"
+                        @click="applyDrawerFilters" />
+                </div>
+            </Drawer>
 
             <!-- Profiles DataView -->
             <div class="mt-8">
@@ -175,7 +202,7 @@
                         </div>
                         <div class="flex items-center justify-center gap-4">
                             <div class="text-sm text-gray-600 flex items-center justify-center gap-2">
-                                <RecordsSelect v-model="filter.records" label="label" class="w-28" size="small" />
+                                <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
                                 <span>/ <strong>{{ totalRecords }}</strong></span>
                             </div>
                             <div class="flex items-center gap-2">
@@ -276,7 +303,7 @@
                                 </div>
                                 <div v-else-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'approved'"
                                     :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
-                                    v-tooltip="'Complete approval in Reviewed Applicants'"
+                                    v-tooltip="'Complete approval in Interviewed Applicants'"
                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
                                     {{
                                         getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
@@ -444,7 +471,7 @@
                                 </div>
                                 <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'approved'"
                                     :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
-                                    v-tooltip="'Complete approval in Reviewed Applicants'"
+                                    v-tooltip="'Complete approval in Interviewed Applicants'"
                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
                                     {{
                                         getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.unified_status)
@@ -620,6 +647,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import moment from 'moment';
 import { usePermission } from '@/composable/permissions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
+import { useFilterManager } from '@/composables/useFilterManager';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
@@ -628,10 +656,12 @@ import 'vue3-toastify/dist/index.css';
 // Custom Select Components
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
+import BarangaySelect from '@/Components/selects/BarangaySelect.vue';
 import RecordsSelect from '@/Components/selects/RecordsSelect.vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
+import TermSelect from '@/Components/selects/TermSelect.vue';
 
 // Modal Components
 import ApplicantFormModal from '@/Components/modals/ApplicantFormModal.vue';
@@ -648,13 +678,6 @@ const props = defineProps({
     profiles_total: [String, Number],
 });
 
-// Get records from URL if not provided by backend
-const getRecordsFromUrl = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlRecords = urlParams.get('records');
-    return urlRecords ? parseInt(urlRecords) : 10;
-};
-
 // Determine initial profile type from URL
 const getInitialProfileType = () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -662,31 +685,145 @@ const getInitialProfileType = () => {
     return type || props.filters?.profile_type || 'all';
 };
 
-// Filter state
-const filter = useForm({
-    records: props.filters?.records ? parseInt(props.filters.records) : getRecordsFromUrl(),
-    name: props.filters?.name || "",
-    program: props.filters?.program || "",
-    school: props.filters?.school || "",
-    course: props.filters?.course || "",
-    municipality: props.filters?.municipality || "",
-    year_level: props.filters?.year_level || "",
-    academic_year: props.filters?.academic_year || "",
-    grant_provision: props.filters?.grant_provision || null,
-    unified_status: props.filters?.unified_status || null,
-    global_search: props.filters?.global_search || "",
-    contract_status: props.filters?.contract_status || null,
-    voucher_status: props.filters?.voucher_status || null,
-    page: props.filters?.page || 1,
+// Page-specific state
+const profileType = ref(getInitialProfileType());
+
+// Filter management via composable
+const {
+    filters: filter,
+    globalFilter,
+    records,
+    rows,
+    first,
+    totalRecords,
+    search: triggerSearch,
+    clear: clearFilters,
+    onPageChange,
+} = useFilterManager({
+    routeName: 'scholarship.profiles',
+    props,
+    filterPropName: 'filters',
+    filterDefs: [
+        { key: 'name', type: 'text', default: '' },
+        { key: 'program', type: 'select', default: '', extract: v => v?.shortname?.toLowerCase() },
+        { key: 'school', type: 'select', default: '', extract: v => v?.shortname?.toLowerCase() },
+        { key: 'course', type: 'select', default: '', extract: v => v?.name?.toLowerCase() },
+        { key: 'year_level', type: 'select', default: '', extract: v => v?.value?.toLowerCase() },
+        { key: 'academic_year', type: 'text', default: '' },
+        { key: 'term', type: 'select', default: '', extract: v => v?.value?.toLowerCase() },
+        { key: 'municipality', type: 'select', default: '', extract: v => v?.name?.toLowerCase() },
+        { key: 'barangay', type: 'select', default: '', extract: v => v?.name?.toLowerCase() },
+        { key: 'grant_provision', type: 'text', default: null },
+        { key: 'unified_status', type: 'text', default: null },
+        { key: 'contract_status', type: 'text', default: null },
+        { key: 'voucher_status', type: 'text', default: null },
+    ],
+    beforeSearch(params, filterValues) {
+        // Handle profile type
+        if (profileType.value === 'existing') {
+            params.profile_type = 'existing';
+        } else if (profileType.value === 'pending') {
+            params.profile_type = 'pending';
+        } else if (profileType.value === 'declined') {
+            params.profile_type = 'declined';
+        } else {
+            params.profile_type = 'all';
+        }
+
+        // Handle attachment filter values (three-state: null, 'with', 'without')
+        if (params.contract_status && !['with', 'without'].includes(params.contract_status)) {
+            delete params.contract_status;
+        }
+        if (params.voucher_status && !['with', 'without'].includes(params.voucher_status)) {
+            delete params.voucher_status;
+        }
+    },
 });
 
+// Keep clearFilters also resetting profileType
+const originalClearFilters = clearFilters;
+const clearAllFilters = () => {
+    profileType.value = 'all';
+    originalClearFilters();
+};
+
+// Computed: active filter tags for display
+const activeFilterTags = computed(() => {
+    const tags = [];
+    const f = filter.value;
+    const labelMap = {
+        name: 'Name',
+        program: 'Program',
+        school: 'School',
+        course: 'Course',
+        municipality: 'Municipality',
+        barangay: 'Barangay',
+        year_level: 'Year Level',
+        academic_year: 'Academic Year',
+        term: 'Term',
+        grant_provision: 'Grant Provision',
+        unified_status: 'Status',
+        contract_status: 'Contract',
+        voucher_status: 'Voucher',
+    };
+    for (const [key, label] of Object.entries(labelMap)) {
+        const val = f[key];
+        if (!val) continue;
+        let display;
+        if (typeof val === 'object') {
+            display = val.shortname || val.name || val.value || JSON.stringify(val);
+        } else {
+            display = String(val);
+        }
+        tags.push({ key, label, display });
+    }
+    return tags;
+});
+
+const removeFilter = (key) => {
+    const selectKeys = ['grant_provision', 'unified_status', 'contract_status', 'voucher_status', 'academic_year', 'term'];
+    filter.value[key] = selectKeys.includes(key) ? null : '';
+    triggerSearch();
+};
+
+// Auto-trigger search when basic filters change
+watch(
+    () => [filter.value.program, filter.value.course, filter.value.year_level],
+    () => { triggerSearch(); },
+);
+
+// Filter drawer state
+const showFilterDrawer = ref(false);
+const drawerFilter = ref({});
+const drawerFilterKeys = ['program', 'course', 'school', 'municipality', 'barangay', 'year_level', 'academic_year', 'term', 'grant_provision', 'unified_status', 'contract_status', 'voucher_status'];
+
+const openDrawer = () => {
+    const snapshot = {};
+    for (const key of drawerFilterKeys) {
+        const val = filter.value[key];
+        snapshot[key] = val instanceof Date ? new Date(val) : val;
+    }
+    drawerFilter.value = snapshot;
+    showFilterDrawer.value = true;
+};
+
+const applyDrawerFilters = () => {
+    for (const key of drawerFilterKeys) {
+        filter.value[key] = drawerFilter.value[key];
+    }
+    triggerSearch();
+    showFilterDrawer.value = false;
+};
+
+const clearDrawerFilters = () => {
+    const nullKeys = ['grant_provision', 'unified_status', 'contract_status', 'voucher_status', 'academic_year', 'term'];
+    for (const key of drawerFilterKeys) {
+        drawerFilter.value[key] = nullKeys.includes(key) ? null : '';
+    }
+};
+
 // UI State
-const showAllFilters = ref(false);
-const globalFilter = ref(props.filters?.global_search || '');
-const first = ref(0);
-const rows = ref(props.filters?.records ? parseInt(props.filters.records) : 10);
 const actionsPopover = ref();
-const profileType = ref(getInitialProfileType());
 const simpleView = ref(localStorage.getItem('scholarProfileSimpleView') === 'true' || false);
 const contextMenu = ref();
 const selectedProfileForContext = ref(null);
@@ -779,13 +916,11 @@ const attachmentStatusOptions = computed(() => [
     { label: 'Without Attachment', value: 'without' }
 ]);
 
-const totalRecords = computed(() => props.profiles_total || 0);
-
 const profilesData = computed(() => {
     return props.profiles?.data || [];
 });
 
-// Computed rows for DataView - provides fallback when filter.records is null
+// Computed rows for DataView - provides fallback when records is null
 const dataViewRows = computed(() => {
     return rows.value || 10;
 });
@@ -903,100 +1038,7 @@ const formatDate = (date) => {
     return moment(date).format('MMM DD, YYYY');
 };
 
-// Filter methods
-let filterListTimeout = null;
-
-const filterList = (resetToPage1 = false) => {
-    // Prepare filter values
-    const program = filter.program?.shortname?.toLowerCase() || "";
-    const course = filter.course?.name?.toLowerCase() || "";
-    const municipality = filter.municipality?.name?.toLowerCase() || "";
-    const name = filter.name.toLowerCase() || "";
-    const school = filter.school?.shortname?.toLowerCase() || "";
-    const year_level = filter.year_level?.value?.toLowerCase() || "";
-    const academic_year = filter.academic_year || "";
-    const global_search = globalFilter.value.toLowerCase() || "";
-    const records = filter.records;
-    const unified_status = filter.unified_status || "";
-
-    // Reset to page 1 only when filtering/searching, otherwise use current page
-    let currentPage = resetToPage1 ? 1 : filter.page;
-
-    const params = {};
-    if (program) params.program = program;
-    if (course) params.course = course;
-    if (school) params.school = school;
-    if (municipality) params.municipality = municipality;
-    if (name) params.name = name;
-    if (year_level) params.year_level = year_level;
-    if (academic_year) params.academic_year = academic_year;
-    if (global_search) params.global_search = global_search;
-    if (filter.grant_provision) params.grant_provision = filter.grant_provision;
-
-    // Handle attachment filters - three-state: null (all), 'with', 'without'
-    if (filter.contract_status) {
-        if (filter.contract_status === 'with') {
-            params.contract_status = 'with';
-        } else if (filter.contract_status === 'without') {
-            params.contract_status = 'without';
-        }
-    }
-    if (filter.voucher_status) {
-        if (filter.voucher_status === 'with') {
-            params.voucher_status = 'with';
-        } else if (filter.voucher_status === 'without') {
-            params.voucher_status = 'without';
-        }
-    }
-
-    // Handle profile type - only add unified_status if profileType is 'all'
-    if (profileType.value === 'existing') {
-        params.profile_type = 'existing';
-        // Filter for approved statuses
-    } else if (profileType.value === 'pending') {
-        params.profile_type = 'pending';
-        // Filter for pending status
-    } else if (profileType.value === 'declined') {
-        params.profile_type = 'declined';
-        // Filter for declined status
-    } else {
-        // profileType is 'all'
-        params.profile_type = 'all';
-        if (unified_status) params.unified_status = unified_status;
-    }
-
-    params.records = records; // Always include records to persist pagination
-    params.page = currentPage;
-
-    router.get(route('scholarship.profiles'), params, {
-        preserveState: true,
-        preserveScroll: true,
-    });
-};
-
-const clearFilters = () => {
-    filter.name = "";
-    filter.program = "";
-    filter.school = "";
-    filter.course = "";
-    filter.municipality = "";
-    filter.year_level = "";
-    filter.academic_year = "";
-    filter.grant_provision = null;
-    filter.unified_status = null;
-    filter.contract_status = null;
-    filter.voucher_status = null;
-    filter.records = 10;
-    filter.global_search = '';
-    filter.page = 1;
-    globalFilter.value = '';
-    profileType.value = 'all'; // Reset to 'all'
-
-    router.get(route('scholarship.profiles'), {}, {
-        replace: true,
-        preserveScroll: true,
-    });
-};
+// filterList and clearFilters are provided by useFilterManager composable
 
 // Action methods
 const viewFullProfile = (profile) => {
@@ -1143,13 +1185,6 @@ const openContextMenu = (event, profile) => {
     contextMenu.value.show(event);
 };
 
-// Pagination
-const onPageChange = (event) => {
-    const page = event.page + 1; // PrimeVue uses 0-based indexing, backend uses 1-based
-    filter.page = page;
-    filterList(false); // Don't reset to page 1, use current page
-};
-
 // Keyboard shortcuts
 const handleKeydown = (e) => {
     if (e.ctrlKey && e.key.toLowerCase() === 'k') {
@@ -1158,14 +1193,7 @@ const handleKeydown = (e) => {
     }
 };
 
-// Watchers
-// Removed auto-trigger watcher for filter changes - manual search button required
-// This prevents auto-filtering while typing
-
-// Manual search trigger function
-const triggerSearch = () => {
-    filterList(true); // Reset to page 1 when searching
-};
+// triggerSearch and clearFilters are provided by useFilterManager composable
 
 // Watch for profile type changes
 watch(profileType, (newValue, oldValue) => {
@@ -1174,30 +1202,8 @@ watch(profileType, (newValue, oldValue) => {
         if (newValue === 'existing' || newValue === 'pending' || newValue === 'declined') {
             filter.unified_status = null;
         }
-        filterList(true); // Reset to page 1 when profile type changes
+        triggerSearch(); // Reset to page 1 when profile type changes
     }
-});
-
-watch(globalFilter, (newValue) => {
-    filter.global_search = newValue;
-    if (filterListTimeout) clearTimeout(filterListTimeout);
-    filterListTimeout = setTimeout(() => {
-        filterList(true); // Reset to page 1 when searching
-        filterListTimeout = null;
-    }, 500);
-});
-
-watch(() => filter.records, (newValue) => {
-    // Keep rows synced with filter.records, allowing null
-    rows.value = newValue ? parseInt(newValue) : null;
-}, { immediate: true });
-
-watch(() => filter.page, (newPage) => {
-    first.value = (newPage - 1) * dataViewRows.value;
-}, { immediate: true });
-
-watch(() => dataViewRows.value, () => {
-    first.value = (filter.page - 1) * dataViewRows.value;
 });
 
 watch(simpleView, (newValue) => {
@@ -1207,7 +1213,6 @@ watch(simpleView, (newValue) => {
 // Lifecycle
 onMounted(() => {
     window.addEventListener('keydown', handleKeydown);
-    globalFilter.value = props.filters?.global_search || '';
     // Initialize profileType from URL or props
     const initialType = getInitialProfileType();
     profileType.value = initialType;

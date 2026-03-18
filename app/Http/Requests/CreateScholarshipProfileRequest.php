@@ -177,7 +177,7 @@ class CreateScholarshipProfileRequest extends FormRequest
             "is_active" => [
                 'boolean'
             ],
-            // is_on_waiting_list is now managed through scholarship_records.application_status
+            // is_on_waiting_list is now managed through scholarship_records.application_status (pending status)
             "remarks" => [
                 'nullable',
                 'string',

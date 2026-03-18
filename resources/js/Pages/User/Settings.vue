@@ -114,10 +114,8 @@
                             </div>
                         </div>
 
-                        <button type="button" @click="showQrCode"
-                            class="w-full px-4 py-2 border border-purple-300 text-purple-700 rounded-md shadow-sm bg-purple-50 text-sm font-medium hover:bg-purple-100 cursor-pointer">
-                            <i class="pi pi-qrcode mr-2"></i> Upload via QR Code
-                        </button>
+                        <Button type="button" label="Upload via QR Code" icon="pi pi-qrcode" outlined class="w-full"
+                            @click="showQrCode" />
                     </div>
 
                     <!-- Image Editor Canvas -->
@@ -132,21 +130,15 @@
 
                         <!-- Image Editor Controls -->
                         <div class="flex gap-2 justify-center">
-                            <button type="button" @click="handleZoomOut"
-                                class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-semibold cursor-pointer">
-                                <i class="pi pi-minus"></i> Zoom Out
-                            </button>
+                            <Button type="button" label="Zoom Out" icon="pi pi-minus" severity="secondary" size="small"
+                                @click="handleZoomOut" />
                             <span class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold">
                                 {{ Math.round((imageScale.value || 1) * 100) }}%
                             </span>
-                            <button type="button" @click="handleZoomIn"
-                                class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-semibold cursor-pointer">
-                                <i class="pi pi-plus"></i> Zoom In
-                            </button>
-                            <button type="button" @click="resetImage"
-                                class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-semibold cursor-pointer">
-                                <i class="pi pi-refresh"></i> Reset
-                            </button>
+                            <Button type="button" label="Zoom In" icon="pi pi-plus" severity="secondary" size="small"
+                                @click="handleZoomIn" />
+                            <Button type="button" label="Reset" icon="pi pi-refresh" severity="secondary" size="small"
+                                @click="resetImage" />
                         </div>
                     </div>
 
@@ -155,18 +147,13 @@
                     </p>
 
                     <div class="flex gap-3 pt-4">
-                        <button type="button" @click="showPhotoDialog = false"
-                            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 cursor-pointer">
-                            Cancel
-                        </button>
-                        <button v-if="showImageEditor" type="button" @click="cancelEditor"
-                            class="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 cursor-pointer">
-                            Back
-                        </button>
-                        <button type="button" @click="submitPhotoForm" :disabled="!selectedImageFile || photoProcessing"
-                            class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed cursor-pointer">
-                            {{ photoProcessing ? 'Uploading...' : 'Upload' }}
-                        </button>
+                        <Button type="button" label="Cancel" severity="secondary" outlined class="flex-1"
+                            @click="showPhotoDialog = false" />
+                        <Button v-if="showImageEditor" type="button" label="Back" severity="secondary" class="flex-1"
+                            @click="cancelEditor" />
+                        <Button type="button" :label="photoProcessing ? 'Uploading...' : 'Upload'" icon="pi pi-upload"
+                            :disabled="!selectedImageFile || photoProcessing" :loading="photoProcessing" class="flex-1"
+                            @click="submitPhotoForm" />
                     </div>
                 </div>
             </Dialog>
@@ -178,10 +165,9 @@
                     <!-- Current Password -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
-                        <input v-model="passwordForm.current_password" type="password"
-                            placeholder="Enter current password"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            :class="{ 'border-red-500': passwordForm.errors.current_password }"
+                        <InputText v-model="passwordForm.current_password" type="password"
+                            placeholder="Enter current password" class="w-full"
+                            :invalid="!!passwordForm.errors.current_password"
                             @input="clearError('password', 'current_password')" />
                         <p v-if="passwordForm.errors.current_password" class="text-red-500 text-sm mt-1">
                             {{ passwordForm.errors.current_password }}
@@ -191,9 +177,8 @@
                     <!-- New Password -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
-                        <input v-model="passwordForm.new_password" type="password" placeholder="Enter new password"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            :class="{ 'border-red-500': passwordForm.errors.new_password }"
+                        <InputText v-model="passwordForm.new_password" type="password" placeholder="Enter new password"
+                            class="w-full" :invalid="!!passwordForm.errors.new_password"
                             @input="clearError('password', 'new_password')" />
                         <p v-if="passwordForm.errors.new_password" class="text-red-500 text-sm mt-1">
                             {{ passwordForm.errors.new_password }}
@@ -203,10 +188,9 @@
                     <!-- Confirm Password -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm Password</label>
-                        <input v-model="passwordForm.new_password_confirmation" type="password"
-                            placeholder="Confirm new password"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            :class="{ 'border-red-500': passwordForm.errors.new_password_confirmation }"
+                        <InputText v-model="passwordForm.new_password_confirmation" type="password"
+                            placeholder="Confirm new password" class="w-full"
+                            :invalid="!!passwordForm.errors.new_password_confirmation"
                             @input="clearError('password', 'new_password_confirmation')" />
                         <p v-if="passwordForm.errors.new_password_confirmation" class="text-red-500 text-sm mt-1">
                             {{ passwordForm.errors.new_password_confirmation }}
@@ -218,14 +202,10 @@
                     </p>
 
                     <div class="flex gap-3 pt-4">
-                        <button type="button" @click="showPasswordDialog = false"
-                            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 cursor-pointer">
-                            Cancel
-                        </button>
-                        <button type="submit" :disabled="passwordForm.processing"
-                            class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed cursor-pointer">
-                            {{ passwordForm.processing ? 'Updating...' : 'Update' }}
-                        </button>
+                        <Button type="button" label="Cancel" severity="secondary" outlined class="flex-1"
+                            @click="showPasswordDialog = false" />
+                        <Button type="submit" label="Update" icon="pi pi-check" :loading="passwordForm.processing"
+                            class="flex-1" />
                     </div>
                 </form>
             </Dialog>
@@ -237,10 +217,8 @@
                     <!-- Name -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
-                        <input v-model="profileForm.name" type="text" placeholder="Enter full name"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            :class="{ 'border-red-500': profileForm.errors.name }"
-                            @input="clearError('profile', 'name')" />
+                        <InputText v-model="profileForm.name" type="text" placeholder="Enter full name" class="w-full"
+                            :invalid="!!profileForm.errors.name" @input="clearError('profile', 'name')" />
                         <p v-if="profileForm.errors.name" class="text-red-500 text-sm mt-1">
                             {{ profileForm.errors.name }}
                         </p>
@@ -249,10 +227,8 @@
                     <!-- Email -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                        <input v-model="profileForm.email" type="email" placeholder="Enter email"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            :class="{ 'border-red-500': profileForm.errors.email }"
-                            @input="clearError('profile', 'email')" />
+                        <InputText v-model="profileForm.email" type="email" placeholder="Enter email" class="w-full"
+                            :invalid="!!profileForm.errors.email" @input="clearError('profile', 'email')" />
                         <p v-if="profileForm.errors.email" class="text-red-500 text-sm mt-1">
                             {{ profileForm.errors.email }}
                         </p>
@@ -261,17 +237,15 @@
                     <!-- Phone -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
-                        <input v-model="profileForm.phone" type="text" placeholder="Enter phone number"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            @input="clearError('profile', 'phone')" />
+                        <InputText v-model="profileForm.phone" type="text" placeholder="Enter phone number"
+                            class="w-full" @input="clearError('profile', 'phone')" />
                     </div>
 
                     <!-- Office Designation -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Office Designation</label>
-                        <input v-model="profileForm.office_designation" type="text" placeholder="Enter designation"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            @input="clearError('profile', 'office_designation')" />
+                        <InputText v-model="profileForm.office_designation" type="text" placeholder="Enter designation"
+                            class="w-full" @input="clearError('profile', 'office_designation')" />
                     </div>
 
                     <p v-if="successMsg.profile" class="text-green-600 text-sm font-semibold text-center">
@@ -279,14 +253,10 @@
                     </p>
 
                     <div class="flex gap-3 pt-4">
-                        <button type="button" @click="showProfileDialog = false"
-                            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 cursor-pointer">
-                            Cancel
-                        </button>
-                        <button type="submit" :disabled="profileForm.processing"
-                            class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed cursor-pointer">
-                            {{ profileForm.processing ? 'Saving...' : 'Save' }}
-                        </button>
+                        <Button type="button" label="Cancel" severity="secondary" outlined class="flex-1"
+                            @click="showProfileDialog = false" />
+                        <Button type="submit" label="Save" icon="pi pi-check" severity="success"
+                            :loading="profileForm.processing" class="flex-1" />
                     </div>
                 </form>
             </Dialog>
@@ -300,7 +270,7 @@
                         <label class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
                             :class="theme === 'light' ? 'border-purple-600 bg-purple-50' : 'border-gray-300 hover:border-gray-400'">
                             <div class="flex items-center space-x-3">
-                                <input type="radio" v-model="theme" value="light" class="w-4 h-4" />
+                                <RadioButton v-model="theme" inputId="theme-light" name="theme" value="light" />
                                 <div>
                                     <span class="font-semibold text-gray-900">Light Theme</span>
                                     <p class="text-sm text-gray-500">Bright and clean interface</p>
@@ -311,7 +281,7 @@
                         <label class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
                             :class="theme === 'dark' ? 'border-purple-600 bg-purple-50' : 'border-gray-300 hover:border-gray-400'">
                             <div class="flex items-center space-x-3">
-                                <input type="radio" v-model="theme" value="dark" class="w-4 h-4" />
+                                <RadioButton v-model="theme" inputId="theme-dark" name="theme" value="dark" />
                                 <div>
                                     <span class="font-semibold text-gray-900">Dark Theme</span>
                                     <p class="text-sm text-gray-500">Easy on the eyes</p>
@@ -325,10 +295,8 @@
                     </p>
 
                     <div class="flex gap-3 pt-4">
-                        <button @click="showThemeDialog = false"
-                            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 cursor-pointer">
-                            Close
-                        </button>
+                        <Button label="Close" severity="secondary" outlined class="flex-1"
+                            @click="showThemeDialog = false" />
                     </div>
                 </div>
             </Dialog>
@@ -356,13 +324,10 @@
                     <div class="bg-gray-50 rounded-lg p-3">
                         <p class="text-xs text-gray-600 mb-2">Or use this link on mobile:</p>
                         <div class="flex gap-2">
-                            <input type="text" :value="qrCodeData.url" readonly
-                                class="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-xs text-gray-700"
+                            <InputText :model-value="qrCodeData.url" readonly class="flex-1 text-xs"
                                 @click="$event.target.select()" />
-                            <button type="button" @click="copyToClipboard(qrCodeData.url)"
-                                class="px-3 py-2 bg-gray-200 text-gray-700 rounded font-semibold hover:bg-gray-300 text-xs whitespace-nowrap transition-all cursor-pointer">
-                                {{ copyButtonText }}
-                            </button>
+                            <Button type="button" :label="copyButtonText" severity="secondary" size="small"
+                                @click="copyToClipboard(qrCodeData.url)" />
                         </div>
                     </div>
 
@@ -374,10 +339,8 @@
                     </div>
 
                     <!-- Close Button -->
-                    <button type="button" @click="showQrModal = false"
-                        class="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 cursor-pointer">
-                        Close
-                    </button>
+                    <Button type="button" label="Close" severity="secondary" outlined class="w-full"
+                        @click="showQrModal = false" />
                 </div>
             </Dialog>
         </div>
