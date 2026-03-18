@@ -22,7 +22,7 @@ class FileUploadService
     public function processUpload(UploadedFile $file, string $type = ''): FileProcessingResult
     {
         $mimeType = $file->getMimeType();
-        
+
         // Auto-detect type if not specified
         if (empty($type)) {
             $type = str_starts_with($mimeType, 'image/') ? 'image' : 'pdf';
@@ -49,10 +49,10 @@ class FileUploadService
     {
         try {
             $fileContent = file_get_contents($file->getRealPath());
-            
+
             // Step 1: Try to load as image using GD
             $image = @imagecreatefromstring($fileContent);
-            
+
             if ($image === false) {
                 return new FileProcessingResult(
                     success: false,
@@ -66,7 +66,7 @@ class FileUploadService
             // Step 3: Enforce portrait orientation (height > width required)
             $width = imagesx($image);
             $height = imagesy($image);
-            
+
             if ($width > $height) {
                 // Rotate landscape to portrait
                 $image = imagerotate($image, -90, 0);
@@ -83,15 +83,21 @@ class FileUploadService
                 $newWidth = intval($width * ($maxDimension / $height));
 
                 $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
-                
+
                 // Enable smooth scaling for better quality
                 imagecopyresampled(
-                    $resizedImage, $image, 
-                    0, 0, 0, 0, 
-                    $newWidth, $newHeight, 
-                    $width, $height
+                    $resizedImage,
+                    $image,
+                    0,
+                    0,
+                    0,
+                    0,
+                    $newWidth,
+                    $newHeight,
+                    $width,
+                    $height
                 );
-                
+
                 imagedestroy($image);
                 $image = $resizedImage;
             }
@@ -105,8 +111,8 @@ class FileUploadService
             // Step 6: Calculate processing metrics
             $originalSize = $file->getSize();
             $compressedSize = strlen($compressed);
-            $compressionRatio = $originalSize > 0 
-                ? round(($originalSize - $compressedSize) / $originalSize * 100, 2) 
+            $compressionRatio = $originalSize > 0
+                ? round(($originalSize - $compressedSize) / $originalSize * 100, 2)
                 : 0;
 
             // Step 7: Generate unique filename
@@ -121,7 +127,6 @@ class FileUploadService
                 compressionRatio: $compressionRatio,
                 mimeType: 'image/jpeg',
             );
-
         } catch (\Exception $e) {
             return new FileProcessingResult(
                 success: false,
@@ -167,7 +172,6 @@ class FileUploadService
                 compressionRatio: $compressionRatio,
                 mimeType: 'application/pdf',
             );
-
         } catch (\Exception $e) {
             return new FileProcessingResult(
                 success: false,
@@ -190,7 +194,7 @@ class FileUploadService
             }
 
             $exif = @exif_read_data($filePath);
-            
+
             if (!$exif || !isset($exif['Orientation'])) {
                 return $image;  // No orientation data
             }
@@ -207,7 +211,6 @@ class FileUploadService
                 8 => imagerotate($image, 90, 0),   // 90 CCW
                 default => $image,
             };
-
         } catch (\Exception $e) {
             // If EXIF reading fails, return image unchanged
             return $image;
@@ -222,11 +225,11 @@ class FileUploadService
         $width = imagesx($image);
         $height = imagesy($image);
         $newImage = imagecreatetruecolor($width, $height);
-        
+
         for ($x = 0; $x < $width; $x++) {
             imagecopy($newImage, $image, $width - $x - 1, 0, $x, 0, 1, $height);
         }
-        
+
         imagedestroy($image);
         return $newImage;
     }
@@ -239,11 +242,11 @@ class FileUploadService
         $width = imagesx($image);
         $height = imagesy($image);
         $newImage = imagecreatetruecolor($width, $height);
-        
+
         for ($y = 0; $y < $height; $y++) {
             imagecopy($newImage, $image, 0, $height - $y - 1, 0, $y, $width, 1);
         }
-        
+
         imagedestroy($image);
         return $newImage;
     }

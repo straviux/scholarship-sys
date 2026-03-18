@@ -255,10 +255,10 @@ class MobileUploadResponseFormatTest extends TestCase
         );
 
         $data = $response->json('data');
-        
+
         // Compressed size should be less than or equal to original
         $this->assertLessThanOrEqual($data['original_size'], $data['size']);
-        
+
         // Both sizes should be greater than zero
         $this->assertGreaterThan(0, $data['size']);
         $this->assertGreaterThan(0, $data['original_size']);
@@ -302,7 +302,7 @@ class MobileUploadResponseFormatTest extends TestCase
 
         $response->assertStatus(422);
         $errors = $response->json('errors');
-        
+
         // Should have either file or attachment_type error (depending on form request rules)
         $this->assertNotEmpty($errors);
     }
@@ -368,11 +368,11 @@ class MobileUploadResponseFormatTest extends TestCase
         );
 
         $filename = $response->json('data.filename');
-        
+
         // Filename should not contain path separators
         $this->assertStringNotContainsString('/', $filename);
         $this->assertStringNotContainsString('\\', $filename);
-        
+
         // Filename should have an extension
         $this->assertStringContainsString('.', $filename);
     }
@@ -396,7 +396,7 @@ class MobileUploadResponseFormatTest extends TestCase
         );
 
         $fileId = $response->json('data.file_id');
-        
+
         // File ID should be numeric (primary key)
         $this->assertIsNumeric($fileId);
         $this->assertGreaterThan(0, $fileId);

@@ -26,8 +26,7 @@ class DisbursementFileService
         Disbursement $disbursement,
         $file,
         string $attachmentType
-    ): DisbursementAttachment
-    {
+    ): DisbursementAttachment {
         // Process file through service
         $fileResult = $this->fileUploadService->processUpload($file);
 
@@ -42,7 +41,9 @@ class DisbursementFileService
         // Get profile info for storage path
         $profile = $disbursement->profile;
         $uniqueId = $profile->unique_id;
-        $scholarName = preg_replace('/[^A-Za-z0-9_]/', '_', 
+        $scholarName = preg_replace(
+            '/[^A-Za-z0-9_]/',
+            '_',
             $profile->first_name . '_' . $profile->last_name
         );
 

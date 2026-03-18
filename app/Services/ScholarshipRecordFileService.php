@@ -28,8 +28,7 @@ class ScholarshipRecordFileService
         $file,
         string $attachmentName,
         ?int $pageNumber = null
-    ): ScholarshipRecordAttachment
-    {
+    ): ScholarshipRecordAttachment {
         // Process file through service
         $fileResult = $this->fileUploadService->processUpload($file);
 
@@ -44,7 +43,9 @@ class ScholarshipRecordFileService
         // Get profile info for storage path
         $profile = $record->profile;
         $uniqueId = $profile->unique_id;
-        $scholarName = preg_replace('/[^A-Za-z0-9_]/', '_', 
+        $scholarName = preg_replace(
+            '/[^A-Za-z0-9_]/',
+            '_',
             $profile->first_name . '_' . $profile->last_name
         );
 
