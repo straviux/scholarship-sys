@@ -1888,6 +1888,64 @@ These patterns are **not allowed** in new code:
 | Custom CSS in `<style>` blocks for common patterns | Tailwind utilities or PrimeVue component props |
 | `fetch()` / `XMLHttpRequest` for API calls | `axios` (import from 'axios') or `useApi` composable |
 
+### 15.13 Asset Loading — Never Use CDN for Stylesheets or Scripts
+
+**All stylesheet and script assets must be self-hosted and served locally. CDN usage is strictly prohibited.**
+
+This ensures the application remains fully functional in offline or low-connectivity environments (e.g., local servers without internet access).
+
+```vue
+<!-- ❌ WRONG — CDN for Tailwind CSS (FORBIDDEN) -->
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<!-- ❌ WRONG — CDN for Font Awesome or other icon libraries (FORBIDDEN) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- ❌ WRONG — CDN for any utility library (FORBIDDEN) -->
+<script src="https://cdn.jsdelivr.net/npm/[library]@[version]/dist/[file]"></script>
+
+<!-- ✅ CORRECT — Use Vite asset management -->
+@vite(['resources/css/app.css', 'resources/js/app.js'])
+
+<!-- ✅ CORRECT — PrimeIcons loaded from local assets (required by configuration) -->
+<link rel="stylesheet" href="path-to-primeicons-package">
+
+<!-- ✅ CORRECT — Custom CSS imported in local files -->
+<style>
+    @import url('/path/to/local/stylesheet.css');
+</style>
+```
+
+**All required stylesheets must be:**
+1. **Built locally** using Vite (CSS pre-processor)
+2. **Bundled** into `/public/build/` during `npm run build`
+3. **Served** via Inertia or direct asset routes (never external CDN)
+
+**For Blade views or standalone mobile upload forms:**
+- Use `@vite()` Blade directive to load compiled CSS/JS
+- If that's not available, ensure CSS is pre-compiled and served from `/public/build/assets/`
+
+**Example mobile upload form (CORRECT):**
+```blade
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <!-- ✅ CORRECT — Use Vite for asset loading in Blade views -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body>
+    <!-- content -->
+</body>
+</html>
+```
+
+This requirement was discovered when the application failed to load styling in an offline environment due to Tailwind CDN being unavailable.
+
 ### 15.14 Summary Checklist — Styling
 
 - [ ] **Icons:** Only `pi pi-*` classes — no Heroicons, no inline SVG, no other icon libraries
@@ -1900,6 +1958,7 @@ These patterns are **not allowed** in new code:
 - [ ] **Colors:** Follow the semantic color palette (Section 15.10)
 - [ ] **Status badges:** Use the uniform pattern (Section 15.11) or PrimeVue `<Tag>`
 - [ ] **API calls:** Use `axios` — never `fetch()` or `XMLHttpRequest`
+- [ ] **Asset loading:** Never use CDN for any stylesheets or scripts (Section 15.13)
 
 ---
 
