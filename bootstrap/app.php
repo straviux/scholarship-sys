@@ -32,6 +32,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'mobile/upload/disbursement/*',
             'mobile/upload/scholarship-record/*',
             'mobile/upload/requirement/*',
+            'mobile/upload/profile/*',
+            'mobile/upload/fund-transaction/*',
         ]);
         //
     })

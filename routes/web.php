@@ -35,6 +35,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 
 // Mobile upload routes (public, no auth required)
+// CSRF exclusion is handled in bootstrap/app.php via validateCsrfTokens(except:)
 Route::get('/mobile/upload/disbursement/{token}', [MobileUploadController::class, 'showDisbursementUpload'])
     ->name('mobile.disbursement.upload');
 Route::post('/mobile/upload/disbursement/{token}', [MobileUploadController::class, 'uploadDisbursementFile'])
@@ -42,25 +43,21 @@ Route::post('/mobile/upload/disbursement/{token}', [MobileUploadController::clas
 Route::get('/mobile/upload/scholarship-record/{token}', [MobileUploadController::class, 'showScholarshipRecordUpload'])
     ->name('mobile.scholarship-record.upload');
 Route::post('/mobile/upload/scholarship-record/{token}', [MobileUploadController::class, 'uploadScholarshipRecordFile'])
-    ->name('mobile.scholarship-record.upload.submit')
-    ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+    ->name('mobile.scholarship-record.upload.submit');
 Route::get('/mobile/upload/profile/{token}', [ProfileController::class, 'showMobileUpload'])
     ->name('mobile.profile.upload');
 Route::post('/mobile/upload/profile/{token}', [ProfileController::class, 'processMobileUpload'])
-    ->name('mobile.profile.upload.submit')
-    ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+    ->name('mobile.profile.upload.submit');
 Route::get('/mobile/upload/requirement/{token}', [MobileUploadController::class, 'showRequirementUpload'])
     ->name('mobile.requirement.upload');
 Route::post('/mobile/upload/requirement/{token}', [MobileUploadController::class, 'uploadRequirementFile'])
-    ->name('mobile.requirement.upload.submit')
-    ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+    ->name('mobile.requirement.upload.submit');
 Route::get('/mobile/upload/fund-transaction/{token}', [MobileUploadController::class, 'showFundTransactionUpload'])
     ->name('mobile.upload.fund-transaction');
 Route::get('/mobile/upload/fund-transaction/{token}/{doc_type}', [MobileUploadController::class, 'showFundTransactionUpload'])
     ->name('mobile.upload.fund-transaction.with-type');
 Route::post('/mobile/upload/fund-transaction/{token}', [MobileUploadController::class, 'uploadFundTransactionFile'])
-    ->name('mobile.upload.fund-transaction.submit')
-    ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+    ->name('mobile.upload.fund-transaction.submit');
 
 // Public API routes (no authentication required)
 Route::get('/api/server-time', function () {

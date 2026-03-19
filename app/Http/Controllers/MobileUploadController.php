@@ -187,26 +187,43 @@ class MobileUploadController extends Controller
      */
     public function showRequirementUpload($token)
     {
-        $requirement = ScholarshipProfileRequirement::where('upload_token', $token)->first();
-
-        if (!$requirement) {
-            Log::warning('requirement_not_found', ['token' => substr($token, 0, 10) . '...']);
-            return view('mobile.upload-expired');
-        }
-
         try {
-            $this->validateUploadToken($requirement, 'requirement');
+            $requirement = ScholarshipProfileRequirement::where('upload_token', $token)->first();
+
+            if (!$requirement) {
+                Log::warning('requirement_not_found', ['token' => substr($token, 0, 10) . '...']);
+                return view('mobile.upload-expired');
+            }
+
+            try {
+                $this->validateUploadToken($requirement, 'requirement');
+            } catch (\Exception $e) {
+                Log::info('requirement_token_expired', [
+                    'id' => $requirement->id,
+                    'error' => $e->getMessage(),
+                ]);
+                return view('mobile.upload-expired');
+            }
+
+            // Safely load relationships
+            try {
+                $requirement->load('profile', 'requirement');
+            } catch (\Exception $e) {
+                Log::warning('requirement_relationships_load_failed', [
+                    'id' => $requirement->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Continue even if relationship loading fails - view has null-safe operators
+            }
+
+            return view('mobile.requirement-upload', compact('requirement'));
         } catch (\Exception $e) {
-            Log::info('requirement_token_expired', [
-                'id' => $requirement->id,
+            Log::error('showRequirementUpload_error', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
-            return view('mobile.upload-expired');
+            return response('Server Error', 500);
         }
-
-        $requirement->load('profile', 'requirement');
-
-        return view('mobile.requirement-upload', compact('requirement'));
     }
 
     /**

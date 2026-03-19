@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Upload Requirement - {{ $requirement->requirement->name }}</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <title>Upload Requirement - {{ $requirement->requirement?->name ?? 'Upload' }}</title>
+    @vite(['resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .preview-container {
@@ -61,10 +61,10 @@
 
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
                 <p class="text-sm text-gray-700"><strong>Profile ID:</strong> {{ $requirement->profile_id }}</p>
-                <p class="text-sm text-gray-700"><strong>Requirement:</strong> {{ $requirement->requirement->name }}</p>
+                <p class="text-sm text-gray-700"><strong>Requirement:</strong> {{ $requirement->requirement?->name ?? 'N/A' }}</p>
                 @if ($requirement->profile)
                 <p class="text-sm text-gray-700"><strong>Scholar:</strong>
-                    {{ $requirement->profile->first_name }} {{ $requirement->profile->last_name }}
+                    {{ $requirement->profile->first_name ?? '' }} {{ $requirement->profile->last_name ?? '' }}
                 </p>
                 @endif
             </div>
