@@ -134,10 +134,32 @@ class FundTransaction extends Model
      */
     public function getMobileUploadUrl($docType = null)
     {
-        if ($docType) {
-            return route('mobile.upload.fund-transaction.with-type', ['token' => $this->upload_token, 'doc_type' => $docType]);
+        // Generate token if needed
+        if (!$this->upload_token || $this->upload_token_expires_at < now()) {
+            $this->generateUploadToken();
         }
-        return route('mobile.upload.fund-transaction', $this->upload_token);
+
+        $baseUrl = request()->getSchemeAndHttpHost() ?: config('app.url');
+        
+        // If localhost or 127.0.0.1, try to get the server's actual IP
+        if (stripos($baseUrl, 'localhost') !== false || stripos($baseUrl, '127.0.0.1') !== false) {
+            // Try to use server's external IP
+            $serverIp = gethostbyname(gethostname());
+            if ($serverIp && $serverIp !== gethostname()) {
+                // Extract port if present in original URL
+                $port = parse_url($baseUrl, PHP_URL_PORT);
+                $portString = $port ? ':' . $port : ':8000';
+                $baseUrl = 'http://' . $serverIp . $portString;
+            }
+        }
+        
+        // Force http scheme
+        $baseUrl = preg_replace('/^https:/i', 'http:', $baseUrl);
+        
+        if ($docType) {
+            return $baseUrl . '/mobile/upload/fund-transaction/' . $this->upload_token . '/' . $docType;
+        }
+        return $baseUrl . '/mobile/upload/fund-transaction/' . $this->upload_token;
     }
 
     /**
