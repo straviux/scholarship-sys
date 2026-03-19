@@ -466,29 +466,7 @@ class ScholarshipRecord extends Model
             $this->generateUploadToken();
         }
 
-        // Auto-detect base URL from current request, fallback to APP_URL
-        if (request()->getSchemeAndHttpHost()) {
-            $baseUrl = request()->getSchemeAndHttpHost();
-        } else {
-            $baseUrl = config('app.url');
-        }
-
-        // If localhost or 127.0.0.1, try to get the server's actual IP
-        if (stripos($baseUrl, 'localhost') !== false || stripos($baseUrl, '127.0.0.1') !== false) {
-            // Try to use server's external IP
-            $serverIp = gethostbyname(gethostname());
-            if ($serverIp && $serverIp !== gethostname()) {
-                // Extract port if present in original URL
-                $port = parse_url($baseUrl, PHP_URL_PORT);
-                $portString = $port ? ':' . $port : ':8000';
-                $baseUrl = 'http://' . $serverIp . $portString;
-            }
-        }
-
-        // Force http scheme
-        $baseUrl = preg_replace('/^https:/i', 'http:', $baseUrl);
-
-        return $baseUrl . '/mobile/upload/scholarship-record/' . $this->upload_token;
+        return route('mobile.scholarship-record.upload', $this->upload_token);
     }
 
     /**
