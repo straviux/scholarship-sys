@@ -6,15 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Upload Error</title>
-    @vite(['resources/js/app.js'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @vite(['resources/css/mobile.css'])
 </head>
 
 <body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
     <div class="max-w-md w-full">
         <div class="bg-white rounded-lg shadow-md p-8 text-center">
             <div class="mb-6">
-                <i class="fas fa-exclamation-triangle text-red-500 text-6xl"></i>
+                <span class="icon icon-triangle-alert text-red-500 text-6xl"></span>
             </div>
 
             <h1 class="text-2xl font-bold text-gray-800 mb-4">Upload Error</h1>
@@ -25,7 +24,7 @@
 
             <button type="button" onclick="closeTab()"
                 class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold">
-                <i class="fas fa-times mr-2"></i>
+                <span class="icon icon-x mr-2"></span>
                 Close This Page
             </button>
         </div>

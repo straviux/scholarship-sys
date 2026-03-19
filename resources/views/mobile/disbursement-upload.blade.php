@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Upload Attachment - Disbursement</title>
-    @vite(['resources/js/app.js'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @vite(['resources/css/mobile.css'])
     <style>
         .preview-container {
             position: relative;
@@ -39,12 +38,12 @@
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <div class="flex items-center justify-between gap-3 mb-4">
                 <div class="flex items-center gap-3">
-                    <i class="fas fa-cloud-upload-alt text-blue-600 text-3xl"></i>
+                    <span class="icon icon-cloud-upload text-blue-600 text-3xl"></span>
                     <h1 class="text-2xl font-bold text-gray-800">Upload Attachment</h1>
                 </div>
                 <button type="button" onclick="closeTab()"
                     class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm transition-all">
-                    <i class="fas fa-times"></i>
+                    <span class="icon icon-x"></span>
                     <span>Close</span>
                 </button>
             </div>
@@ -52,7 +51,7 @@
             <!-- Countdown Timer -->
             <div id="countdownContainer" class="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded mb-4">
                 <div class="flex items-center gap-2">
-                    <i class="fas fa-clock text-yellow-600"></i>
+                    <span class="icon icon-clock text-yellow-600"></span>
                     <p class="text-sm font-semibold text-yellow-800">
                         Session expires in: <span id="countdown" class="text-lg font-bold">15:00</span>
                     </p>
@@ -78,7 +77,7 @@
                 <!-- Attachment Type -->
                 <div class="mb-6">
                     <label for="attachment_type" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-tag text-gray-500 mr-1"></i> Attachment Type
+                        <span class="icon icon-tag text-gray-500 mr-1"></span> Attachment Type
                     </label>
                     <select id="attachment_type" name="attachment_type" required
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -92,20 +91,20 @@
                 <!-- File Upload -->
                 <div class="mb-6">
                     <label for="file" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-file text-gray-500 mr-1"></i> Choose File
+                        <span class="icon icon-file text-gray-500 mr-1"></span> Choose File
                     </label>
 
                     <!-- Quick Camera Button (Mobile) -->
                     <button type="button" id="quickCameraBtn"
                         class="w-full mb-3 bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all md:hidden">
-                        <i class="fas fa-camera text-xl"></i>
+                        <span class="icon icon-camera text-xl"></span>
                         <span>Quick Camera Upload</span>
                     </button>
 
                     <label for="file"
                         class="file-input-label flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100">
                         <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                            <i class="fas fa-camera text-4xl text-gray-400 mb-2"></i>
+                            <span class="icon icon-camera text-4xl text-gray-400 mb-2"></span>
                             <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Tap to take photo</span>
                                 or browse</p>
                             <p class="text-xs text-gray-500">PNG, JPG or PDF (MAX. 25MB)</p>
@@ -121,7 +120,7 @@
                         <img id="previewImage" src="" alt="Preview" class="preview-image">
                         <button type="button" id="removeFile"
                             class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 shadow-lg">
-                            <i class="fas fa-times"></i>
+                            <span class="icon icon-x"></span>
                         </button>
                     </div>
                     <p id="fileName" class="text-sm text-gray-600 mt-2 text-center"></p>
@@ -140,14 +139,14 @@
                 <!-- Submit Button -->
                 <button type="submit" id="submitBtn"
                     class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all">
-                    <i class="fas fa-upload mr-2"></i> Upload File
+                    <span class="icon icon-upload mr-2"></span> Upload File
                 </button>
             </form>
 
             <!-- Success Message -->
             <div id="successMessage" class="hidden mt-6 bg-green-50 border-l-4 border-green-500 p-4 rounded">
                 <div class="flex items-center">
-                    <i class="fas fa-check-circle text-green-500 text-2xl mr-3"></i>
+                    <span class="icon icon-check-circle text-green-500 text-2xl mr-3"></span>
                     <div>
                         <p class="font-semibold text-green-800">Upload Successful!</p>
                         <p class="text-sm text-green-700" id="successDetails"></p>
@@ -158,7 +157,7 @@
             <!-- Error Message -->
             <div id="errorMessage" class="hidden mt-6 bg-red-50 border-l-4 border-red-500 p-4 rounded">
                 <div class="flex items-center">
-                    <i class="fas fa-exclamation-circle text-red-500 text-2xl mr-3"></i>
+                    <span class="icon icon-circle-alert text-red-500 text-2xl mr-3"></span>
                     <div>
                         <p class="font-semibold text-red-800">Upload Failed</p>
                         <p class="text-sm text-red-700" id="errorDetails"></p>
@@ -170,7 +169,7 @@
         <!-- Info -->
         <div class="mt-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
             <p class="text-sm text-blue-800">
-                <i class="fas fa-info-circle mr-2"></i>
+                <span class="icon icon-info mr-2"></span>
                 <strong>Note:</strong> Images will be automatically optimized to reduce file size.
             </p>
         </div>
