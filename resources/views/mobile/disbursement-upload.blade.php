@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Upload Attachment - Disbursement</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -351,7 +352,7 @@
                 try {
                     const data = JSON.parse(xhr.responseText);
 
-                    if (xhr.status === 200 && data.success) {
+                    if ((xhr.status === 200 || xhr.status === 201) && data.success) {
                         successMessage.classList.remove('hidden');
                         successDetails.textContent = `File uploaded successfully! Size reduced by ${data.size_reduction}.`;
                         uploadForm.reset();

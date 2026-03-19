@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Upload Document - {{ $transaction->voucher_number }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -275,10 +276,12 @@
 
             // Add preview button listener
             const previewBtn = div.querySelector('.preview-btn');
-            previewBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                openPreview(this.dataset.path, this.dataset.type);
-            });
+            if (previewBtn) {
+                previewBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    openPreview(this.dataset.path, this.dataset.type);
+                });
+            }
 
             return div;
         }
@@ -478,7 +481,7 @@
                             return;
                         }
 
-                        if (xhr.status === 200 && response.success) {
+                        if ((xhr.status === 200 || xhr.status === 201) && response.success) {
                             console.log('Upload successful:', response);
                             showSuccess();
                             // Reload documents to show newly uploaded file

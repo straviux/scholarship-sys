@@ -249,7 +249,7 @@ class User extends Authenticatable
     public function hasAnyRole(...$roles): bool
     {
         // Flatten the array if the first argument is an array
-        $rolesToCheck = (is_array($roles[0]) ?? false) ? $roles[0] : $roles;
+        $rolesToCheck = (isset($roles[0]) && is_array($roles[0])) ? $roles[0] : $roles;
 
         return $this->roles()
             ->whereIn('name', $rolesToCheck)
