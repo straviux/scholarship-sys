@@ -130,7 +130,7 @@ class User extends Authenticatable
         }
 
         $baseUrl = request()->getSchemeAndHttpHost() ?: config('app.url');
-        
+
         // If localhost or 127.0.0.1, try to get the server's actual IP
         if (stripos($baseUrl, 'localhost') !== false || stripos($baseUrl, '127.0.0.1') !== false) {
             // Try to use server's external IP
@@ -142,7 +142,7 @@ class User extends Authenticatable
                 $baseUrl = 'http://' . $serverIp . $portString;
             }
         }
-        
+
         // Force http scheme
         $baseUrl = preg_replace('/^https:/i', 'http:', $baseUrl);
         return $baseUrl . '/mobile/upload/profile/' . $this->upload_token;

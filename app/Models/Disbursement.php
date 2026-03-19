@@ -117,7 +117,7 @@ class Disbursement extends Model
                 $baseUrl = 'http://' . $serverIp . $portString;
             }
         }
-        
+
         // Force http scheme
         $baseUrl = preg_replace('/^https:/i', 'http:', $baseUrl);
 
