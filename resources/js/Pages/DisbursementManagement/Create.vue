@@ -113,7 +113,7 @@
                                 option-value="value" placeholder="Select Payee Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_type }" />
                             <div v-if="errors.payee_type" class="text-red-600 text-xs mt-1">{{ errors.payee_type[0]
-                                }}</div>
+                            }}</div>
                         </div>
 
                         <!-- Payee Name -->
@@ -122,7 +122,7 @@
                             <InputText v-model="form.payee_name" placeholder="Name of payee" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_name }" />
                             <div v-if="errors.payee_name" class="text-red-600 text-xs mt-1">{{ errors.payee_name[0]
-                                }}</div>
+                            }}</div>
                         </div>
 
                         <!-- Payee Address -->
@@ -139,7 +139,7 @@
                                 option-value="value" placeholder="Select Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.voucher_type }" />
                             <div v-if="errors.voucher_type" class="text-red-600 text-xs mt-1">{{ errors.voucher_type[0]
-                                }}</div>
+                            }}</div>
                         </div>
 
                         <!-- Explanation -->
@@ -152,8 +152,22 @@
                         <!-- Remarks -->
                         <div>
                             <label class="block text-sm font-medium text-slate-900 mb-2">Remarks</label>
-                            <Textarea v-model="form.remarks" placeholder="Additional remarks..." rows="3"
-                                class="w-full text-sm" />
+                            <Editor v-model="form.remarks" editorStyle="height: 120px">
+                                <template #toolbar>
+                                    <span class="ql-formats">
+                                        <button class="ql-bold"></button>
+                                        <button class="ql-italic"></button>
+                                        <button class="ql-underline"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-list" value="ordered"></button>
+                                        <button class="ql-list" value="bullet"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-clean"></button>
+                                    </span>
+                                </template>
+                            </Editor>
                         </div>
 
                         <!-- Attachments -->

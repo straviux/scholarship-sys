@@ -1,95 +1,5 @@
-<template>
-    <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal header="Assign Priority Level"
-        :style="{ width: '500px' }" :closable="true">
-        <div class="space-y-6" v-if="applicant">
-            <!-- Applicant Info -->
-            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-                <div class="flex items-center gap-3">
-                    <div class="bg-blue-500 p-2 rounded-lg">
-                        <i class="pi pi-user text-white"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-blue-800">{{ applicant.last_name }}, {{ applicant.first_name }}
-                        </h4>
-                        <p class="text-sm text-blue-600">{{ applicant.contact_no }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <form @submit.prevent="submit" class="space-y-5">
-                <!-- Priority Level Selection -->
-                <div class="field">
-                    <label for="priority_level" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="pi pi-flag text-gray-400 mr-1"></i>
-                        Priority Level *
-                    </label>
-                    <Select v-model="formData.priority_level" :options="priorityOptions" optionLabel="label"
-                        optionValue="value" placeholder="Select priority level" class="w-full"
-                        :class="{ 'p-invalid': errors.priority_level }">
-                        <template #option="slotProps">
-                            <div class="flex items-center gap-3 p-2">
-                                <div class="w-4 h-4 rounded-full" :class="getPriorityColor(slotProps.option.value)">
-                                </div>
-                                <div>
-                                    <div class="font-medium">{{ slotProps.option.label }}</div>
-                                    <div class="text-xs text-gray-500">{{ slotProps.option.description }}</div>
-                                </div>
-                            </div>
-                        </template>
-                        <template #value="slotProps">
-                            <div v-if="slotProps.value" class="flex items-center gap-2">
-                                <div class="w-3 h-3 rounded-full" :class="getPriorityColor(slotProps.value)"></div>
-                                <span>{{ getPriorityLabel(slotProps.value) }}</span>
-                            </div>
-                            <span v-else class="text-gray-400">Select priority level</span>
-                        </template>
-                    </Select>
-                    <small v-if="errors.priority_level" class="p-error">{{ errors.priority_level }}</small>
-                </div>
-
-                <!-- Priority Reason -->
-                <div class="field">
-                    <label for="priority_reason" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="pi pi-comment text-gray-400 mr-1"></i>
-                        Reason for Priority Assignment *
-                    </label>
-                    <Textarea v-model="formData.priority_reason" rows="4"
-                        placeholder="Please explain why this applicant should receive priority status..." class="w-full"
-                        :class="{ 'p-invalid': errors.priority_reason }" />
-                    <small v-if="errors.priority_reason" class="p-error">{{ errors.priority_reason }}</small>
-                </div>
-
-                <!-- Current Priority Display (if exists) -->
-                <div v-if="applicant.priority_level && applicant.priority_level !== 'normal'"
-                    class="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <h5 class="font-medium text-amber-800 mb-2">Current Priority Status:</h5>
-                    <div class="flex items-center gap-2 mb-2">
-                        <div class="w-3 h-3 rounded-full" :class="getPriorityColor(applicant.priority_level)"></div>
-                        <span class="font-medium">{{ formatPriorityName(applicant.priority_level) }}</span>
-                    </div>
-                    <p class="text-sm text-amber-700" v-if="applicant.priority_reason">
-                        {{ applicant.priority_reason }}
-                    </p>
-                    <p class="text-xs text-amber-600 mt-2" v-if="applicant.priority_assigned_at">
-                        Assigned {{ formatDate(applicant.priority_assigned_at) }}
-                    </p>
-                </div>
-            </form>
-        </div>
-
-        <template #footer>
-            <div class="flex justify-end gap-3">
-                <Button label="Cancel" severity="secondary" @click="closeModal" outlined icon="pi pi-times"
-                    :disabled="isSubmitting" />
-                <Button label="Assign Priority" severity="warn" @click="submit" :loading="isSubmitting"
-                    icon="pi pi-flag" />
-            </div>
-        </template>
-    </Dialog>
-</template>
-
 <script setup>
-import { watch, ref, reactive, inject } from "vue";
+import { watch, ref, reactive, inject, computed, onBeforeUnmount } from "vue";
 import { toast } from 'vue3-toastify';
 import axios from 'axios';
 
@@ -100,7 +10,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:show', 'success']);
 
-// Inject the refresh function from AdminLayout
 const refreshActivityLogs = inject('refreshActivityLogs', null);
 
 const isSubmitting = ref(false);
@@ -120,7 +29,6 @@ const formData = reactive({
     priority_reason: '',
 });
 
-// Reset form when modal is opened
 watch(() => props.show, (newValue) => {
     if (newValue && props.applicant) {
         formData.priority_level = props.applicant.priority_level || 'normal';
@@ -167,14 +75,12 @@ const submit = async () => {
 
         toast.success(response.data?.message || 'Priority level assigned successfully!');
 
-        // Update the applicant object directly to avoid full reload
         if (props.applicant) {
             props.applicant.priority_level = formData.priority_level;
             props.applicant.priority_reason = formData.priority_reason;
             props.applicant.priority_assigned_at = new Date().toISOString();
         }
 
-        // Refresh the activity logs dropdown
         if (refreshActivityLogs) {
             refreshActivityLogs();
         }
@@ -185,7 +91,6 @@ const submit = async () => {
         console.error('Priority assignment error:', error);
 
         if (error.response?.status === 422 && error.response?.data?.errors) {
-            // Validation errors
             const serverErrors = error.response.data.errors;
             if (serverErrors.priority_level) {
                 errors.priority_level = Array.isArray(serverErrors.priority_level)
@@ -214,7 +119,6 @@ const closeModal = () => {
     emit('update:show', false);
 };
 
-// Helper functions
 const getPriorityColor = (priority) => {
     switch (priority) {
         case 'urgent': return 'bg-red-500';
@@ -222,6 +126,16 @@ const getPriorityColor = (priority) => {
         case 'normal': return 'bg-blue-500';
         case 'low': return 'bg-gray-500';
         default: return 'bg-gray-400';
+    }
+};
+
+const getPriorityDot = (priority) => {
+    switch (priority) {
+        case 'urgent': return '#FF3B30';
+        case 'high': return '#FF9500';
+        case 'normal': return '#007AFF';
+        case 'low': return '#8E8E93';
+        default: return '#8E8E93';
     }
 };
 
@@ -237,20 +151,290 @@ const formatPriorityName = (priority) => {
 const formatDate = (date) => {
     return new Date(date).toLocaleDateString();
 };
+
+/* ── Drag ── */
+const dragOffset = ref({ x: 0, y: 0 });
+const dragStart = ref(null);
+const modalStyle = computed(() => ({
+    width: '500px',
+    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
+}));
+
+function onDragStart(e) {
+    if (e.target.closest('button, input, textarea, select, a, .p-select, .p-checkbox')) return;
+    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
+    document.addEventListener('pointermove', onDragMove);
+    document.addEventListener('pointerup', onDragEnd);
+}
+function onDragMove(e) {
+    if (!dragStart.value) return;
+    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
+}
+function onDragEnd() {
+    dragStart.value = null;
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragEnd);
+}
+onBeforeUnmount(() => {
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragEnd);
+});
 </script>
 
+<template>
+    <Dialog :visible="show" modal @update:visible="val => !val && closeModal()"
+        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+        <template #container>
+            <div class="ios-modal" :style="modalStyle">
+                <!-- Nav Bar -->
+                <div class="ios-nav-bar" @pointerdown="onDragStart">
+                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal" :disabled="isSubmitting"><i
+                            class="pi pi-times"></i></button>
+                    <span class="ios-nav-title">Priority Level</span>
+                    <button class="ios-nav-btn ios-nav-action" @click="submit" :disabled="isSubmitting">
+                        {{ isSubmitting ? 'Saving...' : 'Assign' }}
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="ios-body" v-if="applicant">
+                    <!-- Applicant Info -->
+                    <div class="ios-section">
+                        <div class="ios-section-label">Applicant</div>
+                        <div class="ios-card">
+                            <div class="ios-row ios-row-last">
+                                <span class="ios-row-label">{{ applicant.last_name }}, {{ applicant.first_name }}</span>
+                                <span style="font-size: 13px; color: #8E8E93;">{{ applicant.contact_no }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Priority Level Selection -->
+                    <div class="ios-section">
+                        <div class="ios-section-label">Priority Level</div>
+                        <div class="ios-card">
+                            <div v-for="(option, index) in priorityOptions" :key="option.value" class="ios-row"
+                                :class="{ 'ios-row-last': index === priorityOptions.length - 1 }"
+                                style="cursor: pointer;" @click="formData.priority_level = option.value">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span class="ios-priority-dot"
+                                        :style="{ background: getPriorityDot(option.value) }"></span>
+                                    <div>
+                                        <span class="ios-row-label">{{ option.label }}</span>
+                                        <div style="font-size: 12px; color: #8E8E93;">{{ option.description }}</div>
+                                    </div>
+                                </div>
+                                <i v-if="formData.priority_level === option.value" class="pi pi-check"
+                                    style="color: #007AFF; font-size: 14px;"></i>
+                            </div>
+                        </div>
+                        <div v-if="errors.priority_level" class="ios-section-footer ios-error">
+                            {{ errors.priority_level }}
+                        </div>
+                    </div>
+
+                    <!-- Priority Reason -->
+                    <div class="ios-section">
+                        <div class="ios-section-label">Reason</div>
+                        <div class="ios-card" style="padding: 12px;">
+                            <Textarea v-model="formData.priority_reason" class="w-full border-none shadow-none" rows="4"
+                                placeholder="Explain why this applicant should receive priority status..."
+                                style="background: transparent; resize: vertical; font-size: 14px;" />
+                        </div>
+                        <div v-if="errors.priority_reason" class="ios-section-footer ios-error">
+                            {{ errors.priority_reason }}
+                        </div>
+                    </div>
+
+                    <!-- Current Priority (if exists) -->
+                    <div v-if="applicant.priority_level && applicant.priority_level !== 'normal'" class="ios-section">
+                        <div class="ios-section-label">Current Status</div>
+                        <div class="ios-card">
+                            <div class="ios-row">
+                                <span class="ios-row-label">Level</span>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span class="ios-priority-dot"
+                                        :style="{ background: getPriorityDot(applicant.priority_level) }"></span>
+                                    <span style="font-size: 13px; color: #8E8E93;">{{
+                                        formatPriorityName(applicant.priority_level) }}</span>
+                                </div>
+                            </div>
+                            <div v-if="applicant.priority_reason" class="ios-row">
+                                <span class="ios-row-label">Reason</span>
+                                <span style="font-size: 13px; color: #8E8E93; max-width: 60%; text-align: right;">{{
+                                    applicant.priority_reason }}</span>
+                            </div>
+                            <div v-if="applicant.priority_assigned_at" class="ios-row ios-row-last">
+                                <span class="ios-row-label">Assigned</span>
+                                <span style="font-size: 13px; color: #8E8E93;">{{
+                                    formatDate(applicant.priority_assigned_at) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="height: 20px;"></div>
+                </div>
+            </div>
+        </template>
+    </Dialog>
+</template>
+
 <style scoped>
-.field {
-    margin-bottom: 1rem;
+.ios-modal {
+    background: #F2F2F7;
+    border-radius: 14px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    margin: 0 auto;
 }
 
-.p-error {
-    color: var(--red-500);
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
+.ios-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 14px 16px;
+    background: #FFFFFF;
+    border-bottom: 0.5px solid #E5E5EA;
+    flex-shrink: 0;
+    cursor: grab;
+    user-select: none;
 }
 
-.p-invalid {
-    border-color: var(--red-500);
+.ios-nav-bar:active {
+    cursor: grabbing;
+}
+
+.ios-nav-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #000;
+    letter-spacing: -0.4px;
+}
+
+.ios-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 17px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: opacity 0.15s;
+}
+
+.ios-nav-btn:hover {
+    opacity: 0.6;
+}
+
+.ios-nav-cancel {
+    left: 16px;
+    color: #8E8E93;
+    font-size: 20px;
+}
+
+.ios-nav-action {
+    right: 16px;
+    color: #374151;
+    font-weight: 600;
+}
+
+.ios-nav-action:disabled {
+    color: #C7C7CC;
+    cursor: not-allowed;
+}
+
+.ios-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 16px;
+}
+
+.ios-section {
+    margin-top: 22px;
+}
+
+.ios-section:first-child {
+    margin-top: 16px;
+}
+
+.ios-section-label {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6D6D72;
+    text-transform: uppercase;
+    letter-spacing: -0.08px;
+    padding: 0 16px 6px;
+}
+
+.ios-section-footer {
+    font-size: 13px;
+    color: #6D6D72;
+    padding: 6px 16px 0;
+    line-height: 1.3;
+}
+
+.ios-error {
+    color: #FF3B30;
+}
+
+.ios-card {
+    background: #FFFFFF;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 0.5px solid #E5E5EA;
+}
+
+.ios-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 16px;
+    min-height: 36px;
+    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
+}
+
+.ios-row-last {
+    border-bottom: none;
+}
+
+.ios-row:last-child {
+    border-bottom: none;
+}
+
+.ios-row-label {
+    font-size: 14px;
+    color: #000;
+    letter-spacing: -0.4px;
+    font-weight: 500;
+}
+
+.ios-priority-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+</style>
+
+<style>
+.ios-dialog-root.p-dialog {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: auto !important;
+}
+
+.ios-dialog-mask {
+    background: rgba(0, 0, 0, 0.4);
 }
 </style>

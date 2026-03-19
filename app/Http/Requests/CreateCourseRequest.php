@@ -36,6 +36,11 @@ class CreateCourseRequest extends FormRequest
                 'string',
                 'max:50'
             ],
+            "field_of_study" => [
+                'nullable',
+                'string',
+                'max:255'
+            ],
             "description" => [
                 'nullable',
                 'string',

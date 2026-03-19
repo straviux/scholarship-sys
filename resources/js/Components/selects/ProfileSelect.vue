@@ -3,7 +3,8 @@
         placeholder="Search Profile" :loading="loading" :filter="true" showClear class="w-full" @filter="onFilter" /> -->
 
     <Select v-model="localValue" :options="profiles" filter autoFilterFocus showClear optionLabel="name"
-        @filter="onFilter" placeholder="Search Name" class="w-full">
+        @filter="onFilter" placeholder="Search Name" class="w-full"
+        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.name }}</div>

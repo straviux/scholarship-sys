@@ -5,7 +5,7 @@
     <AdminLayout>
         <div>
             <!-- Toolbar -->
-            <Toolbar class="mb-4">
+            <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
                         <i class="pi pi-users text-indigo-900" style="font-size:2rem"></i>
@@ -31,7 +31,8 @@
                 <template #end>
                     <div class="flex gap-3 items-center">
                         <Button icon="pi pi-plus" @click="addRecordPopover.toggle($event)" severity="success"
-                            v-tooltip.bottom="'Add New Record'" v-if="hasPermission('applicants.create')" />
+                            v-tooltip.bottom="'Add New Record'" v-if="hasPermission('applicants.create')" rounded
+                            outlined />
                         <Popover ref="addRecordPopover">
                             <div class="flex flex-col gap-2 w-48">
                                 <!-- <Button @click="openAddApplicantModal" label="Add Applicant" icon="pi pi-user-plus"
@@ -42,68 +43,49 @@
                         </Popover>
                         <!-- <Button icon="pi pi-refresh" @click="refreshData" severity="secondary" outlined
                             v-tooltip.bottom="'Refresh'" /> -->
-                        <Button icon="pi pi-print" @click="actionsPopover.toggle($event)" severity="secondary"
-                            v-tooltip.bottom="'Reports & Export'" v-if="hasPermission('reports.view')" />
-                        <Popover ref="actionsPopover">
-                            <div class="flex flex-col gap-2 w-48">
-                                <Button @click="openReportModal" label="Generate Report" icon="pi pi-file-pdf"
-                                    severity="secondary" outlined class="justify-start"
-                                    v-if="hasPermission('reports.generate')" />
-                                <Button @click="openExportModal" label="Export Data" icon="pi pi-download"
-                                    severity="secondary" outlined class="justify-start"
-                                    v-if="hasPermission('reports.generate')" />
-                            </div>
-                        </Popover>
+                        <Button icon="pi pi-print" @click="showReportModal = true" severity="secondary"
+                            v-tooltip.bottom="'Generate Report'" v-if="hasPermission('reports.view')" rounded
+                            outlined />
                     </div>
                 </template>
             </Toolbar>
 
             <!-- Filters Panel -->
-            <Panel>
-                <div class="space-y-3 -mt-6">
-                    <!-- Filter Controls Header -->
-                    <div class="flex justify-between items-center py-1">
-                        <div class="flex items-center gap-3">
-                            <Button label="More Filters" icon="pi pi-filter" severity="secondary" size="small" outlined
-                                @click="openDrawer()" />
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <Button severity="secondary" outlined size="small" icon="pi pi-history"
-                                @click="clearAllFilters" v-tooltip.bottom="'Clear Filters'" />
-                        </div>
+            <Panel class="!rounded-4xl overflow-hidden">
+                <!-- Filters Section - Single Row -->
+                <div class="flex items-end gap-3 -mt-6 flex-wrap">
+                    <Button icon="pi pi-filter" severity="secondary" size="small" outlined rounded @click="openDrawer()"
+                        v-tooltip.bottom="'More Filters'" />
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
+                        <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="All Programs"
+                            size="small" class="w-full" />
                     </div>
-
-                    <!-- Basic Filters Row -->
-                    <div class="grid grid-cols-2 gap-2 md:grid-cols-4 lg:gap-8">
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
-                            <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="All Programs"
-                                size="small" class="w-full" />
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
-                            <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses"
-                                size="small" class="w-full" />
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
-                            <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
-                                size="small" class="w-full" />
-                        </div>
-                        <!-- Only show Unified Status filter when profileType is 'all' -->
-                        <div class="flex flex-col" v-if="profileType === 'all'">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Status</label>
-                            <Select v-model="filter.unified_status" :options="unifiedStatusOptions" optionLabel="label"
-                                optionValue="value" placeholder="All Statuses" showClear class="w-full" size="small" />
-                        </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
+                        <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses" size="small"
+                            class="w-full" />
                     </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
+                        <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels" size="small"
+                            class="w-full" />
+                    </div>
+                    <!-- Only show Unified Status filter when profileType is 'all' -->
+                    <div class="flex flex-col" v-if="profileType === 'all'">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Status</label>
+                        <Select v-model="filter.unified_status" :options="unifiedStatusOptions" optionLabel="label"
+                            optionValue="value" placeholder="All Statuses" showClear class="w-full" size="small" />
+                    </div>
+                    <Button severity="secondary" outlined rounded size="small" icon="pi pi-history"
+                        @click="clearAllFilters" v-tooltip.bottom="'Clear Filters'" />
                 </div>
             </Panel>
 
             <!-- Active Filter Tags -->
             <div v-if="activeFilterTags.length" class="flex flex-wrap items-center gap-2 mt-2">
                 <span class="text-xs text-gray-500">Active Filters:</span>
-                <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="info" rounded class="cursor-pointer"
+                <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded class="cursor-pointer"
                     @click="removeFilter(tag.key)">
                     <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
                     <i class="pi pi-times ml-1" style="font-size: 0.6rem"></i>
@@ -186,9 +168,10 @@
 
             <!-- Profiles DataView -->
             <div class="mt-8">
-                <Panel>
+                <Panel class="!rounded-4xl overflow-hidden">
                     <!-- Info Bar -->
-                    <div class="md:flex hidden items-center justify-between gap-4 mb-4 p-3 bg-gray-50 rounded-lg -mt-2">
+                    <div
+                        class="md:flex hidden items-center justify-between gap-4 mb-4 p-3 bg-gray-50 rounded-4xl -mt-2">
                         <div class="flex-1 max-w-md">
                             <IconField iconPosition="left">
                                 <InputIcon class="pi pi-search text-gray-400" />
@@ -568,17 +551,6 @@
         <!-- Generate Report Modal -->
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" />
 
-        <!-- Export Modal Placeholder -->
-        <Dialog v-model:visible="showExportModal" modal header="Export Data" :style="{ width: '600px' }">
-            <div class="text-center py-8">
-                <i class="pi pi-download text-6xl text-gray-300 mb-4"></i>
-                <p class="text-gray-600">Data export functionality coming soon...</p>
-            </div>
-            <template #footer>
-                <Button label="Close" @click="showExportModal = false" />
-            </template>
-        </Dialog>
-
         <!-- Grant Provision Update Dialog -->
         <Dialog v-model:visible="showGrantProvisionDialog" modal header="Update Grant Provision"
             :style="{ width: '500px' }">
@@ -823,7 +795,7 @@ const clearDrawerFilters = () => {
 };
 
 // UI State
-const actionsPopover = ref();
+
 const simpleView = ref(localStorage.getItem('scholarProfileSimpleView') === 'true' || false);
 const contextMenu = ref();
 const selectedProfileForContext = ref(null);
@@ -883,7 +855,7 @@ const selectedProfile = ref(null);
 
 // Modal states
 const showReportModal = ref(false);
-const showExportModal = ref(false);
+
 const showAddApplicantModal = ref(false);
 const showAddExistingModal = ref(false);
 const addRecordPopover = ref();
@@ -1148,15 +1120,7 @@ const updateGrantProvision = () => {
     );
 };
 
-const openReportModal = () => {
-    actionsPopover.value.hide();
-    showReportModal.value = true;
-};
 
-const openExportModal = () => {
-    actionsPopover.value.hide();
-    showExportModal.value = true;
-};
 
 // Add Record methods
 const openAddApplicantModal = () => {
@@ -1260,5 +1224,102 @@ onBeforeUnmount(() => {
 
 :deep(.compact-table .p-button) {
     padding: 0.25rem 0.5rem;
+}
+
+/* Rounded inputs, selects, and datepickers to match macOS layout */
+:deep(.p-inputtext) {
+    border-radius: 1rem;
+}
+
+:deep(.p-select) {
+    border-radius: 1rem;
+}
+
+:deep(.p-datepicker .p-inputtext) {
+    border-radius: 1rem;
+}
+
+:deep(.p-inputgroup) {
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 1px solid var(--p-inputtext-border-color, #d1d5db);
+}
+
+:deep(.p-inputgroup:focus-within) {
+    border-color: var(--p-inputtext-focus-border-color, #6366f1);
+}
+
+:deep(.p-inputgroup .p-inputgroupaddon) {
+    border-radius: 0;
+    border: none;
+}
+
+:deep(.p-inputgroup .p-inputtext) {
+    border-radius: 0;
+    border: none;
+}
+
+:deep(.p-inputgroup .p-datepicker) {
+    border-radius: 0;
+    flex: 1;
+}
+
+:deep(.p-inputgroup .p-datepicker .p-inputtext) {
+    border-radius: 0;
+    border: none;
+}
+
+:deep(.p-inputgroup .p-datepicker .p-datepicker-input-icon-container) {
+    border-radius: 0;
+}
+
+/* Rounded DataTable — covers scrollable wrapper and all inner containers */
+:deep(.p-datatable) {
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 1px solid var(--p-datatable-border-color, #e2e8f0);
+}
+
+:deep(.p-datatable .p-datatable-table-container) {
+    border-radius: 0;
+    overflow: hidden;
+}
+
+/* Remove outer-edge cell borders so they don't double up with the container border */
+:deep(.p-datatable .p-datatable-thead > tr > th:first-child),
+:deep(.p-datatable .p-datatable-tbody > tr > td:first-child) {
+    border-left: none;
+}
+
+:deep(.p-datatable .p-datatable-thead > tr > th:last-child),
+:deep(.p-datatable .p-datatable-tbody > tr > td:last-child) {
+    border-right: none;
+}
+
+:deep(.p-datatable .p-datatable-thead > tr:first-child > th) {
+    border-top: none;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr:last-child > td) {
+    border-bottom: none;
+}
+
+:deep(.p-datatable .p-paginator) {
+    border-radius: 0;
+    border: none;
+    border-top: 1px solid var(--p-datatable-border-color, #e2e8f0);
+}
+
+:deep(.p-datatable .p-datatable-header) {
+    border-radius: 0;
+}
+
+:deep(.p-datatable .p-datatable-footer) {
+    border-radius: 0;
+}
+
+/* Rounded IconField search wrapper */
+:deep(.p-iconfield .p-inputtext) {
+    border-radius: 1rem;
 }
 </style>

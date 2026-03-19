@@ -9,8 +9,8 @@ import { useFilterManager } from '@/composables/useFilterManager';
 import axios from 'axios';
 
 
-import ApplicantFormModal from './Modal/ApplicantFormModal.vue';
-import YakapCategoryModal from './Modal/YakapCategoryModal.vue';
+import ApplicantFormModal from '@/Components/modals/ApplicantFormModal.vue';
+import YakapCategoryModal from '@/Components/modals/YakapCategoryModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
 import ExportSelectedModal from './Modal/ExportSelectedModal.vue';
 import PriorityModal from './Modal/PriorityModal.vue';
@@ -19,10 +19,6 @@ import RequirementsChecklistModal from './Modal/RequirementsChecklistModal.vue';
 import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
 import InterviewAssessmentModal from './Modal/InterviewAssessmentModal.vue';
 import ProfileReviewModal from './Modal/ProfileReviewModal.vue';
-import RemarksModal from './Modal/RemarksModal.vue';
-import DeleteConfirmModal from './Modal/DeleteConfirmModal.vue';
-import UpdateYakapModal from './Modal/UpdateYakapModal.vue';
-import BatchUpdateYakapModal from './Modal/BatchUpdateYakapModal.vue';
 
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
@@ -1083,7 +1079,7 @@ const formatDate = (date) => {
     <AdminLayout>
         <div>
             <!-- Toolbar -->
-            <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+            <Toolbar class="mb-4">
                 <template #start>
                     <div class="flex items-center gap-3">
 
@@ -1120,7 +1116,7 @@ const formatDate = (date) => {
                         </template>
 
                         <Button icon="pi pi-user-plus" @click="openYakapCategoryModal"
-                            v-if="hasPermission('applicants.create')" severity="success" rounded outlined
+                            v-if="hasPermission('applicants.create')" severity="success"
                             v-tooltip.bottom="'Add New Applicant'" />
                         <!-- <Button as="a" label="Existing" icon="pi pi-user"
                             v-if="hasPermission('applicants.create') && !hasRole('user')"
@@ -1131,54 +1127,65 @@ const formatDate = (date) => {
             </Toolbar>
 
             <!-- Header Section -->
-            <Panel class="!rounded-4xl overflow-hidden">
-                <!-- Filters Section - Single Row -->
-                <div class="flex items-end gap-3 -mt-6 flex-wrap">
-                    <Button icon="pi pi-filter" severity="secondary" size="small" outlined rounded @click="openDrawer()"
-                        v-tooltip.bottom="'More Filters'" />
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
-                        <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="All Programs"
-                            size="small" class="w-full" />
-                    </div>
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
-                        <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses" size="small"
-                            class="w-full" :scholarship-program-id="filter.program?.id" />
-                    </div>
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
-                        <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels" size="small"
-                            class="w-full" />
-                    </div>
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Date Filed</label>
-                        <div class="flex gap-2">
-                            <InputGroup>
-                                <InputGroupAddon>
-                                    <span class="text-xs">From</span>
-                                </InputGroupAddon>
-                                <DatePicker v-model="filter.date_from" size="small" class="w-full"
-                                    date-format="M dd, yy" showIcon iconDisplay="input" />
-                            </InputGroup>
-                            <InputGroup>
-                                <InputGroupAddon>
-                                    <span class="text-xs">To</span>
-                                </InputGroupAddon>
-                                <DatePicker v-model="filter.date_to" size="small" class="w-full" date-format="M dd, yy"
-                                    showIcon iconDisplay="input" />
-                            </InputGroup>
+            <Panel>
+                <!-- Filters Section -->
+                <div class="space-y-3 -mt-6">
+                    <!-- Filter Controls Header -->
+                    <div class="flex justify-between items-center py-1">
+                        <div class="flex items-center gap-3">
+                            <Button label="More Filters" icon="pi pi-filter" severity="secondary" size="small" outlined
+                                @click="openDrawer()" />
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <Button severity="secondary" outlined size="small" icon="pi pi-history" @click="clearFilter"
+                                v-tooltip.bottom="'Clear Filters'" />
                         </div>
                     </div>
-                    <Button severity="secondary" outlined rounded size="small" icon="pi pi-history" @click="clearFilter"
-                        v-tooltip.bottom="'Clear Filters'" />
+
+                    <!-- Basic Filters Row: Program, Course, Year Level, Date Filed -->
+                    <div class="grid grid-cols-1 gap-2 md:grid-cols-4 lg:gap-8">
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
+                            <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="All Programs"
+                                size="small" class="w-full" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
+                            <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses"
+                                size="small" class="w-full" :scholarship-program-id="filter.program?.id" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
+                            <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
+                                size="small" class="w-full" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Date Filed</label>
+                            <div class="flex gap-2">
+                                <InputGroup>
+                                    <InputGroupAddon>
+                                        <span class="text-xs">From</span>
+                                    </InputGroupAddon>
+                                    <DatePicker v-model="filter.date_from" size="small" class="w-full"
+                                        date-format="M dd, yy" />
+                                </InputGroup>
+                                <InputGroup>
+                                    <InputGroupAddon>
+                                        <span class="text-xs">To</span>
+                                    </InputGroupAddon>
+                                    <DatePicker v-model="filter.date_to" size="small" class="w-full"
+                                        date-format="M dd, yy" />
+                                </InputGroup>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </Panel>
 
             <!-- Active Filter Tags -->
             <div v-if="activeFilterTags.length" class="flex flex-wrap items-center gap-2 mt-2">
                 <span class="text-xs text-gray-500">Active Filters:</span>
-                <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded class="cursor-pointer"
+                <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="info" rounded class="cursor-pointer"
                     @click="removeFilter(tag.key)">
                     <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
                     <i class="pi pi-times ml-1" style="font-size: 0.6rem"></i>
@@ -1283,7 +1290,7 @@ const formatDate = (date) => {
             <div class="mt-8">
                 <!-- Batch Update Section -->
                 <div v-if="selectedRows.length > 0"
-                    class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-4xl flex items-center justify-between">
+                    class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <i class="pi pi-exclamation-circle text-yellow-600 text-xl"></i>
                         <div>
@@ -1296,16 +1303,15 @@ const formatDate = (date) => {
                     </div>
                     <div class="flex gap-2">
                         <Button v-if="hasPermission('applicants.export')" icon="pi pi-download" @click="openExportModal"
-                            severity="info" label="Export Selected" outlined rounded />
+                            severity="info" label="Export Selected" outlined />
                         <Button v-if="hasPermission('applicants.edit')" icon="pi pi-pencil" @click="openBatchYakapModal"
-                            severity="warning" label="Batch Update YAKAP" rounded />
+                            severity="warning" label="Batch Update YAKAP" />
                     </div>
                 </div>
 
-                <Panel class="!rounded-4xl overflow-hidden">
+                <Panel>
                     <!-- Info Bar -->
-                    <div
-                        class="md:flex hidden items-center justify-between gap-4 mb-4 p-3 bg-gray-50 rounded-4xl -mt-2">
+                    <div class="md:flex hidden items-center justify-between gap-4 mb-4 p-3 bg-gray-50 rounded-lg -mt-2">
                         <div class="flex-1 max-w-md">
                             <IconField iconPosition="left">
                                 <InputIcon class="pi pi-search text-gray-400" />
@@ -1521,9 +1527,7 @@ const formatDate = (date) => {
                         <!-- Remarks Column (hidden when JPM columns visible) -->
                         <Column header="Remarks" v-if="!showJpmColumns" style="max-width: 150px">
                             <template #body="slotProps">
-                                <div v-if="slotProps.data.remarks" class="text-xs remarks-content"
-                                    v-html="slotProps.data.remarks"></div>
-                                <span v-else class="text-xs text-gray-400">-</span>
+                                <div class="text-xs">{{ slotProps.data.remarks || '-' }}</div>
                             </template>
                         </Column>
 
@@ -1582,7 +1586,7 @@ const formatDate = (date) => {
                         <Column header="Actions" style="width: 60px" v-if="!simpleView">
                             <template #body="slotProps">
                                 <div class="flex justify-center">
-                                    <Button icon="pi pi-ellipsis-v" rounded outlined severity="secondary" size="small"
+                                    <Button icon="pi pi-ellipsis-v" rounded text severity="secondary" size="small"
                                         @click="(event) => showRowContextMenu(event, slotProps.data)"
                                         v-tooltip.top="'More actions'" />
                                 </div>
@@ -1600,14 +1604,63 @@ const formatDate = (date) => {
         <JpmModal :show="showJpmModal" :profile="selectedProfileForJpm" @update:show="showJpmModal = $event" />
 
         <!-- Remarks Modal -->
-        <RemarksModal :show="showRemarksModal" :profile="selectedProfileForRemarks"
-            :refreshActivityLogs="refreshActivityLogs" @update:show="showRemarksModal = $event"
-            @success="refreshApplicationList" />
+        <Dialog v-model:visible="showRemarksModal" modal header="Add/Edit Remarks" :style="{ width: '50vw' }"
+            @hide="closeRemarksModal">
+            <div class="space-y-4" v-if="selectedProfileForRemarks">
+                <div class="bg-blue-50 p-3 rounded border-l-4 border-blue-500 mb-4">
+                    <div class="font-semibold text-blue-900">
+                        {{ selectedProfileForRemarks.last_name }}, {{ selectedProfileForRemarks.first_name }}
+                    </div>
+                    <div class="text-sm text-gray-600">{{ selectedProfileForRemarks.contact_no }}</div>
+                </div>
 
-        <!-- Delete Confirmation Modal -->
-        <DeleteConfirmModal :show="showConfirmDeleteModal" :applicant="selectedApplicant"
-            :refreshActivityLogs="refreshActivityLogs" @update:show="showConfirmDeleteModal = $event"
-            @deleted="refreshApplicationList" />
+                <div class="flex flex-col gap-3">
+                    <label for="remarks-textarea" class="font-medium text-gray-700">Remarks:</label>
+                    <Textarea v-model="remarksForm.remarks" id="remarks-textarea" class="w-full" rows="6"
+                        placeholder="Enter remarks here..." />
+                    <small v-if="remarksForm.errors.remarks" class="text-red-500">{{ remarksForm.errors.remarks
+                    }}</small>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Cancel" icon="pi pi-times" @click="closeRemarksModal" class="p-button-text" />
+                <Button label="Save Remarks" icon="pi pi-check" @click="submitRemarks" severity="success"
+                    :loading="remarksForm.processing" />
+            </template>
+        </Dialog>
+
+        <!-- Delete Confirmation Dialog -->
+        <Dialog v-model:visible="showConfirmDeleteModal" :style="{ width: '450px' }" header="Confirm Deletion"
+            :modal="true">
+            <div class="flex items-center gap-4">
+                <i class="pi pi-exclamation-triangle text-3xl text-red-500"></i>
+                <div>
+                    <p class="text-lg font-semibold text-gray-800 mb-2">
+                        {{ hasRole('administrator') ? 'Permanently delete this applicant?' : 'Delete this applicant?' }}
+                    </p>
+                    <div class="bg-gray-100 p-3 rounded border-l-4 border-red-500" v-if="selectedApplicant">
+                        <div class="font-semibold text-red-700">
+                            {{ selectedApplicant.last_name }}, {{ selectedApplicant.first_name }}
+                        </div>
+                        <div class="text-sm text-gray-600">{{ selectedApplicant.contact_no }}</div>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-2">
+                        {{ hasRole('administrator') ? `Administrators can permanently delete records. This action cannot
+                        be
+                        undone.` : `Non - administrators can soft delete records. Administrators can restore them
+                        later.`
+                        }}
+                    </p>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Cancel" severity="secondary" @click="closeDeleteModal" outlined />
+                <Button :label="hasRole('administrator') ? 'Permanently Delete' : 'Delete Applicant'" severity="danger"
+                    @click="deleteApplicant" />
+            </template>
+        </Dialog>
 
         <!-- Modals -->
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" />
@@ -1620,19 +1673,138 @@ const formatDate = (date) => {
         <YakapCategoryModal v-model:visible="showYakapCategoryModal" @selected="handleYakapCategorySelected" />
 
         <!-- Update YAKAP Category Modal -->
-        <UpdateYakapModal :show="showUpdateYakapModal" :profile="selectedProfileForYakap"
-            :refreshActivityLogs="refreshActivityLogs" @update:show="showUpdateYakapModal = $event"
-            @success="refreshApplicationList" />
+        <Dialog v-model:visible="showUpdateYakapModal" modal header="Update YAKAP Category" :style="{ width: '50vw' }"
+            @hide="closeUpdateYakapModal">
+            <div class="space-y-4" v-if="selectedProfileForYakap">
+                <div class="bg-blue-50 p-3 rounded border-l-4 border-blue-500 mb-4">
+                    <div class="font-semibold text-blue-900">
+                        {{ selectedProfileForYakap.last_name }}, {{ selectedProfileForYakap.first_name }}
+                    </div>
+                    <div class="text-sm text-gray-600">{{ selectedProfileForYakap.contact_no }}</div>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <label for="yakap-category-update" class="font-medium text-gray-700">YAKAP Category:</label>
+                    <Select v-model="updateYakapForm.yakap_category" :options="yakapCategoryOptions" optionLabel="label"
+                        optionValue="value" placeholder="Select YAKAP Category" class="w-full"
+                        inputId="yakap-category-update" @change="handleYakapCategoryChange" />
+                </div>
+
+                <!-- Municipality Selection for YAKAP Field -->
+                <div v-if="updateYakapForm.yakap_category === 'yakap-field'" class="flex flex-col gap-3">
+                    <label for="yakap-municipality" class="font-medium text-gray-700">Municipality:</label>
+                    <MunicipalitySelect v-model="updateYakapForm.yakap_location" placeholder="Select Municipality"
+                        class="w-full" :clearable="false" inputId="yakap-municipality" />
+                </div>
+
+                <!-- School Selection for YAKAP School -->
+                <div v-if="updateYakapForm.yakap_category === 'yakap-school'" class="flex flex-col gap-3">
+                    <label for="yakap-school" class="font-medium text-gray-700">School:</label>
+                    <SchoolSelect v-model="updateYakapForm.yakap_location" placeholder="Select School" class="w-full"
+                        :clearable="false" inputId="yakap-school" />
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Cancel" icon="pi pi-times" @click="closeUpdateYakapModal" class="p-button-text" />
+                <Button label="Update" icon="pi pi-check" @click="submitUpdateYakap" severity="success"
+                    :loading="updateYakapForm.processing" />
+            </template>
+        </Dialog>
 
         <!-- Interview Assessment Modal -->
         <InterviewAssessmentModal v-model="showInterviewModal" :applicant="selectedApplicantForReview"
             :recordId="interviewRecordId" @submitted="onInterviewSubmitted" />
 
         <!-- Batch Update YAKAP Category Modal -->
-        <BatchUpdateYakapModal :show="showBatchYakapModal" :selectedRows="selectedRows"
-            :refreshActivityLogs="refreshActivityLogs"
-            @update:show="val => { showBatchYakapModal = val; if (!val) selectedRows = []; }"
-            @success="() => { refreshApplicationList(); selectedRows = []; }" />
+        <Dialog v-model:visible="showBatchYakapModal" modal header="Batch Update YAKAP Category"
+            :style="{ width: '900px' }" @hide="closeBatchYakapModal">
+
+            <form @submit.prevent="submitBatchYakapUpdate" class="px-4 pb-2">
+                <!-- Two Column Layout -->
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <!-- LEFT COLUMN: Summary & Location -->
+                    <div>
+                        <h4 class="text-base font-semibold text-gray-700 mb-3 pb-2 border-b">Selection Summary</h4>
+
+                        <!-- Selection Count -->
+                        <div class="mb-4 p-3 bg-blue-50 rounded border border-blue-200">
+                            <div class="font-semibold text-blue-900">{{ selectedRows.length }} applicant(s) selected
+                            </div>
+                            <div class="text-sm text-blue-700 mt-1">Batch update will apply YAKAP category to all
+                                selected
+                                applicants</div>
+                        </div>
+
+
+
+                        <!-- Selected Applicants Preview -->
+                        <div class="mb-4">
+                            <h5 class="text-sm font-medium text-gray-700 mb-2">Selected Applicants</h5>
+                            <div class="bg-gray-50 rounded p-3 max-h-64 overflow-y-auto">
+                                <div v-if="selectedRows.length > 0" class="space-y-2">
+                                    <div v-for="(row, idx) in selectedRows.slice(0, 10)" :key="idx"
+                                        class="text-xs text-gray-600 py-1 px-2 bg-white rounded border">
+                                        {{ row.last_name }}, {{ row.first_name }}
+                                    </div>
+                                    <div v-if="selectedRows.length > 10" class="text-xs text-gray-500 italic px-2">
+                                        ... and {{ selectedRows.length - 10 }} more
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: YAKAP Category Selection -->
+                    <div>
+                        <h4 class="text-base font-semibold text-gray-700 mb-3 pb-2 border-b">Update Options</h4>
+
+                        <!-- YAKAP Category -->
+                        <div class="mb-4">
+                            <label class="block mb-2 text-sm font-medium text-gray-700">YAKAP Category</label>
+                            <Select v-model="batchYakapForm.yakap_category" :options="yakapCategoryOptions"
+                                optionLabel="label" optionValue="value" placeholder="Select YAKAP Category"
+                                class="w-full" @change="handleBatchYakapCategoryChange" />
+                            <small class="text-xs text-gray-500 mt-1">Select the YAKAP category to apply to all selected
+                                applicants</small>
+                        </div>
+
+                        <!-- Category Description -->
+                        <div class="mb-4 p-3 bg-gray-50 rounded border border-gray-200">
+                            <div v-if="batchYakapForm.yakap_category === 'yakap-capitol'" class="text-sm">
+                                <span class="font-medium text-gray-700">YAKAP Capitol:</span>
+                                <p class="text-gray-600 text-xs mt-1">No specific location required</p>
+                            </div>
+                            <!-- Location Selection (shown based on category) -->
+                            <div v-if="batchYakapForm.yakap_category === 'yakap-field'" class="mb-4">
+                                <label class="block mb-2 text-sm font-medium text-gray-700">Municipality</label>
+                                <MunicipalitySelect v-model="batchYakapForm.yakap_location"
+                                    placeholder="Select Municipality" class="w-full" :clearable="false" />
+                            </div>
+
+                            <div v-if="batchYakapForm.yakap_category === 'yakap-school'" class="mb-4">
+                                <label class="block mb-2 text-sm font-medium text-gray-700">School</label>
+                                <SchoolSelect v-model="batchYakapForm.yakap_location" placeholder="Select School"
+                                    class="w-full" :clearable="false" />
+                            </div>
+                        </div>
+
+                        <!-- Clear Button -->
+                        <div class="flex justify-end">
+                            <Button type="button" label="Clear Selection" severity="secondary"
+                                @click="selectedRows = []" outlined text size="small" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-2 pt-4 border-t">
+                    <Button type="button" label="Cancel" severity="secondary" @click="closeBatchYakapModal" outlined />
+                    <Button type="submit" label="Update All" icon="pi pi-check" severity="success"
+                        :disabled="!batchYakapForm.yakap_category" />
+                </div>
+            </form>
+        </Dialog>
 
         <!-- Application Form Modal - for creating/editing applicants -->
         <ApplicantFormModal v-model:visible="showApplicationFormModal" :mode="applicationFormMode"
@@ -1658,108 +1830,3 @@ const formatDate = (date) => {
             @update:show="showExportModal = $event" />
     </AdminLayout>
 </template>
-
-<style scoped>
-/* Rounded inputs, selects, and datepickers to match macOS layout */
-:deep(.p-inputtext) {
-    border-radius: 1rem;
-}
-
-:deep(.p-select) {
-    border-radius: 1rem;
-}
-
-:deep(.p-datepicker .p-inputtext) {
-    border-radius: 1rem;
-}
-
-:deep(.p-inputgroup) {
-    border-radius: 1rem;
-    overflow: hidden;
-    border: 1px solid var(--p-inputtext-border-color, #d1d5db);
-}
-
-:deep(.p-inputgroup:focus-within) {
-    border-color: var(--p-inputtext-focus-border-color, #6366f1);
-}
-
-:deep(.p-inputgroup .p-inputgroupaddon) {
-    border-radius: 0;
-    border: none;
-}
-
-:deep(.p-inputgroup .p-inputtext) {
-    border-radius: 0;
-    border: none;
-}
-
-:deep(.p-inputgroup .p-datepicker) {
-    border-radius: 0;
-    flex: 1;
-}
-
-:deep(.p-inputgroup .p-datepicker .p-inputtext) {
-    border-radius: 0;
-    border: none;
-}
-
-/* Ensure the DatePicker icon button inside InputGroup has no rounding */
-:deep(.p-inputgroup .p-datepicker .p-datepicker-input-icon-container) {
-    border-radius: 0;
-}
-
-/* Rounded DataTable — covers scrollable wrapper and all inner containers */
-:deep(.p-datatable) {
-    border-radius: 1.5rem;
-    overflow: hidden;
-    border: 1px solid var(--p-datatable-border-color, #e2e8f0);
-}
-
-:deep(.p-datatable .p-datatable-table-container) {
-    border-radius: 0;
-    overflow: hidden;
-}
-
-/* Remove outer-edge cell borders so they don't double up with the container border */
-:deep(.p-datatable .p-datatable-thead > tr > th:first-child),
-:deep(.p-datatable .p-datatable-tbody > tr > td:first-child) {
-    border-left: none;
-}
-
-:deep(.p-datatable .p-datatable-thead > tr > th:last-child),
-:deep(.p-datatable .p-datatable-tbody > tr > td:last-child) {
-    border-right: none;
-}
-
-:deep(.p-datatable .p-datatable-thead > tr:first-child > th) {
-    border-top: none;
-}
-
-:deep(.p-datatable .p-datatable-tbody > tr:last-child > td) {
-    border-bottom: none;
-}
-
-:deep(.p-datatable .p-paginator) {
-    border-radius: 0;
-    border: none;
-    border-top: 1px solid var(--p-datatable-border-color, #e2e8f0);
-}
-
-:deep(.p-datatable .p-datatable-header) {
-    border-radius: 0;
-}
-
-:deep(.p-datatable .p-datatable-footer) {
-    border-radius: 0;
-}
-
-/* Rounded IconField search wrapper */
-:deep(.p-iconfield .p-inputtext) {
-    border-radius: 1rem;
-}
-
-/* Rounded Checkbox */
-:deep(.p-checkbox .p-checkbox-box) {
-    border-radius: 0.5rem;
-}
-</style>

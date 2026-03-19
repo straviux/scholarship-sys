@@ -78,7 +78,7 @@
                                 <div class="text-xs text-gray-500 space-y-1 mt-1">
                                     <p v-if="batch.exam_date_from || batch.exam_date_to">Exam: {{
                                         formatDateLong(batch.exam_date_from)
-                                    }}
+                                        }}
                                         to {{ formatDateLong(batch.exam_date_to) }}</p>
                                     <p v-if="batch.result_date">Result: {{ formatDateLong(batch.result_date) }}</p>
                                 </div>
@@ -140,7 +140,7 @@
                     <InputText v-model="batchForm.batch_name" placeholder="e.g., Batch 2025-A" class="w-full"
                         :class="{ 'p-invalid': batchForm.errors.batch_name }" />
                     <small class="text-red-500" v-if="batchForm.errors.batch_name">{{ batchForm.errors.batch_name
-                    }}</small>
+                        }}</small>
                 </div>
 
                 <div>
@@ -175,7 +175,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">Course *</label>
                     <CourseSelect v-model="batchForm.course_id" customPlaceholder="Select course" />
                     <small class="text-red-500" v-if="batchForm.errors.course_id">{{ batchForm.errors.course_id
-                    }}</small>
+                        }}</small>
                 </div>
             </div>
 
@@ -205,7 +205,7 @@
                         Medical
                         Allied Courses program</small>
                     <small v-if="scholarForm.errors.profile_id" class="text-red-500">{{ scholarForm.errors.profile_id
-                    }}</small>
+                        }}</small>
                 </div>
 
                 <div class="border-t pt-4">
@@ -253,8 +253,22 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
-                    <Textarea v-model="scholarForm.remarks" rows="3" class="w-full"
-                        placeholder="Add any remarks or notes" />
+                    <Editor v-model="scholarForm.remarks" editorStyle="height: 120px">
+                        <template #toolbar>
+                            <span class="ql-formats">
+                                <button class="ql-bold"></button>
+                                <button class="ql-italic"></button>
+                                <button class="ql-underline"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-list" value="ordered"></button>
+                                <button class="ql-list" value="bullet"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-clean"></button>
+                            </span>
+                        </template>
+                    </Editor>
                 </div>
             </div>
 
@@ -356,7 +370,7 @@
                 <div v-if="viewingBatch.description" class="bg-gray-50 p-4 rounded-lg">
                     <p class="text-sm text-gray-600"><span class="font-semibold">Description:</span> {{
                         viewingBatch.description
-                        }}</p>
+                    }}</p>
                 </div>
 
                 <!-- Scholars DataTable -->
@@ -393,14 +407,14 @@
                         <Column field="service_start_date" header="Service Start" sortable style="min-width: 140px">
                             <template #body="slotProps">
                                 <span class="font-mono text-sm">{{ formatDateLong(slotProps.data.service_start_date)
-                                }}</span>
+                                    }}</span>
                             </template>
                         </Column>
 
                         <Column field="service_end_date" header="Service End" sortable style="min-width: 140px">
                             <template #body="slotProps">
                                 <span class="font-mono text-sm">{{ formatDateLong(slotProps.data.service_end_date)
-                                }}</span>
+                                    }}</span>
                             </template>
                         </Column>
 

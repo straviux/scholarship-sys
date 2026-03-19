@@ -261,7 +261,22 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Remarks (Optional)</label>
-                    <Textarea v-model="approvalForm.remarks" rows="3" placeholder="Add any remarks..." class="w-full" />
+                    <Editor v-model="approvalForm.remarks" editorStyle="height: 120px">
+                        <template #toolbar>
+                            <span class="ql-formats">
+                                <button class="ql-bold"></button>
+                                <button class="ql-italic"></button>
+                                <button class="ql-underline"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-list" value="ordered"></button>
+                                <button class="ql-list" value="bullet"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-clean"></button>
+                            </span>
+                        </template>
+                    </Editor>
                 </div>
             </div>
 

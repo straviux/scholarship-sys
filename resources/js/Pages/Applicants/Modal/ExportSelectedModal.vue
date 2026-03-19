@@ -1,123 +1,5 @@
-<template>
-    <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal :closable="true"
-        :style="{ width: '900px' }" header="Export Selected Applicants">
-
-        <form @submit.prevent="handleExport" class="px-4 pb-2">
-            <!-- Two Column Layout -->
-            <div class="grid grid-cols-2 gap-6 mb-6">
-                <!-- LEFT COLUMN: Export Options -->
-                <div>
-                    <h4 class="text-base font-semibold text-gray-700 mb-3 pb-2 border-b">Export Format</h4>
-
-                    <!-- Selection Summary -->
-                    <div class="mb-4 p-3 bg-blue-50 rounded border border-blue-200">
-                        <div class="font-semibold text-blue-900">{{ selectedRows.length }} applicant(s) selected</div>
-                        <div class="text-sm text-blue-700 mt-1">Export all selected applicants</div>
-                    </div>
-
-                    <!-- Report Type -->
-                    <div class="mb-4">
-                        <label class="block mb-2 text-sm font-medium text-gray-700">Report Type</label>
-                        <div class="flex gap-4">
-                            <div class="flex items-center">
-                                <RadioButton v-model="reportType" inputId="list" value="list" />
-                                <label for="list" class="ml-2 text-sm">Detailed List</label>
-                            </div>
-                            <div class="flex items-center">
-                                <RadioButton v-model="reportType" inputId="summary" value="summary" />
-                                <label for="summary" class="ml-2 text-sm">Summary</label>
-                            </div>
-                        </div>
-                        <small class="text-xs text-gray-500 mt-1">Choose format for your export</small>
-                    </div>
-
-                    <!-- Selected Applicants Preview -->
-                    <div class="mb-4">
-                        <label class="text-sm font-medium text-gray-700 mb-2">Selected Applicants</label>
-                        <div class="bg-gray-50 rounded p-3 max-h-48 overflow-y-auto border border-gray-200">
-                            <div v-if="selectedRows.length > 0" class="space-y-1">
-                                <div v-for="(row, idx) in selectedRows.slice(0, 10)" :key="idx"
-                                    class="text-xs text-gray-600 py-1 px-2 bg-white rounded border">
-                                    {{ row.last_name }}, {{ row.first_name }}
-                                </div>
-                                <div v-if="selectedRows.length > 10" class="text-xs text-gray-500 italic px-2 py-1">
-                                    ... and {{ selectedRows.length - 10 }} more
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- RIGHT COLUMN: Document Settings -->
-                <div>
-                    <h4 class="text-base font-semibold text-gray-700 mb-3 pb-2 border-b">Document Settings</h4>
-
-                    <!-- Paper Size -->
-                    <div class="mb-4">
-                        <label class="block mb-2 text-sm font-medium text-gray-700">Paper Size</label>
-                        <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label" optionValue="value"
-                            class="w-full" />
-                        <small class="text-xs text-gray-500 mt-1">Choose paper size for your export</small>
-                    </div>
-
-                    <!-- Orientation -->
-                    <div class="mb-4">
-                        <label class="block mb-2 text-sm font-medium text-gray-700">Orientation</label>
-                        <Select v-model="orientation" :options="orientationOptions" optionLabel="label"
-                            optionValue="value" class="w-full" />
-                        <small class="text-xs text-gray-500 mt-1">Choose portrait or landscape layout</small>
-                    </div>
-
-                    <!-- Report Options -->
-                    <div class="mb-4 p-3 bg-amber-50 rounded border border-amber-200">
-                        <h5 class="text-sm font-semibold text-amber-900 mb-3">Report Options</h5>
-
-                        <!-- Include Remarks Toggle -->
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <label class="text-sm font-medium text-gray-700 block">Include Remarks</label>
-                                <small class="text-xs text-gray-500">Add remarks column to report</small>
-                            </div>
-                            <InputSwitch v-model="includeRemarks" />
-                        </div>
-
-                        <!-- Include Grant Provision Toggle -->
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <label class="text-sm font-medium text-gray-700 block">Include Grant Provision</label>
-                                <small class="text-xs text-gray-500">Add grant provision column to report</small>
-                            </div>
-                            <InputSwitch v-model="includeGrantProvision" />
-                        </div>
-                    </div>
-
-                    <!-- Export Summary -->
-                    <div class="mb-4 p-3 bg-gray-50 rounded border border-gray-200">
-                        <p class="text-xs uppercase tracking-wide text-gray-600 mb-2 font-medium">
-                            Export Summary
-                        </p>
-                        <div class="text-xs text-gray-700 space-y-1">
-                            <div><strong>Records:</strong> {{ selectedRows.length }}</div>
-                            <div><strong>Type:</strong> {{ reportType === 'list' ? 'Detailed List' : 'Summary' }}</div>
-                            <div><strong>Paper:</strong> {{ paperSize }} - {{ orientation }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex justify-end gap-2 pt-4 border-t">
-                <Button type="button" label="Cancel" severity="secondary" @click="close" outlined />
-                <Button type="button" label="PDF" icon="pi pi-file-pdf" severity="danger" @click="exportAs('pdf')" />
-                <Button type="button" label="Excel" icon="pi pi-file-excel" severity="success"
-                    @click="exportAs('excel')" />
-            </div>
-        </form>
-    </Dialog>
-</template>
-
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onBeforeUnmount } from 'vue';
 import { toast } from 'vue3-toastify';
 
 const props = defineProps({
@@ -149,7 +31,6 @@ const orientationOptions = [
     { label: 'Landscape', value: 'landscape' },
 ];
 
-// Methods
 const close = () => {
     emit('update:show', false);
 };
@@ -160,7 +41,6 @@ const exportAs = (format) => {
         return;
     }
 
-    // Build query parameters
     const profileIds = props.selectedRows.map(row => row.profile_id).join(',');
     const params = new URLSearchParams({
         profile_ids: profileIds,
@@ -181,9 +61,325 @@ const exportAs = (format) => {
     toast.success(`Exporting ${props.selectedRows.length} applicant(s) as ${format.toUpperCase()}...`);
 };
 
-const handleExport = (e) => {
-    e.preventDefault();
-    // Default to PDF if form submitted
-    exportAs('pdf');
-};
+/* ── Drag ── */
+const dragOffset = ref({ x: 0, y: 0 });
+const dragStart = ref(null);
+const modalStyle = computed(() => ({
+    width: '680px',
+    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
+}));
+
+function onDragStart(e) {
+    if (e.target.closest('button, input, textarea, select, a, .p-select, .p-toggleswitch')) return;
+    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
+    document.addEventListener('pointermove', onDragMove);
+    document.addEventListener('pointerup', onDragEnd);
+}
+function onDragMove(e) {
+    if (!dragStart.value) return;
+    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
+}
+function onDragEnd() {
+    dragStart.value = null;
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragEnd);
+}
+onBeforeUnmount(() => {
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragEnd);
+});
 </script>
+
+<template>
+    <Dialog :visible="show" modal @update:visible="val => !val && close()"
+        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+        <template #container>
+            <div class="ios-modal" :style="modalStyle">
+                <!-- Nav Bar -->
+                <div class="ios-nav-bar" @pointerdown="onDragStart">
+                    <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
+                    <span class="ios-nav-title">Export Selected</span>
+                    <span class="ios-nav-btn" style="right: 16px; visibility: hidden;">.</span>
+                </div>
+
+                <!-- Body -->
+                <div class="ios-body">
+                    <!-- Selection Summary -->
+                    <div class="ios-section">
+                        <div class="ios-section-label">Selection</div>
+                        <div class="ios-card">
+                            <div class="ios-row ios-row-last">
+                                <span class="ios-row-label">Selected Applicants</span>
+                                <span style="font-size: 15px; font-weight: 600; color: #007AFF;">{{ selectedRows.length
+                                }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report Type -->
+                    <div class="ios-section">
+                        <div class="ios-section-label">Report Type</div>
+                        <div class="ios-card">
+                            <div class="ios-row" style="cursor: pointer;" @click="reportType = 'list'">
+                                <span class="ios-row-label">Detailed List</span>
+                                <i v-if="reportType === 'list'" class="pi pi-check"
+                                    style="color: #007AFF; font-size: 14px;"></i>
+                            </div>
+                            <div class="ios-row ios-row-last" style="cursor: pointer;" @click="reportType = 'summary'">
+                                <span class="ios-row-label">Summary</span>
+                                <i v-if="reportType === 'summary'" class="pi pi-check"
+                                    style="color: #007AFF; font-size: 14px;"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Document Settings -->
+                    <div class="ios-section">
+                        <div class="ios-section-label">Document Settings</div>
+                        <div class="ios-card">
+                            <div class="ios-row">
+                                <span class="ios-row-label">Paper Size</span>
+                                <div class="ios-row-control ios-select">
+                                    <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label"
+                                        optionValue="value" class="w-full" />
+                                </div>
+                            </div>
+                            <div class="ios-row ios-row-last">
+                                <span class="ios-row-label">Orientation</span>
+                                <div class="ios-row-control ios-select">
+                                    <Select v-model="orientation" :options="orientationOptions" optionLabel="label"
+                                        optionValue="value" class="w-full" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Options -->
+                    <div class="ios-section">
+                        <div class="ios-section-label">Options</div>
+                        <div class="ios-card">
+                            <div class="ios-row">
+                                <span class="ios-row-label">Include Remarks</span>
+                                <InputSwitch v-model="includeRemarks" />
+                            </div>
+                            <div class="ios-row ios-row-last">
+                                <span class="ios-row-label">Include Grant Provision</span>
+                                <InputSwitch v-model="includeGrantProvision" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview List -->
+                    <div class="ios-section" v-if="selectedRows.length > 0">
+                        <div class="ios-section-label">Preview</div>
+                        <div class="ios-card" style="max-height: 120px; overflow-y: auto;">
+                            <div v-for="(row, idx) in selectedRows.slice(0, 10)" :key="idx" class="ios-row"
+                                :class="{ 'ios-row-last': idx === Math.min(selectedRows.length, 10) - 1 }">
+                                <span style="font-size: 13px; color: #000;">{{ row.last_name }}, {{ row.first_name
+                                }}</span>
+                            </div>
+                            <div v-if="selectedRows.length > 10" class="ios-row ios-row-last"
+                                style="justify-content: center;">
+                                <span style="font-size: 12px; color: #8E8E93; font-style: italic;">... and {{
+                                    selectedRows.length - 10 }} more</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export Buttons -->
+                    <div class="ios-section">
+                        <div class="ios-export-buttons">
+                            <button class="ios-export-btn ios-export-pdf" @click="exportAs('pdf')">
+                                <i class="pi pi-file-pdf"></i> Export as PDF
+                            </button>
+                            <button class="ios-export-btn ios-export-excel" @click="exportAs('excel')">
+                                <i class="pi pi-file-excel"></i> Export as Excel
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="height: 20px;"></div>
+                </div>
+            </div>
+        </template>
+    </Dialog>
+</template>
+
+<style scoped>
+.ios-modal {
+    background: #F2F2F7;
+    border-radius: 14px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.ios-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 14px 16px;
+    background: #FFFFFF;
+    border-bottom: 0.5px solid #E5E5EA;
+    flex-shrink: 0;
+    cursor: grab;
+    user-select: none;
+}
+
+.ios-nav-bar:active {
+    cursor: grabbing;
+}
+
+.ios-nav-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #000;
+    letter-spacing: -0.4px;
+}
+
+.ios-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 17px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: opacity 0.15s;
+}
+
+.ios-nav-btn:hover {
+    opacity: 0.6;
+}
+
+.ios-nav-cancel {
+    left: 16px;
+    color: #8E8E93;
+    font-size: 20px;
+}
+
+.ios-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 16px;
+}
+
+.ios-section {
+    margin-top: 22px;
+}
+
+.ios-section:first-child {
+    margin-top: 16px;
+}
+
+.ios-section-label {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6D6D72;
+    text-transform: uppercase;
+    letter-spacing: -0.08px;
+    padding: 0 16px 6px;
+}
+
+.ios-card {
+    background: #FFFFFF;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 0.5px solid #E5E5EA;
+}
+
+.ios-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 16px;
+    min-height: 36px;
+    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
+}
+
+.ios-row-last {
+    border-bottom: none;
+}
+
+.ios-row:last-child {
+    border-bottom: none;
+}
+
+.ios-row-label {
+    font-size: 14px;
+    color: #000;
+    letter-spacing: -0.4px;
+    font-weight: 500;
+}
+
+.ios-row-control.ios-select {
+    width: 140px;
+}
+
+.ios-row-control.ios-select :deep(.p-select) {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    font-size: 13px;
+    color: #8E8E93;
+    text-align: right;
+    padding: 0;
+}
+
+.ios-export-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.ios-export-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity 0.15s;
+}
+
+.ios-export-btn:hover {
+    opacity: 0.8;
+}
+
+.ios-export-pdf {
+    background: #FF3B30;
+    color: #FFFFFF;
+}
+
+.ios-export-excel {
+    background: #34C759;
+    color: #FFFFFF;
+}
+</style>
+
+<style>
+.ios-dialog-root.p-dialog {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: auto !important;
+}
+
+.ios-dialog-mask {
+    background: rgba(0, 0, 0, 0.4);
+}
+</style>

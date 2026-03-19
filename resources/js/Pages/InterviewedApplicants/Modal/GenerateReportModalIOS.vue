@@ -221,7 +221,7 @@
                         <!-- Active Filters Pills -->
                         <div v-if="activeFiltersCount > 0" class="ios-filter-pills">
                             <span v-if="lastParams.recommendation" class="ios-pill">{{ lastParams.recommendation
-                                }}</span>
+                            }}</span>
                             <span v-if="lastParams.program" class="ios-pill">{{ lastParams.program }}</span>
                             <span v-if="lastParams.school" class="ios-pill">{{ lastParams.school }}</span>
                             <span v-if="lastParams.course" class="ios-pill">{{ lastParams.course }}</span>
@@ -314,9 +314,9 @@
                                                 <td v-if="includeAssessment">{{ capitalize(record.academic_potential) }}
                                                 </td>
                                                 <td v-if="includeAssessment">{{ capitalize(record.financial_need_level)
-                                                    }}</td>
+                                                }}</td>
                                                 <td v-if="includeAssessment">{{ capitalize(record.communication_skills)
-                                                    }}</td>
+                                                }}</td>
                                                 <td>{{ formatDate(record.interviewed_at) }}</td>
                                                 <td>{{ record.interviewer?.name || '—' }}</td>
                                             </tr>
@@ -615,16 +615,12 @@ onBeforeUnmount(() => {
 
 /* iOS Modal Shell — rendered inside headless #container */
 .ios-modal {
-    background: rgba(242, 242, 247, 0.72);
-    backdrop-filter: blur(40px) saturate(180%);
-    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    background: #F2F2F7;
     border-radius: 14px;
     max-height: 85vh;
     display: flex;
     flex-direction: column;
-    box-shadow:
-        0 25px 60px rgba(0, 0, 0, 0.25),
-        0 0 0 0.5px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
     overflow: hidden;
     margin: 0 auto;
 }
@@ -640,8 +636,8 @@ onBeforeUnmount(() => {
     justify-content: center;
     position: relative;
     padding: 14px 16px;
-    background: rgba(255, 255, 255, 0.45);
-    border-bottom: 0.5px solid rgba(255, 255, 255, 0.3);
+    background: #FFFFFF;
+    border-bottom: 0.5px solid #E5E5EA;
     flex-shrink: 0;
     cursor: grab;
     user-select: none;
@@ -741,10 +737,10 @@ onBeforeUnmount(() => {
 
 /* iOS Grouped Card */
 .ios-card {
-    background: rgba(255, 255, 255, 0.55);
+    background: #FFFFFF;
     border-radius: 10px;
     overflow: hidden;
-    border: 0.5px solid rgba(255, 255, 255, 0.4);
+    border: 0.5px solid #E5E5EA;
 }
 
 /* iOS Row */
@@ -792,11 +788,11 @@ onBeforeUnmount(() => {
 /* iOS Segmented Control */
 .ios-segmented-control {
     display: flex;
-    background: rgba(118, 118, 128, 0.15);
+    background: #E9E9EB;
     border-radius: 9px;
     padding: 2px;
     gap: 0;
-    border: 0.5px solid rgba(255, 255, 255, 0.2);
+    border: 0.5px solid #D1D1D6;
 }
 
 .ios-segment {
@@ -818,11 +814,10 @@ onBeforeUnmount(() => {
 }
 
 .ios-segment-active {
-    background: rgba(255, 255, 255, 0.7);
+    background: #FFFFFF;
     box-shadow:
         0 3px 8px rgba(0, 0, 0, 0.06),
-        0 1px 1px rgba(0, 0, 0, 0.04),
-        0 0 0 0.5px rgba(255, 255, 255, 0.5);
+        0 1px 1px rgba(0, 0, 0, 0.04);
 }
 
 /* Preview Card */
@@ -870,8 +865,8 @@ onBeforeUnmount(() => {
 .ios-destructive-btn {
     display: block;
     width: 100%;
-    background: rgba(255, 255, 255, 0.45);
-    border: 0.5px solid rgba(255, 255, 255, 0.3);
+    background: #FFFFFF;
+    border: 0.5px solid #E5E5EA;
     border-radius: 10px;
     padding: 12px;
     text-align: center;
@@ -883,7 +878,7 @@ onBeforeUnmount(() => {
 }
 
 .ios-destructive-btn:hover {
-    background: rgba(255, 255, 255, 0.6);
+    background: #F2F2F7;
 }
 
 /* ═══════════════════════════════════════════════
@@ -891,7 +886,7 @@ onBeforeUnmount(() => {
    ═══════════════════════════════════════════════ */
 
 .ios-preview-body {
-    background: rgba(242, 242, 247, 0.5);
+    background: #F2F2F7;
 }
 
 .ios-report-container {
@@ -1182,7 +1177,6 @@ onBeforeUnmount(() => {
 }
 
 .ios-dialog-mask {
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.4);
 }
 </style>

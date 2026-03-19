@@ -150,7 +150,8 @@ onMounted(() => {
     <!-- Use MultiSelect when multiple is true -->
     <MultiSelect v-if="multiple" v-model="localValue" :options="barangayOptions" filter :filterFields="['name']"
         optionLabel="name" :placeholder="customPlaceholder" class="w-full" :maxSelectedLabels="3"
-        :selectedItemsLabel="'{0} barangays selected'" showSelectAll showClear>
+        :selectedItemsLabel="'{0} barangays selected'" showSelectAll showClear
+        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #option="slotProps">
             <div class="flex items-start uppercase">
                 <div>{{ slotProps.option.name }}</div>
@@ -165,7 +166,8 @@ onMounted(() => {
 
     <!-- Use Select when multiple is false -->
     <Select v-else v-model="localValue" :options="barangayOptions" filter :filterFields="['name']" autoFilterFocus
-        showClear optionLabel="name" :placeholder="customPlaceholder" class="w-full">
+        showClear optionLabel="name" :placeholder="customPlaceholder" class="w-full"
+        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.name }}</div>

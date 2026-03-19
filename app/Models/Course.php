@@ -10,6 +10,7 @@ class Course extends Model
     protected $fillable = [
         'name',
         'shortname',
+        'field_of_study',
         'description',
         'remarks',
         'is_active',

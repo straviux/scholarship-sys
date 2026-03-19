@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\Inertia;
 use App\Http\Requests\CreateCourseRequest;
-use Illuminate\Http\RedirectResponse;
 use App\Http\Resources\CourseResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
@@ -49,9 +48,11 @@ class CourseController extends Controller
                 ->map(function ($course) {
                     return [
                         'id' => $course->id,
+                        'scholarship_program_id' => $course->scholarship_program_id,
                         'program' => $course->scholarshipProgram ? $course->scholarshipProgram->name : 'N/A',
                         'name' => $course->name,
                         'shortname' => $course->shortname,
+                        'field_of_study' => $course->field_of_study,
                         'description' => $course->description,
                         'remarks' => $course->remarks,
                         'start_date' => $course->start_date,
@@ -67,9 +68,10 @@ class CourseController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(CreateCourseRequest $request): RedirectResponse
+    public function store(CreateCourseRequest $request): JsonResponse
     {
         $course = Course::create($request->validated());
+        $course->load(['scholarshipProgram', 'createdBy']);
 
         // Log course creation
         ActivityLogService::logRecordCreated(
@@ -78,7 +80,11 @@ class CourseController extends Controller
             remarks: "Created course: {$course->name}"
         );
 
-        return back();
+        return response()->json([
+            'success' => true,
+            'message' => 'Course has been added',
+            'course' => $this->formatCourse($course),
+        ]);
     }
 
 
@@ -100,6 +106,11 @@ class CourseController extends Controller
                 'nullable',
                 'string',
                 'max:50'
+            ],
+            "field_of_study" => [
+                'nullable',
+                'string',
+                'max:255'
             ],
             "description" => [
                 'nullable',
@@ -129,21 +140,28 @@ class CourseController extends Controller
             ],
         ]));
 
+        $course = $course->fresh();
+        $course->load(['scholarshipProgram', 'createdBy']);
+
         // Log course update
         ActivityLogService::logRecordUpdated(
             profileId: null,
             oldData: $oldData,
-            newData: $course->fresh()->getAttributes(),
+            newData: $course->getAttributes(),
             remarks: "Updated course: {$course->name}"
         );
 
-        return back();
+        return response()->json([
+            'success' => true,
+            'message' => 'Course has been updated',
+            'course' => $this->formatCourse($course),
+        ]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Course $course)
+    public function destroy(Course $course): JsonResponse
     {
         $courseData = $course->getAttributes();
         $course->delete();
@@ -155,7 +173,28 @@ class CourseController extends Controller
             remarks: "Deleted course: {$courseData['name']}"
         );
 
-        return back();
+        return response()->json([
+            'success' => true,
+            'message' => 'Course deleted successfully',
+        ]);
+    }
+
+    private function formatCourse(Course $course): array
+    {
+        return [
+            'id' => $course->id,
+            'scholarship_program_id' => $course->scholarship_program_id,
+            'program' => $course->scholarshipProgram ? $course->scholarshipProgram->name : 'N/A',
+            'name' => $course->name,
+            'shortname' => $course->shortname,
+            'field_of_study' => $course->field_of_study,
+            'description' => $course->description,
+            'remarks' => $course->remarks,
+            'start_date' => $course->start_date,
+            'end_date' => $course->end_date,
+            'created_by' => $course->createdBy ? $course->createdBy->name : 'N/A',
+            'is_active' => $course->is_active,
+        ];
     }
 
     public function findCourseByProgramApi(Request $request)

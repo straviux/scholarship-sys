@@ -111,8 +111,22 @@ const closeModal = () => {
 
             <div class="mt-4">
                 <InputLabel for="remarks" value="Remarks" />
-                <TextArea id="remarks" type="text" class="mt-1 block w-full" v-model="form.remarks"
-                    autocomplete="remarks" />
+                <Editor v-model="form.remarks" editorStyle="height: 120px">
+                    <template #toolbar>
+                        <span class="ql-formats">
+                            <button class="ql-bold"></button>
+                            <button class="ql-italic"></button>
+                            <button class="ql-underline"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-list" value="ordered"></button>
+                            <button class="ql-list" value="bullet"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-clean"></button>
+                        </span>
+                    </template>
+                </Editor>
                 <InputError class="mt-2" :message="form.errors.remarks" />
             </div>
 

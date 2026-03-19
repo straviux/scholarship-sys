@@ -1,6 +1,18 @@
 <template>
     <Select :modelValue="modelValue" @update:modelValue="handleUpdate" :options="civilStatusOptions" optionLabel="label"
-        optionValue="value" :inputId="inputId" :placeholder="placeholder" variant="filled" fluid />
+        optionValue="value" :inputId="inputId" :placeholder="placeholder" class="w-full">
+        <template #value="slotProps">
+            <div v-if="slotProps.value" class="flex items-start">
+                <div>{{civilStatusOptions.find(o => o.value === slotProps.value)?.label || slotProps.value}}</div>
+            </div>
+            <span v-else>{{ slotProps.placeholder }}</span>
+        </template>
+        <template #option="slotProps">
+            <div class="flex items-start">
+                <div>{{ slotProps.option.label }}</div>
+            </div>
+        </template>
+    </Select>
 </template>
 
 <script setup>

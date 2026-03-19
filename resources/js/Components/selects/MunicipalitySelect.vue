@@ -133,7 +133,8 @@ onMounted(fetchMunicipalities);</script>
     <!-- Use MultiSelect when multiple is true -->
     <MultiSelect v-if="multiple" v-model="localValue" :options="municipalities" filter :filterFields="['name']"
         optionLabel="name" :placeholder="customPlaceholder" :loading="loading" class="w-full" :maxSelectedLabels="3"
-        :selectedItemsLabel="'{0} municipalities selected'" showSelectAll showClear>
+        :selectedItemsLabel="'{0} municipalities selected'" showSelectAll showClear
+        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #option="slotProps">
             <div class="flex items-start uppercase">
                 <div>{{ slotProps.option.name }}</div>
@@ -148,7 +149,8 @@ onMounted(fetchMunicipalities);</script>
 
     <!-- Use Select when multiple is false -->
     <Select v-else v-model="localValue" :options="municipalities" filter :filterFields="['name']" autoFilterFocus
-        showClear optionLabel="name" :placeholder="customPlaceholder" :loading="loading" class="w-full">
+        showClear optionLabel="name" :placeholder="customPlaceholder" :loading="loading" class="w-full"
+        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.name }}</div>

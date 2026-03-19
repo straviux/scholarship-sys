@@ -1,7 +1,20 @@
 <template>
     <Select :modelValue="modelValue" @update:modelValue="handleUpdate" :options="religionOptions" optionLabel="label"
-        optionValue="value" :inputId="inputId" :placeholder="placeholder" variant="filled" fluid showClear filter
-        :loading="loading" />
+        optionValue="value" :inputId="inputId" :placeholder="placeholder" class="w-full" showClear filter
+        autoFilterFocus :loading="loading"
+        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
+        <template #value="slotProps">
+            <div v-if="slotProps.value" class="flex items-start">
+                <div>{{religionOptions.find(o => o.value === slotProps.value)?.label || slotProps.value}}</div>
+            </div>
+            <span v-else>{{ slotProps.placeholder }}</span>
+        </template>
+        <template #option="slotProps">
+            <div class="flex items-start">
+                <div>{{ slotProps.option.label }}</div>
+            </div>
+        </template>
+    </Select>
 </template>
 
 <script setup>

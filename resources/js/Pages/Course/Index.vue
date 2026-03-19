@@ -1,27 +1,34 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { Head } from "@inertiajs/vue3";
-import { onMounted, ref, watch } from "vue";
-import { useStorage } from '@vueuse/core';
+import { onMounted, ref, watch, computed, onBeforeUnmount } from "vue";
 import CourseModal from "@/Pages/Course/Modal/CourseModal.vue";
-import { router } from '@inertiajs/vue3';
+import axios from 'axios';
 import { usePermission } from '@/composable/permissions';
+import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
 
 const props = defineProps({
-    action: String,
     courses: Object,
-    course: Object,
     scholarshipPrograms: Object,
 });
 
 const { hasPermission } = usePermission();
 
+// Local reactive copy of courses
+const coursesList = ref([...props.courses]);
+
 const scholarshipProgramsOptions = ref([]);
 const programOptions = ref([]);
 
-// Delete confirmation modal
-const showConfirmDeleteModal = ref(false);
+// Modal state
+const showCourseModal = ref(false);
+const editingCourse = ref(null);
+
+// Delete confirmation
+const showDeleteModal = ref(false);
 const selectedCourse = ref(null);
+const deleting = ref(false);
 
 // Search and pagination
 const globalFilter = ref('');
@@ -33,67 +40,107 @@ const filters = ref({
     program: { value: null, matchMode: 'equals' }
 });
 
-// Watch for changes in globalFilter and update filters
 watch(globalFilter, (newValue) => {
     filters.value.global.value = newValue;
 });
 
-// Watch for changes in programFilter and update filters
 watch(programFilter, (newValue) => {
     filters.value.program.value = newValue;
 });
 
+const rebuildProgramOptions = () => {
+    const uniquePrograms = [...new Set(coursesList.value.map(c => c.program))].filter(Boolean);
+    programOptions.value = [
+        { label: 'All Programs', value: null },
+        ...uniquePrograms.map(p => ({ label: p, value: p }))
+    ];
+};
+
 onMounted(() => {
-    // console.log(props.courses);
     scholarshipProgramsOptions.value = props.scholarshipPrograms.map(program => ({
         value: program.id,
         label: program.name
     }));
-
-    // Create unique program options for filtering
-    const uniquePrograms = [...new Set(props.courses.map(course => course.program))].filter(Boolean);
-    programOptions.value = [
-        { label: 'All Programs', value: null },
-        ...uniquePrograms.map(program => ({ label: program, value: program }))
-    ];
-    // console.log(props.courses);
+    rebuildProgramOptions();
 });
 
-const editCourse = (courseId) => {
-    // Navigate to the edit course page
-    router.get(route("courses.index", {
-        id: courseId,
-        action: 'edit'
-    }))
+const openCreate = () => {
+    editingCourse.value = null;
+    showCourseModal.value = true;
+};
+
+const openEdit = (course) => {
+    editingCourse.value = course;
+    showCourseModal.value = true;
+};
+
+// Handle save from modal (create or update)
+const onCourseSaved = (course) => {
+    const idx = coursesList.value.findIndex(c => c.id === course.id);
+    if (idx >= 0) {
+        coursesList.value[idx] = course;
+    } else {
+        coursesList.value.push(course);
+    }
+    rebuildProgramOptions();
 };
 
 const confirmDeleteCourse = (course) => {
     selectedCourse.value = course;
-    showConfirmDeleteModal.value = true;
+    showDeleteModal.value = true;
+    deleteDragOffset.value = { x: 0, y: 0 };
 };
 
-const deleteCourse = () => {
-    if (selectedCourse.value) {
-        router.delete(route('courses.destroy', selectedCourse.value.id), {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                showConfirmDeleteModal.value = false;
-                selectedCourse.value = null;
-            },
-            onError: () => {
-                showConfirmDeleteModal.value = false;
-                selectedCourse.value = null;
-            }
-        });
+const deleteCourse = async () => {
+    if (!selectedCourse.value || deleting.value) return;
+    deleting.value = true;
+
+    try {
+        await axios.delete(route('courses.destroy', selectedCourse.value.id));
+        coursesList.value = coursesList.value.filter(c => c.id !== selectedCourse.value.id);
+        rebuildProgramOptions();
+        toast.success('Course deleted successfully', { position: toast.POSITION.TOP_RIGHT });
+    } catch {
+        toast.error('Failed to delete course', { position: toast.POSITION.TOP_RIGHT });
+    } finally {
+        deleting.value = false;
+        showDeleteModal.value = false;
+        selectedCourse.value = null;
     }
 };
 
 const closeDeleteModal = () => {
-    showConfirmDeleteModal.value = false;
+    showDeleteModal.value = false;
     selectedCourse.value = null;
 };
 
+/* ── Delete modal drag ── */
+const deleteDragOffset = ref({ x: 0, y: 0 });
+const deleteDragStart = ref(null);
+const deleteModalStyle = computed(() => ({
+    width: '460px',
+    transform: `translate(${deleteDragOffset.value.x}px, ${deleteDragOffset.value.y}px)`,
+}));
+
+function onDeleteDragStart(e) {
+    if (e.target.closest('button, a')) return;
+    deleteDragStart.value = { x: e.clientX - deleteDragOffset.value.x, y: e.clientY - deleteDragOffset.value.y };
+    document.addEventListener('pointermove', onDeleteDragMove);
+    document.addEventListener('pointerup', onDeleteDragEnd);
+}
+function onDeleteDragMove(e) {
+    if (!deleteDragStart.value) return;
+    deleteDragOffset.value = { x: e.clientX - deleteDragStart.value.x, y: e.clientY - deleteDragStart.value.y };
+}
+function onDeleteDragEnd() {
+    deleteDragStart.value = null;
+    document.removeEventListener('pointermove', onDeleteDragMove);
+    document.removeEventListener('pointerup', onDeleteDragEnd);
+}
+onBeforeUnmount(() => {
+    document.removeEventListener('pointermove', onDeleteDragMove);
+    document.removeEventListener('pointerup', onDeleteDragEnd);
+});
 </script>
 
 <template>
@@ -117,8 +164,7 @@ const closeDeleteModal = () => {
                     <div class="text-gray-600">
                         Manage courses and their scholarship programs
                     </div>
-                    <Button label="New Course" icon="pi pi-plus" severity="success" raised
-                        @click="router.get(route('courses.index', { action: 'create' }))" />
+                    <Button label="New Course" icon="pi pi-plus" severity="success" raised @click="openCreate" />
                 </div>
             </Panel>
 
@@ -140,19 +186,21 @@ const closeDeleteModal = () => {
 
             <!-- Courses DataTable -->
             <div class="mt-6">
-                <DataTable :value="courses" stripedRows showGridlines responsiveLayout="scroll"
+                <DataTable :value="coursesList" stripedRows showGridlines responsiveLayout="scroll"
                     :emptyMessage="'No data to be displayed'"
-                    :globalFilterFields="['name', 'shortname', 'program', 'remarks']" v-model:filters="filters"
-                    paginator :rows="rows" v-model:first="first" :rowsPerPageOptions="[5, 10, 20, 50]"
+                    :globalFilterFields="['name', 'shortname', 'field_of_study', 'program', 'remarks']"
+                    v-model:filters="filters" paginator :rows="rows" v-model:first="first"
+                    :rowsPerPageOptions="[5, 10, 20, 50]"
                     paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                     :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
 
                     <template #header>
                         <div class="flex justify-between items-center">
                             <h3 class="text-lg font-semibold text-gray-800">Courses</h3>
-                            <Tag :value="`${courses.length} courses`" severity="info" />
+                            <Tag :value="`${coursesList.length} courses`" severity="info" />
                         </div>
                     </template>
+
                     <Column field="id" header="#" style="width: 50px">
                         <template #body="slotProps">
                             <div class="text-center font-mono text-sm text-gray-500">
@@ -168,6 +216,12 @@ const closeDeleteModal = () => {
                         </template>
                     </Column>
 
+                    <Column field="field_of_study" header="Field of Study" sortable>
+                        <template #body="slotProps">
+                            <span class="text-gray-700">{{ slotProps.data.field_of_study || '-' }}</span>
+                        </template>
+                    </Column>
+
                     <Column field="program" header="Program" sortable>
                         <template #body="slotProps">
                             <span class="font-medium text-gray-700">{{ slotProps.data.program }}</span>
@@ -176,7 +230,7 @@ const closeDeleteModal = () => {
 
                     <Column field="remarks" header="Remarks">
                         <template #body="slotProps">
-                            <span class="text-gray-600">{{ slotProps.data.remarks || '-' }}</span>
+                            <div class="text-gray-600 max-w-xs truncate" v-html="slotProps.data.remarks || '-'"></div>
                         </template>
                     </Column>
 
@@ -191,7 +245,7 @@ const closeDeleteModal = () => {
                         <template #body="slotProps">
                             <div class="flex gap-2 justify-center" v-if="hasPermission('courses.manage')">
                                 <Button icon="pi pi-pen-to-square" severity="info" size="small" rounded outlined
-                                    v-tooltip.top="'Edit Course'" @click="editCourse(slotProps.data.id)" />
+                                    v-tooltip.top="'Edit Course'" @click="openEdit(slotProps.data)" />
                                 <Button v-if="hasPermission('courses.delete')" icon="pi pi-trash" severity="danger"
                                     size="small" rounded outlined v-tooltip.top="'Delete Course'"
                                     @click="confirmDeleteCourse(slotProps.data)" />
@@ -202,33 +256,206 @@ const closeDeleteModal = () => {
             </div>
         </div>
 
-        <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showConfirmDeleteModal" :style="{ width: '450px' }" header="Confirm Deletion"
-            :modal="true">
-            <div class="flex items-center gap-4">
-                <i class="pi pi-exclamation-triangle text-3xl text-red-500"></i>
-                <div>
-                    <p class="text-lg font-semibold text-gray-800 mb-2">
-                        Are you sure you want to delete this course?
-                    </p>
-                    <div class="bg-gray-100 p-3 rounded border-l-4 border-red-500" v-if="selectedCourse">
-                        <div class="font-semibold text-red-700">{{ selectedCourse.name }}</div>
-                        <div class="text-sm text-gray-600">{{ selectedCourse.shortname }}</div>
+        <!-- iOS Delete Confirmation Dialog -->
+        <Dialog :visible="showDeleteModal" modal @update:visible="val => !val && closeDeleteModal()"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+            <template #container>
+                <div class="ios-modal" :style="deleteModalStyle">
+                    <!-- Nav Bar -->
+                    <div class="ios-nav-bar" @pointerdown="onDeleteDragStart">
+                        <button class="ios-nav-btn ios-nav-cancel" @click="closeDeleteModal">
+                            <i class="pi pi-times"></i>
+                        </button>
+                        <span class="ios-nav-title">Confirm Deletion</span>
+                        <button class="ios-nav-btn ios-nav-action ios-nav-destructive" @click="deleteCourse"
+                            :disabled="deleting">
+                            {{ deleting ? 'Deleting...' : 'Delete' }}
+                        </button>
                     </div>
-                    <p class="text-sm text-gray-600 mt-2">
-                        This action cannot be undone.
-                    </p>
-                </div>
-            </div>
 
-            <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeDeleteModal" outlined />
-                <Button label="Delete Course" severity="danger" @click="deleteCourse" />
+                    <!-- Body -->
+                    <div class="ios-body" v-if="selectedCourse">
+                        <!-- Warning -->
+                        <div class="ios-section">
+                            <div class="ios-card">
+                                <div class="ios-row" style="padding: 12px 16px; gap: 12px;">
+                                    <i class="pi pi-exclamation-triangle"
+                                        style="font-size: 24px; color: #FF3B30; flex-shrink: 0;"></i>
+                                    <div>
+                                        <div
+                                            style="font-size: 15px; font-weight: 600; color: #000; margin-bottom: 4px;">
+                                            Permanently delete this course?
+                                        </div>
+                                        <div style="font-size: 13px; color: #8E8E93; line-height: 1.4;">
+                                            This action cannot be undone. All associated data will be removed.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Course Info -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">Course</div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <span class="ios-row-label">Name</span>
+                                    <span style="font-size: 14px; color: #FF3B30; font-weight: 600;">
+                                        {{ selectedCourse.name }}
+                                    </span>
+                                </div>
+                                <div class="ios-row">
+                                    <span class="ios-row-label">Shortname</span>
+                                    <span style="font-size: 13px; color: #8E8E93;">{{ selectedCourse.shortname }}</span>
+                                </div>
+                                <div class="ios-row ios-row-last">
+                                    <span class="ios-row-label">Program</span>
+                                    <span style="font-size: 13px; color: #8E8E93;">{{ selectedCourse.program }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="height: 20px;"></div>
+                    </div>
+                </div>
             </template>
         </Dialog>
 
-        <!-- CREATE SCHOLARSHIP PROGRAM MODAL -->
-        <CourseModal v-if="props.action == 'create' || props.action == 'edit'" :action="props.action"
-            :course="props.course" :scholarshipProgramsOptions="scholarshipProgramsOptions" />
+        <!-- Course Create/Edit Modal -->
+        <CourseModal v-model:visible="showCourseModal" :course="editingCourse"
+            :scholarshipProgramsOptions="scholarshipProgramsOptions" @saved="onCourseSaved" />
     </AdminLayout>
 </template>
+
+<style scoped>
+/* iOS Delete Modal Styles */
+.ios-modal {
+    background: #F2F2F7;
+    border-radius: 14px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.ios-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 14px 16px;
+    background: #FFFFFF;
+    border-bottom: 0.5px solid #E5E5EA;
+    flex-shrink: 0;
+    cursor: grab;
+    user-select: none;
+}
+
+.ios-nav-bar:active {
+    cursor: grabbing;
+}
+
+.ios-nav-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #000;
+    letter-spacing: -0.4px;
+}
+
+.ios-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 17px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: opacity 0.15s;
+}
+
+.ios-nav-btn:hover {
+    opacity: 0.6;
+}
+
+.ios-nav-cancel {
+    left: 16px;
+    color: #8E8E93;
+    font-size: 20px;
+}
+
+.ios-nav-action {
+    right: 16px;
+    color: #374151;
+    font-weight: 600;
+}
+
+.ios-nav-action:disabled {
+    color: #C7C7CC;
+    cursor: not-allowed;
+}
+
+.ios-nav-destructive {
+    color: #FF3B30 !important;
+}
+
+.ios-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 16px;
+}
+
+.ios-section {
+    margin-top: 22px;
+}
+
+.ios-section:first-child {
+    margin-top: 16px;
+}
+
+.ios-section-label {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6D6D72;
+    text-transform: uppercase;
+    letter-spacing: -0.08px;
+    padding: 0 16px 6px;
+}
+
+.ios-card {
+    background: #FFFFFF;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 0.5px solid #E5E5EA;
+}
+
+.ios-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 16px;
+    min-height: 36px;
+    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
+}
+
+.ios-row-last {
+    border-bottom: none;
+}
+
+.ios-row:last-child {
+    border-bottom: none;
+}
+
+.ios-row-label {
+    font-size: 14px;
+    color: #000;
+    letter-spacing: -0.4px;
+    font-weight: 500;
+    white-space: nowrap;
+    min-width: 90px;
+}
+</style>

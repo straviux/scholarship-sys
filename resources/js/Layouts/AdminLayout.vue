@@ -576,24 +576,24 @@ onUnmounted(() => {
         </div>
     </div>
 
-    <div v-if="!shouldBlockNonAdminAccess()" class="w-full h-full flex">
+    <div v-if="!shouldBlockNonAdminAccess()" class="w-full h-full flex content-bg">
         <!-- Mobile Backdrop -->
         <div v-if="toggleMenu" @click="toggleMenu = false" class="fixed inset-0 bg-black/50 z-20 md:hidden" />
 
         <!-- Floating Sidebar -->
         <aside
-            class="fixed z-30 md:z-10 top-0 left-0 md:top-20 md:left-4 flex flex-col bg-[#222831] transition-all duration-300 md:rounded-xl shadow-xl min-w-0 h-full md:h-[calc(100vh-96px)]"
+            class="fixed z-30 md:z-10 top-0 left-0 md:top-20 md:left-4 flex flex-col bg-[#222831] transition-all duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-96px)]"
             :class="[
                 sidebarMinimized ? 'md:w-[110px]' : 'md:w-[220px]',
                 toggleMenu ? 'w-[280px] translate-x-0' : '-translate-x-full md:translate-x-0',
             ]">
 
-            <div class="flex-1 flex flex-col min-h-0 min-w-0 p-0 overflow-hidden">
+            <div class="flex-1 flex flex-col min-h-0 min-w-0 p-0 overflow-hidden rounded-4xl">
                 <Button v-slot="slotProps" asChild>
                     <button v-bind="slotProps.a11yAttrs" @click="toggleSidebarMinimized"
-                        class="flex w-full bg-[#222831] pt-2 px-2 text-gray-500 cursor-pointer rounded-tr-xl rounded-tl-xl justify-end">
+                        class="flex w-full bg-[#222831] pt-4 px-4 text-gray-500 cursor-pointer justify-end">
                         <i :class="{ 'pi pi-window-maximize': sidebarMinimized, 'pi pi-window-minimize': !sidebarMinimized }"
-                            style="font-size: 0.7rem"></i>
+                            style="font-size: 0.7rem;margin-right: 8px;"></i>
                     </button>
                 </Button>
                 <!-- <Button class="flex bg-[#222831]" @click="toggleSidebarMinimized"
@@ -630,7 +630,7 @@ onUnmounted(() => {
                 </div>
                 <!-- Dynamic Menu from API (Full Width) -->
                 <ul v-if="!sidebarMinimized && (menuItems.length > 0 || !menuLoading)"
-                    class="menu space-y-3 md:space-y-2 mt-2 px-3 pb-3 text-sm md:text-xs w-full text-gray-300 hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block flex-1 relative"
+                    class="menu space-y-3 md:space-y-2 mt-2 px-3 pb-20 text-sm md:text-xs w-full text-gray-300 hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block flex-1 relative"
                     :class="{ 'opacity-60 pointer-events-none': menuLoading }">
                     <template v-for="item in menuItems" :key="item.id">
                         <!-- Menu item without children -->
@@ -681,7 +681,7 @@ onUnmounted(() => {
                 </div>
                 <!-- Dynamic Menu from API (Minimized Width) -->
                 <ul v-if="sidebarMinimized && (menuItems.length > 0 || !menuLoading)"
-                    class="menu space-y-3 mt-2 px-2 pb-4 w-full text-gray-300 hover:text-gray-50 items-center min-h-0 min-w-0 block flex-1 overflow-y-auto overflow-x-hidden relative"
+                    class="menu space-y-3 mt-2 px-2 pb-20 w-full text-gray-300 hover:text-gray-50 items-center min-h-0 min-w-0 block flex-1 overflow-y-auto overflow-x-hidden relative"
                     :class="{ 'opacity-60 pointer-events-none': menuLoading }">
                     <template v-for="item in menuItems" :key="item.id">
                         <!-- Single menu item (minimized) -->
@@ -691,7 +691,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                }}</span>
+                                    }}</span>
                             </SidebarLink>
                         </li>
 
@@ -700,7 +700,7 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                }}</span>
+                                    }}</span>
                             </div>
                         </li>
                     </template>
@@ -847,7 +847,8 @@ onUnmounted(() => {
                 </div>
             </div>
 
-            <div ref="contentRef" class="content-scroll flex-1 overflow-y-auto px-4 md:px-6 pt-6"
+            <div ref="contentRef"
+                class="content-scroll content-bg flex-1 overflow-y-auto px-4 md:px-6 pt-6 pb-10 transition-all duration-300"
                 :class="sidebarMinimized ? 'md:ml-[130px]' : 'md:ml-[240px]'">
                 <!-- <ToastList /> -->
                 <slot />
@@ -929,6 +930,8 @@ aside {
 
 .menu::-webkit-scrollbar-track {
     background: transparent;
+    margin-top: 8px;
+    margin-bottom: 32px;
 }
 
 .menu::-webkit-scrollbar-thumb {
@@ -938,6 +941,19 @@ aside {
 
 .menu:hover::-webkit-scrollbar-thumb {
     background: rgba(156, 163, 175, 0.5);
+}
+
+/* Cool blue-gray frosted glass background */
+.content-bg {
+    background:
+        radial-gradient(ellipse at 20% 10%, rgba(230, 235, 242, 0.7) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 30%, rgba(220, 228, 238, 0.6) 0%, transparent 45%),
+        radial-gradient(ellipse at 10% 70%, rgba(225, 231, 240, 0.5) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 85%, rgba(222, 229, 239, 0.6) 0%, transparent 40%),
+        radial-gradient(ellipse at 50% 50%, rgba(228, 233, 241, 0.55) 0%, transparent 60%),
+        linear-gradient(160deg, rgba(235, 239, 245, 0.5) 0%, rgba(225, 230, 238, 0.4) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 
 /* Auto-hide content area scrollbar */

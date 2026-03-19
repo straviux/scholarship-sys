@@ -106,7 +106,8 @@ onMounted(fetchData);
     <!-- MultiSelect for multiple selection -->
     <MultiSelect v-if="multiple" v-model="localValue" :options="schoolOptions" filter autoFilterFocus showClear
         optionLabel="name" :placeholder="customPlaceholder" class="w-full" :filterFields="['name', 'shortname']"
-        :maxSelectedLabels="3" :selectedItemsLabel="'{0} schools selected'" showSelectAll>
+        :maxSelectedLabels="3" :selectedItemsLabel="'{0} schools selected'" showSelectAll
+        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #chip="slotProps">
             <div class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded uppercase mr-1">
                 {{ slotProps.value.shortname }}
@@ -127,7 +128,8 @@ onMounted(fetchData);
 
     <!-- Select for single selection -->
     <Select v-else v-model="localValue" :options="schoolOptions" filter autoFilterFocus showClear optionLabel="name"
-        :placeholder="customPlaceholder" class="w-full" :filterFields="['name', 'shortname']">
+        :placeholder="customPlaceholder" class="w-full" :filterFields="['name', 'shortname']"
+        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 {{ slotProps.value.shortname }}

@@ -66,11 +66,26 @@
 
                                         <!-- Date Fields and Remarks (Only for Add Existing) -->
                                         <div class="grid grid-cols-1 md:grid-cols-6 gap-3 mt-10">
-                                            <FloatLabel class="md:col-span-4">
-                                                <Textarea v-model="form.remarks" inputId="remarks" variant="filled"
-                                                    placeholder="&nbsp;" rows="1" fluid autoResize />
-                                                <label class="text-sm" for="remarks">Remarks</label>
-                                            </FloatLabel>
+                                            <div class="md:col-span-4">
+                                                <label
+                                                    class="text-sm font-medium text-gray-600 mb-1 block">Remarks</label>
+                                                <Editor v-model="form.remarks" editorStyle="height: 100px">
+                                                    <template #toolbar>
+                                                        <span class="ql-formats">
+                                                            <button class="ql-bold"></button>
+                                                            <button class="ql-italic"></button>
+                                                            <button class="ql-underline"></button>
+                                                        </span>
+                                                        <span class="ql-formats">
+                                                            <button class="ql-list" value="ordered"></button>
+                                                            <button class="ql-list" value="bullet"></button>
+                                                        </span>
+                                                        <span class="ql-formats">
+                                                            <button class="ql-clean"></button>
+                                                        </span>
+                                                    </template>
+                                                </Editor>
+                                            </div>
                                             <FloatLabel>
                                                 <DatePicker v-model="form.date_filed" type="date" inputId="date_filed"
                                                     variant="filled" placeholder="mm/dd/yyyy" showIcon fluid

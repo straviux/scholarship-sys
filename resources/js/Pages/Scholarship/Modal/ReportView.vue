@@ -1,58 +1,27 @@
 <template>
-    <div class="h-full flex flex-col bg-white">
-        <!-- Toolbar -->
-        <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-200">
-            <div class="flex items-center gap-3">
-                <Button label="Back" icon="pi pi-arrow-left" @click="goBack" severity="secondary" text size="small" />
-                <Button label="Refresh" icon="pi pi-refresh" @click="regenerate" severity="secondary" text size="small"
-                    :loading="loading" />
-            </div>
-
-            <div class="flex items-center gap-6">
-                <!-- Paper Settings -->
-                <div class="flex items-center gap-2 text-sm">
-                    <label class="text-gray-600">Paper:</label>
-                    <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label" optionValue="value"
-                        class="w-32" size="small" />
-                </div>
-                <div class="flex items-center gap-2 text-sm">
-                    <label class="text-gray-600">Orientation:</label>
-                    <Select v-model="orientation" :options="orientationOptions" optionLabel="label" optionValue="value"
-                        class="w-36" size="small" />
-                </div>
-
-                <!-- Export Buttons -->
-                <div class="flex items-center gap-2">
-                    <Button label="PDF" icon="pi pi-file-pdf" @click="saveAsPdf" severity="danger" outlined
-                        size="small" />
-                    <Button label="Excel" icon="pi pi-file-excel" @click="saveAsExcel" severity="success" outlined
-                        size="small" />
-                </div>
-            </div>
-        </div>
-
+    <div class="ios-report-root">
         <!-- Content Area -->
-        <div class="flex-1 overflow-auto p-8 bg-gray-50">
+        <div class="ios-report-scroll pt-4">
             <!-- Loading State -->
-            <div v-if="loading" class="flex flex-col items-center justify-center h-full">
+            <div v-if="loading" class="ios-loading-state">
                 <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="4" animationDuration="1s" />
-                <p class="mt-4 text-gray-600 font-medium">Loading report...</p>
+                <p>Loading report...</p>
             </div>
 
             <!-- Report Content -->
             <div v-else class="max-w-7xl mx-auto">
                 <!-- Report Header -->
-                <div class="mb-8 pb-6 border-b border-gray-200">
+                <div class="mb-4 pb-3 border-b border-gray-200">
                     <div class="flex items-start justify-between">
                         <div>
-                            <h1 class="text-3xl font-light text-gray-900 mb-2">
+                            <h1 class="text-lg font-semibold text-gray-900 mb-0.5">
                                 {{ reportType === 'list' ? 'Scholarship Profiles' : 'Summary Report' }}
                             </h1>
-                            <p class="text-sm text-gray-500">
+                            <p class="text-[11px] text-gray-500">
                                 Total Records: <strong>{{ totalRecords }}</strong>
                             </p>
                         </div>
-                        <div class="text-right text-sm text-gray-500">
+                        <div class="text-right text-[11px] text-gray-500">
                             <p>{{ moment().format('MMM DD, YYYY') }}</p>
                             <p>{{ moment().format('hh:mm A') }}</p>
                         </div>
@@ -60,13 +29,13 @@
                 </div>
 
                 <!-- Applied Filters -->
-                <div v-if="hasActiveFilters" class="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                    <p class="text-xs uppercase tracking-wide text-gray-600 mb-3 font-medium">
+                <div v-if="hasActiveFilters" class="mb-4 px-3 py-2 bg-blue-50 rounded-lg border border-blue-100">
+                    <p class="text-[10px] uppercase tracking-wide text-gray-600 mb-1.5 font-medium">
                         Active Filters
                     </p>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-1.5">
                         <span v-for="(filter, key) in activeFilters" :key="key"
-                            class="inline-flex items-center px-3 py-1 bg-white border border-gray-200 rounded-full text-sm text-gray-700">
+                            class="inline-flex items-center px-2 py-0.5 bg-white border border-gray-200 rounded-full text-[11px] text-gray-700">
                             <span class="font-medium text-gray-900">{{ key }}:</span>
                             <span class="ml-1">{{ filter }}</span>
                         </span>
@@ -76,28 +45,36 @@
                 <!-- List Report -->
                 <div v-if="reportType === 'list' && records.length > 0">
                     <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                        <table class="w-full text-sm">
+                        <table class="w-full text-[11px]">
                             <thead>
                                 <tr class="bg-gray-50 border-b border-gray-200">
-                                    <th class="px-4 py-3 text-left font-medium text-gray-700">#</th>
-                                    <th class="px-4 py-3 text-left font-medium text-gray-700">Name</th>
-                                    <th class="px-4 py-3 text-left font-medium text-gray-700">Contact No(s).</th>
+                                    <th class="px-2 py-1.5 text-left font-semibold text-gray-700 text-[10px]">#</th>
+                                    <th class="px-2 py-1.5 text-left font-semibold text-gray-700 text-[10px]">Name</th>
+                                    <th class="px-2 py-1.5 text-left font-semibold text-gray-700 text-[10px]">Contact
+                                        No(s).</th>
                                     <th v-if="!params.municipality"
-                                        class="px-4 py-3 text-left font-medium text-gray-700">Municipality</th>
-                                    <th v-if="!params.program" class="px-4 py-3 text-left font-medium text-gray-700">
+                                        class="px-2 py-1.5 text-left font-semibold text-gray-700 text-[10px]">
+                                        Municipality</th>
+                                    <th v-if="!params.program"
+                                        class="px-2 py-1.5 text-left font-semibold text-gray-700 text-[10px]">
                                         Program</th>
-                                    <th v-if="!params.school" class="px-4 py-3 text-left font-medium text-gray-700">
+                                    <th v-if="!params.school"
+                                        class="px-2 py-1.5 text-left font-semibold text-gray-700 text-[10px]">
                                         School</th>
                                     <th v-if="!params.course && !params.courses"
-                                        class="px-4 py-3 text-left font-medium text-gray-700">
+                                        class="px-2 py-1.5 text-left font-semibold text-gray-700 text-[10px]">
                                         Course</th>
-                                    <th v-if="!params.year_level" class="px-4 py-3 text-left font-medium text-gray-700">
+                                    <th v-if="!params.year_level"
+                                        class="px-2 py-1.5 text-left font-semibold text-gray-700 text-[10px]">
                                         Level</th>
                                     <th v-if="!params.unified_status"
-                                        class="px-4 py-3 text-left font-medium text-gray-700">Status</th>
+                                        class="px-2 py-1.5 text-left font-semibold text-gray-700 text-[10px]">Status
+                                    </th>
                                     <th v-if="!params.grant_provision && isStatusActive"
-                                        class="px-4 py-3 text-left font-medium text-gray-700">Grant Provision</th>
-                                    <th class="px-4 py-3 text-left font-medium text-gray-700">{{ isShowingApproved ?
+                                        class="px-2 py-1.5 text-left font-semibold text-gray-700 text-[10px]">Grant
+                                        Provision</th>
+                                    <th class="px-2 py-1.5 text-left font-semibold text-gray-700 text-[10px]">{{
+                                        isShowingApproved ?
                                         'Date Approved' : 'Date Filed' }}</th>
                                 </tr>
                             </thead>
@@ -106,36 +83,36 @@
                                     'border-b border-gray-100 hover:bg-gray-50 transition-colors',
                                     isJpm(item) && params.enable_jpm_highlighting == 1 ? 'bg-emerald-50' : ''
                                 ]">
-                                    <td class="px-4 py-3 text-gray-600">{{ idx + 1 }}</td>
-                                    <td class="px-4 py-3 text-gray-900">
+                                    <td class="px-2 py-1 text-gray-600">{{ idx + 1 }}</td>
+                                    <td class="px-2 py-1 text-gray-900 font-medium whitespace-nowrap">
                                         {{ formatName(item) }}
                                     </td>
-                                    <td class="px-4 py-3 text-gray-600">
+                                    <td class="px-2 py-1 text-gray-600">
                                         {{ item.contact_no || '-' }}
                                     </td>
-                                    <td v-if="!params.municipality" class="px-4 py-3 text-gray-600">
+                                    <td v-if="!params.municipality" class="px-2 py-1 text-gray-600">
                                         {{ item.municipality || '-' }}
                                     </td>
-                                    <td v-if="!params.program" class="px-4 py-3 text-gray-600">
+                                    <td v-if="!params.program" class="px-2 py-1 text-gray-600">
                                         {{ item.program_name || '-' }}
                                     </td>
-                                    <td v-if="!params.school" class="px-4 py-3 text-gray-600">
+                                    <td v-if="!params.school" class="px-2 py-1 text-gray-600">
                                         {{ item.school_name || '-' }}
                                     </td>
-                                    <td v-if="!params.course && !params.courses" class="px-4 py-3 text-gray-600">
+                                    <td v-if="!params.course && !params.courses" class="px-2 py-1 text-gray-600">
                                         {{ item.course_name || '-' }}
                                     </td>
-                                    <td v-if="!params.year_level" class="px-4 py-3 text-gray-600">
+                                    <td v-if="!params.year_level" class="px-2 py-1 text-gray-600">
                                         {{ item.year_level || '-' }}
                                     </td>
-                                    <td v-if="!params.unified_status" class="px-4 py-3">
+                                    <td v-if="!params.unified_status" class="px-2 py-1">
                                         <Tag :value="formatApprovalStatus(item)" :severity="getStatusSeverity(item)" />
                                     </td>
                                     <td v-if="!params.grant_provision && isStatusActive"
-                                        class="px-4 py-3 text-gray-600">
+                                        class="px-2 py-1 text-gray-600">
                                         {{ formatGrantProvision(item) }}
                                     </td>
-                                    <td class="px-4 py-3 text-gray-600">
+                                    <td class="px-2 py-1 text-gray-600 whitespace-nowrap">
                                         {{ formatDate(isShowingApproved ? item.date_approved : item.date_filed) }}
                                     </td>
                                 </tr>
@@ -146,27 +123,30 @@
 
                 <!-- Summary Report -->
                 <div v-if="reportType === 'summary'">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-lg border border-gray-200">
-                            <h3 class="text-sm uppercase tracking-wide text-gray-600 mb-2">Total Scholars</h3>
-                            <p class="text-4xl font-light text-gray-900">{{ totalRecords }}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-[10px] uppercase tracking-wide text-gray-600 mb-1">Total Scholars</h3>
+                            <p class="text-2xl font-light text-gray-900">{{ totalRecords }}</p>
                         </div>
-                        <div class="bg-white p-6 rounded-lg border border-gray-200">
-                            <h3 class="text-sm uppercase tracking-wide text-gray-600 mb-2">Programs</h3>
-                            <p class="text-4xl font-light text-gray-900">{{ summaryData.programs }}</p>
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-[10px] uppercase tracking-wide text-gray-600 mb-1">Programs</h3>
+                            <p class="text-2xl font-light text-gray-900">{{ summaryData.programs }}</p>
                         </div>
-                        <div class="bg-white p-6 rounded-lg border border-gray-200">
-                            <h3 class="text-sm uppercase tracking-wide text-gray-600 mb-2">Schools</h3>
-                            <p class="text-4xl font-light text-gray-900">{{ summaryData.schools }}</p>
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-[10px] uppercase tracking-wide text-gray-600 mb-1">Schools</h3>
+                            <p class="text-2xl font-light text-gray-900">{{ summaryData.schools }}</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- No Records -->
-                <div v-if="records.length === 0" class="text-center py-12 text-gray-500">
-                    <i class="pi pi-inbox text-6xl mb-4"></i>
-                    <p class="text-lg">No records found matching the selected filters.</p>
+                <div v-if="records.length === 0" class="text-center py-8 text-gray-500">
+                    <i class="pi pi-inbox text-4xl mb-3"></i>
+                    <p class="text-sm">No records found matching the selected filters.</p>
                 </div>
+
+                <!-- Bottom spacer -->
+                <div class="pb-12"></div>
             </div>
         </div>
     </div>

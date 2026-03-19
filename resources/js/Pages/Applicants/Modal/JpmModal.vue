@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { toast } from 'vue3-toastify';
 
@@ -83,7 +83,6 @@ const hasGuardian = computed(() => {
 });
 
 const closeModal = () => {
-    // Reset form to original profile data when closing without saving
     if (props.profile) {
         jpmForm.value = {
             is_jpm_member: Boolean(props.profile.is_jpm_member),
@@ -100,23 +99,15 @@ const closeModal = () => {
 const isResetting = ref(false);
 
 const resetAllJpmStatus = () => {
-    // Trigger spin animation
     isResetting.value = true;
-
-    // Add timeout to show animation before clearing
     setTimeout(() => {
         jpmForm.value.is_jpm_member = false;
         jpmForm.value.is_father_jpm = false;
         jpmForm.value.is_mother_jpm = false;
         jpmForm.value.is_guardian_jpm = false;
         jpmForm.value.is_not_jpm = false;
-
         toast.info('All JPM status cleared');
-
-        // Stop animation after a brief moment
-        setTimeout(() => {
-            isResetting.value = false;
-        }, 300);
+        setTimeout(() => { isResetting.value = false; }, 300);
     }, 400);
 };
 
@@ -142,7 +133,7 @@ const saveJpmData = () => {
 
     router.put(route('applicants.updateJpmStatus', props.profile.profile_id), payload, {
         preserveScroll: true,
-        preserveState: false,  // Changed to false to reload fresh data
+        preserveState: false,
         onSuccess: () => {
             closeModal();
             toast.success('JPM data updated successfully');
@@ -153,129 +144,330 @@ const saveJpmData = () => {
         }
     });
 };
+
+/* ── Drag ── */
+const dragOffset = ref({ x: 0, y: 0 });
+const dragStart = ref(null);
+const modalStyle = computed(() => ({
+    width: '560px',
+    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
+}));
+
+function onDragStart(e) {
+    if (e.target.closest('button, input, textarea, select, a, .p-select, .p-checkbox, .p-editor')) return;
+    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
+    document.addEventListener('pointermove', onDragMove);
+    document.addEventListener('pointerup', onDragEnd);
+}
+function onDragMove(e) {
+    if (!dragStart.value) return;
+    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
+}
+function onDragEnd() {
+    dragStart.value = null;
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragEnd);
+}
+onBeforeUnmount(() => {
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragEnd);
+});
 </script>
 
 <template>
-    <Dialog :visible="show" @update:visible="emit('update:show', $event)" :style="{ width: '600px' }"
-        header="Edit JPM Information" :modal="true">
-        <div class="space-y-4">
-            <!-- Applicant Info Header -->
-            <div v-if="profile" class="bg-blue-50 p-3 rounded border-l-4 border-blue-500">
-                <div class="flex items-center justify-between">
-                    <div class="font-semibold text-blue-700 text-lg">
-                        {{ profile.last_name }}, {{ profile.first_name }}
+    <Dialog :visible="show" modal @update:visible="val => !val && closeModal()"
+        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+        <template #container>
+            <div class="ios-modal" :style="modalStyle">
+                <!-- Nav Bar -->
+                <div class="ios-nav-bar" @pointerdown="onDragStart">
+                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal"><i class="pi pi-times"></i></button>
+                    <span class="ios-nav-title">JPM Tagging</span>
+                    <button class="ios-nav-btn ios-nav-action" @click="saveJpmData">Save</button>
+                </div>
+
+                <!-- Body -->
+                <div class="ios-body" v-if="profile">
+                    <!-- Applicant Info -->
+                    <div class="ios-section">
+                        <div class="ios-section-label">Applicant Information</div>
+                        <div class="ios-card">
+                            <div class="ios-row">
+                                <span class="ios-row-label">{{ profile.last_name }}, {{ profile.first_name }}</span>
+                                <button class="ios-copy-btn"
+                                    @click="copyToClipboard(`${profile.last_name}, ${profile.first_name}`, 'Applicant name')">
+                                    <i class="pi pi-copy"></i>
+                                </button>
+                            </div>
+                            <div v-if="hasFather" class="ios-row">
+                                <span class="ios-row-label"><span style="color: #8E8E93;">Father:</span> {{
+                                    profile.father_name }}</span>
+                                <button class="ios-copy-btn"
+                                    @click="copyToClipboard(profile.father_name, 'Father name')">
+                                    <i class="pi pi-copy"></i>
+                                </button>
+                            </div>
+                            <div v-if="hasMother" class="ios-row">
+                                <span class="ios-row-label"><span style="color: #8E8E93;">Mother:</span> {{
+                                    profile.mother_name }}</span>
+                                <button class="ios-copy-btn"
+                                    @click="copyToClipboard(profile.mother_name, 'Mother name')">
+                                    <i class="pi pi-copy"></i>
+                                </button>
+                            </div>
+                            <div v-if="hasGuardian" class="ios-row ios-row-last">
+                                <span class="ios-row-label"><span style="color: #8E8E93;">Guardian:</span> {{
+                                    profile.guardian_name }}</span>
+                                <button class="ios-copy-btn"
+                                    @click="copyToClipboard(profile.guardian_name, 'Guardian name')">
+                                    <i class="pi pi-copy"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <Button icon="pi pi-copy" size="small" text rounded severity="secondary"
-                        @click="copyToClipboard(`${profile.last_name}, ${profile.first_name}`, 'Applicant name')"
-                        v-tooltip.top="'Copy applicant name'" />
-                </div>
-                <div class="text-sm text-gray-600 mt-1 space-y-0.5">
-                    <div v-if="hasFather" class="flex items-center justify-between group">
-                        <span>
-                            <span class="font-medium">Father:</span> {{ profile.father_name }}
-                        </span>
-                        <Button icon="pi pi-copy" size="small" text rounded severity="secondary"
-                            @click="copyToClipboard(profile.father_name, 'Father name')"
-                            v-tooltip.top="'Copy father name'" />
+
+                    <!-- JPM Member Tagging -->
+                    <div class="ios-section">
+                        <div class="ios-section-label"
+                            style="display: flex; align-items: center; justify-content: space-between;">
+                            <span>JPM Member Tagging</span>
+                            <button class="ios-copy-btn" style="font-size: 12px;" @click="resetAllJpmStatus"
+                                :disabled="!hasAnyJpmMember && !jpmForm.is_not_jpm"
+                                :class="isResetting ? 'animate-spin' : ''">
+                                <i class="pi pi-refresh"></i>
+                            </button>
+                        </div>
+                        <div class="ios-card">
+                            <!-- Applicant -->
+                            <div class="ios-row" :style="{ opacity: jpmForm.is_not_jpm ? 0.5 : 1 }">
+                                <span class="ios-row-label">Applicant</span>
+                                <Checkbox v-model="jpmForm.is_jpm_member" binary :disabled="jpmForm.is_not_jpm" />
+                            </div>
+                            <!-- Father -->
+                            <div v-if="hasFather" class="ios-row" :style="{ opacity: jpmForm.is_not_jpm ? 0.5 : 1 }">
+                                <span class="ios-row-label">Father</span>
+                                <Checkbox v-model="jpmForm.is_father_jpm" binary :disabled="jpmForm.is_not_jpm" />
+                            </div>
+                            <!-- Mother -->
+                            <div v-if="hasMother" class="ios-row" :style="{ opacity: jpmForm.is_not_jpm ? 0.5 : 1 }">
+                                <span class="ios-row-label">Mother</span>
+                                <Checkbox v-model="jpmForm.is_mother_jpm" binary :disabled="jpmForm.is_not_jpm" />
+                            </div>
+                            <!-- Guardian -->
+                            <div v-if="hasGuardian" class="ios-row ios-row-last"
+                                :style="{ opacity: jpmForm.is_not_jpm ? 0.5 : 1 }">
+                                <span class="ios-row-label">Guardian</span>
+                                <Checkbox v-model="jpmForm.is_guardian_jpm" binary :disabled="jpmForm.is_not_jpm" />
+                            </div>
+                        </div>
                     </div>
-                    <div v-if="hasMother" class="flex items-center justify-between group">
-                        <span>
-                            <span class="font-medium">Mother:</span> {{ profile.mother_name }}
-                        </span>
-                        <Button icon="pi pi-copy" size="small" text rounded severity="secondary"
-                            @click="copyToClipboard(profile.mother_name, 'Mother name')"
-                            v-tooltip.top="'Copy mother name'" />
+
+                    <!-- Not JPM Option -->
+                    <div class="ios-section">
+                        <div class="ios-card">
+                            <div class="ios-row ios-row-last" :style="{ opacity: hasAnyJpmMember ? 0.5 : 1 }">
+                                <span class="ios-row-label" style="color: #FF9500;">Not a JPM Member</span>
+                                <Checkbox v-model="jpmForm.is_not_jpm" binary :disabled="hasAnyJpmMember" />
+                            </div>
+                        </div>
+                        <div v-if="hasAnyJpmMember" class="ios-section-footer">
+                            Uncheck all JPM members above to enable this option
+                        </div>
                     </div>
-                    <div v-if="hasGuardian" class="flex items-center justify-between group">
-                        <span>
-                            <span class="font-medium">Guardian:</span> {{ profile.guardian_name }}
-                        </span>
-                        <Button icon="pi pi-copy" size="small" text rounded severity="secondary"
-                            @click="copyToClipboard(profile.guardian_name, 'Guardian name')"
-                            v-tooltip.top="'Copy guardian name'" />
+
+                    <!-- Remarks -->
+                    <div class="ios-section">
+                        <div class="ios-section-label">Remarks</div>
+                        <div class="ios-card">
+                            <Editor v-model="jpmForm.jpm_remarks" editorStyle="height: 120px">
+                                <template #toolbar>
+                                    <span class="ql-formats">
+                                        <button class="ql-bold"></button>
+                                        <button class="ql-italic"></button>
+                                        <button class="ql-underline"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-list" value="ordered"></button>
+                                        <button class="ql-list" value="bullet"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-clean"></button>
+                                    </span>
+                                </template>
+                            </Editor>
+                        </div>
+                        <div class="ios-section-footer">
+                            Add any notes or verification details regarding JPM membership.
+                        </div>
                     </div>
+
+                    <div style="height: 20px;"></div>
                 </div>
-            </div>
-
-            <!-- JPM Tagging Section -->
-            <div class="space-y-3">
-                <div class="flex justify-between items-center border-b pb-2">
-                    <label class="text-sm font-bold text-gray-700">JPM Member Tagging</label>
-                    <Button icon="pi pi-refresh" severity="warn" text rounded @click="resetAllJpmStatus"
-                        v-tooltip.top="'Reset all JPM status'" :disabled="!hasAnyJpmMember && !jpmForm.is_not_jpm"
-                        :class="isResetting ? 'animate-spin' : 'animate-pulse'" />
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <!-- Applicant - Always visible -->
-                    <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-                        :class="{ 'opacity-50 cursor-not-allowed': jpmForm.is_not_jpm }">
-                        <Checkbox v-model="jpmForm.is_jpm_member" binary inputId="jpm_applicant"
-                            :disabled="jpmForm.is_not_jpm" />
-                        <span class="text-sm">Applicant</span>
-                    </label>
-
-                    <!-- Father - Only show if father name exists -->
-                    <label v-if="hasFather" class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-                        :class="{ 'opacity-50 cursor-not-allowed': jpmForm.is_not_jpm }">
-                        <Checkbox v-model="jpmForm.is_father_jpm" binary inputId="jpm_father"
-                            :disabled="jpmForm.is_not_jpm" />
-                        <span class="text-sm">Father ({{ profile.father_name }})</span>
-                    </label>
-
-                    <!-- Mother - Only show if mother name exists -->
-                    <label v-if="hasMother" class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-                        :class="{ 'opacity-50 cursor-not-allowed': jpmForm.is_not_jpm }">
-                        <Checkbox v-model="jpmForm.is_mother_jpm" binary inputId="jpm_mother"
-                            :disabled="jpmForm.is_not_jpm" />
-                        <span class="text-sm">Mother ({{ profile.mother_name }})</span>
-                    </label>
-
-                    <!-- Guardian - Only show if guardian name exists -->
-                    <label v-if="hasGuardian"
-                        class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-                        :class="{ 'opacity-50 cursor-not-allowed': jpmForm.is_not_jpm }">
-                        <Checkbox v-model="jpmForm.is_guardian_jpm" binary inputId="jpm_guardian"
-                            :disabled="jpmForm.is_not_jpm" />
-                        <span class="text-sm">Guardian ({{ profile.guardian_name }})</span>
-                    </label>
-                </div>
-
-                <div class="pt-2 border-t">
-                    <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-                        :class="{ 'opacity-50 cursor-not-allowed': hasAnyJpmMember }">
-                        <Checkbox v-model="jpmForm.is_not_jpm" binary inputId="jpm_not_member"
-                            :disabled="hasAnyJpmMember" />
-                        <span class="text-sm font-medium text-orange-600">Not a JPM Member</span>
-                    </label>
-                    <p class="text-xs text-gray-500 mt-1 ml-7" v-if="hasAnyJpmMember">
-                        <i class="pi pi-info-circle mr-1"></i>
-                        Uncheck all JPM members above to enable this option
-                    </p>
-                </div>
-            </div>
-
-            <!-- JPM Remarks Section -->
-            <div class="space-y-2">
-                <label for="jpmRemarks" class="block text-sm font-bold text-gray-700 border-b pb-2">
-                    Remarks</label>
-                <Textarea id="jpmRemarks" v-model="jpmForm.jpm_remarks" rows="4"
-                    placeholder="Enter additional remarks about JPM status, verification details, etc..."
-                    class="w-full" />
-                <p class="text-xs text-gray-500">
-                    <i class="pi pi-info-circle mr-1"></i>
-                    Add any additional notes or verification details regarding JPM membership.
-                </p>
-            </div>
-        </div>
-
-        <template #footer>
-            <div class="flex justify-end gap-2">
-                <Button label="Cancel" severity="secondary" @click="closeModal" outlined />
-                <Button label="Save JPM Data" severity="success" icon="pi pi-check" @click="saveJpmData" />
             </div>
         </template>
     </Dialog>
 </template>
 
-<style scoped></style>
+<style scoped>
+.ios-modal {
+    background: #F2F2F7;
+    border-radius: 14px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.ios-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 14px 16px;
+    background: #FFFFFF;
+    border-bottom: 0.5px solid #E5E5EA;
+    flex-shrink: 0;
+    cursor: grab;
+    user-select: none;
+}
+
+.ios-nav-bar:active {
+    cursor: grabbing;
+}
+
+.ios-nav-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #000;
+    letter-spacing: -0.4px;
+}
+
+.ios-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 17px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: opacity 0.15s;
+}
+
+.ios-nav-btn:hover {
+    opacity: 0.6;
+}
+
+.ios-nav-cancel {
+    left: 16px;
+    color: #8E8E93;
+    font-size: 20px;
+}
+
+.ios-nav-action {
+    right: 16px;
+    color: #374151;
+    font-weight: 600;
+}
+
+.ios-nav-action:disabled {
+    color: #C7C7CC;
+    cursor: not-allowed;
+}
+
+.ios-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 16px;
+}
+
+.ios-section {
+    margin-top: 22px;
+}
+
+.ios-section:first-child {
+    margin-top: 16px;
+}
+
+.ios-section-label {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6D6D72;
+    text-transform: uppercase;
+    letter-spacing: -0.08px;
+    padding: 0 16px 6px;
+}
+
+.ios-section-footer {
+    font-size: 13px;
+    color: #6D6D72;
+    padding: 6px 16px 0;
+    line-height: 1.3;
+}
+
+.ios-card {
+    background: #FFFFFF;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 0.5px solid #E5E5EA;
+}
+
+.ios-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 16px;
+    min-height: 36px;
+    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
+}
+
+.ios-row-last {
+    border-bottom: none;
+}
+
+.ios-row:last-child {
+    border-bottom: none;
+}
+
+.ios-row-label {
+    font-size: 14px;
+    color: #000;
+    letter-spacing: -0.4px;
+    font-weight: 500;
+}
+
+.ios-copy-btn {
+    background: none;
+    border: none;
+    color: #8E8E93;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: opacity 0.15s;
+}
+
+.ios-copy-btn:hover {
+    opacity: 0.6;
+}
+</style>
+
+<style>
+.ios-dialog-root.p-dialog {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: auto !important;
+}
+
+.ios-dialog-mask {
+    background: rgba(0, 0, 0, 0.4);
+}
+</style>

@@ -1,8 +1,5 @@
 <script setup>
-import GuestLayout from "@/Layouts/GuestLayout.vue";
 import InputError from "@/Components/ui/inputs/InputError.vue";
-import InputLabel from "@/Components/ui/inputs/InputLabel.vue";
-import TextInput from "@/Components/ui/inputs/TextInput.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import { ref } from 'vue';
 
@@ -13,21 +10,17 @@ const form = useForm({
     password_confirmation: "",
 });
 
-const showPassword = ref(false);
-const showPasswordConfirmation = ref(false);
+const isDark = ref(localStorage.getItem('theme') === 'dark');
+
+const toggleTheme = () => {
+    isDark.value = !isDark.value;
+    localStorage.setItem('theme', isDark.value ? 'dark' : 'light');
+};
 
 const submit = () => {
     form.post(route("register"), {
         onFinish: () => form.reset("password", "password_confirmation"),
     });
-};
-
-const togglePasswordVisibility = () => {
-    showPassword.value = !showPassword.value;
-};
-
-const togglePasswordConfirmationVisibility = () => {
-    showPasswordConfirmation.value = !showPasswordConfirmation.value;
 };
 </script>
 
@@ -35,151 +28,301 @@ const togglePasswordConfirmationVisibility = () => {
 
     <Head title="Sign Up" />
 
-    <div
-        class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-        <!-- Background Pattern -->
-        <div class="absolute inset-0 bg-white/40 backdrop-blur-sm">
-            <div class="absolute inset-0 opacity-40 pattern-bg"></div>
-        </div>
+    <div class="mac-login-screen h-dvh overflow-hidden relative flex items-center justify-center antialiased"
+        :class="{ dark: isDark }">
+        <div class="mac-wallpaper absolute inset-0"></div>
 
-        <!-- Register Card -->
-        <div class="relative w-full max-w-md">
-            <!-- Main Card -->
-            <div class="bg-white/80 backdrop-blur-lg shadow-2xl rounded-2xl border border-white/50 overflow-hidden">
-                <!-- Header -->
-                <div class="px-8 pt-8 pb-6 text-center">
-                    <!-- Logo/Icon -->
-                    <div
-                        class="mx-auto w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-                        <i class="pi pi-user-plus text-white text-3xl"></i>
+        <div class="relative z-[1] flex flex-col items-center w-full max-w-[340px] p-5">
+            <div class="flex flex-col items-center w-full">
+                <div class="flex items-center gap-4 mb-3.5">
+                    <img src="/images/yakap-logo.png" alt="YAKAP"
+                        class="mac-logo w-16 h-16 object-contain rounded-[14px]" />
+                    <img src="/images/pgp-logo.png" alt="PGP"
+                        class="mac-logo w-16 h-16 object-contain rounded-[14px]" />
+                </div>
+
+                <h1 class="mac-title text-[22px] font-semibold tracking-[-0.3px] m-0 mb-1 text-center">Create Account
+                </h1>
+                <p class="mac-subtitle text-[13px] mt-0 mb-7 font-normal">Join the scholarship portal</p>
+
+                <form @submit.prevent="submit" class="w-full flex flex-col items-center gap-2.5">
+                    <div class="w-full">
+                        <IconField class="mac-iconfield">
+                            <InputIcon class="pi pi-user" />
+                            <InputText v-model="form.name" placeholder="Full Name" required autofocus
+                                autocomplete="name" class="mac-input" />
+                        </IconField>
+                        <InputError class="mt-1 pl-1 text-xs text-[#FF3B30]" :message="form.errors.name" />
                     </div>
 
-                    <h1 class="text-2xl font-bold text-gray-900 mb-2">Create Account</h1>
-                    <p class="text-gray-600">Join the scholarship portal</p>
-                </div>
+                    <div class="w-full">
+                        <IconField class="mac-iconfield">
+                            <InputIcon class="pi pi-at" />
+                            <InputText v-model="form.username" placeholder="Username" required autocomplete="username"
+                                class="mac-input" />
+                        </IconField>
+                        <InputError class="mt-1 pl-1 text-xs text-[#FF3B30]" :message="form.errors.username" />
+                    </div>
 
-                <!-- Form -->
-                <div class="px-8 pb-8">
-                    <form @submit.prevent="submit" class="space-y-6">
-                        <!-- Name Field -->
-                        <div class="space-y-2">
-                            <InputLabel for="name" value="Full Name" class="text-gray-700 font-medium" />
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="pi pi-user text-gray-400"></i>
-                                </div>
-                                <TextInput id="name" type="text"
-                                    class="pl-10 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
-                                    v-model="form.name" required autofocus autocomplete="name"
-                                    placeholder="Enter your full name" />
-                            </div>
-                            <InputError class="mt-1" :message="form.errors.name" />
-                        </div>
+                    <div class="w-full">
+                        <IconField class="mac-iconfield">
+                            <InputIcon class="pi pi-lock" />
+                            <Password v-model="form.password" placeholder="Password" :feedback="false" toggleMask
+                                inputClass="mac-input" class="mac-password" required autocomplete="new-password" />
+                        </IconField>
+                        <InputError class="mt-1 pl-1 text-xs text-[#FF3B30]" :message="form.errors.password" />
+                    </div>
 
-                        <!-- Username Field -->
-                        <div class="space-y-2">
-                            <InputLabel for="username" value="Username" class="text-gray-700 font-medium" />
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="pi pi-at text-gray-400"></i>
-                                </div>
-                                <TextInput id="username" type="text"
-                                    class="pl-10 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
-                                    v-model="form.username" required autocomplete="username"
-                                    placeholder="Choose a username" />
-                            </div>
-                            <InputError class="mt-1" :message="form.errors.username" />
-                        </div>
+                    <div class="w-full">
+                        <IconField class="mac-iconfield">
+                            <InputIcon class="pi pi-check-circle" />
+                            <Password v-model="form.password_confirmation" placeholder="Confirm Password"
+                                :feedback="false" toggleMask inputClass="mac-input" class="mac-password" required
+                                autocomplete="new-password" />
+                        </IconField>
+                        <InputError class="mt-1 pl-1 text-xs text-[#FF3B30]"
+                            :message="form.errors.password_confirmation" />
+                    </div>
 
-                        <!-- Password Field -->
-                        <div class="space-y-2">
-                            <InputLabel for="password" value="Password" class="text-gray-700 font-medium" />
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="pi pi-lock text-gray-400"></i>
-                                </div>
-                                <TextInput id="password" :type="showPassword ? 'text' : 'password'"
-                                    class="pl-10 pr-10 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
-                                    v-model="form.password" required autocomplete="new-password"
-                                    placeholder="Create a password" />
-                                <button type="button" @click="togglePasswordVisibility"
-                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none transition-colors duration-200">
-                                    <i class="pi" :class="showPassword ? 'pi-eye-slash' : 'pi-eye'"></i>
-                                </button>
-                            </div>
-                            <InputError class="mt-1" :message="form.errors.password" />
-                        </div>
+                    <div class="flex items-center justify-center w-full mt-0.5">
+                        <Link :href="route('login')"
+                            class="mac-link text-xs font-medium no-underline flex items-center gap-1">
+                            <i class="pi pi-sign-in" style="font-size: 11px"></i>
+                            Already have an account? Sign in
+                        </Link>
+                    </div>
 
-                        <!-- Confirm Password Field -->
-                        <div class="space-y-2">
-                            <InputLabel for="password_confirmation" value="Confirm Password"
-                                class="text-gray-700 font-medium" />
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="pi pi-check-circle text-gray-400"></i>
-                                </div>
-                                <TextInput id="password_confirmation"
-                                    :type="showPasswordConfirmation ? 'text' : 'password'"
-                                    class="pl-10 pr-10 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
-                                    v-model="form.password_confirmation" required autocomplete="new-password"
-                                    placeholder="Confirm your password" />
-                                <button type="button" @click="togglePasswordConfirmationVisibility"
-                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none transition-colors duration-200">
-                                    <i class="pi" :class="showPasswordConfirmation ? 'pi-eye-slash' : 'pi-eye'"></i>
-                                </button>
-                            </div>
-                            <InputError class="mt-1" :message="form.errors.password_confirmation" />
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div class="pt-2">
-                            <Button type="submit" label="Create Account" icon="pi pi-user-plus"
-                                severity="success" class="w-full"
-                                :loading="form.processing"
-                                :disabled="form.processing" />
-                        </div>
-
-                        <!-- Back to Login -->
-                        <div class="text-center">
-                            <Link :href="route('login')"
-                                class="text-sm text-green-600 hover:text-green-500 transition-colors duration-200 font-medium hover:underline flex items-center justify-center gap-1">
-                                <i class="pi pi-sign-in"></i>
-                                Already have an account? Sign in
-                            </Link>
-                        </div>
-                    </form>
-                </div>
+                    <div class="flex w-full items-center justify-between mt-2">
+                        <Button :icon="isDark ? 'pi pi-sun' : 'pi pi-moon'" @click="toggleTheme"
+                            :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'" text rounded
+                            class="mac-theme-toggle" />
+                        <Button type="submit" icon="pi pi-arrow-right" :loading="form.processing"
+                            :disabled="form.processing" rounded class="mac-submit" />
+                    </div>
+                </form>
             </div>
 
-            <!-- Footer -->
-            <div class="mt-8 text-center">
-                <p class="text-sm text-gray-600">
-                    Scholarship Management System
-                </p>
-                <p class="text-xs text-gray-500 mt-1">
-                    © {{ new Date().getFullYear() }} All rights reserved
-                </p>
+            <div class="mac-footer mt-10 flex items-center gap-1.5 text-[11px]">
+                <span>Scholarship Management System</span>
+                <span class="text-sm leading-none">·</span>
+                <span>© {{ new Date().getFullYear() }}</span>
             </div>
         </div>
     </div>
 </template>
 
 <style scoped>
-/* Background pattern */
-.pattern-bg {
-    background-image: radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.05) 0%, transparent 50%);
-    background-size: 60px 60px;
+/* Font stack */
+.mac-login-screen {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
 }
 
-/* Custom input focus styles */
-input:focus {
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+/* ═══ Light theme colors ═══ */
+
+.mac-wallpaper {
+    background: linear-gradient(160deg, #f5f5f7 0%, #e8e8ed 40%, #f0f0f3 70%, #e5e5ea 100%);
 }
 
-/* Backdrop blur fallback */
-@supports not (backdrop-filter: blur(12px)) {
-    .backdrop-blur-lg {
-        background-color: rgba(255, 255, 255, 0.9);
-    }
+.mac-logo {
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
+}
+
+.mac-title {
+    color: #1d1d1f;
+}
+
+.mac-subtitle {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+.mac-link {
+    color: #007AFF;
+    transition: color 0.15s;
+}
+
+.mac-link:hover {
+    color: #0055D4;
+}
+
+.mac-footer {
+    color: rgba(0, 0, 0, 0.3);
+}
+
+/* ═══ PrimeVue component overrides ═══ */
+
+:deep(.mac-iconfield) {
+    width: 100%;
+}
+
+:deep(.mac-iconfield .p-inputicon) {
+    color: rgba(0, 0, 0, 0.3);
+}
+
+:deep(.mac-iconfield .p-inputtext),
+:deep(.mac-input) {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.7) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 10px !important;
+    color: #1d1d1f !important;
+    font-size: 14px;
+    height: 40px;
+    font-family: inherit;
+    backdrop-filter: blur(20px);
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+:deep(.mac-iconfield .p-inputtext:focus),
+:deep(.mac-input:focus) {
+    border-color: rgba(0, 122, 255, 0.5) !important;
+    background: rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15) !important;
+}
+
+:deep(.mac-iconfield .p-inputtext::placeholder),
+:deep(.mac-input::placeholder) {
+    color: rgba(0, 0, 0, 0.3) !important;
+}
+
+:deep(.mac-password) {
+    width: 100%;
+}
+
+:deep(.mac-password .p-password-toggle-mask-btn) {
+    color: rgba(0, 0, 0, 0.3) !important;
+    width: 32px;
+    height: 32px;
+}
+
+:deep(.mac-password .p-password-toggle-mask-btn:hover) {
+    color: rgba(0, 0, 0, 0.55) !important;
+    background: transparent !important;
+}
+
+:deep(.mac-submit.p-button) {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    padding: 0 !important;
+    background: #007AFF !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25);
+    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+
+:deep(.mac-submit.p-button:hover) {
+    background: #0055D4 !important;
+    transform: scale(1.05);
+    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.3);
+}
+
+:deep(.mac-submit.p-button:active) {
+    transform: scale(0.95);
+}
+
+:deep(.mac-submit.p-button:disabled) {
+    opacity: 0.5;
+    transform: none;
+}
+
+:deep(.mac-theme-toggle.p-button) {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border: none !important;
+    background: transparent !important;
+    color: #f5a623 !important;
+    font-size: 20px;
+    transition: all 0.3s ease;
+}
+
+:deep(.mac-theme-toggle.p-button .p-button-icon) {
+    font-size: 20px;
+}
+
+:deep(.mac-theme-toggle.p-button:hover) {
+    background: rgba(0, 0, 0, 0.05) !important;
+    color: #e09500 !important;
+    transform: scale(1.1);
+}
+
+/* ═══ Dark mode overrides ═══ */
+
+.dark .mac-wallpaper {
+    background: linear-gradient(160deg, #1c2028 0%, #222831 40%, #1e242d 70%, #222831 100%);
+}
+
+.dark .mac-logo {
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
+}
+
+.dark .mac-title {
+    color: #f5f5f7;
+}
+
+.dark .mac-subtitle {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.dark .mac-link {
+    color: #0A84FF;
+}
+
+.dark .mac-link:hover {
+    color: #409CFF;
+}
+
+.dark .mac-footer {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.dark :deep(.mac-theme-toggle.p-button) {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.dark :deep(.mac-theme-toggle.p-button:hover) {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.dark :deep(.mac-iconfield .p-inputicon) {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.dark :deep(.mac-iconfield .p-inputtext),
+.dark :deep(.mac-input) {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #f5f5f7 !important;
+}
+
+.dark :deep(.mac-iconfield .p-inputtext:focus),
+.dark :deep(.mac-input:focus) {
+    border-color: rgba(10, 132, 255, 0.5) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2) !important;
+}
+
+.dark :deep(.mac-iconfield .p-inputtext::placeholder),
+.dark :deep(.mac-input::placeholder) {
+    color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.dark :deep(.mac-password .p-password-toggle-mask-btn) {
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.dark :deep(.mac-password .p-password-toggle-mask-btn:hover) {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.dark :deep(.mac-submit.p-button) {
+    background: #0A84FF !important;
+    box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3);
+}
+
+.dark :deep(.mac-submit.p-button:hover) {
+    background: #409CFF !important;
+    box-shadow: 0 4px 14px rgba(10, 132, 255, 0.4);
 }
 </style>

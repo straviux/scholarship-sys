@@ -164,16 +164,20 @@ watch(
 <template>
     <!-- Use MultiSelect when multiple is true -->
     <MultiSelect v-if="multiple" v-model="localValue" :options="courseOptions" filter
-        :filterFields="['name', 'shortname']" optionLabel="name" :placeholder="customPlaceholder" class="w-full"
-        :maxSelectedLabels="3" :selectedItemsLabel="'{0} courses selected'" showSelectAll showClear>
+        :filterFields="['name', 'shortname', 'field_of_study']" optionLabel="name" :placeholder="customPlaceholder"
+        class="w-full" :maxSelectedLabels="3" :selectedItemsLabel="'{0} courses selected'" showSelectAll showClear
+        :pt="{ overlay: { style: 'max-width: 400px; border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #option="slotProps">
-            <div class="flex items-start uppercase">
+            <div class="uppercase"
+                :title="slotProps.option.isNullOption ? '' : `${slotProps.option.shortname} — ${slotProps.option.name}${slotProps.option.field_of_study ? ' (' + slotProps.option.field_of_study + ')' : ''}`">
                 <div v-if="slotProps.option.isNullOption">
                     <span class="text-[12px]">{{ slotProps.option.name }}</span>
                 </div>
                 <div v-else>
-                    <span class="text-[12px]">{{ slotProps.option.name }}</span><br>
-                    <span class="text-[10px] font-bold">[{{ slotProps.option.shortname }}]</span>
+                    <div class="text-[12px] font-bold leading-snug">{{ slotProps.option.shortname }}</div>
+                    <div class="text-[10px] text-gray-600 leading-snug">{{ slotProps.option.name }}</div>
+                    <div v-if="slotProps.option.field_of_study" class="text-[10px] text-gray-400 leading-snug">{{
+                        slotProps.option.field_of_study }}</div>
                 </div>
             </div>
         </template>
@@ -185,24 +189,28 @@ watch(
     </MultiSelect>
 
     <!-- Use Select when multiple is false -->
-    <Select v-else v-model="localValue" :options="courseOptions" filter :filterFields="['name', 'shortname']"
-        autoFilterFocus showClear optionLabel="name" :placeholder="customPlaceholder" class="w-full">
+    <Select v-else v-model="localValue" :options="courseOptions" filter
+        :filterFields="['name', 'shortname', 'field_of_study']" autoFilterFocus showClear optionLabel="name"
+        :placeholder="customPlaceholder" class="w-full"
+        :pt="{ overlay: { style: 'max-width: 400px; border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #value="slotProps">
-            <div v-if="slotProps.value" class="flex items-start uppercase">
-                <div>{{ slotProps.value.shortname }}</div>
+            <div v-if="slotProps.value" class="uppercase truncate">
+                {{ slotProps.value.shortname }}<span v-if="slotProps.value.field_of_study"
+                    class="text-gray-500 font-normal text-[11px]"> — {{ slotProps.value.field_of_study }}</span>
             </div>
-            <span v-else>
-                <div class="flex items-start">{{ slotProps.placeholder }}</div>
-            </span>
+            <span v-else>{{ slotProps.placeholder }}</span>
         </template>
         <template #option="slotProps">
-            <div class="flex items-start uppercase">
+            <div class="uppercase"
+                :title="slotProps.option.isNullOption ? '' : `${slotProps.option.shortname} — ${slotProps.option.name}${slotProps.option.field_of_study ? ' (' + slotProps.option.field_of_study + ')' : ''}`">
                 <div v-if="slotProps.option.isNullOption">
                     <span class="text-[12px]">{{ slotProps.option.name }}</span>
                 </div>
                 <div v-else>
-                    <span class="text-[12px]">{{ slotProps.option.name }}</span><br>
-                    <span class="text-[10px] font-bold">[{{ slotProps.option.shortname }}]</span>
+                    <div class="text-[12px] font-bold leading-snug">{{ slotProps.option.shortname }}</div>
+                    <div class="text-[10px] text-gray-600 leading-snug">{{ slotProps.option.name }}</div>
+                    <div v-if="slotProps.option.field_of_study" class="text-[10px] text-gray-400 leading-snug">{{
+                        slotProps.option.field_of_study }}</div>
                 </div>
             </div>
         </template>

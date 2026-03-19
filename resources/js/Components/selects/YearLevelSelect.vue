@@ -106,7 +106,8 @@ watch(
 
 <template>
     <Select v-model="localValue" :options="year_levels" filter autoFilterFocus showClear optionLabel="label"
-        :placeholder="customPlaceholder" class="w-full">
+        :placeholder="customPlaceholder" class="w-full"
+        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.label }}</div>

@@ -87,7 +87,8 @@ onMounted(() => {
 
 <template>
     <Select v-model="localValue" :options="acad_year" filter autoFilterFocus showClear optionLabel="label"
-        placeholder="Select Academic Year" class="w-full">
+        placeholder="Select Academic Year" class="w-full"
+        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.label }}</div>

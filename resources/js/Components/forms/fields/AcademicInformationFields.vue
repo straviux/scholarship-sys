@@ -49,11 +49,24 @@
 
             <!-- Remarks Field -->
             <div class="grid grid-cols-1 gap-3 mt-10">
-                <FloatLabel>
-                    <Textarea :modelValue="remarks" @update:modelValue="$emit('update:remarks', $event)"
-                        inputId="remarks" variant="filled" rows="3" fluid autoResize />
-                    <label class="text-sm" for="remarks">Remarks (Optional)</label>
-                </FloatLabel>
+                <label class="text-sm font-medium text-gray-600 mb-1">Remarks (Optional)</label>
+                <Editor :modelValue="remarks" @update:modelValue="$emit('update:remarks', $event)"
+                    editorStyle="height: 120px">
+                    <template #toolbar>
+                        <span class="ql-formats">
+                            <button class="ql-bold"></button>
+                            <button class="ql-italic"></button>
+                            <button class="ql-underline"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-list" value="ordered"></button>
+                            <button class="ql-list" value="bullet"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-clean"></button>
+                        </span>
+                    </template>
+                </Editor>
             </div>
         </div>
     </div>

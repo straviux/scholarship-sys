@@ -473,7 +473,7 @@ Route::middleware(['auth'])->controller(CourseController::class)->group(function
     Route::get('/courses-list-api/{scholarship_program_id?}', [CourseController::class, 'getCoursesApi'])->name('courses-api.list');
     Route::get('/courses/{action?}/{id?}', 'index')->name('courses.index');
     Route::post('/courses', 'store')->middleware('check.permission:courses.create')->name('courses.store');
-    Route::put('/courses/{course}', 'update')->middleware('check.permission:courses.edit')->name('courses.update');
+    Route::put('/courses/{course}', 'update')->middleware('check.permission:courses.manage')->name('courses.update');
     Route::delete('/courses/{course}', 'destroy')->middleware('check.permission:courses.delete')->name('courses.destroy');
 });
 

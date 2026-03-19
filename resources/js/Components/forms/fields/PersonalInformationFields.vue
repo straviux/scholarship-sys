@@ -5,30 +5,37 @@
             <slot name="header">Personal Information</slot>
         </h4>
         <div class="space-y-4">
+            <!-- Extension Name Toggle -->
+            <div class="flex items-center gap-2 mt-4 pb-4">
+                <Checkbox v-model="showExtName" inputId="showExtName" binary />
+                <label for="showExtName" class="text-xs text-gray-600 cursor-pointer">With Extension Name (Jr., Sr.,
+                    III, etc.)</label>
+            </div>
             <!-- Name Fields Row -->
-            <div class="grid grid-cols-1 md:grid-cols-10 gap-4 mt-8">
-                <div class="md:col-span-3">
+            <div class="grid grid-cols-1" :class="showExtName ? 'md:grid-cols-10' : 'md:grid-cols-3'"
+                style="gap: 1rem;">
+                <div :class="showExtName ? 'md:col-span-3' : ''">
                     <FloatLabel>
                         <InputText :modelValue="last_name" @update:modelValue="$emit('update:last_name', $event)"
                             inputId="last_name" variant="filled" fluid />
                         <label class="text-sm" for="last_name">Last Name *</label>
                     </FloatLabel>
                 </div>
-                <div class="md:col-span-3">
+                <div :class="showExtName ? 'md:col-span-3' : ''">
                     <FloatLabel>
                         <InputText :modelValue="first_name" @update:modelValue="$emit('update:first_name', $event)"
                             inputId="first_name" variant="filled" fluid />
                         <label class="text-sm" for="first_name">First Name *</label>
                     </FloatLabel>
                 </div>
-                <div class="md:col-span-3">
+                <div :class="showExtName ? 'md:col-span-3' : ''">
                     <FloatLabel>
                         <InputText :modelValue="middle_name" @update:modelValue="$emit('update:middle_name', $event)"
                             inputId="middle_name" variant="filled" fluid />
                         <label class="text-sm" for="middle_name">Middle Name</label>
                     </FloatLabel>
                 </div>
-                <div class="md:col-span-1">
+                <div v-if="showExtName" class="md:col-span-1">
                     <FloatLabel>
                         <InputText :modelValue="extension_name"
                             @update:modelValue="$emit('update:extension_name', $event)" inputId="extension_name"
@@ -48,14 +55,14 @@
                     </FloatLabel>
                 </div>
                 <div>
-                    <FloatLabel>
-                        <DatePicker :modelValue="date_of_birth" placeholder="mm/dd/yyyy"
+                    <FloatLabel :class="{ 'dob-hide-label': !dobFocused && !date_of_birth }">
+                        <DatePicker :modelValue="date_of_birth" :placeholder="dobPlaceholder"
                             @update:modelValue="$emit('update:date_of_birth', $event)" type="date"
                             inputId="date_of_birth" variant="filled" showIcon fluid iconDisplay="input"
-                            :manualInput="true" @input="formatDateInput" />
+                            :manualInput="true" @input="formatDateInput" @focus="dobFocused = true"
+                            @blur="dobFocused = false" />
                         <label class="text-sm" for="date_of_birth">Date of Birth</label>
                     </FloatLabel>
-
                 </div>
                 <div class="flex flex-col gap-2">
                     <FloatLabel v-if="!customPlaceOfBirth">
@@ -132,8 +139,16 @@
 
 
             <!-- Permanent Address Row -->
-            <h5 class="text-sm font-semibold text-gray-700 mt-6 mb-4">Permanent Address</h5>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="flex items-center gap-4 mt-8 mb-0">
+                <h5 class="text-xs font-semibold text-gray-700">Permanent Address</h5>
+                <div class="flex items-center gap-2">
+                    <Checkbox v-model="sameAsPermanent" inputId="sameAsPermanent" binary
+                        @change="handleSameAsPermanentChange" />
+                    <label for="sameAsPermanent" class="text-xs text-gray-600 cursor-pointer">Same as Present
+                        Address</label>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
                 <div>
                     <FloatLabel>
                         <MunicipalitySelect :modelValue="municipality"
@@ -158,42 +173,37 @@
             </div>
 
             <!-- Present Address Row -->
-            <div class="flex items-center gap-4 mt-6 mb-4">
-                <h5 class="text-sm font-semibold text-gray-700">Present Address</h5>
-                <div class="flex items-center gap-2">
-                    <Checkbox v-model="sameAsPermanent" inputId="sameAsPermanent" binary
-                        @change="handleSameAsPermanentChange" />
-                    <label for="sameAsPermanent" class="text-sm text-gray-600 cursor-pointer">Same as Permanent
-                        Address</label>
+            <Transition name="slide-address">
+                <div v-if="!sameAsPermanent">
+                    <h5 class="text-xs font-semibold text-gray-700 mt-6 mb-0">Present Address</h5>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
+                        <div>
+                            <FloatLabel>
+                                <MunicipalitySelect :modelValue="temporary_municipality"
+                                    @update:modelValue="$emit('update:temporary_municipality', $event)"
+                                    custom-placeholder="&nbsp;" />
+                                <label class="text-sm" for="temporary_municipality">Municipality</label>
+                            </FloatLabel>
+                        </div>
+                        <div>
+                            <FloatLabel>
+                                <BarangaySelect :modelValue="temporary_barangay"
+                                    @update:modelValue="$emit('update:temporary_barangay', $event)"
+                                    :municipalityId="temporaryMunicipalityId" custom-placeholder="&nbsp;" />
+                                <label class="text-sm" for="temporary_barangay">Barangay</label>
+                            </FloatLabel>
+                        </div>
+                        <div>
+                            <FloatLabel>
+                                <InputText :modelValue="temporary_address"
+                                    @update:modelValue="$emit('update:temporary_address', $event)"
+                                    inputId="temporary_address" variant="filled" fluid />
+                                <label class="text-sm" for="temporary_address">Street Address</label>
+                            </FloatLabel>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <FloatLabel>
-                        <MunicipalitySelect :modelValue="temporary_municipality"
-                            @update:modelValue="$emit('update:temporary_municipality', $event)"
-                            custom-placeholder="&nbsp;" :disabled="sameAsPermanent" />
-                        <label class="text-sm" for="temporary_municipality">Municipality</label>
-                    </FloatLabel>
-                </div>
-                <div>
-                    <FloatLabel>
-                        <BarangaySelect :modelValue="temporary_barangay"
-                            @update:modelValue="$emit('update:temporary_barangay', $event)"
-                            :municipalityId="temporaryMunicipalityId" custom-placeholder="&nbsp;"
-                            :disabled="sameAsPermanent" />
-                        <label class="text-sm" for="temporary_barangay">Barangay</label>
-                    </FloatLabel>
-                </div>
-                <div>
-                    <FloatLabel>
-                        <InputText :modelValue="temporary_address"
-                            @update:modelValue="$emit('update:temporary_address', $event)" inputId="temporary_address"
-                            variant="filled" fluid :disabled="sameAsPermanent" />
-                        <label class="text-sm" for="temporary_address">Street Address</label>
-                    </FloatLabel>
-                </div>
-            </div>
+            </Transition>
         </div>
     </div>
 </template>
@@ -280,6 +290,23 @@ const temporaryMunicipalityId = computed(() => {
     return props.temporary_municipality;
 });
 
+// Date of Birth placeholder - show format guide on focus
+const dobFocused = ref(false);
+const dobPlaceholder = computed(() => (dobFocused.value || props.date_of_birth) ? 'mm/dd/yyyy' : 'Date of Birth');
+
+// Checkbox state for extension name visibility
+const showExtName = ref(false);
+
+// Watch for existing extension_name to auto-enable the toggle
+watch(() => props.extension_name, (val) => {
+    if (val && val.trim() !== '') showExtName.value = true;
+}, { immediate: true });
+
+// Clear extension_name when toggling off
+watch(showExtName, (val) => {
+    if (!val) emit('update:extension_name', '');
+});
+
 // Checkbox state for custom place of birth
 const customPlaceOfBirth = ref(false);
 
@@ -303,13 +330,13 @@ watch(customPlaceOfBirth, (newValue) => {
     }
 });
 
-// Checkbox state for "Same as Permanent Address"
+// Checkbox state for "Same as Present Address"
 const sameAsPermanent = ref(false);
 
-// Handle checkbox change - copy permanent address to present address
+// Handle checkbox change - copy present address to permanent address
 const handleSameAsPermanentChange = () => {
     if (sameAsPermanent.value) {
-        // Copy permanent address to present address
+        // Copy present address into permanent address
         emit('update:temporary_municipality', props.municipality);
         emit('update:temporary_barangay', props.barangay);
         emit('update:temporary_address', props.address);
@@ -362,5 +389,30 @@ onMounted(() => {
 
 .p-datepicker.p-variant-filled .p-datepicker-input {
     background-color: #ffffff !important;
+}
+
+.dob-hide-label label {
+    opacity: 0 !important;
+    pointer-events: none;
+}
+
+.dob-hide-label .p-datepicker-input::placeholder {
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.slide-address-enter-active,
+.slide-address-leave-active {
+    transition: all 0.3s ease;
+    overflow: hidden;
+    max-height: 200px;
+    opacity: 1;
+}
+
+.slide-address-enter-from,
+.slide-address-leave-to {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0 !important;
 }
 </style>

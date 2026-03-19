@@ -774,14 +774,14 @@ onMounted(async () => {
                             v-model="voucherData.obligations.payee_id" :options="voucherData.scholars"
                             optionValue="profile_id" placeholder="Select Payee" class="w-full">
                             <template #option="{ option }">
-                                {{ option.first_name }} {{ option.last_name }}{{ voucherData.scholars.length > 1 ? ' &
-                                CO.' : '' }}
+                                {{ option.first_name }} {{ option.last_name }}{{ voucherData.scholars.length > 1 ? ` &
+                                CO.` : '' }}
                             </template>
                             <template #value="{ value, placeholder }">
                                 <template v-if="value != null && value !== ''">
                                     {{voucherData.scholars.find(s => s.profile_id === value)?.first_name}}
-                                    {{voucherData.scholars.find(s => s.profile_id === value)?.last_name}}{{
-                                        voucherData.scholars.length > 1 ? ' & CO.' : '' }}
+                                    {{voucherData.scholars.find(s => s.profile_id ===
+                                        value)?.last_name}}{{ voucherData.scholars.length > 1 ? ` & CO.` : '' }}
                                 </template>
                                 <span v-else>{{ placeholder }}</span>
                             </template>

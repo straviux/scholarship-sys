@@ -1506,7 +1506,7 @@ onMounted(() => {
                                 </td>
                                 <td class="px-2 sm:px-6 py-4 text-sm font-medium text-gray-900">{{
                                     formatAmount(calculateTotalAmount(voucher))
-                                }}</td>
+                                    }}</td>
                                 <td class="px-2 sm:px-6 py-4 text-xs font-semibold text-gray-600">{{
                                     voucher.creator?.name
                                     || '---' }}
@@ -1615,7 +1615,7 @@ onMounted(() => {
                 <div class="bg-white border border-gray-200 rounded p-4">
                     <p class="text-sm font-semibold text-gray-900 mb-2">Scholars ({{ selectedVoucher.scholar_ids?.length
                         || 0
-                        }})</p>
+                    }})</p>
                     <div v-if="loadingScholars" class="text-center py-2">
                         <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span class="text-xs">Loading...</span>
                     </div>
@@ -1624,7 +1624,7 @@ onMounted(() => {
                         <div v-for="(scholar, index) in scholarsDetails" :key="index"
                             class="text-xs text-gray-700 py-1 px-2 bg-gray-50 rounded flex items-center justify-between gap-2">
                             <span class="font-medium">{{ index + 1 }}. {{ scholar.first_name }} {{ scholar.last_name
-                                }}</span>
+                            }}</span>
                             <span class="text-gray-600 whitespace-nowrap">
                                 <span v-if="scholar.course_name">{{ scholar.course_name }}</span>
                                 <span v-if="scholar.year_level" class="ml-1">| {{
@@ -1632,7 +1632,7 @@ onMounted(() => {
                                         scholar.year_level
                                 }}</span>
                                 <span v-if="scholar.academic_year" class="ml-1">| {{ scholar.academic_year
-                                    }}</span>
+                                }}</span>
                                 <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                             </span>
                         </div>
@@ -1941,7 +1941,22 @@ onMounted(() => {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-900 mb-2">Remarks</label>
-                    <Textarea v-model="remarksForm.remarks" rows="6" class="w-full" placeholder="Enter remarks..." />
+                    <Editor v-model="remarksForm.remarks" editorStyle="height: 150px">
+                        <template #toolbar>
+                            <span class="ql-formats">
+                                <button class="ql-bold"></button>
+                                <button class="ql-italic"></button>
+                                <button class="ql-underline"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-list" value="ordered"></button>
+                                <button class="ql-list" value="bullet"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-clean"></button>
+                            </span>
+                        </template>
+                    </Editor>
                 </div>
             </div>
             <template #footer>
@@ -1967,8 +1982,22 @@ onMounted(() => {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-900 mb-2">Remarks (Optional)</label>
-                    <Textarea v-model="statusForm.remarks" rows="4" class="w-full"
-                        placeholder="Add or update remarks..." />
+                    <Editor v-model="statusForm.remarks" editorStyle="height: 120px">
+                        <template #toolbar>
+                            <span class="ql-formats">
+                                <button class="ql-bold"></button>
+                                <button class="ql-italic"></button>
+                                <button class="ql-underline"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-list" value="ordered"></button>
+                                <button class="ql-list" value="bullet"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-clean"></button>
+                            </span>
+                        </template>
+                    </Editor>
                 </div>
             </div>
             <template #footer>
@@ -2083,7 +2112,7 @@ onMounted(() => {
                         <p class="text-sm font-semibold text-gray-900">{{ previewData.filename }}</p>
                         <p class="text-xs text-gray-600 mt-1">Document Type: {{ previewData.docType }} | {{
                             previewData.mimeType
-                            }}</p>
+                        }}</p>
                     </div>
                     <div class="flex gap-2">
                         <!-- Zoom Controls for Images -->

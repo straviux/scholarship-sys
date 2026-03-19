@@ -133,7 +133,7 @@
                                         <p class="text-xs font-medium">OBR Date</p>
                                         <p class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
                                             item.date_obligated ? formatDate(item.date_obligated) : '-'
-                                            }}</p>
+                                        }}</p>
                                     </div>
                                     <div v-if="item.obr_no" class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">OBR No.</p>
@@ -189,33 +189,33 @@
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Year:</span>
                                                 <span class="font-medium text-gray-900">{{ item.year_level || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Term:</span>
                                                 <span class="font-medium text-gray-900">{{ item.semester || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">AY:</span>
                                                 <span class="font-medium text-gray-900">{{ item.academic_year || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Course:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">School:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -374,7 +374,22 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
-                    <Textarea v-model="form.remarks" rows="3" placeholder="Enter remarks" class="w-full" />
+                    <Editor v-model="form.remarks" editorStyle="height: 120px">
+                        <template #toolbar>
+                            <span class="ql-formats">
+                                <button class="ql-bold"></button>
+                                <button class="ql-italic"></button>
+                                <button class="ql-underline"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-list" value="ordered"></button>
+                                <button class="ql-list" value="bullet"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-clean"></button>
+                            </span>
+                        </template>
+                    </Editor>
                 </div>
             </div>
 
@@ -403,7 +418,22 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
-                    <Textarea v-model="chequeForm.remarks" rows="3" placeholder="Enter remarks" class="w-full" />
+                    <Editor v-model="chequeForm.remarks" editorStyle="height: 120px">
+                        <template #toolbar>
+                            <span class="ql-formats">
+                                <button class="ql-bold"></button>
+                                <button class="ql-italic"></button>
+                                <button class="ql-underline"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-list" value="ordered"></button>
+                                <button class="ql-list" value="bullet"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-clean"></button>
+                            </span>
+                        </template>
+                    </Editor>
                 </div>
             </div>
 
@@ -586,8 +616,7 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Or copy this link:</label>
                         <div class="flex gap-2">
-                            <InputText type="text" :value="qrCodeData.url" readonly
-                                class="flex-1 text-xs" />
+                            <InputText type="text" :value="qrCodeData.url" readonly class="flex-1 text-xs" />
                             <Button icon="pi pi-copy" size="small" @click="copyToClipboard(qrCodeData.url)"
                                 v-tooltip.top="'Copy link'" />
                         </div>

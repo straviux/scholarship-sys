@@ -76,6 +76,14 @@
 }
 
 @layer base {
+	html,
+	body,
+	#app {
+		height: 100%;
+		margin: 0;
+		padding: 0;
+	}
+
 	html {
 		color-scheme: light !important;
 	}
@@ -83,8 +91,6 @@
 	/* Ensure fixed sizing for critical elements */
 	body {
 		font-size: 14px;
-		margin: 0;
-		padding: 0;
 	}
 
 	/* Table sizing consistency */
