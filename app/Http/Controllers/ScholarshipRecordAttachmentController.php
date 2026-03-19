@@ -241,7 +241,7 @@ class ScholarshipRecordAttachmentController extends Controller
         return response()->json([
             'qr_code' => $scholarshipRecord->getUploadQrCode(250),
             'url' => $scholarshipRecord->getMobileUploadUrl(),
-            'expires_at' => $scholarshipRecord->upload_token_expires_at,
+            'expires_at' => $scholarshipRecord->upload_token_expires_at?->toIso8601String(),
         ]);
     }
 }

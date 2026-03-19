@@ -368,7 +368,7 @@ class DisbursementController extends Controller
         return response()->json([
             'qr_code' => $disbursement->getUploadQrCode(250),
             'url' => $disbursement->getMobileUploadUrl(),
-            'expires_at' => $disbursement->upload_token_expires_at,
+            'expires_at' => $disbursement->upload_token_expires_at?->toIso8601String(),
         ]);
     }
 }

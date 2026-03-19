@@ -295,7 +295,7 @@ class ProfileController extends Controller
             return response()->json([
                 'qr_code_svg' => $user->getUploadQrCode(250),
                 'url' => $user->getMobileUploadUrl(),
-                'expires_at' => $user->upload_token_expires_at,
+                'expires_at' => $user->upload_token_expires_at?->toIso8601String(),
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to generate QR code for profile upload', [

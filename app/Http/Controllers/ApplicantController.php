@@ -1164,11 +1164,14 @@ class ApplicantController extends Controller
 
             // Generate upload token
             $profileRequirement->generateUploadToken(5);
+            
+            // Refresh the model to ensure all attributes are properly loaded
+            $profileRequirement->refresh();
 
             return response()->json([
                 'qr_code_svg' => $profileRequirement->getUploadQrCode(250),
                 'url' => $profileRequirement->getMobileUploadUrl(),
-                'expires_at' => $profileRequirement->upload_token_expires_at,
+                'expires_at' => $profileRequirement->upload_token_expires_at?->toIso8601String(),
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to generate QR code for requirement', [

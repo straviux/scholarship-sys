@@ -543,7 +543,7 @@ class FundTransactionController extends Controller
         return response()->json([
             'qr_code_svg' => $transaction->getUploadQrCode(250, $docType),
             'url' => $transaction->getMobileUploadUrl($docType),
-            'expires_at' => $transaction->upload_token_expires_at,
+            'expires_at' => $transaction->upload_token_expires_at?->toIso8601String(),
         ]);
     }
 
