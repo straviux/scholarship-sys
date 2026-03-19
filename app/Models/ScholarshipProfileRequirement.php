@@ -65,6 +65,8 @@ class ScholarshipProfileRequirement extends Model
         }
 
         $baseUrl = request()->getSchemeAndHttpHost() ?: config('app.url');
+        // Force http scheme
+        $baseUrl = preg_replace('/^https:/i', 'http:', $baseUrl);
         return $baseUrl . '/mobile/upload/requirement/' . $this->upload_token;
     }
 
