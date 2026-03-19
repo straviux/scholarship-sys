@@ -7,7 +7,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Upload Document - {{ $transaction->voucher_number }}</title>
     @vite(['resources/css/mobile.css'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .preview-container {
             position: relative;
@@ -39,12 +38,12 @@
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <div class="flex items-center justify-between gap-3 mb-4">
                 <div class="flex items-center gap-3">
-                    <i class="fas fa-cloud-upload-alt text-blue-600 text-3xl"></i>
+                    <span class="icon icon-cloud-upload text-blue-600 text-3xl"></span>
                     <h1 class="text-2xl font-bold text-gray-800">Upload Fund Transaction Document</h1>
                 </div>
                 <button type="button" onclick="closeTab()"
                     class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm transition-all">
-                    <i class="fas fa-times"></i>
+                    <span class="icon icon-x"></span>
                     <span>Close</span>
                 </button>
             </div>
@@ -52,7 +51,7 @@
             <!-- Countdown Timer -->
             <div id="countdownContainer" class="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded mb-4">
                 <div class="flex items-center gap-2">
-                    <i class="fas fa-clock text-yellow-600"></i>
+                    <span class="icon icon-clock text-yellow-600"></span>
                     <p class="text-sm font-semibold text-yellow-800">
                         Session expires in: <span id="countdown" class="text-lg font-bold">30:00</span>
                     </p>
@@ -74,7 +73,7 @@
                 @if($docType)
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-folder-open text-gray-500 mr-1"></i> Document Type
+                        <span class="icon icon-folder-open text-gray-500 mr-1"></span> Document Type
                     </label>
                     <div class="bg-blue-50 border border-blue-300 rounded-lg px-4 py-3">
                         <p class="text-sm font-semibold text-blue-900">
@@ -94,7 +93,7 @@
                 @else
                 <div class="mb-6">
                     <label for="documentType" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-folder-open text-gray-500 mr-1"></i> Document Type
+                        <span class="icon icon-folder-open text-gray-500 mr-1"></span> Document Type
                     </label>
                     <select id="documentType" name="document_type" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
                         <option value="">-- Select Document Type --</option>
@@ -109,20 +108,20 @@
                 <!-- File Upload -->
                 <div class="mb-6">
                     <label for="file" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-file text-gray-500 mr-1"></i> Choose File
+                        <span class="icon icon-file text-gray-500 mr-1"></span> Choose File
                     </label>
 
                     <!-- Quick Camera Button (Mobile) -->
                     <button type="button" id="quickCameraBtn"
                         class="w-full mb-3 bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all md:hidden">
-                        <i class="fas fa-camera text-xl"></i>
+                        <span class="icon icon-camera text-xl"></span>
                         <span>Quick Camera Upload</span>
                     </button>
 
                     <label for="file"
                         class="file-input-label flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100">
                         <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                            <i class="fas fa-camera text-4xl text-gray-400 mb-2"></i>
+                            <span class="icon icon-camera text-4xl text-gray-400 mb-2"></span>
                             <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Tap to take photo</span>
                                 or browse</p>
                             <p class="text-xs text-gray-500">PNG, JPG or PDF (MAX. 25MB)</p>
@@ -138,7 +137,7 @@
                         <img id="previewImage" src="" alt="Preview" class="preview-image hidden">
                         <button type="button" id="removeFile"
                             class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 shadow-lg">
-                            <i class="fas fa-times"></i>
+                            <span class="icon icon-x"></span>
                         </button>
                     </div>
                     <p id="fileName" class="text-sm text-gray-600 mt-2 text-center"></p>
@@ -157,14 +156,14 @@
                 <!-- Submit Button -->
                 <button type="submit" id="submitBtn"
                     class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all">
-                    <i class="fas fa-upload mr-2"></i> Upload File
+                    <span class="icon icon-upload mr-2"></span> Upload File
                 </button>
             </form>
 
             <!-- Success Message -->
             <div id="successMessage" class="hidden mt-6 bg-green-50 border-l-4 border-green-500 p-4 rounded">
                 <div class="flex items-center">
-                    <i class="fas fa-check-circle text-green-500 text-2xl mr-3"></i>
+                    <span class="icon icon-check-circle text-green-500 text-2xl mr-3"></span>
                     <div>
                         <p class="font-semibold text-green-800">Upload Successful!</p>
                         <p class="text-sm text-green-700">Your file has been successfully uploaded.</p>
@@ -175,7 +174,7 @@
             <!-- Error Message -->
             <div id="errorMessage" class="hidden mt-6 bg-red-50 border-l-4 border-red-500 p-4 rounded">
                 <div class="flex items-start">
-                    <i class="fas fa-exclamation-circle text-red-500 text-xl mr-3 mt-0.5"></i>
+                    <span class="icon icon-circle-alert text-red-500 text-xl mr-3 mt-0.5"></span>
                     <div>
                         <p class="font-semibold text-red-800">Upload Failed</p>
                         <p id="errorText" class="text-sm text-red-700"></p>
@@ -186,7 +185,7 @@
             <!-- Uploaded Documents Preview -->
             <div id="documentsSection" class="hidden mt-8 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-300 rounded-lg p-6">
                 <div class="flex items-center gap-2 mb-4">
-                    <i class="fas fa-file-check text-blue-600 text-xl"></i>
+                    <span class="icon icon-file-check text-blue-600 text-xl"></span>
                     <h2 class="text-lg font-bold text-blue-900">Uploaded Documents</h2>
                 </div>
                 <div id="documentsList" class="space-y-3">
@@ -241,7 +240,7 @@
 
             const isImage = doc.mime_type && doc.mime_type.startsWith('image/');
             const isPdf = doc.mime_type && doc.mime_type.includes('pdf');
-            const fileIcon = isPdf ? 'fa-file-pdf text-red-500' : isImage ? 'fa-image text-blue-500' : 'fa-file text-gray-500';
+            const fileIcon = isPdf ? 'icon-file-text text-red-500' : isImage ? 'icon-image text-blue-500' : 'icon-file text-gray-500';
 
             const docTypeDisplay = {
                 'obr': 'OBR',
@@ -254,7 +253,7 @@
 
             div.innerHTML = `
                 <div class="flex items-start gap-3 flex-1">
-                    <i class="fas ${fileIcon} text-xl mt-1"></i>
+                    <span class="icon ${fileIcon} text-xl mt-1"></span>
                     <div class="flex-1">
                         <p class="font-semibold text-gray-800 break-words">${doc.filename}</p>
                         <p class="text-xs text-gray-500 mt-1">
@@ -266,10 +265,10 @@
                 </div>
                 <div class="flex gap-2 ml-2">
                     <button type="button" class="preview-btn text-blue-600 hover:text-blue-800 p-2" data-path="${doc.path}" data-type="${doc.mime_type}" title="Preview">
-                        <i class="fas fa-eye text-lg"></i>
+                        <span class="icon icon-eye text-lg"></span>
                     </button>
                     <a href="${doc.path}" download="${doc.filename}" class="text-green-600 hover:text-green-800 p-2" title="Download">
-                        <i class="fas fa-download text-lg"></i>
+                        <span class="icon icon-download text-lg"></span>
                     </a>
                 </div>
             `;
@@ -297,7 +296,7 @@
                 content = `<embed src="${path}" type="application/pdf" class="w-full h-[80vh] rounded-lg">`;
             } else {
                 content = `<div class="bg-white rounded-lg p-8 text-center">
-                    <i class="fas fa-file text-6xl text-gray-400 mb-4"></i>
+                    <span class="icon icon-file text-6xl text-gray-400 mb-4"></span>
                     <p class="text-gray-600 mb-4">File preview not available</p>
                     <a href="${path}" download class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Download File</a>
                 </div>`;
@@ -307,7 +306,7 @@
                 <div class="relative">
                     ${content}
                     <button type="button" class="absolute top-4 right-4 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-red-600 shadow-lg" onclick="this.closest('.fixed').remove()">
-                        <i class="fas fa-times text-lg"></i>
+                        <span class="icon icon-x text-lg"></span>
                     </button>
                 </div>
             `;
@@ -387,11 +386,11 @@
                 previewContainer.innerHTML = `
                     <div class="relative">
                         <div class="text-center py-8">
-                            <i class="fas fa-file-pdf text-6xl text-gray-400 mb-2"></i>
+                            <span class="icon icon-file-text text-6xl text-gray-400 mb-2"></span>
                             <p id="fileName" class="text-sm text-gray-600 mt-2">${selectedFile.name} (${(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</p>
                         </div>
                         <button type="button" id="removeFile" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 shadow-lg">
-                            <i class="fas fa-times"></i>
+                            <span class="icon icon-x"></span>
                         </button>
                     </div>
                 `;
