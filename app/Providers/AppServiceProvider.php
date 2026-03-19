@@ -37,8 +37,10 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
 
-            // Check if user has the specific permission
-            if ($user->can($ability)) {
+            // Check if user has the specific permission through their role
+            // Note: Must use hasPermission() instead of can() to avoid infinite recursion
+            // since can() goes back through Gate which triggers Gate::before again
+            if ($user->hasPermission($ability)) {
                 return true;
             }
 

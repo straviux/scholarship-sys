@@ -540,7 +540,7 @@ class ReportController extends Controller
     {
         // Build query based on filters
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) {
-            $q->with(['scholarshipStatus']);
+            // scholarshipStatus relationship removed - column no longer exists
         }]);
 
         // Filter by unified status (pending, approved, denied, active, completed)
@@ -1057,7 +1057,7 @@ class ReportController extends Controller
     {
         // Build query based on filters
         $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant' => function ($q) {
-            $q->with(['scholarshipStatus']);
+            // scholarshipStatus relationship removed - column no longer exists
         }]);
 
         // Filter by unified status

@@ -109,6 +109,7 @@ class ApplicantController extends Controller
             )
             // CRITICAL: Filter for ONLY PENDING status to exclude approved/denied/active records
             ->where('scholarship_records.unified_status', 'pending')
+            ->whereNull('scholarship_records.deleted_at')
             ->whereNotNull('scholarship_records.profile_id');
 
         // Filter by program if specified

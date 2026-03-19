@@ -93,7 +93,7 @@
             </div>
 
             <!-- Filter Drawer -->
-            <Drawer v-model:visible="showFilterDrawer" header="All Filters" position="right" class="!w-[600px]">
+            <FloatingDrawer v-model:visible="showFilterDrawer" header="All Filters" position="right" class="!w-[600px]">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
@@ -164,7 +164,7 @@
                     <Button label="Apply" icon="pi pi-filter-fill" severity="info" size="small"
                         @click="applyDrawerFilters" />
                 </div>
-            </Drawer>
+            </FloatingDrawer>
 
             <!-- Profiles DataView -->
             <div class="mt-8">
@@ -621,6 +621,7 @@ import { usePermission } from '@/composable/permissions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { useFilterManager } from '@/composables/useFilterManager';
 import axios from 'axios';
+import FloatingDrawer from '@/Components/FloatingDrawer.vue';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 

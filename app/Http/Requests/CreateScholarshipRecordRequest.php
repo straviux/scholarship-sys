@@ -93,11 +93,6 @@ class CreateScholarshipRecordRequest extends FormRequest
             "school_id" => $isG12
                 ? ['nullable', 'exists:schools,id']
                 : ['required', 'exists:schools,id'],
-            "approval_status" => [
-                'nullable',
-                'string',
-                'max:50'
-            ],
             "grant_provision" => [
                 'nullable',
                 'string',

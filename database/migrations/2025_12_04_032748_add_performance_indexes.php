@@ -13,8 +13,12 @@ return new class extends Migration
     public function up(): void
     {
         // Add indexes for commonly filtered columns using raw SQL to avoid conflicts
-        DB::statement('ALTER TABLE scholarship_records ADD INDEX idx_scholarship_status (scholarship_status)');
-        DB::statement('ALTER TABLE scholarship_records ADD INDEX idx_approval_status (approval_status)');
+        if (Schema::hasColumn('scholarship_records', 'scholarship_status')) {
+            DB::statement('ALTER TABLE scholarship_records ADD INDEX idx_scholarship_status (scholarship_status)');
+        }
+        if (Schema::hasColumn('scholarship_records', 'approval_status')) {
+            DB::statement('ALTER TABLE scholarship_records ADD INDEX idx_approval_status (approval_status)');
+        }
         DB::statement('ALTER TABLE scholarship_records ADD INDEX idx_date_filed (date_filed)');
 
         DB::statement('ALTER TABLE scholarship_profiles ADD INDEX idx_first_name (first_name)');

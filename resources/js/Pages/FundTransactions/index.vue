@@ -28,6 +28,7 @@ const editingId = ref(null);
 const editFormData = ref(null);
 const responsibilityCenters = ref([]);
 const contextMenu = ref();
+const selectedContextVoucher = ref(null);
 const showRemarksDialog = ref(false);
 const selectedVoucherForRemarks = ref(null);
 const remarksForm = reactive({
@@ -783,7 +784,11 @@ const confirmDelete = async () => {
     }
 };
 
-// Context Menu
+// Context Menu - DataTable row context menu handler
+const onRowContextMenu = (event) => {
+    openContextMenu(event.originalEvent, event.data);
+};
+
 const openContextMenu = (event, voucher) => {
     event.preventDefault();
     const items = [
@@ -1315,213 +1320,189 @@ onMounted(() => {
 
         <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
             <!-- Header -->
-            <Toolbar class="border-0 bg-transparent p-0 flex-col sm:flex-row gap-4">
+            <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
                 <template #start>
-                    <div class="flex items-center gap-4 w-full">
-                        <div class="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
-                            <i class="pi pi-credit-card text-indigo-900" style="font-size: 1.5rem;"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <h1 class="text-xl sm:text-2xl font-bold text-gray-700">Fund Transactions Management</h1>
-                            <p class="text-xs sm:text-sm text-gray-600 mt-1 truncate">Create and manage financial
-                                transactions</p>
+                    <div class="flex items-center gap-3">
+                        <i class="pi pi-credit-card text-indigo-900" style="font-size: 2rem"></i>
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-700">Fund Transactions Management</h1>
+                            <p class="text-sm text-gray-600">Create and manage financial transactions</p>
                         </div>
                     </div>
                 </template>
                 <template #end>
-                    <Button label="Create Fund Transaction" icon="pi pi-plus" @click="handleCreateVoucher" />
+                    <Button icon="pi pi-plus" @click="handleCreateVoucher" severity="success" rounded outlined
+                        v-tooltip.bottom="'Create Fund Transaction'" />
                 </template>
             </Toolbar>
 
 
             <!-- List/Summary Section -->
-            <div class="bg-white rounded-lg shadow p-4 sm:p-6 mt-8 overflow-hidden">
-                <div class="flex flex-col gap-4 mb-4">
-                    <div class="w-full">
-                        <InputText v-model="searchQuery" type="text" placeholder="Search voucher, payee, or scholar..."
-                            class="w-full" />
+            <Panel class="!rounded-4xl overflow-hidden mt-8">
+                <!-- Info Bar -->
+                <div class="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 rounded-4xl -mt-2">
+                    <div class="flex-1 max-w-md">
+                        <IconField iconPosition="left">
+                            <InputIcon class="pi pi-search text-gray-400" />
+                            <InputText v-model="searchQuery" placeholder="Search voucher, payee, or scholar..."
+                                class="w-full" size="small" />
+                        </IconField>
                     </div>
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <div class="flex flex-wrap gap-3 items-center">
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="userFilter" name="userFilter" value="" inputId="uf-all" />
-                                <span class="text-sm text-gray-700">All Records</span>
-                                <Badge :value="totalRecordsCount" severity="secondary" />
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="userFilter" name="userFilter" value="my-records"
-                                    inputId="uf-my" />
-                                <span class="text-sm text-gray-700">My Records</span>
-                                <Badge :value="myRecordsCount" severity="secondary" />
-                            </label>
-                            <span class="text-gray-300 mx-1">|</span>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="statusFilter" name="statusFilter" value="" inputId="sf-all" />
-                                <span class="text-sm text-gray-700">All Status</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="statusFilter" name="statusFilter" value="On Process"
-                                    inputId="sf-process" />
-                                <span class="text-sm text-gray-700">On Process</span>
-                                <Badge :value="statusCounts['On Process']" severity="secondary" />
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="statusFilter" name="statusFilter" value="No OBR"
-                                    inputId="sf-noobr" />
-                                <span class="text-sm text-gray-700">No OBR</span>
-                                <Badge :value="statusCounts['No OBR']" severity="secondary" />
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="statusFilter" name="statusFilter" value="LOA" inputId="sf-loa" />
-                                <span class="text-sm text-gray-700">LOA</span>
-                                <Badge :value="statusCounts['LOA']" severity="secondary" />
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="statusFilter" name="statusFilter" value="Irregular"
-                                    inputId="sf-irregular" />
-                                <span class="text-sm text-gray-700">Irregular</span>
-                                <Badge :value="statusCounts['Irregular']" severity="secondary" />
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="statusFilter" name="statusFilter" value="Transferred"
-                                    inputId="sf-transferred" />
-                                <span class="text-sm text-gray-700">Transferred</span>
-                                <Badge :value="statusCounts['Transferred']" severity="secondary" />
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="statusFilter" name="statusFilter" value="Claimed"
-                                    inputId="sf-claimed" />
-                                <span class="text-sm text-gray-700">Claimed</span>
-                                <Badge :value="statusCounts['Claimed']" severity="secondary" />
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="statusFilter" name="statusFilter" value="Paid"
-                                    inputId="sf-paid" />
-                                <span class="text-sm text-gray-700">Paid</span>
-                                <Badge :value="statusCounts['Paid']" severity="secondary" />
-                            </label>
-
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="statusFilter" name="statusFilter" value="Denied"
-                                    inputId="sf-denied" />
-                                <span class="text-sm text-gray-700">Denied</span>
-                                <Badge :value="statusCounts['Denied']" severity="secondary" />
-                            </label>
-                        </div>
-                        <Button label="Refresh" icon="pi pi-refresh" severity="secondary" @click="fetchVouchers"
-                            :disabled="loading" :loading="loading" />
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm opacity-60">Right click on row for actions</span>
+                        <Button icon="pi pi-refresh" severity="secondary" size="small" rounded outlined
+                            @click="fetchVouchers" :disabled="loading" :loading="loading"
+                            v-tooltip.bottom="'Refresh'" />
                     </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full divide-y divide-gray-200 text-xs sm:text-sm mt-8">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th
-                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    OBR No</th>
-                                <th
-                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Payee</th>
-                                <th
-                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    OBR Type</th>
-                                <th class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    style="min-width: 150px">
-                                    Disbursement Type</th>
 
-
-                                <th class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    style="min-width: 140px">
-                                    Status</th>
-                                <th
-                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Total Amount</th>
-                                <th
-                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Processed By</th>
-                                <th
-                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Date</th>
-                                <th
-                                    class="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-if="loading" class="hover:bg-gray-50">
-                                <td colspan="9" class="px-2 sm:px-6 py-8 text-center text-sm text-gray-500">
-                                    <i class="pi pi-spin pi-spinner mr-2"></i> Loading vouchers...
-                                </td>
-                            </tr>
-                            <tr v-else-if="vouchers.length === 0" class="hover:bg-gray-50">
-                                <td colspan="9" class="px-2 sm:px-6 py-8 text-center text-sm text-gray-500">
-                                    <p>No vouchers created yet.</p>
-                                    <p class="text-xs text-gray-400 mt-1">Click the "Create Fund Transaction" button to
-                                        get
-                                        started</p>
-                                </td>
-                            </tr>
-                            <tr v-else-if="filteredVouchers.length === 0" class="hover:bg-gray-50">
-                                <td colspan="9" class="px-2 sm:px-6 py-8 text-center text-sm text-gray-500">
-                                    <p>No vouchers match your search.</p>
-                                    <p class="text-xs text-gray-400 mt-1">Try adjusting your search criteria</p>
-                                </td>
-                            </tr>
-                            <tr v-for="voucher in filteredVouchers" :key="voucher.id"
-                                class="hover:bg-gray-50 transition"
-                                @contextmenu.prevent="openContextMenu($event, voucher)">
-                                <td class="px-2 sm:px-6 py-4 text-sm font-medium text-blue-600">{{ voucher.obr_no ||
-                                    '---' }}
-                                </td>
-                                <td class="px-2 sm:px-6 py-4 text-sm font-semibold text-gray-800">
-                                    <div>{{ voucher.payee_name }}</div>
-                                    <div v-if="isPayeeSchool(voucher)"
-                                        class="text-xs font-medium italic text-gray-600 mt-1">
-                                        {{ getFirstScholarNameFromCache(voucher) || '---' }}
-                                    </div>
-                                </td>
-                                <td class="px-2 sm:px-6 py-4 text-sm">
-                                    <span :class="{
-                                        'px-3 py-1 rounded-full text-xs font-medium': true,
-                                        ' text-gray-800': voucher.obr_type === 'REGULAR',
-                                        ' text-yellow-800': voucher.obr_type === 'FINANCIAL ASSISTANCE',
-                                        ' text-purple-800': voucher.obr_type === 'REIMBURSEMENT'
-                                    }">
-                                        {{ voucher.obr_type || '---' }}
-                                    </span>
-                                </td>
-                                <td class="px-2 sm:px-6 py-4 text-gray-900" style="min-width: 150px">
-                                    <span class="text-xs font-medium uppercase">
-                                        {{ voucher.voucher_type === 'disbursements' ? 'DV' :
-                                            (voucher.voucher_type === 'payroll' ? 'Payroll' : voucher.voucher_type) }}
-                                    </span>
-                                </td>
-
-
-                                <td class="px-2 sm:px-6 py-4 text-sm" style="min-width: 140px">
-                                    <span
-                                        :class="['px-3 py-1 rounded-full text-xs font-medium', getStatusColor(voucher.obr_status)]">
-                                        {{ voucher.obr_status || 'On Process' }}
-                                    </span>
-                                </td>
-                                <td class="px-2 sm:px-6 py-4 text-sm font-medium text-gray-900">{{
-                                    formatAmount(calculateTotalAmount(voucher))
-                                    }}</td>
-                                <td class="px-2 sm:px-6 py-4 text-xs font-semibold text-gray-600">{{
-                                    voucher.creator?.name
-                                    || '---' }}
-                                </td>
-                                <td class="px-2 sm:px-6 py-4 text-xs text-gray-600">{{ formatDate(voucher.created_at) }}
-                                </td>
-                                <td class="px-2 sm:px-6 py-4 text-sm">
-                                    <Button icon="pi pi-ellipsis-v" @click="(e) => openContextMenu(e, voucher)" text
-                                        rounded size="small" v-tooltip="'Actions'" />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Filter Chips -->
+                <div class="flex flex-wrap gap-3 items-center mb-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <RadioButton v-model="userFilter" name="userFilter" value="" inputId="uf-all" />
+                        <span class="text-sm text-gray-700">All Records</span>
+                        <Badge :value="totalRecordsCount" severity="secondary" />
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <RadioButton v-model="userFilter" name="userFilter" value="my-records" inputId="uf-my" />
+                        <span class="text-sm text-gray-700">My Records</span>
+                        <Badge :value="myRecordsCount" severity="secondary" />
+                    </label>
+                    <span class="text-gray-300 mx-1">|</span>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <RadioButton v-model="statusFilter" name="statusFilter" value="" inputId="sf-all" />
+                        <span class="text-sm text-gray-700">All Status</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <RadioButton v-model="statusFilter" name="statusFilter" value="On Process"
+                            inputId="sf-process" />
+                        <span class="text-sm text-gray-700">On Process</span>
+                        <Badge :value="statusCounts['On Process']" severity="secondary" />
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <RadioButton v-model="statusFilter" name="statusFilter" value="No OBR" inputId="sf-noobr" />
+                        <span class="text-sm text-gray-700">No OBR</span>
+                        <Badge :value="statusCounts['No OBR']" severity="secondary" />
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <RadioButton v-model="statusFilter" name="statusFilter" value="LOA" inputId="sf-loa" />
+                        <span class="text-sm text-gray-700">LOA</span>
+                        <Badge :value="statusCounts['LOA']" severity="secondary" />
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <RadioButton v-model="statusFilter" name="statusFilter" value="Irregular"
+                            inputId="sf-irregular" />
+                        <span class="text-sm text-gray-700">Irregular</span>
+                        <Badge :value="statusCounts['Irregular']" severity="secondary" />
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <RadioButton v-model="statusFilter" name="statusFilter" value="Transferred"
+                            inputId="sf-transferred" />
+                        <span class="text-sm text-gray-700">Transferred</span>
+                        <Badge :value="statusCounts['Transferred']" severity="secondary" />
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <RadioButton v-model="statusFilter" name="statusFilter" value="Claimed" inputId="sf-claimed" />
+                        <span class="text-sm text-gray-700">Claimed</span>
+                        <Badge :value="statusCounts['Claimed']" severity="secondary" />
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <RadioButton v-model="statusFilter" name="statusFilter" value="Paid" inputId="sf-paid" />
+                        <span class="text-sm text-gray-700">Paid</span>
+                        <Badge :value="statusCounts['Paid']" severity="secondary" />
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <RadioButton v-model="statusFilter" name="statusFilter" value="Denied" inputId="sf-denied" />
+                        <span class="text-sm text-gray-700">Denied</span>
+                        <Badge :value="statusCounts['Denied']" severity="secondary" />
+                    </label>
                 </div>
-            </div>
+
+                <!-- Context Menu -->
+                <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
+
+                <!-- DataTable -->
+                <DataTable :value="filteredVouchers" stripedRows showGridlines responsiveLayout="scroll"
+                    :loading="loading"
+                    :emptyMessage="vouchers.length === 0 ? 'No vouchers created yet. Click Create Fund Transaction to get started.' : 'No vouchers match your search.'"
+                    :scrollable="true" scrollHeight="600px" @row-contextmenu="onRowContextMenu" contextMenu
+                    v-model:contextMenuSelection="selectedContextVoucher">
+
+                    <Column header="OBR No" style="min-width: 140px">
+                        <template #body="slotProps">
+                            <span class="text-sm font-medium text-blue-600">{{ slotProps.data.obr_no || '---' }}</span>
+                        </template>
+                    </Column>
+
+                    <Column header="Payee" style="min-width: 200px">
+                        <template #body="slotProps">
+                            <div class="text-sm font-semibold text-gray-800">{{ slotProps.data.payee_name }}</div>
+                            <div v-if="isPayeeSchool(slotProps.data)"
+                                class="text-xs font-medium italic text-gray-600 mt-1">
+                                {{ getFirstScholarNameFromCache(slotProps.data) || '---' }}
+                            </div>
+                        </template>
+                    </Column>
+
+                    <Column header="OBR Type" style="min-width: 130px">
+                        <template #body="slotProps">
+                            <span :class="{
+                                'px-3 py-1 rounded-full text-xs font-medium': true,
+                                'text-gray-800': slotProps.data.obr_type === 'REGULAR',
+                                'text-yellow-800': slotProps.data.obr_type === 'FINANCIAL ASSISTANCE',
+                                'text-purple-800': slotProps.data.obr_type === 'REIMBURSEMENT'
+                            }">
+                                {{ slotProps.data.obr_type || '---' }}
+                            </span>
+                        </template>
+                    </Column>
+
+                    <Column header="Disbursement Type" style="min-width: 150px">
+                        <template #body="slotProps">
+                            <span class="text-xs font-medium uppercase">
+                                {{ slotProps.data.voucher_type === 'disbursements' ? 'DV' :
+                                    (slotProps.data.voucher_type === 'payroll' ? 'Payroll' : slotProps.data.voucher_type) }}
+                            </span>
+                        </template>
+                    </Column>
+
+                    <Column header="Status" style="min-width: 140px">
+                        <template #body="slotProps">
+                            <span
+                                :class="['px-3 py-1 rounded-full text-xs font-medium', getStatusColor(slotProps.data.obr_status)]">
+                                {{ slotProps.data.obr_status || 'On Process' }}
+                            </span>
+                        </template>
+                    </Column>
+
+                    <Column header="Total Amount" style="min-width: 130px">
+                        <template #body="slotProps">
+                            <span class="text-sm font-medium text-gray-900">{{
+                                formatAmount(calculateTotalAmount(slotProps.data)) }}</span>
+                        </template>
+                    </Column>
+
+                    <Column header="Processed By" style="min-width: 130px">
+                        <template #body="slotProps">
+                            <span class="text-xs font-semibold text-gray-600">{{ slotProps.data.creator?.name || '---'
+                                }}</span>
+                        </template>
+                    </Column>
+
+                    <Column header="Date" style="min-width: 110px">
+                        <template #body="slotProps">
+                            <span class="text-xs text-gray-600">{{ formatDate(slotProps.data.created_at) }}</span>
+                        </template>
+                    </Column>
+
+                    <Column header="Actions" style="width: 70px">
+                        <template #body="slotProps">
+                            <Button icon="pi pi-ellipsis-v" @click="(e) => openContextMenu(e, slotProps.data)" text
+                                rounded size="small" v-tooltip="'Actions'" />
+                        </template>
+                    </Column>
+                </DataTable>
+            </Panel>
         </div>
 
         <!-- Fund Transaction Wizard (Create & Edit) -->
@@ -1531,7 +1512,8 @@ onMounted(() => {
 
         <!-- Delete Confirmation Dialog -->
         <Dialog v-model:visible="showDeleteConfirmDialog" modal header="Confirm Delete" class="w-11/12 sm:w-96"
-            :style="{ maxWidth: '500px' }">
+            :style="{ maxWidth: '500px' }"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
                     <i class="pi pi-exclamation-triangle text-2xl text-red-500"></i>
@@ -1556,7 +1538,8 @@ onMounted(() => {
 
         <!-- View Fund Transaction Dialog -->
         <Dialog v-model:visible="showViewDialog" modal header="Fund Transaction Details" class="w-11/12 sm:max-w-2xl"
-            :style="{ maxWidth: '700px' }">
+            :style="{ maxWidth: '700px' }"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
             <div v-if="selectedVoucher" class="space-y-4">
                 <!-- Fund Transaction Info -->
                 <div class="grid grid-cols-2 gap-4">
@@ -1615,7 +1598,7 @@ onMounted(() => {
                 <div class="bg-white border border-gray-200 rounded p-4">
                     <p class="text-sm font-semibold text-gray-900 mb-2">Scholars ({{ selectedVoucher.scholar_ids?.length
                         || 0
-                    }})</p>
+                        }})</p>
                     <div v-if="loadingScholars" class="text-center py-2">
                         <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span class="text-xs">Loading...</span>
                     </div>
@@ -1624,7 +1607,7 @@ onMounted(() => {
                         <div v-for="(scholar, index) in scholarsDetails" :key="index"
                             class="text-xs text-gray-700 py-1 px-2 bg-gray-50 rounded flex items-center justify-between gap-2">
                             <span class="font-medium">{{ index + 1 }}. {{ scholar.first_name }} {{ scholar.last_name
-                            }}</span>
+                                }}</span>
                             <span class="text-gray-600 whitespace-nowrap">
                                 <span v-if="scholar.course_name">{{ scholar.course_name }}</span>
                                 <span v-if="scholar.year_level" class="ml-1">| {{
@@ -1632,7 +1615,7 @@ onMounted(() => {
                                         scholar.year_level
                                 }}</span>
                                 <span v-if="scholar.academic_year" class="ml-1">| {{ scholar.academic_year
-                                }}</span>
+                                    }}</span>
                                 <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                             </span>
                         </div>
@@ -1702,7 +1685,8 @@ onMounted(() => {
 
         <!-- File Upload Dialog -->
         <Dialog v-model:visible="showFileUploadDialog" modal header="Upload Documents" class="w-11/12 sm:max-w-2xl"
-            :style="{ maxWidth: '700px' }">
+            :style="{ maxWidth: '700px' }"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
             <div v-if="selectedVoucherForUpload" class="space-y-6">
                 <div class="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
                     <p class="text-xs font-medium text-blue-900 mb-1">VOUCHER</p>
@@ -1879,7 +1863,8 @@ onMounted(() => {
 
         <!-- QR Code Modal -->
         <Dialog v-model:visible="showQrModal" modal header="Mobile Upload QR Code" class="w-11/12 sm:max-w-2xl"
-            :style="{ maxWidth: '600px' }">
+            :style="{ maxWidth: '600px' }"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
             <div v-if="qrCodeData" class="text-center space-y-4">
                 <!-- QR Code -->
                 <div class="bg-white p-6 rounded-lg border-2 border-gray-200 inline-block">
@@ -1926,12 +1911,10 @@ onMounted(() => {
             </template>
         </Dialog>
 
-        <!-- Context Menu -->
-        <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
-
         <!-- Remarks Dialog -->
         <Dialog v-model:visible="showRemarksDialog" modal header="Add/Edit Remarks" class="w-11/12 sm:max-w-xl"
-            :style="{ maxWidth: '600px' }">
+            :style="{ maxWidth: '600px' }"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
             <div v-if="selectedVoucherForRemarks" class="space-y-4">
                 <div>
                     <p class="text-sm font-medium text-gray-700 mb-2">Voucher: {{
@@ -1967,7 +1950,8 @@ onMounted(() => {
 
         <!-- Transaction Status Dialog -->
         <Dialog v-model:visible="showStatusDialog" modal header="Update Transaction Status" class="w-11/12 sm:w-96"
-            :style="{ maxWidth: '500px' }">
+            :style="{ maxWidth: '500px' }"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
             <div v-if="selectedVoucherForStatus" class="space-y-4">
                 <div>
                     <p class="text-sm font-medium text-gray-700 mb-2">Voucher: {{
@@ -2008,7 +1992,8 @@ onMounted(() => {
 
         <!-- OBR Tracking Dialog -->
         <Dialog v-model:visible="showOBRTrackingDialog" modal header="Update OBR Info" class="w-11/12 sm:max-w-xl"
-            :style="{ maxWidth: '600px' }">
+            :style="{ maxWidth: '600px' }"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
             <div class="space-y-4">
                 <div v-if="selectedVoucherForOBRTracking" class="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
                     <p class="text-xs font-medium text-blue-900 mb-1">VOUCHER</p>
@@ -2063,7 +2048,8 @@ onMounted(() => {
 
         <!-- Tracking History Dialog -->
         <Dialog v-model:visible="showTrackingHistoryDialog" modal header="Tracking Timeline"
-            class="w-11/12 sm:max-w-2xl" :style="{ maxWidth: '720px' }">
+            class="w-11/12 sm:max-w-2xl" :style="{ maxWidth: '720px' }"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
             <div v-if="trackingHistoryData" class="space-y-0">
                 <!-- Tracking Timeline -->
                 <div v-if="trackingHistoryData.tracking_information && trackingHistoryData.tracking_information.length > 0"
@@ -2105,14 +2091,15 @@ onMounted(() => {
 
         <!-- Document Preview Modal -->
         <Dialog v-model:visible="showPreviewModal" modal header="Document Preview" class="w-11/12 sm:max-w-4xl"
-            :style="{ maxWidth: '1000px', maxHeight: '90vh' }" :maximizable="true">
+            :style="{ maxWidth: '1000px', maxHeight: '90vh' }" :maximizable="true"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
             <div v-if="previewData" class="space-y-4 h-full">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex-1">
                         <p class="text-sm font-semibold text-gray-900">{{ previewData.filename }}</p>
                         <p class="text-xs text-gray-600 mt-1">Document Type: {{ previewData.docType }} | {{
                             previewData.mimeType
-                        }}</p>
+                            }}</p>
                     </div>
                     <div class="flex gap-2">
                         <!-- Zoom Controls for Images -->
@@ -2178,4 +2165,99 @@ onMounted(() => {
     </AdminLayout>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* Rounded inputs, selects, and datepickers to match macOS layout */
+:deep(.p-inputtext) {
+    border-radius: 1rem;
+}
+
+:deep(.p-select) {
+    border-radius: 1rem;
+}
+
+/* Rounded DataTable — covers scrollable wrapper and all inner containers */
+:deep(.p-datatable) {
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 1px solid var(--p-datatable-border-color, #e2e8f0);
+}
+
+:deep(.p-datatable .p-datatable-table-container) {
+    border-radius: 0;
+    overflow: hidden;
+}
+
+/* Remove outer-edge cell borders so they don't double up with the container border */
+:deep(.p-datatable .p-datatable-thead > tr > th:first-child),
+:deep(.p-datatable .p-datatable-tbody > tr > td:first-child) {
+    border-left: none;
+}
+
+:deep(.p-datatable .p-datatable-thead > tr > th:last-child),
+:deep(.p-datatable .p-datatable-tbody > tr > td:last-child) {
+    border-right: none;
+}
+
+:deep(.p-datatable .p-datatable-thead > tr:first-child > th) {
+    border-top: none;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr:last-child > td) {
+    border-bottom: none;
+}
+
+:deep(.p-datatable .p-paginator) {
+    border-radius: 0;
+    border: none;
+    border-top: 1px solid var(--p-datatable-border-color, #e2e8f0);
+}
+
+:deep(.p-datatable .p-datatable-header) {
+    border-radius: 0;
+}
+
+:deep(.p-datatable .p-datatable-footer) {
+    border-radius: 0;
+}
+
+/* Rounded IconField search wrapper */
+:deep(.p-iconfield .p-inputtext) {
+    border-radius: 1rem;
+}
+
+/* Extra cell padding for better readability */
+:deep(.p-datatable .p-datatable-tbody > tr > td) {
+    padding: 0.85rem 1rem;
+}
+
+:deep(.p-datatable .p-datatable-thead > tr > th) {
+    padding: 0.85rem 1rem;
+}
+
+/* Remove highlight border on right-click context menu selection */
+:deep(.p-datatable .p-datatable-tbody > tr.p-datatable-contextmenu-row-selected > td) {
+    outline: none;
+    box-shadow: none;
+    border-color: inherit;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr.p-datatable-contextmenu-row-selected) {
+    outline: none;
+    box-shadow: none;
+}
+</style>
+
+<!-- Unscoped: PrimeVue Dialog uses Portal (teleports outside component DOM) -->
+<style>
+/* iOS Dialog styling */
+.ios-dialog-root.p-dialog {
+    border-radius: 14px !important;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+.ios-dialog-mask {
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(4px);
+}
+</style>

@@ -22,7 +22,8 @@ class UserActivityLogController extends Controller
             ->get()
             ->map(function ($log) {
                 $profileName = null;
-                if ($log->profile) {
+                $profileExists = $log->profile !== null;
+                if ($profileExists) {
                     $profileName = trim($log->profile->first_name . ' ' . ($log->profile->middle_name ?? '') . ' ' . $log->profile->last_name);
                 }
 
@@ -35,7 +36,7 @@ class UserActivityLogController extends Controller
                     'remarks' => $log->remarks,
                     'description' => $log->description,
                     'performed_at' => $log->performed_at,
-                    'profile_id' => $log->profile_id,
+                    'profile_id' => $profileExists ? $log->profile_id : null,
                     'profile_name' => $profileName,
                     'details' => $log->details,
                     'snapshot_before' => $log->snapshot_before,
@@ -65,7 +66,8 @@ class UserActivityLogController extends Controller
             ->paginate($perPage)
             ->through(function ($log) {
                 $profileName = null;
-                if ($log->profile) {
+                $profileExists = $log->profile !== null;
+                if ($profileExists) {
                     $profileName = trim($log->profile->first_name . ' ' . ($log->profile->middle_name ?? '') . ' ' . $log->profile->last_name);
                 }
 
@@ -78,7 +80,7 @@ class UserActivityLogController extends Controller
                     'remarks' => $log->remarks,
                     'description' => $log->description,
                     'performed_at' => $log->performed_at,
-                    'profile_id' => $log->profile_id,
+                    'profile_id' => $profileExists ? $log->profile_id : null,
                     'profile_name' => $profileName,
                     'details' => $log->details,
                     'snapshot_before' => $log->snapshot_before,

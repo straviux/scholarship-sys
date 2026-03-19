@@ -41,7 +41,7 @@ class ScholarshipRecordResource extends JsonResource
             'applied_course' => $this->applied_course,
             'applied_school' => $this->applied_school,
             'is_active' => $this->is_active,
-            'application_status' => $this->application_status, // 0=Pending, 1=Active, 2=Denied
+            'unified_status' => $this->unified_status,
             'date_filed' => $this->date_filed,
             'date_approved' => $this->date_approved,
             'created_by' => $this->createdBy ? [
@@ -57,7 +57,6 @@ class ScholarshipRecordResource extends JsonResource
             'educational_backgrounds' => $this->educationalBackgrounds ? $this->educationalBackgrounds : null,
             'ongoing_scholarship_grant' => $this->ongoingScholarshipGrant ? $this->ongoingScholarshipGrant : null,
             'pending_scholarship_grant' => $this->pendingScholarshipGrant ? $this->pendingScholarshipGrant : null,
-            // Note: application_status fields removed - use scholarship_status instead
         ];
     }
 }

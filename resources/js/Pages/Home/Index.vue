@@ -29,7 +29,6 @@ const props = defineProps({
 const showHelpDialog = ref(false);
 const systemUpdates = ref([]);
 
-// Fetch system updates
 const fetchSystemUpdates = async () => {
     try {
         const response = await fetch('/api/system-updates', {
@@ -46,27 +45,23 @@ const fetchSystemUpdates = async () => {
         }
     } catch (error) {
         console.error('Error fetching system updates:', error);
-        // Fallback to empty array
         systemUpdates.value = [];
     }
 };
 
-// Fetch system updates on mount
 onMounted(() => {
     fetchSystemUpdates();
 });
 
-// Sort system updates chronologically (newest first)
 const sortedSystemUpdates = computed(() => {
     return [...systemUpdates.value].sort((a, b) => {
-        // Parse dates and sort in descending order (newest first)
         const dateA = new Date(a.created_at);
         const dateB = new Date(b.created_at);
         return dateB - dateA;
     });
 });
 
-// Service Cards Data
+// Service Cards
 const serviceCards = computed(() => {
     const cards = [];
 
@@ -76,10 +71,11 @@ const serviceCards = computed(() => {
             title: 'New Application',
             description: 'Submit a new scholarship application',
             icon: 'pi pi-file-edit',
-            color: 'blue',
+            iconBg: 'bg-[#007AFF]',
             action: () => router.visit(route('applicants.index')),
             badge: props.pendingApplicants > 0 ? props.pendingApplicants : null,
-            badgeLabel: 'To Review'
+            badgeIcon: 'pi pi-clock',
+            badgeColor: 'text-orange-500'
         });
     }
 
@@ -89,10 +85,11 @@ const serviceCards = computed(() => {
             title: 'Scholarship Profiles',
             description: 'View and manage scholarship profiles',
             icon: 'pi pi-list',
-            color: 'green',
+            iconBg: 'bg-[#34C759]',
             action: () => router.visit(route('applicants.index')),
             badge: props.activeApplications > 0 ? props.activeApplications : null,
-            badgeLabel: 'Active'
+            badgeIcon: 'pi pi-check-circle',
+            badgeColor: 'text-green-500'
         });
     }
 
@@ -102,7 +99,7 @@ const serviceCards = computed(() => {
             title: 'Fund Transactions',
             description: 'View and generate fund transactions',
             icon: 'pi pi-credit-card',
-            color: 'orange',
+            iconBg: 'bg-[#FF9500]',
             action: () => router.visit(route('fund_transactions.index'))
         });
     }
@@ -110,10 +107,10 @@ const serviceCards = computed(() => {
     if (hasPermission('documents.view')) {
         cards.push({
             id: 'documents',
-            title: 'Documents and Forms',
+            title: 'Documents & Forms',
             description: 'Access downloadable documents and forms',
             icon: 'pi pi-file-pdf',
-            color: 'purple',
+            iconBg: 'bg-[#AF52DE]',
             action: () => router.visit(route('documents.index'))
         });
     }
@@ -121,319 +118,305 @@ const serviceCards = computed(() => {
     return cards;
 });
 
-// Important Links
-const importantLinks = [
+// Quick Links
+const quickLinks = [
     {
         label: 'Help & Support',
         icon: 'pi pi-question-circle',
+        iconColor: 'text-[#007AFF]',
         description: 'Get help with your applications',
         action: () => showHelpDialog.value = true
     },
     {
         label: 'Contact Us',
         icon: 'pi pi-envelope',
+        iconColor: 'text-[#34C759]',
         description: 'Reach out to our support team',
         href: 'mailto:scholarship@example.com'
     },
     {
         label: 'Scholarship Programs',
         icon: 'pi pi-building',
+        iconColor: 'text-[#FF9500]',
         description: 'Learn about available programs',
         action: () => router.visit(route('scholarshipprograms.index'))
     },
     {
         label: 'Guidelines',
         icon: 'pi pi-book',
+        iconColor: 'text-[#AF52DE]',
         description: 'Read application guidelines',
         href: '#'
     }
 ];
 
-// Get card background color
-const getCardBackground = (color) => {
-    const colors = {
-        blue: 'bg-blue-50',
-        green: 'bg-green-50',
-        orange: 'bg-orange-50',
-        purple: 'bg-purple-50'
-    };
-    return colors[color] || 'bg-gray-50';
-};
 
-// Get card icon color
-const getCardIconColor = (color) => {
-    const colors = {
-        blue: 'text-blue-600',
-        green: 'text-green-600',
-        orange: 'text-orange-600',
-        purple: 'text-purple-600'
-    };
-    return colors[color] || 'text-gray-600';
-};
-
-// Get card shadow
-const getCardShadow = (color) => {
-    const shadows = {
-        blue: 'shadow-blue-200',
-        green: 'shadow-green-200',
-        orange: 'shadow-orange-200',
-        purple: 'shadow-purple-200'
-    };
-    return shadows[color] || 'shadow-gray-200';
-};
 </script>
 
 <template>
 
     <Head title="Home" />
     <AdminLayout>
-        <Toolbar class="border-0 bg-transparent p-0">
+        <!-- Toolbar — consistent with other pages -->
+        <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
             <template #start>
-                <div class="flex items-center gap-4">
-                    <div class="flex items-center justify-center w-16 h-16">
-                        <i class="pi pi-graduation-cap text-indigo-900" style="font-size: 2rem;"></i>
-                    </div>
+                <div class="flex items-center gap-3">
+                    <i class="pi pi-graduation-cap text-indigo-900" style="font-size: 2rem"></i>
                     <div>
                         <h1 class="text-2xl font-bold text-gray-700">PGP Scholarship Portal</h1>
-                        <p class="text-gray-600 mt-1">A centralized platform for managing scholarship applications,
+                        <p class="text-sm text-gray-600">A centralized platform for managing scholarship applications,
                             requirements, and updates.</p>
                     </div>
                 </div>
             </template>
         </Toolbar>
-        <div class="space-y-8 py-12">
-            <!-- Service Cards Section -->
-            <div>
-                <div class="flex items-center gap-2 mb-4">
-                    <i class="pi pi-th-large text-2xl text-blue-600"></i>
-                    <h2 class="text-2xl font-bold text-gray-800">Services</h2>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-                    <div v-for="card in serviceCards" :key="card.id" :class="[
-                        'p-6 rounded-lg cursor-pointer transition-all duration-300 transform hover:scale-105 text-center shadow-md hover:shadow-lg',
-                        getCardBackground(card.color),
-                        getCardShadow(card.color)
-                    ]" @click="card.action">
-                        <div class="flex justify-center mb-4">
-                            <div :class="['text-6xl', getCardIconColor(card.color)]">
-                                <i :class="card.icon" style="font-size: 2rem;"></i>
+
+        <div class="space-y-6">
+
+            <!-- ─── Services Section ─── -->
+            <div class="ios-section">
+                <div class="ios-section-label">SERVICES</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div v-for="card in serviceCards" :key="card.id" class="ios-card service-card group cursor-pointer"
+                        @click="card.action">
+                        <div class="p-6 flex flex-col items-center text-center">
+                            <div
+                                :class="[card.iconBg, 'w-12 h-12 rounded-[14px] flex items-center justify-center mb-3 shadow-sm transition-transform duration-200 group-hover:scale-110']">
+                                <i :class="card.icon" class="text-white" style="font-size: 1.25rem"></i>
                             </div>
-                        </div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ card.title }}</h3>
-                        <p class="text-sm text-gray-600 mb-3">{{ card.description }}</p>
-                        <div v-if="card.badge" class="inline-block">
-                            <Badge v-if="card.badge" :value="card.badge" severity="danger" />
-                            <div class="text-xs text-gray-500 font-medium mt-1">
-                                {{ card.badge }} {{ card.badgeLabel }}
+                            <h3 class="text-sm font-semibold text-[#1d1d1f] mb-1">{{ card.title }}</h3>
+                            <p class="text-xs text-[#6D6D72] leading-relaxed">{{ card.description }}</p>
+                            <div v-if="card.badge" class="mt-3 flex items-center gap-1.5"
+                                v-tooltip.bottom="card.badge + ' item(s)'">
+                                <i :class="[card.badgeIcon, card.badgeColor]" style="font-size: 0.85rem"></i>
+                                <Badge :value="card.badge" severity="danger" />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Main Content Area - System Updates -->
+            <!-- ─── System Updates + Quick Links ─── -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
                 <!-- System Updates -->
-                <div class="lg:col-span-2">
-                    <div class="flex items-center gap-2 mb-4">
-                        <i class="pi pi-bell text-3xl text-indigo-600"></i>
-                        <h2 class="text-2xl font-bold text-gray-800">System Updates</h2>
-                    </div>
-                    <Panel>
-                        <div v-if="systemUpdates && systemUpdates.length > 0" class="space-y-4">
+                <div class="lg:col-span-2 ios-section">
+                    <div class="ios-section-label">SYSTEM UPDATES</div>
+                    <div class="ios-card overflow-hidden">
+                        <div v-if="sortedSystemUpdates.length > 0">
                             <div v-for="(update, idx) in sortedSystemUpdates.slice(0, 5)" :key="idx"
-                                class="p-4 rounded shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                                class="ios-row cursor-pointer hover:bg-[#F2F2F7] transition-colors"
                                 @click="router.visit(route('system-updates.index'))">
-                                <div class="flex items-start justify-between mb-2">
-                                    <h4 class="font-semibold text-gray-800">{{ update.title }}</h4>
-                                    <Tag v-if="update.type" :value="update.type" severity="info" class="text-xs" />
-                                </div>
-                                <p class="text-sm text-gray-600 mb-2">{{ update.content }}</p>
-                                <div class="text-xs text-gray-500">
-                                    {{ update.created_at }}
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-sm font-semibold text-[#1d1d1f] truncate">{{ update.title }}
+                                        </h4>
+                                        <p class="text-xs text-[#6D6D72] mt-0.5 line-clamp-2">{{ update.content }}</p>
+                                        <span class="text-xs text-[#8E8E93] mt-1 block">{{ update.created_at }}</span>
+                                    </div>
+                                    <i v-if="update.type" class="pi flex-shrink-0" :class="{
+                                        'pi-info-circle text-[#007AFF]': update.type === 'info',
+                                        'pi-exclamation-triangle text-[#FF9500]': update.type === 'warning',
+                                        'pi-check-circle text-[#34C759]': update.type === 'success',
+                                        'pi-times-circle text-[#FF3B30]': update.type === 'error'
+                                    }" style="font-size: 1rem" v-tooltip.left="update.type"></i>
                                 </div>
                             </div>
-                            <div v-if="sortedSystemUpdates.length > 5" class="mt-4 pt-4 border-t text-center">
-                                <Button label="View All System Updates" icon="pi pi-arrow-right" link
-                                    @click="router.visit(route('system-updates.index'))" class="w-full"
-                                    severity="info" />
-                            </div>
-                            <div v-if="systemUpdates.length === 0" class="text-center py-8">
-                                <i class="pi pi-inbox text-4xl text-gray-300 mb-3"></i>
-                                <p class="text-gray-500">No system updates at the moment</p>
+                            <div v-if="sortedSystemUpdates.length > 5"
+                                class="px-4 py-3 text-center border-t border-[#E5E5EA]/50">
+                                <button
+                                    class="text-[#007AFF] text-sm font-semibold hover:text-[#0055D4] transition-colors"
+                                    @click="router.visit(route('system-updates.index'))">
+                                    View All Updates
+                                </button>
                             </div>
                         </div>
-                        <div v-else class="text-center py-8">
-                            <i class="pi pi-inbox text-4xl text-gray-300 mb-3"></i>
-                            <p class="text-gray-500">No system updates at the moment</p>
+                        <div v-else class="py-10 text-center">
+                            <i class="pi pi-inbox text-3xl text-[#C7C7CC] mb-2"></i>
+                            <p class="text-sm text-[#8E8E93]">No system updates at the moment</p>
                         </div>
-                    </Panel>
+                    </div>
                 </div>
 
-                <!-- Important Links & Help -->
-                <div>
-                    <div class="flex items-center gap-2 mb-4">
-                        <i class="pi pi-link text-2xl text-indigo-600"></i>
-                        <h2 class="text-2xl font-bold text-gray-800">Quick Links</h2>
-                    </div>
-                    <Panel>
-                        <div class="space-y-3">
-                            <div v-for="link in importantLinks" :key="link.label"
-                                class="p-3 border rounded-lg hover:bg-indigo-50 cursor-pointer transition-colors"
-                                @click="link.action || (link.href ? window.open(link.href) : null)">
-                                <div class="flex items-start gap-3">
-                                    <div class="text-indigo-600 text-xl pt-1">
-                                        <i :class="link.icon"></i>
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-gray-800">{{ link.label }}</h4>
-                                        <p class="text-xs text-gray-500">{{ link.description }}</p>
-                                    </div>
-                                    <i class="pi pi-chevron-right text-gray-400 pt-1"></i>
+                <!-- Quick Links -->
+                <div class="ios-section">
+                    <div class="ios-section-label">QUICK LINKS</div>
+                    <div class="ios-card overflow-hidden">
+                        <div v-for="(link, idx) in quickLinks" :key="link.label"
+                            class="ios-row cursor-pointer hover:bg-[#F2F2F7] transition-colors"
+                            @click="link.action ? link.action() : (link.href ? window.open(link.href) : null)">
+                            <div class="flex items-center gap-3">
+                                <i :class="[link.icon, link.iconColor]" style="font-size: 1.1rem"></i>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-sm font-medium text-[#1d1d1f]">{{ link.label }}</h4>
+                                    <p class="text-xs text-[#8E8E93]">{{ link.description }}</p>
                                 </div>
+                                <i class="pi pi-chevron-right text-[#C7C7CC]" style="font-size: 0.75rem"></i>
                             </div>
                         </div>
-                    </Panel>
+                    </div>
                 </div>
             </div>
 
-            <!-- Mental Model Section -->
-            <Panel header="Mental Model: What Do I Need To Do?" class="border-t-4 border-t-indigo-600">
-                <Tabs>
-                    <TabList>
-                        <Tab>I'm New</Tab>
-                        <Tab>I Have Pending Items</Tab>
-                        <Tab>Need Help?</Tab>
-                    </TabList>
-                    <TabPanels>
-                        <TabPanel>
-                            <div class="space-y-4">
-                                <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-lg">
-                                    <div
-                                        class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full font-semibold flex-shrink-0">
-                                        1</div>
-                                    <div>
-                                        <h4 class="font-semibold text-gray-800 mb-1">Start Application</h4>
-                                        <p class="text-sm text-gray-600">Click "Apply for Scholarship" to begin your
-                                            application process</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-lg">
-                                    <div
-                                        class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full font-semibold flex-shrink-0">
-                                        2</div>
-                                    <div>
-                                        <h4 class="font-semibold text-gray-800 mb-1">Complete Information</h4>
-                                        <p class="text-sm text-gray-600">Fill in your personal, family, and academic
-                                            information</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-lg">
-                                    <div
-                                        class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full font-semibold flex-shrink-0">
-                                        3</div>
-                                    <div>
-                                        <h4 class="font-semibold text-gray-800 mb-1">Upload Requirements</h4>
-                                        <p class="text-sm text-gray-600">Submit required documents in the Requirements
-                                            section</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </TabPanel>
-                        <TabPanel>
-                            <div class="space-y-4">
-                                <div class="flex items-start gap-4 p-4 bg-orange-50 rounded-lg">
-                                    <i class="pi pi-exclamation-triangle text-2xl text-orange-600 flex-shrink-0"></i>
-                                    <div>
-                                        <h4 class="font-semibold text-gray-800 mb-1">Check Your Status</h4>
-                                        <p class="text-sm text-gray-600">Go to "Check Status" to see what items need
-                                            attention</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-4 p-4 bg-orange-50 rounded-lg">
-                                    <i class="pi pi-cloud-upload text-2xl text-orange-600 flex-shrink-0"></i>
-                                    <div>
-                                        <h4 class="font-semibold text-gray-800 mb-1">Upload Missing Documents</h4>
-                                        <p class="text-sm text-gray-600">Use "Upload Requirements" to submit any missing
-                                            documents</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </TabPanel>
-                        <TabPanel>
-                            <div class="space-y-4">
-                                <div class="p-4 bg-green-50 rounded-lg">
-                                    <h4 class="font-semibold text-gray-800 mb-2">Common Issues</h4>
-                                    <ul class="text-sm text-gray-600 space-y-2">
-                                        <li class="flex items-center gap-2">
-                                            <i class="pi pi-check text-green-600"></i>
-                                            <span>Login issues? Reset your password on the login page</span>
-                                        </li>
-                                        <li class="flex items-center gap-2">
-                                            <i class="pi pi-check text-green-600"></i>
-                                            <span>Application rejected? Check the feedback section for details</span>
-                                        </li>
-                                        <li class="flex items-center gap-2">
-                                            <i class="pi pi-check text-green-600"></i>
-                                            <span>Document not uploading? Ensure file is in supported format</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <Button label="Contact Support" icon="pi pi-envelope" severity="info" class="w-full"
-                                    @click="showHelpDialog = true" />
-                            </div>
-                        </TabPanel>
-                    </TabPanels>
-                </Tabs>
-            </Panel>
         </div>
 
-        <!-- Help Dialog -->
-        <Dialog v-model:visible="showHelpDialog" modal header="Help & Support" :style="{ width: '50vw' }">
-            <div class="space-y-4">
-                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                    <h4 class="font-semibold text-blue-900 mb-2">Scholarship Support Team</h4>
-                    <p class="text-sm text-blue-800 mb-2">Email: scholarship@example.com</p>
-                    <p class="text-sm text-blue-800">Phone: +1 (555) XXX-XXXX</p>
-                </div>
-                <div class="bg-gray-50 p-4 rounded">
-                    <h4 class="font-semibold text-gray-800 mb-3">Common Questions</h4>
-                    <div class="space-y-3">
-                        <div>
-                            <p class="font-medium text-gray-700">Q: How long does application review take?</p>
-                            <p class="text-sm text-gray-600 mt-1">A: Applications are typically reviewed within 2-4
-                                weeks of submission</p>
+        <!-- Help Dialog — iOS style -->
+        <Dialog v-model:visible="showHelpDialog" modal
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+            <template #container>
+                <div class="ios-help-modal">
+                    <!-- Nav bar -->
+                    <div class="ios-help-nav">
+                        <button class="text-[#8E8E93] text-xl leading-none" @click="showHelpDialog = false">
+                            <i class="pi pi-times"></i>
+                        </button>
+                        <span class="ios-help-title">Help & Support</span>
+                        <div class="w-5"></div>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="ios-help-body">
+                        <div class="ios-section">
+                            <div class="ios-section-label">CONTACT</div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <div class="flex items-center gap-3">
+                                        <i class="pi pi-users text-[#007AFF]"></i>
+                                        <div>
+                                            <div class="text-sm font-semibold text-[#1d1d1f]">Scholarship Support Team
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ios-row">
+                                    <div class="flex items-center gap-3">
+                                        <i class="pi pi-envelope text-[#34C759]"></i>
+                                        <span class="text-sm text-[#007AFF]">scholarship@example.com</span>
+                                    </div>
+                                </div>
+                                <div class="ios-row !border-b-0">
+                                    <div class="flex items-center gap-3">
+                                        <i class="pi pi-phone text-[#FF9500]"></i>
+                                        <span class="text-sm text-[#1d1d1f]">+1 (555) XXX-XXXX</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <p class="font-medium text-gray-700">Q: Can I edit my application after submission?</p>
-                            <p class="text-sm text-gray-600 mt-1">A: You can edit until your application is under review
-                            </p>
+
+                        <div class="ios-section">
+                            <div class="ios-section-label">FREQUENTLY ASKED</div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <p class="text-sm font-medium text-[#1d1d1f]">How long does application review take?
+                                    </p>
+                                    <p class="text-xs text-[#6D6D72] mt-1">Applications are typically reviewed within
+                                        2–4 weeks of submission.</p>
+                                </div>
+                                <div class="ios-row !border-b-0">
+                                    <p class="text-sm font-medium text-[#1d1d1f]">Can I edit my application after
+                                        submission?</p>
+                                    <p class="text-xs text-[#6D6D72] mt-1">You can edit until your application is under
+                                        review.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <template #footer>
-                <Button label="Close" @click="showHelpDialog = false" severity="secondary" />
             </template>
         </Dialog>
     </AdminLayout>
 </template>
 
 <style scoped>
-/* Add custom animations if needed */
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* ─── iOS Section Labels ─── */
+.ios-section {
+    margin-top: 0;
 }
 
-:deep(.p-panel) {
-    border: 1px solid #e5e7eb;
+.ios-section-label {
+    font-size: 13px;
+    color: #6D6D72;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    padding: 0 20px 8px;
+    font-weight: 500;
+}
+
+/* ─── iOS Card (grouped rows) ─── */
+.ios-card {
+    background: #FFFFFF;
+    border-radius: 2rem;
+    border: 0.5px solid #E5E5EA;
+}
+
+.ios-row {
+    padding: 14px 20px;
+    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
+}
+
+.ios-row:last-child {
+    border-bottom: none;
+}
+
+/* ─── Service Card hover ─── */
+.service-card {
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.service-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+/* ─── Help Dialog (iOS) ─── */
+:deep(.ios-dialog-root.p-dialog) {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-width: 440px;
+}
+
+:deep(.ios-dialog-mask) {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+}
+
+.ios-help-modal {
+    background: #F2F2F7;
+    border-radius: 14px;
+    max-height: 85vh;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+}
+
+.ios-help-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #FFFFFF;
+    border-bottom: 0.5px solid #E5E5EA;
+}
+
+.ios-help-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #000;
+    letter-spacing: -0.4px;
+}
+
+.ios-help-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 16px 24px;
+}
+
+.ios-help-body .ios-section+.ios-section {
+    margin-top: 22px;
 }
 </style>

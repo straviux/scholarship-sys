@@ -203,11 +203,6 @@ class ScholarshipRecord extends Model
         return $this->belongsTo(User::class, 'interviewed_by')->select(['id', 'name']);
     }
 
-    public function scholarshipStatus()
-    {
-        return $this->belongsTo(ScholarshipStatus::class, 'scholarship_status_id')->select(['id', 'status', 'remarks', 'status_id']);
-    }
-
     public function course()
     {
         return $this->hasOne(Course::class, 'id', 'course_id');

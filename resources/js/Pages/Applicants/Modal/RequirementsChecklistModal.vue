@@ -464,7 +464,7 @@ function onPrevDragEnd() {
                 </div>
 
                 <!-- Applicant name subtitle -->
-                <div class="ios-subtitle" v-if="applicant">
+                <div class="ios-subtitle text-gray-800 font-semibold" v-if="applicant">
                     {{ applicant?.last_name }}, {{ applicant?.first_name }}
                 </div>
 
@@ -491,7 +491,7 @@ function onPrevDragEnd() {
                                     <!-- Requirement Info -->
                                     <div style="flex: 1; min-width: 0; margin-left: 10px;">
                                         <div style="font-size: 14px; font-weight: 500; color: #000;">{{ requirement.name
-                                        }}</div>
+                                            }}</div>
                                         <!-- File status -->
                                         <div v-if="requirement.is_submitted && requirement.file_name"
                                             style="font-size: 11px; color: #34C759; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
@@ -568,9 +568,10 @@ function onPrevDragEnd() {
 
                 <div class="ios-body" v-if="qrCodeData">
                     <!-- QR Code -->
-                    <div class="ios-section" style="margin-top: 16px;">
-                        <div class="ios-card" style="padding: 20px; display: flex; justify-content: center;">
-                            <div v-html="qrCodeData.qrCode" style="width: 200px; height: 200px;"></div>
+                    <div class="ios-section" style="margin-top: 16px; ">
+                        <div class="ios-card"
+                            style="padding: 20px;height: 290px; display: flex; justify-content: center;">
+                            <div v-html="qrCodeData.qrCode" style="width: 200px; height: 200px;margin-left:-28px"></div>
                         </div>
                     </div>
 
@@ -582,7 +583,7 @@ function onPrevDragEnd() {
                             </div>
                             <div style="font-size: 12px; color: #6D6D72; margin-top: 4px;">
                                 Scan this QR code on your mobile device to upload <strong>{{ qrModalRequirement?.name
-                                }}</strong>.
+                                    }}</strong>.
                             </div>
                         </div>
                     </div>
@@ -627,7 +628,7 @@ function onPrevDragEnd() {
                     <button class="ios-nav-btn ios-nav-cancel" @click="showPreviewModal = false"><i
                             class="pi pi-times"></i></button>
                     <span class="ios-nav-title" style="font-size: 15px;">{{ previewFile?.file_name || 'Preview'
-                    }}</span>
+                        }}</span>
                     <button class="ios-nav-btn ios-nav-action" @click="downloadFile(previewFile)">
                         <i class="pi pi-download" style="font-size: 14px;"></i>
                     </button>
@@ -691,7 +692,7 @@ function onPrevDragEnd() {
                             <div class="ios-row ios-row-last">
                                 <span class="ios-row-label">Type</span>
                                 <span style="font-size: 13px; color: #8E8E93;">{{ previewFile.type.toUpperCase()
-                                }}</span>
+                                    }}</span>
                             </div>
                         </div>
                     </div>
@@ -779,7 +780,6 @@ function onPrevDragEnd() {
     background: #FFFFFF;
     border-bottom: 0.5px solid #E5E5EA;
     font-size: 13px;
-    color: #8E8E93;
     text-align: center;
     flex-shrink: 0;
 }

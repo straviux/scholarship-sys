@@ -8,7 +8,7 @@ import { usePermission } from '@/composable/permissions';
 import { useFilterManager } from '@/composables/useFilterManager';
 import axios from 'axios';
 
-
+import FloatingDrawer from '@/Components/FloatingDrawer.vue';
 import ApplicantFormModal from './Modal/ApplicantFormModal.vue';
 import YakapCategoryModal from './Modal/YakapCategoryModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModal.vue';
@@ -1186,7 +1186,7 @@ const formatDate = (date) => {
             </div>
 
             <!-- Filter Drawer -->
-            <Drawer v-model:visible="showFilterDrawer" header="All Filters" position="right" class="!w-[600px]">
+            <FloatingDrawer v-model:visible="showFilterDrawer" header="All Filters" position="right" class="!w-[600px]">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
@@ -1277,7 +1277,7 @@ const formatDate = (date) => {
                     <Button label="Apply" icon="pi pi-filter-fill" severity="info" size="small"
                         @click="applyDrawerFilters" />
                 </div>
-            </Drawer>
+            </FloatingDrawer>
 
             <!-- Applicants DataTable -->
             <div class="mt-8">
@@ -1403,35 +1403,30 @@ const formatDate = (date) => {
 
                                         </div>
                                     </div>
-                                    <div class="flex gap-1">
-                                        <div class="px-1">
-                                            <div class="text-xs font-semibold text-gray-500">
-                                                Prog. <span class="font-bold text-gray-600">#{{
-                                                    slotProps.data.sequence_number || '-'
-                                                    }}</span>
-                                            </div>
+                                    <div class="flex gap-2">
+                                        <div class="flex items-center gap-1"
+                                            v-tooltip.bottom="'Program #' + (slotProps.data.sequence_number || '-')">
+                                            <i class="pi pi-bookmark text-indigo-500" style="font-size: 0.7rem;"></i>
+                                            <span class="text-xs font-bold text-gray-600">#{{
+                                                slotProps.data.sequence_number || '-' }}</span>
                                         </div>
-                                        <div class="px-1">
-                                            <div class="text-xs font-semibold text-gray-500">
-                                                Cour. <span class="font-bold text-gray-600">#{{
-                                                    slotProps.data.sequence_number_by_course || '-'
-                                                    }}</span>
-                                            </div>
+                                        <div class="flex items-center gap-1"
+                                            v-tooltip.bottom="'Course #' + (slotProps.data.sequence_number_by_course || '-')">
+                                            <i class="pi pi-book text-teal-500" style="font-size: 0.7rem;"></i>
+                                            <span class="text-xs font-bold text-gray-600">#{{
+                                                slotProps.data.sequence_number_by_course || '-' }}</span>
                                         </div>
-                                        <div class="px-1">
-                                            <div class="text-xs font-semibold text-gray-500">
-                                                Sch. <span class="font-bold text-gray-600">#{{
-                                                    slotProps.data.sequence_number_by_school_course || '-'
-                                                    }}</span>
-
-                                            </div>
+                                        <div class="flex items-center gap-1"
+                                            v-tooltip.bottom="'School #' + (slotProps.data.sequence_number_by_school_course || '-')">
+                                            <i class="pi pi-building text-amber-500" style="font-size: 0.7rem;"></i>
+                                            <span class="text-xs font-bold text-gray-600">#{{
+                                                slotProps.data.sequence_number_by_school_course || '-' }}</span>
                                         </div>
-                                        <div class="px-1">
-                                            <div class="text-xs font-semibold text-gray-500">
-                                                Date <span class="font-bold text-gray-600">#{{
-                                                    slotProps.data.daily_sequence_number ||
-                                                    '-' }}</span>
-                                            </div>
+                                        <div class="flex items-center gap-1"
+                                            v-tooltip.bottom="'Daily #' + (slotProps.data.daily_sequence_number || '-')">
+                                            <i class="pi pi-calendar text-gray-400" style="font-size: 0.7rem;"></i>
+                                            <span class="text-xs font-bold text-gray-600">#{{
+                                                slotProps.data.daily_sequence_number || '-' }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1499,21 +1494,18 @@ const formatDate = (date) => {
                         </Column>
 
                         <!-- JPM Status Column (only visible when showJpmColumns is enabled) -->
-                        <Column header="JPM Status" v-if="hasPermission('jpm.view') && showJpmColumns"
-                            style="min-width: 180px">
+                        <Column header="JPM" v-if="hasPermission('jpm.view') && showJpmColumns" style="width: 80px">
                             <template #body="slotProps">
-                                <div class="flex flex-col gap-1">
-                                    <div class="flex justify-center" v-if="getJpmStatus(slotProps.data)">
-                                        <Tag :severity="getJpmTagSeverity(getJpmStatus(slotProps.data))"
-                                            :value="getJpmTagLabel(getJpmStatus(slotProps.data))" />
-                                    </div>
-                                    <span v-else class="text-gray-400 text-sm text-center">-</span>
-
-                                    <!-- Show member details -->
+                                <div class="flex items-center justify-center">
                                     <div v-if="getJpmStatus(slotProps.data)?.status === 'member'"
-                                        class="text-xs text-gray-600 text-center italic">
-                                        {{ getJpmMemberDetails(getJpmStatus(slotProps.data)) }}
+                                        v-tooltip.top="'JPM Member: ' + getJpmMemberDetails(getJpmStatus(slotProps.data))">
+                                        <i class="pi pi-check-circle text-green-500" style="font-size: 1.1rem;"></i>
                                     </div>
+                                    <div v-else-if="getJpmStatus(slotProps.data)?.status === 'not_member'"
+                                        v-tooltip.top="'Not a JPM Member'">
+                                        <i class="pi pi-times-circle text-orange-400" style="font-size: 1.1rem;"></i>
+                                    </div>
+                                    <span v-else class="text-gray-300">-</span>
                                 </div>
                             </template>
                         </Column>
@@ -1563,17 +1555,22 @@ const formatDate = (date) => {
                         </Column>
 
                         <!-- Priority Column -->
-                        <Column header="Priority" style="width: 150px"
+                        <Column header="Priority" style="width: 80px"
                             v-if="hasPermission('priority.manage') && !simpleView">
                             <template #body="slotProps">
-                                <div class="flex items-center gap-2">
-                                    <div
-                                        v-if="slotProps.data.priority_level && slotProps.data.priority_level !== 'normal'">
-                                        <Tag :severity="getPrioritySeverity(slotProps.data.priority_level)"
-                                            :value="formatPriorityName(slotProps.data.priority_level)"
-                                            v-tooltip.top="slotProps.data.priority_reason" />
+                                <div class="flex items-center justify-center">
+                                    <div v-if="slotProps.data.priority_level === 'urgent'"
+                                        v-tooltip.top="'Urgent' + (slotProps.data.priority_reason ? ': ' + slotProps.data.priority_reason : '')">
+                                        <i class="pi pi-exclamation-triangle text-red-500"
+                                            style="font-size: 1.1rem;"></i>
                                     </div>
-                                    <span v-else class="text-gray-400 text-sm">Normal</span>
+                                    <div v-else-if="slotProps.data.priority_level === 'high'"
+                                        v-tooltip.top="'High' + (slotProps.data.priority_reason ? ': ' + slotProps.data.priority_reason : '')">
+                                        <i class="pi pi-star-fill text-orange-500" style="font-size: 1.1rem;"></i>
+                                    </div>
+                                    <div v-else v-tooltip.top="'Normal'">
+                                        <i class="pi pi-minus text-gray-300" style="font-size: 0.9rem;"></i>
+                                    </div>
                                 </div>
                             </template>
                         </Column>
@@ -1761,5 +1758,14 @@ const formatDate = (date) => {
 /* Rounded Checkbox */
 :deep(.p-checkbox .p-checkbox-box) {
     border-radius: 0.5rem;
+}
+
+/* Extra cell padding for better readability */
+:deep(.p-datatable .p-datatable-tbody > tr > td) {
+    padding: 0.85rem 1rem;
+}
+
+:deep(.p-datatable .p-datatable-thead > tr > th) {
+    padding: 0.85rem 1rem;
 }
 </style>
