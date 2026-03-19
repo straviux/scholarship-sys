@@ -1164,7 +1164,7 @@ class ApplicantController extends Controller
 
             // Generate upload token
             $profileRequirement->generateUploadToken(5);
-            
+
             // Refresh the model to ensure all attributes are properly loaded
             $profileRequirement->refresh();
 
