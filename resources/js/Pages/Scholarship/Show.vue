@@ -7,7 +7,7 @@
             <!-- Header with Back Button -->
             <div class="mb-6 flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <Button icon="pi pi-arrow-left" text rounded @click="goBackToProfiles()"
+                    <Button icon="pi pi-arrow-left" text rounded severity="secondary" @click="goBackToProfiles()"
                         v-tooltip.top="'Back to Profiles'" />
                     <div>
                         <h1 class="text-3xl font-bold text-gray-900">
@@ -19,25 +19,25 @@
                 </div>
                 <div class="flex gap-2">
                     <Button v-if="hasPermission('applicants.edit')" icon="pi pi-user" label="Edit Personal Info"
-                        severity="warning" size="small" @click="showPersonalInfoModal = true"
+                        severity="warning" size="small" rounded outlined @click="showPersonalInfoModal = true"
                         v-tooltip.top="'Edit Personal Information'" />
                     <Button v-if="hasPermission('applicants.edit')" icon="pi pi-home" label="Edit Family Info"
-                        severity="info" size="small" @click="showFamilyInfoModal = true"
+                        severity="info" size="small" rounded outlined @click="showFamilyInfoModal = true"
                         v-tooltip.top="'Edit Family Information'" />
                 </div>
             </div>
 
             <!-- Tab Navigation -->
-            <div class="bg-white rounded-lg shadow">
+            <div class="!rounded-4xl overflow-hidden bg-white shadow-sm border border-gray-200">
                 <Tabs v-model:value="activeTab">
                     <TabList>
-                        <Tab value="0">Personal Information</Tab>
-                        <Tab value="1">Family Information</Tab>
-                        <Tab value="2">Academic Information</Tab>
-                        <Tab value="3">Obligations & Transactions</Tab>
-                        <Tab value="4">Attachments</Tab>
-                        <Tab value="5">Approval History</Tab>
-                        <Tab value="6">Activity Logs</Tab>
+                        <Tab value="0"><i class="pi pi-user mr-2"></i>Personal Information</Tab>
+                        <Tab value="1"><i class="pi pi-users mr-2"></i>Family Information</Tab>
+                        <Tab value="2"><i class="pi pi-graduation-cap mr-2"></i>Academic Information</Tab>
+                        <Tab value="3"><i class="pi pi-wallet mr-2"></i>Obligations & Transactions</Tab>
+                        <Tab value="4"><i class="pi pi-paperclip mr-2"></i>Attachments</Tab>
+                        <Tab value="5"><i class="pi pi-check-circle mr-2"></i>Approval History</Tab>
+                        <Tab value="6"><i class="pi pi-list mr-2"></i>Activity Logs</Tab>
                     </TabList>
                     <TabPanels>
                         <!-- Personal Information Tab -->
@@ -222,7 +222,8 @@
                                         @click="openAddRecordModal" severity="success" size="small" />
                                 </div>
                                 <div v-if="scholarshipRecords.length > 0">
-                                    <DataTable :value="scholarshipRecords" stripedRows showGridlines>
+                                    <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
+                                        :value="scholarshipRecords" stripedRows showGridlines>
                                         <Column header="Program & School" style="min-width: 250px">
                                             <template #body="slotProps">
                                                 <div class="space-y-1">
@@ -326,7 +327,8 @@
                             <div class="p-6">
                                 <div v-if="allAttachments.length > 0">
                                     <h3 class="text-lg font-semibold text-gray-900 mb-4">All Attachments</h3>
-                                    <DataTable :value="allAttachments" stripedRows showGridlines paginator :rows="10">
+                                    <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
+                                        :value="allAttachments" stripedRows showGridlines paginator :rows="10">
                                         <Column header="Source" style="min-width: 150px">
                                             <template #body="slotProps">
                                                 <Chip :label="slotProps.data.attachment_source"
@@ -340,7 +342,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -425,7 +427,7 @@
                                                     <div>
                                                         <h5 class="font-semibold text-gray-900">
                                                             Status: <span class="text-blue-600">{{ timeline.new_status
-                                                                }}</span>
+                                                            }}</span>
                                                         </h5>
                                                         <p class="text-sm text-gray-600">{{
                                                             formatDateTime(timeline.performed_at) }}</p>
@@ -437,13 +439,13 @@
                                                         <p class="text-xs text-gray-600">Previous Status</p>
                                                         <p class="text-sm font-medium text-gray-900">{{
                                                             timeline.old_status || 'N/A'
-                                                            }}</p>
+                                                        }}</p>
                                                     </div>
                                                     <div>
                                                         <p class="text-xs text-gray-600">New Status</p>
                                                         <p class="text-sm font-medium text-gray-900">{{
                                                             timeline.new_status || 'N/A'
-                                                            }}</p>
+                                                        }}</p>
                                                     </div>
                                                 </div>
 
@@ -451,7 +453,7 @@
                                                     <p class="text-xs text-gray-600">Encoded by</p>
                                                     <p class="text-sm font-medium text-gray-900">{{
                                                         timeline.changed_by?.name || 'System'
-                                                        }}</p>
+                                                    }}</p>
                                                 </div>
 
                                                 <div v-if="timeline.remarks"
@@ -566,318 +568,41 @@
         <FamilyInformationModal v-model:visible="showFamilyInfoModal" :profile="profile" @success="handleSuccess" />
 
         <!-- Manage Attachments Modal -->
-        <Dialog v-model:visible="showAttachmentsModal" modal header="Manage Scholarship Record Attachments"
-            :style="{ width: '60vw' }">
-            <div class="space-y-4">
-                <!-- Record Info -->
-                <div v-if="selectedRecord" class="bg-gray-50 p-3 rounded border border-gray-200">
-                    <p class="text-sm font-semibold text-gray-900">{{ selectedRecord.program?.name || 'N/A' }}</p>
-                    <p class="text-xs text-gray-600">{{ selectedRecord.academic_year }} - {{ selectedRecord.term }}</p>
-                </div>
-
-                <!-- Existing Attachments -->
-                <div v-if="selectedRecord && selectedRecord.attachments && selectedRecord.attachments.length > 0">
-                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Existing Attachments</h4>
-                    <div class="space-y-2">
-                        <div v-for="attachment in selectedRecord.attachments" :key="attachment.attachment_id"
-                            class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
-                            <div class="flex items-center gap-3">
-                                <i :class="getFileIcon(attachment.file_type)" class="text-2xl text-blue-600"></i>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">{{ attachment.attachment_name }}</p>
-                                    <p class="text-xs text-gray-500">{{ attachment.file_name }} – {{
-                                        formatFileSize(attachment.file_size) }}</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-2">
-                                <Button icon="pi pi-eye" size="small" outlined label="View"
-                                    @click="viewAttachment(attachment)" />
-                                <Button icon="pi pi-download" size="small" outlined
-                                    @click="downloadAttachment(attachment)" />
-                                <Button v-if="hasPermission('applicants.edit')" icon="pi pi-trash" size="small"
-                                    severity="danger" outlined @click="deleteAttachment(attachment)" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Upload New Attachment -->
-                <div v-if="hasPermission('applicants.edit')">
-                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Upload New Attachment</h4>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Attachment Type *</label>
-                            <Select v-model="attachmentForm.attachment_name" :options="attachmentTypeOptions"
-                                optionLabel="label" optionValue="value" placeholder="Select attachment type"
-                                class="w-full" />
-                            <p class="text-xs text-gray-500 mt-1">Select the type of attachment you're uploading</p>
-                        </div>
-                        <div v-if="attachmentForm.attachment_name === 'others'">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Specify Attachment Type
-                                *</label>
-                            <InputText v-model="attachmentForm.custom_attachment_name"
-                                placeholder="e.g., Medical Certificate, ID Photo" class="w-full" />
-                            <p class="text-xs text-gray-500 mt-1">Enter the specific type of attachment</p>
-                        </div>
-                        <div v-if="attachmentForm.attachment_name === 'contract'">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Page Number (Optional)</label>
-                            <InputNumber v-model="attachmentForm.page_number" :min="1" placeholder="e.g., 1, 2, 3"
-                                class="w-full" />
-                            <p class="text-xs text-gray-500 mt-1">Specify the page number if uploading contract pages
-                                separately
-                            </p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">File (PDF or Image) *</label>
-                            <input type="file" ref="fileInput" @change="handleFileSelect" accept=".pdf,.jpg,.jpeg,.png"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            <p class="text-xs text-gray-500 mt-1">Accepted formats: PDF, JPG, PNG (Max 25MB)</p>
-                        </div>
-                        <div v-if="attachmentForm.file">
-                            <p class="text-sm text-gray-700">Selected: <span class="font-medium">{{
-                                attachmentForm.file.name }}</span></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeAttachmentsModal" />
-                <Button v-if="hasPermission('applicants.edit')" label="Upload" @click="uploadAttachment"
-                    :loading="uploading"
-                    :disabled="!attachmentForm.file || !attachmentForm.attachment_name || (attachmentForm.attachment_name === 'others' && !attachmentForm.custom_attachment_name)" />
-            </template>
-        </Dialog>
+        <ManageAttachmentsModal v-model:visible="showAttachmentsModal" :record="selectedRecord"
+            :has-edit-permission="hasPermission('applicants.edit')" @view-attachment="onViewAttachment"
+            @success="handleModalSuccess" />
 
         <!-- View Attachment Modal -->
-        <Dialog v-model:visible="showViewerModal" modal :header="viewerAttachment?.file_name"
-            :style="{ width: '90vw', height: '100vh' }" :maximizable="true">
-            <div class="flex items-center justify-center bg-gray-100 rounded relative overflow-hidden"
-                style="min-height: 80vh;">
-                <!-- PDF Viewer -->
-                <iframe v-if="viewerAttachment && viewerAttachment.file_type?.includes('pdf')"
-                    :src="getAttachmentUrl(viewerAttachment)" class="w-full h-full rounded" style="min-height: 600px;"
-                    frameborder="0">
-                </iframe>
-
-                <!-- Image Viewer with Zoom -->
-                <div v-else-if="viewerAttachment && viewerAttachment.file_type?.includes('image')"
-                    class="w-full h-full flex items-center justify-center relative" style="min-height: 600px;"
-                    @wheel="handleWheel" @mousedown="handleMouseDown" @mousemove="handleMouseMove"
-                    @mouseup="handleMouseUp" @mouseleave="handleMouseUp"
-                    :style="{ cursor: imageZoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }">
-                    <img :src="getAttachmentUrl(viewerAttachment)" :alt="viewerAttachment.file_name"
-                        class="max-w-full max-h-[600px] object-contain rounded select-none" draggable="false" :style="{
-                            transform: `scale(${imageZoom}) translate(${imagePosition.x / imageZoom}px, ${imagePosition.y / imageZoom}px)`,
-                            transition: isDragging ? 'none' : 'transform 0.1s ease-out'
-                        }" />
-
-                    <!-- Zoom Controls -->
-                    <div class="absolute bottom-4 right-4 flex gap-2 bg-white rounded-lg shadow-lg p-2">
-                        <Button icon="pi pi-minus" @click="zoomOut" size="small" severity="secondary" rounded
-                            :disabled="imageZoom <= 0.5" />
-                        <span class="px-3 py-2 text-sm font-semibold">{{ Math.round(imageZoom * 100) }}%</span>
-                        <Button icon="pi pi-plus" @click="zoomIn" size="small" severity="secondary" rounded
-                            :disabled="imageZoom >= 5" />
-                        <Button icon="pi pi-refresh" @click="resetZoom" size="small" severity="secondary" rounded
-                            v-tooltip.top="'Reset Zoom'" />
-                    </div>
-                </div>
-
-                <!-- Fallback -->
-                <div v-else class="text-center p-8">
-                    <i class="pi pi-file text-6xl text-gray-400 mb-4"></i>
-                    <p class="text-gray-600">Unable to preview this file type</p>
-                    <Button label="Download Instead" icon="pi pi-download" class="mt-4"
-                        @click="downloadAttachment(viewerAttachment)" />
-                </div>
-            </div>
-
-            <template #footer>
-                <div class="pt-4 gap-4 flex justify-end">
-                    <Button label="Download" icon="pi pi-download" @click="downloadAttachment(viewerAttachment)" />
-                    <Button label="Close" severity="secondary" @click="showViewerModal = false" />
-                </div>
-            </template>
-        </Dialog>
+        <ViewAttachmentModal v-model:visible="showViewerModal" :attachment="viewerAttachment" />
 
         <!-- QR Code Modal -->
-        <Dialog v-model:visible="showQrModal" modal header="Mobile Upload QR Code"
-            :style="{ width: '30vw', minWidth: '400px' }">
-            <div v-if="qrCodeData" class="text-center space-y-4">
-                <!-- QR Code -->
-                <div class="bg-white p-6 rounded-lg border-2 border-gray-200 inline-block">
-                    <div v-html="qrCodeData.qrCode"></div>
-                </div>
-
-                <!-- Instructions -->
-                <div class="text-left space-y-3">
-                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                        <p class="text-sm font-semibold text-gray-900 mb-2">
-                            <i class="pi pi-info-circle mr-2"></i>How to use:
-                        </p>
-                        <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
-                            <li>Scan this QR code with your mobile device</li>
-                            <li>Take a photo or select from gallery</li>
-                            <li>Upload will be automatically optimized</li>
-                        </ol>
-                    </div>
-
-                    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
-                        <p class="text-xs text-yellow-800">
-                            <i class="pi pi-exclamation-triangle mr-2"></i>
-                            <strong>Expires in:</strong>
-                            <span :class="{
-                                'text-yellow-600': qrCountdown.includes('min') && !qrCountdown.includes('0 min'),
-                                'text-orange-600': qrCountdown.includes('0 min') && parseInt(qrCountdown) >= 5,
-                                'text-red-600 font-bold': qrCountdown.includes('0 min') && parseInt(qrCountdown) < 5 || qrCountdown === 'EXPIRED'
-                            }">
-                                {{ qrCountdown || 'Loading...' }}
-                            </span>
-                        </p>
-                    </div>
-
-                    <!-- Mobile URL (for copying) -->
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Or copy this link:</label>
-                        <div class="flex gap-2">
-                            <InputText type="text" :value="qrCodeData.url" readonly
-                                class="flex-1 text-xs" />
-                            <Button icon="pi pi-copy" size="small" @click="copyToClipboard(qrCodeData.url)"
-                                v-tooltip.top="'Copy link'" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <template #footer>
-                <Button label="Close" severity="secondary" @click="showQrModal = false" />
-            </template>
-        </Dialog>
+        <QrCodeModal v-model:visible="showQrModal" :qr-data="qrCodeData" />
 
         <!-- Add/Edit Scholarship Record Modal -->
-        <Dialog v-model:visible="showRecordModal" modal
-            :header="recordModalMode === 'add' ? 'Add Scholarship Record' : 'Edit Scholarship Record'"
-            :style="{ width: '700px' }">
-            <div class="space-y-4 py-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Program <span v-if="isG12Record"
-                                class="text-xs text-gray-500">(Optional for G12)</span><span v-else>*</span></label>
-                        <ProgramSelect v-model="recordForm.program_id" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">School <span v-if="isG12Record"
-                                class="text-xs text-gray-500">(Optional for G12)</span><span v-else>*</span></label>
-                        <SchoolSelect v-model="recordForm.school_id" />
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Course <span v-if="isG12Record"
-                                class="text-xs text-gray-500">(N/A for G12)</span><span v-else>*</span></label>
-                        <CourseSelect v-model="recordForm.course_id"
-                            :scholarship-program-id="typeof recordForm.program_id === 'object' ? recordForm.program_id?.id : recordForm.program_id"
-                            :disabled="isG12Record" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Year Level *</label>
-                        <YearLevelSelect v-model="recordForm.year_level" />
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Academic Year <span
-                                v-if="isG12Record" class="text-xs text-gray-500">(Optional for G12)</span><span
-                                v-else>*</span></label>
-                        <AcademicYearSelect v-model="recordForm.academic_year" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Term <span v-if="isG12Record"
-                                class="text-xs text-gray-500">(Optional for G12)</span><span v-else>*</span></label>
-                        <TermSelect v-model="recordForm.term" />
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Date Filed</label>
-                        <DatePicker v-model="recordForm.date_filed" dateFormat="yy-mm-dd" showIcon fluid />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Date Approved</label>
-                        <DatePicker v-model="recordForm.date_approved" dateFormat="yy-mm-dd" showIcon fluid />
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <Select v-model="recordForm.unified_status" :options="unifiedStatusOptions" optionLabel="label"
-                        optionValue="value" placeholder="Select Status" fluid />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Grant Provision</label>
-                    <Select v-model="recordForm.grant_provision" :options="grantProvisionOptions" optionLabel="label"
-                        optionValue="value" placeholder="Select Grant Provision" fluid showClear />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
-                    <InputText v-model="recordForm.remarks" placeholder="Enter remarks" fluid />
-                </div>
-            </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeRecordModal" outlined size="small" />
-                <Button :label="recordModalMode === 'add' ? 'Add Record' : 'Update Record'" @click.stop="submitRecord"
-                    :loading="recordForm.processing" size="small" />
-            </template>
-        </Dialog>
+        <ScholarshipRecordModal v-model:visible="showRecordModal" :mode="recordModalMode" :record="editingRecord"
+            :profile-id="profile.profile_id" @success="handleModalSuccess" />
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showDeleteConfirm" modal header="Confirm Deletion" :style="{ width: '450px' }">
-            <div class="flex items-center gap-4">
-                <i class="pi pi-exclamation-triangle text-4xl text-red-500"></i>
-                <div>
-                    <p class="text-gray-900 font-semibold mb-2">Are you sure you want to delete this scholarship record?
-                    </p>
-                    <div v-if="recordToDelete" class="bg-gray-100 p-3 rounded border-l-4 border-red-500">
-                        <p class="text-sm font-medium text-gray-900">{{ recordToDelete.program?.name || 'N/A' }}</p>
-                        <p class="text-xs text-gray-600">{{ recordToDelete.academic_year }} - {{ recordToDelete.term }}
-                        </p>
-                    </div>
-                    <p class="text-sm text-gray-600 mt-2">This action cannot be undone.</p>
-                </div>
-            </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" @click="showDeleteConfirm = false" outlined size="small" />
-                <Button label="Delete" severity="danger" @click="deleteRecord" :loading="deleting" size="small" />
-            </template>
-        </Dialog>
+        <DeleteRecordModal v-model:visible="showDeleteConfirm" :record="recordToDelete" @success="handleModalSuccess" />
     </AdminLayout>
 </template>
 
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed, watch, onUnmounted, nextTick, onMounted, inject } from 'vue';
+import { ref, computed, watch, onMounted, inject } from 'vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 import { usePermission } from '@/composable/permissions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
-import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
-import CourseSelect from '@/Components/selects/CourseSelect.vue';
-import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
-import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
-import TermSelect from '@/Components/selects/TermSelect.vue';
 import PersonalInformationModal from '@/Components/modals/PersonalInformationModal.vue';
 import FamilyInformationModal from '@/Components/modals/FamilyInformationModal.vue';
+import ManageAttachmentsModal from '@/Components/modals/ManageAttachmentsModal.vue';
+import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
+import QrCodeModal from '@/Components/modals/QrCodeModal.vue';
+import ScholarshipRecordModal from '@/Components/modals/ScholarshipRecordModal.vue';
+import DeleteRecordModal from '@/Components/modals/DeleteRecordModal.vue';
 import ObligationsTransactions from '@/Components/ObligationsTransactions.vue';
 
 const props = defineProps({
@@ -900,67 +625,16 @@ const showQrModal = ref(false);
 const showRecordModal = ref(false);
 const showDeleteConfirm = ref(false);
 const recordModalMode = ref('add'); // 'add' or 'edit'
+const editingRecord = ref(null);
 const recordToDelete = ref(null);
-const deleting = ref(false);
 const qrCodeData = ref(null);
-const qrCountdown = ref('');
-const qrCountdownInterval = ref(null);
 const selectedRecord = ref(null);
 const viewerAttachment = ref(null);
-const uploading = ref(false);
 const activityLogs = ref([]);
 const statusTimeline = ref([]);
-const recordForm = ref({
-    grant_id: null,
-    program_id: null,
-    school_id: null,
-    course_id: null,
-    year_level: null,
-    academic_year: null,
-    term: null,
-    date_filed: null,
-    date_approved: null,
-    unified_status: 'pending',
-    grant_provision: null,
-    remarks: null,
-    processing: false
-});
-const attachmentForm = ref({
-    attachment_name: '',
-    custom_attachment_name: '',
-    page_number: null,
-    file: null
-});
-const fileInput = ref(null);
-
-// Attachment type options
-const attachmentTypeOptions = [
-    { label: 'Contract', value: 'contract' },
-    { label: 'Copy of Grades', value: 'copy_of_grades' },
-    { label: 'Certificate of Enrollment', value: 'certificate_of_enrollment' },
-    { label: 'Certificate of Registration', value: 'certificate_of_registration' },
-    { label: 'Others', value: 'others' }
-];
 
 // Status composable
 const { statusOptions, getStatusLabel, getStatusSeverity } = useScholarshipStatus();
-
-// Unified status options for form (exclude 'unknown' from dropdown)
-const unifiedStatusOptions = computed(() => statusOptions.value.filter(status => status.value !== 'unknown'));
-
-// Grant provision options
-const grantProvisionOptions = [
-    { label: 'Matriculation', value: 'Matriculation' },
-    { label: 'RLE', value: 'RLE' },
-    { label: 'Tuition', value: 'Tuition' },
-    { label: 'RLE and Tuition', value: 'RLE and Tuition' }
-];
-
-// Image zoom state
-const imageZoom = ref(1);
-const imagePosition = ref({ x: 0, y: 0 });
-const isDragging = ref(false);
-const dragStart = ref({ x: 0, y: 0 });
 
 // Watch for tab changes and persist to localStorage
 watch(activeTab, (newValue) => {
@@ -982,14 +656,6 @@ onMounted(() => {
     }
 });
 
-// Reset zoom when modal opens/closes
-watch(showViewerModal, (newValue) => {
-    if (newValue) {
-        imageZoom.value = 1;
-        imagePosition.value = { x: 0, y: 0 };
-    }
-});
-
 // Computed
 const fullName = computed(() => {
     return `${props.profile.first_name} ${props.profile.middle_name || ''} ${props.profile.last_name} ${props.profile.extension_name || ''}`.trim();
@@ -1003,11 +669,6 @@ const scholarshipRecords = computed(() => {
     if (!props.profile.scholarship_grant) return [];
     // Return all records, already sorted by latest first from backend
     return props.profile.scholarship_grant;
-});
-
-const isG12Record = computed(() => {
-    const yearLevelValue = typeof recordForm.value.year_level === 'object' ? recordForm.value.year_level?.value : recordForm.value.year_level;
-    return yearLevelValue === 'G12';
 });
 
 const allAttachments = computed(() => {
@@ -1191,187 +852,19 @@ const goBackToProfiles = () => {
 // Scholarship Record CRUD Methods
 const openAddRecordModal = () => {
     recordModalMode.value = 'add';
-    recordForm.value = {
-        grant_id: null,
-        program_id: null,
-        school_id: null,
-        course_id: null,
-        year_level: null,
-        academic_year: null,
-        term: null,
-        date_filed: new Date(),
-        date_approved: null,
-        unified_status: 'pending',
-        grant_provision: null,
-        remarks: null,
-        processing: false
-    };
+    editingRecord.value = null;
     showRecordModal.value = true;
 };
 
-const openEditRecordModal = async (record) => {
-    // console.log(record)
+const openEditRecordModal = (record) => {
     recordModalMode.value = 'edit';
-    recordForm.value = {
-        // Use record.id as grant_id
-        grant_id: record.id,
-        // Use full objects for select components if available, otherwise use IDs
-        program_id: record.program || record.program_id,
-        school_id: record.school || record.school_id,
-        course_id: record.course || record.course_id,
-        year_level: record.year_level,
-        academic_year: record.academic_year,
-        term: record.term,
-        date_filed: record.date_filed ? new Date(record.date_filed) : null,
-        date_approved: record.date_approved ? new Date(record.date_approved) : null,
-        unified_status: record.unified_status || 'pending',
-        grant_provision: record.grant_provision || null,
-        remarks: record.remarks,
-        processing: false
-    };
+    editingRecord.value = record;
     showRecordModal.value = true;
-
-    // Wait for modal to render and select components to initialize
-    await nextTick();
-};
-
-const closeRecordModal = () => {
-    showRecordModal.value = false;
-    recordForm.value = {
-        grant_id: null,
-        program_id: null,
-        school_id: null,
-        course_id: null,
-        year_level: null,
-        academic_year: null,
-        term: null,
-        date_filed: null,
-        date_approved: null,
-        unified_status: 'pending',
-        grant_provision: null,
-        remarks: null,
-        processing: false
-    };
-};
-
-const submitRecord = async () => {
-    recordForm.value.processing = true;
-
-    try {
-        // Validate required fields
-        const yearLevelValue = typeof recordForm.value.year_level === 'object' ? recordForm.value.year_level?.value : recordForm.value.year_level;
-        const isG12 = yearLevelValue === 'G12';
-
-        // For non-G12 records, program, school, academic_year, and term are required
-        if (!isG12) {
-            if (!recordForm.value.program_id) {
-                toast.error('Program is required');
-                recordForm.value.processing = false;
-                return;
-            }
-            if (!recordForm.value.school_id) {
-                toast.error('School is required');
-                recordForm.value.processing = false;
-                return;
-            }
-            if (!recordForm.value.academic_year) {
-                toast.error('Academic Year is required');
-                recordForm.value.processing = false;
-                return;
-            }
-            if (!recordForm.value.term) {
-                toast.error('Term is required');
-                recordForm.value.processing = false;
-                return;
-            }
-        }
-
-        // Year level is always required
-        if (!yearLevelValue) {
-            toast.error('Year Level is required');
-            recordForm.value.processing = false;
-            return;
-        }
-
-        // Helper function to convert string to uppercase
-        const toUpperCase = (value) => {
-            if (!value || typeof value !== 'string') return value;
-            return value.toUpperCase();
-        };
-
-        const formData = {
-            profile_id: props.profile.profile_id,
-            program_id: typeof recordForm.value.program_id === 'object' ? recordForm.value.program_id?.id : recordForm.value.program_id,
-            school_id: typeof recordForm.value.school_id === 'object' ? recordForm.value.school_id?.id : recordForm.value.school_id,
-            course_id: typeof recordForm.value.course_id === 'object' ? recordForm.value.course_id?.id : recordForm.value.course_id,
-            year_level: yearLevelValue,
-            academic_year: typeof recordForm.value.academic_year === 'object' ? recordForm.value.academic_year?.value : recordForm.value.academic_year,
-            term: typeof recordForm.value.term === 'object' ? recordForm.value.term?.value : recordForm.value.term,
-            date_filed: formatDateForAPI(recordForm.value.date_filed),
-            date_approved: formatDateForAPI(recordForm.value.date_approved),
-            unified_status: recordForm.value.unified_status,
-            grant_provision: toUpperCase(recordForm.value.grant_provision),
-            remarks: toUpperCase(recordForm.value.remarks),
-            yakap_category: recordForm.value.yakap_category || null,
-            yakap_location: recordForm.value.yakap_location || null,  // Already a clean string name
-        };
-        console.log('Form data being sent:', formData);
-        let response;
-        if (recordModalMode.value === 'add') {
-            response = await axios.post(route('scholarship_records.store'), formData);
-            toast.success('Scholarship record added successfully');
-        } else {
-            console.log('Updating record with ID:', recordForm.value.grant_id);
-            response = await axios.put(route('scholarship_records.update', recordForm.value.grant_id), formData);
-            toast.success('Scholarship record updated successfully');
-        }
-
-        closeRecordModal();
-        router.reload({ only: ['profile'] });
-        if (refreshActivityLogs) refreshActivityLogs();
-    } catch (error) {
-        console.error('Error submitting scholarship record:', error);
-        console.error('Error response:', error.response?.data);
-        const errorMsg = error.response?.data?.message || error.response?.data?.errors || 'Failed to save scholarship record';
-        toast.error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
-    } finally {
-        recordForm.value.processing = false;
-    }
 };
 
 const confirmDeleteRecord = (record) => {
     recordToDelete.value = record;
     showDeleteConfirm.value = true;
-};
-
-const deleteRecord = async () => {
-    deleting.value = true;
-
-    try {
-        if (!recordToDelete.value) {
-            throw new Error('No record selected for deletion');
-        }
-
-        const recordId = recordToDelete.value.id || recordToDelete.value.grant_id;
-        console.log('Deleting record with id:', recordId);
-        console.log('Full record object:', recordToDelete.value);
-
-        if (!recordId) {
-            throw new Error('Record does not have a valid ID');
-        }
-
-        await axios.delete(route('scholarship_records.destroy', recordId));
-        toast.success('Scholarship record deleted successfully');
-        showDeleteConfirm.value = false;
-        recordToDelete.value = null;
-        router.reload({ only: ['profile'] });
-        if (refreshActivityLogs) refreshActivityLogs();
-    } catch (error) {
-        console.error('Error deleting scholarship record:', error);
-        toast.error(error.response?.data?.message || 'Failed to delete scholarship record');
-    } finally {
-        deleting.value = false;
-    }
 };
 
 const getStatusClass = (status) => {
@@ -1393,111 +886,9 @@ const manageAttachments = (record) => {
     showAttachmentsModal.value = true;
 };
 
-const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        if (file.size > 25 * 1024 * 1024) { // 25MB
-            toast.error('File size must not exceed 25MB');
-            event.target.value = '';
-            return;
-        }
-        attachmentForm.value.file = file;
-    }
-};
-
-const uploadAttachment = async () => {
-    if (!attachmentForm.value.attachment_name || !attachmentForm.value.file) {
-        toast.error('Please provide attachment name and select a file');
-        return;
-    }
-
-    // Validate "others" - requires custom name
-    if (attachmentForm.value.attachment_name === 'others' && !attachmentForm.value.custom_attachment_name) {
-        toast.error('Please specify the attachment type');
-        return;
-    }
-
-    uploading.value = true;
-    const formData = new FormData();
-
-    // Use custom name if "others" is selected, otherwise use the selected value
-    const finalAttachmentName = attachmentForm.value.attachment_name === 'others'
-        ? attachmentForm.value.custom_attachment_name
-        : attachmentForm.value.attachment_name;
-
-    formData.append('attachment_name', finalAttachmentName);
-    formData.append('file', attachmentForm.value.file);
-
-    // Add page number for contracts
-    if (attachmentForm.value.attachment_name === 'contract' && attachmentForm.value.page_number) {
-        formData.append('page_number', attachmentForm.value.page_number);
-    }
-
-    try {
-        const response = await axios.post(route('scholarship.records.attachments.upload', selectedRecord.value.id), formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
-
-        toast.success('Attachment uploaded successfully');
-
-        // Update the selected record's attachments
-        if (response.data.attachments) {
-            selectedRecord.value.attachments = response.data.attachments;
-        }
-
-        attachmentForm.value = {
-            attachment_name: '',
-            custom_attachment_name: '',
-            page_number: null,
-            file: null
-        };
-        if (fileInput.value) fileInput.value.value = '';
-
-        // Reload the profile data to update all views
-        router.reload({ only: ['profile'] });
-        if (refreshActivityLogs) refreshActivityLogs();
-    } catch (error) {
-        toast.error(error.response?.data?.message || 'Failed to upload attachment');
-    } finally {
-        uploading.value = false;
-    }
-};
-
-const viewAttachment = (attachment) => {
+const onViewAttachment = (attachment) => {
     viewerAttachment.value = attachment;
     showViewerModal.value = true;
-};
-
-const downloadAttachment = (attachment) => {
-    const routeName = attachment.download_route || 'scholarship.records.attachments.download';
-    window.open(route(routeName, attachment.attachment_id), '_blank');
-};
-
-const deleteAttachment = async (attachment) => {
-    if (!confirm('Are you sure you want to delete this attachment?')) return;
-
-    try {
-        const response = await axios.delete(route('scholarship.records.attachments.delete', attachment.attachment_id));
-        toast.success('Attachment deleted successfully');
-
-        // Update the selected record's attachments immediately
-        if (selectedRecord.value && response.data.attachments) {
-            selectedRecord.value.attachments = response.data.attachments;
-        }
-
-        // Reload the profile data to update all views
-        router.reload({ only: ['profile'] });
-        if (refreshActivityLogs) refreshActivityLogs();
-    } catch (error) {
-        toast.error(error.response?.data?.message || 'Failed to delete attachment');
-    }
-};
-
-const closeAttachmentsModal = () => {
-    showAttachmentsModal.value = false;
-    selectedRecord.value = null;
-    attachmentForm.value = { attachment_name: '', file: null };
-    if (fileInput.value) fileInput.value.value = '';
 };
 
 // QR Code for mobile upload
@@ -1511,85 +902,27 @@ const showQrCode = async (record) => {
             record: record
         };
         showQrModal.value = true;
-        startCountdown();
     } catch (error) {
         toast.error('Failed to generate QR code');
         console.error(error);
     }
 };
 
-const startCountdown = () => {
-    // Clear any existing interval
-    if (qrCountdownInterval.value) {
-        clearInterval(qrCountdownInterval.value);
-    }
-
-    const updateCountdown = () => {
-        if (!qrCodeData.value) return;
-
-        const now = new Date();
-        const expiresAt = new Date(qrCodeData.value.expiresAt);
-        const diff = expiresAt - now;
-
-        if (diff <= 0) {
-            qrCountdown.value = 'EXPIRED';
-            clearInterval(qrCountdownInterval.value);
-            return;
-        }
-
-        const totalMinutes = Math.floor(diff / 1000 / 60);
-        const seconds = Math.floor((diff / 1000) % 60);
-        qrCountdown.value = `${totalMinutes} min ${seconds} sec`;
-    };
-
-    updateCountdown();
-    qrCountdownInterval.value = setInterval(updateCountdown, 1000);
+// Handle success from external modals
+const handleModalSuccess = () => {
+    router.reload({ only: ['profile'] });
+    if (refreshActivityLogs) refreshActivityLogs();
 };
 
-// Watch for modal close to clear interval
-watch(showQrModal, (newValue) => {
-    if (!newValue && qrCountdownInterval.value) {
-        clearInterval(qrCountdownInterval.value);
-        qrCountdownInterval.value = null;
-    }
-});
+// Attachment utility methods (used in Attachments tab)
+const viewAttachment = (attachment) => {
+    viewerAttachment.value = attachment;
+    showViewerModal.value = true;
+};
 
-// Cleanup on component unmount
-onUnmounted(() => {
-    if (qrCountdownInterval.value) {
-        clearInterval(qrCountdownInterval.value);
-    }
-});
-
-const copyToClipboard = async (text) => {
-    try {
-        // Try modern clipboard API first
-        if (navigator.clipboard && window.isSecureContext) {
-            await navigator.clipboard.writeText(text);
-            toast.success('Link copied to clipboard!');
-        } else {
-            // Fallback for non-HTTPS contexts (like IP addresses)
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-999999px';
-            textArea.style.top = '-999999px';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            const successful = document.execCommand('copy');
-            textArea.remove();
-            if (successful) {
-                toast.success('Link copied to clipboard!');
-            } else {
-                throw new Error('Copy failed');
-            }
-        }
-    } catch (error) {
-        // If all else fails, show the URL in a prompt
-        toast.error('Failed to copy automatically. Please copy manually:');
-        prompt('Copy this URL:', text);
-    }
+const downloadAttachment = (attachment) => {
+    const routeName = attachment.download_route || 'scholarship.records.attachments.download';
+    window.open(route(routeName, attachment.attachment_id), '_blank');
 };
 
 const getFileIcon = (fileType) => {
@@ -1598,67 +931,10 @@ const getFileIcon = (fileType) => {
     return 'pi-file';
 };
 
-// Image zoom functions
-const handleWheel = (event) => {
-    event.preventDefault();
-    const delta = event.deltaY > 0 ? -0.1 : 0.1;
-    imageZoom.value = Math.max(0.5, Math.min(5, imageZoom.value + delta));
-};
-
-const handleMouseDown = (event) => {
-    if (imageZoom.value > 1) {
-        isDragging.value = true;
-        dragStart.value = {
-            x: event.clientX - imagePosition.value.x,
-            y: event.clientY - imagePosition.value.y
-        };
-    }
-};
-
-const handleMouseMove = (event) => {
-    if (isDragging.value) {
-        imagePosition.value = {
-            x: event.clientX - dragStart.value.x,
-            y: event.clientY - dragStart.value.y
-        };
-    }
-};
-
-const handleMouseUp = () => {
-    isDragging.value = false;
-};
-
-const resetZoom = () => {
-    imageZoom.value = 1;
-    imagePosition.value = { x: 0, y: 0 };
-};
-
-const zoomIn = () => {
-    imageZoom.value = Math.min(5, imageZoom.value + 0.25);
-};
-
-const zoomOut = () => {
-    imageZoom.value = Math.max(0.5, imageZoom.value - 0.25);
-};
-
 const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-};
-
-const formatDateForAPI = (date) => {
-    if (!date) return null;
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
-
-const getAttachmentUrl = (attachment) => {
-    const routeName = attachment.view_route || 'scholarship.records.attachments.view';
-    return route(routeName, attachment.attachment_id);
 };
 
 // Activity Logs Methods
@@ -1798,3 +1074,41 @@ const loadStatusTimeline = async () => {
 };
 
 </script>
+
+<style scoped>
+/* Form input overrides for iOS consistency */
+:deep(.p-inputtext),
+:deep(.p-select) {
+    border-radius: 10px;
+}
+
+:deep(.p-datepicker) {
+    border-radius: 10px;
+}
+
+:deep(.p-inputgroup) {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--p-inputtext-border-color, #d1d5db);
+}
+
+:deep(.p-inputgroup:focus-within) {
+    border-color: var(--p-inputtext-focus-border-color, #6366f1);
+}
+
+:deep(.p-inputgroup .p-inputtext),
+:deep(.p-inputgroup .p-select),
+:deep(.p-inputgroup-addon) {
+    border: none;
+    border-radius: 0;
+}
+
+/* Drag exclusion for editors */
+:deep(.p-editor),
+:deep(.ql-container),
+:deep(.ql-toolbar) {
+    -webkit-user-select: text;
+    user-select: text;
+    pointer-events: auto;
+}
+</style>

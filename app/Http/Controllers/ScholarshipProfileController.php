@@ -710,32 +710,11 @@ class ScholarshipProfileController extends Controller
             }
         ]);
 
-        // Handle profile_type filter
-        $profileType = $request->get('profile_type', 'all');
-
-        if ($profileType === 'existing') {
-            // Filter for active scholars (unified_status = 'active')
-            $query->whereHas('latestScholarshipRecord', function ($q) {
-                $q->where('unified_status', 'active');
+        // Handle unified_status filter
+        if ($request->filled('unified_status')) {
+            $query->whereHas('latestScholarshipRecord', function ($q) use ($request) {
+                $q->where('unified_status', $request->unified_status);
             });
-        } elseif ($profileType === 'pending') {
-            // Filter for pending profiles based on unified_status
-            $query->whereHas('latestScholarshipRecord', function ($q) {
-                $q->where('unified_status', 'pending');
-            });
-        } elseif ($profileType === 'declined') {
-            // Filter for declined profiles based on unified_status
-            $query->whereHas('latestScholarshipRecord', function ($q) {
-                $q->where('unified_status', 'denied');
-            });
-        } else {
-            // For 'all' - show all statuses unless explicitly specified otherwise
-            if ($request->filled('unified_status')) {
-                $query->whereHas('latestScholarshipRecord', function ($q) use ($request) {
-                    $q->where('unified_status', $request->unified_status);
-                });
-            }
-            // If no unified_status filter is specified, show all records regardless of status
         }
 
         // Filter by program
@@ -886,7 +865,6 @@ class ScholarshipProfileController extends Controller
             'profiles' => $profiles,
             'filters' => $request->only([
                 'unified_status',
-                'profile_type',
                 'name',
                 'program',
                 'school',

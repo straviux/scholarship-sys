@@ -17,16 +17,6 @@
                 </template>
 
                 <template #center>
-                    <div class="flex items-center justify-center">
-                        <div class="join border border-gray-300 rounded-lg">
-                            <button v-for="option in profileTypeOptions" :key="option.value"
-                                :class="['join-item btn btn-sm', profileType === option.value ? 'btn-active' : 'btn-ghost']"
-                                @click="profileType = option.value">
-                                <i :class="option.icon" class="mr-1"></i>
-                                {{ option.label }}
-                            </button>
-                        </div>
-                    </div>
                 </template>
                 <template #end>
                     <div class="flex gap-3 items-center">
@@ -37,7 +27,7 @@
                             <div class="flex flex-col gap-2 w-48">
                                 <!-- <Button @click="openAddApplicantModal" label="Add Applicant" icon="pi pi-user-plus"
                                     severity="success" outlined class="justify-start" /> -->
-                                <Button @click="openAddExistingModal" label="Add Existing" icon="pi pi-user-edit"
+                                <Button @click="openAddActiveModal" label="Add Active" icon="pi pi-user-edit"
                                     severity="info" outlined class="justify-start" />
                             </div>
                         </Popover>
@@ -71,14 +61,23 @@
                         <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels" size="small"
                             class="w-full" />
                     </div>
-                    <!-- Only show Unified Status filter when profileType is 'all' -->
-                    <div class="flex flex-col" v-if="profileType === 'all'">
+                    <!-- Only show Unified Status filter -->
+                    <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Status</label>
                         <Select v-model="filter.unified_status" :options="unifiedStatusOptions" optionLabel="label"
-                            optionValue="value" placeholder="All Statuses" showClear class="w-full" size="small" />
+                            optionValue="value" placeholder="All Statuses" showClear class="w-full" size="small" filter>
+                            <template #filter="{ value, updateModel }">
+                                <InputGroup>
+                                    <InputText :value="value" @input="updateModel($event.target.value)"
+                                        placeholder="Search status..." class="w-full" />
+                                    <Button v-if="value" icon="pi pi-times" severity="secondary" text size="small"
+                                        @click="updateModel('')" />
+                                </InputGroup>
+                            </template>
+                        </Select>
                     </div>
                     <Button severity="secondary" outlined rounded size="small" icon="pi pi-history"
-                        @click="clearAllFilters" v-tooltip.bottom="'Clear Filters'" />
+                        @click="clearFilters" v-tooltip.bottom="'Clear Filters'" />
                 </div>
             </Panel>
 
@@ -139,11 +138,20 @@
                         <Select v-model="drawerFilter.grant_provision" :options="grantProvisionOptions"
                             placeholder="All Provisions" size="small" class="w-full" showClear />
                     </div>
-                    <div class="flex flex-col" v-if="profileType === 'all'">
+                    <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Status</label>
                         <Select v-model="drawerFilter.unified_status" :options="unifiedStatusOptions"
                             optionLabel="label" optionValue="value" placeholder="All Statuses" showClear size="small"
-                            class="w-full" />
+                            class="w-full" filter>
+                            <template #filter="{ value, updateModel }">
+                                <InputGroup>
+                                    <InputText :value="value" @input="updateModel($event.target.value)"
+                                        placeholder="Search status..." class="w-full" />
+                                    <Button v-if="value" icon="pi pi-times" severity="secondary" text size="small"
+                                        @click="updateModel('')" />
+                                </InputGroup>
+                            </template>
+                        </Select>
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Contract</label>
@@ -189,7 +197,7 @@
                                 <span>/ <strong>{{ totalRecords }}</strong></span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <Checkbox v-model="simpleView" inputId="simpleViewToggle" binary />
+                                <ToggleSwitch v-model="simpleView" inputId="simpleViewToggle" size="small" />
                                 <label for="simpleViewToggle" class="text-xs text-gray-600 cursor-pointer"
                                     @click="toggleSimpleView">Simple
                                     View</label>
@@ -198,8 +206,9 @@
                     </div>
 
                     <!-- DataTable View -->
-                    <DataTable :value="profilesData" paginator :rows="dataViewRows" :totalRecords="totalRecords"
-                        :first="first" @page="onPageChange" :lazy="true"
+                    <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="profilesData" paginator
+                        :rows="dataViewRows" :totalRecords="totalRecords" :first="first" @page="onPageChange"
+                        :lazy="true"
                         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                         :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
                         :rowHover="true" stripedRows class="compact-table"
@@ -279,6 +288,14 @@
                                 <div v-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'pending'"
                                     :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
                                     v-tooltip="'Awaiting review'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
+                                    {{
+                                        getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
+                                    }}
+                                </div>
+                                <div v-else-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'interviewed'"
+                                    :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
+                                    v-tooltip="'Interviewed, awaiting decision'"
                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
                                     {{
                                         getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
@@ -452,6 +469,14 @@
                                         getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.unified_status)
                                     }}
                                 </div>
+                                <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'interviewed'"
+                                    :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
+                                    v-tooltip="'Interviewed, awaiting decision'"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
+                                    {{
+                                        getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.unified_status)
+                                    }}
+                                </div>
                                 <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'approved'"
                                     :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
                                     v-tooltip="'Complete approval in Interviewed Applicants'"
@@ -605,7 +630,7 @@
         <ApplicantFormModal v-model:visible="showAddApplicantModal" :profiles="profiles" @success="refreshData" />
 
         <!-- Scholar Form Modal (Create) -->
-        <ScholarFormModal v-model:visible="showAddExistingModal" mode="create" @success="refreshData" />
+        <ScholarFormModal v-model:visible="showAddActiveModal" mode="create" @success="refreshData" />
 
         <!-- Context Menu -->
         <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
@@ -650,16 +675,7 @@ const props = defineProps({
     declineReasons: Object,
     profiles_total: [String, Number],
 });
-
-// Determine initial profile type from URL
-const getInitialProfileType = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const type = urlParams.get('profile_type');
-    return type || props.filters?.profile_type || 'all';
-};
-
 // Page-specific state
-const profileType = ref(getInitialProfileType());
 
 // Filter management via composable
 const {
@@ -692,17 +708,6 @@ const {
         { key: 'voucher_status', type: 'text', default: null },
     ],
     beforeSearch(params, filterValues) {
-        // Handle profile type
-        if (profileType.value === 'existing') {
-            params.profile_type = 'existing';
-        } else if (profileType.value === 'pending') {
-            params.profile_type = 'pending';
-        } else if (profileType.value === 'declined') {
-            params.profile_type = 'declined';
-        } else {
-            params.profile_type = 'all';
-        }
-
         // Handle attachment filter values (three-state: null, 'with', 'without')
         if (params.contract_status && !['with', 'without'].includes(params.contract_status)) {
             delete params.contract_status;
@@ -713,12 +718,6 @@ const {
     },
 });
 
-// Keep clearFilters also resetting profileType
-const originalClearFilters = clearFilters;
-const clearAllFilters = () => {
-    profileType.value = 'all';
-    originalClearFilters();
-};
 
 // Computed: active filter tags for display
 const activeFilterTags = computed(() => {
@@ -761,9 +760,14 @@ const removeFilter = (key) => {
 
 // Auto-trigger search when basic filters change
 watch(
-    () => [filter.value.program, filter.value.course, filter.value.year_level],
+    () => [filter.value.program, filter.value.course, filter.value.year_level, filter.value.unified_status],
     () => { triggerSearch(); },
 );
+
+// Trigger search when records per page changes
+watch(records, () => {
+    triggerSearch();
+});
 
 // Filter drawer state
 const showFilterDrawer = ref(false);
@@ -842,14 +846,6 @@ const academicYearOptions = computed(() => {
     return years;
 });
 
-// Profile Type Options
-const profileTypeOptions = ref([
-    { label: 'All', value: 'all', icon: 'pi pi-users' },
-    { label: 'Existing', value: 'existing', icon: 'pi pi-check-circle' },
-    { label: 'Pending', value: 'pending', icon: 'pi pi-clock' },
-    { label: 'Declined', value: 'declined', icon: 'pi pi-times-circle' }
-]);
-
 // Profile view state
 const showProfileDialog = ref(false);
 const selectedProfile = ref(null);
@@ -858,7 +854,7 @@ const selectedProfile = ref(null);
 const showReportModal = ref(false);
 
 const showAddApplicantModal = ref(false);
-const showAddExistingModal = ref(false);
+const showAddActiveModal = ref(false);
 const addRecordPopover = ref();
 
 // Grant Provision Dialog
@@ -878,10 +874,22 @@ const profileToDelete = ref(null);
 const refreshActivityLogs = inject('refreshActivityLogs', null);
 const { statusOptions, getStatusLabel, getStatusSeverity, getStatusStyle } = useScholarshipStatus();
 
-const unifiedStatusOptions = computed(() => [
-    { label: 'All Statuses', value: null },
-    ...statusOptions.value
-]);
+const unifiedStatusOptions = computed(() => {
+    const ordered = [
+        { label: 'All Statuses', value: null },
+        { label: 'Pending', value: 'pending' },
+        { label: 'Active', value: 'active' },
+        { label: 'Completed', value: 'completed' },
+        { label: 'Interviewed', value: 'interviewed' },
+    ];
+
+    // Add remaining statuses
+    const remaining = statusOptions.value.filter(option =>
+        !['pending', 'active', 'completed', 'interviewed'].includes(option.value)
+    );
+
+    return [...ordered, ...remaining];
+});
 
 const attachmentStatusOptions = computed(() => [
     { label: 'All', value: null },
@@ -970,11 +978,6 @@ const getInitials = (profile) => {
     return (firstInitial + lastInitial).toUpperCase() || '?';
 };
 
-const getProfileTypeLabel = (type) => {
-    const option = profileTypeOptions.value.find(opt => opt.value === type);
-    return option?.label || 'All';
-};
-
 const getApprovalStatusLabel = (status) => {
     if (!Array.isArray(props.approvalStatuses)) return status || 'Unknown';
     const statusObj = props.approvalStatuses.find(s => s.value === status);
@@ -1018,7 +1021,6 @@ const viewFullProfile = (profile) => {
     // Save current filters to localStorage before navigating
     const filters = {
         unified_status: route().params?.unified_status || null,
-        profile_type: route().params?.profile_type || null,
         name: route().params?.name || null,
         program: route().params?.program || null,
         school: route().params?.school || null,
@@ -1129,9 +1131,9 @@ const openAddApplicantModal = () => {
     showAddApplicantModal.value = true;
 };
 
-const openAddExistingModal = () => {
+const openAddActiveModal = () => {
     addRecordPopover.value.hide();
-    showAddExistingModal.value = true;
+    showAddActiveModal.value = true;
 };
 
 const refreshData = () => {
@@ -1160,17 +1162,6 @@ const handleKeydown = (e) => {
 
 // triggerSearch and clearFilters are provided by useFilterManager composable
 
-// Watch for profile type changes
-watch(profileType, (newValue, oldValue) => {
-    if (newValue !== oldValue) {
-        // Clear unified_status when switching to 'existing', 'pending' or 'declined'
-        if (newValue === 'existing' || newValue === 'pending' || newValue === 'declined') {
-            filter.unified_status = null;
-        }
-        triggerSearch(); // Reset to page 1 when profile type changes
-    }
-});
-
 watch(simpleView, (newValue) => {
     localStorage.setItem('scholarProfileSimpleView', newValue.toString());
 });
@@ -1178,9 +1169,6 @@ watch(simpleView, (newValue) => {
 // Lifecycle
 onMounted(() => {
     window.addEventListener('keydown', handleKeydown);
-    // Initialize profileType from URL or props
-    const initialType = getInitialProfileType();
-    profileType.value = initialType;
 });
 
 onBeforeUnmount(() => {

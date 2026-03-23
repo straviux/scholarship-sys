@@ -42,7 +42,7 @@ const communicationSkillsOptions = [
 ];
 
 const recommendationOptions = [
-    { label: 'Recommended for Approval', value: 'recommended' },
+    { label: 'For Approval', value: 'recommended' },
     { label: 'For Further Evaluation', value: 'further_evaluation' },
     { label: 'Not Recommended', value: 'not_recommended' },
 ];
@@ -148,7 +148,7 @@ onBeforeUnmount(() => {
                     <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
                     <span class="ios-nav-title">Interview Assessment</span>
                     <button class="ios-nav-btn ios-nav-action" @click="submitAssessment" :disabled="submitting">
-                        {{ submitting ? 'Submitting...' : 'Submit' }}
+                        <i class="pi pi-check" style="font-size: 18px; color: #34C759;"></i>
                     </button>
                 </div>
 
@@ -156,13 +156,17 @@ onBeforeUnmount(() => {
                 <div class="ios-body" v-if="applicant">
                     <!-- Applicant Info -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Applicant</div>
+                        <div class="ios-section-label">
+                            <i class="pi pi-user" style="color: #007AFF; margin-right: 8px;"></i>
+                            Applicant Information
+                        </div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <span class="ios-row-label">{{ applicant.last_name }}, {{ applicant.first_name }}</span>
+                                <span class="ios-row-label" style="color: #333;">{{ applicant.last_name }}, {{
+                                    applicant.first_name }}</span>
                             </div>
                             <div class="ios-row ios-row-last">
-                                <span class="ios-row-label" style="color: #8E8E93; font-weight: 400;">
+                                <span class="ios-row-label" style="color: #999; font-weight: 400;">
                                     {{ applicant.scholarship_grant?.[0]?.program?.shortname }} — {{
                                         applicant.scholarship_grant?.[0]?.course?.shortname }}
                                 </span>
@@ -172,15 +176,22 @@ onBeforeUnmount(() => {
 
                     <!-- Academic Potential -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Academic Potential</div>
-                        <div class="ios-card">
-                            <div v-for="(option, index) in academicPotentialOptions" :key="option.value" class="ios-row"
-                                :class="{ 'ios-row-last': index === academicPotentialOptions.length - 1 }"
-                                style="cursor: pointer;" @click="form.academic_potential = option.value">
-                                <span class="ios-row-label">{{ option.label }}</span>
-                                <i v-if="form.academic_potential === option.value" class="pi pi-check"
-                                    style="color: #007AFF; font-size: 14px;"></i>
-                            </div>
+                        <div class="ios-section-label">
+                            <i class="pi pi-graduation-cap" style="color: #007AFF; margin-right: 8px;"></i>
+                            Academic Potential
+                        </div>
+                        <div class="ios-segmented-control">
+                            <button v-for="option in academicPotentialOptions" :key="option.value"
+                                :class="['ios-segment', form.academic_potential === option.value && 'ios-segment-active']"
+                                @click="form.academic_potential = option.value">
+                                <span>{{ option.label }}</span>
+                                <span
+                                    style="width: 16px; height: 13px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <transition name="fade-scale">
+                                        <i v-if="form.academic_potential === option.value" class="pi pi-check"></i>
+                                    </transition>
+                                </span>
+                            </button>
                         </div>
                         <div v-if="errors.academic_potential" class="ios-section-footer ios-error">{{
                             errors.academic_potential }}</div>
@@ -188,15 +199,22 @@ onBeforeUnmount(() => {
 
                     <!-- Financial Need -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Financial Need</div>
-                        <div class="ios-card">
-                            <div v-for="(option, index) in financialNeedOptions" :key="option.value" class="ios-row"
-                                :class="{ 'ios-row-last': index === financialNeedOptions.length - 1 }"
-                                style="cursor: pointer;" @click="form.financial_need_level = option.value">
-                                <span class="ios-row-label">{{ option.label }}</span>
-                                <i v-if="form.financial_need_level === option.value" class="pi pi-check"
-                                    style="color: #007AFF; font-size: 14px;"></i>
-                            </div>
+                        <div class="ios-section-label">
+                            <i class="pi pi-wallet" style="color: #34C759; margin-right: 8px;"></i>
+                            Financial Need
+                        </div>
+                        <div class="ios-segmented-control">
+                            <button v-for="option in financialNeedOptions" :key="option.value"
+                                :class="['ios-segment', form.financial_need_level === option.value && 'ios-segment-active']"
+                                @click="form.financial_need_level = option.value">
+                                <span>{{ option.label }}</span>
+                                <span
+                                    style="width: 16px; height: 13px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <transition name="fade-scale">
+                                        <i v-if="form.financial_need_level === option.value" class="pi pi-check"></i>
+                                    </transition>
+                                </span>
+                            </button>
                         </div>
                         <div v-if="errors.financial_need_level" class="ios-section-footer ios-error">{{
                             errors.financial_need_level }}</div>
@@ -204,16 +222,22 @@ onBeforeUnmount(() => {
 
                     <!-- Communication Skills -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Communication Skills</div>
-                        <div class="ios-card">
-                            <div v-for="(option, index) in communicationSkillsOptions" :key="option.value"
-                                class="ios-row"
-                                :class="{ 'ios-row-last': index === communicationSkillsOptions.length - 1 }"
-                                style="cursor: pointer;" @click="form.communication_skills = option.value">
-                                <span class="ios-row-label">{{ option.label }}</span>
-                                <i v-if="form.communication_skills === option.value" class="pi pi-check"
-                                    style="color: #007AFF; font-size: 14px;"></i>
-                            </div>
+                        <div class="ios-section-label">
+                            <i class="pi pi-comments" style="color: #FF9500; margin-right: 8px;"></i>
+                            Communication Skills
+                        </div>
+                        <div class="ios-segmented-control">
+                            <button v-for="option in communicationSkillsOptions" :key="option.value"
+                                :class="['ios-segment', form.communication_skills === option.value && 'ios-segment-active']"
+                                @click="form.communication_skills = option.value">
+                                <span>{{ option.label }}</span>
+                                <span
+                                    style="width: 16px; height: 13px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <transition name="fade-scale">
+                                        <i v-if="form.communication_skills === option.value" class="pi pi-check"></i>
+                                    </transition>
+                                </span>
+                            </button>
                         </div>
                         <div v-if="errors.communication_skills" class="ios-section-footer ios-error">{{
                             errors.communication_skills }}</div>
@@ -221,23 +245,33 @@ onBeforeUnmount(() => {
 
                     <!-- Recommendation -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Recommendation</div>
-                        <div class="ios-card">
-                            <div v-for="(option, index) in recommendationOptions" :key="option.value" class="ios-row"
-                                :class="{ 'ios-row-last': index === recommendationOptions.length - 1 }"
-                                style="cursor: pointer;" @click="form.recommendation = option.value">
-                                <span class="ios-row-label">{{ option.label }}</span>
-                                <i v-if="form.recommendation === option.value" class="pi pi-check"
-                                    style="color: #007AFF; font-size: 14px;"></i>
-                            </div>
+                        <div class="ios-section-label">
+                            <i class="pi pi-thumbs-up" style="color: #5856D6; margin-right: 8px;"></i>
+                            Recommendation
+                        </div>
+                        <div class="ios-segmented-control">
+                            <button v-for="option in recommendationOptions" :key="option.value"
+                                :class="['ios-segment', form.recommendation === option.value && 'ios-segment-active']"
+                                @click="form.recommendation = option.value">
+                                <span>{{ option.label }}</span>
+                                <span
+                                    style="width: 16px; height: 13px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <transition name="fade-scale">
+                                        <i v-if="form.recommendation === option.value" class="pi pi-check"></i>
+                                    </transition>
+                                </span>
+                            </button>
                         </div>
                         <div v-if="errors.recommendation" class="ios-section-footer ios-error">{{ errors.recommendation
-                            }}</div>
+                        }}</div>
                     </div>
 
                     <!-- Remarks -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Remarks</div>
+                        <div class="ios-section-label">
+                            <i class="pi pi-pencil" style="color: #FF3B30; margin-right: 8px;"></i>
+                            Remarks
+                        </div>
                         <div class="ios-card">
                             <Editor v-model="form.interview_remarks" editorStyle="height: 120px">
                                 <template #toolbar>
@@ -264,156 +298,3 @@ onBeforeUnmount(() => {
         </template>
     </Dialog>
 </template>
-
-<style scoped>
-.ios-modal {
-    background: #F2F2F7;
-    border-radius: 14px;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-    overflow: hidden;
-    margin: 0 auto;
-}
-
-.ios-nav-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    padding: 14px 16px;
-    background: #FFFFFF;
-    border-bottom: 0.5px solid #E5E5EA;
-    flex-shrink: 0;
-    cursor: grab;
-    user-select: none;
-}
-
-.ios-nav-bar:active {
-    cursor: grabbing;
-}
-
-.ios-nav-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: #000;
-    letter-spacing: -0.4px;
-}
-
-.ios-nav-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    font-size: 17px;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 8px;
-    transition: opacity 0.15s;
-}
-
-.ios-nav-btn:hover {
-    opacity: 0.6;
-}
-
-.ios-nav-cancel {
-    left: 16px;
-    color: #8E8E93;
-    font-size: 20px;
-}
-
-.ios-nav-action {
-    right: 16px;
-    color: #374151;
-    font-weight: 600;
-}
-
-.ios-nav-action:disabled {
-    color: #C7C7CC;
-    cursor: not-allowed;
-}
-
-.ios-body {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 0 16px;
-}
-
-.ios-section {
-    margin-top: 22px;
-}
-
-.ios-section:first-child {
-    margin-top: 16px;
-}
-
-.ios-section-label {
-    font-size: 13px;
-    font-weight: 400;
-    color: #6D6D72;
-    text-transform: uppercase;
-    letter-spacing: -0.08px;
-    padding: 0 16px 6px;
-}
-
-.ios-section-footer {
-    font-size: 13px;
-    color: #6D6D72;
-    padding: 6px 16px 0;
-    line-height: 1.3;
-}
-
-.ios-error {
-    color: #FF3B30;
-}
-
-.ios-card {
-    background: #FFFFFF;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 0.5px solid #E5E5EA;
-}
-
-.ios-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 4px 16px;
-    min-height: 36px;
-    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
-}
-
-.ios-row-last {
-    border-bottom: none;
-}
-
-.ios-row:last-child {
-    border-bottom: none;
-}
-
-.ios-row-label {
-    font-size: 14px;
-    color: #000;
-    letter-spacing: -0.4px;
-    font-weight: 500;
-}
-</style>
-
-<style>
-.ios-dialog-root.p-dialog {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-    width: auto !important;
-}
-
-.ios-dialog-mask {
-    background: rgba(0, 0, 0, 0.4);
-}
-</style>

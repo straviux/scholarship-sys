@@ -97,8 +97,8 @@
                     <div v-if="filteredList.length === 0" class="text-center py-8 text-gray-500">
                         No interviewed applicants found
                     </div>
-                    <DataTable v-else :value="filteredList" responsiveLayout="scroll" class="text-sm" dataKey="id"
-                        v-model:selection="selectedRows"
+                    <DataTable v-else v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredList"
+                        responsiveLayout="scroll" class="text-sm" dataKey="id" v-model:selection="selectedRows"
                         @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu>
                         <Column selectionMode="multiple" :exportable="false" style="width: 3rem"></Column>
                         <Column field="profile.last_name" header="Name" sortable>

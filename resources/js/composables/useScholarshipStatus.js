@@ -11,6 +11,14 @@ export const useScholarshipStatus = () => {
 			textColor: '#92400E',
 			description: 'Awaiting review',
 		},
+		interviewed: {
+			label: 'Interviewed',
+			severity: 'info',
+			color: '#6366F1',
+			bgColor: '#E0E7FF',
+			textColor: '#3730A3',
+			description: 'Interviewed, awaiting decision',
+		},
 		approved: {
 			label: 'Approved',
 			severity: 'info',
@@ -137,6 +145,7 @@ export const useScholarshipStatus = () => {
 		// Valid status values
 		const validStatuses = [
 			'pending',
+			'interviewed',
 			'approved',
 			'active',
 			'completed',

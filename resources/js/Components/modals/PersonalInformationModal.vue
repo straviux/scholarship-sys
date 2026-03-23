@@ -1,43 +1,47 @@
 <template>
-    <Dialog :visible="visible" modal header="Edit Personal Information" :style="{ width: '90vw', maxWidth: '800px' }"
-        @update:visible="val => emit('update:visible', val)" :maximizable="true">
-        <template #header>
-            <div class="flex items-center gap-2">
-                <i class="pi pi-user text-lg text-blue-600" style="font-size: 1.2rem;"></i>
-                <span class="font-semibold text-xl">Edit Personal Information</span>
+    <Dialog :visible="visible" modal :style="{ width: '90vw', maxWidth: '800px' }"
+        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
+        @update:visible="val => emit('update:visible', val)">
+        <template #container>
+            <div class="ios-modal" :style="dragStyle">
+                <div class="ios-nav-bar" @pointerdown="onDragStart">
+                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal"><i class="pi pi-times"></i></button>
+                    <span class="ios-nav-title">Edit Personal Information</span>
+                    <button class="ios-nav-btn ios-nav-action" @click="submitForm" :disabled="saving">
+                        <i class="pi pi-check"></i>
+                    </button>
+                </div>
+                <div class="ios-body">
+                    <PersonalInformationFields v-model:first_name="form.first_name"
+                        v-model:middle_name="form.middle_name" v-model:last_name="form.last_name"
+                        v-model:extension_name="form.extension_name" v-model:contact_no="form.contact_no"
+                        v-model:contact_no_2="form.contact_no_2" v-model:email="form.email"
+                        v-model:date_of_birth="form.date_of_birth" v-model:gender="form.gender"
+                        v-model:place_of_birth="form.place_of_birth" v-model:civil_status="form.civil_status"
+                        v-model:religion="form.religion" v-model:indigenous_group="form.indigenous_group"
+                        v-model:municipality="form.municipality" v-model:barangay="form.barangay"
+                        v-model:address="form.address" v-model:temporary_municipality="form.temporary_municipality"
+                        v-model:temporary_barangay="form.temporary_barangay"
+                        v-model:temporary_address="form.temporary_address" :show-header="false" />
+
+                    <!-- Validation Messages -->
+                    <div v-if="validationError"
+                        style="margin-top: 12px; background: #FFF2F2; border: 1px solid #FFD2D2; border-radius: 10px; padding: 12px;">
+                        <p style="font-size: 13px; color: #FF3B30; font-weight: 500;">
+                            <i class="pi pi-exclamation-triangle" style="margin-right: 8px;"></i>
+                            {{ validationError }}
+                        </p>
+                    </div>
+                </div>
+
             </div>
-        </template>
-
-        <div class="space-y-4">
-            <PersonalInformationFields v-model:first_name="form.first_name" v-model:middle_name="form.middle_name"
-                v-model:last_name="form.last_name" v-model:extension_name="form.extension_name"
-                v-model:contact_no="form.contact_no" v-model:contact_no_2="form.contact_no_2" v-model:email="form.email"
-                v-model:date_of_birth="form.date_of_birth" v-model:gender="form.gender"
-                v-model:place_of_birth="form.place_of_birth" v-model:civil_status="form.civil_status"
-                v-model:religion="form.religion" v-model:indigenous_group="form.indigenous_group"
-                v-model:municipality="form.municipality" v-model:barangay="form.barangay" v-model:address="form.address"
-                v-model:temporary_municipality="form.temporary_municipality"
-                v-model:temporary_barangay="form.temporary_barangay" v-model:temporary_address="form.temporary_address"
-                :show-header="false" />
-
-            <!-- Validation Messages -->
-            <div v-if="validationError" class="mt-4 bg-red-50 border border-red-200 rounded p-3">
-                <p class="text-sm text-red-800 font-medium">
-                    <i class="pi pi-exclamation-triangle mr-2"></i>
-                    {{ validationError }}
-                </p>
-            </div>
-        </div>
-
-        <template #footer>
-            <Button label="Cancel" severity="secondary" @click="closeModal" outlined size="small" />
-            <Button label="Update" @click="submitForm" :loading="saving" size="small" />
         </template>
     </Dialog>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
+import { useDraggableModal } from '@/composables/useDraggableModal';
 import PersonalInformationFields from '@/Components/forms/fields/PersonalInformationFields.vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
@@ -51,6 +55,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:visible', 'success']);
+
+const { dragStyle, onDragStart, resetDrag } = useDraggableModal();
 
 const saving = ref(false);
 const validationError = ref('');
@@ -104,6 +110,7 @@ watch(() => props.profile, (newProfile) => {
 }, { immediate: true, deep: true });
 
 const closeModal = () => {
+    resetDrag();
     emit('update:visible', false);
     validationError.value = '';
     form.value = {
@@ -189,3 +196,85 @@ const submitForm = async () => {
     }
 };
 </script>
+
+<style scoped>
+.ios-modal {
+    background: #F2F2F7;
+    border-radius: 14px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+}
+
+.ios-nav-bar {
+    padding: 14px 16px;
+    background: #FFFFFF;
+    border-bottom: 0.5px solid #E5E5EA;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-height: 48px;
+    cursor: grab;
+}
+
+.ios-nav-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #000;
+    letter-spacing: -0.4px;
+}
+
+.ios-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.ios-nav-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.ios-nav-cancel {
+    left: 16px;
+    color: #8E8E93;
+    font-size: 20px;
+}
+
+
+.ios-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px;
+}
+</style>
+
+<style>
+.ios-dialog-root.p-dialog {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+.ios-dialog-root .p-dialog-content {
+    padding: 0 !important;
+    background: transparent !important;
+}
+
+.ios-dialog-mask {
+    background: rgba(0, 0, 0, 0.4);
+}
+</style>

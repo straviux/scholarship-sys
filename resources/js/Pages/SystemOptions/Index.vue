@@ -53,8 +53,9 @@
                                     </div>
 
                                     <!-- Options DataTable -->
-                                    <DataTable :value="getOptionsForCategory(category)" :rows="10" :rowHover="true"
-                                        stripedRows showGridlines class="mt-4">
+                                    <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
+                                        :value="getOptionsForCategory(category)" :rows="10" :rowHover="true" stripedRows
+                                        showGridlines class="mt-4">
                                         <Column header="Order" style="width: 80px">
                                             <template #body="slotProps">
                                                 <div class="flex items-center gap-2">

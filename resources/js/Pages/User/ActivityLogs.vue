@@ -44,8 +44,9 @@
 
             <!-- Activities Table -->
             <div class="bg-white rounded-lg shadow overflow-hidden">
-                <DataTable :value="filteredActivities" stripedRows showGridlines paginator :rows="20"
-                    :loading="isLoading" responsiveLayout="scroll" :rowsPerPageOptions="[10, 20, 50]">
+                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredActivities"
+                    stripedRows showGridlines paginator :rows="20" :loading="isLoading" responsiveLayout="scroll"
+                    :rowsPerPageOptions="[10, 20, 50]">
 
                     <!-- Activity Type Column -->
                     <Column field="activity_type" header="Activity Type" class="w-40">

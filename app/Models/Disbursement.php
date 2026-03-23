@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Helpers\MobileUploadUrl;
 
 class Disbursement extends Model
 {
@@ -99,7 +100,7 @@ class Disbursement extends Model
             $this->generateUploadToken();
         }
 
-        return route('mobile.disbursement.upload', $this->upload_token);
+        return MobileUploadUrl::build('mobile.disbursement.upload', $this->upload_token);
     }
 
     /**

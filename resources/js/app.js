@@ -1,5 +1,6 @@
 import './bootstrap';
 import '../css/app.css';
+import '../css/ios-design-system.css';
 
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
@@ -16,6 +17,9 @@ import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import 'primeicons/primeicons.css';
 import permissionDirective from './directives/permission';
+import smoothScrollDirective from './directives/smoothScroll';
+import animateTableRowsDirective from './directives/animateTableRows';
+import animationPlugin from './plugins/animationPlugin';
 
 // PrimeVue Components - Global Registration
 import Button from 'primevue/button';
@@ -128,8 +132,11 @@ createInertiaApp({
 			})
 			.use(ToastService)
 			.use(ConfirmationService)
+			.use(animationPlugin)
 			.component('VueDatePicker', VueDatePicker)
-			.directive('can', permissionDirective);
+			.directive('can', permissionDirective)
+			.directive('smooth-scroll', smoothScrollDirective)
+			.directive('animate-table-rows', animateTableRowsDirective);
 
 		// Register PrimeVue components globally
 		app.component('Button', Button);

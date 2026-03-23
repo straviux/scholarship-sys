@@ -1,7 +1,11 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import { useGSAPAnimation } from '@/composables/useGSAPAnimation';
+import { toggleAnimation } from '@/utils/animations';
 
 const emit = defineEmits(['update:checked']);
+const checkbox = ref(null);
+const { animate } = useGSAPAnimation();
 
 const props = defineProps({
     checked: {
@@ -19,16 +23,13 @@ const proxyChecked = computed({
     },
 
     set(val) {
+        animate(checkbox.value, toggleAnimation.pulse());
         emit('update:checked', val);
     },
 });
 </script>
 
 <template>
-    <input
-        type="checkbox"
-        :value="value"
-        v-model="proxyChecked"
-        class="rounded-sm border-gray-300 text-indigo-600 shadow-xs focus:ring-indigo-500"
-    />
+    <input ref="checkbox" type="checkbox" :value="value" v-model="proxyChecked"
+        class="rounded-sm border-gray-300 text-indigo-600 shadow-xs focus:ring-indigo-500" />
 </template>

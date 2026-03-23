@@ -163,10 +163,10 @@ const formatRoleName = (roleName) => {
 
             <!-- Users DataTable -->
             <div class="mt-6">
-                <DataTable :value="users" stripedRows showGridlines responsiveLayout="scroll"
-                    :emptyMessage="'No data to be displayed'" :globalFilterFields="['name', 'username']"
-                    v-model:filters="filters" paginator :rows="rows" v-model:first="first"
-                    :rowsPerPageOptions="[5, 10, 20, 50]"
+                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="users" stripedRows
+                    showGridlines responsiveLayout="scroll" :emptyMessage="'No data to be displayed'"
+                    :globalFilterFields="['name', 'username']" v-model:filters="filters" paginator :rows="rows"
+                    v-model:first="first" :rowsPerPageOptions="[5, 10, 20, 50]"
                     paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                     :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
 

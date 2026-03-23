@@ -262,7 +262,8 @@ const formatDate = (date) => {
                                 <Badge :value="statusCounts.all" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="no-obr" inputId="pm-noobr" />
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="no-obr"
+                                    inputId="pm-noobr" />
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">No OBR</span>
                                 <Badge :value="statusCounts['no-obr']" severity="secondary"></Badge>
                             </label>
@@ -272,17 +273,20 @@ const formatDate = (date) => {
                                 <Badge :value="statusCounts['LOA']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="IRREGULAR" inputId="pm-irregular" />
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="IRREGULAR"
+                                    inputId="pm-irregular" />
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Irregular</span>
                                 <Badge :value="statusCounts['IRREGULAR']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="TRANSFERRED" inputId="pm-transferred" />
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="TRANSFERRED"
+                                    inputId="pm-transferred" />
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Transferred</span>
                                 <Badge :value="statusCounts['TRANSFERRED']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="CLAIMED" inputId="pm-claimed" />
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="CLAIMED"
+                                    inputId="pm-claimed" />
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Claimed</span>
                                 <Badge :value="statusCounts['CLAIMED']" severity="secondary"></Badge>
                             </label>
@@ -292,12 +296,14 @@ const formatDate = (date) => {
                                 <Badge :value="statusCounts['PAID']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="ON PROCESS" inputId="pm-onprocess" />
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="ON PROCESS"
+                                    inputId="pm-onprocess" />
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">On Process</span>
                                 <Badge :value="statusCounts['ON PROCESS']" severity="secondary"></Badge>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="DENIED" inputId="pm-denied" />
+                                <RadioButton v-model="selectedStatus" name="pmStatus" value="DENIED"
+                                    inputId="pm-denied" />
                                 <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Denied</span>
                                 <Badge :value="statusCounts['DENIED']" severity="secondary"></Badge>
                             </label>
@@ -318,8 +324,9 @@ const formatDate = (date) => {
 
             <!-- Data Table -->
             <div class="bg-white rounded-lg shadow mt-8 overflow-auto">
-                <DataTable :value="filteredData" :paginator="true" :rows="10" :rows-per-page-options="[5, 10, 20, 50]"
-                    responsive-layout="scroll" class="w-full text-xs sm:text-sm">
+                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredData"
+                    :paginator="true" :rows="10" :rows-per-page-options="[5, 10, 20, 50]" responsive-layout="scroll"
+                    class="w-full text-xs sm:text-sm">
                     <Column field="scholar_name" header="Scholar Name" :sortable="true" style="min-width: 160px">
                         <template #body="{ data }">
                             <a :href="route('scholarship.profile.show', data.profile_id)" target="_blank"
@@ -388,7 +395,7 @@ const formatDate = (date) => {
                     <Column field="obr_no" header="OBR No." style="min-width: 120px">
                         <template #body="{ data }">
                             <span v-if="data.obr_no" class="text-xs sm:text-sm font-mono text-blue-700">{{ data.obr_no
-                                }}</span>
+                            }}</span>
                             <span v-else class="text-gray-400">—</span>
                         </template>
                     </Column>

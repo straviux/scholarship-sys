@@ -31,8 +31,9 @@
                 <template #content>
                     <TabView v-model:activeIndex="activeTabIndex">
                         <TabPanel header="All Files">
-                            <DataTable :value="getAllDocuments()" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]"
-                                paginator :rowHover="true" stripedRows showGridlines>
+                            <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
+                                :value="getAllDocuments()" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]" paginator
+                                :rowHover="true" stripedRows showGridlines>
                                 <Column field="title" header="Title" sortable style="min-width: 200px">
                                     <template #body="slotProps">
                                         <div class="flex items-center gap-2">
@@ -45,7 +46,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                        }}</span>
+                                            }}</span>
                                     </template>
                                 </Column>
 
@@ -101,7 +102,8 @@
                         </TabPanel>
 
                         <TabPanel v-for="category in categories" :key="category.value" :header="category.label">
-                            <DataTable :value="getDocumentsByCategory(category.value)" :rows="10"
+                            <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
+                                :value="getDocumentsByCategory(category.value)" :rows="10"
                                 :rowsPerPageOptions="[5, 10, 20, 50]" paginator :rowHover="true" stripedRows
                                 showGridlines>
                                 <Column field="title" header="Title" sortable style="min-width: 200px">
@@ -116,7 +118,7 @@
                                 <Column field="description" header="Description" style="min-width: 250px">
                                     <template #body="slotProps">
                                         <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                        }}</span>
+                                            }}</span>
                                     </template>
                                 </Column>
 
@@ -270,7 +272,7 @@
                                     <span><i class="pi pi-file mr-1"></i>{{ viewingDocument.file_name }}</span>
                                     <span><i class="pi pi-database mr-1"></i>{{
                                         formatFileSize(viewingDocument.file_size)
-                                    }}</span>
+                                        }}</span>
                                     <span v-if="viewingDocument.category">
                                         <i class="pi pi-tag mr-1"></i>{{ viewingDocument.category }}
                                     </span>

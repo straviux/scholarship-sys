@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Carbon\Carbon;
+use App\Helpers\MobileUploadUrl;
 
 class ScholarshipRecord extends Model
 {
@@ -466,7 +467,7 @@ class ScholarshipRecord extends Model
             $this->generateUploadToken();
         }
 
-        return route('mobile.scholarship-record.upload', $this->upload_token);
+        return MobileUploadUrl::build('mobile.scholarship-record.upload', $this->upload_token);
     }
 
     /**

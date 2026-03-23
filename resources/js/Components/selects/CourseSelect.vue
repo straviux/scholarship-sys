@@ -1,6 +1,9 @@
 <script setup>
 import { ref, watch, watchEffect, computed } from 'vue';
 import { useApi } from '@/composable/api';
+import { useGSAPAnimation } from '@/composables/useGSAPAnimation';
+import { selectAnimation } from '@/utils/animations';
+
 const props = defineProps({
     scholarshipProgramId: {
         type: [String, Number],
@@ -29,9 +32,11 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue']);
-// const { data, error, fetchData } = useApi(route('courses-api.list', { scholarship_program_id: props.scholarshipProgramId }));
 const courses = ref([]);
 const loading = ref(false);
+const multiSelect = ref(null);
+const select = ref(null);
+const { animate } = useGSAPAnimation();
 
 // Computed property to include null option when needed
 const courseOptions = computed(() => {
@@ -159,13 +164,28 @@ watch(
     { immediate: true }
 );
 // onMounted(fetchData);
+
+const onSelectShow = () => {
+    const overlay = multiSelect.value?.overlayViewChild?.el || select.value?.overlayViewChild?.el;
+    if (overlay) {
+        animate(overlay, selectAnimation.open());
+    }
+};
+
+const onSelectHide = () => {
+    const overlay = multiSelect.value?.overlayViewChild?.el || select.value?.overlayViewChild?.el;
+    if (overlay) {
+        animate(overlay, selectAnimation.close());
+    }
+};
 </script>
 
 <template>
     <!-- Use MultiSelect when multiple is true -->
-    <MultiSelect v-if="multiple" v-model="localValue" :options="courseOptions" filter
-        :filterFields="['name', 'shortname', 'field_of_study']" optionLabel="name" :placeholder="customPlaceholder"
-        class="w-full" :maxSelectedLabels="3" :selectedItemsLabel="'{0} courses selected'" showSelectAll showClear
+    <MultiSelect ref="multiSelect" v-if="multiple" v-model="localValue" :options="courseOptions" filter
+        @show="onSelectShow" @hide="onSelectHide" :filterFields="['name', 'shortname', 'field_of_study']"
+        optionLabel="name" :placeholder="customPlaceholder" class="w-full" :maxSelectedLabels="3"
+        :selectedItemsLabel="'{0} courses selected'" showSelectAll showClear
         :pt="{ overlay: { style: 'max-width: 400px; border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #option="slotProps">
             <div class="uppercase"
@@ -189,9 +209,9 @@ watch(
     </MultiSelect>
 
     <!-- Use Select when multiple is false -->
-    <Select v-else v-model="localValue" :options="courseOptions" filter
-        :filterFields="['name', 'shortname', 'field_of_study']" autoFilterFocus showClear optionLabel="name"
-        :placeholder="customPlaceholder" class="w-full"
+    <Select ref="select" v-else v-model="localValue" :options="courseOptions" filter @show="onSelectShow"
+        @hide="onSelectHide" :filterFields="['name', 'shortname', 'field_of_study']" autoFilterFocus showClear
+        optionLabel="name" :placeholder="customPlaceholder" class="w-full"
         :pt="{ overlay: { style: 'max-width: 400px; border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="uppercase truncate">

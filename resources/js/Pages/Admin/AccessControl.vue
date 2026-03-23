@@ -494,10 +494,10 @@ const runCleanup = async () => {
                             </div>
 
                             <!-- Users DataTable -->
-                            <DataTable :value="users" stripedRows showGridlines responsiveLayout="scroll"
-                                :emptyMessage="'No users found'" :globalFilterFields="['name', 'username']"
-                                v-model:filters="userFilters" paginator :rows="userRows" v-model:first="userFirst"
-                                :rowsPerPageOptions="[5, 10, 20, 50]"
+                            <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="users"
+                                stripedRows showGridlines responsiveLayout="scroll" :emptyMessage="'No users found'"
+                                :globalFilterFields="['name', 'username']" v-model:filters="userFilters" paginator
+                                :rows="userRows" v-model:first="userFirst" :rowsPerPageOptions="[5, 10, 20, 50]"
                                 paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                                 :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
 
@@ -703,7 +703,8 @@ const runCleanup = async () => {
                             </div>
 
                             <!-- Permissions DataTable -->
-                            <DataTable :value="permissions" stripedRows showGridlines responsiveLayout="scroll"
+                            <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="permissions"
+                                stripedRows showGridlines responsiveLayout="scroll"
                                 :emptyMessage="'No permissions found'" :globalFilterFields="['name', 'description']"
                                 v-model:filters="permissionFilters" paginator :rows="permissionRows"
                                 v-model:first="permissionFirst" :rowsPerPageOptions="[5, 10, 20, 50]"

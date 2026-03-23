@@ -112,10 +112,10 @@ const closeDeleteModal = () => {
             </div>
             <div class="mt-6">
                 <!-- Table View -->
-                <DataTable :value="scholarshipPrograms" stripedRows showGridlines responsiveLayout="scroll"
-                    :emptyMessage="'No data to be displayed'" :globalFilterFields="['name', 'shortname', 'remarks']"
-                    v-model:filters="filters" paginator :rows="rows" v-model:first="first"
-                    :rowsPerPageOptions="[5, 10, 20, 50]"
+                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="scholarshipPrograms"
+                    stripedRows showGridlines responsiveLayout="scroll" :emptyMessage="'No data to be displayed'"
+                    :globalFilterFields="['name', 'shortname', 'remarks']" v-model:filters="filters" paginator
+                    :rows="rows" v-model:first="first" :rowsPerPageOptions="[5, 10, 20, 50]"
                     paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                     :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
 

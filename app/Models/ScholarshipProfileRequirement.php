@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Helpers\MobileUploadUrl;
 
 class ScholarshipProfileRequirement extends Model
 {
@@ -64,7 +65,7 @@ class ScholarshipProfileRequirement extends Model
             $this->generateUploadToken();
         }
 
-        return route('mobile.requirement.upload', $this->upload_token);
+        return MobileUploadUrl::build('mobile.requirement.upload', $this->upload_token);
     }
 
     /**

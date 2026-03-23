@@ -11,7 +11,6 @@ import axios from 'axios';
 import FloatingDrawer from '@/Components/FloatingDrawer.vue';
 import ApplicantFormModal from './Modal/ApplicantFormModal.vue';
 import YakapCategoryModal from './Modal/YakapCategoryModal.vue';
-import GenerateReportModal from './Modal/GenerateReportModal.vue';
 import ExportSelectedModal from './Modal/ExportSelectedModal.vue';
 import PriorityModal from './Modal/PriorityModal.vue';
 import JpmModal from './Modal/JpmModal.vue';
@@ -34,10 +33,6 @@ import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
-
-const showReportModal = ref(false);
-const openReportModal = () => { showReportModal.value = true; };
-
 
 const { hasPermission, hasRole } = usePermission();
 
@@ -182,6 +177,11 @@ watch(
     () => [filter.value.program, filter.value.course, filter.value.year_level, filter.value.date_from, filter.value.date_to],
     () => { triggerSearch(); },
 );
+
+// Trigger search when records per page changes
+watch(records, () => {
+    triggerSearch();
+});
 
 const form = useForm({
     sort: {
@@ -1075,6 +1075,15 @@ const formatDate = (date) => {
     return moment(date).format('MMM DD, YYYY');
 };
 
+// Truncate text for display with tooltip support
+const truncateText = (text, maxLength = 80) => {
+    if (!text) return '';
+    // Remove HTML tags for truncation
+    const plainText = text.replace(/<[^>]*>/g, '');
+    if (plainText.length <= maxLength) return plainText;
+    return plainText.substring(0, maxLength) + '...';
+};
+
 </script>
 
 <template>
@@ -1100,20 +1109,16 @@ const formatDate = (date) => {
                     <div class="flex gap-3 items-center">
                         <!-- JPM Controls -->
                         <template v-if="hasPermission('jpm.view')">
-                            <div class="flex items-center gap-4">
-                                <div class="flex items-center gap-2">
-                                    <Checkbox v-model="showJpmColumns" inputId="showJpmToggle" binary />
-                                    <label for="showJpmToggle" class="text-sm text-gray-600 cursor-pointer">Enable JPM
-                                        Tagging</label>
+                            <div class="flex items-center justify-between gap-4 flex-1">
+                                <label class="text-sm text-gray-600">JPM Tagging</label>
+                                <ToggleSwitch v-model="showJpmColumns"
+                                    style="transform: scale(0.75); origin: right center;" />
+                            </div>
 
-                                    {{ hasPermission('jpm.manage') }}
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <label for="jpmFilter" class="text-sm text-gray-600">JPM Filter:</label>
-                                    <Select v-model="filter.jpm_filter" :options="jpmFilterOptions" optionLabel="label"
-                                        size="small" optionValue="value" placeholder="Select filter" class="w-40"
-                                        inputId="jpmFilter" />
-                                </div>
+                            <div class="flex items-center gap-2">
+                                <Select v-model="filter.jpm_filter" :options="jpmFilterOptions" optionLabel="label"
+                                    size="small" optionValue="value" placeholder="Select filter" class="w-40"
+                                    inputId="jpmFilter" />
                             </div>
 
                             <Divider layout="vertical" class="h-6" />
@@ -1323,9 +1328,9 @@ const formatDate = (date) => {
                                 <span>/ <strong>{{ totalRecords }}</strong></span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <Checkbox v-model="simpleView" inputId="simpleViewToggle" binary />
-                                <label for="simpleViewToggle" class="text-xs text-gray-600 cursor-pointer">Simple
-                                    View</label>
+                                <label class="text-xs text-gray-600">Simple View</label>
+                                <ToggleSwitch v-model="simpleView"
+                                    style="transform: scale(0.75); origin: right center;" />
                             </div>
                         </div>
                     </div>
@@ -1334,13 +1339,13 @@ const formatDate = (date) => {
                     <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
 
                     <!-- Table View -->
-                    <DataTable :value="applicants" stripedRows showGridlines responsiveLayout="scroll"
-                        :emptyMessage="'No applicants to display'" :lazy="true" paginator :rows="rows"
-                        :totalRecords="totalRecords" :first="first" @page="onPageChange"
+                    <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="applicants" stripedRows
+                        showGridlines responsiveLayout="scroll" :emptyMessage="'No applicants to display'" :lazy="true"
+                        paginator :rows="rows" :totalRecords="totalRecords" :first="first" @page="onPageChange"
                         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                         :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
                         v-model:selection="selectedRows" dataKey="profile_id"
-                        :rowsPerPageOptions="[10, 25, 50, 100, 250, 500]" :scrollable="true" scrollHeight="600px"
+                        :rowsPerPageOptions="[10, 25, 50, 100, 250, 500]" :scrollable="true"
                         @row-contextmenu="onRowContextMenu" contextMenu>
 
                         <!-- Selection Column -->
@@ -1511,10 +1516,12 @@ const formatDate = (date) => {
                         </Column>
 
                         <!-- Remarks Column (hidden when JPM columns visible) -->
-                        <Column header="Remarks" v-if="!showJpmColumns" style="max-width: 150px">
+                        <Column header="Remarks" v-if="!showJpmColumns" style="max-width: 200px">
                             <template #body="slotProps">
-                                <div v-if="slotProps.data.remarks" class="text-xs remarks-content"
-                                    v-html="slotProps.data.remarks"></div>
+                                <div v-if="slotProps.data.remarks" v-tooltip.top="slotProps.data.remarks"
+                                    class="text-xs text-gray-700 cursor-help">
+                                    {{ truncateText(slotProps.data.remarks, 80) }}
+                                </div>
                                 <span v-else class="text-xs text-gray-400">-</span>
                             </template>
                         </Column>
@@ -1607,8 +1614,6 @@ const formatDate = (date) => {
             @deleted="refreshApplicationList" />
 
         <!-- Modals -->
-        <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" />
-
         <!-- Integrated Profile & Review Modal -->
         <ProfileReviewModal v-model:visible="showProfileReviewModal" :applicant="selectedApplicantForReview"
             :applicants="applicants" @interview="handleProfileReviewInterview" @closed="closeProfileReviewModal" />
@@ -1755,10 +1760,6 @@ const formatDate = (date) => {
     border-radius: 1rem;
 }
 
-/* Rounded Checkbox */
-:deep(.p-checkbox .p-checkbox-box) {
-    border-radius: 0.5rem;
-}
 
 /* Extra cell padding for better readability */
 :deep(.p-datatable .p-datatable-tbody > tr > td) {

@@ -761,8 +761,7 @@ const loadRecordsSummaryForMonth = async () => {
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Or copy this link:</label>
                         <div class="flex gap-2">
-                            <InputText type="text" :value="qrCodeData.url" readonly
-                                class="flex-1 text-xs" />
+                            <InputText type="text" :value="qrCodeData.url" readonly class="flex-1 text-xs" />
                             <Button icon="pi pi-copy" size="small" @click="copyToClipboard(qrCodeData.url)"
                                 v-tooltip.top="'Copy link'" />
                         </div>
@@ -866,8 +865,8 @@ const loadRecordsSummaryForMonth = async () => {
                     </div>
 
                     <!-- Records Table -->
-                    <DataTable v-else :value="calendarRecords" class="w-full" :rows="10" paginator
-                        responsive-layout="scroll" striped-rows>
+                    <DataTable v-else v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="calendarRecords"
+                        class="w-full" :rows="10" paginator responsive-layout="scroll" striped-rows>
                         <Column field="applicant_name" header="Applicant Name" class="min-w-48" />
                         <Column field="program_name" header="Program" class="min-w-40" />
                         <Column field="record_type" header="Record Type" class="min-w-32">

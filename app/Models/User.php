@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Helpers\MobileUploadUrl;
 
 class User extends Authenticatable
 {
@@ -129,7 +130,7 @@ class User extends Authenticatable
             $this->generateUploadToken();
         }
 
-        return route('mobile.profile.upload', $this->upload_token);
+        return MobileUploadUrl::build('mobile.profile.upload', $this->upload_token);
     }
 
     /**

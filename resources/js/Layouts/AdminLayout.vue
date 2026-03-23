@@ -4,11 +4,14 @@ import SidebarLink from "@/Components/ui/navigation/SidebarLink.vue";
 import NotificationDropdown from "@/Components/ui/navigation/NotificationDropdown.vue";
 import ActivityLogsDropdown from "@/Components/ui/navigation/ActivityLogsDropdown.vue";
 import MaintenanceAlertModal from "@/Components/MaintenanceAlertModal.vue";
+import ScrollToTop from "@/Components/ui/ScrollToTop.vue";
 import { Link, usePage, router } from "@inertiajs/vue3";
+import { useSmoothScroll } from "@/composables/useSmoothScroll";
 import { usePermission } from "@/composable/permissions";
 import logger from '@/utils/logger';
 
 const { hasRole, hasPermission } = usePermission();
+const { scrollToTop } = useSmoothScroll();
 const $page = usePage();
 const toggleMenu = ref(false);
 const sidebarMinimized = ref(localStorage.getItem('sidebarMinimized') === 'true');
@@ -484,6 +487,8 @@ onMounted(() => {
     // Close mobile menu when navigating to a new page
     removeNavigateListener = router.on('navigate', () => {
         toggleMenu.value = false;
+        // Smooth scroll to top on page navigation
+        scrollToTop(0.5);
     });
 
     // Note: We intentionally do NOT refresh menu on navigation because:
@@ -576,7 +581,7 @@ onUnmounted(() => {
         </div>
     </div>
 
-    <div v-if="!shouldBlockNonAdminAccess()" class="w-full h-full flex content-bg">
+    <div v-if="!shouldBlockNonAdminAccess()" class="w-full h-full flex">
         <!-- Mobile Backdrop -->
         <div v-if="toggleMenu" @click="toggleMenu = false" class="fixed inset-0 bg-black/50 z-20 md:hidden" />
 
@@ -848,11 +853,14 @@ onUnmounted(() => {
             </div>
 
             <div ref="contentRef"
-                class="content-scroll content-bg flex-1 overflow-y-auto px-4 md:px-6 pt-6 pb-10 transition-all duration-300"
+                class="content-scroll flex-1 overflow-y-auto px-4 md:px-6 pt-6 pb-10 transition-all duration-300"
                 :class="sidebarMinimized ? 'md:ml-[130px]' : 'md:ml-[240px]'">
                 <!-- <ToastList /> -->
                 <slot />
             </div>
+
+            <!-- Scroll to Top Button -->
+            <ScrollToTop :showThreshold="400" :scrollDuration="0.8" />
         </div>
     </div>
 </template>
@@ -989,5 +997,14 @@ html,
 body {
     overflow: hidden;
     height: 100%;
+    background:
+        radial-gradient(ellipse at 20% 10%, rgba(230, 235, 242, 0.7) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 30%, rgba(220, 228, 238, 0.6) 0%, transparent 45%),
+        radial-gradient(ellipse at 10% 70%, rgba(225, 231, 240, 0.5) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 85%, rgba(222, 229, 239, 0.6) 0%, transparent 40%),
+        radial-gradient(ellipse at 50% 50%, rgba(228, 233, 241, 0.55) 0%, transparent 60%),
+        linear-gradient(160deg, rgba(235, 239, 245, 0.5) 0%, rgba(225, 230, 238, 0.4) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 </style>

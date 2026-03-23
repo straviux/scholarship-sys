@@ -68,8 +68,9 @@
 
                 <!-- Disbursements Table -->
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-slate-200">
-                    <DataTable :value="disbursements" :paginator="true" :rows="10" :row-hover="true"
-                        class="text-xs sm:text-sm" responsive-layout="scroll">
+                    <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="disbursements"
+                        :paginator="true" :rows="10" :row-hover="true" class="text-xs sm:text-sm"
+                        responsive-layout="scroll">
                         <!-- OBR No -->
                         <Column field="obr_no" header="OBR No" style="min-width: 120px">
                             <template #body="{ data }">
@@ -112,7 +113,7 @@
                         <Column field="academic_year" header="Year/Sem" style="min-width: 95px">
                             <template #body="{ data }">
                                 <div class="text-slate-600">{{ data.academic_year }}/{{ data.semester?.substring(0, 1)
-                                    }}</div>
+                                }}</div>
                             </template>
                         </Column>
 

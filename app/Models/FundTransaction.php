@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Helpers\MobileUploadUrl;
 
 class FundTransaction extends Model
 {
@@ -135,9 +136,9 @@ class FundTransaction extends Model
     public function getMobileUploadUrl($docType = null)
     {
         if ($docType) {
-            return route('mobile.upload.fund-transaction.with-type', ['token' => $this->upload_token, 'doc_type' => $docType]);
+            return MobileUploadUrl::build('mobile.upload.fund-transaction.with-type', ['token' => $this->upload_token, 'doc_type' => $docType]);
         }
-        return route('mobile.upload.fund-transaction', $this->upload_token);
+        return MobileUploadUrl::build('mobile.upload.fund-transaction', $this->upload_token);
     }
 
     /**

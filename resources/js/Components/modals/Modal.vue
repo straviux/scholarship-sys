@@ -1,5 +1,7 @@
 <script setup>
-import { computed, onMounted, onUnmounted, watch } from "vue";
+import { computed, onMounted, onUnmounted, watch, ref } from "vue";
+import { useGSAPAnimation } from "@/composables/useGSAPAnimation";
+import { modalAnimation } from "@/utils/animations";
 
 const props = defineProps({
     show: {
@@ -21,11 +23,13 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["close"]);
+const dialog = ref(null);
+const { animate, animateFrom } = useGSAPAnimation();
 
 watch(
     () => props.show,
-    () => {
-        if (props.show) {
+    (isVisible) => {
+        if (isVisible) {
             document.body.style.overflow = "hidden";
         } else {
             document.body.style.overflow = null;
@@ -42,6 +46,14 @@ const close = () => {
 const closeOnEscape = (e) => {
     if (e.key === "Escape" && props.show) {
         close();
+    }
+};
+
+const onDialogShow = () => {
+    const dialogContent = dialog.value?.$el?.querySelector('.p-dialog-content');
+    if (dialogContent) {
+        animateFrom(dialogContent, modalAnimation.entrance());
+        animate(dialogContent, { opacity: 1, scale: 1, y: 0, duration: 0.4 });
     }
 };
 
@@ -65,8 +77,8 @@ const maxWidthClass = computed(() => {
 </script>
 
 <template>
-    <Dialog :visible="show" modal :closable="closeable" :style="{ width: maxWidthClass }"
-        @update:visible="(val) => { if (!val) close(); }">
+    <Dialog ref="dialog" :visible="show" modal :closable="closeable" :style="{ width: maxWidthClass }"
+        @show="onDialogShow" @update:visible="(val) => { if (!val) close(); }">
         <slot v-if="show" />
     </Dialog>
 </template>
