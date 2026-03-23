@@ -1,5 +1,5 @@
 <template>
-    <Drawer v-bind="$attrs" :pt="drawerPt">
+    <Drawer v-bind="$attrs" :pt="drawerPt" :showCloseIcon="showCloseIcon" appendTo="body">
         <slot />
         <template v-for="(_, name) in $slots" :key="name" #[name]>
             <slot :name="name" />
@@ -8,6 +8,13 @@
 </template>
 
 <script setup>
+const props = defineProps({
+    showCloseIcon: {
+        type: Boolean,
+        default: true
+    }
+});
+
 const drawerPt = {
     root: { class: 'floating-drawer' },
     mask: { class: 'floating-drawer-mask' }
@@ -20,6 +27,7 @@ const drawerPt = {
     height: calc(100vh - 2rem) !important;
     margin: 1rem !important;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .floating-drawer .p-drawer-header {
@@ -31,6 +39,6 @@ const drawerPt = {
 }
 
 .floating-drawer-mask {
-    backdrop-filter: blur(4px);
+    background: transparent !important;
 }
 </style>

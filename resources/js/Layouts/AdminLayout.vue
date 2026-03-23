@@ -587,7 +587,7 @@ onUnmounted(() => {
 
         <!-- Floating Sidebar -->
         <aside
-            class="fixed z-30 md:z-10 top-0 left-0 md:top-20 md:left-4 flex flex-col bg-[#222831] transition-all duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-96px)]"
+            class="fixed z-30 md:z-10 top-0 left-0 md:top-20 md:left-4 flex flex-col bg-[#222831] transition-[width,transform] duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-96px)]"
             :class="[
                 sidebarMinimized ? 'md:w-[110px]' : 'md:w-[220px]',
                 toggleMenu ? 'w-[280px] translate-x-0' : '-translate-x-full md:translate-x-0',
@@ -696,7 +696,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </SidebarLink>
                         </li>
 
@@ -705,7 +705,7 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </div>
                         </li>
                     </template>
@@ -853,7 +853,7 @@ onUnmounted(() => {
             </div>
 
             <div ref="contentRef"
-                class="content-scroll flex-1 overflow-y-auto px-4 md:px-6 pt-6 pb-10 transition-all duration-300"
+                class="content-scroll flex-1 overflow-y-auto px-4 md:px-6 pt-6 pb-10 transition-[margin-left] duration-300"
                 :class="sidebarMinimized ? 'md:ml-[130px]' : 'md:ml-[240px]'">
                 <!-- <ToastList /> -->
                 <slot />

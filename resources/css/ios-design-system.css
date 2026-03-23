@@ -16,11 +16,22 @@
 	margin: 0 auto;
 }
 
-/* GDialog Root Override */
+/* Disable PrimeVue's built-in Dialog scale transition — we handle animation ourselves */
+.ios-dialog-root.p-dialog-enter-active,
+.ios-dialog-root.p-dialog-leave-active {
+	transition: none !important;
+}
+.ios-dialog-root.p-dialog-enter-from,
+.ios-dialog-root.p-dialog-leave-to {
+	opacity: 1 !important;
+	transform: none !important;
+}
+
+/* Dialog Root Override */
 .ios-dialog-root.p-dialog {
 	background: transparent !important;
 	border: none !important;
-	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
+	box-shadow: none !important;
 	padding: 0 !important;
 	max-height: none !important;
 	overflow: visible !important;

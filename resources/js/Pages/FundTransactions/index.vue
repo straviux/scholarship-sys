@@ -4,6 +4,9 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import VoucherWizard from '@/Components/Obligations/VoucherWizard.vue';
+import FloatingDrawer from '@/Components/FloatingDrawer.vue';
+import gsap from 'gsap';
+import { shouldAnimate } from '@/composables/useAnimationDefaults';
 import axios from 'axios';
 
 const toast = useToast();
@@ -93,6 +96,48 @@ const quillToolbar = [
     [{ list: 'ordered' }, { list: 'bullet' }],
     ['link']
 ];
+
+// Filter drawer
+const showFilterDrawer = ref(false);
+
+const statusFilterOptions = [
+    { label: 'All Status', value: '' },
+    { label: 'On Process', value: 'On Process' },
+    { label: 'No OBR', value: 'No OBR' },
+    { label: 'LOA', value: 'LOA' },
+    { label: 'Irregular', value: 'Irregular' },
+    { label: 'Transferred', value: 'Transferred' },
+    { label: 'Claimed', value: 'Claimed' },
+    { label: 'Paid', value: 'Paid' },
+    { label: 'Denied', value: 'Denied' },
+];
+
+// Page-level element refs
+// Modal element refs for GSAP entry animations
+const elDeleteModal = ref(null);
+const elViewModal = ref(null);
+const elFileUploadModal = ref(null);
+const elQrModal = ref(null);
+const elRemarksModal = ref(null);
+const elStatusModal = ref(null);
+const elObrTrackingModal = ref(null);
+const elTrackingHistoryModal = ref(null);
+
+// Animate an iOS modal element in using GSAP
+const animateModalIn = (elRef) => {
+    nextTick(() => {
+        const el = elRef?.value;
+        if (!el || !shouldAnimate()) return;
+        gsap.from(el, {
+            y: 32,
+            opacity: 0,
+            scale: 0.96,
+            duration: 0.34,
+            ease: 'back.out(1.7)',
+            clearProps: 'transform,opacity',
+        });
+    });
+};
 
 const handleCreateVoucher = () => {
     editingId.value = null;
@@ -1349,14 +1394,17 @@ onMounted(() => {
                         </IconField>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-sm opacity-60">Right click on row for actions</span>
+                        <span class="text-sm opacity-60 hidden sm:block">Right click row for actions</span>
+                        <Button icon="pi pi-sliders-h" :badge="statusFilter ? '!' : undefined" badgeSeverity="danger"
+                            severity="secondary" size="small" rounded outlined @click="showFilterDrawer = true"
+                            v-tooltip.bottom="'Filters'" />
                         <Button icon="pi pi-refresh" severity="secondary" size="small" rounded outlined
                             @click="fetchVouchers" :disabled="loading" :loading="loading"
                             v-tooltip.bottom="'Refresh'" />
                     </div>
                 </div>
 
-                <!-- Filter Chips -->
+                <!-- Record Filter + Active Tag Row -->
                 <div class="flex flex-wrap gap-3 items-center mb-4">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <RadioButton v-model="userFilter" name="userFilter" value="" inputId="uf-all" />
@@ -1368,55 +1416,43 @@ onMounted(() => {
                         <span class="text-sm text-gray-700">My Records</span>
                         <Badge :value="myRecordsCount" severity="secondary" />
                     </label>
-                    <span class="text-gray-300 mx-1">|</span>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <RadioButton v-model="statusFilter" name="statusFilter" value="" inputId="sf-all" />
-                        <span class="text-sm text-gray-700">All Status</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <RadioButton v-model="statusFilter" name="statusFilter" value="On Process"
-                            inputId="sf-process" />
-                        <span class="text-sm text-gray-700">On Process</span>
-                        <Badge :value="statusCounts['On Process']" severity="secondary" />
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <RadioButton v-model="statusFilter" name="statusFilter" value="No OBR" inputId="sf-noobr" />
-                        <span class="text-sm text-gray-700">No OBR</span>
-                        <Badge :value="statusCounts['No OBR']" severity="secondary" />
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <RadioButton v-model="statusFilter" name="statusFilter" value="LOA" inputId="sf-loa" />
-                        <span class="text-sm text-gray-700">LOA</span>
-                        <Badge :value="statusCounts['LOA']" severity="secondary" />
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <RadioButton v-model="statusFilter" name="statusFilter" value="Irregular"
-                            inputId="sf-irregular" />
-                        <span class="text-sm text-gray-700">Irregular</span>
-                        <Badge :value="statusCounts['Irregular']" severity="secondary" />
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <RadioButton v-model="statusFilter" name="statusFilter" value="Transferred"
-                            inputId="sf-transferred" />
-                        <span class="text-sm text-gray-700">Transferred</span>
-                        <Badge :value="statusCounts['Transferred']" severity="secondary" />
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <RadioButton v-model="statusFilter" name="statusFilter" value="Claimed" inputId="sf-claimed" />
-                        <span class="text-sm text-gray-700">Claimed</span>
-                        <Badge :value="statusCounts['Claimed']" severity="secondary" />
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <RadioButton v-model="statusFilter" name="statusFilter" value="Paid" inputId="sf-paid" />
-                        <span class="text-sm text-gray-700">Paid</span>
-                        <Badge :value="statusCounts['Paid']" severity="secondary" />
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <RadioButton v-model="statusFilter" name="statusFilter" value="Denied" inputId="sf-denied" />
-                        <span class="text-sm text-gray-700">Denied</span>
-                        <Badge :value="statusCounts['Denied']" severity="secondary" />
-                    </label>
+                    <template v-if="statusFilter">
+                        <span class="text-gray-300 mx-1">|</span>
+                        <Tag severity="secondary" rounded class="cursor-pointer" @click="statusFilter = ''">
+                            <span class="text-xs">Status: <strong>{{ statusFilter }}</strong></span>
+                            <i class="pi pi-times ml-1" style="font-size: 0.6rem"></i>
+                        </Tag>
+                    </template>
                 </div>
+
+                <!-- Status Filter FloatingDrawer -->
+                <FloatingDrawer v-model:visible="showFilterDrawer" header="Filters" position="right" class="!w-[360px]">
+                    <div class="flex flex-col gap-2 mt-2">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">OBR Status</p>
+                        <label v-for="opt in statusFilterOptions" :key="opt.value"
+                            class="flex items-center justify-between px-4 py-3 rounded-2xl cursor-pointer transition-colors select-none"
+                            :class="statusFilter === opt.value
+                                ? 'bg-indigo-50 ring-1 ring-indigo-400'
+                                : 'bg-gray-50 hover:bg-gray-100'" @click="statusFilter = opt.value">
+                            <div class="flex items-center gap-3">
+                                <span
+                                    class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                                    :class="statusFilter === opt.value ? 'border-indigo-500' : 'border-gray-300'">
+                                    <span v-if="statusFilter === opt.value"
+                                        class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                                </span>
+                                <span class="text-sm font-medium text-gray-800">{{ opt.label }}</span>
+                            </div>
+                            <Badge v-if="opt.value" :value="statusCounts[opt.value] ?? 0" severity="secondary" />
+                        </label>
+                    </div>
+                    <div class="flex gap-2 justify-end mt-6 pt-4 border-t">
+                        <Button severity="secondary" outlined size="small" icon="pi pi-history" label="Clear"
+                            @click="statusFilter = ''" />
+                        <Button label="Done" icon="pi pi-check" severity="info" size="small"
+                            @click="showFilterDrawer = false" />
+                    </div>
+                </FloatingDrawer>
 
                 <!-- Context Menu -->
                 <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
@@ -1485,7 +1521,7 @@ onMounted(() => {
                     <Column header="Processed By" style="min-width: 130px">
                         <template #body="slotProps">
                             <span class="text-xs font-semibold text-gray-600">{{ slotProps.data.creator?.name || '---'
-                                }}</span>
+                            }}</span>
                         </template>
                     </Column>
 
@@ -1511,10 +1547,11 @@ onMounted(() => {
             @scholar-selected="handleScholarSelection" />
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showDeleteConfirmDialog" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+        <Dialog v-model:visible="showDeleteConfirmDialog" modal appendTo="body"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
+            @show="animateModalIn(elDeleteModal)">
             <template #container>
-                <div class="ios-modal" style="width: 90vw; max-width: 420px;">
+                <div ref="elDeleteModal" class="ios-modal" style="width: 90vw; max-width: 420px;">
                     <div class="ios-nav-bar">
                         <button class="ios-nav-btn ios-nav-cancel" @click="showDeleteConfirmDialog = false"><i
                                 class="pi pi-times"></i></button>
@@ -1552,10 +1589,11 @@ onMounted(() => {
         </Dialog>
 
         <!-- View Fund Transaction Dialog -->
-        <Dialog v-model:visible="showViewDialog" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+        <Dialog v-model:visible="showViewDialog" modal appendTo="body"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
+            @show="animateModalIn(elViewModal)">
             <template #container>
-                <div class="ios-modal" style="width: 90vw; max-width: 700px;">
+                <div ref="elViewModal" class="ios-modal" style="width: 90vw; max-width: 700px;">
                     <div class="ios-nav-bar">
                         <button class="ios-nav-btn ios-nav-cancel" @click="showViewDialog = false"><i
                                 class="pi pi-times"></i></button>
@@ -1589,7 +1627,7 @@ onMounted(() => {
                                     <div class="ios-row">
                                         <span class="ios-row-label">Amount</span>
                                         <span style="font-weight: 600;">{{ formatAmount(selectedVoucher.amount)
-                                            }}</span>
+                                        }}</span>
                                     </div>
                                     <div class="ios-row">
                                         <span class="ios-row-label">Created By</span>
@@ -1715,10 +1753,11 @@ onMounted(() => {
         </Dialog>
 
         <!-- File Upload Dialog -->
-        <Dialog v-model:visible="showFileUploadDialog" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+        <Dialog v-model:visible="showFileUploadDialog" modal appendTo="body"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
+            @show="animateModalIn(elFileUploadModal)">
             <template #container>
-                <div class="ios-modal" style="width: 90vw; max-width: 700px;">
+                <div ref="elFileUploadModal" class="ios-modal" style="width: 90vw; max-width: 700px;">
                     <div class="ios-nav-bar">
                         <button class="ios-nav-btn ios-nav-cancel" @click="showFileUploadDialog = false"><i
                                 class="pi pi-times"></i></button>
@@ -1938,10 +1977,11 @@ onMounted(() => {
         </Dialog>
 
         <!-- QR Code Modal -->
-        <Dialog v-model:visible="showQrModal" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+        <Dialog v-model:visible="showQrModal" modal appendTo="body"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
+            @show="animateModalIn(elQrModal)">
             <template #container>
-                <div class="ios-modal" style="width: 90vw; max-width: 600px;">
+                <div ref="elQrModal" class="ios-modal" style="width: 90vw; max-width: 600px;">
                     <div class="ios-nav-bar">
                         <button class="ios-nav-btn ios-nav-cancel" @click="showQrModal = false"><i
                                 class="pi pi-times"></i></button>
@@ -2004,10 +2044,11 @@ onMounted(() => {
         </Dialog>
 
         <!-- Remarks Dialog -->
-        <Dialog v-model:visible="showRemarksDialog" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+        <Dialog v-model:visible="showRemarksDialog" modal appendTo="body"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
+            @show="animateModalIn(elRemarksModal)">
             <template #container>
-                <div class="ios-modal" style="width: 90vw; max-width: 600px;">
+                <div ref="elRemarksModal" class="ios-modal" style="width: 90vw; max-width: 600px;">
                     <div class="ios-nav-bar">
                         <button class="ios-nav-btn ios-nav-cancel" @click="showRemarksDialog = false"><i
                                 class="pi pi-times"></i></button>
@@ -2055,10 +2096,11 @@ onMounted(() => {
         </Dialog>
 
         <!-- Transaction Status Dialog -->
-        <Dialog v-model:visible="showStatusDialog" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+        <Dialog v-model:visible="showStatusDialog" modal appendTo="body"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
+            @show="animateModalIn(elStatusModal)">
             <template #container>
-                <div class="ios-modal" style="width: 90vw; max-width: 500px;">
+                <div ref="elStatusModal" class="ios-modal" style="width: 90vw; max-width: 500px;">
                     <div class="ios-nav-bar">
                         <button class="ios-nav-btn ios-nav-cancel" @click="showStatusDialog = false"><i
                                 class="pi pi-times"></i></button>
@@ -2113,10 +2155,11 @@ onMounted(() => {
         </Dialog>
 
         <!-- OBR Tracking Dialog -->
-        <Dialog v-model:visible="showOBRTrackingDialog" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+        <Dialog v-model:visible="showOBRTrackingDialog" modal appendTo="body"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
+            @show="animateModalIn(elObrTrackingModal)">
             <template #container>
-                <div class="ios-modal" style="width: 90vw; max-width: 600px;">
+                <div ref="elObrTrackingModal" class="ios-modal" style="width: 90vw; max-width: 600px;">
                     <div class="ios-nav-bar">
                         <button class="ios-nav-btn ios-nav-cancel" @click="showOBRTrackingDialog = false"><i
                                 class="pi pi-times"></i></button>
@@ -2195,10 +2238,11 @@ onMounted(() => {
         </Dialog>
 
         <!-- Tracking History Dialog -->
-        <Dialog v-model:visible="showTrackingHistoryDialog" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+        <Dialog v-model:visible="showTrackingHistoryDialog" modal appendTo="body"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
+            @show="animateModalIn(elTrackingHistoryModal)">
             <template #container>
-                <div class="ios-modal" style="width: 90vw; max-width: 720px;">
+                <div ref="elTrackingHistoryModal" class="ios-modal" style="width: 90vw; max-width: 720px;">
                     <div class="ios-nav-bar">
                         <button class="ios-nav-btn ios-nav-cancel" @click="showTrackingHistoryDialog = false"><i
                                 class="pi pi-times"></i></button>
@@ -2246,110 +2290,99 @@ onMounted(() => {
         </Dialog>
 
         <!-- Document Preview Modal -->
-        <Dialog v-model:visible="showPreviewModal" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal" style="width: 90vw; max-width: 1000px;">
-                    <div class="ios-nav-bar">
-                        <button class="ios-nav-btn ios-nav-cancel" @click="showPreviewModal = false"><i
-                                class="pi pi-times"></i></button>
-                        <span class="ios-nav-title">Document Preview</span>
-                        <a v-if="previewData" :href="previewData.url" :download="previewData.filename"
-                            class="ios-nav-btn ios-nav-action" style="text-decoration: none;">
-                            <i class="pi pi-download" style="font-size: 13px; margin-right: 4px;"></i>Download
-                        </a>
-                        <span v-else class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
-                    </div>
-                    <div class="ios-body">
-                        <div v-if="previewData" style="padding-top: 16px;">
-                            <!-- File Info -->
-                            <div class="ios-section">
-                                <div class="ios-card">
-                                    <div class="ios-row">
-                                        <span class="ios-row-label">Filename</span>
-                                        <span style="font-size: 13px; word-break: break-all; text-align: right;">{{
-                                            previewData.filename }}</span>
-                                    </div>
-                                    <div class="ios-row" style="border-bottom: none;">
-                                        <span class="ios-row-label">Type</span>
-                                        <span style="font-size: 13px;">{{ previewData.docType }} | {{
-                                            previewData.mimeType }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Zoom Controls for Images -->
-                            <div v-if="previewData.mimeType && previewData.mimeType.startsWith('image/')"
-                                class="ios-section">
-                                <p class="ios-section-label">Zoom</p>
-                                <div class="ios-card" style="padding: 10px 16px;">
-                                    <div style="display: flex; align-items: center; gap: 8px;">
-                                        <Button icon="pi pi-minus" @click="previewZoom -= 10"
-                                            :disabled="previewZoom <= 50" text size="small" />
-                                        <span
-                                            style="font-size: 13px; font-weight: 500; width: 48px; text-align: center;">{{
-                                                previewZoom }}%</span>
-                                        <Button icon="pi pi-plus" @click="previewZoom += 10"
-                                            :disabled="previewZoom >= 200" text size="small" />
-                                        <Button icon="pi pi-home" @click="previewZoom = 100" text size="small"
-                                            v-tooltip="'Reset Zoom'" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Image Preview -->
-                            <div v-if="previewData.mimeType && previewData.mimeType.startsWith('image/')"
-                                class="ios-section" style="margin-bottom: 16px;">
-                                <div class="ios-card"
-                                    style="padding: 16px; overflow: auto; max-height: calc(85vh - 280px);">
-                                    <div style="display: flex; justify-content: center;">
-                                        <img :src="previewData.path" :alt="previewData.filename"
-                                            style="border-radius: 8px; border: 1px solid #e5e5ea;"
-                                            :style="{ width: previewZoom + '%', maxWidth: 'none' }" @error="() => {
-                                                console.error('Failed to load image:', previewData.path);
-                                                toast.add({
-                                                    severity: 'warn',
-                                                    summary: 'Image Load Error',
-                                                    detail: 'Could not display image. Try downloading instead.',
-                                                    life: 3000
-                                                });
-                                            }">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- PDF Preview -->
-                            <div v-else-if="previewData.mimeType && previewData.mimeType.includes('pdf')"
-                                class="ios-section" style="margin-bottom: 16px;">
-                                <div class="ios-card" style="padding: 16px;">
-                                    <p style="font-size: 13px; color: #8E8E93; margin-bottom: 12px;">PDFs open in a new
-                                        window for best viewing experience</p>
-                                    <Button label="Open PDF in Viewer"
-                                        @click="() => window.open(previewData.url, '_blank')" icon="pi pi-external-link"
-                                        class="w-full" severity="info" />
-                                    <p style="font-size: 12px; color: #8E8E93; margin-top: 8px;">Or use the Download
-                                        button above to save to your computer</p>
-                                </div>
-                            </div>
-
-                            <!-- Other File Types -->
-                            <div v-else class="ios-section" style="margin-bottom: 16px;">
-                                <div class="ios-card" style="padding: 32px 16px; text-align: center;">
-                                    <i class="pi pi-file"
-                                        style="font-size: 48px; color: #8E8E93; display: block; margin-bottom: 12px;"></i>
-                                    <p style="font-size: 14px; color: #3c3c43; margin-bottom: 6px;">Preview not
-                                        available for this file type</p>
-                                    <p style="font-size: 12px; color: #8E8E93; margin-bottom: 16px;">{{
-                                        previewData.mimeType || 'File type unknown' }}</p>
-                                    <Button label="Download File" @click="() => window.open(previewData.url, '_blank')"
-                                        icon="pi pi-download" class="w-full" />
-                                </div>
-                            </div>
+        <FloatingDrawer v-model:visible="showPreviewModal" position="right" class="!w-[800px]">
+            <template #header>
+                <div class="flex items-center justify-between w-full pr-2">
+                    <span class="font-semibold text-gray-900 text-base">Document Preview</span>
+                    <a v-if="previewData" :href="previewData.url" :download="previewData.filename"
+                        class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                        style="text-decoration: none;">
+                        <i class="pi pi-download" style="font-size: 13px;"></i>Download
+                    </a>
+                </div>
+            </template>
+            <div v-if="previewData" style="padding-top: 8px;">
+                <!-- File Info -->
+                <div class="ios-section">
+                    <div class="ios-card">
+                        <div class="ios-row">
+                            <span class="ios-row-label">Filename</span>
+                            <span style="font-size: 13px; word-break: break-all; text-align: right;">{{
+                                previewData.filename }}</span>
+                        </div>
+                        <div class="ios-row" style="border-bottom: none;">
+                            <span class="ios-row-label">Type</span>
+                            <span style="font-size: 13px;">{{ previewData.docType }} | {{
+                                previewData.mimeType }}</span>
                         </div>
                     </div>
                 </div>
-            </template>
-        </Dialog>
+
+                <!-- Zoom Controls for Images -->
+                <div v-if="previewData.mimeType && previewData.mimeType.startsWith('image/')" class="ios-section">
+                    <p class="ios-section-label">Zoom</p>
+                    <div class="ios-card" style="padding: 10px 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <Button icon="pi pi-minus" @click="previewZoom -= 10" :disabled="previewZoom <= 50" text
+                                size="small" />
+                            <span style="font-size: 13px; font-weight: 500; width: 48px; text-align: center;">{{
+                                previewZoom }}%</span>
+                            <Button icon="pi pi-plus" @click="previewZoom += 10" :disabled="previewZoom >= 200" text
+                                size="small" />
+                            <Button icon="pi pi-home" @click="previewZoom = 100" text size="small"
+                                v-tooltip="'Reset Zoom'" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Image Preview -->
+                <div v-if="previewData.mimeType && previewData.mimeType.startsWith('image/')" class="ios-section"
+                    style="margin-bottom: 16px;">
+                    <div class="ios-card" style="padding: 16px; overflow: auto;">
+                        <div style="display: flex; justify-content: center;">
+                            <img :src="previewData.path" :alt="previewData.filename"
+                                style="border-radius: 8px; border: 1px solid #e5e5ea;"
+                                :style="{ width: previewZoom + '%', maxWidth: 'none' }" @error="() => {
+                                    console.error('Failed to load image:', previewData.path);
+                                    toast.add({
+                                        severity: 'warn',
+                                        summary: 'Image Load Error',
+                                        detail: 'Could not display image. Try downloading instead.',
+                                        life: 3000
+                                    });
+                                }">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF Preview -->
+                <div v-else-if="previewData.mimeType && previewData.mimeType.includes('pdf')" class="ios-section"
+                    style="margin-bottom: 16px;">
+                    <div class="ios-card" style="padding: 16px;">
+                        <p style="font-size: 13px; color: #8E8E93; margin-bottom: 12px;">PDFs open in a new
+                            window for best viewing experience</p>
+                        <Button label="Open PDF in Viewer" @click="() => window.open(previewData.url, '_blank')"
+                            icon="pi pi-external-link" class="w-full" severity="info" />
+                        <p style="font-size: 12px; color: #8E8E93; margin-top: 8px;">Or use the Download
+                            button above to save to your device</p>
+                    </div>
+                </div>
+
+                <!-- Other File Types -->
+                <div v-else class="ios-section" style="margin-bottom: 16px;">
+                    <div class="ios-card" style="padding: 32px 16px; text-align: center;">
+                        <i class="pi pi-file"
+                            style="font-size: 48px; color: #8E8E93; display: block; margin-bottom: 12px;"></i>
+                        <p style="font-size: 14px; color: #3c3c43; margin-bottom: 6px;">Preview not
+                            available for this file type</p>
+                        <p style="font-size: 12px; color: #8E8E93; margin-bottom: 16px;">{{
+                            previewData.mimeType || 'File type unknown' }}</p>
+                        <Button label="Download File" @click="() => window.open(previewData.url, '_blank')"
+                            icon="pi pi-download" class="w-full" />
+                    </div>
+                </div>
+            </div>
+        </FloatingDrawer>
 
     </AdminLayout>
 </template>

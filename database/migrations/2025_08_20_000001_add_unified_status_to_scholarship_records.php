@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('scholarship_records', function (Blueprint $table) {
             // Add new unified_status column as nullable
             // Values: pending_approval, approved_pending, active_scholar, completed, declined
-            $table->string('unified_status', 50)->nullable()->after('scholarship_status');
+            $table->string('unified_status', 50)->nullable();
 
             // Add index for filtering
             $table->index('unified_status');
