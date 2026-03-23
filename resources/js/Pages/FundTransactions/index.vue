@@ -1573,9 +1573,7 @@ onMounted(() => {
                                     </div>
                                     <div class="ios-row">
                                         <span class="ios-row-label">Disbursement Type</span>
-                                        <span>{{ selectedVoucher.voucher_type === 'disbursements' ? 'Disbursement
-                                            Voucher' : (selectedVoucher.voucher_type === 'payroll' ? 'Payroll' :
-                                            selectedVoucher.voucher_type) }}</span>
+                                        <span>{{ selectedVoucher.voucher_type === 'disbursements' ? 'Disbursement Voucher' : (selectedVoucher.voucher_type === 'payroll' ? 'Payroll' : selectedVoucher.voucher_type) }}</span>
                                     </div>
                                     <div class="ios-row">
                                         <span class="ios-row-label">Payee</span>
