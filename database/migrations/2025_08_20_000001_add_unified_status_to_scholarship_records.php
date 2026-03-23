@@ -12,12 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('scholarship_records', function (Blueprint $table) {
-            // Add new unified_status column as nullable
-            // Values: pending_approval, approved_pending, active_scholar, completed, declined
-            $table->string('unified_status', 50)->nullable();
-
-            // Add index for filtering
-            $table->index('unified_status');
+            if (!Schema::hasColumn('scholarship_records', 'unified_status')) {
+                $table->string('unified_status', 50)->nullable();
+                $table->index('unified_status');
+            }
         });
     }
 
