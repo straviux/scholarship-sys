@@ -1542,7 +1542,7 @@ onMounted(() => {
                                 <p class="text-sm text-red-800">
                                     <strong>Voucher #:</strong> {{vouchers.find(v => v.id ===
                                         voucherToDelete)?.voucher_number ||
-                                    'N/A'}}
+                                        'N/A'}}
                                 </p>
                             </div>
                         </div>
@@ -1573,7 +1573,9 @@ onMounted(() => {
                                     </div>
                                     <div class="ios-row">
                                         <span class="ios-row-label">Disbursement Type</span>
-                                        <span>{{ selectedVoucher.voucher_type === 'disbursements' ? 'Disbursement Voucher' : (selectedVoucher.voucher_type === 'payroll' ? 'Payroll' : selectedVoucher.voucher_type) }}</span>
+                                        <span>{{ selectedVoucher.voucher_type === 'disbursements' ? `Disbursement
+                                            Voucher` : (selectedVoucher.voucher_type === 'payroll' ? 'Payroll' :
+                                            selectedVoucher.voucher_type) }}</span>
                                     </div>
                                     <div class="ios-row">
                                         <span class="ios-row-label">Payee</span>
@@ -1581,7 +1583,7 @@ onMounted(() => {
                                             <p>{{ selectedVoucher.payee_name }}</p>
                                             <p v-if="isPayeeSchool(selectedVoucher)"
                                                 style="font-size: 12px; color: #8E8E93; margin-top: 2px;">Scholar: {{
-                                                getFirstScholarName(selectedVoucher) || '---' }}</p>
+                                                    getFirstScholarName(selectedVoucher) || '---' }}</p>
                                         </div>
                                     </div>
                                     <div class="ios-row">
@@ -1605,7 +1607,7 @@ onMounted(() => {
                                         <span class="ios-row-label">OBR Status</span>
                                         <span
                                             :class="['px-3 py-1 rounded-full text-xs font-medium inline-block', getStatusColor(selectedVoucher.obr_status)]">{{
-                                            selectedVoucher.obr_status || 'On Process' }}</span>
+                                                selectedVoucher.obr_status || 'On Process' }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -1639,7 +1641,7 @@ onMounted(() => {
                                                     /^(1st|2nd|3rd|4th)$/i.test(scholar.year_level) ? scholar.year_level
                                                         + ' YEAR' :
                                                         scholar.year_level
-                                                    }}</span>
+                                                }}</span>
                                                 <span v-if="scholar.academic_year" class="ml-1">| {{
                                                     scholar.academic_year }}</span>
                                                 <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
@@ -2286,7 +2288,7 @@ onMounted(() => {
                                             :disabled="previewZoom <= 50" text size="small" />
                                         <span
                                             style="font-size: 13px; font-weight: 500; width: 48px; text-align: center;">{{
-                                            previewZoom }}%</span>
+                                                previewZoom }}%</span>
                                         <Button icon="pi pi-plus" @click="previewZoom += 10"
                                             :disabled="previewZoom >= 200" text size="small" />
                                         <Button icon="pi pi-home" @click="previewZoom = 100" text size="small"
