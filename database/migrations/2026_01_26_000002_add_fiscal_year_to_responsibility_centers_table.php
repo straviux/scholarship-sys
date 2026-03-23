@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('responsibility_centers', function (Blueprint $table) {
-            $table->string('fiscal_year')->nullable()->after('name');
+            if (!Schema::hasColumn('responsibility_centers', 'fiscal_year')) {
+                $table->string('fiscal_year')->nullable()->after('name');
+            }
         });
     }
 

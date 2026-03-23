@@ -11,7 +11,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('scholarship_records', function (Blueprint $table) {
-            $table->date('date_approved')->nullable()->after('date_filed');
+            if (!Schema::hasColumn('scholarship_records', 'date_approved')) {
+                $table->date('date_approved')->nullable()->after('date_filed');
+            }
         });
     }
 

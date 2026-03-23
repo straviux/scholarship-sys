@@ -11,7 +11,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('scholarship_profiles', function (Blueprint $table) {
-            $table->string('jpm_remarks')->nullable()->after('is_guardian_jpm');
+            if (!Schema::hasColumn('scholarship_profiles', 'jpm_remarks')) {
+                $table->string('jpm_remarks')->nullable()->after('is_guardian_jpm');
+            }
         });
     }
 

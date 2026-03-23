@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('cheques', function (Blueprint $table) {
-            $table->dropColumn(['status', 'date_issued', 'date_cleared']);
+            $cols = array_filter(['status', 'date_issued', 'date_cleared'], fn($col) => Schema::hasColumn('cheques', $col));
+            if ($cols) {
+                $table->dropColumn($cols);
+            }
         });
     }
 

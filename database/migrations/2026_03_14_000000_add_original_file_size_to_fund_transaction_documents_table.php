@@ -9,7 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_transaction_documents', function (Blueprint $table) {
-            $table->integer('original_file_size')->nullable()->after('file_size');
+            if (!Schema::hasColumn('fund_transaction_documents', 'original_file_size')) {
+                $table->integer('original_file_size')->nullable()->after('file_size');
+            }
         });
     }
 

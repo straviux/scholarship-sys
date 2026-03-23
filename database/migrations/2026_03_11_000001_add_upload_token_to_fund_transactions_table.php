@@ -12,9 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_transactions', function (Blueprint $table) {
-            // Add upload token for QR-based document uploads
-            $table->string('upload_token')->nullable()->unique()->after('remarks');
-            $table->timestamp('upload_token_expires_at')->nullable()->after('upload_token');
+            if (!Schema::hasColumn('fund_transactions', 'upload_token')) {
+                $table->string('upload_token')->nullable()->unique()->after('remarks');
+            }
+            if (!Schema::hasColumn('fund_transactions', 'upload_token_expires_at')) {
+                $table->timestamp('upload_token_expires_at')->nullable()->after('upload_token');
+            }
         });
     }
 

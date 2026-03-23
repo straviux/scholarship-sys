@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('scholarship_records', function (Blueprint $table) {
-            $table->enum('grant_provision', ['Matriculation', 'RLE', 'Tuition'])->nullable()->after('scholarship_status_remarks');
+            if (!Schema::hasColumn('scholarship_records', 'grant_provision')) {
+                $table->enum('grant_provision', ['Matriculation', 'RLE', 'Tuition'])->nullable()->after('scholarship_status_remarks');
+            }
         });
     }
 

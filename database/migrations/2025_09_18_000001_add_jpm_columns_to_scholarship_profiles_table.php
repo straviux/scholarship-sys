@@ -8,8 +8,12 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('scholarship_profiles', function (Blueprint $table) {
-            $table->boolean('is_jpm_member')->default(false)->after('contact_no_2');
-            $table->boolean('is_jpm_leader')->default(false)->after('is_jpm_member');
+            if (!Schema::hasColumn('scholarship_profiles', 'is_jpm_member')) {
+                $table->boolean('is_jpm_member')->default(false)->after('contact_no_2');
+            }
+            if (!Schema::hasColumn('scholarship_profiles', 'is_jpm_leader')) {
+                $table->boolean('is_jpm_leader')->default(false)->after('is_jpm_member');
+            }
         });
     }
 

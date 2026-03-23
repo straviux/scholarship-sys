@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('upload_token', 64)->nullable()->unique()->after('profile_photo');
-            $table->timestamp('upload_token_expires_at')->nullable()->after('upload_token');
+            if (!Schema::hasColumn('users', 'upload_token')) {
+                $table->string('upload_token', 64)->nullable()->unique()->after('profile_photo');
+            }
+            if (!Schema::hasColumn('users', 'upload_token_expires_at')) {
+                $table->timestamp('upload_token_expires_at')->nullable()->after('upload_token');
+            }
         });
     }
 

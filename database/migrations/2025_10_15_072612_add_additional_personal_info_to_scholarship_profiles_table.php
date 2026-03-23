@@ -12,11 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('scholarship_profiles', function (Blueprint $table) {
-            // Add new personal information fields
-            // Note: Using existing contact_no_2 field instead of secondary_contact_no
-            $table->date('date_of_birth')->nullable()->after('birthdate');
-            $table->string('place_of_birth', 50)->nullable()->after('date_of_birth');
-            $table->string('indigenous_group', 100)->nullable()->after('religion');
+            if (!Schema::hasColumn('scholarship_profiles', 'date_of_birth')) {
+                $table->date('date_of_birth')->nullable()->after('birthdate');
+            }
+            if (!Schema::hasColumn('scholarship_profiles', 'place_of_birth')) {
+                $table->string('place_of_birth', 50)->nullable()->after('date_of_birth');
+            }
+            if (!Schema::hasColumn('scholarship_profiles', 'indigenous_group')) {
+                $table->string('indigenous_group', 100)->nullable()->after('religion');
+            }
         });
     }
 

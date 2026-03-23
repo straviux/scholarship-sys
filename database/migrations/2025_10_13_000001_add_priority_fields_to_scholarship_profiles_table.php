@@ -12,10 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('scholarship_profiles', function (Blueprint $table) {
-            $table->enum('priority_level', ['low', 'normal', 'high', 'urgent'])->default('normal')->after('remarks');
-            $table->text('priority_reason')->nullable()->after('priority_level');
-            $table->timestamp('priority_assigned_at')->nullable()->after('priority_reason');
-            $table->foreignId('priority_assigned_by')->nullable()->constrained('users')->onDelete('set null')->after('priority_assigned_at');
+            if (!Schema::hasColumn('scholarship_profiles', 'priority_level')) {
+                $table->enum('priority_level', ['low', 'normal', 'high', 'urgent'])->default('normal')->after('remarks');
+            }
+            if (!Schema::hasColumn('scholarship_profiles', 'priority_reason')) {
+                $table->text('priority_reason')->nullable()->after('priority_level');
+            }
+            if (!Schema::hasColumn('scholarship_profiles', 'priority_assigned_at')) {
+                $table->timestamp('priority_assigned_at')->nullable()->after('priority_reason');
+            }
+            if (!Schema::hasColumn('scholarship_profiles', 'priority_assigned_by')) {
+                $table->foreignId('priority_assigned_by')->nullable()->constrained('users')->onDelete('set null')->after('priority_assigned_at');
+            }
         });
     }
 

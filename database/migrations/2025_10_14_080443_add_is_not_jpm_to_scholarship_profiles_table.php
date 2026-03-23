@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('scholarship_profiles', function (Blueprint $table) {
-            $table->boolean('is_not_jpm')->default(false)->after('is_guardian_jpm');
+            if (!Schema::hasColumn('scholarship_profiles', 'is_not_jpm')) {
+                $table->boolean('is_not_jpm')->default(false)->after('is_guardian_jpm');
+            }
         });
     }
 

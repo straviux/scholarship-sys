@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('scholarship_records', function (Blueprint $table) {
-            $table->string('yakap_category')->nullable()->after('term');
-            $table->string('yakap_location')->nullable()->after('yakap_category');
+            if (!Schema::hasColumn('scholarship_records', 'yakap_category')) {
+                $table->string('yakap_category')->nullable()->after('term');
+            }
+            if (!Schema::hasColumn('scholarship_records', 'yakap_location')) {
+                $table->string('yakap_location')->nullable()->after('yakap_category');
+            }
         });
     }
 

@@ -8,7 +8,9 @@ return new class extends Migration {
     public function up()
     {
         Schema::table('scholarship_profiles', function (Blueprint $table) {
-            $table->string('unique_id', 8)->unique()->nullable()->after('profile_id');
+            if (!Schema::hasColumn('scholarship_profiles', 'unique_id')) {
+                $table->string('unique_id', 8)->unique()->nullable()->after('profile_id');
+            }
         });
     }
     public function down()

@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('vouchers', function (Blueprint $table) {
-            $table->string('transaction_status')->default('pending')->after('obr_type');
+            if (!Schema::hasColumn('vouchers', 'transaction_status')) {
+                $table->string('transaction_status')->default('pending')->after('obr_type');
+            }
         });
     }
 

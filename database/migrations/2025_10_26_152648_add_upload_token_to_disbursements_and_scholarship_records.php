@@ -12,13 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('disbursements', function (Blueprint $table) {
-            $table->string('upload_token', 64)->unique()->nullable()->after('created_by');
-            $table->timestamp('upload_token_expires_at')->nullable()->after('upload_token');
+            if (!Schema::hasColumn('disbursements', 'upload_token')) {
+                $table->string('upload_token', 64)->unique()->nullable()->after('created_by');
+            }
+            if (!Schema::hasColumn('disbursements', 'upload_token_expires_at')) {
+                $table->timestamp('upload_token_expires_at')->nullable()->after('upload_token');
+            }
         });
 
         Schema::table('scholarship_records', function (Blueprint $table) {
-            $table->string('upload_token', 64)->unique()->nullable()->after('updated_by');
-            $table->timestamp('upload_token_expires_at')->nullable()->after('upload_token');
+            if (!Schema::hasColumn('scholarship_records', 'upload_token')) {
+                $table->string('upload_token', 64)->unique()->nullable()->after('updated_by');
+            }
+            if (!Schema::hasColumn('scholarship_records', 'upload_token_expires_at')) {
+                $table->timestamp('upload_token_expires_at')->nullable()->after('upload_token');
+            }
         });
     }
 

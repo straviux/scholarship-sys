@@ -12,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('scholarship_profiles', function (Blueprint $table) {
-            $table->tinyInteger('application_status')->default(0)->comment('0: Waiting List, 1: Active, 2: Denied');
-            $table->string('application_status_remarks')->nullable();
-            $table->date('application_status_date')->nullable();
+            if (!Schema::hasColumn('scholarship_profiles', 'application_status')) {
+                $table->tinyInteger('application_status')->default(0)->comment('0: Waiting List, 1: Active, 2: Denied');
+            }
+            if (!Schema::hasColumn('scholarship_profiles', 'application_status_remarks')) {
+                $table->string('application_status_remarks')->nullable();
+            }
+            if (!Schema::hasColumn('scholarship_profiles', 'application_status_date')) {
+                $table->date('application_status_date')->nullable();
+            }
         });
     }
 

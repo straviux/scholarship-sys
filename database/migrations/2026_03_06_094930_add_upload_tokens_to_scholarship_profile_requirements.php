@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('scholarship_profile_requirements', function (Blueprint $table) {
-            $table->string('upload_token')->nullable()->unique()->after('file_path');
-            $table->dateTime('upload_token_expires_at')->nullable()->after('upload_token');
+            if (!Schema::hasColumn('scholarship_profile_requirements', 'upload_token')) {
+                $table->string('upload_token')->nullable()->unique()->after('file_path');
+            }
+            if (!Schema::hasColumn('scholarship_profile_requirements', 'upload_token_expires_at')) {
+                $table->dateTime('upload_token_expires_at')->nullable()->after('upload_token');
+            }
         });
     }
 

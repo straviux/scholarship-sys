@@ -12,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('vouchers', function (Blueprint $table) {
-            $table->integer('fiscal_year')->nullable()->after('course')->comment('Fiscal year for OBR tracking');
-            $table->string('obr_no')->nullable()->after('fiscal_year')->comment('OBR Number from external tracking system');
-            $table->string('dv_no')->nullable()->after('obr_no')->comment('Disbursement Voucher Number from external tracking system');
+            if (!Schema::hasColumn('vouchers', 'fiscal_year')) {
+                $table->integer('fiscal_year')->nullable()->after('course')->comment('Fiscal year for OBR tracking');
+            }
+            if (!Schema::hasColumn('vouchers', 'obr_no')) {
+                $table->string('obr_no')->nullable()->after('fiscal_year')->comment('OBR Number from external tracking system');
+            }
+            if (!Schema::hasColumn('vouchers', 'dv_no')) {
+                $table->string('dv_no')->nullable()->after('obr_no')->comment('Disbursement Voucher Number from external tracking system');
+            }
         });
     }
 

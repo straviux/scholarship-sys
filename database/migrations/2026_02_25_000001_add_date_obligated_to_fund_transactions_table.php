@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_transactions', function (Blueprint $table) {
-            $table->dateTime('date_obligated')->nullable()->after('obr_no');
+            if (!Schema::hasColumn('fund_transactions', 'date_obligated')) {
+                $table->dateTime('date_obligated')->nullable()->after('obr_no');
+            }
         });
 
         // Populate date_obligated with created_at for existing records
