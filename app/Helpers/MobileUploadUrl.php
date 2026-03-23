@@ -17,7 +17,10 @@ class MobileUploadUrl
         return Cache::remember('mobile_upload_base_url', 300, function () {
             $appUrl = config('app.url', 'http://localhost:8000');
             $scheme = parse_url($appUrl, PHP_URL_SCHEME) ?? 'http';
-            $port   = parse_url($appUrl, PHP_URL_PORT);
+
+            // MOBILE_UPLOAD_PORT overrides the port from APP_URL when the
+            // LAN-accessible port differs (e.g. production behind a proxy).
+            $port   = env('MOBILE_UPLOAD_PORT') ?: parse_url($appUrl, PHP_URL_PORT);
             $suffix = $port ? ":{$port}" : '';
 
             $ip = self::getServerIp();
