@@ -1,10 +1,5 @@
 import { ref, onMounted, onUnmounted } from 'vue';
-import gsap from 'gsap';
-import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 import { shouldAnimate } from './useAnimationDefaults';
-
-// Register ScrollToPlugin
-gsap.registerPlugin(ScrollToPlugin);
 
 /**
  * Composable for smooth scrolling functionality
@@ -40,15 +35,10 @@ export const useSmoothScroll = () => {
 		}
 
 		isScrolling.value = true;
-
-		gsap.to(window, {
-			scrollTo: { y: targetPosition, autoKill: false },
-			duration: duration,
-			ease: 'power2.inOut',
-			onComplete: () => {
-				isScrolling.value = false;
-			},
-		});
+		window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+		window.setTimeout(() => {
+			isScrolling.value = false;
+		}, Math.max(50, Math.round(duration * 1000)));
 	};
 
 	/**
@@ -65,15 +55,10 @@ export const useSmoothScroll = () => {
 		}
 
 		isScrolling.value = true;
-
-		gsap.to(window, {
-			scrollTo: { y: y, autoKill: false },
-			duration: duration,
-			ease: 'power2.inOut',
-			onComplete: () => {
-				isScrolling.value = false;
-			},
-		});
+		window.scrollTo({ top: y, behavior: 'smooth' });
+		window.setTimeout(() => {
+			isScrolling.value = false;
+		}, Math.max(50, Math.round(duration * 1000)));
 	};
 
 	/**

@@ -22,10 +22,8 @@ export const easings = {
 };
 
 // Wrapper to skip animations if user prefers reduced motion
-// TEMPORARILY DISABLED — all GSAP animations off for debugging
 export const shouldAnimate = () => {
-	return false;
-	// return !prefersReducedMotion();
+	return !prefersReducedMotion();
 };
 
 // Get delay based on animation preference

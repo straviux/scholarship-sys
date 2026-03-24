@@ -128,9 +128,9 @@ Route::middleware(['auth', 'check.role:system-report,deleted-records,maintenance
 
     // Deleted Records Management Routes - Administrator Only
     Route::get('/admin/deleted-records', [AdminController::class, 'deletedRecords'])->name('admin.deleted-records');
-    Route::post('/admin/profiles/{id}/restore', [AdminController::class, 'restoreProfile'])->middleware('check.permission:profiles.restore')->name('admin.profiles.restore');
-    Route::delete('/admin/profiles/{id}/permanently-delete', [AdminController::class, 'permanentlyDeleteProfile'])->middleware('check.permission:profiles.delete')->name('admin.profiles.permanently-delete');
-    Route::post('/admin/scholarship-records/{id}/restore', [AdminController::class, 'restoreRecord'])->middleware('check.permission:scholarships.restore')->name('admin.records.restore');
+    Route::post('/admin/profiles/{id}/restore', [AdminController::class, 'restoreProfile'])->middleware('check.permission:applicants.delete')->name('admin.profiles.restore');
+    Route::delete('/admin/profiles/{id}/permanently-delete', [AdminController::class, 'permanentlyDeleteProfile'])->middleware('check.permission:applicants.delete')->name('admin.profiles.permanently-delete');
+    Route::post('/admin/scholarship-records/{id}/restore', [AdminController::class, 'restoreRecord'])->middleware('check.permission:scholarships.delete')->name('admin.records.restore');
     Route::delete('/admin/scholarship-records/{id}/permanently-delete', [AdminController::class, 'permanentlyDeleteRecord'])->middleware('check.permission:scholarships.delete')->name('admin.records.permanently-delete');
 
     // Maintenance Management Routes

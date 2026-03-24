@@ -76,17 +76,6 @@
 	}
 }
 
-/* TEMPORARY DEBUG: Nuclear — disable ALL transitions/animations/scroll-behavior */
-*,
-*::before,
-*::after {
-	transition: none !important;
-	animation: none !important;
-}
-html {
-	scroll-behavior: auto !important;
-}
-
 @layer base {
 	html,
 	body,

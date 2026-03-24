@@ -1,5 +1,3 @@
-import gsap from 'gsap';
-import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 import { useGSAPAnimation, quickAnimate, quickAnimateFrom } from '../composables/useGSAPAnimation';
 import {
 	shouldAnimate,
@@ -9,9 +7,6 @@ import {
 	animationTimings,
 	easings,
 } from '../composables/useAnimationDefaults';
-
-// Register GSAP plugins
-gsap.registerPlugin(ScrollToPlugin);
 
 /**
  * Vue 3 Plugin for global GSAP animation utilities

@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
@@ -9,7 +9,7 @@ import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import logger from '@/utils/logger';
 import FloatingDrawer from '@/Components/FloatingDrawer.vue';
-import gsap from 'gsap';
+import { quickAnimateFrom } from '@/composables/useGSAPAnimation';
 import { shouldAnimate } from '@/composables/useAnimationDefaults';
 
 const toast = useToast(); const emit = defineEmits(['close', 'scholar-selected']);
@@ -220,6 +220,16 @@ const getSelectedScholarsList = () => {
     return scholars.value.filter(s => s.selected);
 };
 
+const normalizeId = (value) => (value === null || value === undefined ? '' : String(value));
+const idsEqual = (a, b) => normalizeId(a) !== '' && normalizeId(a) === normalizeId(b);
+
+const payeeOptions = computed(() => {
+    return voucherData.scholars.map((s) => ({
+        ...s,
+        payeeValue: normalizeId(s.profile_id)
+    }));
+});
+
 // Update selected count and voucherData
 const updateSelectedCount = () => {
     selectedScholars.value = scholars.value.filter(s => s.selected);
@@ -228,6 +238,14 @@ const updateSelectedCount = () => {
         ...s,
         individualAmount: s.individualAmount || parseFloat(voucherData.obligations.amount) || 0
     }));
+
+    // Keep payee_id valid against current selected scholars
+    if (voucherData.obligations.payee_type === 'scholar') {
+        const hasCurrentPayee = voucherData.scholars.some(s => idsEqual(s.profile_id, voucherData.obligations.payee_id));
+        if (!hasCurrentPayee) {
+            voucherData.obligations.payee_id = voucherData.scholars[0] ? normalizeId(voucherData.scholars[0].profile_id) : '';
+        }
+    }
 };
 
 // Get step title
@@ -235,9 +253,8 @@ const getStepTitle = () => {
     const prefix = props.mode === 'edit' ? 'Edit' : 'Create';
     const titles = [
         `${prefix} - Select Scholars`,
-        `${prefix} - Obligation Request`,
-        `${prefix} - Disbursements/Payroll`,
-        `${prefix} - List of Scholars`,
+        `${prefix} - Obligation & Scholars`,
+        `${prefix} - Particulars & Explanation`,
         `Review & ${props.mode === 'edit' ? 'Update' : 'Create'}`
     ];
     return titles[step.value - 1];
@@ -274,7 +291,7 @@ const loadEditData = async () => {
 
         // Set obligations
         voucherData.obligations.payee_type = data.payee_type || 'scholar';
-        voucherData.obligations.payee_id = data.payee_id || '';
+        voucherData.obligations.payee_id = data.payee_type === 'scholar' ? normalizeId(data.payee_id) : (data.payee_id || '');
         voucherData.obligations.payee_name = data.payee_name || '';
 
         // For school payees, if payee_id is empty but payee_name exists, use payee_name as payee_id
@@ -354,19 +371,23 @@ const handleSubmit = async () => {
         // Build payee_name based on payee_type
         let payeeName = voucherData.obligations.payee_name;
 
-        if (!payeeName) {
-            if (voucherData.obligations.payee_type === 'scholar' && voucherData.obligations.payee_id) {
-                const selectedScholar = voucherData.scholars.find(s => s.profile_id === voucherData.obligations.payee_id);
-                payeeName = selectedScholar ? `${selectedScholar.first_name} ${selectedScholar.last_name}` : '';
-                // Add & CO. if multiple scholars
-                if (voucherData.scholars.length > 1) {
-                    payeeName += ' & CO.';
-                }
-            } else if (voucherData.obligations.payee_type === 'school') {
-                // For school, payee_id contains the school name/identifier
-                payeeName = voucherData.obligations.payee_id;
+        if (voucherData.obligations.payee_type === 'scholar') {
+            const selectedScholar = voucherData.scholars.find(s => idsEqual(s.profile_id, voucherData.obligations.payee_id));
+            payeeName = selectedScholar ? `${selectedScholar.first_name} ${selectedScholar.last_name}` : '';
+            // Always append & CO. when this is a group of scholars
+            if (payeeName && voucherData.scholars.length > 1) {
+                payeeName += ' & CO.';
             }
+        } else if (voucherData.obligations.payee_type === 'school') {
+            // For school, payee_id contains the school name/identifier
+            payeeName = voucherData.obligations.payee_id;
         }
+
+        const selectedScholars = voucherData.scholars.filter(s => s.selected);
+        const computedScholarTotal = selectedScholars.reduce((sum, scholar) => {
+            return sum + (parseFloat(scholar.individualAmount) || 0);
+        }, 0);
+        const fallbackAmount = parseFloat(voucherData.obligations.amount) || 0;
 
         const payload = {
             voucher_type: voucherData.disbursements.type,
@@ -383,14 +404,13 @@ const handleSubmit = async () => {
             account_code: voucherData.obligations.account_code,
             particulars_name: voucherData.obligations.particulars_name,
             particulars_description: voucherData.obligations.particulars_description,
-            amount: parseFloat(voucherData.obligations.amount) || 0,
+            amount: selectedScholars.length > 0 ? computedScholarTotal : fallbackAmount,
             obr_type: voucherData.obligations.obr_type,
             notes: voucherData.summary.notes,
             transaction_status: voucherData.summary.transaction_status
         };
 
         // For scholar_ids, include individual amounts for each scholar
-        const selectedScholars = voucherData.scholars.filter(s => s.selected);
         if (selectedScholars.length > 0) {
             payload.scholar_ids = selectedScholars.map(s => ({
                 profile_id: s.profile_id,
@@ -483,12 +503,224 @@ const selectedParticular = computed(() => {
     return currentParticulars.value.find(p => p.account_code === voucherData.obligations.account_code);
 });
 
+const autoGeneratedParticularsDescription = ref('');
+const autoGeneratedExplanation = ref('');
+
+const toUpperOrFallback = (value, fallback = '---') => {
+    const text = String(value ?? '').trim();
+    return (text || fallback).toUpperCase();
+};
+
+const joinNonEmpty = (...parts) => {
+    return parts
+        .map(part => String(part ?? '').trim())
+        .filter(Boolean)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+};
+
+const primaryParticularScholar = computed(() => {
+    return selectedPayeeScholar.value || voucherData.scholars[0] || null;
+});
+
+const particularsCourse = computed(() => {
+    return voucherData.disbursements.course || voucherData.disbursements.los_course || primaryParticularScholar.value?.course || '';
+});
+
+const particularsYearLevel = computed(() => {
+    return formatYearLevel(primaryParticularScholar.value?.year_level || '');
+});
+
+const particularsSchool = computed(() => {
+    if (voucherData.obligations.payee_type === 'school') {
+        return voucherData.obligations.payee_id || voucherData.obligations.payee_name || '';
+    }
+    return primaryParticularScholar.value?.school || '';
+});
+
+const particularsSemester = computed(() => {
+    return voucherData.disbursements.semester || primaryParticularScholar.value?.term || '';
+});
+
+const particularsAcademicYear = computed(() => {
+    return voucherData.disbursements.academic_year || primaryParticularScholar.value?.academic_year || '';
+});
+
+const particularsGrantProvision = computed(() => {
+    return selectedParticular.value?.name || voucherData.obligations.particulars_name || '';
+});
+
+const scholarsParticularSeed = computed(() => {
+    return voucherData.scholars
+        .map(s => joinNonEmpty(
+            normalizeId(s.profile_id),
+            s.year_level,
+            s.course,
+            s.school,
+            s.academic_year,
+            s.term
+        ))
+        .join('|');
+});
+
+const buildParticularsDescriptionByObrType = () => {
+    const obrType = (voucherData.obligations.obr_type || '').toUpperCase();
+    if (!obrType) return '';
+
+    if (obrType === 'REIMBURSEMENT') {
+        const firstLine = `REIMBURSEMENT FOR ${toUpperOrFallback(particularsYearLevel.value)}`;
+        const secondLine = `${toUpperOrFallback(particularsCourse.value)} STUDENT`;
+        const thirdLine = toUpperOrFallback(joinNonEmpty(particularsSemester.value, particularsAcademicYear.value));
+        const schoolLine = toUpperOrFallback(particularsSchool.value);
+        return `<p>(${firstLine}<br>${secondLine}<br>${thirdLine})</p><p>(${schoolLine})</p>`;
+    }
+
+    if (obrType === 'REGULAR') {
+        const detailsLine = joinNonEmpty(
+            `EDUCATIONAL ASSISTANCE FOR ${toUpperOrFallback(particularsCourse.value)} STUDENT,`,
+            toUpperOrFallback(particularsSemester.value),
+            toUpperOrFallback(particularsAcademicYear.value)
+        );
+        const grantLine = toUpperOrFallback(particularsGrantProvision.value);
+        return `<p>(${detailsLine})</p><p>(${grantLine})</p>`;
+    }
+
+    if (obrType === 'FINANCIAL ASSISTANCE') {
+        const lineOne = joinNonEmpty(
+            `FINANCIAL ASSISTANCE FOR ${toUpperOrFallback(particularsYearLevel.value)}`,
+            toUpperOrFallback(particularsAcademicYear.value)
+        );
+        const lineTwo = toUpperOrFallback(particularsCourse.value);
+        const lineThree = toUpperOrFallback(particularsSchool.value);
+        return `<p>(${lineOne})</p><p>(${lineTwo})</p><p>(${lineThree})</p>`;
+    }
+
+    return '';
+};
+
+const buildExplanationByObrType = () => {
+    const disbursementType = (voucherData.disbursements.type || '').toLowerCase();
+    const obrType = (voucherData.obligations.obr_type || '').toUpperCase();
+    const course = toUpperOrFallback(particularsCourse.value);
+    const school = toUpperOrFallback(particularsSchool.value);
+
+    if (disbursementType === 'payroll') {
+        return `<p>We acknowledge receipt of the sum shown opposite our names for EDUCATIONAL FINANCIAL ASSISTANCE FOR ${school} ${course} SCHOLARS</p>`;
+    }
+
+    if (!obrType) return '';
+
+    const grantProvision = toUpperOrFallback(particularsGrantProvision.value);
+    const yearLevel = toUpperOrFallback(particularsYearLevel.value);
+    const semesterAcademicYear = toUpperOrFallback(joinNonEmpty(particularsSemester.value, particularsAcademicYear.value));
+
+    if (obrType === 'REIMBURSEMENT') {
+        return `<p>To obligate the payment for the REIMBURSEMENT OF ${grantProvision} OF ${course} STUDENT, ${yearLevel}, ${semesterAcademicYear} at ${school} as per supporting papers hereto attached in the amount of...</p>`;
+    }
+
+    if (obrType === 'REGULAR') {
+        return `<p>To obligate the payment for the ${grantProvision} OF THE ${course} STUDENT, ${yearLevel}, ${semesterAcademicYear} as per supporting papers hereto attached in the amount of...</p>`;
+    }
+
+    if (obrType === 'FINANCIAL ASSISTANCE') {
+        return `<p>To obligate the payment for the FINANCIAL ASSISTANCE OF THE ${course} as per supporting papers hereto attached in the amount of...</p>`;
+    }
+
+    return '';
+};
+
 // Watch for los_course changes and auto-fill course field if empty
 watch(
     () => voucherData.disbursements.los_course,
     (newValue) => {
         if (newValue && !voucherData.disbursements.course) {
             voucherData.disbursements.course = newValue;
+        }
+    }
+);
+
+watch(
+    () => selectedParticular.value?.name,
+    (newName) => {
+        if (newName) {
+            voucherData.obligations.particulars_name = newName;
+        }
+    }
+);
+
+watch(
+    [
+        () => voucherData.obligations.obr_type,
+        () => voucherData.disbursements.course,
+        () => voucherData.disbursements.los_course,
+        () => voucherData.disbursements.semester,
+        () => voucherData.disbursements.academic_year,
+        () => voucherData.obligations.payee_type,
+        () => voucherData.obligations.payee_id,
+        () => voucherData.obligations.payee_name,
+        () => voucherData.obligations.particulars_name,
+        () => selectedParticular.value?.name,
+        () => scholarsParticularSeed.value
+    ],
+    () => {
+        const generated = buildParticularsDescriptionByObrType();
+        if (!generated) {
+            autoGeneratedParticularsDescription.value = '';
+            return;
+        }
+
+        const currentDescription = (voucherData.obligations.particulars_description || '').trim();
+        if (!currentDescription || currentDescription === autoGeneratedParticularsDescription.value) {
+            voucherData.obligations.particulars_description = generated;
+        }
+        autoGeneratedParticularsDescription.value = generated;
+    }
+);
+
+watch(
+    [
+        () => voucherData.obligations.obr_type,
+        () => voucherData.disbursements.course,
+        () => voucherData.disbursements.los_course,
+        () => voucherData.disbursements.semester,
+        () => voucherData.disbursements.academic_year,
+        () => voucherData.obligations.payee_type,
+        () => voucherData.obligations.payee_id,
+        () => voucherData.obligations.payee_name,
+        () => voucherData.obligations.particulars_name,
+        () => selectedParticular.value?.name,
+        () => scholarsParticularSeed.value
+    ],
+    () => {
+        const generated = buildExplanationByObrType();
+        if (!generated) {
+            autoGeneratedExplanation.value = '';
+            return;
+        }
+
+        const currentExplanation = (voucherData.disbursements.explanation || '').trim();
+        if (!currentExplanation || currentExplanation === autoGeneratedExplanation.value) {
+            voucherData.disbursements.explanation = generated;
+        }
+        autoGeneratedExplanation.value = generated;
+    }
+);
+
+watch(
+    () => voucherData.obligations.payee_type,
+    (newType, oldType) => {
+        if (newType === 'school') {
+            const matchesSelectedScholar = voucherData.scholars.some(s => idsEqual(s.profile_id, voucherData.obligations.payee_id));
+            if (oldType === 'scholar' && matchesSelectedScholar) {
+                voucherData.obligations.payee_id = '';
+            }
+            return;
+        }
+
+        const hasCurrentPayee = voucherData.scholars.some(s => idsEqual(s.profile_id, voucherData.obligations.payee_id));
+        if (!hasCurrentPayee) {
+            voucherData.obligations.payee_id = voucherData.scholars[0] ? normalizeId(voucherData.scholars[0].profile_id) : '';
         }
     }
 );
@@ -500,7 +732,7 @@ const selectedPayeeScholar = computed(() => {
     if (voucherData.obligations.payee_type !== 'scholar' || !voucherData.obligations.payee_id) {
         return null;
     }
-    return voucherData.scholars.find(s => s.profile_id === voucherData.obligations.payee_id);
+    return voucherData.scholars.find(s => idsEqual(s.profile_id, voucherData.obligations.payee_id));
 });
 
 // Get payee display name
@@ -582,6 +814,8 @@ const resetVoucherData = () => {
         notes: '',
         transaction_status: 'pending'
     };
+    autoGeneratedParticularsDescription.value = '';
+    autoGeneratedExplanation.value = '';
     // Deselect all scholars
     scholars.value.forEach(s => s.selected = false);
     selectedScholars.value = [];
@@ -647,25 +881,27 @@ onMounted(async () => {
     isOpen.value = true;
 });
 
-// GSAP: step transition — slide in direction of travel
+// GSAP: step transition â€” slide in direction of travel
 watch(step, (newStep, oldStep) => {
     if (!shouldAnimate()) return;
     const dir = newStep > oldStep ? 1 : -1;
     nextTick(() => {
         const el = wizardContentRef.value;
         if (!el) return;
-        gsap.from(el, { x: dir * 28, opacity: 0, duration: 0.26, ease: 'power2.out', clearProps: 'transform,opacity' });
+        quickAnimateFrom(el, { x: dir * 28, opacity: 0, duration: 0.26, clearProps: 'transform,opacity' });
     });
 });
 
 
-// ─── Drag logic ───
+// â”€â”€â”€ Drag logic â”€â”€â”€
 const dragOffset = ref({ x: 0, y: 0 });
 const dragStart = ref(null);
 
 const wizardModalStyle = computed(() => ({
     width: '90vw',
-    maxWidth: step.value === 2 ? '1100px' : '640px',
+    maxWidth: step.value === 2 ? '1040px' : (step.value === 3 ? '1200px' : '640px'),
+    height: 'calc(100vh - 2rem)',
+    maxHeight: 'calc(100vh - 2rem)',
     transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
 }));
 
@@ -694,8 +930,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <Dialog v-model:visible="isOpen" :modal="true" appendTo="body"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }" @hide="closeWizard">
+    <Dialog v-model:visible="isOpen" :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
+        @hide="closeWizard">
         <template #container>
             <div class="ios-modal" :style="wizardModalStyle">
                 <!-- iOS Nav Bar -->
@@ -704,14 +940,17 @@ onBeforeUnmount(() => {
                         <i class="pi pi-times"></i>
                     </button>
                     <button v-else class="ios-nav-btn ios-nav-cancel" @click="previousStep">
-                        <i class="pi pi-chevron-left" style="font-size: 13px;"></i> Back
+                        <i class="pi pi-chevron-left" style="font-size: 13px;"></i>
                     </button>
                     <span class="ios-nav-title">{{ getStepTitle() }}</span>
-                    <button v-if="step < 5" class="ios-nav-btn ios-nav-action" @click="nextStep"
-                        :disabled="step === 1 && selectedCount === 0">Next</button>
+                    <button v-if="step < 4" class="ios-nav-btn ios-nav-action" @click="nextStep"
+                        :disabled="step === 1 && selectedCount === 0">
+                        <i class="pi pi-arrow-right" style="font-size: 13px;"></i>
+                    </button>
                     <button v-else class="ios-nav-btn ios-nav-action" @click="handleSubmit" :disabled="loading">
                         <i v-if="loading" class="pi pi-spin pi-spinner" style="font-size: 12px; margin-right: 3px;"></i>
-                        {{ props.mode === 'edit' ? 'Update' : 'Create' }}
+                        <i v-else-if="props.mode === 'edit'" class="pi pi-save" style="font-size: 13px;"></i>
+                        <i v-else class="pi pi-check" style="font-size: 13px;"></i>
                     </button>
                 </div>
                 <div ref="wizardContentRef" class="ios-body">
@@ -719,12 +958,12 @@ onBeforeUnmount(() => {
                         <!-- Progress Bar -->
                         <div class="space-y-2">
                             <div class="flex justify-between text-sm text-gray-600">
-                                <span>Step {{ step }} of 5</span>
-                                <span>{{ Math.round((step / 5) * 100) }}%</span>
+                                <span>Step {{ step }} of 4</span>
+                                <span>{{ Math.round((step / 4) * 100) }}%</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
                                 <div class="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                    :style="{ width: (step / 5) * 100 + '%' }"></div>
+                                    :style="{ width: (step / 4) * 100 + '%' }"></div>
                             </div>
                         </div>
 
@@ -737,7 +976,7 @@ onBeforeUnmount(() => {
 
                                 <div class="space-y-3">
                                     <!-- Info Banner -->
-                                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl">
                                         <p class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>Only
                                             active scholars
                                             are displayed</p>
@@ -760,7 +999,7 @@ onBeforeUnmount(() => {
 
                                     <!-- Error Message -->
                                     <div v-if="error"
-                                        class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                                        class="p-3 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm">
                                         {{ error }}
                                     </div>
 
@@ -775,7 +1014,7 @@ onBeforeUnmount(() => {
 
                                     <!-- Scholar List -->
                                     <div v-if="!loading"
-                                        class="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                                        class="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded-2xl p-4">
                                         <div v-if="filteredScholars.length === 0"
                                             class="text-center py-8 text-gray-500">
                                             <p v-if="scholars.length === 0">No scholars available</p>
@@ -789,7 +1028,7 @@ onBeforeUnmount(() => {
                                             <label :for="`scholar-${scholar.profile_id}`"
                                                 class="ml-3 text-sm text-gray-700 flex-1 cursor-pointer">
                                                 <div class="font-medium">{{ scholar.first_name }} {{ scholar.middle_name
-                                                }} {{
+                                                    }} {{
                                                         scholar.last_name }}</div>
                                                 <div class="text-gray-500 text-xs">
                                                     <span v-if="scholar.year_level" class="uppercase">{{
@@ -811,21 +1050,15 @@ onBeforeUnmount(() => {
                         </div>
 
                         <!-- Step 2: Obligations -->
-                        <div v-if="step === 2" class="space-y-4">
-                            <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                                <p v-if="props.mode === 'edit'" class="text-sm text-blue-900"><i
-                                        class="pi pi-info-circle mr-2"></i>Voucher Number: <span
-                                        class="font-semibold">{{
-                                            voucherData.voucher_number }}</span></p>
-                                <p v-else class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>A new
-                                    voucher number
-                                    will be generated upon saving</p>
-                            </div>
+                        <div v-if="step === 2" class="space-y-4 text-gray-800">
 
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                            <div
+                                class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 bg-white border border-[#e5e5ea] rounded-2xl p-4">
                                 <!-- OBR Type and Payee Type -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">OBR Type</label>
+                                    <label
+                                        class="inline-flex text-sm font-medium text-gray-700 mb-1 items-center gap-2"><i
+                                            class="pi pi-tag text-[#FF9500] text-xs"></i>OBR Type</label>
                                     <Select v-model="voucherData.obligations.obr_type"
                                         :options="[{ value: 'REGULAR', label: 'REGULAR' }, { value: 'FINANCIAL ASSISTANCE', label: 'FINANCIAL ASSISTANCE' }, { value: 'REIMBURSEMENT', label: 'REIMBURSEMENT' }]"
                                         optionLabel="label" optionValue="value" placeholder="Select OBR Type"
@@ -833,7 +1066,9 @@ onBeforeUnmount(() => {
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Payee Type</label>
+                                    <label
+                                        class="inline-flex text-sm font-medium text-gray-700 mb-1 items-center gap-2"><i
+                                            class="pi pi-users text-[#007AFF] text-xs"></i>Payee Type</label>
                                     <Select v-model="voucherData.obligations.payee_type"
                                         :options="[{ value: 'scholar', label: 'Scholar' }, { value: 'school', label: 'School' }]"
                                         optionLabel="label" optionValue="value" class="w-full" />
@@ -841,24 +1076,27 @@ onBeforeUnmount(() => {
                             </div>
 
                             <!-- Payee and Payee Address (wider section) -->
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                            <div
+                                class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 bg-white border border-[#e5e5ea] rounded-2xl p-4">
                                 <!-- Payee Selection -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Payee</label>
+                                    <label
+                                        class="inline-flex text-sm font-medium text-gray-700 mb-1 items-center gap-2"><i
+                                            class="pi pi-user text-[#34C759] text-xs"></i>Payee</label>
                                     <!-- Scholar Dropdown -->
                                     <Select v-if="voucherData.obligations.payee_type === 'scholar'"
-                                        v-model="voucherData.obligations.payee_id" :options="voucherData.scholars"
-                                        optionValue="profile_id" placeholder="Select Payee" class="w-full">
+                                        v-model="voucherData.obligations.payee_id" :options="payeeOptions"
+                                        optionValue="payeeValue" placeholder="Select Payee" class="w-full">
                                         <template #option="{ option }">
-                                            {{ option.first_name }} {{ option.last_name }}{{ voucherData.scholars.length
+                                            {{ option.first_name }} {{ option.last_name }}{{ payeeOptions.length
                                                 > 1 ? ` &
                                             CO.` : '' }}
                                         </template>
                                         <template #value="{ value, placeholder }">
                                             <template v-if="value != null && value !== ''">
-                                                {{voucherData.scholars.find(s => s.profile_id === value)?.first_name}}
-                                                {{voucherData.scholars.find(s => s.profile_id ===
-                                                    value)?.last_name}}{{ voucherData.scholars.length > 1 ? ` & CO.` : '' }}
+                                                {{payeeOptions.find(s => idsEqual(s.payeeValue, value))?.first_name}}
+                                                {{payeeOptions.find(s => idsEqual(s.payeeValue,
+                                                    value))?.last_name}}{{ payeeOptions.length > 1 ? ` & CO.` : '' }}
                                             </template>
                                             <span v-else>{{ placeholder }}</span>
                                         </template>
@@ -870,19 +1108,25 @@ onBeforeUnmount(() => {
 
                                 <!-- Payee Address -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Payee Address</label>
+                                    <label
+                                        class="inline-flex text-sm font-medium text-gray-700 mb-1 items-center gap-2"><i
+                                            class="pi pi-map-marker text-[#AF52DE] text-xs"></i>Payee
+                                        Address</label>
                                     <InputText v-model="voucherData.obligations.payee_address" type="text"
                                         placeholder="Enter payee address..." class="w-full" />
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-start">
+                            <div
+                                class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-start bg-white border border-[#e5e5ea] rounded-2xl p-4">
 
                                 <!-- Column 2: Responsibility Center, Particulars, Account Code, Amount -->
                                 <div class="space-y-4">
                                     <!-- Responsibility Center -->
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Responsibility
+                                        <label
+                                            class="inline-flex text-sm font-medium text-gray-700 mb-1 items-center gap-2"><i
+                                                class="pi pi-building text-[#5856D6] text-xs"></i>Responsibility
                                             Center</label>
                                         <Select v-model="voucherData.obligations.responsibility_center"
                                             :options="responsibilityCenters" optionLabel="code" optionValue="code"
@@ -891,7 +1135,9 @@ onBeforeUnmount(() => {
 
                                     <!-- Particular Selection -->
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Particulars</label>
+                                        <label
+                                            class="inline-flex text-sm font-medium text-gray-700 mb-1 items-center gap-2"><i
+                                                class="pi pi-bookmark text-[#FF9500] text-xs"></i>Particulars</label>
                                         <Select v-model="voucherData.obligations.account_code"
                                             :disabled="!voucherData.obligations.responsibility_center"
                                             :options="currentParticulars" optionLabel="name" optionValue="account_code"
@@ -919,20 +1165,64 @@ onBeforeUnmount(() => {
                                             (Optional)</label>
                                         <TermSelect v-model="voucherData.disbursements.semester" />
                                     </div>
+
+                                    <div>
+                                        <label
+                                            class="inline-flex text-sm font-medium text-gray-700 mb-2 items-center gap-2"><i
+                                                class="pi pi-book text-[#8E8E93] text-xs"></i>Course
+                                            (Optional)</label>
+                                        <InputText v-model="voucherData.disbursements.course" type="text" class="w-full"
+                                            placeholder="e.g., Medical Laboratory Science" />
+                                    </div>
                                 </div>
 
-                                <!-- Column 3: Academic Year, Term -->
-
-
-                                <!-- Column 3: Particulars Description (Quill Editor) -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Particulars
-                                        (Descriptions)</label>
-                                    <div class="border border-gray-300 rounded-lg overflow-hidden h-full">
-                                        <QuillEditor v-model:content="voucherData.obligations.particulars_description"
-                                            :toolbar="quillToolbar" content-type="html" theme="snow"
-                                            placeholder="Enter particulars description..." style="height: 300px" />
+                                <div class="space-y-4">
+                                    <div class="bg-white border border-[#e5e5ea] rounded-2xl p-3">
+                                        <div class="flex items-center justify-between gap-3 mb-2">
+                                            <label
+                                                class="inline-flex text-xs font-medium text-gray-900 items-center gap-2">
+                                                <i class="pi pi-users text-[#34C759] text-xs"></i>
+                                                Selected Scholars ({{ voucherData.scholars.length }})
+                                            </label>
+                                            <div class="flex items-center gap-2 shrink-0">
+                                                <Checkbox id="applyToAll" v-model="applyToAllChecked" :binary="true" />
+                                                <label for="applyToAll"
+                                                    class="text-xs font-medium text-gray-900 cursor-pointer whitespace-nowrap">
+                                                    Apply Same Amount
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div v-if="applyToAllChecked" class="flex items-center gap-2 mb-2">
+                                            <span class="text-gray-600 text-xs">PHP</span>
+                                            <InputText v-model="applyToAllAmount" type="number" placeholder="0.00"
+                                                step="0.01" class="flex-1 text-sm" />
+                                            <Button label="Apply" severity="success" @click="applyAmountToAll" />
+                                        </div>
+                                        <div class="text-xs text-blue-800 space-y-1">
+                                            <div v-for="scholar in voucherData.scholars" :key="scholar.profile_id"
+                                                class="flex items-center justify-between px-2.5 py-1 bg-white rounded-xl border border-[#e5e5ea]">
+                                                <div class="flex items-center flex-1">
+                                                    <i class="pi pi-check text-green-600 mr-3 text-xs"></i>
+                                                    <span class="font-medium text-sm">{{ scholar.first_name }} {{
+                                                        scholar.last_name
+                                                    }}</span>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-gray-600 text-xs">PHP</span>
+                                                    <InputText v-model.number="scholar.individualAmount" type="number"
+                                                        placeholder="0.00" step="0.01" class="w-28 text-sm" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div v-if="voucherData.scholars.length > 1"
+                                            class="mt-3 pt-3 border-t border-blue-200 flex justify-between items-center">
+                                            <span class="font-semibold text-sm text-blue-900">Total Amount:</span>
+                                            <span class="text-base font-bold text-blue-600">{{
+                                                formatCurrency(totalAmount)
+                                                }}</span>
+                                        </div>
                                     </div>
+
                                 </div>
 
                             </div>
@@ -940,19 +1230,18 @@ onBeforeUnmount(() => {
 
                         </div>
 
-                        <!-- Step 3: Explanation -->
-                        <div v-if="step === 3" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <!-- Column 1: Disbursement Type -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-900 mb-3">
-                                    Disbursement Type
+                        <!-- Step 3: Particulars & Explanation -->
+                        <div v-if="step === 3" class="space-y-4 text-gray-800">
+                            <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4">
+                                <label class="inline-flex text-sm font-medium text-gray-900 mb-3 items-center gap-2">
+                                    <i class="pi pi-wallet text-[#007AFF] text-xs"></i>Disbursement Type
                                 </label>
-                                <div class="space-y-3">
+                                <div class="flex items-center gap-8">
                                     <div class="flex items-center">
                                         <RadioButton v-model="voucherData.disbursements.type" inputId="disbursements"
                                             name="disbursementType" value="disbursements" />
                                         <label for="disbursements"
-                                            class="ml-3 text-sm font-medium text-gray-900  cursor-pointer">
+                                            class="ml-3 text-sm font-medium text-gray-900 cursor-pointer">
                                             Disbursement Voucher
                                         </label>
                                     </div>
@@ -967,99 +1256,55 @@ onBeforeUnmount(() => {
                                 </div>
                             </div>
 
-                            <!-- Column 2-3: Explanation -->
-                            <div class="lg:col-span-2">
-                                <label class="block text-sm font-medium text-gray-900 mb-2">
-                                    Explanation
-                                </label>
-                                <div class="border border-gray-300 rounded-lg overflow-hidden">
-                                    <QuillEditor v-model:content="voucherData.disbursements.explanation"
-                                        :toolbar="quillToolbar" content-type="html" theme="snow"
-                                        placeholder="Enter explanation..." style="height: 200px" />
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Particulars
+                                        (Descriptions)</label>
+                                    <div class="border border-gray-300 rounded-2xl overflow-hidden bg-white h-full">
+                                        <QuillEditor v-model:content="voucherData.obligations.particulars_description"
+                                            :toolbar="quillToolbar" content-type="html" theme="snow"
+                                            placeholder="Enter particulars description..." style="height: 420px" />
+                                    </div>
+                                </div>
+
+                                <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4">
+                                    <label
+                                        class="inline-flex text-sm font-medium text-gray-900 mb-2 items-center gap-2">
+                                        <i class="pi pi-file-edit text-[#5856D6] text-xs"></i>Explanation
+                                    </label>
+                                    <div class="border border-gray-300 rounded-2xl overflow-hidden bg-white">
+                                        <QuillEditor v-model:content="voucherData.disbursements.explanation"
+                                            :toolbar="quillToolbar" content-type="html" theme="snow"
+                                            placeholder="Enter explanation..." style="height: 420px" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Step 4: List of Scholars -->
+                        <!-- Step 4: Review & Create -->
                         <div v-if="step === 4" class="space-y-4">
-                            <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
-                                <p class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>Set individual
-                                    amounts for
-                                    each scholar. The amounts will be summed up to create the total disbursement.</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-900 mb-3">
-                                    Selected Scholars ({{ voucherData.scholars.length }})
-                                </label>
-
-                                <!-- Apply Same Amount to All Scholars -->
-                                <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                                    <div class="flex items-center gap-3 mb-3">
-                                        <Checkbox id="applyToAll" v-model="applyToAllChecked" :binary="true" />
-                                        <label for="applyToAll"
-                                            class="text-sm font-medium text-gray-900 cursor-pointer">
-                                            Apply Same Amount to All Scholars
-                                        </label>
-                                    </div>
-                                    <div v-if="applyToAllChecked" class="flex items-center gap-2">
-                                        <span class="text-gray-600 text-sm">₱</span>
-                                        <InputText v-model="applyToAllAmount" type="number" placeholder="0.00"
-                                            step="0.01" class="flex-1" />
-                                        <Button label="Apply" severity="success" @click="applyAmountToAll" />
-                                    </div>
-                                </div>
-
-                                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
-                                    <div class="text-sm text-blue-800 space-y-3">
-                                        <div v-for="scholar in voucherData.scholars" :key="scholar.profile_id"
-                                            class="flex items-center justify-between p-3 bg-white rounded border border-blue-200">
-                                            <div class="flex items-center flex-1">
-                                                <i class="pi pi-check text-green-600 mr-3 text-xs"></i>
-                                                <span class="font-medium">{{ scholar.first_name }} {{ scholar.last_name
-                                                }}</span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-gray-600 text-sm">₱</span>
-                                                <InputText v-model.number="scholar.individualAmount" type="number"
-                                                    placeholder="0.00" step="0.01" class="w-24" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div v-if="voucherData.scholars.length > 1"
-                                        class="mt-4 pt-4 border-t border-blue-200 flex justify-between items-center">
-                                        <span class="font-semibold text-blue-900">Total Amount:</span>
-                                        <span class="text-lg font-bold text-blue-600">{{ formatCurrency(totalAmount)
-                                        }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="space-y-4">
-                                <!-- Course -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Course
-                                        (Optional)</label>
-                                    <InputText v-model="voucherData.disbursements.course" type="text" class="w-full"
-                                        placeholder="e.g., BS Information Technology" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Step 5: Review & Create -->
-                        <div v-if="step === 5" class="space-y-4">
                             <!-- Obligations Summary -->
-                            <div v-if="voucherData.obligations.payee_id"
-                                class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
                                 <h4 class="font-medium text-gray-900 mb-3">Obligation Details</h4>
                                 <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">OBR Type:</span>
+                                        <span class="font-medium text-gray-900">{{ voucherData.obligations.obr_type ||
+                                            '---' }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Payee Type:</span>
+                                        <span class="font-medium text-gray-900">{{ voucherData.obligations.payee_type ||
+                                            '---' }}</span>
+                                    </div>
                                     <div class="flex justify-between">
                                         <span class="text-gray-600">Payee:</span>
                                         <span class="font-medium text-gray-900">{{ getPayeeDisplay() }}</span>
                                     </div>
-                                    <div v-if="voucherData.obligations.payee_address" class="flex justify-between">
+                                    <div class="flex justify-between">
                                         <span class="text-gray-600 text-xs">Address:</span>
                                         <p class="font-medium text-gray-900 text-sm">{{
-                                            voucherData.obligations.payee_address }}</p>
+                                            voucherData.obligations.payee_address || '---' }}</p>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-gray-600">Particulars:</span>
@@ -1072,13 +1317,44 @@ onBeforeUnmount(() => {
                                     <div class="flex justify-between">
                                         <span class="text-gray-600">Account Code:</span>
                                         <span class="font-medium text-gray-900">{{ voucherData.obligations.account_code
-                                        }}</span>
+                                            || '---' }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Disbursement Type:</span>
+                                        <span class="font-medium text-gray-900">{{ voucherData.disbursements.type ||
+                                            '---' }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Course:</span>
+                                        <span class="font-medium text-gray-900">{{ voucherData.disbursements.course ||
+                                            '---' }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Academic Year:</span>
+                                        <span class="font-medium text-gray-900">{{
+                                            voucherData.disbursements.academic_year ||
+                                            '---' }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Term:</span>
+                                        <span class="font-medium text-gray-900">{{ voucherData.disbursements.semester ||
+                                            '---' }}</span>
                                     </div>
                                     <div v-if="voucherData.obligations.particulars_description"
                                         class="pt-2 border-t border-gray-300">
                                         <p class="text-gray-600 text-xs mb-2">Particulars (Description):</p>
                                         <div class="text-gray-700 text-sm"
                                             v-html="voucherData.obligations.particulars_description">
+                                        </div>
+                                    </div>
+                                    <!-- Disbursements Summary -->
+                                    <div v-if="voucherData.disbursements.explanation"
+                                        class="pt-2 border-t border-gray-300">
+                                        <p class="text-gray-600 text-xs mb-2">{{ voucherData.disbursements.type ===
+                                            'disbursements' ?
+                                            'Disbursements' : 'Payroll' }} Explanation</p>
+                                        <div class="text-gray-700 text-sm"
+                                            v-html="voucherData.disbursements.explanation">
                                         </div>
                                     </div>
                                     <div class="pt-2 border-t border-gray-300">
@@ -1089,7 +1365,7 @@ onBeforeUnmount(() => {
                                                 <span>{{ scholar.first_name }} {{ scholar.last_name }}</span>
                                                 <span class="font-semibold">{{ formatCurrency(scholar.individualAmount
                                                     || 0)
-                                                }}</span>
+                                                    }}</span>
                                             </li>
                                         </ol>
                                         <div
@@ -1104,39 +1380,12 @@ onBeforeUnmount(() => {
 
                             <!-- Notes Summary -->
                             <div v-if="voucherData.summary.notes"
-                                class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                                class="bg-yellow-50 p-4 rounded-2xl border border-yellow-200">
                                 <h4 class="font-medium text-yellow-900 mb-2">Notes</h4>
                                 <p class="text-sm text-yellow-800">{{ voucherData.summary.notes }}</p>
                             </div>
 
-                            <!-- Disbursements Summary -->
-                            <div v-if="voucherData.disbursements.explanation"
-                                class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                                <h4 class="font-medium text-blue-900 mb-2">{{ voucherData.disbursements.type ===
-                                    'disbursements' ?
-                                    'Disbursements' : 'Payroll' }} Explanation</h4>
-                                <p class="text-sm text-blue-800" v-html="voucherData.disbursements.explanation"></p>
-                            </div>
-
-                            <!-- List of Scholars Summary -->
-                            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                                <h4 class="font-medium text-purple-900 mb-2">List of Scholars</h4>
-                                <div class="text-sm text-purple-800 space-y-2">
-                                    <div v-if="voucherData.disbursements.course">
-                                        <span class="text-gray-600">Course:</span> {{ voucherData.disbursements.course
-                                        }}
-                                    </div>
-                                    <div v-if="voucherData.disbursements.academic_year">
-                                        <span class="text-gray-600">Academic Year:</span>
-                                        {{ voucherData.disbursements.academic_year }}
-                                    </div>
-                                    <div v-if="voucherData.disbursements.semester">
-                                        <span class="text-gray-600">Term:</span>
-                                        {{ voucherData.disbursements.semester }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        </div><!-- end Step 4 -->
 
                     </div><!-- end space-y-6 -->
                 </div><!-- end ios-body / wizardContentRef -->
@@ -1145,8 +1394,8 @@ onBeforeUnmount(() => {
     </Dialog>
 
     <!-- Obligation Preview Drawer -->
-    <FloatingDrawer :visible="isOpen && step !== 5" :header="step === 1 ? 'Selected Scholars' : 'Preview'"
-        :modal="false" position="right" :closable="false" :dismissableMask="false" class="!w-[400px]">
+    <FloatingDrawer :visible="isOpen && step <= 2" :header="step === 1 ? 'Selected Scholars' : 'Preview'" :modal="false"
+        position="right" :closable="false" :dismissableMask="false" class="!w-[400px]">
         <div class="space-y-4">
             <!-- Step 1: Selected Scholars -->
             <div v-if="step === 1" class="space-y-3">
@@ -1158,11 +1407,11 @@ onBeforeUnmount(() => {
                         class="flex items-center justify-between bg-green-50 p-3 rounded border border-green-200">
                         <div class="flex-1">
                             <div class="text-sm font-medium text-gray-900">{{ scholar.first_name }} {{ scholar.last_name
-                                }}
+                            }}
                             </div>
                             <div class="text-xs text-gray-500">
                                 <span v-if="scholar.year_level" class="uppercase">{{ formatYearLevel(scholar.year_level)
-                                    }}</span>
+                                }}</span>
                                 <span v-else class="text-red-500">---</span>
                                 {{ scholar.course ? ' | ' + scholar.course : '' }}
                             </div>
@@ -1194,7 +1443,7 @@ onBeforeUnmount(() => {
                 <div class="flex justify-between pb-3 border-b border-gray-200">
                     <span class="text-gray-600">Particulars:</span>
                     <span class="font-medium text-gray-900">{{ voucherData.obligations.particulars_name || '---'
-                    }}</span>
+                        }}</span>
                 </div>
 
                 <div class="flex justify-between pb-3 border-b border-gray-200">

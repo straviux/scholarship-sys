@@ -5,11 +5,16 @@ import { useToast } from 'primevue/usetoast';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import VoucherWizard from '@/Components/Obligations/VoucherWizard.vue';
 import FloatingDrawer from '@/Components/FloatingDrawer.vue';
-import gsap from 'gsap';
+import { quickAnimateFrom } from '@/composables/useGSAPAnimation';
 import { shouldAnimate } from '@/composables/useAnimationDefaults';
 import axios from 'axios';
 
 const toast = useToast();
+
+const ftDrawerPt = {
+    root: { class: 'ft-floating-drawer' },
+    mask: { class: 'ft-floating-drawer-mask' }
+};
 
 const page = usePage();
 const showWizard = ref(false);
@@ -128,12 +133,11 @@ const animateModalIn = (elRef) => {
     nextTick(() => {
         const el = elRef?.value;
         if (!el || !shouldAnimate()) return;
-        gsap.from(el, {
+        quickAnimateFrom(el, {
             y: 32,
             opacity: 0,
             scale: 0.96,
             duration: 0.34,
-            ease: 'back.out(1.7)',
             clearProps: 'transform,opacity',
         });
     });
@@ -1425,8 +1429,9 @@ onMounted(() => {
                     </template>
                 </div>
 
-                <!-- Status Filter FloatingDrawer -->
-                <FloatingDrawer v-model:visible="showFilterDrawer" header="Filters" position="right" class="!w-[360px]">
+                <!-- Status Filter Drawer -->
+                <FloatingDrawer v-model:visible="showFilterDrawer" header="Filters" position="right" class="!w-[360px]"
+                    :modal="true">
                     <div class="flex flex-col gap-2 mt-2">
                         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">OBR Status</p>
                         <label v-for="opt in statusFilterOptions" :key="opt.value"
@@ -1521,7 +1526,7 @@ onMounted(() => {
                     <Column header="Processed By" style="min-width: 130px">
                         <template #body="slotProps">
                             <span class="text-xs font-semibold text-gray-600">{{ slotProps.data.creator?.name || '---'
-                            }}</span>
+                                }}</span>
                         </template>
                     </Column>
 
@@ -1547,7 +1552,7 @@ onMounted(() => {
             @scholar-selected="handleScholarSelection" />
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showDeleteConfirmDialog" modal appendTo="body"
+        <Dialog v-model:visible="showDeleteConfirmDialog" modal
             :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
             @show="animateModalIn(elDeleteModal)">
             <template #container>
@@ -1589,7 +1594,7 @@ onMounted(() => {
         </Dialog>
 
         <!-- View Fund Transaction Dialog -->
-        <Dialog v-model:visible="showViewDialog" modal appendTo="body"
+        <Dialog v-model:visible="showViewDialog" modal
             :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
             @show="animateModalIn(elViewModal)">
             <template #container>
@@ -1627,7 +1632,7 @@ onMounted(() => {
                                     <div class="ios-row">
                                         <span class="ios-row-label">Amount</span>
                                         <span style="font-weight: 600;">{{ formatAmount(selectedVoucher.amount)
-                                        }}</span>
+                                            }}</span>
                                     </div>
                                     <div class="ios-row">
                                         <span class="ios-row-label">Created By</span>
@@ -1753,7 +1758,7 @@ onMounted(() => {
         </Dialog>
 
         <!-- File Upload Dialog -->
-        <Dialog v-model:visible="showFileUploadDialog" modal appendTo="body"
+        <Dialog v-model:visible="showFileUploadDialog" modal
             :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
             @show="animateModalIn(elFileUploadModal)">
             <template #container>
@@ -1977,7 +1982,7 @@ onMounted(() => {
         </Dialog>
 
         <!-- QR Code Modal -->
-        <Dialog v-model:visible="showQrModal" modal appendTo="body"
+        <Dialog v-model:visible="showQrModal" modal
             :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
             @show="animateModalIn(elQrModal)">
             <template #container>
@@ -2044,7 +2049,7 @@ onMounted(() => {
         </Dialog>
 
         <!-- Remarks Dialog -->
-        <Dialog v-model:visible="showRemarksDialog" modal appendTo="body"
+        <Dialog v-model:visible="showRemarksDialog" modal
             :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
             @show="animateModalIn(elRemarksModal)">
             <template #container>
@@ -2096,7 +2101,7 @@ onMounted(() => {
         </Dialog>
 
         <!-- Transaction Status Dialog -->
-        <Dialog v-model:visible="showStatusDialog" modal appendTo="body"
+        <Dialog v-model:visible="showStatusDialog" modal
             :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
             @show="animateModalIn(elStatusModal)">
             <template #container>
@@ -2155,7 +2160,7 @@ onMounted(() => {
         </Dialog>
 
         <!-- OBR Tracking Dialog -->
-        <Dialog v-model:visible="showOBRTrackingDialog" modal appendTo="body"
+        <Dialog v-model:visible="showOBRTrackingDialog" modal
             :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
             @show="animateModalIn(elObrTrackingModal)">
             <template #container>
@@ -2238,7 +2243,7 @@ onMounted(() => {
         </Dialog>
 
         <!-- Tracking History Dialog -->
-        <Dialog v-model:visible="showTrackingHistoryDialog" modal appendTo="body"
+        <Dialog v-model:visible="showTrackingHistoryDialog" modal
             :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
             @show="animateModalIn(elTrackingHistoryModal)">
             <template #container>
@@ -2290,7 +2295,7 @@ onMounted(() => {
         </Dialog>
 
         <!-- Document Preview Modal -->
-        <FloatingDrawer v-model:visible="showPreviewModal" position="right" class="!w-[800px]">
+        <Drawer v-model:visible="showPreviewModal" position="right" class="!w-[800px]" :modal="true" :pt="ftDrawerPt">
             <template #header>
                 <div class="flex items-center justify-between w-full pr-2">
                     <span class="font-semibold text-gray-900 text-base">Document Preview</span>
@@ -2382,7 +2387,7 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
-        </FloatingDrawer>
+        </Drawer>
 
     </AdminLayout>
 </template>
@@ -2466,5 +2471,55 @@ onMounted(() => {
 :deep(.p-datatable .p-datatable-tbody > tr.p-datatable-contextmenu-row-selected) {
     outline: none;
     box-shadow: none;
+}
+</style>
+
+<style>
+/* Disable PrimeVue built-in drawer enter/leave for this custom floating drawer */
+.ft-floating-drawer.p-drawer-enter-active,
+.ft-floating-drawer.p-drawer-leave-active {
+    transition: none !important;
+}
+
+.ft-floating-drawer.p-drawer-enter-from,
+.ft-floating-drawer.p-drawer-leave-to {
+    transform: none !important;
+    opacity: 1 !important;
+}
+
+.ft-floating-drawer.p-drawer {
+    border-radius: 2rem !important;
+    height: calc(100vh - 2rem) !important;
+    margin: 1rem !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    animation: none !important;
+    transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.ft-floating-drawer .p-drawer-header {
+    border-radius: 2rem 2rem 0 0;
+}
+
+.ft-floating-drawer .p-drawer-content {
+    border-radius: 0 0 2rem 2rem;
+}
+
+.ft-floating-drawer-mask {
+    background: transparent !important;
+    animation: none !important;
+    transition: none !important;
+}
+
+/* Ensure mask animation cannot conflict */
+.ft-floating-drawer-mask.p-overlay-enter-active,
+.ft-floating-drawer-mask.p-overlay-leave-active {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* Keep open smooth, make close instant */
+.ft-floating-drawer.p-drawer-leave-active {
+    transition: none !important;
 }
 </style>

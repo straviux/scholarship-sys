@@ -206,14 +206,18 @@
                     </div>
 
                     <!-- DataTable View -->
-                    <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="profilesData" paginator
+                    <DataTable :value="tableData" paginator
                         :rows="dataViewRows" :totalRecords="totalRecords" :first="first" @page="onPageChange"
                         :lazy="true"
                         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                         :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
                         :rowHover="true" stripedRows class="compact-table"
                         @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu
-                        :globalFilter="globalFilter">
+                        :globalFilter="globalFilter"
+                        :rowClass="(row) => expandedRows.length && !expandedRows.some(r => r.profile_id === row.profile_id) ? 'row-blurred' : ''"
+                        v-model:expandedRows="expandedRows">
+
+                        <Column expander style="width: 3rem" />
 
                         <Column field="unique_id" header="ID" style="min-width: 120px;">
                             <template #body="slotProps">
@@ -285,72 +289,37 @@
 
                         <Column field="status" header="Status" style="min-width: 120px;">
                             <template #body="slotProps">
-                                <div v-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'pending'"
-                                    :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
-                                    v-tooltip="'Awaiting review'"
-                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
-                                    {{
-                                        getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
-                                    }}
-                                </div>
-                                <div v-else-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'interviewed'"
-                                    :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
-                                    v-tooltip="'Interviewed, awaiting decision'"
-                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
-                                    {{
-                                        getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
-                                    }}
-                                </div>
-                                <div v-else-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'approved'"
-                                    :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
-                                    v-tooltip="'Complete approval in Interviewed Applicants'"
-                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
-                                    {{
-                                        getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
-                                    }}
-                                </div>
-                                <div v-else-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'denied'"
-                                    :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
-                                    v-tooltip="'Application has been denied'"
-                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
-                                    {{
-                                        getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
-                                    }}
-                                </div>
-                                <div v-else-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'active'"
-                                    :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
-                                    v-tooltip="'Enrolled as scholar'"
-                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
-                                    {{
-                                        getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
-                                    }}
-                                </div>
-                                <div v-else-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'completed'"
-                                    :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
-                                    v-tooltip="'Scholarship completed'"
-                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
-                                    {{
-                                        getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
-                                    }}
-                                </div>
-                                <div v-else-if="slotProps.data.latest_scholarship_record && slotProps.data.latest_scholarship_record.unified_status === 'unknown'"
-                                    :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
-                                    v-tooltip="'Status unknown'"
-                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
-                                    {{
-                                        getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
-                                    }}
-                                </div>
-                                <div v-else-if="slotProps.data.latest_scholarship_record"
-                                    :style="getStatusStyle('unknown')"
-                                    v-tooltip="'Unrecognized status - treating as unknown'"
-                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
-                                    Unknown
-                                </div>
+                                <template v-if="slotProps.data.latest_scholarship_record">
+                                    <div :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
+                                        :v-tooltip="getStatusTooltip(slotProps.data.latest_scholarship_record.unified_status)"
+                                        class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
+                                        {{
+                                            getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
+                                        }}
+                                    </div>
+                                </template>
                                 <div v-else
                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block bg-gray-100 text-gray-800 border-gray-300">
                                     No Record
                                 </div>
+                            </template>
+                        </Column>
+
+                        <Column header="Previous Records" style="min-width: 150px;">
+                            <template #body="slotProps">
+                                <div v-if="Object.keys(slotProps.data.previous_record_statuses ?? {}).length"
+                                    class="flex flex-wrap gap-1">
+                                    <div v-for="(count, status) in slotProps.data.previous_record_statuses"
+                                        :key="status" class="flex items-center gap-1">
+                                        <div :style="getStatusStyle(status)"
+                                            class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block">
+                                            {{ getScholarshipStatusLabel(status) }}
+                                        </div>
+                                        <Badge v-if="count > 1" :value="count" severity="secondary" size="small"
+                                            v-tooltip.top="`${count} records with this status`" />
+                                    </div>
+                                </div>
+                                <span v-else class="text-xs text-gray-400">—</span>
                             </template>
                         </Column>
 
@@ -386,7 +355,86 @@
                                         :class="{ 'opacity-50': !hasRole('administrator') }" />
                                 </div>
                             </template>
-                        </Column> <template #empty>
+                        </Column>
+
+                        <template #expansion="slotProps">
+                            <div class="px-4 py-3">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <i class="pi pi-history text-indigo-500"></i>
+                                    <span class="text-sm font-semibold text-gray-700">Scholarship Records</span>
+                                    <Badge :value="slotProps.data.scholarship_grant?.length ?? 0" severity="secondary" size="small" />
+                                </div>
+                                <DataTable :value="slotProps.data.scholarship_grant" size="small"
+                                    v-if="slotProps.data.scholarship_grant?.length"
+                                    :rowClass="(row) => row.id === slotProps.data.latest_scholarship_record?.id ? 'bg-blue-50' : ''">
+                                    <Column header="#" style="width: 2.5rem;">
+                                        <template #body="r">
+                                            <span class="text-xs text-gray-400">{{ slotProps.data.scholarship_grant.indexOf(r.data) + 1 }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Status" style="min-width: 110px;">
+                                        <template #body="r">
+                                            <div class="flex items-center gap-1">
+                                                <div :style="getStatusStyle(r.data.unified_status)"
+                                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border inline-block">
+                                                    {{ getScholarshipStatusLabel(r.data.unified_status) }}
+                                                </div>
+                                                <i v-if="r.data.id === slotProps.data.latest_scholarship_record?.id"
+                                                    class="pi pi-star-fill text-blue-400 text-xs" v-tooltip.top="'Latest record'" />
+                                            </div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Program" style="min-width: 100px;">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.program?.shortname || '—' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Course" style="min-width: 120px;">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.course?.shortname || '—' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="School" style="min-width: 120px;">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.school?.shortname || '—' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Year" style="min-width: 80px;">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Academic Year" style="min-width: 110px;">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.academic_year || '—' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Term" style="min-width: 80px;">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.term || '—' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Grant Provision" style="min-width: 110px;">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.grant_provision || '—' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Date Filed" style="min-width: 100px;">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.date_filed ? formatDate(r.data.date_filed) : '—' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Date Approved" style="min-width: 110px;">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.date_approved ? formatDate(r.data.date_approved) : '—' }}</span>
+                                        </template>
+                                    </Column>
+                                </DataTable>
+                                <p v-else class="text-xs text-gray-400 italic">No scholarship records found.</p>
+                            </div>
+                        </template>
+
+                        <template #empty>
                             <div class="text-center py-12">
                                 <i class="pi pi-users text-6xl text-gray-300 mb-4"></i>
                                 <p class="text-gray-500 text-lg">No profiles found</p>
@@ -802,6 +850,7 @@ const clearDrawerFilters = () => {
 // UI State
 
 const simpleView = ref(localStorage.getItem('scholarProfileSimpleView') === 'true' || false);
+const expandedRows = ref([]);
 const contextMenu = ref();
 const selectedProfileForContext = ref(null);
 
@@ -900,6 +949,9 @@ const attachmentStatusOptions = computed(() => [
 const profilesData = computed(() => {
     return props.profiles?.data || [];
 });
+
+// All rows always shown; non-expanded rows are blurred via rowClass
+const tableData = computed(() => profilesData.value);
 
 // Computed rows for DataView - provides fallback when records is null
 const dataViewRows = computed(() => {
@@ -1007,6 +1059,19 @@ const getScholarshipStatusLabel = (status) => {
 
 const getScholarshipStatusSeverity = (status) => {
     return getStatusSeverity(status);
+};
+
+const getStatusTooltip = (status) => {
+    const tooltips = {
+        pending: 'Awaiting review',
+        interviewed: 'Interviewed, awaiting decision',
+        approved: 'Complete approval in Interviewed Applicants',
+        denied: 'Application has been denied',
+        active: 'Enrolled as scholar',
+        completed: 'Scholarship completed',
+        unknown: 'Status unknown',
+    };
+    return tooltips[status] || 'Unrecognized status';
 };
 
 const formatDate = (date) => {
@@ -1213,6 +1278,13 @@ onBeforeUnmount(() => {
 
 :deep(.compact-table .p-button) {
     padding: 0.25rem 0.5rem;
+}
+
+:deep(.compact-table .p-datatable-tbody > tr.row-blurred > td) {
+    opacity: 0.35;
+    filter: blur(1.5px);
+    transition: opacity 0.25s ease, filter 0.25s ease;
+    pointer-events: none;
 }
 
 /* Rounded inputs, selects, and datepickers to match macOS layout */

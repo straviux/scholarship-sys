@@ -264,7 +264,7 @@ onMounted(() => {
 <template>
 
     <Head title="Responsibility Centers" />
-    <Toast />
+    <Toast position="top-right" :life="3500" :baseZIndex="20000" />
     <div class="p-6 space-y-6">
         <!-- Header -->
         <div class="flex justify-between items-center">
@@ -304,7 +304,7 @@ onMounted(() => {
                     <div class="flex-1">
                         <h3 class="text-lg font-semibold text-gray-900">{{ rc.name }}</h3>
                         <p class="text-sm text-gray-600 mt-1">Code: <span class="font-mono font-medium">{{ rc.code
-                        }}</span></p>
+                                }}</span></p>
                         <p v-if="rc.fiscal_year" class="text-sm text-gray-600 mt-1">Fiscal Year: <span
                                 class="font-medium">{{ rc.fiscal_year }}</span></p>
                     </div>
@@ -371,11 +371,13 @@ onMounted(() => {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <InputText v-model="formData.name" type="text" placeholder="e.g., Scholarship Center" class="w-full" />
+                    <InputText v-model="formData.name" type="text" placeholder="e.g., Scholarship Center"
+                        class="w-full" />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Fiscal Year</label>
-                    <InputText v-model="formData.fiscal_year" type="text" placeholder="e.g., 2024-2025" class="w-full" />
+                    <InputText v-model="formData.fiscal_year" type="text" placeholder="e.g., 2024-2025"
+                        class="w-full" />
                 </div>
             </div>
 
@@ -394,17 +396,20 @@ onMounted(() => {
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Particulars Name</label>
-                    <InputText v-model="particularFormData.name" type="text" placeholder="e.g., Tuition Fee" class="w-full" />
+                    <InputText v-model="particularFormData.name" type="text" placeholder="e.g., Tuition Fee"
+                        class="w-full" />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Account Code</label>
-                    <InputText v-model="particularFormData.account_code" type="text" placeholder="e.g., 5010-001" class="w-full" />
+                    <InputText v-model="particularFormData.account_code" type="text" placeholder="e.g., 5010-001"
+                        class="w-full" />
                 </div>
             </div>
 
             <template #footer>
                 <div class="space-x-2">
-                    <Button @click="showParticularsModal = false" :disabled="processing" label="Cancel" severity="secondary" />
+                    <Button @click="showParticularsModal = false" :disabled="processing" label="Cancel"
+                        severity="secondary" />
                     <Button @click="saveParticular" :disabled="processing" :label="processing ? 'Saving...' : 'Save'" />
                 </div>
             </template>
@@ -423,7 +428,8 @@ onMounted(() => {
 
             <template #footer>
                 <div class="space-x-2">
-                    <Button @click="showDeleteConfirmModal = false" :disabled="processing" label="Cancel" severity="secondary" />
+                    <Button @click="showDeleteConfirmModal = false" :disabled="processing" label="Cancel"
+                        severity="secondary" />
                     <Button @click="deleteConfirmType === 'rc' ? confirmDeleteRC() : executeDeleteParticular()"
                         :disabled="processing" :label="processing ? 'Deleting...' : 'Delete'" severity="danger" />
                 </div>

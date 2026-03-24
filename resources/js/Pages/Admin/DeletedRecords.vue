@@ -14,9 +14,9 @@
             <div class="mb-6">
                 <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-3">
                     <i class="pi pi-search text-gray-500"></i>
-                    <InputText v-model="searchQuery" type="text" placeholder="Search by name..."
-                        class="flex-1" />
-                    <Button v-if="searchQuery" @click="searchQuery = ''" icon="pi pi-times" severity="secondary" variant="text" size="small" />
+                    <InputText v-model="searchQuery" type="text" placeholder="Search by name..." class="flex-1" />
+                    <Button v-if="searchQuery" @click="searchQuery = ''" icon="pi pi-times" severity="secondary"
+                        variant="text" size="small" />
                 </div>
             </div>
 
@@ -221,16 +221,6 @@ const props = defineProps({
     }
 });
 
-console.log('DeletedRecords component loaded');
-console.log('Deleted Profiles:', props.deletedProfiles);
-console.log('Deleted Records:', props.deletedRecords);
-
-// Profile IDs for debugging
-if (props.deletedProfiles.length > 0) {
-    console.log('First profile ID:', props.deletedProfiles[0].id);
-    console.log('First profile data:', props.deletedProfiles[0]);
-}
-
 const activeTab = ref('profiles');
 const searchQuery = ref('');
 const showDeleteProfileConfirmDialog = ref(false);
@@ -322,7 +312,7 @@ const permanentlyDeleteProfile = async () => {
     showDeleteProfileConfirmDialog.value = false;
 
     try {
-        await axios.delete(route('admin.profiles.permanently-delete', profile.id));
+        await axios.delete(route('admin.profiles.permanently-delete', profile.profile_id));
         showNotification('Profile permanently deleted.');
         setTimeout(() => location.reload(), 1500);
     } catch (error) {

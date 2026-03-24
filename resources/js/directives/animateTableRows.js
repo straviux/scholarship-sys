@@ -1,4 +1,3 @@
-import gsap from 'gsap';
 import { shouldAnimate } from '@/composables/useAnimationDefaults';
 
 /**
@@ -49,23 +48,25 @@ export default {
 			if (isAnimating) return;
 			isAnimating = true;
 
-			// Set initial state for all rows
-			gsap.set(rows, {
-				opacity: 0,
-				y: 10,
-			});
+			// Animate rows with stagger using native transitions
+			Array.from(rows).forEach((row, index) => {
+				row.style.opacity = '0';
+				row.style.transform = 'translateY(10px)';
+				row.style.transition = `opacity ${duration}s ease, transform ${duration}s ease`;
 
-			// Animate rows with stagger
-			gsap.to(rows, {
-				opacity: 1,
-				y: 0,
-				duration,
-				stagger,
-				ease,
-				delay,
-				onComplete: () => {
-					isAnimating = false;
-				},
+				window.setTimeout(() => {
+					row.style.opacity = '1';
+					row.style.transform = 'translateY(0)';
+				}, Math.round((delay + index * stagger) * 1000));
+
+				window.setTimeout(() => {
+					row.style.transition = '';
+					row.style.transform = '';
+					row.style.opacity = '';
+					if (index === rows.length - 1) {
+						isAnimating = false;
+					}
+				}, Math.round((delay + index * stagger + duration) * 1000));
 			});
 		};
 

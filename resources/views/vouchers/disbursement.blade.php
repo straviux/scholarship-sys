@@ -393,15 +393,15 @@
 
                     $scholars = \App\Models\ScholarshipProfile::whereIn('profile_id', $profileIds)->get();
                     if($scholars && count($scholars) > 0) {
-                        $scholarName = ($scholars[0]->last_name ?? '') . ', ' . ($scholars[0]->first_name ?? '');
-                        if($scholars[0]->middle_name) {
-                            $scholarName .= ' ' . $scholars[0]->middle_name;
-                        }
-                        if($scholars[0]->ext) {
-                            $scholarName .= ' ' . $scholars[0]->ext;
-                        }
+                    $scholarName = ($scholars[0]->last_name ?? '') . ', ' . ($scholars[0]->first_name ?? '');
+                    if($scholars[0]->middle_name) {
+                    $scholarName .= ' ' . $scholars[0]->middle_name;
+                    }
+                    if($scholars[0]->ext) {
+                    $scholarName .= ' ' . $scholars[0]->ext;
+                    }
                     } else {
-                        $scholarName = '_______________';
+                    $scholarName = '_______________';
                     }
                     } else {
                     $scholarName = '_______________';
@@ -493,9 +493,9 @@
                 </table>
             </div>
             <div class="column_5" style="flex: 0.5;border-right: none;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;margin-top: -1px">
                     <tr>
-                        <td style="width: 100%; margin-top:-1x;margin-left:-3px; font-weight: bold; vertical-align: top;display:flex; align-items: center;font-size:14px">
+                        <td style="width: 100%;margin-left:-3px; font-weight: bold; vertical-align: top;display:flex; align-items: center;font-size:14px">
                             <div style="border: 1px solid #333;padding:0 18px;margin-right:4px;justify-content: center; display: flex; align-items: center;justify-content: center;">B</div> <span>Certified</span>
                         </td>
                     </tr>

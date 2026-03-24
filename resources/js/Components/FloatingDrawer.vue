@@ -1,5 +1,5 @@
 <template>
-    <Drawer v-bind="$attrs" :pt="drawerPt" :showCloseIcon="showCloseIcon" appendTo="body">
+    <Drawer v-bind="$attrs" :modal="modal" :pt="drawerPt" :showCloseIcon="showCloseIcon">
         <slot />
         <template v-for="(_, name) in $slots" :key="name" #[name]>
             <slot :name="name" />
@@ -10,6 +10,10 @@
 <script setup>
 const props = defineProps({
     showCloseIcon: {
+        type: Boolean,
+        default: false
+    },
+    modal: {
         type: Boolean,
         default: true
     }
@@ -27,7 +31,7 @@ const drawerPt = {
     height: calc(100vh - 2rem) !important;
     margin: 1rem !important;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
-    transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    overflow: hidden;
 }
 
 .floating-drawer .p-drawer-header {

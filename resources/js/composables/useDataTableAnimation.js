@@ -1,7 +1,25 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import gsap from 'gsap';
 import { dataTableAnimation } from '@/utils/animations';
 import { shouldAnimate } from './useAnimationDefaults';
+
+const animateRowsNative = (rows, { duration = 0.3, stagger = 0.05, delay = 0 }) => {
+	rows.forEach((row, index) => {
+		row.style.opacity = '0';
+		row.style.transform = 'translateY(10px)';
+		row.style.transition = `opacity ${duration}s ease, transform ${duration}s ease`;
+
+		window.setTimeout(() => {
+			row.style.opacity = '1';
+			row.style.transform = 'translateY(0)';
+		}, Math.round((delay + index * stagger) * 1000));
+
+		window.setTimeout(() => {
+			row.style.transition = '';
+			row.style.transform = '';
+			row.style.opacity = '';
+		}, Math.round((delay + index * stagger + duration) * 1000));
+	});
+};
 
 /**
  * Composable for animating DataTable rows
@@ -35,25 +53,8 @@ export const useDataTableAnimation = (tableRef, options = {}) => {
 		isAnimating.value = true;
 
 		try {
-			// Set initial state for rows
-			gsap.set(rows, {
-				opacity: 0,
-				y: 10,
-			});
-
-			// Animate rows with stagger
-			await gsap.to(rows, {
-				opacity: 1,
-				y: 0,
-				duration,
-				stagger,
-				ease,
-				delay,
-				onComplete: () => {
-					// Mark rows as animated
-					rows.forEach((row) => animatedRows.value.add(row));
-				},
-			});
+			animateRowsNative(rows, { duration, stagger, delay });
+			rows.forEach((row) => animatedRows.value.add(row));
 		} finally {
 			isAnimating.value = false;
 		}
@@ -137,20 +138,18 @@ export const useDataTableAnimation = (tableRef, options = {}) => {
 export const useRowAnimation = () => {
 	const animateRowOnMount = (element, duration = 0.3, ease = 'power2.out') => {
 		if (!shouldAnimate()) return;
-
-		gsap.fromTo(
-			element,
-			{
-				opacity: 0,
-				y: 10,
-			},
-			{
-				opacity: 1,
-				y: 0,
-				duration,
-				ease,
-			},
-		);
+		element.style.opacity = '0';
+		element.style.transform = 'translateY(10px)';
+		element.style.transition = `opacity ${duration}s ease, transform ${duration}s ease`;
+		requestAnimationFrame(() => {
+			element.style.opacity = '1';
+			element.style.transform = 'translateY(0)';
+		});
+		window.setTimeout(() => {
+			element.style.transition = '';
+			element.style.transform = '';
+			element.style.opacity = '';
+		}, Math.round(duration * 1000));
 	};
 
 	return {

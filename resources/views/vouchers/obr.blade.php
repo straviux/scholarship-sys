@@ -267,6 +267,8 @@
     <?php
     // Load and encode PGP logo as base64 for PDF embedding
     $logoPath = public_path('images/pgp-logo.svg');
+    $scholars = [];
+    $totalAmount = 0;
     if (file_exists($logoPath)) {
         $logoImage = file_get_contents($logoPath);
         $logoBase64 = base64_encode($logoImage);
@@ -458,9 +460,8 @@
         </div>
 
         <!-- OBR Total Row -->
-        @if($voucher->scholar_ids && count($voucher->scholar_ids) > 0)
+        @if(!empty($scholars))
         @php
-        $totalAmount = 0;
         foreach($scholars as $scholar) {
         $totalAmount += $scholar['amount'];
         }
@@ -470,7 +471,7 @@
         <!-- Bottom Section -->
         <div class="obr-bottom-section" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <!-- TOTAL Row -->
-            @if($voucher->scholar_ids && count($voucher->scholar_ids) > 0)
+            @if(!empty($scholars))
             <div class="obr-info-row no-border-bottom border-top">
                 <div class="column_1" style="border: none;"></div>
                 <div class="column_2" style="border: none;"></div>
@@ -483,7 +484,7 @@
             </div>
             @endif
             <!-- Row 5 -->
-            <div class="obr-info-row">
+            <div class="obr-info-row" style="border-top:1px solid #333;">
                 <div class="column_2" style="flex: 1.08;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                         <tr>
@@ -508,7 +509,7 @@
                 <div class="column_3" style="flex: 0.9;border-right: none;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
                         <tr>
-                            <td style="width: 100%; margin-top:-25px;margin-left:-3px; font-weight: bold; vertical-align: top;display:flex; align-items: center;font-size:14px">
+                            <td style="width: 100%; margin-top:-26px;margin-left:-3px; font-weight: bold; vertical-align: top;display:flex; align-items: center;font-size:14px">
                                 <div style="border: 1px solid #333;padding:0 18px;margin-right:4px;justify-content: center; display: flex; align-items: center;justify-content: center;">B</div> <span>Certified</span>
                             </td>
                         </tr>

@@ -700,10 +700,19 @@ class ScholarshipProfileController extends Controller
      */
     public function profiles(Request $request)
     {
-        // Get all scholarship profiles with their latest scholarship record
+        // Get all scholarship profiles with their latest scholarship record and all records
         $query = ScholarshipProfile::with([
             'latestScholarshipRecord' => function ($q) {
                 $q->with(['program', 'course', 'school', 'attachments']);
+            },
+            'scholarshipGrant' => function ($q) {
+                $q->with([
+                        'program' => fn($q) => $q->select('scholarship_programs.id', 'scholarship_programs.name', 'scholarship_programs.shortname'),
+                        'course' => fn($q) => $q->select('courses.id', 'courses.name', 'courses.shortname'),
+                        'school' => fn($q) => $q->select('schools.id', 'schools.name', 'schools.shortname'),
+                    ])
+                    ->select('id', 'profile_id', 'unified_status', 'created_at', 'program_id', 'course_id', 'school_id', 'year_level', 'date_filed', 'date_approved', 'grant_provision', 'academic_year', 'term')
+                    ->orderBy('created_at', 'desc');
             },
             'disbursements' => function ($q) {
                 $q->with('attachments');
@@ -835,7 +844,15 @@ class ScholarshipProfileController extends Controller
         $profiles->getCollection()->transform(function ($profile) {
             $latestRecord = $profile->latestScholarshipRecord;
             $profile->latest_scholarship_record = $latestRecord;
-            $profile->total_scholarships = $profile->scholarshipGrant()->count();
+            $profile->total_scholarships = $profile->scholarshipGrant->count();
+
+            // Build previous records: all records except the latest, grouped by status with counts
+            $latestId = $latestRecord?->id;
+            $profile->previous_record_statuses = $profile->scholarshipGrant
+                ->filter(fn($r) => $r->id !== $latestId)
+                ->groupBy('unified_status')
+                ->map->count()
+                ->toArray(); // e.g. ['completed' => 2, 'denied' => 1]
 
             // Count contract attachments (scholarship record attachments)
             $contractCount = $latestRecord && $latestRecord->attachments ? $latestRecord->attachments->count() : 0;
