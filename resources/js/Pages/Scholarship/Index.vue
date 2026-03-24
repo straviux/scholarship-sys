@@ -206,9 +206,8 @@
                     </div>
 
                     <!-- DataTable View -->
-                    <DataTable :value="tableData" paginator
-                        :rows="dataViewRows" :totalRecords="totalRecords" :first="first" @page="onPageChange"
-                        :lazy="true"
+                    <DataTable :value="tableData" paginator :rows="dataViewRows" :totalRecords="totalRecords"
+                        :first="first" @page="onPageChange" :lazy="true"
                         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                         :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
                         :rowHover="true" stripedRows class="compact-table"
@@ -362,14 +361,16 @@
                                 <div class="flex items-center gap-2 mb-3">
                                     <i class="pi pi-history text-indigo-500"></i>
                                     <span class="text-sm font-semibold text-gray-700">Scholarship Records</span>
-                                    <Badge :value="slotProps.data.scholarship_grant?.length ?? 0" severity="secondary" size="small" />
+                                    <Badge :value="slotProps.data.scholarship_grant?.length ?? 0" severity="secondary"
+                                        size="small" />
                                 </div>
                                 <DataTable :value="slotProps.data.scholarship_grant" size="small"
                                     v-if="slotProps.data.scholarship_grant?.length"
                                     :rowClass="(row) => row.id === slotProps.data.latest_scholarship_record?.id ? 'bg-blue-50' : ''">
                                     <Column header="#" style="width: 2.5rem;">
                                         <template #body="r">
-                                            <span class="text-xs text-gray-400">{{ slotProps.data.scholarship_grant.indexOf(r.data) + 1 }}</span>
+                                            <span class="text-xs text-gray-400">{{
+                                                slotProps.data.scholarship_grant.indexOf(r.data) + 1 }}</span>
                                         </template>
                                     </Column>
                                     <Column header="Status" style="min-width: 110px;">
@@ -380,7 +381,8 @@
                                                     {{ getScholarshipStatusLabel(r.data.unified_status) }}
                                                 </div>
                                                 <i v-if="r.data.id === slotProps.data.latest_scholarship_record?.id"
-                                                    class="pi pi-star-fill text-blue-400 text-xs" v-tooltip.top="'Latest record'" />
+                                                    class="pi pi-star-fill text-blue-400 text-xs"
+                                                    v-tooltip.top="'Latest record'" />
                                             </div>
                                         </template>
                                     </Column>
@@ -401,7 +403,8 @@
                                     </Column>
                                     <Column header="Year" style="min-width: 80px;">
                                         <template #body="r">
-                                            <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—' }}</span>
+                                            <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—'
+                                                }}</span>
                                         </template>
                                     </Column>
                                     <Column header="Academic Year" style="min-width: 110px;">
@@ -421,12 +424,14 @@
                                     </Column>
                                     <Column header="Date Filed" style="min-width: 100px;">
                                         <template #body="r">
-                                            <span class="text-xs">{{ r.data.date_filed ? formatDate(r.data.date_filed) : '—' }}</span>
+                                            <span class="text-xs">{{ r.data.date_filed ? formatDate(r.data.date_filed) :
+                                                '—' }}</span>
                                         </template>
                                     </Column>
                                     <Column header="Date Approved" style="min-width: 110px;">
                                         <template #body="r">
-                                            <span class="text-xs">{{ r.data.date_approved ? formatDate(r.data.date_approved) : '—' }}</span>
+                                            <span class="text-xs">{{ r.data.date_approved ?
+                                                formatDate(r.data.date_approved) : '—' }}</span>
                                         </template>
                                     </Column>
                                 </DataTable>

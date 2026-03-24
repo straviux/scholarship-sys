@@ -707,10 +707,10 @@ class ScholarshipProfileController extends Controller
             },
             'scholarshipGrant' => function ($q) {
                 $q->with([
-                        'program' => fn($q) => $q->select('scholarship_programs.id', 'scholarship_programs.name', 'scholarship_programs.shortname'),
-                        'course' => fn($q) => $q->select('courses.id', 'courses.name', 'courses.shortname'),
-                        'school' => fn($q) => $q->select('schools.id', 'schools.name', 'schools.shortname'),
-                    ])
+                    'program' => fn($q) => $q->select('scholarship_programs.id', 'scholarship_programs.name', 'scholarship_programs.shortname'),
+                    'course' => fn($q) => $q->select('courses.id', 'courses.name', 'courses.shortname'),
+                    'school' => fn($q) => $q->select('schools.id', 'schools.name', 'schools.shortname'),
+                ])
                     ->select('id', 'profile_id', 'unified_status', 'created_at', 'program_id', 'course_id', 'school_id', 'year_level', 'date_filed', 'date_approved', 'grant_provision', 'academic_year', 'term')
                     ->orderBy('created_at', 'desc');
             },
