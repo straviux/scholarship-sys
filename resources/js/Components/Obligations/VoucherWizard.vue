@@ -237,6 +237,27 @@ const normalizeId = (value) => (value === null || value === undefined ? '' : Str
 const toUpper = (obj, key) => { if (obj[key]) obj[key] = obj[key].toUpperCase(); };
 const idsEqual = (a, b) => normalizeId(a) !== '' && normalizeId(a) === normalizeId(b);
 
+// Format scholar name with middle initial for REIMBURSEMENT OBR type
+const formatScholarNameForPayee = (scholar, useMiddleInitial = false) => {
+    if (!scholar) return '';
+
+    let parts = [scholar.first_name];
+
+    if (useMiddleInitial && scholar.middle_name) {
+        // Use middle initial (first letter + period)
+        const initial = scholar.middle_name.charAt(0).toUpperCase();
+        parts.push(initial + '.');
+    } else if (scholar.middle_name) {
+        // Use full middle name
+        parts.push(scholar.middle_name);
+    }
+
+    if (scholar.last_name) parts.push(scholar.last_name);
+    if (scholar.extension_name) parts.push(scholar.extension_name);
+
+    return parts.filter(Boolean).join(' ');
+};
+
 const payeeOptions = computed(() => {
     return voucherData.scholars.map((s) => ({
         ...s,
@@ -416,11 +437,12 @@ const handleSubmit = async () => {
     try {
         // Build payee_name based on payee_type
         let payeeName = voucherData.obligations.payee_name;
+        const useMiddleInitial = voucherData.obligations.obr_type === 'REIMBURSEMENT';
 
         if (voucherData.obligations.payee_type === 'scholar') {
             const selectedScholar = voucherData.scholars.find(s => idsEqual(s.profile_id, voucherData.obligations.payee_id));
             if (selectedScholar) {
-                payeeName = [selectedScholar.first_name, selectedScholar.middle_name, selectedScholar.last_name, selectedScholar.extension_name].filter(Boolean).join(' ');
+                payeeName = formatScholarNameForPayee(selectedScholar, useMiddleInitial);
             } else {
                 payeeName = '';
             }
@@ -467,7 +489,7 @@ const handleSubmit = async () => {
         if (selectedScholars.length > 0) {
             payload.scholar_ids = selectedScholars.map(s => ({
                 profile_id: s.profile_id,
-                name: [s.first_name, s.middle_name, s.last_name, s.extension_name].filter(Boolean).join(' '),
+                name: formatScholarNameForPayee(s, useMiddleInitial),
                 amount: parseFloat(s.individualAmount) || 0
             }));
         } else {
@@ -1353,7 +1375,7 @@ onBeforeUnmount(() => {
                                         <div class="flex items-center justify-between gap-3 mb-2">
                                             <label class="text-xs font-medium text-gray-900">Selected Scholars ({{
                                                 voucherData.scholars.length
-                                            }})</label>
+                                                }})</label>
                                             <div class="flex items-center gap-2 shrink-0">
                                                 <Checkbox id="applyToAll" v-model="applyToAllChecked" :binary="true" />
                                                 <label for="applyToAll"
@@ -1374,7 +1396,7 @@ onBeforeUnmount(() => {
                                                 <div class="flex items-center flex-1">
                                                     <i class="pi pi-check text-green-600 mr-3 text-xs"></i>
                                                     <span class="font-medium text-sm">{{ formatScholarFullName(scholar)
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="flex items-center gap-2">
                                                     <span class="text-gray-600 text-xs">PHP</span>
@@ -1388,7 +1410,7 @@ onBeforeUnmount(() => {
                                             <span class="font-semibold text-sm text-blue-900">Total Amount:</span>
                                             <span class="text-base font-bold text-blue-600">{{
                                                 formatCurrency(totalAmount)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                     </div>
 
@@ -1625,7 +1647,7 @@ onBeforeUnmount(() => {
                                                 <span>{{ formatScholarFullName(scholar) }}</span>
                                                 <span class="font-semibold">{{ formatCurrency(scholar.individualAmount
                                                     || 0)
-                                                    }}</span>
+                                                }}</span>
                                             </li>
                                         </ol>
                                         <div
