@@ -739,7 +739,7 @@ const {
     first,
     totalRecords,
     search: triggerSearch,
-    clear: clearFilters,
+    clear: clearAllFilters,
     onPageChange,
 } = useFilterManager({
     routeName: 'scholarship.profiles',
@@ -808,14 +808,22 @@ const activeFilterTags = computed(() => {
 const removeFilter = (key) => {
     const selectKeys = ['grant_provision', 'unified_status', 'contract_status', 'voucher_status', 'academic_year', 'term'];
     filter.value[key] = selectKeys.includes(key) ? null : '';
+    collapseExpandedRows();
     triggerSearch();
 };
 
 // Auto-trigger search when basic filters change
 watch(
     () => [filter.value.program, filter.value.course, filter.value.year_level, filter.value.unified_status],
-    () => { triggerSearch(); },
+    () => {
+        collapseExpandedRows();
+        triggerSearch();
+    },
 );
+
+watch(globalFilter, () => {
+    collapseExpandedRows();
+});
 
 // Trigger search when records per page changes
 watch(records, () => {
@@ -841,6 +849,7 @@ const applyDrawerFilters = () => {
     for (const key of drawerFilterKeys) {
         filter.value[key] = drawerFilter.value[key];
     }
+    collapseExpandedRows();
     triggerSearch();
     showFilterDrawer.value = false;
 };
@@ -858,6 +867,15 @@ const simpleView = ref(localStorage.getItem('scholarProfileSimpleView') === 'tru
 const expandedRows = ref([]);
 const contextMenu = ref();
 const selectedProfileForContext = ref(null);
+
+const collapseExpandedRows = () => {
+    expandedRows.value = [];
+};
+
+const clearFilters = () => {
+    collapseExpandedRows();
+    clearAllFilters();
+};
 
 // Permission composable
 const { hasPermission } = usePermission();
