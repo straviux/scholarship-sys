@@ -268,7 +268,7 @@
 
                     <div class="row border-none" style="margin-top:32px">
                         <div class="col col-grow col-center col-vcenter">
-                            <span class="text-lg font-semibold tracking-wide">{{ $voucher->los_course ?? $courseName }}</span>
+                            <span class="text-lg font-semibold tracking-wide">{{ $voucher->course ?? $voucher->los_course ?? $courseName }}</span>
                         </div>
                     </div>
 
@@ -316,7 +316,10 @@
                         ->first();
                         }
 
-                        if($record) {
+                        // Priority: Use voucher's optional year_level if set, otherwise use record's year_level
+                        if(!empty($voucher->year_level)) {
+                        $year = $voucher->year_level;
+                        } elseif($record) {
                         $year = $record->year_level ?? '';
                         }
 

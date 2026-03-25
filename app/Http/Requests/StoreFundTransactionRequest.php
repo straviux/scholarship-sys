@@ -36,6 +36,8 @@ class StoreFundTransactionRequest extends FormRequest
             'scholar_ids.*.name' => ['nullable', 'string'],
             'scholar_ids.*.amount' => ['nullable', 'numeric'],
             'year_level' => ['nullable', 'string'],
+            'school' => ['nullable', 'string'],
+            'grant_provision' => ['nullable', 'string'],
             'notes' => ['nullable', 'string'],
             'remarks' => ['nullable', 'string'],
             'transaction_status' => ['nullable', 'string'],

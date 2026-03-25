@@ -73,7 +73,9 @@ const voucherData = reactive({
         course: '', // Optional course for new List of Scholars step
         year_level: '', // Optional year level override
         academic_year: '', // Optional academic year
-        semester: '' // Optional semester
+        semester: '', // Optional semester
+        school: '', // School name
+        grant_provision: '' // Grant provision
     },
     summary: {
         notes: '',
@@ -84,6 +86,8 @@ const voucherData = reactive({
 const transactionStatusOptions = [
     'No OBR', 'LOA', 'Irregular', 'Transferred', 'Claimed', 'Paid', 'On Process', 'Denied'
 ];
+
+const grantProvisionOptions = ['Matriculation', 'Related Learning Experience', 'Tuition', 'Related Learning Experience and Tuition'];
 
 // Available schools for payee selection
 const schools = ref([
@@ -230,6 +234,7 @@ const getSelectedScholarsList = () => {
 };
 
 const normalizeId = (value) => (value === null || value === undefined ? '' : String(value));
+const toUpper = (obj, key) => { if (obj[key]) obj[key] = obj[key].toUpperCase(); };
 const idsEqual = (a, b) => normalizeId(a) !== '' && normalizeId(a) === normalizeId(b);
 
 const payeeOptions = computed(() => {
@@ -325,6 +330,8 @@ const loadEditData = async () => {
         voucherData.disbursements.academic_year = data.academic_year || '';
         voucherData.disbursements.semester = data.semester || '';
         voucherData.disbursements.year_level = data.year_level || '';
+        voucherData.disbursements.school = data.school || '';
+        voucherData.disbursements.grant_provision = data.grant_provision || '';
 
         // Set summary notes
         voucherData.summary.notes = data.notes || '';
@@ -412,6 +419,8 @@ const handleSubmit = async () => {
             academic_year: voucherData.disbursements.academic_year,
             semester: voucherData.disbursements.semester,
             year_level: voucherData.disbursements.year_level,
+            school: voucherData.disbursements.school,
+            grant_provision: voucherData.disbursements.grant_provision,
             payee_type: voucherData.obligations.payee_type,
             payee_id: voucherData.obligations.payee_id,
             payee_name: payeeName,
@@ -536,35 +545,100 @@ const joinNonEmpty = (...parts) => {
         .trim();
 };
 
+// Get selected scholar for payee (must be defined before primaryParticularScholar)
+const selectedPayeeScholar = computed(() => {
+    if (voucherData.obligations.payee_type !== 'scholar' || !voucherData.obligations.payee_id) {
+        return null;
+    }
+    return voucherData.scholars.find(s => idsEqual(s.profile_id, voucherData.obligations.payee_id));
+});
+
 const primaryParticularScholar = computed(() => {
     return selectedPayeeScholar.value || voucherData.scholars[0] || null;
 });
 
 const particularsCourse = computed(() => {
-    return voucherData.disbursements.course || voucherData.disbursements.los_course || primaryParticularScholar.value?.course || '';
+    // Priority: Additional Info (Step 3) → Scholar data
+    const course = voucherData.disbursements.course?.trim() || voucherData.disbursements.los_course?.trim();
+    if (course) {
+        console.log('Course Priority: Using additional info -', course);
+        return course;
+    }
+    const scholarCourse = primaryParticularScholar.value?.course || '';
+    if (scholarCourse) {
+        console.log('Course Priority: Fallback to scholar -', scholarCourse);
+    }
+    return scholarCourse;
 });
 
 const particularsYearLevel = computed(() => {
-    return formatYearLevel(voucherData.disbursements.year_level || primaryParticularScholar.value?.year_level || '');
+    // Priority: Additional Info (Step 3) → Scholar data
+    const yearLevel = voucherData.disbursements.year_level?.trim();
+    if (yearLevel) {
+        console.log('Year Level Priority: Using additional info -', yearLevel);
+        return formatYearLevel(yearLevel);
+    }
+    const scholarYearLevel = primaryParticularScholar.value?.year_level || '';
+    if (scholarYearLevel) {
+        console.log('Year Level Priority: Fallback to scholar -', scholarYearLevel);
+    }
+    return formatYearLevel(scholarYearLevel);
 });
 
 const particularsSchool = computed(() => {
-    if (voucherData.obligations.payee_type === 'school') {
-        return voucherData.obligations.payee_id || voucherData.obligations.payee_name || '';
+    // Priority: Additional Info (Step 3) → Payee school → Scholar data
+    if (voucherData.disbursements.school?.trim()) {
+        console.log('School Priority: Using additional info -', voucherData.disbursements.school);
+        return voucherData.disbursements.school;
     }
-    return primaryParticularScholar.value?.school || '';
+    if (voucherData.obligations.payee_type === 'school') {
+        const payeeSchool = voucherData.obligations.payee_id || voucherData.obligations.payee_name || '';
+        if (payeeSchool) {
+            console.log('School Priority: Using payee school -', payeeSchool);
+            return payeeSchool;
+        }
+    }
+    const scholarSchool = primaryParticularScholar.value?.school || '';
+    if (scholarSchool) {
+        console.log('School Priority: Fallback to scholar -', scholarSchool);
+    }
+    return scholarSchool;
 });
 
 const particularsSemester = computed(() => {
-    return voucherData.disbursements.semester || primaryParticularScholar.value?.term || '';
+    // Priority: Additional Info (Step 3) → Scholar data
+    if (voucherData.disbursements.semester?.trim()) {
+        console.log('Semester Priority: Using additional info -', voucherData.disbursements.semester);
+        return voucherData.disbursements.semester;
+    }
+    const scholarSemester = primaryParticularScholar.value?.term || '';
+    if (scholarSemester) {
+        console.log('Semester Priority: Fallback to scholar -', scholarSemester);
+    }
+    return scholarSemester;
 });
 
 const particularsAcademicYear = computed(() => {
-    return voucherData.disbursements.academic_year || primaryParticularScholar.value?.academic_year || '';
+    // Priority: Additional Info (Step 3) → Scholar data
+    if (voucherData.disbursements.academic_year?.trim()) {
+        console.log('Academic Year Priority: Using additional info -', voucherData.disbursements.academic_year);
+        return voucherData.disbursements.academic_year;
+    }
+    const scholarAcademicYear = primaryParticularScholar.value?.academic_year || '';
+    if (scholarAcademicYear) {
+        console.log('Academic Year Priority: Fallback to scholar -', scholarAcademicYear);
+    }
+    return scholarAcademicYear;
 });
 
 const particularsGrantProvision = computed(() => {
-    return selectedParticular.value?.name || voucherData.obligations.particulars_name || '';
+    const grant = (voucherData.disbursements.grant_provision || '').trim();
+    const particular = (voucherData.obligations.particulars_name || '').trim();
+    console.log('Grant Provision Priority:', { grant, particular, result: grant || particular || '' });
+    // Explicitly prioritize grant_provision first
+    if (grant) return grant;
+    if (particular) return particular;
+    return '';
 });
 
 const scholarsParticularSeed = computed(() => {
@@ -589,6 +663,7 @@ const buildParticularsDescriptionByObrType = () => {
         const course = toUpperOrFallback(particularsCourse.value);
         const termAcadYear = toUpperOrFallback(joinNonEmpty(particularsSemester.value, particularsAcademicYear.value));
         const schoolLine = toUpperOrFallback(particularsSchool.value);
+        console.log('REIMBURSEMENT Description Build:', { yearLevel, course, termAcadYear, schoolLine, disbYear: voucherData.disbursements.year_level, disbCourse: voucherData.disbursements.course });
         return `<p>(REIMBURSEMENT FOR ${yearLevel}, ${course} STUDENT, ${termAcadYear})</p><p>(${schoolLine})</p>`;
     }
 
@@ -673,11 +748,17 @@ watch(
         () => voucherData.disbursements.semester,
         () => voucherData.disbursements.academic_year,
         () => voucherData.disbursements.year_level,
+        () => voucherData.disbursements.school,
         () => voucherData.obligations.payee_type,
         () => voucherData.obligations.payee_id,
         () => voucherData.obligations.payee_name,
         () => voucherData.obligations.particulars_name,
-        () => selectedParticular.value?.name,
+        () => particularsGrantProvision.value,
+        () => particularsCourse.value,
+        () => particularsSchool.value,
+        () => particularsYearLevel.value,
+        () => particularsSemester.value,
+        () => particularsAcademicYear.value,
         () => scholarsParticularSeed.value
     ],
     () => {
@@ -703,12 +784,19 @@ watch(
         () => voucherData.disbursements.semester,
         () => voucherData.disbursements.academic_year,
         () => voucherData.disbursements.year_level,
+        () => voucherData.disbursements.school,
         () => voucherData.obligations.payee_type,
         () => voucherData.obligations.payee_id,
         () => voucherData.obligations.payee_name,
         () => voucherData.obligations.particulars_name,
-        () => selectedParticular.value?.name,
-        () => scholarsParticularSeed.value
+        () => particularsGrantProvision.value,
+        () => particularsCourse.value,
+        () => particularsSchool.value,
+        () => particularsYearLevel.value,
+        () => particularsSemester.value,
+        () => particularsAcademicYear.value,
+        () => scholarsParticularSeed.value,
+        () => voucherData.disbursements.type
     ],
     () => {
         const generated = buildExplanationByObrType();
@@ -743,15 +831,54 @@ watch(
     }
 );
 
-
-
-// Get selected scholar for payee
-const selectedPayeeScholar = computed(() => {
-    if (voucherData.obligations.payee_type !== 'scholar' || !voucherData.obligations.payee_id) {
-        return null;
+// Watch grant_provision specifically to force rebuild explanation
+watch(
+    () => voucherData.disbursements.grant_provision,
+    () => {
+        const generated = buildExplanationByObrType();
+        if (generated) {
+            // Force rebuild explanation when grant_provision changes
+            voucherData.disbursements.explanation = generated;
+            autoGeneratedExplanation.value = generated;
+        }
     }
-    return voucherData.scholars.find(s => idsEqual(s.profile_id, voucherData.obligations.payee_id));
-});
+);
+
+// Watch additional info fields to force rebuild explanation and particulars description
+watch(
+    [
+        () => voucherData.disbursements.school,
+        () => voucherData.disbursements.year_level,
+        () => voucherData.disbursements.course,
+        () => voucherData.disbursements.semester,
+        () => voucherData.disbursements.academic_year
+    ],
+    () => {
+        console.log('Step 3 Additional Info Watch Triggered:', {
+            course: voucherData.disbursements.course,
+            year_level: voucherData.disbursements.year_level,
+            school: voucherData.disbursements.school,
+            semester: voucherData.disbursements.semester,
+            academic_year: voucherData.disbursements.academic_year
+        });
+        
+        // Rebuild explanation
+        const explanation = buildExplanationByObrType();
+        if (explanation) {
+            voucherData.disbursements.explanation = explanation;
+            autoGeneratedExplanation.value = explanation;
+        }
+
+        // Rebuild particulars description
+        const description = buildParticularsDescriptionByObrType();
+        if (description) {
+            voucherData.obligations.particulars_description = description;
+            autoGeneratedParticularsDescription.value = description;
+        }
+    }
+);
+
+
 
 // Get payee display name
 const getPayeeDisplay = () => {
@@ -1144,14 +1271,18 @@ onBeforeUnmount(() => {
                                     </Select>
                                     <!-- School Input -->
                                     <InputText v-else v-model="voucherData.obligations.payee_id" type="text"
-                                        placeholder="Enter school name..." class="w-full" />
+                                        placeholder="Enter school name..." class="w-full"
+                                        @input="toUpper(voucherData.obligations, 'payee_id')"
+                                        style="text-transform:uppercase" />
                                 </div>
 
                                 <!-- Payee Address -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Payee Address</label>
                                     <InputText v-model="voucherData.obligations.payee_address" type="text"
-                                        placeholder="Enter payee address..." class="w-full" />
+                                        placeholder="Enter payee address..." class="w-full"
+                                        @input="toUpper(voucherData.obligations, 'payee_address')"
+                                        style="text-transform:uppercase" />
                                 </div>
                             </div>
 
@@ -1194,7 +1325,7 @@ onBeforeUnmount(() => {
                                         <div class="flex items-center justify-between gap-3 mb-2">
                                             <label class="text-xs font-medium text-gray-900">Selected Scholars ({{
                                                 voucherData.scholars.length
-                                                }})</label>
+                                            }})</label>
                                             <div class="flex items-center gap-2 shrink-0">
                                                 <Checkbox id="applyToAll" v-model="applyToAllChecked" :binary="true" />
                                                 <label for="applyToAll"
@@ -1215,7 +1346,7 @@ onBeforeUnmount(() => {
                                                 <div class="flex items-center flex-1">
                                                     <i class="pi pi-check text-green-600 mr-3 text-xs"></i>
                                                     <span class="font-medium text-sm">{{ formatScholarFullName(scholar)
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div class="flex items-center gap-2">
                                                     <span class="text-gray-600 text-xs">PHP</span>
@@ -1229,7 +1360,7 @@ onBeforeUnmount(() => {
                                             <span class="font-semibold text-sm text-blue-900">Total Amount:</span>
                                             <span class="text-base font-bold text-blue-600">{{
                                                 formatCurrency(totalAmount)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                     </div>
 
@@ -1241,6 +1372,21 @@ onBeforeUnmount(() => {
 
                         <!-- Step 3: Additional Info (Optional Fields) -->
                         <div v-if="step === 3" class="space-y-4 text-gray-800">
+                            <!-- Info Banner -->
+                            <div class="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-4 py-3">
+                                <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="currentColor"
+                                    viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                <p class="text-sm text-blue-700">
+                                    <span class="font-semibold">For document generation only.</span>
+                                    The information entered here is used solely to generate the voucher document and
+                                    will <span class="font-semibold">not</span> be saved to the scholar's profile.
+                                </p>
+                            </div>
+
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4 space-y-4">
                                     <div>
@@ -1257,13 +1403,33 @@ onBeforeUnmount(() => {
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Course</label>
                                         <InputText v-model="voucherData.disbursements.course" type="text" class="w-full"
-                                            placeholder="e.g., Medical Laboratory Science" />
+                                            placeholder="e.g., Medical Laboratory Science"
+                                            @input="toUpper(voucherData.disbursements, 'course')"
+                                            style="text-transform:uppercase" />
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Year Level</label>
                                         <InputText v-model="voucherData.disbursements.year_level" type="text"
-                                            class="w-full" placeholder="e.g., 1st, 2nd" />
+                                            class="w-full" placeholder="e.g., 1st, 2nd"
+                                            @input="toUpper(voucherData.disbursements, 'year_level')"
+                                            style="text-transform:uppercase" />
                                     </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">School</label>
+                                    <InputText v-model="voucherData.disbursements.school" type="text" class="w-full"
+                                        placeholder="e.g., University of the Philippines"
+                                        @input="toUpper(voucherData.disbursements, 'school')"
+                                        style="text-transform:uppercase" />
+                                </div>
+                                <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Grant Provision</label>
+                                    <Select v-model="voucherData.disbursements.grant_provision"
+                                        :options="grantProvisionOptions" placeholder="Select grant provision"
+                                        class="w-full" showClear />
                                 </div>
                             </div>
                         </div>
@@ -1431,7 +1597,7 @@ onBeforeUnmount(() => {
                                                 <span>{{ formatScholarFullName(scholar) }}</span>
                                                 <span class="font-semibold">{{ formatCurrency(scholar.individualAmount
                                                     || 0)
-                                                }}</span>
+                                                    }}</span>
                                             </li>
                                         </ol>
                                         <div
