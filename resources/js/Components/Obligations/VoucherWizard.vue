@@ -1028,7 +1028,7 @@ onBeforeUnmount(() => {
                                             <label :for="`scholar-${scholar.profile_id}`"
                                                 class="ml-3 text-sm text-gray-700 flex-1 cursor-pointer">
                                                 <div class="font-medium">{{ scholar.first_name }} {{ scholar.middle_name
-                                                    }} {{
+                                                }} {{
                                                         scholar.last_name }}</div>
                                                 <div class="text-gray-500 text-xs">
                                                     <span v-if="scholar.year_level" class="uppercase">{{
@@ -1205,7 +1205,7 @@ onBeforeUnmount(() => {
                                                     <i class="pi pi-check text-green-600 mr-3 text-xs"></i>
                                                     <span class="font-medium text-sm">{{ scholar.first_name }} {{
                                                         scholar.last_name
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div class="flex items-center gap-2">
                                                     <span class="text-gray-600 text-xs">PHP</span>
@@ -1219,7 +1219,7 @@ onBeforeUnmount(() => {
                                             <span class="font-semibold text-sm text-blue-900">Total Amount:</span>
                                             <span class="text-base font-bold text-blue-600">{{
                                                 formatCurrency(totalAmount)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                     </div>
 
@@ -1365,7 +1365,7 @@ onBeforeUnmount(() => {
                                                 <span>{{ scholar.first_name }} {{ scholar.last_name }}</span>
                                                 <span class="font-semibold">{{ formatCurrency(scholar.individualAmount
                                                     || 0)
-                                                    }}</span>
+                                                }}</span>
                                             </li>
                                         </ol>
                                         <div
@@ -1407,11 +1407,11 @@ onBeforeUnmount(() => {
                         class="flex items-center justify-between bg-green-50 p-3 rounded border border-green-200">
                         <div class="flex-1">
                             <div class="text-sm font-medium text-gray-900">{{ scholar.first_name }} {{ scholar.last_name
-                            }}
+                                }}
                             </div>
                             <div class="text-xs text-gray-500">
                                 <span v-if="scholar.year_level" class="uppercase">{{ formatYearLevel(scholar.year_level)
-                                }}</span>
+                                    }}</span>
                                 <span v-else class="text-red-500">---</span>
                                 {{ scholar.course ? ' | ' + scholar.course : '' }}
                             </div>
@@ -1443,7 +1443,7 @@ onBeforeUnmount(() => {
                 <div class="flex justify-between pb-3 border-b border-gray-200">
                     <span class="text-gray-600">Particulars:</span>
                     <span class="font-medium text-gray-900">{{ voucherData.obligations.particulars_name || '---'
-                        }}</span>
+                    }}</span>
                 </div>
 
                 <div class="flex justify-between pb-3 border-b border-gray-200">
