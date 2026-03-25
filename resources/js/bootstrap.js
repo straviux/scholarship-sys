@@ -90,7 +90,12 @@ window.axios.interceptors.response.use(
 		const originalConfig = error?.config;
 		const method = (originalConfig?.method || 'GET').toUpperCase();
 
-		if (status === 419 && originalConfig && !originalConfig.__csrfRetried && !SAFE_HTTP_METHODS.has(method)) {
+		if (
+			status === 419 &&
+			originalConfig &&
+			!originalConfig.__csrfRetried &&
+			!SAFE_HTTP_METHODS.has(method)
+		) {
 			originalConfig.__csrfRetried = true;
 
 			try {
@@ -110,7 +115,7 @@ window.axios.interceptors.response.use(
 		}
 
 		return Promise.reject(error);
-	}
+	},
 );
 
 window.fetch = async (input, init = {}) => {
