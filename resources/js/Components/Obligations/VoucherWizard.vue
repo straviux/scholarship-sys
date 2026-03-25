@@ -52,7 +52,7 @@ const applyToAllAmount = ref('');
 
 // Form data for all sections
 const voucherData = reactive({
-    voucher_number: '',
+    transaction_id: '',
     scholars: [],
     obligations: {
         payee_type: 'scholar', // scholar or school
@@ -84,7 +84,7 @@ const voucherData = reactive({
 });
 
 const transactionStatusOptions = [
-    'No OBR', 'LOA', 'Irregular', 'Transferred', 'Claimed', 'Paid', 'On Process', 'Denied'
+    'No OBR', 'LOA', 'Irregular', 'Transferred', 'Claimed', 'Paid', 'On Process', 'Denied', 'Cancelled'
 ];
 
 const grantProvisionOptions = ['Matriculation', 'Related Learning Experience', 'Tuition', 'Related Learning Experience and Tuition', 'Affiliation', 'Related Learning Experience & Affiliation'];
@@ -351,7 +351,7 @@ const loadEditData = async () => {
         const data = props.initialData;
 
         // Set voucher number
-        voucherData.voucher_number = data.voucher_number || data.number || '';
+        voucherData.transaction_id = data.transaction_id || data.number || '';
 
         // Set obligations
         voucherData.obligations.payee_type = data.payee_type || 'scholar';
@@ -372,7 +372,7 @@ const loadEditData = async () => {
         voucherData.obligations.obr_type = data.obr_type || '';
 
         // Set disbursements
-        voucherData.disbursements.type = data.voucher_type || 'disbursements';
+        voucherData.disbursements.type = data.disbursement_type || 'disbursements';
         voucherData.disbursements.explanation = data.explanation || '';
         voucherData.disbursements.los_course = data.los_course || '';
         voucherData.disbursements.course = data.course || '';
@@ -462,9 +462,8 @@ const handleSubmit = async () => {
         const fallbackAmount = parseFloat(voucherData.obligations.amount) || 0;
 
         const payload = {
-            voucher_type: voucherData.disbursements.type,
+            disbursement_type: voucherData.disbursements.type,
             explanation: voucherData.disbursements.explanation,
-            los_course: voucherData.disbursements.los_course,
             course: voucherData.disbursements.course,
             academic_year: voucherData.disbursements.academic_year,
             semester: voucherData.disbursements.semester,
@@ -481,7 +480,6 @@ const handleSubmit = async () => {
             particulars_description: voucherData.obligations.particulars_description,
             amount: selectedScholars.length > 0 ? computedScholarTotal : fallbackAmount,
             obr_type: voucherData.obligations.obr_type,
-            notes: voucherData.summary.notes,
             transaction_status: voucherData.summary.transaction_status
         };
 
@@ -984,7 +982,7 @@ const applyAmountToAll = () => {
 // Close wizard
 // Reset voucherData to initial state
 const resetVoucherData = () => {
-    voucherData.voucher_number = '';
+    voucherData.transaction_id = '';
     voucherData.scholars = [];
     voucherData.obligations = {
         payee_type: 'scholar',

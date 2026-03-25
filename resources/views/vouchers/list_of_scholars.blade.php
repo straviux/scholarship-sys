@@ -268,7 +268,7 @@
 
                     <div class="row border-none" style="margin-top:32px">
                         <div class="col col-grow col-center col-vcenter">
-                            <span class="text-lg font-semibold tracking-wide">{{ $voucher->course ?? $voucher->los_course ?? $courseName }}</span>
+                            <span class="text-lg font-semibold tracking-wide">{{ $voucher->course ?? $courseName }}</span>
                         </div>
                     </div>
 

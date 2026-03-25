@@ -336,13 +336,15 @@ const formatDate = (date) => {
                             </a>
                         </template>
                     </Column>
-                    <Column field="voucher_type" header="Disbursement Type" :sortable="true" style="min-width: 100px">
+                    <Column field="disbursement_type" header="Disbursement Type" :sortable="true"
+                        style="min-width: 100px">
                         <template #body="{ data }">
-                            <span v-if="data.voucher_type"
+                            <span v-if="data.disbursement_type"
                                 class="px-2 sm:px-3 py-1 rounded-full text-xs font-semibold inline-block"
-                                :class="data.voucher_type === 'disbursements' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'">
-                                {{ data.voucher_type === 'disbursements' ? 'Disbursement' : (data.voucher_type ===
-                                    'payroll' ? 'Payroll' : data.voucher_type) }}
+                                :class="data.disbursement_type === 'disbursements' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'">
+                                {{ data.disbursement_type === 'disbursements' ? 'Disbursement' : (data.disbursement_type
+                                    ===
+                                    'payroll' ? 'Payroll' : data.disbursement_type) }}
                             </span>
                             <span v-else class="text-gray-400 text-xs">—</span>
                         </template>
@@ -396,7 +398,7 @@ const formatDate = (date) => {
                     <Column field="obr_no" header="OBR No." style="min-width: 120px">
                         <template #body="{ data }">
                             <span v-if="data.obr_no" class="text-xs sm:text-sm font-mono text-blue-700">{{ data.obr_no
-                                }}</span>
+                            }}</span>
                             <span v-else class="text-gray-400">—</span>
                         </template>
                     </Column>

@@ -11,23 +11,23 @@ use Illuminate\Support\Facades\Storage;
 class FundTransactionService
 {
     /**
-     * Generate a unique voucher number for the current month.
+     * Generate a unique transaction ID for the current month.
      *
-     * Format: DV-YYYYMM-0001
+     * Format: FTR-YYYYMM-0001
      */
-    public function generateVoucherNumber(): string
+    public function generateTransactionId(): string
     {
         $year = date('Y');
         $month = date('m');
-        $prefix = sprintf('DV-%s%s-', $year, $month);
+        $prefix = sprintf('FTR-%s%s-', $year, $month);
 
         $lastVoucher = FundTransaction::withoutTrashed()
-            ->where('voucher_number', 'like', $prefix . '%')
-            ->orderBy('voucher_number', 'desc')
+            ->where('transaction_id', 'like', $prefix . '%')
+            ->orderBy('transaction_id', 'desc')
             ->first();
 
         $nextNumber = $lastVoucher
-            ? (int) substr($lastVoucher->voucher_number, -4) + 1
+            ? (int) substr($lastVoucher->transaction_id, -4) + 1
             : 1;
 
         return $prefix . sprintf('%04d', $nextNumber);
@@ -42,13 +42,13 @@ class FundTransactionService
     public function create(array $data): FundTransaction
     {
         return DB::transaction(function () use ($data) {
-            $data['voucher_number'] = $this->generateVoucherNumber();
+            $data['transaction_id'] = $this->generateTransactionId();
 
             $voucher = FundTransaction::create($data);
 
             Log::info('fund_transaction_created', [
                 'id' => $voucher->id,
-                'voucher_number' => $voucher->voucher_number,
+                'transaction_id' => $voucher->transaction_id,
                 'created_by' => $data['created_by'] ?? null,
             ]);
 

@@ -17,12 +17,19 @@
                         <p class="text-sm text-gray-500 mt-1">Scholar Profile</p>
                     </div>
                 </div>
-                <div class="flex gap-2">
-                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-user" label="Edit Personal Info"
-                        severity="warning" size="small" rounded outlined @click="showPersonalInfoModal = true"
+                <div class="flex items-center bg-white/80 backdrop-blur-sm border border-gray-200/80 rounded-2xl shadow-sm p-1 gap-0.5">
+                    <Button icon="pi pi-book" label="Generate Ledger" size="small" rounded text
+                        class="!font-medium !text-gray-700"
+                        @click="generateLedger"
+                        v-tooltip.top="'Generate Scholar Ledger'" />
+                    <div class="w-px h-6 bg-gray-200 mx-0.5 self-center flex-shrink-0"></div>
+                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-user" label="Edit Personal" size="small" rounded text
+                        class="!font-medium !text-gray-700"
+                        @click="showPersonalInfoModal = true"
                         v-tooltip.top="'Edit Personal Information'" />
-                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-home" label="Edit Family Info"
-                        severity="info" size="small" rounded outlined @click="showFamilyInfoModal = true"
+                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-home" label="Edit Family" size="small" rounded text
+                        class="!font-medium !text-gray-700"
+                        @click="showFamilyInfoModal = true"
                         v-tooltip.top="'Edit Family Information'" />
                 </div>
             </div>
@@ -837,6 +844,10 @@ const handleSuccess = () => {
         router.reload({ only: ['profile'] });
         if (refreshActivityLogs) refreshActivityLogs();
     }, 1500);
+};
+
+const generateLedger = () => {
+    window.open(`/api/scholars/${props.profile.profile_id}/ledger-pdf`, '_blank');
 };
 
 const goBackToProfiles = () => {

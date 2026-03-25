@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Upload Document - {{ $transaction->voucher_number }}</title>
+    <title>Upload Document - {{ $transaction->transaction_id }}</title>
     @vite(['resources/css/mobile.css'])
     <style>
         .preview-container {
@@ -59,7 +59,7 @@
             </div>
 
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                <p class="text-sm text-gray-700"><strong>Voucher Number:</strong> {{ $transaction->voucher_number }}</p>
+                <p class="text-sm text-gray-700"><strong>Transaction ID:</strong> {{ $transaction->transaction_id }}</p>
                 <p class="text-sm text-gray-700"><strong>Payee:</strong> {{ $transaction->payee_name }}</p>
                 <p class="text-sm text-gray-700"><strong>Amount:</strong> ₱{{ number_format($transaction->amount, 2) }}</p>
             </div>

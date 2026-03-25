@@ -173,7 +173,7 @@
                             <tbody>
                                 <tr v-for="voucher in encodedData.vouchers" :key="voucher.id"
                                     class="border-b hover:bg-gray-50">
-                                    <td class="px-6 py-4 font-semibold">{{ voucher.voucher_number }}</td>
+                                    <td class="px-6 py-4 font-semibold">{{ voucher.transaction_id }}</td>
                                     <td class="px-6 py-4">{{ voucher.type || '-' }}</td>
                                     <td class="px-6 py-4">₱ {{ formatCurrency(voucher.amount) }}</td>
                                     <td class="px-6 py-4 text-gray-600">{{ formatDate(voucher.created_at) }}</td>

@@ -34,7 +34,7 @@ class VoucherOBRExport implements FromCollection, WithHeadings, WithStyles, Shou
         $rows->push([]); // Empty row
 
         // Add document info
-        $rows->push(['OBR No.:', $this->voucher->voucher_number, '', 'Date:', $this->voucher->created_at?->format('M d, Y'), '', 'Type:', ucfirst($this->voucher->voucher_type)]);
+        $rows->push(['OBR No.:', $this->voucher->transaction_id, '', 'Date:', $this->voucher->created_at?->format('M d, Y'), '', 'Type:', ucfirst($this->voucher->disbursement_type)]);
         $rows->push([]); // Empty row
 
         // Add payee information

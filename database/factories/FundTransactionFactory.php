@@ -17,7 +17,7 @@ class FundTransactionFactory extends Factory
     public function definition(): array
     {
         return [
-            'voucher_type' => $this->faker->randomElement(['disbursements', 'payroll']),
+            'disbursement_type' => $this->faker->randomElement(['disbursements', 'payroll']),
             'payee_type' => 'scholar',
             'payee_name' => $this->faker->name(),
             'amount' => $this->faker->randomFloat(2, 100, 10000),

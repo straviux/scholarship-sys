@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payroll - {{ $voucher->voucher_number }}</title>
+    <title>Payroll - {{ $voucher->transaction_id }}</title>
     @include('vouchers.styles')
     <style>
         @page {

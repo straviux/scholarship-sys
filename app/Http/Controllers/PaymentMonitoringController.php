@@ -73,7 +73,7 @@ class PaymentMonitoringController extends Controller
                     // OBR data (blank if no fund transaction)
                     'obr_no' => '',
                     'transaction_status' => '',
-                    'voucher_type' => '',
+                    'disbursement_type' => '',
                     'amount' => '',
                     'date_obligated' => '',
                     'remarks' => '',
@@ -124,7 +124,7 @@ class PaymentMonitoringController extends Controller
                     // OBR data
                     'obr_no' => $fundTransaction->obr_no ?? '',
                     'transaction_status' => $fundTransaction->transaction_status ?? '',
-                    'voucher_type' => $fundTransaction->voucher_type ?? '',
+                    'disbursement_type' => $fundTransaction->disbursement_type ?? '',
                     'amount' => $individualAmount,
                     'date_obligated' => $fundTransaction->date_obligated ?? $fundTransaction->created_at ?? '',
                     'remarks' => $fundTransaction->remarks ?? '',

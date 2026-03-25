@@ -177,7 +177,7 @@ class FundTransactionController extends Controller
             $browsershot->format('A4')->margins(0, 0, 0, 0);
             $pdf = $browsershot->pdf();
 
-            $filename = 'OBR-' . $voucher->voucher_number . '.pdf';
+            $filename = 'OBR-' . $voucher->transaction_id . '.pdf';
 
             return response($pdf, 200)
                 ->header('Content-Type', 'application/pdf')
@@ -197,7 +197,7 @@ class FundTransactionController extends Controller
     {
         try {
             $voucher = FundTransaction::findOrFail($id);
-            $filename = 'OBR-' . $voucher->voucher_number . '.xlsx';
+            $filename = 'OBR-' . $voucher->transaction_id . '.xlsx';
 
             return Excel::download(
                 new \App\Exports\VoucherOBRExport($voucher),
@@ -229,7 +229,7 @@ class FundTransactionController extends Controller
             $browsershot->margins(0, 0, 0, 0)->paperSize(216, 330, 'mm');
             $pdf = $browsershot->pdf();
 
-            $filename = 'DV-' . $voucher->voucher_number . '.pdf';
+            $filename = 'DV-' . $voucher->transaction_id . '.pdf';
 
             return response($pdf, 200)
                 ->header('Content-Type', 'application/pdf')
@@ -249,7 +249,7 @@ class FundTransactionController extends Controller
     {
         try {
             $voucher = FundTransaction::findOrFail($id);
-            $filename = 'DV-' . $voucher->voucher_number . '.xlsx';
+            $filename = 'DV-' . $voucher->transaction_id . '.xlsx';
 
             return Excel::download(
                 new \App\Exports\VoucherOBRExport($voucher),
@@ -285,7 +285,7 @@ class FundTransactionController extends Controller
 
             $pdf = $browsershot->pdf();
 
-            $filename = 'Payroll-' . $voucher->voucher_number . '.pdf';
+            $filename = 'Payroll-' . $voucher->transaction_id . '.pdf';
 
             return response($pdf, 200)
                 ->header('Content-Type', 'application/pdf')
@@ -320,7 +320,7 @@ class FundTransactionController extends Controller
 
             $pdf = $browsershot->pdf();
 
-            $filename = 'ListOfScholars-' . $voucher->voucher_number . '.pdf';
+            $filename = 'ListOfScholars-' . $voucher->transaction_id . '.pdf';
 
             return response($pdf, 200)
                 ->header('Content-Type', 'application/pdf')

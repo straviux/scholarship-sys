@@ -299,7 +299,7 @@ const closeModal = () => {
                                 <tr v-for="voucher in getVouchersForDate(selectedDate)" :key="voucher.voucher_id"
                                     class="hover:bg-purple-50">
                                     <td class="px-4 py-2 text-gray-700 font-mono">{{ voucher.voucher_id }}</td>
-                                    <td class="px-4 py-2 text-gray-700">{{ voucher.voucher_number || 'N/A' }}</td>
+                                    <td class="px-4 py-2 text-gray-700">{{ voucher.transaction_id || 'N/A' }}</td>
                                     <td class="px-4 py-2 text-gray-700">{{ voucher.amount ?
                                         parseFloat(voucher.amount).toFixed(2) : 'N/A' }}</td>
                                     <td class="px-4 py-2">

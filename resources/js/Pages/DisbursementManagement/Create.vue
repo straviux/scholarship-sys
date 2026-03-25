@@ -113,7 +113,7 @@
                                 option-value="value" placeholder="Select Payee Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_type }" />
                             <div v-if="errors.payee_type" class="text-red-600 text-xs mt-1">{{ errors.payee_type[0]
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <!-- Payee Name -->
@@ -122,7 +122,7 @@
                             <InputText v-model="form.payee_name" placeholder="Name of payee" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_name }" />
                             <div v-if="errors.payee_name" class="text-red-600 text-xs mt-1">{{ errors.payee_name[0]
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <!-- Payee Address -->
@@ -135,11 +135,12 @@
                         <!-- Voucher Type -->
                         <div>
                             <label class="block text-sm font-medium text-slate-900 mb-2">Voucher Type *</label>
-                            <Dropdown v-model="form.voucher_type" :options="voucherTypeOptions" option-label="label"
-                                option-value="value" placeholder="Select Type" class="w-full text-sm"
-                                :class="{ 'border-red-500': errors.voucher_type }" />
-                            <div v-if="errors.voucher_type" class="text-red-600 text-xs mt-1">{{ errors.voucher_type[0]
-                            }}</div>
+                            <Dropdown v-model="form.disbursement_type" :options="voucherTypeOptions"
+                                option-label="label" option-value="value" placeholder="Select Type"
+                                class="w-full text-sm" :class="{ 'border-red-500': errors.disbursement_type }" />
+                            <div v-if="errors.disbursement_type" class="text-red-600 text-xs mt-1">{{
+                                errors.disbursement_type[0]
+                                }}</div>
                         </div>
 
                         <!-- Explanation -->
@@ -329,7 +330,7 @@ const form = reactive({
     payee_type: props.existingTransaction?.payee_type || 'scholar',
     payee_name: props.existingTransaction?.payee_name || '',
     payee_address: props.existingTransaction?.payee_address || '',
-    voucher_type: props.existingTransaction?.voucher_type || '',
+    disbursement_type: props.existingTransaction?.disbursement_type || '',
     scholar_ids: [...selectededProfileIds.value],
     amount: calculateSelectedTotal(),
     explanation: '',
@@ -400,8 +401,8 @@ function handleSubmit() {
     if (selectededProfileIds.value.length === 0) {
         errors.value.scholar_ids = ['Please select at least one profile'];
     }
-    if (!form.voucher_type) {
-        errors.value.voucher_type = ['Voucher type is required'];
+    if (!form.disbursement_type) {
+        errors.value.disbursement_type = ['Voucher type is required'];
     }
     if (!form.payee_type) {
         errors.value.payee_type = ['Payee type is required'];
@@ -423,7 +424,7 @@ function handleSubmit() {
         payee_type: form.payee_type,
         payee_name: form.payee_name,
         payee_address: form.payee_address,
-        voucher_type: form.voucher_type,
+        disbursement_type: form.disbursement_type,
         scholar_ids: selectededProfileIds.value,
         amount: calculateSelectedTotal(),
         explanation: form.explanation,

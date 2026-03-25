@@ -674,7 +674,7 @@ class ProfileController extends Controller
         $vouchersArray = $vouchers->map(function ($voucher) {
             return [
                 'voucher_id' => $voucher->id,
-                'voucher_number' => $voucher->voucher_number,
+                'transaction_id' => $voucher->transaction_id,
                 'scholar_ids' => $voucher->scholar_ids,
                 'amount' => $voucher->amount,
                 'transaction_status' => $voucher->transaction_status,

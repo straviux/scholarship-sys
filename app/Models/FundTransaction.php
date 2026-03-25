@@ -16,10 +16,9 @@ class FundTransaction extends Model
     protected $table = 'fund_transactions';
 
     protected $fillable = [
-        'voucher_number',
-        'voucher_type',
+        'transaction_id',
+        'disbursement_type',
         'explanation',
-        'los_course',
         'course',
         'academic_year',
         'semester',
@@ -34,7 +33,6 @@ class FundTransaction extends Model
         'particulars_description',
         'amount',
         'scholar_ids',
-        'notes',
         'remarks',
         'transaction_status',
         'school',
@@ -43,6 +41,7 @@ class FundTransaction extends Model
         'updated_by',
         'fiscal_year',
         'obr_no',
+
         'dv_no',
         'date_obligated',
         'upload_token',
@@ -54,6 +53,7 @@ class FundTransaction extends Model
         'particulars_description' => 'array',
         'amount' => 'decimal:2',
         'upload_token_expires_at' => 'datetime',
+
     ];
 
     protected $appends = ['obr_status'];

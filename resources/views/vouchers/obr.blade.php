@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Obligation Request - {{ $voucher->voucher_number }}</title>
+    <title>Obligation Request - {{ $voucher->transaction_id }}</title>
     <style>
         * {
             margin: 0;

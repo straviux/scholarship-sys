@@ -15,9 +15,8 @@ class StoreFundTransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'voucher_type' => ['required', 'in:disbursements,payroll'],
+            'disbursement_type' => ['required', 'in:disbursements,payroll'],
             'explanation' => ['nullable', 'string'],
-            'los_course' => ['nullable', 'string'],
             'course' => ['nullable', 'string'],
             'academic_year' => ['nullable', 'string'],
             'semester' => ['nullable', 'string'],
@@ -38,9 +37,12 @@ class StoreFundTransactionRequest extends FormRequest
             'year_level' => ['nullable', 'string'],
             'school' => ['nullable', 'string'],
             'grant_provision' => ['nullable', 'string'],
-            'notes' => ['nullable', 'string'],
             'remarks' => ['nullable', 'string'],
             'transaction_status' => ['nullable', 'string'],
+            'fiscal_year' => ['nullable', 'integer'],
+            'obr_no' => ['nullable', 'string'],
+            'date_obligated' => ['nullable', 'date'],
+            'dv_no' => ['nullable', 'string'],
             'created_by' => ['nullable', 'integer'],
         ];
     }
