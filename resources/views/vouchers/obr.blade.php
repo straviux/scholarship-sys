@@ -509,7 +509,7 @@
                 <div class="column_3" style="flex: 0.9;border-right: none;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
                         <tr>
-                            <td style="width: 100%; margin-top:-26px;margin-left:-3px; font-weight: bold; vertical-align: top;display:flex; align-items: center;font-size:14px">
+                            <td style="width: 100%; margin-top:-25px;margin-left:-3px; font-weight: bold; vertical-align: top;display:flex; align-items: center;font-size:14px">
                                 <div style="border: 1px solid #333;padding:0 18px;margin-right:4px;justify-content: center; display: flex; align-items: center;justify-content: center;">B</div> <span>Certified</span>
                             </td>
                         </tr>

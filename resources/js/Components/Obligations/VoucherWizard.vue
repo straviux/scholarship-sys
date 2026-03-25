@@ -87,7 +87,7 @@ const transactionStatusOptions = [
     'No OBR', 'LOA', 'Irregular', 'Transferred', 'Claimed', 'Paid', 'On Process', 'Denied'
 ];
 
-const grantProvisionOptions = ['Matriculation', 'Related Learning Experience', 'Tuition', 'Related Learning Experience and Tuition'];
+const grantProvisionOptions = ['Matriculation', 'Related Learning Experience', 'Tuition', 'Related Learning Experience and Tuition', 'Affiliation', 'Related Learning Experience & Affiliation'];
 
 // Available schools for payee selection
 const schools = ref([
@@ -934,7 +934,8 @@ watch(
 const getPayeeDisplay = () => {
     if (voucherData.obligations.payee_type === 'scholar') {
         if (selectedPayeeScholar.value) {
-            const name = `${selectedPayeeScholar.value.first_name} ${selectedPayeeScholar.value.last_name}`;
+            const useMiddleInitial = voucherData.obligations.obr_type === 'REIMBURSEMENT';
+            const name = formatScholarNameForPayee(selectedPayeeScholar.value, useMiddleInitial);
             return voucherData.scholars.length > 1 ? `${name} & CO.` : name;
         }
         return '---';
