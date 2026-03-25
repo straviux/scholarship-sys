@@ -260,6 +260,34 @@ const updateSelectedCount = () => {
             voucherData.obligations.payee_id = voucherData.scholars[0] ? normalizeId(voucherData.scholars[0].profile_id) : '';
         }
     }
+
+    // Pre-populate additional info fields from first selected scholar (only if they don't already have values)
+    if (voucherData.scholars.length > 0) {
+        const firstScholar = voucherData.scholars[0];
+        // Only populate if fields are empty to avoid overwriting user input
+        if (!voucherData.disbursements.course && firstScholar.course) {
+            voucherData.disbursements.course = firstScholar.course;
+        }
+        if (!voucherData.disbursements.year_level && firstScholar.year_level) {
+            voucherData.disbursements.year_level = firstScholar.year_level;
+        }
+        if (!voucherData.disbursements.school && firstScholar.school) {
+            voucherData.disbursements.school = firstScholar.school;
+        }
+        if (!voucherData.disbursements.semester && firstScholar.term) {
+            voucherData.disbursements.semester = firstScholar.term;
+        }
+        if (!voucherData.disbursements.academic_year && firstScholar.academic_year) {
+            voucherData.disbursements.academic_year = firstScholar.academic_year;
+        }
+        logger.info('Pre-populated additional info from first scholar:', {
+            course: voucherData.disbursements.course,
+            year_level: voucherData.disbursements.year_level,
+            school: voucherData.disbursements.school,
+            semester: voucherData.disbursements.semester,
+            academic_year: voucherData.disbursements.academic_year
+        });
+    }
 };
 
 // Get step title
