@@ -1463,7 +1463,7 @@ class ScholarshipProfileController extends Controller
                 ->whereHas('scholarshipRecords', function ($query) {
                     $query->where('unified_status', 'active');
                 })
-                ->select('profile_id', 'first_name', 'middle_name', 'last_name', 'email')
+                ->select('profile_id', 'first_name', 'middle_name', 'last_name', 'extension_name')
                 ->with(['scholarshipRecords' => function ($query) {
                     $query->where('unified_status', 'active')
                         ->select('id', 'profile_id', 'unified_status', 'academic_year', 'term', 'year_level', 'course_id', 'school_id')
@@ -1490,7 +1490,7 @@ class ScholarshipProfileController extends Controller
                         'first_name' => $scholar->first_name,
                         'middle_name' => $scholar->middle_name,
                         'last_name' => $scholar->last_name,
-                        'email' => $scholar->email,
+                        'extension_name' => $scholar->extension_name,
                         'year_level' => $latestScholarship?->year_level ?? '---',
                         'course' => $latestScholarship?->course?->name ?? '---',
                         'school' => $latestScholarship?->school?->name ?? '---',

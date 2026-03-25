@@ -33,7 +33,9 @@ class FundTransactionController extends Controller
     {
         try {
             $data = $request->validated();
-            $data['transaction_status'] = 'on process';
+            if (empty($data['transaction_status'])) {
+                $data['transaction_status'] = 'On Process';
+            }
 
             $voucher = $this->service->create($data);
 

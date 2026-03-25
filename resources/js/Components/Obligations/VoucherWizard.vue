@@ -8,7 +8,6 @@ import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import logger from '@/utils/logger';
-import FloatingDrawer from '@/Components/FloatingDrawer.vue';
 import { quickAnimateFrom } from '@/composables/useGSAPAnimation';
 import { shouldAnimate } from '@/composables/useAnimationDefaults';
 
@@ -72,6 +71,7 @@ const voucherData = reactive({
         explanation: '',
         los_course: '', // Optional course name for Letter of Support
         course: '', // Optional course for new List of Scholars step
+        year_level: '', // Optional year level override
         academic_year: '', // Optional academic year
         semester: '' // Optional semester
     },
@@ -80,6 +80,10 @@ const voucherData = reactive({
         transaction_status: 'On Process'
     }
 });
+
+const transactionStatusOptions = [
+    'No OBR', 'LOA', 'Irregular', 'Transferred', 'Claimed', 'Paid', 'On Process', 'Denied'
+];
 
 // Available schools for payee selection
 const schools = ref([
@@ -215,6 +219,11 @@ const formatYearLevel = (yearLevel) => {
     return yearLevel;
 };
 
+const formatScholarFullName = (scholar) => {
+    if (!scholar) return '';
+    return [scholar.first_name, scholar.middle_name, scholar.last_name, scholar.extension_name].filter(Boolean).join(' ');
+};
+
 // Get selected scholar details
 const getSelectedScholarsList = () => {
     return scholars.value.filter(s => s.selected);
@@ -254,6 +263,7 @@ const getStepTitle = () => {
     const titles = [
         `${prefix} - Select Scholars`,
         `${prefix} - Obligation & Scholars`,
+        `${prefix} - Additional Info`,
         `${prefix} - Particulars & Explanation`,
         `Review & ${props.mode === 'edit' ? 'Update' : 'Create'}`
     ];
@@ -314,6 +324,7 @@ const loadEditData = async () => {
         voucherData.disbursements.course = data.course || '';
         voucherData.disbursements.academic_year = data.academic_year || '';
         voucherData.disbursements.semester = data.semester || '';
+        voucherData.disbursements.year_level = data.year_level || '';
 
         // Set summary notes
         voucherData.summary.notes = data.notes || '';
@@ -373,7 +384,11 @@ const handleSubmit = async () => {
 
         if (voucherData.obligations.payee_type === 'scholar') {
             const selectedScholar = voucherData.scholars.find(s => idsEqual(s.profile_id, voucherData.obligations.payee_id));
-            payeeName = selectedScholar ? `${selectedScholar.first_name} ${selectedScholar.last_name}` : '';
+            if (selectedScholar) {
+                payeeName = [selectedScholar.first_name, selectedScholar.middle_name, selectedScholar.last_name, selectedScholar.extension_name].filter(Boolean).join(' ');
+            } else {
+                payeeName = '';
+            }
             // Always append & CO. when this is a group of scholars
             if (payeeName && voucherData.scholars.length > 1) {
                 payeeName += ' & CO.';
@@ -396,6 +411,7 @@ const handleSubmit = async () => {
             course: voucherData.disbursements.course,
             academic_year: voucherData.disbursements.academic_year,
             semester: voucherData.disbursements.semester,
+            year_level: voucherData.disbursements.year_level,
             payee_type: voucherData.obligations.payee_type,
             payee_id: voucherData.obligations.payee_id,
             payee_name: payeeName,
@@ -414,7 +430,7 @@ const handleSubmit = async () => {
         if (selectedScholars.length > 0) {
             payload.scholar_ids = selectedScholars.map(s => ({
                 profile_id: s.profile_id,
-                name: `${s.first_name} ${s.last_name}`,
+                name: [s.first_name, s.middle_name, s.last_name, s.extension_name].filter(Boolean).join(' '),
                 amount: parseFloat(s.individualAmount) || 0
             }));
         } else {
@@ -529,7 +545,7 @@ const particularsCourse = computed(() => {
 });
 
 const particularsYearLevel = computed(() => {
-    return formatYearLevel(primaryParticularScholar.value?.year_level || '');
+    return formatYearLevel(voucherData.disbursements.year_level || primaryParticularScholar.value?.year_level || '');
 });
 
 const particularsSchool = computed(() => {
@@ -569,11 +585,11 @@ const buildParticularsDescriptionByObrType = () => {
     if (!obrType) return '';
 
     if (obrType === 'REIMBURSEMENT') {
-        const firstLine = `REIMBURSEMENT FOR ${toUpperOrFallback(particularsYearLevel.value)}`;
-        const secondLine = `${toUpperOrFallback(particularsCourse.value)} STUDENT`;
-        const thirdLine = toUpperOrFallback(joinNonEmpty(particularsSemester.value, particularsAcademicYear.value));
+        const yearLevel = toUpperOrFallback(particularsYearLevel.value);
+        const course = toUpperOrFallback(particularsCourse.value);
+        const termAcadYear = toUpperOrFallback(joinNonEmpty(particularsSemester.value, particularsAcademicYear.value));
         const schoolLine = toUpperOrFallback(particularsSchool.value);
-        return `<p>(${firstLine}<br>${secondLine}<br>${thirdLine})</p><p>(${schoolLine})</p>`;
+        return `<p>(REIMBURSEMENT FOR ${yearLevel}, ${course} STUDENT, ${termAcadYear})</p><p>(${schoolLine})</p>`;
     }
 
     if (obrType === 'REGULAR') {
@@ -656,6 +672,7 @@ watch(
         () => voucherData.disbursements.los_course,
         () => voucherData.disbursements.semester,
         () => voucherData.disbursements.academic_year,
+        () => voucherData.disbursements.year_level,
         () => voucherData.obligations.payee_type,
         () => voucherData.obligations.payee_id,
         () => voucherData.obligations.payee_name,
@@ -685,6 +702,7 @@ watch(
         () => voucherData.disbursements.los_course,
         () => voucherData.disbursements.semester,
         () => voucherData.disbursements.academic_year,
+        () => voucherData.disbursements.year_level,
         () => voucherData.obligations.payee_type,
         () => voucherData.obligations.payee_id,
         () => voucherData.obligations.payee_name,
@@ -807,6 +825,7 @@ const resetVoucherData = () => {
         explanation: '',
         los_course: '',
         course: '',
+        year_level: '',
         academic_year: '',
         semester: ''
     };
@@ -899,8 +918,8 @@ const dragStart = ref(null);
 
 const wizardModalStyle = computed(() => ({
     width: '90vw',
-    maxWidth: step.value === 2 ? '1040px' : (step.value === 3 ? '1200px' : '640px'),
-    height: 'calc(100vh - 2rem)',
+    maxWidth: step.value === 1 ? '900px' : step.value === 2 ? '1040px' : step.value === 4 ? '1200px' : '640px',
+    height: 'auto',
     maxHeight: 'calc(100vh - 2rem)',
     transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
 }));
@@ -943,7 +962,7 @@ onBeforeUnmount(() => {
                         <i class="pi pi-chevron-left" style="font-size: 13px;"></i>
                     </button>
                     <span class="ios-nav-title">{{ getStepTitle() }}</span>
-                    <button v-if="step < 4" class="ios-nav-btn ios-nav-action" @click="nextStep"
+                    <button v-if="step < 5" class="ios-nav-btn ios-nav-action" @click="nextStep"
                         :disabled="step === 1 && selectedCount === 0">
                         <i class="pi pi-arrow-right" style="font-size: 13px;"></i>
                     </button>
@@ -958,92 +977,115 @@ onBeforeUnmount(() => {
                         <!-- Progress Bar -->
                         <div class="space-y-2">
                             <div class="flex justify-between text-sm text-gray-600">
-                                <span>Step {{ step }} of 4</span>
-                                <span>{{ Math.round((step / 4) * 100) }}%</span>
+                                <span>Step {{ step }} of 5</span>
+                                <span>{{ Math.round((step / 5) * 100) }}%</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
                                 <div class="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                    :style="{ width: (step / 4) * 100 + '%' }"></div>
+                                    :style="{ width: (step / 5) * 100 + '%' }"></div>
                             </div>
                         </div>
 
                         <!-- Step 1: Scholar Selection -->
-                        <div v-if="step === 1" class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-900 mb-3">
-                                    Select Scholars
-                                </label>
+                        <div v-if="step === 1" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <!-- Left: Search & Select -->
+                            <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4 space-y-3">
+                                <label class="block text-sm font-medium text-gray-900">Select Scholars</label>
 
-                                <div class="space-y-3">
-                                    <!-- Info Banner -->
-                                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl">
-                                        <p class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>Only
-                                            active scholars
-                                            are displayed</p>
+                                <!-- Info Banner -->
+                                <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl">
+                                    <p class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>Only active
+                                        scholars are displayed</p>
+                                </div>
+
+                                <!-- Search Input -->
+                                <div class="relative">
+                                    <InputText v-model="searchQuery" type="text" placeholder="Search by name..."
+                                        class="w-full" />
+                                    <div v-if="searchLoading" class="absolute right-3 top-2.5">
+                                        <i class="pi pi-spin pi-spinner text-blue-600"></i>
                                     </div>
+                                </div>
 
-                                    <!-- Search Input -->
-                                    <div class="relative">
-                                        <InputText v-model="searchQuery" type="text"
-                                            placeholder="Search by name or email..." class="w-full" />
-                                        <div v-if="searchLoading" class="absolute right-3 top-2.5">
-                                            <i class="pi pi-spin pi-spinner text-blue-600"></i>
-                                        </div>
+                                <!-- Loading State -->
+                                <div v-if="loading" class="text-center py-8">
+                                    <i class="pi pi-spin pi-spinner text-3xl text-blue-600"></i>
+                                    <p class="mt-2 text-gray-600">Loading scholars...</p>
+                                </div>
+
+                                <!-- Error Message -->
+                                <div v-if="error"
+                                    class="p-3 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm">
+                                    {{ error }}
+                                </div>
+
+                                <!-- Select All Checkbox -->
+                                <div v-if="!loading" class="flex items-center">
+                                    <Checkbox id="select-all" v-model="selectAll" :binary="true"
+                                        @change="toggleSelectAll" />
+                                    <label for="select-all" class="ml-3 text-sm font-medium text-gray-900">
+                                        Select All ({{ filteredScholars.length }} found)
+                                    </label>
+                                </div>
+
+                                <!-- Scholar List -->
+                                <div v-if="!loading" class="space-y-1 max-h-[420px] overflow-y-auto">
+                                    <div v-if="filteredScholars.length === 0" class="text-center py-8 text-gray-500">
+                                        <p v-if="scholars.length === 0">No scholars available</p>
+                                        <p v-else>No scholars match your search</p>
                                     </div>
-
-                                    <!-- Loading State -->
-                                    <div v-if="loading" class="text-center py-8">
-                                        <i class="pi pi-spin pi-spinner text-3xl text-blue-600"></i>
-                                        <p class="mt-2 text-gray-600">Loading scholars...</p>
-                                    </div>
-
-                                    <!-- Error Message -->
-                                    <div v-if="error"
-                                        class="p-3 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm">
-                                        {{ error }}
-                                    </div>
-
-                                    <!-- Select All Checkbox -->
-                                    <div v-if="!loading" class="flex items-center">
-                                        <Checkbox id="select-all" v-model="selectAll" :binary="true"
-                                            @change="toggleSelectAll" />
-                                        <label for="select-all" class="ml-3 text-sm font-medium text-gray-900">
-                                            Select All ({{ filteredScholars.length }} found)
+                                    <div v-for="scholar in filteredScholars" :key="scholar.profile_id"
+                                        class="flex items-center hover:bg-gray-50 p-2 rounded-xl">
+                                        <Checkbox :inputId="`scholar-${scholar.profile_id}`" v-model="scholar.selected"
+                                            :binary="true" @change="updateSelectedCount" />
+                                        <label :for="`scholar-${scholar.profile_id}`"
+                                            class="ml-3 text-sm text-gray-700 flex-1 cursor-pointer">
+                                            <div class="font-medium">{{ formatScholarFullName(scholar) }}</div>
+                                            <div class="text-gray-500 text-xs">
+                                                <span v-if="scholar.year_level" class="uppercase">{{
+                                                    formatYearLevel(scholar.year_level) }}</span>
+                                                <span v-else class="text-red-400">—</span>
+                                                {{ scholar.course ? ' | ' + scholar.course : '' }}
+                                                {{ scholar.school ? ' | ' + scholar.school : '' }}
+                                            </div>
                                         </label>
                                     </div>
+                                </div>
+                            </div>
 
-                                    <!-- Scholar List -->
-                                    <div v-if="!loading"
-                                        class="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded-2xl p-4">
-                                        <div v-if="filteredScholars.length === 0"
-                                            class="text-center py-8 text-gray-500">
-                                            <p v-if="scholars.length === 0">No scholars available</p>
-                                            <p v-else>No scholars match your search</p>
-                                        </div>
-                                        <div v-for="scholar in filteredScholars" :key="scholar.profile_id"
-                                            class="flex items-center hover:bg-gray-50 p-2 rounded">
-                                            <Checkbox :inputId="`scholar-${scholar.profile_id}`"
-                                                v-model="scholar.selected" :binary="true"
-                                                @change="updateSelectedCount" />
-                                            <label :for="`scholar-${scholar.profile_id}`"
-                                                class="ml-3 text-sm text-gray-700 flex-1 cursor-pointer">
-                                                <div class="font-medium">{{ scholar.first_name }} {{ scholar.middle_name
-                                                }} {{
-                                                        scholar.last_name }}</div>
-                                                <div class="text-gray-500 text-xs">
-                                                    <span v-if="scholar.year_level" class="uppercase">{{
-                                                        formatYearLevel(scholar.year_level) }}</span>
-                                                    <span v-else class="text-red-500">---</span>
-                                                    {{ scholar.course ? ' | ' + scholar.course : '' }}
-                                                    {{ scholar.school ? ' | ' + scholar.school : '' }}
-                                                </div>
-                                            </label>
-                                        </div>
+                            <!-- Right: Selected Scholars -->
+                            <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4 flex flex-col">
+                                <label class="block text-sm font-medium text-gray-900 mb-3">
+                                    Selected Scholars
+                                    <span class="ml-2 text-xs font-normal text-gray-500">({{ selectedCount }})</span>
+                                </label>
+
+                                <div v-if="selectedCount === 0"
+                                    class="flex-1 flex items-center justify-center text-center py-8 text-gray-400">
+                                    <div>
+                                        <i class="pi pi-users text-3xl mb-2 block text-gray-300"></i>
+                                        <p class="text-sm">No scholars selected yet</p>
                                     </div>
+                                </div>
 
-                                    <!-- Selected Count -->
-                                    <div class="text-sm text-gray-600">
-                                        {{ selectedCount }} scholar(s) selected
+                                <div v-else class="space-y-2 max-h-[460px] overflow-y-auto">
+                                    <div v-for="scholar in scholars.filter(s => s.selected)" :key="scholar.profile_id"
+                                        class="flex items-center justify-between bg-green-50 border border-green-200 p-2.5 rounded-xl">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="text-sm font-medium text-gray-900 truncate">{{
+                                                formatScholarFullName(scholar) }}</div>
+                                            <div class="text-xs text-gray-500">
+                                                <span v-if="scholar.year_level" class="uppercase">{{
+                                                    formatYearLevel(scholar.year_level) }}</span>
+                                                <span v-else class="text-red-400">—</span>
+                                                {{ scholar.course ? ' | ' + scholar.course : '' }}
+                                            </div>
+                                        </div>
+                                        <button
+                                            @click="() => { const s = scholars.find(x => x.profile_id === scholar.profile_id); if (s) { s.selected = false; updateSelectedCount(); } }"
+                                            class="ml-2 shrink-0 text-red-400 hover:text-red-600 text-xs p-1 rounded-lg hover:bg-red-50 transition-colors">
+                                            <i class="pi pi-times"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1052,51 +1094,50 @@ onBeforeUnmount(() => {
                         <!-- Step 2: Obligations -->
                         <div v-if="step === 2" class="space-y-4 text-gray-800">
 
+                            <!-- OBR Type + Transaction Status -->
                             <div
                                 class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 bg-white border border-[#e5e5ea] rounded-2xl p-4">
-                                <!-- OBR Type and Payee Type -->
                                 <div>
-                                    <label
-                                        class="inline-flex text-sm font-medium text-gray-700 mb-1 items-center gap-2"><i
-                                            class="pi pi-tag text-[#FF9500] text-xs"></i>OBR Type</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">OBR Type</label>
                                     <Select v-model="voucherData.obligations.obr_type"
                                         :options="[{ value: 'REGULAR', label: 'REGULAR' }, { value: 'FINANCIAL ASSISTANCE', label: 'FINANCIAL ASSISTANCE' }, { value: 'REIMBURSEMENT', label: 'REIMBURSEMENT' }]"
                                         optionLabel="label" optionValue="value" placeholder="Select OBR Type"
                                         class="w-full" />
                                 </div>
-
                                 <div>
-                                    <label
-                                        class="inline-flex text-sm font-medium text-gray-700 mb-1 items-center gap-2"><i
-                                            class="pi pi-users text-[#007AFF] text-xs"></i>Payee Type</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Transaction
+                                        Status</label>
+                                    <Select v-model="voucherData.summary.transaction_status"
+                                        :options="transactionStatusOptions" placeholder="Select status"
+                                        class="w-full" />
+                                </div>
+                            </div>
+
+                            <!-- Payee Type, Payee, and Payee Address in one row -->
+                            <div
+                                class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4 bg-white border border-[#e5e5ea] rounded-2xl p-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Payee Type</label>
                                     <Select v-model="voucherData.obligations.payee_type"
                                         :options="[{ value: 'scholar', label: 'Scholar' }, { value: 'school', label: 'School' }]"
                                         optionLabel="label" optionValue="value" class="w-full" />
                                 </div>
-                            </div>
 
-                            <!-- Payee and Payee Address (wider section) -->
-                            <div
-                                class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 bg-white border border-[#e5e5ea] rounded-2xl p-4">
                                 <!-- Payee Selection -->
                                 <div>
-                                    <label
-                                        class="inline-flex text-sm font-medium text-gray-700 mb-1 items-center gap-2"><i
-                                            class="pi pi-user text-[#34C759] text-xs"></i>Payee</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Payee</label>
                                     <!-- Scholar Dropdown -->
                                     <Select v-if="voucherData.obligations.payee_type === 'scholar'"
                                         v-model="voucherData.obligations.payee_id" :options="payeeOptions"
                                         optionValue="payeeValue" placeholder="Select Payee" class="w-full">
                                         <template #option="{ option }">
-                                            {{ option.first_name }} {{ option.last_name }}{{ payeeOptions.length
-                                                > 1 ? ` &
-                                            CO.` : '' }}
+                                            {{ formatScholarFullName(option) }}{{ payeeOptions.length > 1 ? ` & CO.` :
+                                                '' }}
                                         </template>
                                         <template #value="{ value, placeholder }">
                                             <template v-if="value != null && value !== ''">
-                                                {{payeeOptions.find(s => idsEqual(s.payeeValue, value))?.first_name}}
-                                                {{payeeOptions.find(s => idsEqual(s.payeeValue,
-                                                    value))?.last_name}}{{ payeeOptions.length > 1 ? ` & CO.` : '' }}
+                                                {{formatScholarFullName(payeeOptions.find(s => idsEqual(s.payeeValue,
+                                                    value)))}}{{ payeeOptions.length > 1 ? ` & CO.` : '' }}
                                             </template>
                                             <span v-else>{{ placeholder }}</span>
                                         </template>
@@ -1108,10 +1149,7 @@ onBeforeUnmount(() => {
 
                                 <!-- Payee Address -->
                                 <div>
-                                    <label
-                                        class="inline-flex text-sm font-medium text-gray-700 mb-1 items-center gap-2"><i
-                                            class="pi pi-map-marker text-[#AF52DE] text-xs"></i>Payee
-                                        Address</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Payee Address</label>
                                     <InputText v-model="voucherData.obligations.payee_address" type="text"
                                         placeholder="Enter payee address..." class="w-full" />
                                 </div>
@@ -1124,9 +1162,7 @@ onBeforeUnmount(() => {
                                 <div class="space-y-4">
                                     <!-- Responsibility Center -->
                                     <div>
-                                        <label
-                                            class="inline-flex text-sm font-medium text-gray-700 mb-1 items-center gap-2"><i
-                                                class="pi pi-building text-[#5856D6] text-xs"></i>Responsibility
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Responsibility
                                             Center</label>
                                         <Select v-model="voucherData.obligations.responsibility_center"
                                             :options="responsibilityCenters" optionLabel="code" optionValue="code"
@@ -1135,9 +1171,7 @@ onBeforeUnmount(() => {
 
                                     <!-- Particular Selection -->
                                     <div>
-                                        <label
-                                            class="inline-flex text-sm font-medium text-gray-700 mb-1 items-center gap-2"><i
-                                                class="pi pi-bookmark text-[#FF9500] text-xs"></i>Particulars</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Particulars</label>
                                         <Select v-model="voucherData.obligations.account_code"
                                             :disabled="!voucherData.obligations.responsibility_center"
                                             :options="currentParticulars" optionLabel="name" optionValue="account_code"
@@ -1153,37 +1187,14 @@ onBeforeUnmount(() => {
 
 
 
-                                    <div class="mt-2">
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year
-                                            (Optional)</label>
-                                        <AcademicYearSelect v-model="voucherData.disbursements.academic_year" />
-                                    </div>
-
-                                    <!-- Term -->
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Term
-                                            (Optional)</label>
-                                        <TermSelect v-model="voucherData.disbursements.semester" />
-                                    </div>
-
-                                    <div>
-                                        <label
-                                            class="inline-flex text-sm font-medium text-gray-700 mb-2 items-center gap-2"><i
-                                                class="pi pi-book text-[#8E8E93] text-xs"></i>Course
-                                            (Optional)</label>
-                                        <InputText v-model="voucherData.disbursements.course" type="text" class="w-full"
-                                            placeholder="e.g., Medical Laboratory Science" />
-                                    </div>
                                 </div>
 
                                 <div class="space-y-4">
                                     <div class="bg-white border border-[#e5e5ea] rounded-2xl p-3">
                                         <div class="flex items-center justify-between gap-3 mb-2">
-                                            <label
-                                                class="inline-flex text-xs font-medium text-gray-900 items-center gap-2">
-                                                <i class="pi pi-users text-[#34C759] text-xs"></i>
-                                                Selected Scholars ({{ voucherData.scholars.length }})
-                                            </label>
+                                            <label class="text-xs font-medium text-gray-900">Selected Scholars ({{
+                                                voucherData.scholars.length
+                                                }})</label>
                                             <div class="flex items-center gap-2 shrink-0">
                                                 <Checkbox id="applyToAll" v-model="applyToAllChecked" :binary="true" />
                                                 <label for="applyToAll"
@@ -1203,9 +1214,8 @@ onBeforeUnmount(() => {
                                                 class="flex items-center justify-between px-2.5 py-1 bg-white rounded-xl border border-[#e5e5ea]">
                                                 <div class="flex items-center flex-1">
                                                     <i class="pi pi-check text-green-600 mr-3 text-xs"></i>
-                                                    <span class="font-medium text-sm">{{ scholar.first_name }} {{
-                                                        scholar.last_name
-                                                        }}</span>
+                                                    <span class="font-medium text-sm">{{ formatScholarFullName(scholar)
+                                                    }}</span>
                                                 </div>
                                                 <div class="flex items-center gap-2">
                                                     <span class="text-gray-600 text-xs">PHP</span>
@@ -1227,32 +1237,85 @@ onBeforeUnmount(() => {
 
                             </div>
 
-
                         </div>
 
-                        <!-- Step 3: Particulars & Explanation -->
+                        <!-- Step 3: Additional Info (Optional Fields) -->
                         <div v-if="step === 3" class="space-y-4 text-gray-800">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4 space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Academic
+                                            Year</label>
+                                        <AcademicYearSelect v-model="voucherData.disbursements.academic_year" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
+                                        <TermSelect v-model="voucherData.disbursements.semester" />
+                                    </div>
+                                </div>
+                                <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4 space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Course</label>
+                                        <InputText v-model="voucherData.disbursements.course" type="text" class="w-full"
+                                            placeholder="e.g., Medical Laboratory Science" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Year Level</label>
+                                        <InputText v-model="voucherData.disbursements.year_level" type="text"
+                                            class="w-full" placeholder="e.g., 1st, 2nd" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Particulars & Explanation -->
+                        <div v-if="step === 4" class="space-y-4 text-gray-800">
                             <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4">
-                                <label class="inline-flex text-sm font-medium text-gray-900 mb-3 items-center gap-2">
-                                    <i class="pi pi-wallet text-[#007AFF] text-xs"></i>Disbursement Type
-                                </label>
-                                <div class="flex items-center gap-8">
-                                    <div class="flex items-center">
-                                        <RadioButton v-model="voucherData.disbursements.type" inputId="disbursements"
-                                            name="disbursementType" value="disbursements" />
-                                        <label for="disbursements"
-                                            class="ml-3 text-sm font-medium text-gray-900 cursor-pointer">
-                                            Disbursement Voucher
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <RadioButton v-model="voucherData.disbursements.type" inputId="payroll"
-                                            name="disbursementType" value="payroll" />
-                                        <label for="payroll"
-                                            class="ml-3 text-sm font-medium text-gray-900 cursor-pointer">
-                                            Payroll
-                                        </label>
-                                    </div>
+                                <label class="block text-sm font-medium text-gray-900 mb-3">Disbursement Type</label>
+                                <div class="flex gap-3">
+                                    <button type="button" @click="voucherData.disbursements.type = 'disbursements'"
+                                        :class="[
+                                            'flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all duration-200 text-left',
+                                            voucherData.disbursements.type === 'disbursements'
+                                                ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                                                : 'border-[#e5e5ea] bg-gray-50 text-gray-600 hover:border-gray-300 hover:bg-gray-100'
+                                        ]">
+                                        <span :class="[
+                                            'flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200',
+                                            voucherData.disbursements.type === 'disbursements'
+                                                ? 'border-indigo-500 bg-indigo-500'
+                                                : 'border-gray-300 bg-white'
+                                        ]">
+                                            <svg v-if="voucherData.disbursements.type === 'disbursements'"
+                                                class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor" stroke-width="3">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </span>
+                                        <span class="text-sm font-medium">Disbursement Voucher</span>
+                                    </button>
+                                    <button type="button" @click="voucherData.disbursements.type = 'payroll'" :class="[
+                                        'flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all duration-200 text-left',
+                                        voucherData.disbursements.type === 'payroll'
+                                            ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                                            : 'border-[#e5e5ea] bg-gray-50 text-gray-600 hover:border-gray-300 hover:bg-gray-100'
+                                    ]">
+                                        <span :class="[
+                                            'flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200',
+                                            voucherData.disbursements.type === 'payroll'
+                                                ? 'border-indigo-500 bg-indigo-500'
+                                                : 'border-gray-300 bg-white'
+                                        ]">
+                                            <svg v-if="voucherData.disbursements.type === 'payroll'"
+                                                class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor" stroke-width="3">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </span>
+                                        <span class="text-sm font-medium">Payroll</span>
+                                    </button>
                                 </div>
                             </div>
 
@@ -1268,10 +1331,7 @@ onBeforeUnmount(() => {
                                 </div>
 
                                 <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4">
-                                    <label
-                                        class="inline-flex text-sm font-medium text-gray-900 mb-2 items-center gap-2">
-                                        <i class="pi pi-file-edit text-[#5856D6] text-xs"></i>Explanation
-                                    </label>
+                                    <label class="block text-sm font-medium text-gray-900 mb-2">Explanation</label>
                                     <div class="border border-gray-300 rounded-2xl overflow-hidden bg-white">
                                         <QuillEditor v-model:content="voucherData.disbursements.explanation"
                                             :toolbar="quillToolbar" content-type="html" theme="snow"
@@ -1281,8 +1341,8 @@ onBeforeUnmount(() => {
                             </div>
                         </div>
 
-                        <!-- Step 4: Review & Create -->
-                        <div v-if="step === 4" class="space-y-4">
+                        <!-- Step 5: Review & Create -->
+                        <div v-if="step === 5" class="space-y-4">
                             <!-- Obligations Summary -->
                             <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
                                 <h4 class="font-medium text-gray-900 mb-3">Obligation Details</h4>
@@ -1330,6 +1390,12 @@ onBeforeUnmount(() => {
                                             '---' }}</span>
                                     </div>
                                     <div class="flex justify-between">
+                                        <span class="text-gray-600">Year Level:</span>
+                                        <span class="font-medium text-gray-900">{{ voucherData.disbursements.year_level
+                                            ||
+                                            '---' }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
                                         <span class="text-gray-600">Academic Year:</span>
                                         <span class="font-medium text-gray-900">{{
                                             voucherData.disbursements.academic_year ||
@@ -1362,7 +1428,7 @@ onBeforeUnmount(() => {
                                         <ol class="text-gray-700 text-sm space-y-1 ml-4 list-decimal">
                                             <li v-for="(scholar, i) in voucherData.scholars" :key="scholar.profile_id"
                                                 class="flex justify-between">
-                                                <span>{{ scholar.first_name }} {{ scholar.last_name }}</span>
+                                                <span>{{ formatScholarFullName(scholar) }}</span>
                                                 <span class="font-semibold">{{ formatCurrency(scholar.individualAmount
                                                     || 0)
                                                 }}</span>
@@ -1385,111 +1451,13 @@ onBeforeUnmount(() => {
                                 <p class="text-sm text-yellow-800">{{ voucherData.summary.notes }}</p>
                             </div>
 
-                        </div><!-- end Step 4 -->
+                        </div><!-- end Step 5 -->
 
                     </div><!-- end space-y-6 -->
                 </div><!-- end ios-body / wizardContentRef -->
             </div><!-- end ios-modal -->
         </template>
     </Dialog>
-
-    <!-- Obligation Preview Drawer -->
-    <FloatingDrawer :visible="isOpen && step <= 2" :header="step === 1 ? 'Selected Scholars' : 'Preview'" :modal="false"
-        position="right" :closable="false" :dismissableMask="false" class="!w-[400px]">
-        <div class="space-y-4">
-            <!-- Step 1: Selected Scholars -->
-            <div v-if="step === 1" class="space-y-3">
-                <div v-if="selectedCount === 0" class="text-center py-8 text-gray-500">
-                    <p class="text-sm">No scholars selected yet</p>
-                </div>
-                <div v-else class="space-y-2">
-                    <div v-for="scholar in scholars.filter(s => s.selected)" :key="scholar.profile_id"
-                        class="flex items-center justify-between bg-green-50 p-3 rounded border border-green-200">
-                        <div class="flex-1">
-                            <div class="text-sm font-medium text-gray-900">{{ scholar.first_name }} {{ scholar.last_name
-                                }}
-                            </div>
-                            <div class="text-xs text-gray-500">
-                                <span v-if="scholar.year_level" class="uppercase">{{ formatYearLevel(scholar.year_level)
-                                    }}</span>
-                                <span v-else class="text-red-500">---</span>
-                                {{ scholar.course ? ' | ' + scholar.course : '' }}
-                            </div>
-                        </div>
-                        <button
-                            @click="() => { const s = scholars.find(x => x.profile_id === scholar.profile_id); if (s) s.selected = false; updateSelectedCount(); }"
-                            class="ml-2 text-red-500 hover:text-red-700 text-sm">
-                            <i class="pi pi-times"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 2-5: Obligation Preview -->
-            <div v-else class="space-y-3 text-sm">
-                <div class="flex justify-between pb-3 border-b border-gray-200">
-                    <span class="text-gray-600">Payee:</span>
-                    <span class="font-medium text-gray-900">{{ getPayeeDisplay() }}</span>
-                </div>
-                <div v-if="voucherData.obligations.payee_address"
-                    class="flex justify-between pb-3 border-b border-gray-200">
-                    <span class="text-gray-600 text-xs uppercase">Address:</span>
-                    <p class="font-medium text-gray-900 text-sm mt-1">{{ voucherData.obligations.payee_address }}</p>
-                </div>
-                <div class="flex justify-between pb-3 border-b border-gray-200">
-                    <span class="text-gray-600">Resp. Center:</span>
-                    <span class="font-medium text-gray-900">{{ getRCDisplay() }}</span>
-                </div>
-                <div class="flex justify-between pb-3 border-b border-gray-200">
-                    <span class="text-gray-600">Particulars:</span>
-                    <span class="font-medium text-gray-900">{{ voucherData.obligations.particulars_name || '---'
-                    }}</span>
-                </div>
-
-                <div class="flex justify-between pb-3 border-b border-gray-200">
-                    <span class="text-gray-600">Account Code:</span>
-                    <span class="font-medium text-gray-900">{{ voucherData.obligations.account_code || '---' }}</span>
-                </div>
-                <div class="py-3 border-b border-gray-200">
-                    <p class="text-gray-700 font-medium mb-3 uppercase text-xs">List of Scholars</p>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-gray-700 text-xs">
-                            <thead>
-                                <tr class="border-b border-gray-300">
-                                    <th class="text-left pb-2">Scholar Name</th>
-                                    <th class="text-left pb-2 px-2">Academic Year</th>
-                                    <th class="text-left pb-2 px-2">Term</th>
-                                    <th class="text-right pb-2">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(scholar, i) in voucherData.scholars" :key="scholar.profile_id"
-                                    class="border-b border-gray-200">
-                                    <td class="py-2">{{ scholar.first_name }} {{ scholar.last_name }}</td>
-                                    <td class="py-2 px-2">{{ voucherData.disbursements.academic_year || '---' }}</td>
-                                    <td class="py-2 px-2">{{ voucherData.disbursements.semester || '---' }}</td>
-                                    <td class="py-2 text-right font-semibold">{{
-                                        formatCurrency(scholar.individualAmount || 0) }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="flex justify-between pt-3">
-                    <span class="text-gray-600 font-medium">Total Amount:</span>
-                    <span class="font-bold text-gray-700 text-lg">{{ formatCurrency(totalAmount) }}</span>
-                </div>
-                <div v-if="voucherData.obligations.particulars_description" class="py-3 border-t border-gray-200">
-                    <p class="text-gray-700 font-medium mb-2 text-xs uppercase">Particulars Description</p>
-                    <div class="text-gray-700 text-sm" v-html="voucherData.obligations.particulars_description"></div>
-                </div>
-                <div v-if="voucherData.disbursements.explanation" class="py-3 border-t border-gray-200">
-                    <p class="text-gray-700 font-medium mb-2 text-xs uppercase">Disbursement/Payroll Explanation</p>
-                    <div class="text-gray-700 text-sm" v-html="voucherData.disbursements.explanation"></div>
-                </div>
-            </div>
-        </div>
-    </FloatingDrawer>
 </template>
 
 <style scoped>
@@ -1519,5 +1487,41 @@ onBeforeUnmount(() => {
 :deep(p.ql-align-justify),
 :deep(div.ql-align-justify) {
     text-align: justify;
+}
+
+/* ── Compact inputs & selects ── */
+:deep(.p-inputtext) {
+    font-size: 13px;
+    padding: 6px 10px;
+    min-height: unset;
+}
+
+:deep(.p-select) {
+    font-size: 13px;
+    min-height: unset;
+}
+
+:deep(.p-select-label) {
+    font-size: 13px;
+    padding: 6px 10px;
+}
+
+:deep(.p-select-dropdown) {
+    width: 2rem;
+}
+
+:deep(.p-radiobutton .p-radiobutton-box) {
+    width: 16px;
+    height: 16px;
+}
+
+:deep(.p-checkbox .p-checkbox-box) {
+    width: 16px;
+    height: 16px;
+}
+
+:deep(.p-button:not(.p-button-icon-only)) {
+    font-size: 13px;
+    padding: 6px 12px;
 }
 </style>

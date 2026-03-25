@@ -33,9 +33,13 @@ class StoreFundTransactionRequest extends FormRequest
             'scholar_ids' => ['nullable', 'array'],
             'scholar_ids.*.profile_id' => ['nullable'],
             'scholar_ids.*.scholarship_record_id' => ['nullable'],
+            'scholar_ids.*.name' => ['nullable', 'string'],
+            'scholar_ids.*.amount' => ['nullable', 'numeric'],
+            'year_level' => ['nullable', 'string'],
             'notes' => ['nullable', 'string'],
             'remarks' => ['nullable', 'string'],
-            'transaction_status' => ['nullable', 'in:No OBR,LOA,Irregular,Transferred,Claimed,Paid,On Process,Denied'],
+            'transaction_status' => ['nullable', 'string'],
+            'created_by' => ['nullable', 'integer'],
         ];
     }
 
