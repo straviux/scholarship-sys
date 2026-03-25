@@ -39,15 +39,17 @@ class AuthenticatedSessionController extends Controller
     /**
      * Destroy an authenticated session.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request): \Symfony\Component\HttpFoundation\Response
     {
         Auth::guard('web')->logout();
 
+        // invalidate() MUST come before regenerateToken() so the new token
+        // is stamped into the fresh session, not the old one that gets wiped.
+        $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        $request->session()->invalidate();
-
-        // Redirect with a full page reload to clear client-side Inertia state
-        return redirect('/login')->header('X-Force-Reload', 'true');
+        // Inertia::location() forces a full browser reload so the SPA
+        // reinitialises with the fresh CSRF token from app.blade.php.
+        return Inertia::location(route('login'));
     }
 }

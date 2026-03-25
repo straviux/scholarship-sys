@@ -7,6 +7,7 @@ use App\Exports\ScholarshipReportExport;
 use Illuminate\Http\Request;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipRecord;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Browsershot\Browsershot;
@@ -1254,7 +1255,40 @@ class ReportController extends Controller
         $currentDateTime = \Carbon\Carbon::now()->format('Y-m-d_H-i-s');
         $filename = "scholarship_report_{$currentDateTime}.xlsx";
 
-        return Excel::download(new ScholarshipReportExport($profiles, $summary, $filters, $reportType, $canViewJpm, $includeRemarks, $includeGrantProvision), $filename);
+        try {
+            return Excel::download(new ScholarshipReportExport(
+                $profiles,
+                $summary,
+                $filters,
+                $reportType,
+                $canViewJpm,
+                $includeRemarks,
+                $includeGrantProvision
+            ), $filename);
+        } catch (\Throwable $e) {
+            Log::error('Scholarship Excel export failed', [
+                'message' => $e->getMessage(),
+                'report_type' => $reportType,
+                'include_remarks' => $includeRemarks,
+                'include_grant_provision' => $includeGrantProvision,
+            ]);
+
+            if ($includeRemarks) {
+                Log::warning('Retrying scholarship Excel export without remarks due to export rendering failure.');
+
+                return Excel::download(new ScholarshipReportExport(
+                    $profiles,
+                    $summary,
+                    $filters,
+                    $reportType,
+                    $canViewJpm,
+                    false,
+                    $includeGrantProvision
+                ), $filename);
+            }
+
+            throw $e;
+        }
     }
 
     /**

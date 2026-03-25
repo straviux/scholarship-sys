@@ -15,7 +15,7 @@
                     <div class="flex items-start justify-between">
                         <div>
                             <h1 class="text-lg font-semibold text-gray-900 mb-0.5">
-                                {{ reportType === 'list' ? 'Scholarship Profiles' : 'Summary Report' }}
+                                {{ reportTitle }}
                             </h1>
                             <p class="text-[11px] text-gray-500">
                                 Total Records: <strong>{{ totalRecords }}</strong>
@@ -75,7 +75,7 @@
                                         Provision</th>
                                     <th class="px-2 py-1.5 text-left font-semibold text-gray-700 text-[10px]">{{
                                         isShowingApproved ?
-                                        'Date Approved' : 'Date Filed' }}</th>
+                                            'Date Approved' : 'Date Filed' }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -125,7 +125,8 @@
                 <div v-if="reportType === 'summary'">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div class="bg-white p-4 rounded-lg border border-gray-200">
-                            <h3 class="text-[10px] uppercase tracking-wide text-gray-600 mb-1">Total Scholars</h3>
+                            <h3 class="text-[10px] uppercase tracking-wide text-gray-600 mb-1">Total {{ personLabel }}
+                            </h3>
                             <p class="text-2xl font-light text-gray-900">{{ totalRecords }}</p>
                         </div>
                         <div class="bg-white p-4 rounded-lg border border-gray-200">
@@ -175,6 +176,24 @@ const paperSize = ref(props.params.paper_size || 'A4');
 const orientation = ref(props.params.orientation || 'landscape');
 const reportType = computed(() => props.params.report_type || 'list');
 const totalRecords = computed(() => records.value.length);
+
+const personLabel = computed(() => {
+    const status = props.params.unified_status;
+    const statusArray = Array.isArray(status) ? status : (status ? [status] : []);
+    if (statusArray.length === 1 && ['pending', 'denied'].includes(statusArray[0])) return 'Applicants';
+    return 'Scholars';
+});
+
+const reportTitle = computed(() => {
+    const status = props.params.unified_status;
+    const statusArray = Array.isArray(status) ? status : (status ? [status] : []);
+    const singleStatus = statusArray.length === 1 ? statusArray[0] : null;
+    const statusLabel = singleStatus ? formatUnifiedStatusText(singleStatus) : null;
+    if (reportType.value === 'summary') {
+        return statusLabel ? `Summary Report of ${statusLabel} ${personLabel.value}` : 'Summary Report';
+    }
+    return statusLabel ? `Detailed List of ${statusLabel} ${personLabel.value}` : 'Detailed List';
+});
 
 // Options
 const paperSizeOptions = [

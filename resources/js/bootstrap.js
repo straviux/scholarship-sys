@@ -30,7 +30,7 @@ function getXsrfTokenFromCookie() {
 }
 
 function getBestCsrfToken() {
-	return getXsrfTokenFromCookie() || getCsrfTokenFromMeta();
+	return getCsrfTokenFromMeta() || getXsrfTokenFromCookie();
 }
 
 function setCsrfToken(token) {

@@ -65,7 +65,7 @@
         <span>{{ ucfirst($reportType) }}</span>
         @foreach($filters as $key => $value)
         @if($value && !in_array($key, ['paper_size', 'orientation', 'date_filed']))
-        <span style="color:#d1d5db;">•</span>
+        <span style="color:#d1d5db;">|</span>
         @if($key === 'unified_status')
         <!-- Display unified status from request parameter -->
         <span>{{ is_array($value) ? implode(', ', array_map('ucwords', str_replace('_', ' ', $value))) : ucwords(str_replace('_', ' ', $value)) }}</span>
@@ -279,11 +279,20 @@
             </tr>
         </thead>
     </table>
+    @php
+    $exStatusFilter = $filters['unified_status'] ?? null;
+    $exSingleStatus = is_array($exStatusFilter) ? (count($exStatusFilter) === 1 ? $exStatusFilter[0] : null) : $exStatusFilter;
+    $exPersonLabel = in_array($exSingleStatus, ['pending', 'denied']) ? 'Applicants' : 'Scholars';
+    $exStatusLabel = $exSingleStatus ? ucfirst($exSingleStatus) : null;
+    $exReportTitle = ($reportType === 'summary')
+    ? ($exStatusLabel ? 'Summary Report of ' . $exStatusLabel . ' ' . $exPersonLabel : 'Summary Report')
+    : ($exStatusLabel ? 'Detailed List of ' . $exStatusLabel . ' ' . $exPersonLabel : 'Detailed List');
+    @endphp
     <table class="data-table" border="1" style="table-layout: fixed; width: 100%;">
         <thead>
             <tr>
                 <th colspan="{{ $colCount }}">
-                    <h2>Scholarship Report</h2>
+                    <h2>{{ $exReportTitle }}</h2>
                 </th>
             </tr>
             <tr>
@@ -312,7 +321,7 @@
                 <th style="width: 100px;">Grant Provision</th>
                 @endif
                 @if($includeRemarks ?? false)
-                <th style="width: 150px;">Remarks</th>
+                <th>Remarks</th>
                 @endif
                 <th style="width: 70px;">{{ $showingApproved ? 'Date Approved' : 'Date Filed' }}</th>
             </tr>
@@ -383,7 +392,7 @@
                 <td>{{ $grantProvision !== '-' ? ucwords(str_replace('_', ' ', $grantProvision)) : '-' }}</td>
                 @endif
                 @if($includeRemarks ?? false)
-                <td>{{ $remarks }}</td>
+                <td>{{ strip_tags($remarks) }}</td>
                 @endif
                 <td>{{ $displayDate ? \Carbon\Carbon::parse($displayDate)->format('M d, Y') : '-' }}</td>
             </tr>

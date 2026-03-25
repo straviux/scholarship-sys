@@ -195,7 +195,8 @@ const shouldShowAction = (action) => {
 
                             <div class="flex items-start gap-2">
                                 <i class="pi pi-comment text-gray-400 mt-1"></i>
-                                <span class="text-gray-600 text-xs italic">{{ applicant.remarks || '-' }}</span>
+                                <span v-if="applicant.remarks" class="text-gray-600 text-xs italic" v-html="applicant.remarks"></span>
+                                <span v-else class="text-gray-600 text-xs italic">-</span>
                             </div>
                         </div>
                     </slot>

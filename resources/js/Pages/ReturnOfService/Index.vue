@@ -313,7 +313,7 @@
 
                 <div v-if="viewingScholar.remarks" class="border-t pt-4">
                     <p class="text-xs text-gray-500 uppercase mb-2">Remarks</p>
-                    <p class="text-gray-700">{{ viewingScholar.remarks }}</p>
+                    <p class="text-gray-700" v-html="viewingScholar.remarks"></p>
                 </div>
             </div>
 
@@ -420,7 +420,8 @@
 
                         <Column field="remarks" header="Remarks" style="min-width: 200px">
                             <template #body="slotProps">
-                                <span class="text-sm text-gray-700">{{ slotProps.data.remarks || '-' }}</span>
+                                <span v-if="slotProps.data.remarks" class="text-sm text-gray-700" v-html="slotProps.data.remarks"></span>
+                                <span v-else class="text-sm text-gray-400">-</span>
                             </template>
                         </Column>
 

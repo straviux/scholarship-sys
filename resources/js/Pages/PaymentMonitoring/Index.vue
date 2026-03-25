@@ -386,7 +386,7 @@ const formatDate = (date) => {
                     <!-- Remarks -->
                     <Column field="remarks" header="Remarks" style="min-width: 160px">
                         <template #body="{ data }">
-                            <span v-if="data.remarks" class="text-xs sm:text-sm text-gray-600">{{ data.remarks }}</span>
+                            <span v-if="data.remarks" class="text-xs sm:text-sm text-gray-600" v-html="data.remarks"></span>
                             <span v-else class="text-gray-400">—</span>
                         </template>
                     </Column>

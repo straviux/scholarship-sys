@@ -460,7 +460,7 @@
                                                     class="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
                                                     <p class="text-xs text-blue-700 font-semibold mb-1">Remarks:
                                                     </p>
-                                                    <p class="text-sm text-blue-900">{{ timeline.remarks }}</p>
+                                                    <p class="text-sm text-blue-900" v-html="timeline.remarks"></p>
                                                 </div>
                                             </div>
                                         </div>

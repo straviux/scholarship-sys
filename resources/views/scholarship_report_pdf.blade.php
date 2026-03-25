@@ -282,12 +282,24 @@
         Generated: {{ now()->timezone('Asia/Manila')->format('F d, Y h:i A') }}
     </div>
 
+    @php
+    $statusFilter = $filters['unified_status'] ?? null;
+    $singleStatus = is_array($statusFilter) ? (count($statusFilter) === 1 ? $statusFilter[0] : null) : $statusFilter;
+    $personLabel = in_array($singleStatus, ['pending', 'denied']) ? 'Applicants' : 'Scholars';
+    $statusLabel = $singleStatus ? ucfirst($singleStatus) : null;
+    if ($reportType === 'summary') {
+    $reportTitle = $statusLabel ? 'Summary Report of ' . $statusLabel . ' ' . $personLabel : 'Summary Report';
+    } else {
+    $reportTitle = $statusLabel ? 'Detailed List of ' . $statusLabel . ' ' . $personLabel : 'Detailed List';
+    }
+    @endphp
+
     <!-- Minimalist Report Header -->
     <div class="report-header">
         <div style="display: flex; justify-content: space-between; align-items: baseline;">
             <div>
                 <h1 style="margin: 0; font-size: 14px; font-weight: 300; color: #111827;">
-                    {{ $reportType === 'summary' ? 'Summary Report' : 'Scholarship Report' }}
+                    {{ $reportTitle }}
                 </h1>
                 <p style="margin: 4px 0 0 0; font-size: 13px; color: #444;">
                     {{ $profiles->count() }} records
@@ -313,7 +325,7 @@
         <thead>
             <tr>
                 <th>Status</th>
-                <th>Scholars</th>
+                <th>{{ $personLabel }}</th>
                 <th>%</th>
             </tr>
         </thead>
@@ -350,7 +362,7 @@
             }
             @endphp
             <tr style="font-weight: 600; background: #f3f4f6;">
-                <td>{{ $statusIndex++ }}. {{ $name }}</td>
+                <td>{{ $currentGroupIndex = $statusIndex++ }}. {{ $name }}</td>
                 <td style="font-size: 1.15em;">{{ $statusTotal }}</td>
                 <td>{{ number_format(($statusTotal / $total) * 100, 1) }}%</td>
             </tr>
@@ -365,14 +377,14 @@
             }
             @endphp
             <tr style="padding-left: 1.5rem;">
-                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
+                <td style="padding-left: 2rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex++ }}</span> {{ $subName }} (<strong>{{ $secondaryTotal }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
             @php $tertiaryIndex = 1; @endphp
             @foreach($subCount as $tertiaryName => $tertiaryCount)
             <tr style="padding-left: 2.5rem;">
-                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+                <td style="padding-left: 3.5rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex - 1 }}.{{ $tertiaryIndex++ }}</span> {{ $tertiaryName }} (<strong>{{ $tertiaryCount }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -380,7 +392,7 @@
             @else
             {{-- Secondary level (two-level nesting) --}}
             <tr style="padding-left: 1.5rem;">
-                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
+                <td style="padding-left: 2rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex++ }}</span> {{ $subName }} (<strong>{{ $subCount }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -389,7 +401,7 @@
             @else
             {{-- Flat status summary (no secondary grouping) --}}
             <tr>
-                <td>{{ $statusIndex++ }}. {{ $name }}</td>
+                <td>{{ $currentGroupIndex = $statusIndex++ }}. {{ $name }}</td>
                 <td>{{ $count }}</td>
                 <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
             </tr>
@@ -409,7 +421,7 @@
         <thead>
             <tr>
                 <th>Grant Provision</th>
-                <th>Scholars</th>
+                <th>{{ $personLabel }}</th>
                 <th>%</th>
             </tr>
         </thead>
@@ -444,7 +456,7 @@
             }
             @endphp
             <tr style="font-weight: 600; background: #f3f4f6;">
-                <td>{{ $grantIndex++ }}. {{ $name }}</td>
+                <td>{{ $currentGroupIndex = $grantIndex++ }}. {{ $name }}</td>
                 <td style="font-size: 1.15em;">{{ $grantTotal }}</td>
                 <td>{{ number_format(($grantTotal / $total) * 100, 1) }}%</td>
             </tr>
@@ -459,14 +471,14 @@
             }
             @endphp
             <tr style="padding-left: 1.5rem;">
-                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
+                <td style="padding-left: 2rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex++ }}</span> {{ $subName }} (<strong>{{ $secondaryTotal }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
             @php $tertiaryIndex = 1; @endphp
             @foreach($subCount as $tertiaryName => $tertiaryCount)
             <tr style="padding-left: 2.5rem;">
-                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+                <td style="padding-left: 3.5rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex - 1 }}.{{ $tertiaryIndex++ }}</span> {{ $tertiaryName }} (<strong>{{ $tertiaryCount }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -474,7 +486,7 @@
             @else
             {{-- Secondary level (two-level nesting) --}}
             <tr style="padding-left: 1.5rem;">
-                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
+                <td style="padding-left: 2rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex++ }}</span> {{ $subName }} (<strong>{{ $subCount }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -483,7 +495,7 @@
             @else
             {{-- Flat grant provision summary (no secondary grouping) --}}
             <tr>
-                <td>{{ $grantIndex++ }}. {{ $name }}</td>
+                <td>{{ $currentGroupIndex = $grantIndex++ }}. {{ $name }}</td>
                 <td>{{ $count }}</td>
                 <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
             </tr>
@@ -503,7 +515,7 @@
         <thead>
             <tr>
                 <th>Program</th>
-                <th>Scholars</th>
+                <th>{{ $personLabel }}</th>
                 <th>%</th>
             </tr>
         </thead>
@@ -538,7 +550,7 @@
             }
             @endphp
             <tr style="font-weight: 600; background: #f3f4f6;">
-                <td>{{ $programIndex++ }}. {{ $name }}</td>
+                <td>{{ $currentGroupIndex = $programIndex++ }}. {{ $name }}</td>
                 <td style="font-size: 1.15em;">{{ $programTotal }}</td>
                 <td>{{ number_format(($programTotal / $total) * 100, 1) }}%</td>
             </tr>
@@ -553,14 +565,14 @@
             }
             @endphp
             <tr style="padding-left: 1.5rem;">
-                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
+                <td style="padding-left: 2rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex++ }}</span> {{ $subName }} (<strong>{{ $secondaryTotal }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
             @php $tertiaryIndex = 1; @endphp
             @foreach($subCount as $tertiaryName => $tertiaryCount)
             <tr style="padding-left: 2.5rem;">
-                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+                <td style="padding-left: 3.5rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex - 1 }}.{{ $tertiaryIndex++ }}</span> {{ $tertiaryName }} (<strong>{{ $tertiaryCount }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -568,7 +580,7 @@
             @else
             {{-- Secondary level (two-level nesting) --}}
             <tr style="padding-left: 1.5rem;">
-                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
+                <td style="padding-left: 2rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex++ }}</span> {{ $subName }} (<strong>{{ $subCount }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -577,7 +589,7 @@
             @else
             {{-- Flat program summary (no secondary grouping) --}}
             <tr>
-                <td>{{ $programIndex++ }}. {{ $name }}</td>
+                <td>{{ $currentGroupIndex = $programIndex++ }}. {{ $name }}</td>
                 <td>{{ $count }}</td>
                 <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
             </tr>
@@ -597,7 +609,7 @@
         <thead>
             <tr>
                 <th>School</th>
-                <th>Scholars</th>
+                <th>{{ $personLabel }}</th>
                 <th>%</th>
             </tr>
         </thead>
@@ -632,7 +644,7 @@
             }
             @endphp
             <tr style="font-weight: 600; background: #f3f4f6;">
-                <td>{{ $schoolIndex++ }}. {{ $name }}</td>
+                <td>{{ $currentGroupIndex = $schoolIndex++ }}. {{ $name }}</td>
                 <td style="font-size: 1.15em;">{{ $schoolTotal }}</td>
                 <td>{{ number_format(($schoolTotal / $total) * 100, 1) }}%</td>
             </tr>
@@ -647,14 +659,14 @@
             }
             @endphp
             <tr style="padding-left: 1.5rem;">
-                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
+                <td style="padding-left: 2rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex++ }}</span> {{ $subName }} (<strong>{{ $secondaryTotal }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
             @php $tertiaryIndex = 1; @endphp
             @foreach($subCount as $tertiaryName => $tertiaryCount)
             <tr style="padding-left: 2.5rem;">
-                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+                <td style="padding-left: 3.5rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex - 1 }}.{{ $tertiaryIndex++ }}</span> {{ $tertiaryName }} (<strong>{{ $tertiaryCount }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -662,7 +674,7 @@
             @else
             {{-- Secondary level (two-level nesting) --}}
             <tr style="padding-left: 1.5rem;">
-                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
+                <td style="padding-left: 2rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex++ }}</span> {{ $subName }} (<strong>{{ $subCount }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -671,7 +683,7 @@
             @else
             {{-- Flat school summary (no secondary grouping) --}}
             <tr>
-                <td>{{ $schoolIndex++ }}. {{ $name }}</td>
+                <td>{{ $currentGroupIndex = $schoolIndex++ }}. {{ $name }}</td>
                 <td>{{ $count }}</td>
                 <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
             </tr>
@@ -691,7 +703,7 @@
         <thead>
             <tr>
                 <th>Course</th>
-                <th>Scholars</th>
+                <th>{{ $personLabel }}</th>
                 <th>%</th>
             </tr>
         </thead>
@@ -726,7 +738,7 @@
             }
             @endphp
             <tr style="font-weight: 600; background: #f3f4f6;">
-                <td>{{ $courseIndex++ }}. {{ $name }}</td>
+                <td>{{ $currentGroupIndex = $courseIndex++ }}. {{ $name }}</td>
                 <td style="font-size: 1.15em;">{{ $courseTotal }}</td>
                 <td>{{ number_format(($courseTotal / $total) * 100, 1) }}%</td>
             </tr>
@@ -741,14 +753,14 @@
             }
             @endphp
             <tr style="padding-left: 1.5rem;">
-                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
+                <td style="padding-left: 2rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex++ }}</span> {{ $subName }} (<strong>{{ $secondaryTotal }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
             @php $tertiaryIndex = 1; @endphp
             @foreach($subCount as $tertiaryName => $tertiaryCount)
             <tr style="padding-left: 2.5rem;">
-                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+                <td style="padding-left: 3.5rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex - 1 }}.{{ $tertiaryIndex++ }}</span> {{ $tertiaryName }} (<strong>{{ $tertiaryCount }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -756,7 +768,7 @@
             @else
             {{-- Secondary level (two-level nesting) --}}
             <tr style="padding-left: 1.5rem;">
-                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
+                <td style="padding-left: 2rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex++ }}</span> {{ $subName }} (<strong>{{ $subCount }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -765,7 +777,7 @@
             @else
             {{-- Flat course summary (no secondary grouping) --}}
             <tr>
-                <td>{{ $courseIndex++ }}. {{ $name }}</td>
+                <td>{{ $currentGroupIndex = $courseIndex++ }}. {{ $name }}</td>
                 <td>{{ $count }}</td>
                 <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
             </tr>
@@ -785,7 +797,7 @@
         <thead>
             <tr>
                 <th>Year Level</th>
-                <th>Scholars</th>
+                <th>{{ $personLabel }}</th>
                 <th>%</th>
             </tr>
         </thead>
@@ -829,7 +841,7 @@
             }
             @endphp
             <tr style="font-weight: 600; background: #f3f4f6;">
-                <td>{{ $yearLevelIndex++ }}. {{ $name }}</td>
+                <td>{{ $currentGroupIndex = $yearLevelIndex++ }}. {{ $name }}</td>
                 <td style="font-size: 1.15em;">{{ $yearLevelTotal }}</td>
                 <td>{{ number_format(($yearLevelTotal / $total) * 100, 1) }}%</td>
             </tr>
@@ -844,14 +856,14 @@
             }
             @endphp
             <tr style="padding-left: 1.5rem;">
-                <td style="padding-left: 2rem;">{{ $subName }} ({{ $secondaryTotal }})</td>
+                <td style="padding-left: 2rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex++ }}</span> {{ $subName }} (<strong>{{ $secondaryTotal }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
             @php $tertiaryIndex = 1; @endphp
             @foreach($subCount as $tertiaryName => $tertiaryCount)
             <tr style="padding-left: 2.5rem;">
-                <td style="padding-left: 3.5rem;">{{ $tertiaryName }} ({{ $tertiaryCount }})</td>
+                <td style="padding-left: 3.5rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex - 1 }}.{{ $tertiaryIndex++ }}</span> {{ $tertiaryName }} (<strong>{{ $tertiaryCount }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -859,7 +871,7 @@
             @else
             {{-- Secondary level (two-level nesting) --}}
             <tr style="padding-left: 1.5rem;">
-                <td style="padding-left: 2rem;">{{ $subName }} ({{ $subCount }})</td>
+                <td style="padding-left: 2rem;"><span style="font-size: 0.8em; color: #9ca3af; font-weight: normal;">{{ $currentGroupIndex }}.{{ $subIndex++ }}</span> {{ $subName }} (<strong>{{ $subCount }}</strong>)</td>
                 <td></td>
                 <td></td>
             </tr>
@@ -868,7 +880,7 @@
             @else
             {{-- Flat year level summary (no secondary grouping) --}}
             <tr>
-                <td>{{ $yearLevelIndex++ }}. {{ $name }}</td>
+                <td>{{ $currentGroupIndex = $yearLevelIndex++ }}. {{ $name }}</td>
                 <td>{{ $count }}</td>
                 <td>{{ number_format(($count / $total) * 100, 1) }}%</td>
             </tr>
@@ -1043,7 +1055,7 @@
                 <td style="font-size:11px;">{{ $grantProvision !== '-' ? ucwords(str_replace('_', ' ', $grantProvision)) : '-' }}</td>
                 @endif
                 @if($includeRemarks ?? false)
-                <td style="font-size:11px;">{{ $remarks }}</td>
+                <td style="font-size:11px;">{!! $remarks !!}</td>
                 @endif
             </tr>
             @php $overallIndex++; @endphp
