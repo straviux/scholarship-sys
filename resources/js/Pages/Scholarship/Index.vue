@@ -44,7 +44,7 @@
             <Panel class="!rounded-4xl overflow-hidden">
                 <!-- Filters Section - Single Row -->
                 <div class="flex items-end gap-3 -mt-6 flex-wrap">
-                    <Button icon="pi pi-filter" severity="secondary" size="small" outlined rounded @click="openDrawer()"
+                    <Button icon="pi pi-filter" severity="warn" text rounded @click="openDrawer()"
                         v-tooltip.bottom="'More Filters'" />
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
@@ -404,7 +404,7 @@
                                     <Column header="Year" style="min-width: 80px;">
                                         <template #body="r">
                                             <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—'
-                                                }}</span>
+                                            }}</span>
                                         </template>
                                     </Column>
                                     <Column header="Academic Year" style="min-width: 110px;">

@@ -131,7 +131,7 @@
                                         <p class="text-xs font-medium">OBR Date</p>
                                         <p class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
                                             item.date_obligated ? formatDate(item.date_obligated) : '-'
-                                            }}</p>
+                                        }}</p>
                                     </div>
                                     <div v-if="item.obr_no" class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">OBR No.</p>
@@ -187,33 +187,33 @@
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Year:</span>
                                                 <span class="font-medium text-gray-900">{{ item.year_level || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Term:</span>
                                                 <span class="font-medium text-gray-900">{{ item.semester || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">AY:</span>
                                                 <span class="font-medium text-gray-900">{{ item.academic_year || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Course:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">School:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -595,6 +595,8 @@ const saving = ref(false);
 const deleting = ref(false);
 const uploading = ref(false);
 const disbursements = ref([]);
+const showSummary = ref(false);
+const expandedYears = ref({});
 const showAddModal = ref(false);
 const showChequeModal = ref(false);
 const showDeleteDialog = ref(false);

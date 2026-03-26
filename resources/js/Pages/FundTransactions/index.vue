@@ -62,7 +62,7 @@ const obrStatuses = ['No OBR', 'LOA', 'Irregular', 'Transferred', 'Claimed', 'Pa
 const showOBRTrackingDialog = ref(false);
 const selectedVoucherForOBRTracking = ref(null);
 const statusFilter = ref('');  // Status filter
-const userFilter = ref('');  // User filter - '' for all, 'my-records' for current user
+const userFilter = ref('all');  // User filter - 'all' for all records, 'my-records' for current user
 const obrTrackingForm = reactive({
     fiscal_year: new Date().getFullYear(),
     obr_no: '',
@@ -521,9 +521,10 @@ const filteredVouchers = computed(() => {
     if (userFilter.value === 'my-records') {
         const currentUserId = page.props.auth?.user?.id;
         if (currentUserId) {
-            filtered = filtered.filter(v => v.creator?.id === currentUserId);
+            filtered = filtered.filter(v => v.created_by == currentUserId);
         }
     }
+    // 'all' — no filter applied
 
     // Filter by status if selected
     if (statusFilter.value) {
@@ -589,7 +590,7 @@ const statusCounts = computed(() => {
 // Computed property for user record counts
 const myRecordsCount = computed(() => {
     const userId = page.props.auth?.user?.id;
-    return userId ? vouchers.value.filter(v => v.creator_id === userId).length : 0;
+    return userId ? vouchers.value.filter(v => v.created_by == userId).length : 0;
 });
 
 const totalRecordsCount = computed(() => vouchers.value.length);
@@ -1383,9 +1384,6 @@ onMounted(() => {
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-sm opacity-60 hidden sm:block">Right click row for actions</span>
-                        <Button icon="pi pi-sliders-h" :badge="statusFilter ? '!' : undefined" badgeSeverity="danger"
-                            severity="secondary" size="small" rounded outlined @click="showFilterDrawer = true"
-                            v-tooltip.bottom="'Filters'" />
                         <Button icon="pi pi-refresh" severity="secondary" size="small" rounded outlined
                             @click="fetchVouchers" :disabled="loading" :loading="loading"
                             v-tooltip.bottom="'Refresh'" />
@@ -1394,8 +1392,10 @@ onMounted(() => {
 
                 <!-- Record Filter + Active Tag Row -->
                 <div class="flex flex-wrap gap-3 items-center mb-4">
+                    <Button icon="pi pi-filter" :badge="statusFilter ? '!' : undefined" badgeSeverity="danger"
+                        severity="warn" text rounded @click="showFilterDrawer = true" v-tooltip.bottom="'Filters'" />
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <RadioButton v-model="userFilter" name="userFilter" value="" inputId="uf-all" />
+                        <RadioButton v-model="userFilter" name="userFilter" value="all" inputId="uf-all" />
                         <span class="text-sm text-gray-700">All Records</span>
                         <Badge :value="totalRecordsCount" severity="secondary" />
                     </label>
@@ -1404,6 +1404,7 @@ onMounted(() => {
                         <span class="text-sm text-gray-700">My Records</span>
                         <Badge :value="myRecordsCount" severity="secondary" />
                     </label>
+
                     <template v-if="statusFilter">
                         <span class="text-gray-300 mx-1">|</span>
                         <Tag severity="secondary" rounded class="cursor-pointer" @click="statusFilter = ''">
@@ -1511,7 +1512,7 @@ onMounted(() => {
                     <Column header="Processed By" style="min-width: 130px">
                         <template #body="slotProps">
                             <span class="text-xs font-semibold text-gray-600">{{ slotProps.data.creator?.name || '---'
-                            }}</span>
+                                }}</span>
                         </template>
                     </Column>
 
@@ -1555,7 +1556,8 @@ onMounted(() => {
                         </div>
                         <div class="ios-row">
                             <span class="ios-row-label">Date Obligated</span>
-                            <span>{{ selectedVoucher.date_obligated ? formatDate(selectedVoucher.date_obligated) : '---' }}</span>
+                            <span>{{ selectedVoucher.date_obligated ? formatDate(selectedVoucher.date_obligated) : '---'
+                                }}</span>
                         </div>
                         <div class="ios-row">
                             <span class="ios-row-label">Disbursement Type</span>
@@ -1575,7 +1577,7 @@ onMounted(() => {
                         <div class="ios-row">
                             <span class="ios-row-label">Amount</span>
                             <span style="font-weight: 600;">{{ formatAmount(selectedVoucher.amount)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="ios-row">
                             <span class="ios-row-label">Created By</span>

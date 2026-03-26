@@ -3,139 +3,165 @@
     <Head title="Return of Service Batches" />
 
     <AdminLayout>
-        <template #header>
-            Return of Service (ROS) Management
-        </template>
 
-        <div class="space-y-6">
-            <!-- Page Header -->
-            <div>
-                <div class="flex items-center gap-3 mb-2">
-                    <i class="pi pi-graduation-cap text-2xl text-blue-600"></i>
-                    <h1 class="text-2xl font-bold text-gray-800">Return of Service (ROS) Management</h1>
-                </div>
-                <p class="text-sm text-gray-600">Manage return of service batches and add scholars to track their
-                    service obligations.</p>
-                <div class="flex gap-2 mt-4">
-                    <Button v-if="hasPermission('return-of-service.export')" icon="pi pi-download" label="Export"
-                        severity="info" outlined rounded @click="exportRecords" />
-                    <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus" label="New Batch"
-                        severity="success" rounded @click="openNewBatchDialog" />
-                </div>
-            </div>
+        <div>
+            <!-- Toolbar -->
+            <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+                <template #start>
+                    <div class="flex items-center gap-3">
+                        <i class="pi pi-graduation-cap text-blue-600" style="font-size:2rem"></i>
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-700">Return of Service</h1>
+                            <p class="text-sm text-gray-600">Manage ROS batches and track scholar service obligations
+                            </p>
+                        </div>
+                    </div>
+                </template>
+                <template #end>
+                    <div class="flex gap-2">
+                        <Button v-if="hasPermission('return-of-service.export')" icon="pi pi-download" label="Export"
+                            severity="secondary" outlined rounded size="small" @click="exportRecords" />
+                        <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus" label="New Batch"
+                            severity="success" rounded size="small" @click="openNewBatchDialog" />
+                    </div>
+                </template>
+            </Toolbar>
 
-            <!-- Filters Card -->
-            <div class="bg-white !rounded-4xl overflow-hidden border border-gray-200 px-6 pt-4 pb-5 shadow-sm">
-                <div class="flex justify-between items-center mb-3">
-                    <div class="flex items-center gap-2">
-                        <i class="pi pi-filter text-gray-400 text-sm"></i>
-                        <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Filters</span>
+            <!-- Filters Panel -->
+            <Panel class="mb-6 !rounded-4xl overflow-hidden">
+                <div class="flex items-end gap-3 -mt-6 flex-wrap">
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Batch Name</label>
+                        <IconField iconPosition="left">
+                            <InputIcon class="pi pi-search text-gray-400" />
+                            <InputText v-model="batchSearch" placeholder="Search batch name..." size="small" />
+                        </IconField>
                     </div>
-                    <Button severity="secondary" text size="small" icon="pi pi-history" @click="clearBatchFilters"
-                        v-tooltip.bottom="`Clear Filters`" />
-                </div>
-                <div class="grid grid-cols-1 gap-2 md:grid-cols-4 lg:gap-4">
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-600">Batch Name</label>
-                        <InputText v-model="batchSearch" placeholder="Search batch name..." class="w-full"
-                            size="small" />
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Created By</label>
+                        <InputText v-model="batchCreatedByFilter" placeholder="Filter by creator..." size="small" />
                     </div>
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-600">Created By</label>
-                        <InputText v-model="batchCreatedByFilter" placeholder="Filter by creator..." class="w-full"
-                            size="small" />
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-600">Year</label>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Year</label>
                         <InputNumber v-model="batchYearFilter" placeholder="e.g., 2025" :useGrouping="false"
-                            class="w-full" size="small" />
+                            size="small" inputStyle="width: 120px" />
                     </div>
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-600">Description</label>
-                        <InputText v-model="batchDescriptionFilter" placeholder="Search description..." class="w-full"
-                            size="small" />
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Description</label>
+                        <InputText v-model="batchDescriptionFilter" placeholder="Search description..." size="small" />
                     </div>
+                    <Button severity="secondary" outlined rounded size="small" icon="pi pi-history"
+                        @click="clearBatchFilters" v-tooltip.bottom="`Clear Filters`" />
+                </div>
+            </Panel>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
+                    <div class="text-2xl font-bold text-blue-600">{{ batches.length }}</div>
+                    <div class="text-xs text-gray-500">Total Batches</div>
+                </div>
+                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
+                    <div class="text-2xl font-bold text-indigo-600">{{ filteredBatches.length }}</div>
+                    <div class="text-xs text-gray-500">Filtered Results</div>
+                </div>
+                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
+                    <div class="text-2xl font-bold text-green-600">{{batches.reduce((s, b) => s + (b.total_scholars ||
+                        0), 0) }}
+                    </div>
+                    <div class="text-xs text-gray-500">Total Scholars</div>
+                </div>
+                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
+                    <div class="text-2xl font-bold text-gray-400">{{batches.filter(b => b.result_date).length}}</div>
+                    <div class="text-xs text-gray-500">With Results</div>
                 </div>
             </div>
 
-            <!-- Batch Cards Grid -->
-            <div class="grid grid-cols-1 gap-4">
-                <div v-for="batch in filteredBatches" :key="batch.id"
-                    class="bg-white !rounded-4xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="p-6">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="flex items-start gap-3">
-                                <div
-                                    class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <i class="pi pi-folder text-blue-600 text-sm"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-gray-900 text-base leading-tight">{{ batch.batch_name
-                                        }}</h4>
-                                    <div class="text-xs text-gray-500 space-y-0.5 mt-1">
-                                        <p v-if="batch.exam_date_from || batch.exam_date_to">
-                                            <span class="font-medium">Exam:</span>
-                                            {{ formatDateLong(batch.exam_date_from) }} –
-                                            {{ formatDateLong(batch.exam_date_to) }}
-                                        </p>
-                                        <p v-if="batch.result_date">
-                                            <span class="font-medium">Result:</span>
-                                            {{ formatDateLong(batch.result_date) }}
-                                        </p>
+            <!-- Batch Cards -->
+            <Panel class="!rounded-4xl overflow-hidden shadow-sm">
+                <div class="text-sm text-gray-500 mb-4 -mt-2">{{ filteredBatches.length }} batch(es)</div>
+
+                <!-- Batch Cards Grid -->
+                <div class="grid grid-cols-1 gap-4">
+                    <div v-for="batch in filteredBatches" :key="batch.id"
+                        class="bg-white !rounded-4xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-start gap-3">
+                                    <div
+                                        class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <i class="pi pi-folder text-blue-600 text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900 text-base leading-tight">{{
+                                            batch.batch_name
+                                            }}</h4>
+                                        <div class="text-xs text-gray-500 space-y-0.5 mt-1">
+                                            <p v-if="batch.exam_date_from || batch.exam_date_to">
+                                                <span class="font-medium">Exam:</span>
+                                                {{ formatDateLong(batch.exam_date_from) }} –
+                                                {{ formatDateLong(batch.exam_date_to) }}
+                                            </p>
+                                            <p v-if="batch.result_date">
+                                                <span class="font-medium">Result:</span>
+                                                {{ formatDateLong(batch.result_date) }}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
+                                <div class="text-right flex-shrink-0">
+                                    <span
+                                        class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
+                                        <i class="pi pi-users text-xs"></i>
+                                        {{ batch.total_scholars }}
+                                    </span>
+                                    <p class="text-xs text-gray-400 mt-1.5">by {{ batch.created_by }}</p>
+                                </div>
                             </div>
-                            <div class="text-right flex-shrink-0">
-                                <span
-                                    class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
-                                    <i class="pi pi-users text-xs"></i>
-                                    {{ batch.total_scholars }}
-                                </span>
-                                <p class="text-xs text-gray-400 mt-1.5">by {{ batch.created_by }}</p>
+
+                            <div v-if="batch.description" class="bg-gray-50 rounded-2xl px-4 py-2.5 mb-4">
+                                <p class="text-sm text-gray-600">{{ batch.description }}</p>
                             </div>
-                        </div>
 
-                        <div v-if="batch.description" class="bg-gray-50 rounded-2xl px-4 py-2.5 mb-4">
-                            <p class="text-sm text-gray-600">{{ batch.description }}</p>
-                        </div>
-
-                        <div class="flex gap-1.5 flex-wrap border-t border-gray-100 pt-3">
-                            <Button icon="pi pi-eye" label="View Batch" severity="secondary" text size="small" rounded
-                                @click="openViewBatchDialog(batch)" />
-                            <Button v-if="hasPermission('return-of-service.edit')" icon="pi pi-pencil" label="Edit"
-                                severity="warning" text size="small" rounded @click="openEditBatchDialog(batch)" />
-                            <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus"
-                                label="Add Scholar" severity="success" text size="small" rounded
-                                @click="openAddScholarDialog(batch)" />
-                            <Button icon="pi pi-download" label="Export" severity="info" text size="small" rounded
-                                @click="exportBatch(batch)" />
-                            <Button v-if="hasPermission('return-of-service.delete')" icon="pi pi-trash"
-                                severity="danger" text size="small" rounded @click="confirmDeleteBatch(batch)"
-                                v-tooltip.top="`Delete`" />
+                            <div class="flex gap-1.5 flex-wrap border-t border-gray-100 pt-3">
+                                <Button icon="pi pi-eye" label="View Batch" severity="secondary" text size="small"
+                                    rounded @click="openViewBatchDialog(batch)" />
+                                <Button v-if="hasPermission('return-of-service.edit')" icon="pi pi-pencil" label="Edit"
+                                    severity="warning" text size="small" rounded @click="openEditBatchDialog(batch)" />
+                                <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus"
+                                    label="Add Scholar" severity="success" text size="small" rounded
+                                    @click="openAddScholarDialog(batch)" />
+                                <Button icon="pi pi-download" label="Export" severity="info" text size="small" rounded
+                                    @click="exportBatch(batch)" />
+                                <Button v-if="hasPermission('return-of-service.delete')" icon="pi pi-trash"
+                                    severity="danger" text size="small" rounded @click="confirmDeleteBatch(batch)"
+                                    v-tooltip.top="`Delete`" />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Empty State -->
-            <div v-if="batches.length === 0" class="text-center py-16">
-                <div class="w-16 h-16 rounded-3xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                    <i class="pi pi-inbox text-2xl text-gray-400"></i>
+                <!-- Empty State -->
+                <div v-if="batches.length === 0" class="text-center py-16">
+                    <div class="w-16 h-16 rounded-3xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                        <i class="pi pi-inbox text-2xl text-gray-400"></i>
+                    </div>
+                    <p class="text-gray-500 mb-4">No ROS batches created yet.</p>
+                    <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus"
+                        label="Create First Batch" severity="success" rounded @click="openNewBatchDialog" />
                 </div>
-                <p class="text-gray-500 mb-4">No ROS batches created yet.</p>
-                <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus" label="Create First Batch"
-                    severity="success" rounded @click="openNewBatchDialog" />
-            </div>
 
-            <!-- No Results State -->
-            <div v-else-if="filteredBatches.length === 0" class="text-center py-16">
-                <div class="w-16 h-16 rounded-3xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                    <i class="pi pi-search text-2xl text-gray-400"></i>
+                <!-- No Results State -->
+                <div v-else-if="filteredBatches.length === 0" class="text-center py-16">
+                    <div class="w-16 h-16 rounded-3xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                        <i class="pi pi-search text-2xl text-gray-400"></i>
+                    </div>
+                    <p class="text-gray-500 mb-4">No batches match your filters.</p>
+                    <Button icon="pi pi-times" label="Clear Filters" severity="secondary" outlined rounded
+                        @click="clearBatchFilters" />
                 </div>
-                <p class="text-gray-500 mb-4">No batches match your filters.</p>
-                <Button icon="pi pi-times" label="Clear Filters" severity="secondary" outlined rounded
-                    @click="clearBatchFilters" />
-            </div>
+
+            </Panel>
         </div>
 
 
@@ -511,7 +537,7 @@
                                         Course
                                     </div>
                                     <span class="text-sm font-medium text-gray-800">{{ viewingBatch.course_name
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div v-if="viewingBatch.exam_date_from || viewingBatch.exam_date_to" class="ios-row">
                                     <div class="ios-row-label">
@@ -529,7 +555,7 @@
                                         Result Date
                                     </div>
                                     <span class="text-sm text-gray-700">{{ formatDateLong(viewingBatch.result_date)
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="ios-row">
                                     <div class="ios-row-label">
@@ -696,7 +722,7 @@
                                     </div>
                                     <div style="flex: 1; min-width: 0;">
                                         <p class="text-sm font-semibold text-gray-700">{{ scholarToDelete?.scholar_name
-                                            }}</p>
+                                        }}</p>
                                         <p class="text-xs text-red-600 mt-1">This action cannot be undone.</p>
                                     </div>
                                 </div>
@@ -742,6 +768,10 @@ import { Head, useForm, router } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Toolbar from 'primevue/toolbar';
+import Panel from 'primevue/panel';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 import MultiSelect from 'primevue/multiselect';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
@@ -1649,6 +1679,13 @@ onBeforeUnmount(() => {
 /* Wide batch view modal */
 .ios-modal-wide {
     height: 85vh;
+}
+
+/* Page-level input rounding */
+:deep(.p-inputtext),
+:deep(.p-select),
+:deep(.p-inputnumber-input) {
+    border-radius: 1rem;
 }
 
 /* Destructive Button */

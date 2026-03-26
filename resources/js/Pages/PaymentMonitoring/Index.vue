@@ -10,6 +10,10 @@ import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Panel from 'primevue/panel';
 import Badge from 'primevue/badge';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import RadioButton from 'primevue/radiobutton';
+import Tag from 'primevue/tag';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
@@ -161,7 +165,21 @@ const filteredData = computed(() => {
     return data;
 });
 
-// Status badge styling
+// PrimeVue Tag severity mapping
+const getStatusSeverity = (status) => {
+    const map = {
+        'LOA': 'info',
+        'IRREGULAR': 'warn',
+        'TRANSFERRED': 'secondary',
+        'CLAIMED': 'contrast',
+        'PAID': 'success',
+        'ON PROCESS': 'warn',
+        'DENIED': 'danger',
+    };
+    return map[status] || 'secondary';
+};
+
+// Status badge styling (legacy — kept for reference)
 const getStatusBadgeClass = (status) => {
     const baseClass = 'px-2 sm:px-3 py-1 rounded-full text-xs font-semibold';
     const statusMap = {
@@ -193,240 +211,214 @@ const formatDate = (date) => {
     <Head title="Payment Monitoring" />
 
     <AdminLayout>
-        <template #header>Payment Monitoring</template>
 
-        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-8">
-            <Toolbar class="mb-6 bg-white rounded-lg shadow-sm flex-col sm:flex-row gap-4">
+        <div>
+            <!-- Toolbar -->
+            <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
                 <template #start>
-                    <div class="flex items-center gap-3 w-full">
-                        <i class="pi pi-dollar text-lg sm:text-2xl text-blue-600 flex-shrink-0"
-                            style="font-size: 1.5rem;"></i>
-                        <div class="min-w-0">
-                            <h1 class="text-lg sm:text-xl font-bold text-gray-800">Payment Monitoring</h1>
-                            <p class="text-xs sm:text-sm text-gray-500 truncate">Track OBR status for active scholarship
-                                records</p>
+                    <div class="flex items-center gap-3">
+                        <i class="pi pi-dollar text-blue-600" style="font-size:2rem"></i>
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-700">Payment Monitoring</h1>
+                            <p class="text-sm text-gray-600">Track OBR status for active scholarship records</p>
                         </div>
                     </div>
                 </template>
             </Toolbar>
 
             <!-- Filters Panel -->
-            <Panel class="mb-6" header="Filters" :toggleable="true" :collapsed="false">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4">
-                    <!-- Search by Scholar Name -->
-                    <div class="flex flex-col gap-2 md:col-span-2">
-                        <label for="search" class="text-xs sm:text-sm font-medium text-gray-700">Scholar Name</label>
-                        <InputText id="search" v-model="searchInput" placeholder="Search by name"
-                            class="w-full text-xs sm:text-sm" />
+            <Panel class="mb-6 !rounded-4xl overflow-hidden">
+                <div class="flex items-end gap-3 -mt-6 flex-wrap">
+                    <!-- Search -->
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Scholar Name</label>
+                        <IconField iconPosition="left">
+                            <InputIcon class="pi pi-search text-gray-400" />
+                            <InputText v-model="searchInput" placeholder="Search by name..." size="small" />
+                        </IconField>
                     </div>
 
-
-                    <!-- Filter by Academic Year -->
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs sm:text-sm font-medium text-gray-700">Academic Year</label>
-                        <AcademicYearSelect v-model="selectedAcademicYear" />
+                    <!-- Academic Year -->
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Academic Year</label>
+                        <AcademicYearSelect v-model="selectedAcademicYear" size="small" />
                     </div>
 
-                    <!-- Filter by Term/Semester -->
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs sm:text-sm font-medium text-gray-700">Term</label>
-                        <TermSelect v-model="selectedSemester" />
+                    <!-- Term -->
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Term</label>
+                        <TermSelect v-model="selectedSemester" size="small" />
                     </div>
 
-                    <!-- Filter by Program -->
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs sm:text-sm font-medium text-gray-700">Program</label>
-                        <ProgramSelect v-model="selectedProgram" />
+                    <!-- Program -->
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
+                        <ProgramSelect v-model="selectedProgram" size="small" />
                     </div>
 
-                    <!-- Filter by Course -->
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs sm:text-sm font-medium text-gray-700">Course</label>
+                    <!-- Course -->
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
                         <CourseSelect v-model="selectedCourse" :scholarship-program-id="selectedProgram?.id"
-                            :multiple="true" />
+                            :multiple="true" size="small" />
                     </div>
 
-                    <!-- Filter by School -->
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs sm:text-sm font-medium text-gray-700">School</label>
-                        <SchoolSelect v-model="selectedSchool" />
+                    <!-- School -->
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">School</label>
+                        <SchoolSelect v-model="selectedSchool" size="small" />
                     </div>
 
-                    <!-- Filter by Transaction Status -->
-                    <div class="flex flex-col gap-2 md:col-span-3">
-                        <label class="text-xs sm:text-sm font-medium text-gray-700">Transaction Status</label>
-                        <div class="flex flex-wrap gap-2 sm:gap-3">
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="" inputId="pm-all" />
-                                <span class="text-sm text-gray-700">All</span>
-                                <Badge :value="statusCounts.all" severity="secondary"></Badge>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="no-obr"
-                                    inputId="pm-noobr" />
-                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">No OBR</span>
-                                <Badge :value="statusCounts['no-obr']" severity="secondary"></Badge>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="LOA" inputId="pm-loa" />
-                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">LOA</span>
-                                <Badge :value="statusCounts['LOA']" severity="secondary"></Badge>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="IRREGULAR"
-                                    inputId="pm-irregular" />
-                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Irregular</span>
-                                <Badge :value="statusCounts['IRREGULAR']" severity="secondary"></Badge>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="TRANSFERRED"
-                                    inputId="pm-transferred" />
-                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Transferred</span>
-                                <Badge :value="statusCounts['TRANSFERRED']" severity="secondary"></Badge>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="CLAIMED"
-                                    inputId="pm-claimed" />
-                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Claimed</span>
-                                <Badge :value="statusCounts['CLAIMED']" severity="secondary"></Badge>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="PAID" inputId="pm-paid" />
-                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Paid</span>
-                                <Badge :value="statusCounts['PAID']" severity="secondary"></Badge>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="ON PROCESS"
-                                    inputId="pm-onprocess" />
-                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">On Process</span>
-                                <Badge :value="statusCounts['ON PROCESS']" severity="secondary"></Badge>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <RadioButton v-model="selectedStatus" name="pmStatus" value="DENIED"
-                                    inputId="pm-denied" />
-                                <span class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Denied</span>
-                                <Badge :value="statusCounts['DENIED']" severity="secondary"></Badge>
-                            </label>
-                        </div>
-                    </div>
-                    <!-- Action Buttons -->
-                    <div class="flex flex-col gap-2 md:col-span-1 items-end justify-end">
-                        <label class="text-xs sm:text-sm font-medium text-gray-700">&nbsp;</label>
-                        <div class="flex gap-2 w-full">
-                            <Button label="Apply Filters" icon="pi pi-check" severity="success" @click="applyFilters"
-                                class="flex-1 text-xs sm:text-sm" size="small" />
-                            <Button label="Clear" icon="pi pi-times" severity="secondary" @click="clearFilters"
-                                class="flex-1 text-xs sm:text-sm" size="small" />
-                        </div>
-                    </div>
+                    <!-- Clear -->
+                    <Button severity="secondary" outlined rounded size="small" icon="pi pi-history"
+                        @click="clearFilters" v-tooltip.bottom="`Clear Filters`" />
+                </div>
+
+                <!-- Status filter row -->
+                <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
+                    <label v-for="opt in [
+                        { label: 'All', value: '', count: statusCounts.all },
+                        { label: 'No OBR', value: 'no-obr', count: statusCounts['no-obr'] },
+                        { label: 'LOA', value: 'LOA', count: statusCounts['LOA'] },
+                        { label: 'Irregular', value: 'IRREGULAR', count: statusCounts['IRREGULAR'] },
+                        { label: 'Transferred', value: 'TRANSFERRED', count: statusCounts['TRANSFERRED'] },
+                        { label: 'Claimed', value: 'CLAIMED', count: statusCounts['CLAIMED'] },
+                        { label: 'Paid', value: 'PAID', count: statusCounts['PAID'] },
+                        { label: 'On Process', value: 'ON PROCESS', count: statusCounts['ON PROCESS'] },
+                        { label: 'Denied', value: 'DENIED', count: statusCounts['DENIED'] },
+                    ]" :key="opt.value" class="flex items-center gap-1.5 cursor-pointer">
+                        <RadioButton v-model="selectedStatus" name="pmStatus" :value="opt.value" />
+                        <span class="text-sm text-gray-700 whitespace-nowrap">{{ opt.label }}</span>
+                        <Badge :value="opt.count" severity="secondary" />
+                    </label>
                 </div>
             </Panel>
 
+            <!-- Stats Summary -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
+                    <div class="text-2xl font-bold text-blue-600">{{ statusCounts.all }}</div>
+                    <div class="text-xs text-gray-500">Total Records</div>
+                </div>
+                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
+                    <div class="text-2xl font-bold text-orange-500">{{ statusCounts['ON PROCESS'] }}</div>
+                    <div class="text-xs text-gray-500">On Process</div>
+                </div>
+                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
+                    <div class="text-2xl font-bold text-green-600">{{ statusCounts['PAID'] }}</div>
+                    <div class="text-xs text-gray-500">Paid</div>
+                </div>
+                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
+                    <div class="text-2xl font-bold text-gray-400">{{ statusCounts['no-obr'] }}</div>
+                    <div class="text-xs text-gray-500">No OBR</div>
+                </div>
+            </div>
+
             <!-- Data Table -->
-            <div class="bg-white rounded-lg shadow mt-8 overflow-auto">
+            <Panel class="!rounded-4xl overflow-hidden shadow-sm">
+                <div class="flex items-center justify-between mb-4 -mt-2">
+                    <span class="text-sm text-gray-500">{{ filteredData.length }} record(s)</span>
+                </div>
+
                 <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredData"
-                    :paginator="true" :rows="10" :rows-per-page-options="[5, 10, 20, 50]" responsive-layout="scroll"
-                    class="w-full text-xs sm:text-sm">
-                    <Column field="scholar_name" header="Scholar Name" :sortable="true" style="min-width: 160px">
+                    :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]" class="text-sm" showGridlines
+                    stripedRows scrollable>
+
+                    <Column field="scholar_name" header="Scholar Name" sortable style="min-width: 180px">
                         <template #body="{ data }">
                             <a :href="route('scholarship.profile.show', data.profile_id)" target="_blank"
-                                class="text-gray-600 hover:text-gray-800 hover:underline font-medium">
+                                class="text-blue-600 hover:text-blue-800 hover:underline font-medium flex items-center gap-1">
                                 {{ data.scholar_name }}
-                                <i class="pi pi-external-link ml-1" style="font-size: 9pt;"></i>
+                                <i class="pi pi-external-link" style="font-size: 9pt;"></i>
                             </a>
                         </template>
                     </Column>
-                    <Column field="disbursement_type" header="Disbursement Type" :sortable="true"
-                        style="min-width: 100px">
+
+                    <Column field="disbursement_type" header="Type" sortable style="min-width: 110px">
                         <template #body="{ data }">
-                            <span v-if="data.disbursement_type"
-                                class="px-2 sm:px-3 py-1 rounded-full text-xs font-semibold inline-block"
-                                :class="data.disbursement_type === 'disbursements' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'">
-                                {{ data.disbursement_type === 'disbursements' ? 'Disbursement' : (data.disbursement_type
-                                    ===
-                                    'payroll' ? 'Payroll' : data.disbursement_type) }}
-                            </span>
+                            <Tag v-if="data.disbursement_type"
+                                :value="data.disbursement_type === 'disbursements' ? 'Disbursement' : data.disbursement_type === 'payroll' ? 'Payroll' : data.disbursement_type"
+                                :severity="data.disbursement_type === 'disbursements' ? 'info' : 'success'" rounded />
                             <span v-else class="text-gray-400 text-xs">—</span>
                         </template>
                     </Column>
-                    <Column field="academic_year" header="Academic Year" :sortable="true" style="min-width: 100px" />
-                    <Column field="year_level" header="Year Level" :sortable="true" style="min-width: 80px" />
-                    <Column field="term" header="Term" :sortable="true" style="min-width: 80px" />
 
-                    <!-- Transaction Status -->
-                    <Column header="Transaction Status" style="min-width: 140px">
+                    <Column field="academic_year" header="Acad. Year" sortable style="min-width: 110px" />
+                    <Column field="year_level" header="Year" sortable style="min-width: 70px" />
+                    <Column field="term" header="Term" sortable style="min-width: 80px" />
+
+                    <Column header="Status" style="min-width: 140px">
                         <template #body="{ data }">
-                            <div v-if="data.transaction_status" :class="getStatusBadgeClass(data.transaction_status)">
-                                {{ data.transaction_status }}
-                            </div>
-                            <div v-else class="text-gray-500 text-sm italic">
-                                No OBR assigned
-                            </div>
+                            <Tag v-if="data.transaction_status" :value="data.transaction_status" rounded
+                                :severity="getStatusSeverity(data.transaction_status)" />
+                            <span v-else class="text-gray-400 text-xs italic">No OBR</span>
                         </template>
                     </Column>
 
-                    <!-- Amount -->
-                    <Column header="Amount" style="min-width: 100px">
+                    <Column header="Amount" sortable style="min-width: 110px">
                         <template #body="{ data }">
-                            <span v-if="data.amount" class="font-semibold text-green-700 text-xs sm:text-sm">
+                            <span v-if="data.amount" class="font-semibold text-green-700">
                                 ₱{{ parseFloat(data.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
                             </span>
                             <span v-else class="text-gray-400">—</span>
                         </template>
                     </Column>
 
-                    <!-- OBR Date -->
-                    <Column header="OBR Date" style="min-width: 100px">
+                    <Column header="OBR Date" style="min-width: 110px">
                         <template #body="{ data }">
-                            <span v-if="data.date_obligated" class="text-xs sm:text-sm text-gray-700">
-                                {{ formatDate(data.date_obligated) }}
-                            </span>
+                            <span v-if="data.date_obligated" class="text-gray-700">{{ formatDate(data.date_obligated)
+                                }}</span>
                             <span v-else class="text-gray-400">—</span>
                         </template>
                     </Column>
 
-                    <!-- Remarks -->
-                    <Column field="remarks" header="Remarks" style="min-width: 160px">
+                    <Column field="obr_no" header="OBR No." style="min-width: 130px">
                         <template #body="{ data }">
-                            <span v-if="data.remarks" class="text-xs sm:text-sm text-gray-600"
-                                v-html="data.remarks"></span>
+                            <span v-if="data.obr_no" class="font-mono text-blue-700">{{ data.obr_no }}</span>
                             <span v-else class="text-gray-400">—</span>
                         </template>
                     </Column>
 
-                    <!-- OBR No -->
-                    <Column field="obr_no" header="OBR No." style="min-width: 120px">
+                    <Column field="remarks" header="Remarks" style="min-width: 180px">
                         <template #body="{ data }">
-                            <span v-if="data.obr_no" class="text-xs sm:text-sm font-mono text-blue-700">{{ data.obr_no
-                            }}</span>
+                            <span v-if="data.remarks" class="text-gray-600" v-html="data.remarks"></span>
                             <span v-else class="text-gray-400">—</span>
                         </template>
                     </Column>
 
                     <template #empty>
-                        <div class="p-8 text-center text-gray-500">
-                            <i class="pi pi-inbox text-2xl mb-2 block"></i>
+                        <div class="py-12 text-center text-gray-500">
+                            <i class="pi pi-inbox text-3xl mb-2 block"></i>
                             <p>No payment records found matching the current filters.</p>
                         </div>
                     </template>
                 </DataTable>
-            </div>
+            </Panel>
         </div>
+
     </AdminLayout>
 </template>
 
 <style scoped>
 :deep(.p-datatable) {
-    border-radius: 0.5rem;
+    border-radius: 0;
+    overflow: hidden;
+    border: none;
 }
 
-:deep(.p-datatable .p-datatable-thead > tr > th) {
-    background-color: #f3f4f6;
-    font-weight: 600;
-    color: #374151;
+:deep(.p-datatable-table-container) {
+    border-radius: 0;
+    overflow: hidden;
 }
 
 :deep(.p-paginator) {
-    border-top: 1px solid #e5e7eb;
+    border: none;
+    border-top: 1px solid var(--p-datatable-border-color);
+}
+
+:deep(.p-inputtext),
+:deep(.p-select),
+:deep(.p-multiselect) {
+    border-radius: 1rem;
 }
 </style>
