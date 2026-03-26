@@ -31,8 +31,8 @@
                         <i class="pi pi-filter text-gray-400 text-sm"></i>
                         <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Filters</span>
                     </div>
-                    <Button severity="secondary" text size="small" icon="pi pi-history"
-                        @click="clearBatchFilters" v-tooltip.bottom="`Clear Filters`" />
+                    <Button severity="secondary" text size="small" icon="pi pi-history" @click="clearBatchFilters"
+                        v-tooltip.bottom="`Clear Filters`" />
                 </div>
                 <div class="grid grid-cols-1 gap-2 md:grid-cols-4 lg:gap-4">
                     <div class="flex flex-col gap-1">
@@ -52,8 +52,8 @@
                     </div>
                     <div class="flex flex-col gap-1">
                         <label class="text-xs font-medium text-gray-600">Description</label>
-                        <InputText v-model="batchDescriptionFilter" placeholder="Search description..."
-                            class="w-full" size="small" />
+                        <InputText v-model="batchDescriptionFilter" placeholder="Search description..." class="w-full"
+                            size="small" />
                     </div>
                 </div>
             </div>
@@ -65,11 +65,13 @@
                     <div class="p-6">
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex items-start gap-3">
-                                <div class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <div
+                                    class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0 mt-0.5">
                                     <i class="pi pi-folder text-blue-600 text-sm"></i>
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold text-gray-900 text-base leading-tight">{{ batch.batch_name }}</h4>
+                                    <h4 class="font-semibold text-gray-900 text-base leading-tight">{{ batch.batch_name
+                                        }}</h4>
                                     <div class="text-xs text-gray-500 space-y-0.5 mt-1">
                                         <p v-if="batch.exam_date_from || batch.exam_date_to">
                                             <span class="font-medium">Exam:</span>
@@ -84,7 +86,8 @@
                                 </div>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
+                                <span
+                                    class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
                                     <i class="pi pi-users text-xs"></i>
                                     {{ batch.total_scholars }}
                                 </span>
@@ -97,8 +100,8 @@
                         </div>
 
                         <div class="flex gap-1.5 flex-wrap border-t border-gray-100 pt-3">
-                            <Button icon="pi pi-eye" label="View Batch" severity="secondary" text size="small"
-                                rounded @click="openViewBatchDialog(batch)" />
+                            <Button icon="pi pi-eye" label="View Batch" severity="secondary" text size="small" rounded
+                                @click="openViewBatchDialog(batch)" />
                             <Button v-if="hasPermission('return-of-service.edit')" icon="pi pi-pencil" label="Edit"
                                 severity="warning" text size="small" rounded @click="openEditBatchDialog(batch)" />
                             <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus"
@@ -145,8 +148,7 @@
             <template #container>
                 <div class="ios-modal" :style="batchDrag.modalStyle.value">
                     <div class="ios-nav-bar" @pointerdown="batchDrag.onDragStart">
-                        <button class="ios-nav-btn ios-nav-cancel"
-                            @click="showBatchDialog = false; resetBatchForm();"
+                        <button class="ios-nav-btn ios-nav-cancel" @click="showBatchDialog = false; resetBatchForm();"
                             v-tooltip.bottom="`Cancel`">
                             <i class="pi pi-times"></i>
                         </button>
@@ -167,8 +169,7 @@
                                         Batch Name <span style="color: #FF3B30; margin-left: 2px;">*</span>
                                     </div>
                                     <InputText v-model="batchForm.batch_name" placeholder="e.g., Batch 2025-A"
-                                        class="ios-full-input"
-                                        :class="{ 'p-invalid': batchForm.errors.batch_name }" />
+                                        class="ios-full-input" :class="{ 'p-invalid': batchForm.errors.batch_name }" />
                                 </div>
                                 <div class="ios-row ios-row-stacked">
                                     <div class="ios-row-label">
@@ -194,8 +195,8 @@
                                         Date From
                                     </div>
                                     <div class="ios-row-control">
-                                        <DatePicker v-model="batchForm.exam_date_from" placeholder="Any"
-                                            showIcon iconDisplay="input" class="ios-datepicker" />
+                                        <DatePicker v-model="batchForm.exam_date_from" placeholder="Any" showIcon
+                                            iconDisplay="input" class="ios-datepicker" />
                                     </div>
                                 </div>
                                 <div class="ios-row">
@@ -204,8 +205,8 @@
                                         Date To
                                     </div>
                                     <div class="ios-row-control">
-                                        <DatePicker v-model="batchForm.exam_date_to" placeholder="Any"
-                                            showIcon iconDisplay="input" class="ios-datepicker" />
+                                        <DatePicker v-model="batchForm.exam_date_to" placeholder="Any" showIcon
+                                            iconDisplay="input" class="ios-datepicker" />
                                     </div>
                                 </div>
                             </div>
@@ -221,8 +222,8 @@
                                         Result Date
                                     </div>
                                     <div class="ios-row-control">
-                                        <DatePicker v-model="batchForm.result_date" placeholder="Any"
-                                            showIcon iconDisplay="input" class="ios-datepicker" />
+                                        <DatePicker v-model="batchForm.result_date" placeholder="Any" showIcon
+                                            iconDisplay="input" class="ios-datepicker" />
                                     </div>
                                 </div>
                                 <div class="ios-row">
@@ -257,8 +258,7 @@
                 <div class="ios-modal" :style="scholarDrag.modalStyle.value">
                     <div class="ios-nav-bar" @pointerdown="scholarDrag.onDragStart">
                         <button class="ios-nav-btn ios-nav-cancel"
-                            @click="showScholarDialog = false; resetScholarForm();"
-                            v-tooltip.bottom="`Cancel`">
+                            @click="showScholarDialog = false; resetScholarForm();" v-tooltip.bottom="`Cancel`">
                             <i class="pi pi-times"></i>
                         </button>
                         <span class="ios-nav-title">{{ scholarMode === 'add' ? 'Add Scholar' : 'Edit Scholar' }}</span>
@@ -288,8 +288,8 @@
                                         Select Scholars <span style="color: #FF3B30; margin-left: 2px;">*</span>
                                     </div>
                                     <MultiSelect v-model="scholarForm.selectedProfile" :options="scholarshipRecords"
-                                        optionLabel="label" placeholder="Search completed scholars..."
-                                        :filter="true" class="ios-full-input" @filter="onProfileFilter" />
+                                        optionLabel="label" placeholder="Search completed scholars..." :filter="true"
+                                        class="ios-full-input" @filter="onProfileFilter" />
                                     <small class="text-gray-500 text-xs">Only completed records from Medicine and
                                         Medical Allied Courses program</small>
                                 </div>
@@ -319,8 +319,8 @@
                                         End Date
                                     </div>
                                     <div class="ios-row-control">
-                                        <DatePicker v-model="scholarForm.service_end_date" placeholder="Select"
-                                            showIcon iconDisplay="input" class="ios-datepicker"
+                                        <DatePicker v-model="scholarForm.service_end_date" placeholder="Select" showIcon
+                                            iconDisplay="input" class="ios-datepicker"
                                             :class="{ 'p-invalid': isEndDateInvalid }" />
                                     </div>
                                 </div>
@@ -330,8 +330,8 @@
                                         Years of Service
                                     </div>
                                     <div class="ios-row-control">
-                                        <InputNumber v-model="scholarForm.years_of_service" :min="0"
-                                            placeholder="Auto" class="ios-inputnumber" />
+                                        <InputNumber v-model="scholarForm.years_of_service" :min="0" placeholder="Auto"
+                                            class="ios-inputnumber" />
                                     </div>
                                 </div>
                             </div>
@@ -395,8 +395,7 @@
         <!-- ══════════════════════════════════════════
             VIEW SCHOLAR MODAL (iOS)
         ══════════════════════════════════════════ -->
-        <Dialog :visible="showViewScholarDialog"
-            @update:visible="v => { if (!v) showViewScholarDialog = false; }" modal
+        <Dialog :visible="showViewScholarDialog" @update:visible="v => { if (!v) showViewScholarDialog = false; }" modal
             :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
             <template #container>
                 <div class="ios-modal" :style="viewScholarDrag.modalStyle.value">
@@ -495,9 +494,8 @@
                             style="max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                             {{ viewingBatch.batch_name }}
                         </span>
-                        <button v-if="hasPermission('return-of-service.create')"
-                            class="ios-nav-btn ios-nav-action" @click="openAddScholarDialog(viewingBatch)"
-                            v-tooltip.bottom="`Add Scholar`">
+                        <button v-if="hasPermission('return-of-service.create')" class="ios-nav-btn ios-nav-action"
+                            @click="openAddScholarDialog(viewingBatch)" v-tooltip.bottom="`Add Scholar`">
                             <i class="pi pi-plus"></i>
                         </button>
                         <div v-else style="width: 48px;"></div>
@@ -512,7 +510,8 @@
                                         <i class="pi pi-graduation-cap" style="color: #34C759; font-size: 13px;"></i>
                                         Course
                                     </div>
-                                    <span class="text-sm font-medium text-gray-800">{{ viewingBatch.course_name }}</span>
+                                    <span class="text-sm font-medium text-gray-800">{{ viewingBatch.course_name
+                                        }}</span>
                                 </div>
                                 <div v-if="viewingBatch.exam_date_from || viewingBatch.exam_date_to" class="ios-row">
                                     <div class="ios-row-label">
@@ -529,7 +528,8 @@
                                         <i class="pi pi-calendar-times" style="color: #AF52DE; font-size: 13px;"></i>
                                         Result Date
                                     </div>
-                                    <span class="text-sm text-gray-700">{{ formatDateLong(viewingBatch.result_date) }}</span>
+                                    <span class="text-sm text-gray-700">{{ formatDateLong(viewingBatch.result_date)
+                                        }}</span>
                                 </div>
                                 <div class="ios-row">
                                     <div class="ios-row-label">
@@ -553,22 +553,21 @@
                         <div class="ios-section">
                             <div class="ios-section-label">Scholars</div>
                             <div class="mb-2">
-                                <InputText v-model="scholarSearch"
-                                    placeholder="Search scholar name or status..." class="w-full" size="small" />
+                                <InputText v-model="scholarSearch" placeholder="Search scholar name or status..."
+                                    class="w-full" size="small" />
                             </div>
-                            <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
-                                :value="filteredScholars" :rows="10" paginator :rowHover="true" stripedRows
-                                showGridlines responsiveLayout="scroll">
-                                <Column field="scholar_name" header="Scholar Name" sortable
-                                    style="min-width: 200px">
+                            <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredScholars"
+                                :rows="10" paginator :rowHover="true" stripedRows showGridlines
+                                responsiveLayout="scroll">
+                                <Column field="scholar_name" header="Scholar Name" sortable style="min-width: 200px">
                                     <template #body="slotProps">
                                         <span class="font-semibold">{{ slotProps.data.scholar_name }}</span>
                                     </template>
                                 </Column>
-                                <Column field="years_of_service" header="Years ROS" sortable
-                                    style="width: 120px">
+                                <Column field="years_of_service" header="Years ROS" sortable style="width: 120px">
                                     <template #body="slotProps">
-                                        <span class="font-semibold text-blue-600">{{ slotProps.data.years_of_service || 0 }}</span>
+                                        <span class="font-semibold text-blue-600">{{ slotProps.data.years_of_service ||
+                                            0 }}</span>
                                     </template>
                                 </Column>
                                 <Column field="completion_status" header="Status" sortable style="width: 130px">
@@ -580,13 +579,14 @@
                                 <Column field="service_start_date" header="Service Start" sortable
                                     style="min-width: 140px">
                                     <template #body="slotProps">
-                                        <span class="font-mono text-sm">{{ formatDateLong(slotProps.data.service_start_date) }}</span>
+                                        <span class="font-mono text-sm">{{
+                                            formatDateLong(slotProps.data.service_start_date) }}</span>
                                     </template>
                                 </Column>
-                                <Column field="service_end_date" header="Service End" sortable
-                                    style="min-width: 140px">
+                                <Column field="service_end_date" header="Service End" sortable style="min-width: 140px">
                                     <template #body="slotProps">
-                                        <span class="font-mono text-sm">{{ formatDateLong(slotProps.data.service_end_date) }}</span>
+                                        <span class="font-mono text-sm">{{
+                                            formatDateLong(slotProps.data.service_end_date) }}</span>
                                     </template>
                                 </Column>
                                 <Column field="remarks" header="Remarks" style="min-width: 200px">
@@ -599,15 +599,14 @@
                                 <Column header="Actions" style="width: 120px">
                                     <template #body="slotProps">
                                         <div class="flex gap-1">
-                                            <Button icon="pi pi-eye" severity="secondary" text rounded
-                                                size="small" @click="viewScholar(slotProps.data)"
-                                                v-tooltip.top="`View`" />
-                                            <Button v-if="hasPermission('return-of-service.edit')"
-                                                icon="pi pi-pencil" severity="warning" text rounded size="small"
+                                            <Button icon="pi pi-eye" severity="secondary" text rounded size="small"
+                                                @click="viewScholar(slotProps.data)" v-tooltip.top="`View`" />
+                                            <Button v-if="hasPermission('return-of-service.edit')" icon="pi pi-pencil"
+                                                severity="warning" text rounded size="small"
                                                 @click="openEditScholarDialog(viewingBatch, slotProps.data)"
                                                 v-tooltip.top="`Edit`" />
-                                            <Button v-if="hasPermission('return-of-service.delete')"
-                                                icon="pi pi-trash" severity="danger" text rounded size="small"
+                                            <Button v-if="hasPermission('return-of-service.delete')" icon="pi pi-trash"
+                                                severity="danger" text rounded size="small"
                                                 @click="confirmDeleteScholar(slotProps.data)"
                                                 v-tooltip.top="`Delete`" />
                                         </div>
@@ -630,8 +629,7 @@
         <!-- ══════════════════════════════════════════
             DELETE BATCH CONFIRM (iOS)
         ══════════════════════════════════════════ -->
-        <Dialog :visible="showDeleteBatchDialog"
-            @update:visible="v => { if (!v) showDeleteBatchDialog = false; }" modal
+        <Dialog :visible="showDeleteBatchDialog" @update:visible="v => { if (!v) showDeleteBatchDialog = false; }" modal
             :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
             <template #container>
                 <div class="ios-modal" :style="deleteBatchDrag.modalStyle.value">
@@ -648,11 +646,13 @@
                             <div class="ios-card" style="background: #FFF5F5; border-color: #FECACA;">
                                 <div class="ios-row"
                                     style="gap: 12px; padding: 14px 16px; min-height: 60px; align-items: flex-start;">
-                                    <div class="flex-shrink-0 w-9 h-9 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
+                                    <div
+                                        class="flex-shrink-0 w-9 h-9 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
                                         <i class="pi pi-exclamation-triangle text-red-500 text-sm"></i>
                                     </div>
                                     <div style="flex: 1; min-width: 0;">
-                                        <p class="text-sm font-semibold text-gray-800">{{ batchToDelete?.batch_name }}</p>
+                                        <p class="text-sm font-semibold text-gray-800">{{ batchToDelete?.batch_name }}
+                                        </p>
                                         <p class="text-xs text-red-600 mt-1">
                                             This will delete all {{ batchToDelete?.total_scholars }} scholars in this
                                             batch. This action cannot be undone.
@@ -673,9 +673,8 @@
         <!-- ══════════════════════════════════════════
             DELETE SCHOLAR CONFIRM (iOS)
         ══════════════════════════════════════════ -->
-        <Dialog :visible="showDeleteScholarDialog"
-            @update:visible="v => { if (!v) showDeleteScholarDialog = false; }" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+        <Dialog :visible="showDeleteScholarDialog" @update:visible="v => { if (!v) showDeleteScholarDialog = false; }"
+            modal :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
             <template #container>
                 <div class="ios-modal" :style="deleteScholarDrag.modalStyle.value">
                     <div class="ios-nav-bar" @pointerdown="deleteScholarDrag.onDragStart">
@@ -691,11 +690,13 @@
                             <div class="ios-card" style="background: #FFF5F5; border-color: #FECACA;">
                                 <div class="ios-row"
                                     style="gap: 12px; padding: 14px 16px; min-height: 60px; align-items: flex-start;">
-                                    <div class="flex-shrink-0 w-9 h-9 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
+                                    <div
+                                        class="flex-shrink-0 w-9 h-9 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
                                         <i class="pi pi-exclamation-triangle text-red-500 text-sm"></i>
                                     </div>
                                     <div style="flex: 1; min-width: 0;">
-                                        <p class="text-sm font-semibold text-gray-700">{{ scholarToDelete?.scholar_name }}</p>
+                                        <p class="text-sm font-semibold text-gray-700">{{ scholarToDelete?.scholar_name
+                                            }}</p>
                                         <p class="text-xs text-red-600 mt-1">This action cannot be undone.</p>
                                     </div>
                                 </div>
@@ -1628,7 +1629,7 @@ onBeforeUnmount(() => {
     min-width: 0;
 }
 
-.ios-row-control > :deep(*) {
+.ios-row-control> :deep(*) {
     width: 100%;
     min-width: 0;
 }
