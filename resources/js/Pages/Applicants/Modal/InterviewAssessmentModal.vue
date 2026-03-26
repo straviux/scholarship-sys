@@ -276,7 +276,7 @@ onBeforeUnmount(() => {
                             </button>
                         </div>
                         <div v-if="errors.recommendation" class="ios-section-footer ios-error">{{ errors.recommendation
-                            }}</div>
+                        }}</div>
                     </div>
 
                     <!-- Remarks -->

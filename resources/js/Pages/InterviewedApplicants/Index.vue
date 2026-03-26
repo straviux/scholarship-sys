@@ -289,8 +289,7 @@
 
         <!-- Edit Assessment Modal (reuses InterviewAssessmentModal) -->
         <InterviewAssessmentModal v-model="showEditDialog" :applicant="editApplicant" :recordId="selectedRecord?.id"
-            :isEdit="true" successMessage="Assessment updated successfully."
-            :initialValues="selectedRecord ? {
+            :isEdit="true" successMessage="Assessment updated successfully." :initialValues="selectedRecord ? {
                 academic_potential: selectedRecord.academic_potential,
                 financial_need_level: selectedRecord.financial_need_level,
                 communication_skills: selectedRecord.communication_skills,
@@ -371,7 +370,7 @@
                                         Date Filed
                                     </div>
                                     <span class="text-sm text-gray-700">{{ formatDate(selectedRecord.date_filed)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>
