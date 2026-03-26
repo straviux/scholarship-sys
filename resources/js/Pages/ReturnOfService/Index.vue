@@ -8,487 +8,722 @@
         </template>
 
         <div class="space-y-6">
-            <!-- Header Section -->
+            <!-- Page Header -->
             <div>
                 <div class="flex items-center gap-3 mb-2">
                     <i class="pi pi-graduation-cap text-2xl text-blue-600"></i>
                     <h1 class="text-2xl font-bold text-gray-800">Return of Service (ROS) Management</h1>
                 </div>
-                <p class="text-gray-600">Manage return of service batches and add scholars to track their service
-                    obligations.
-                </p>
+                <p class="text-sm text-gray-600">Manage return of service batches and add scholars to track their
+                    service obligations.</p>
                 <div class="flex gap-2 mt-4">
                     <Button v-if="hasPermission('return-of-service.export')" icon="pi pi-download" label="Export"
-                        severity="info" outlined @click="exportRecords" />
+                        severity="info" outlined rounded @click="exportRecords" />
                     <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus" label="New Batch"
-                        severity="success" raised @click="openNewBatchDialog" />
+                        severity="success" rounded @click="openNewBatchDialog" />
                 </div>
             </div>
 
-            <!-- Batches Filters Panel -->
-            <Panel>
-                <div class="space-y-3 -mt-6">
-                    <!-- Filter Controls Header -->
-                    <div class="flex justify-between items-center py-1">
-                        <div class="flex items-center gap-3">
-                            <span class="opacity-60 text-sm">Search and filter batches</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <Button severity="secondary" outlined size="small" icon="pi pi-history"
-                                @click="clearBatchFilters" v-tooltip.bottom="'Clear Filters'" />
-                        </div>
+            <!-- Filters Card -->
+            <div class="bg-white !rounded-4xl overflow-hidden border border-gray-200 px-6 pt-4 pb-5 shadow-sm">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-filter text-gray-400 text-sm"></i>
+                        <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Filters</span>
                     </div>
-
-                    <!-- Batch Filters Row -->
-                    <div class="grid grid-cols-1 gap-2 md:grid-cols-4 lg:gap-4">
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Batch Name</label>
-                            <InputText v-model="batchSearch" placeholder="Search batch name..." class="w-full"
-                                size="small" />
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Created By</label>
-                            <InputText v-model="batchCreatedByFilter" placeholder="Filter by creator..." class="w-full"
-                                size="small" />
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Year</label>
-                            <InputNumber v-model="batchYearFilter" placeholder="e.g., 2025" :useGrouping="false"
-                                class="w-full" size="small" />
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Description</label>
-                            <InputText v-model="batchDescriptionFilter" placeholder="Search description..."
-                                class="w-full" size="small" />
-                        </div>
+                    <Button severity="secondary" text size="small" icon="pi pi-history"
+                        @click="clearBatchFilters" v-tooltip.bottom="`Clear Filters`" />
+                </div>
+                <div class="grid grid-cols-1 gap-2 md:grid-cols-4 lg:gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-medium text-gray-600">Batch Name</label>
+                        <InputText v-model="batchSearch" placeholder="Search batch name..." class="w-full"
+                            size="small" />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-medium text-gray-600">Created By</label>
+                        <InputText v-model="batchCreatedByFilter" placeholder="Filter by creator..." class="w-full"
+                            size="small" />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-medium text-gray-600">Year</label>
+                        <InputNumber v-model="batchYearFilter" placeholder="e.g., 2025" :useGrouping="false"
+                            class="w-full" size="small" />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-medium text-gray-600">Description</label>
+                        <InputText v-model="batchDescriptionFilter" placeholder="Search description..."
+                            class="w-full" size="small" />
                     </div>
                 </div>
-            </Panel>
+            </div>
 
-
-            <!-- Batches Cards Grid -->
+            <!-- Batch Cards Grid -->
             <div class="grid grid-cols-1 gap-4">
                 <div v-for="batch in filteredBatches" :key="batch.id"
-                    class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-3 flex-grow">
-                            <i class="pi pi-folder text-lg text-blue-500"></i>
-                            <div>
-                                <h4 class="font-semibold text-gray-800 text-lg">{{ batch.batch_name }}</h4>
-                                <div class="text-xs text-gray-500 space-y-1 mt-1">
-                                    <p v-if="batch.exam_date_from || batch.exam_date_to">Exam: {{
-                                        formatDateLong(batch.exam_date_from)
-                                    }}
-                                        to {{ formatDateLong(batch.exam_date_to) }}</p>
-                                    <p v-if="batch.result_date">Result: {{ formatDateLong(batch.result_date) }}</p>
+                    class="bg-white !rounded-4xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <i class="pi pi-folder text-blue-600 text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 text-base leading-tight">{{ batch.batch_name }}</h4>
+                                    <div class="text-xs text-gray-500 space-y-0.5 mt-1">
+                                        <p v-if="batch.exam_date_from || batch.exam_date_to">
+                                            <span class="font-medium">Exam:</span>
+                                            {{ formatDateLong(batch.exam_date_from) }} –
+                                            {{ formatDateLong(batch.exam_date_to) }}
+                                        </p>
+                                        <p v-if="batch.result_date">
+                                            <span class="font-medium">Result:</span>
+                                            {{ formatDateLong(batch.result_date) }}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="flex items-center gap-4 text-right">
-                            <div>
-                                <span
-                                    class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold block">
-                                    {{ batch.total_scholars }} Scholars
+                            <div class="text-right flex-shrink-0">
+                                <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
+                                    <i class="pi pi-users text-xs"></i>
+                                    {{ batch.total_scholars }}
                                 </span>
-                                <p class="text-xs text-gray-500 mt-2">Created by {{ batch.created_by }}</p>
+                                <p class="text-xs text-gray-400 mt-1.5">by {{ batch.created_by }}</p>
                             </div>
                         </div>
-                    </div>
 
-                    <div v-if="batch.description" class="bg-gray-50 p-3 rounded-lg mb-4">
-                        <p class="text-sm text-gray-700">{{ batch.description }}</p>
-                    </div>
+                        <div v-if="batch.description" class="bg-gray-50 rounded-2xl px-4 py-2.5 mb-4">
+                            <p class="text-sm text-gray-600">{{ batch.description }}</p>
+                        </div>
 
-                    <div class="flex gap-2 flex-wrap">
-                        <Button icon="pi pi-eye" label="View Batch" severity="secondary" text size="small"
-                            @click="openViewBatchDialog(batch)" />
-                        <Button v-if="hasPermission('return-of-service.edit')" icon="pi pi-pencil" label="Edit"
-                            severity="warning" text size="small" @click="openEditBatchDialog(batch)" />
-                        <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus" label="Add Scholar"
-                            severity="success" text size="small" @click="openAddScholarDialog(batch)" />
-                        <Button v-if="hasPermission('return-of-service.delete')" icon="pi pi-trash" label="Delete"
-                            severity="danger" text size="small" @click="confirmDeleteBatch(batch)" />
-                        <Button icon="pi pi-download" label="Export" severity="info" text size="small"
-                            @click="exportBatch(batch)" />
+                        <div class="flex gap-1.5 flex-wrap border-t border-gray-100 pt-3">
+                            <Button icon="pi pi-eye" label="View Batch" severity="secondary" text size="small"
+                                rounded @click="openViewBatchDialog(batch)" />
+                            <Button v-if="hasPermission('return-of-service.edit')" icon="pi pi-pencil" label="Edit"
+                                severity="warning" text size="small" rounded @click="openEditBatchDialog(batch)" />
+                            <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus"
+                                label="Add Scholar" severity="success" text size="small" rounded
+                                @click="openAddScholarDialog(batch)" />
+                            <Button icon="pi pi-download" label="Export" severity="info" text size="small" rounded
+                                @click="exportBatch(batch)" />
+                            <Button v-if="hasPermission('return-of-service.delete')" icon="pi pi-trash"
+                                severity="danger" text size="small" rounded @click="confirmDeleteBatch(batch)"
+                                v-tooltip.top="`Delete`" />
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Empty State -->
-            <div v-if="batches.length === 0" class="text-center py-12">
-                <i class="pi pi-inbox text-4xl text-gray-300 mb-4"></i>
+            <div v-if="batches.length === 0" class="text-center py-16">
+                <div class="w-16 h-16 rounded-3xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                    <i class="pi pi-inbox text-2xl text-gray-400"></i>
+                </div>
                 <p class="text-gray-500 mb-4">No ROS batches created yet.</p>
                 <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus" label="Create First Batch"
-                    severity="success" @click="openNewBatchDialog" />
+                    severity="success" rounded @click="openNewBatchDialog" />
             </div>
 
             <!-- No Results State -->
-            <div v-else-if="filteredBatches.length === 0" class="text-center py-12">
-                <i class="pi pi-search text-4xl text-gray-300 mb-4"></i>
+            <div v-else-if="filteredBatches.length === 0" class="text-center py-16">
+                <div class="w-16 h-16 rounded-3xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                    <i class="pi pi-search text-2xl text-gray-400"></i>
+                </div>
                 <p class="text-gray-500 mb-4">No batches match your filters.</p>
-                <Button icon="pi pi-times" label="Clear Filters" severity="secondary" @click="clearBatchFilters"
-                    outlined />
+                <Button icon="pi pi-times" label="Clear Filters" severity="secondary" outlined rounded
+                    @click="clearBatchFilters" />
             </div>
         </div>
 
-        <!-- New/Edit Batch Dialog -->
-        <Dialog v-model:visible="showBatchDialog" :header="batchMode === 'add' ? 'Create New Batch' : 'Edit Batch'"
-            :modal="true" :style="{ width: '600px' }" @hide="resetBatchForm">
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Batch Name *</label>
-                    <InputText v-model="batchForm.batch_name" placeholder="e.g., Batch 2025-A" class="w-full"
-                        :class="{ 'p-invalid': batchForm.errors.batch_name }" />
-                    <small class="text-red-500" v-if="batchForm.errors.batch_name">{{ batchForm.errors.batch_name
-                    }}</small>
-                </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <Textarea v-model="batchForm.description" rows="3" class="w-full"
-                        placeholder="Add description or notes about this batch" />
-                </div>
-
-                <div class="flex gap-2">
-                    <div class="w-full">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Examination Date From</label>
-                        <DatePicker v-model="batchForm.exam_date_from" placeholder="mm/dd/yyyy" type="date"
-                            :manualInput="true" @input="formatDateInput" showIcon iconDisplay="button" fluid
-                            class="w-full" />
+        <!-- ══════════════════════════════════════════
+            BATCH FORM MODAL (iOS)
+        ══════════════════════════════════════════ -->
+        <Dialog :visible="showBatchDialog"
+            @update:visible="v => { if (!v) { showBatchDialog = false; resetBatchForm(); } }" modal
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+            <template #container>
+                <div class="ios-modal" :style="batchDrag.modalStyle.value">
+                    <div class="ios-nav-bar" @pointerdown="batchDrag.onDragStart">
+                        <button class="ios-nav-btn ios-nav-cancel"
+                            @click="showBatchDialog = false; resetBatchForm();"
+                            v-tooltip.bottom="`Cancel`">
+                            <i class="pi pi-times"></i>
+                        </button>
+                        <span class="ios-nav-title">{{ batchMode === 'add' ? 'New Batch' : 'Edit Batch' }}</span>
+                        <button class="ios-nav-btn ios-nav-action" @click="submitBatchForm"
+                            :disabled="batchForm.processing" v-tooltip.bottom="`Save`">
+                            <i class="pi pi-check"></i>
+                        </button>
                     </div>
-
-                    <div class="w-full">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Examination Date To</label>
-                        <DatePicker v-model="batchForm.exam_date_to" placeholder="mm/dd/yyyy" type="date"
-                            :manualInput="true" @input="formatDateInput" showIcon iconDisplay="button" fluid
-                            class="w-full" />
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Result Date</label>
-                    <DatePicker v-model="batchForm.result_date" placeholder="mm/dd/yyyy" type="date" :manualInput="true"
-                        @input="formatDateInput" showIcon iconDisplay="button" fluid class="w-full" />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Course *</label>
-                    <CourseSelect v-model="batchForm.course_id" customPlaceholder="Select course" />
-                    <small class="text-red-500" v-if="batchForm.errors.course_id">{{ batchForm.errors.course_id
-                    }}</small>
-                </div>
-            </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" outlined @click="showBatchDialog = false" />
-                <Button :label="batchMode === 'add' ? 'Create' : 'Update'" severity="primary" @click="submitBatchForm"
-                    :loading="batchForm.processing" />
-            </template>
-        </Dialog>
-
-        <!-- Add/Edit Scholar Dialog -->
-        <Dialog v-model:visible="showScholarDialog"
-            :header="scholarMode === 'add' ? 'Add Scholar to Batch' : 'Edit Scholar'" :modal="true"
-            :style="{ width: '800px' }" @hide="resetScholarForm">
-            <div class="space-y-4 max-h-[70vh] overflow-y-auto">
-                <div v-if="scholarMode === 'edit'">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Scholar Name</label>
-                    <InputText :value="scholarForm.record_label" readonly class="w-full" />
-                </div>
-
-                <div v-else>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Scholar Name *</label>
-                    <MultiSelect v-model="scholarForm.selectedProfile" :options="scholarshipRecords" optionLabel="label"
-                        placeholder="Search completed scholars..." :filter="true" class="w-full"
-                        @filter="onProfileFilter" />
-                    <small class="text-gray-500 text-xs mt-1">Only completed scholarship records from Medicine and
-                        Medical
-                        Allied Courses program</small>
-                    <small v-if="scholarForm.errors.profile_id" class="text-red-500">{{ scholarForm.errors.profile_id
-                    }}</small>
-                </div>
-
-                <div class="border-t pt-4">
-                    <h4 class="font-semibold text-gray-800 mb-3">Return of Service Details</h4>
-                    <div class="grid grid-cols-2 gap-4">
-
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Service Start Date</label>
-                            <DatePicker v-model="scholarForm.service_start_date" placeholder="mm/dd/yyyy" type="date"
-                                :manualInput="false" showIcon iconDisplay="button" fluid class="w-full" />
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Service End Date</label>
-                            <DatePicker v-model="scholarForm.service_end_date" placeholder="mm/dd/yyyy" type="date"
-                                :manualInput="false" showIcon iconDisplay="button" fluid class="w-full"
-                                :class="{ 'p-invalid': isEndDateInvalid }" />
-                            <small class="text-red-500" v-if="isEndDateInvalid">End date cannot be earlier than start
-                                date</small>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Years of Service</label>
-                            <InputNumber v-model="scholarForm.years_of_service" :min="0" placeholder="Auto-calculated"
-                                class="w-full" />
-                            <small class="text-gray-500 text-xs mt-1">Auto-calculated from service dates
-                                (editable)</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="border-t pt-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-3">Completion Status *</label>
-                    <div class="space-y-3">
-                        <div v-for="option in completionOptions" :key="option.value" class="flex items-center">
-                            <RadioButton v-model="scholarForm.completion_status" :value="option.value"
-                                :inputId="'status_' + option.value" />
-                            <label :for="'status_' + option.value" class="ml-2 text-sm text-gray-700 cursor-pointer">{{
-                                option.label }}</label>
-                        </div>
-                    </div>
-                    <small class="text-red-500 block mt-2" v-if="scholarForm.errors.completion_status">{{
-                        scholarForm.errors.completion_status }}</small>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
-                    <Editor v-model="scholarForm.remarks" editorStyle="height: 120px">
-                        <template #toolbar>
-                            <span class="ql-formats">
-                                <button class="ql-bold"></button>
-                                <button class="ql-italic"></button>
-                                <button class="ql-underline"></button>
-                            </span>
-                            <span class="ql-formats">
-                                <button class="ql-list" value="ordered"></button>
-                                <button class="ql-list" value="bullet"></button>
-                            </span>
-                            <span class="ql-formats">
-                                <button class="ql-clean"></button>
-                            </span>
-                        </template>
-                    </Editor>
-                </div>
-            </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" outlined @click="showScholarDialog = false" />
-                <Button :label="scholarMode === 'add' ? 'Add' : 'Update'" severity="primary" @click="submitScholarForm"
-                    :loading="scholarForm.processing" :disabled="isEndDateInvalid" />
-            </template>
-        </Dialog>
-
-        <!-- View Scholar Dialog -->
-        <Dialog v-model:visible="showViewScholarDialog" header="Scholar Details" :modal="true"
-            :style="{ width: '700px' }">
-            <div v-if="viewingScholar" class="space-y-4">
-                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <h3 class="font-semibold text-lg text-gray-800">{{ viewingScholar.scholar_name }}</h3>
-                </div>
-
-                <div class="border-t pt-4">
-                    <h4 class="font-semibold text-gray-800 mb-3">Return of Service</h4>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-xs text-gray-500 uppercase">Years</p>
-                            <p class="font-semibold text-lg text-blue-600">{{ viewingScholar.years_of_service || 0 }}
-                            </p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 uppercase">Status</p>
-                            <Tag :value="viewingScholar.completion_status"
-                                :severity="getCompletionSeverity(viewingScholar.completion_status)" />
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 uppercase">Service Start</p>
-                            <p class="font-semibold">{{ formatDateLong(viewingScholar.service_start_date) }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 uppercase font-semibold">Service End Date</p>
-                            <p class="font-semibold">{{ formatDateLong(viewingScholar.service_end_date) }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div v-if="viewingScholar.remarks" class="border-t pt-4">
-                    <p class="text-xs text-gray-500 uppercase mb-2">Remarks</p>
-                    <p class="text-gray-700" v-html="viewingScholar.remarks"></p>
-                </div>
-            </div>
-
-            <template #footer>
-                <Button label="Close" severity="secondary" @click="showViewScholarDialog = false" />
-            </template>
-        </Dialog>
-
-        <!-- Delete Batch Dialog -->
-        <Dialog v-model:visible="showDeleteBatchDialog" header="Confirm Delete Batch" :modal="true"
-            :style="{ width: '450px' }">
-            <div class="flex items-center gap-3">
-                <i class="pi pi-exclamation-triangle text-red-500 text-2xl"></i>
-                <div>
-                    <p class="mb-2">Are you sure you want to delete this batch?</p>
-                    <p class="text-sm text-gray-600 font-semibold">{{ batchToDelete?.batch_name }}</p>
-                    <p class="text-sm text-red-600 mt-2">This will delete all {{ batchToDelete?.total_scholars }}
-                        scholars in
-                        this batch. This action cannot be undone.</p>
-                </div>
-            </div>
-            <template #footer>
-                <Button label="Cancel" severity="secondary" outlined @click="showDeleteBatchDialog = false" />
-                <Button label="Delete" severity="danger" @click="deleteBatch" />
-            </template>
-        </Dialog>
-
-        <!-- View Batch Dialog -->
-        <Dialog v-model:visible="showViewBatchDialog" :header="viewingBatch?.batch_name" :modal="true"
-            :style="{ width: '90vw' }" @hide="viewingBatch = null; scholarSearch = '';">
-            <div v-if="viewingBatch" class="space-y-4">
-                <!-- Batch Information -->
-                <div class="grid grid-cols-2 gap-4 pb-4 border-b md:grid-cols-4">
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase font-semibold">Course</p>
-                        <p class="font-semibold text-gray-800">{{ viewingBatch.course_name }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase font-semibold">Exam Date</p>
-                        <p class="font-semibold text-gray-800">{{ formatDateLong(viewingBatch.exam_date_from) }} - {{
-                            formatDateLong(viewingBatch.exam_date_to) }}</p>
-                    </div>
-
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase font-semibold">Result Date</p>
-                        <p class="font-semibold text-gray-800">{{ formatDateLong(viewingBatch.result_date) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase font-semibold">Created By</p>
-                        <p class="font-semibold text-gray-800">{{ viewingBatch.created_by }}</p>
-                    </div>
-                </div>
-
-                <div v-if="viewingBatch.description" class="bg-gray-50 p-4 rounded-lg">
-                    <p class="text-sm text-gray-600"><span class="font-semibold">Description:</span> {{
-                        viewingBatch.description
-                        }}</p>
-                </div>
-
-                <!-- Scholars DataTable -->
-                <div>
-                    <div class="flex items-center gap-2 mb-4">
-                        <i class="pi pi-search"></i>
-                        <InputText v-model="scholarSearch" placeholder="Search scholar name or status..."
-                            class="w-full" />
-                    </div>
-                    <h5 class="font-semibold text-gray-800 mb-3">Scholars in this Batch</h5>
-                    <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredScholars"
-                        :rows="10" paginator :rowHover="true" stripedRows responsiveLayout="scroll">
-
-                        <Column field="scholar_name" header="Scholar Name" sortable style="min-width: 200px">
-                            <template #body="slotProps">
-                                <span class="font-semibold">{{ slotProps.data.scholar_name }}</span>
-                            </template>
-                        </Column>
-
-                        <Column field="years_of_service" header="Years ROS" sortable style="width: 120px">
-                            <template #body="slotProps">
-                                <span class="font-semibold text-blue-600">{{ slotProps.data.years_of_service ||
-                                    0 }}</span>
-                            </template>
-                        </Column>
-
-                        <Column field="completion_status" header="Status" sortable style="width: 130px">
-                            <template #body="slotProps">
-                                <Tag :value="slotProps.data.completion_status"
-                                    :severity="getCompletionSeverity(slotProps.data.completion_status)" />
-                            </template>
-                        </Column>
-
-                        <Column field="service_start_date" header="Service Start" sortable style="min-width: 140px">
-                            <template #body="slotProps">
-                                <span class="font-mono text-sm">{{ formatDateLong(slotProps.data.service_start_date)
-                                }}</span>
-                            </template>
-                        </Column>
-
-                        <Column field="service_end_date" header="Service End" sortable style="min-width: 140px">
-                            <template #body="slotProps">
-                                <span class="font-mono text-sm">{{ formatDateLong(slotProps.data.service_end_date)
-                                }}</span>
-                            </template>
-                        </Column>
-
-                        <Column field="remarks" header="Remarks" style="min-width: 200px">
-                            <template #body="slotProps">
-                                <span v-if="slotProps.data.remarks" class="text-sm text-gray-700"
-                                    v-html="slotProps.data.remarks"></span>
-                                <span v-else class="text-sm text-gray-400">-</span>
-                            </template>
-                        </Column>
-
-                        <Column header="Actions" style="width: 200px">
-                            <template #body="slotProps">
-                                <div class="flex gap-2">
-                                    <Button icon="pi pi-eye" severity="secondary" text size="small"
-                                        @click="viewScholar(slotProps.data)" v-tooltip.top="'View'" />
-                                    <Button v-if="hasPermission('return-of-service.edit')" icon="pi pi-pencil"
-                                        severity="warning" text size="small"
-                                        @click="openEditScholarDialog(viewingBatch, slotProps.data)"
-                                        v-tooltip.top="'Edit'" />
-                                    <Button v-if="hasPermission('return-of-service.delete')" icon="pi pi-trash"
-                                        severity="danger" text size="small"
-                                        @click="confirmDeleteScholar(slotProps.data)" v-tooltip.top="'Delete'" />
+                    <div class="ios-body">
+                        <!-- Basic Info -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">Basic Info</div>
+                            <div class="ios-card">
+                                <div class="ios-row ios-row-stacked">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-tag" style="color: #007AFF; font-size: 13px;"></i>
+                                        Batch Name <span style="color: #FF3B30; margin-left: 2px;">*</span>
+                                    </div>
+                                    <InputText v-model="batchForm.batch_name" placeholder="e.g., Batch 2025-A"
+                                        class="ios-full-input"
+                                        :class="{ 'p-invalid': batchForm.errors.batch_name }" />
                                 </div>
-                            </template>
-                        </Column>
-
-                        <template #empty>
-                            <div class="text-center py-8">
-                                <p class="text-gray-500">No scholars in this batch yet.</p>
+                                <div class="ios-row ios-row-stacked">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-align-left" style="color: #8E8E93; font-size: 13px;"></i>
+                                        Description
+                                    </div>
+                                    <Textarea v-model="batchForm.description" rows="2"
+                                        placeholder="Notes about this batch" class="ios-full-input" />
+                                </div>
                             </div>
-                        </template>
-                    </DataTable>
-                </div>
-            </div>
+                            <div v-if="batchForm.errors.batch_name" class="ios-section-footer ios-error">
+                                {{ batchForm.errors.batch_name }}
+                            </div>
+                        </div>
 
-            <template #footer>
-                <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus" label="Add Scholar"
-                    severity="success" @click="openAddScholarDialog(viewingBatch)" />
-                <Button label="Close" severity="secondary" @click="showViewBatchDialog = false" />
+                        <!-- Exam Period -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">Exam Period</div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                        Date From
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <DatePicker v-model="batchForm.exam_date_from" placeholder="Any"
+                                            showIcon iconDisplay="input" class="ios-datepicker" />
+                                    </div>
+                                </div>
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                        Date To
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <DatePicker v-model="batchForm.exam_date_to" placeholder="Any"
+                                            showIcon iconDisplay="input" class="ios-datepicker" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Details -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">Details</div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-calendar-times" style="color: #AF52DE; font-size: 13px;"></i>
+                                        Result Date
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <DatePicker v-model="batchForm.result_date" placeholder="Any"
+                                            showIcon iconDisplay="input" class="ios-datepicker" />
+                                    </div>
+                                </div>
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-graduation-cap" style="color: #34C759; font-size: 13px;"></i>
+                                        Course <span style="color: #FF3B30; margin-left: 2px;">*</span>
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <CourseSelect v-model="batchForm.course_id" customPlaceholder="Select"
+                                            class="ios-select" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="batchForm.errors.course_id" class="ios-section-footer ios-error">
+                                {{ batchForm.errors.course_id }}
+                            </div>
+                        </div>
+
+                        <div style="height: 24px;"></div>
+                    </div>
+                </div>
             </template>
         </Dialog>
 
-        <!-- Delete Scholar Dialog -->
-        <Dialog v-model:visible="showDeleteScholarDialog" header="Confirm Delete Scholar" :modal="true"
-            :style="{ width: '450px' }">
-            <div class="flex items-center gap-3">
-                <i class="pi pi-exclamation-triangle text-red-500 text-2xl"></i>
-                <div>
-                    <p class="mb-2">Are you sure you want to remove this scholar from the batch?</p>
-                    <p class="text-sm text-gray-600 font-semibold">{{ scholarToDelete?.scholar_name }}</p>
-                    <p class="text-sm text-red-600 mt-2">This action cannot be undone.</p>
+        <!-- ══════════════════════════════════════════
+            SCHOLAR FORM MODAL (iOS)
+        ══════════════════════════════════════════ -->
+        <Dialog :visible="showScholarDialog"
+            @update:visible="v => { if (!v) { showScholarDialog = false; resetScholarForm(); } }" modal
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+            <template #container>
+                <div class="ios-modal" :style="scholarDrag.modalStyle.value">
+                    <div class="ios-nav-bar" @pointerdown="scholarDrag.onDragStart">
+                        <button class="ios-nav-btn ios-nav-cancel"
+                            @click="showScholarDialog = false; resetScholarForm();"
+                            v-tooltip.bottom="`Cancel`">
+                            <i class="pi pi-times"></i>
+                        </button>
+                        <span class="ios-nav-title">{{ scholarMode === 'add' ? 'Add Scholar' : 'Edit Scholar' }}</span>
+                        <button class="ios-nav-btn ios-nav-action" @click="submitScholarForm"
+                            :disabled="scholarForm.processing || isEndDateInvalid" v-tooltip.bottom="`Save`">
+                            <i class="pi pi-check"></i>
+                        </button>
+                    </div>
+                    <div class="ios-body">
+                        <!-- Scholar Identity -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">Scholar</div>
+                            <div class="ios-card">
+                                <div v-if="scholarMode === 'edit'" class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-user" style="color: #007AFF; font-size: 13px;"></i>
+                                        Name
+                                    </div>
+                                    <span class="text-sm text-gray-700 font-medium"
+                                        style="max-width: 220px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        {{ scholarForm.record_label }}
+                                    </span>
+                                </div>
+                                <div v-else class="ios-row ios-row-stacked">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-users" style="color: #007AFF; font-size: 13px;"></i>
+                                        Select Scholars <span style="color: #FF3B30; margin-left: 2px;">*</span>
+                                    </div>
+                                    <MultiSelect v-model="scholarForm.selectedProfile" :options="scholarshipRecords"
+                                        optionLabel="label" placeholder="Search completed scholars..."
+                                        :filter="true" class="ios-full-input" @filter="onProfileFilter" />
+                                    <small class="text-gray-500 text-xs">Only completed records from Medicine and
+                                        Medical Allied Courses program</small>
+                                </div>
+                            </div>
+                            <div v-if="scholarForm.errors.profile_id" class="ios-section-footer ios-error">
+                                {{ scholarForm.errors.profile_id }}
+                            </div>
+                        </div>
+
+                        <!-- Service Dates -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">Return of Service</div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-calendar" style="color: #34C759; font-size: 13px;"></i>
+                                        Start Date
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <DatePicker v-model="scholarForm.service_start_date" placeholder="Select"
+                                            showIcon iconDisplay="input" class="ios-datepicker" />
+                                    </div>
+                                </div>
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                        End Date
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <DatePicker v-model="scholarForm.service_end_date" placeholder="Select"
+                                            showIcon iconDisplay="input" class="ios-datepicker"
+                                            :class="{ 'p-invalid': isEndDateInvalid }" />
+                                    </div>
+                                </div>
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-clock" style="color: #5856D6; font-size: 13px;"></i>
+                                        Years of Service
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <InputNumber v-model="scholarForm.years_of_service" :min="0"
+                                            placeholder="Auto" class="ios-inputnumber" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="isEndDateInvalid" class="ios-section-footer ios-error">
+                                End date cannot be earlier than start date
+                            </div>
+                            <div v-else class="ios-section-footer">
+                                Auto-calculated from service dates (editable)
+                            </div>
+                        </div>
+
+                        <!-- Completion Status -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">
+                                Completion Status <span style="color: #FF3B30; margin-left: 2px;">*</span>
+                            </div>
+                            <div class="ios-card">
+                                <div v-for="option in completionOptions" :key="option.value" class="ios-row">
+                                    <div class="ios-row-label">{{ option.label }}</div>
+                                    <RadioButton v-model="scholarForm.completion_status" :value="option.value"
+                                        :inputId="`status_${option.value}`" />
+                                </div>
+                            </div>
+                            <div v-if="scholarForm.errors.completion_status" class="ios-section-footer ios-error">
+                                {{ scholarForm.errors.completion_status }}
+                            </div>
+                        </div>
+
+                        <!-- Remarks -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">Remarks</div>
+                            <div class="ios-card" style="overflow: visible;">
+                                <div class="ios-row ios-row-stacked" style="gap: 0; padding: 0;">
+                                    <Editor v-model="scholarForm.remarks" editorStyle="height: 120px"
+                                        class="ios-full-input">
+                                        <template #toolbar>
+                                            <span class="ql-formats">
+                                                <button class="ql-bold"></button>
+                                                <button class="ql-italic"></button>
+                                                <button class="ql-underline"></button>
+                                            </span>
+                                            <span class="ql-formats">
+                                                <button class="ql-list" value="ordered"></button>
+                                                <button class="ql-list" value="bullet"></button>
+                                            </span>
+                                            <span class="ql-formats">
+                                                <button class="ql-clean"></button>
+                                            </span>
+                                        </template>
+                                    </Editor>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="height: 24px;"></div>
+                    </div>
                 </div>
-            </div>
-            <template #footer>
-                <Button label="Cancel" severity="secondary" outlined @click="showDeleteScholarDialog = false" />
-                <Button label="Delete" severity="danger" @click="deleteScholar" />
+            </template>
+        </Dialog>
+
+        <!-- ══════════════════════════════════════════
+            VIEW SCHOLAR MODAL (iOS)
+        ══════════════════════════════════════════ -->
+        <Dialog :visible="showViewScholarDialog"
+            @update:visible="v => { if (!v) showViewScholarDialog = false; }" modal
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+            <template #container>
+                <div class="ios-modal" :style="viewScholarDrag.modalStyle.value">
+                    <div class="ios-nav-bar" @pointerdown="viewScholarDrag.onDragStart">
+                        <button class="ios-nav-btn ios-nav-cancel" @click="showViewScholarDialog = false"
+                            v-tooltip.bottom="`Close`">
+                            <i class="pi pi-times"></i>
+                        </button>
+                        <span class="ios-nav-title">Scholar Details</span>
+                        <div style="width: 48px;"></div>
+                    </div>
+                    <div class="ios-body" v-if="viewingScholar">
+                        <!-- Scholar Name Banner -->
+                        <div class="ios-section">
+                            <div class="ios-card" style="background: #EFF6FF; border-color: #BFDBFE;">
+                                <div class="ios-row" style="min-height: 48px;">
+                                    <div class="ios-row-label"
+                                        style="font-size: 15px; font-weight: 600; color: #1D4ED8;">
+                                        {{ viewingScholar.scholar_name }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Service Details -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">Return of Service</div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-clock" style="color: #5856D6; font-size: 13px;"></i>
+                                        Years of Service
+                                    </div>
+                                    <span class="font-bold text-blue-600" style="font-size: 16px;">
+                                        {{ viewingScholar.years_of_service || 0 }}
+                                    </span>
+                                </div>
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-check-circle" style="color: #34C759; font-size: 13px;"></i>
+                                        Status
+                                    </div>
+                                    <Tag :value="viewingScholar.completion_status"
+                                        :severity="getCompletionSeverity(viewingScholar.completion_status)" />
+                                </div>
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-calendar" style="color: #34C759; font-size: 13px;"></i>
+                                        Service Start
+                                    </div>
+                                    <span class="text-sm text-gray-700">
+                                        {{ formatDateLong(viewingScholar.service_start_date) }}
+                                    </span>
+                                </div>
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                        Service End
+                                    </div>
+                                    <span class="text-sm text-gray-700">
+                                        {{ formatDateLong(viewingScholar.service_end_date) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Remarks -->
+                        <div v-if="viewingScholar.remarks" class="ios-section">
+                            <div class="ios-section-label">Remarks</div>
+                            <div class="ios-card" style="padding: 10px 16px;">
+                                <p class="text-sm text-gray-700" v-html="viewingScholar.remarks"></p>
+                            </div>
+                        </div>
+
+                        <div style="height: 24px;"></div>
+                    </div>
+                </div>
+            </template>
+        </Dialog>
+
+        <!-- ══════════════════════════════════════════
+            VIEW BATCH MODAL (iOS – wide)
+        ══════════════════════════════════════════ -->
+        <Dialog :visible="showViewBatchDialog"
+            @update:visible="v => { if (!v) { showViewBatchDialog = false; viewingBatch = null; scholarSearch = ''; } }"
+            modal :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+            <template #container>
+                <div class="ios-modal ios-modal-wide" :style="viewBatchDrag.modalStyle.value" v-if="viewingBatch">
+                    <div class="ios-nav-bar" @pointerdown="viewBatchDrag.onDragStart">
+                        <button class="ios-nav-btn ios-nav-cancel"
+                            @click="showViewBatchDialog = false; viewingBatch = null; scholarSearch = '';"
+                            v-tooltip.bottom="`Close`">
+                            <i class="pi pi-times"></i>
+                        </button>
+                        <span class="ios-nav-title"
+                            style="max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            {{ viewingBatch.batch_name }}
+                        </span>
+                        <button v-if="hasPermission('return-of-service.create')"
+                            class="ios-nav-btn ios-nav-action" @click="openAddScholarDialog(viewingBatch)"
+                            v-tooltip.bottom="`Add Scholar`">
+                            <i class="pi pi-plus"></i>
+                        </button>
+                        <div v-else style="width: 48px;"></div>
+                    </div>
+                    <div class="ios-body">
+                        <!-- Batch Info -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">Batch Info</div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-graduation-cap" style="color: #34C759; font-size: 13px;"></i>
+                                        Course
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-800">{{ viewingBatch.course_name }}</span>
+                                </div>
+                                <div v-if="viewingBatch.exam_date_from || viewingBatch.exam_date_to" class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                        Exam Dates
+                                    </div>
+                                    <span class="text-sm text-gray-700">
+                                        {{ formatDateLong(viewingBatch.exam_date_from) }} –
+                                        {{ formatDateLong(viewingBatch.exam_date_to) }}
+                                    </span>
+                                </div>
+                                <div v-if="viewingBatch.result_date" class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-calendar-times" style="color: #AF52DE; font-size: 13px;"></i>
+                                        Result Date
+                                    </div>
+                                    <span class="text-sm text-gray-700">{{ formatDateLong(viewingBatch.result_date) }}</span>
+                                </div>
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-user" style="color: #8E8E93; font-size: 13px;"></i>
+                                        Created By
+                                    </div>
+                                    <span class="text-sm text-gray-600">{{ viewingBatch.created_by }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div v-if="viewingBatch.description" class="ios-section">
+                            <div class="ios-section-label">Description</div>
+                            <div class="ios-card" style="padding: 10px 16px;">
+                                <p class="text-sm text-gray-600">{{ viewingBatch.description }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Scholars Table -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">Scholars</div>
+                            <div class="mb-2">
+                                <InputText v-model="scholarSearch"
+                                    placeholder="Search scholar name or status..." class="w-full" size="small" />
+                            </div>
+                            <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
+                                :value="filteredScholars" :rows="10" paginator :rowHover="true" stripedRows
+                                showGridlines responsiveLayout="scroll">
+                                <Column field="scholar_name" header="Scholar Name" sortable
+                                    style="min-width: 200px">
+                                    <template #body="slotProps">
+                                        <span class="font-semibold">{{ slotProps.data.scholar_name }}</span>
+                                    </template>
+                                </Column>
+                                <Column field="years_of_service" header="Years ROS" sortable
+                                    style="width: 120px">
+                                    <template #body="slotProps">
+                                        <span class="font-semibold text-blue-600">{{ slotProps.data.years_of_service || 0 }}</span>
+                                    </template>
+                                </Column>
+                                <Column field="completion_status" header="Status" sortable style="width: 130px">
+                                    <template #body="slotProps">
+                                        <Tag :value="slotProps.data.completion_status"
+                                            :severity="getCompletionSeverity(slotProps.data.completion_status)" />
+                                    </template>
+                                </Column>
+                                <Column field="service_start_date" header="Service Start" sortable
+                                    style="min-width: 140px">
+                                    <template #body="slotProps">
+                                        <span class="font-mono text-sm">{{ formatDateLong(slotProps.data.service_start_date) }}</span>
+                                    </template>
+                                </Column>
+                                <Column field="service_end_date" header="Service End" sortable
+                                    style="min-width: 140px">
+                                    <template #body="slotProps">
+                                        <span class="font-mono text-sm">{{ formatDateLong(slotProps.data.service_end_date) }}</span>
+                                    </template>
+                                </Column>
+                                <Column field="remarks" header="Remarks" style="min-width: 200px">
+                                    <template #body="slotProps">
+                                        <span v-if="slotProps.data.remarks" class="text-sm text-gray-700"
+                                            v-html="slotProps.data.remarks"></span>
+                                        <span v-else class="text-sm text-gray-400">-</span>
+                                    </template>
+                                </Column>
+                                <Column header="Actions" style="width: 120px">
+                                    <template #body="slotProps">
+                                        <div class="flex gap-1">
+                                            <Button icon="pi pi-eye" severity="secondary" text rounded
+                                                size="small" @click="viewScholar(slotProps.data)"
+                                                v-tooltip.top="`View`" />
+                                            <Button v-if="hasPermission('return-of-service.edit')"
+                                                icon="pi pi-pencil" severity="warning" text rounded size="small"
+                                                @click="openEditScholarDialog(viewingBatch, slotProps.data)"
+                                                v-tooltip.top="`Edit`" />
+                                            <Button v-if="hasPermission('return-of-service.delete')"
+                                                icon="pi pi-trash" severity="danger" text rounded size="small"
+                                                @click="confirmDeleteScholar(slotProps.data)"
+                                                v-tooltip.top="`Delete`" />
+                                        </div>
+                                    </template>
+                                </Column>
+                                <template #empty>
+                                    <div class="text-center py-8">
+                                        <p class="text-gray-500">No scholars in this batch yet.</p>
+                                    </div>
+                                </template>
+                            </DataTable>
+                        </div>
+
+                        <div style="height: 24px;"></div>
+                    </div>
+                </div>
+            </template>
+        </Dialog>
+
+        <!-- ══════════════════════════════════════════
+            DELETE BATCH CONFIRM (iOS)
+        ══════════════════════════════════════════ -->
+        <Dialog :visible="showDeleteBatchDialog"
+            @update:visible="v => { if (!v) showDeleteBatchDialog = false; }" modal
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+            <template #container>
+                <div class="ios-modal" :style="deleteBatchDrag.modalStyle.value">
+                    <div class="ios-nav-bar" @pointerdown="deleteBatchDrag.onDragStart">
+                        <button class="ios-nav-btn ios-nav-cancel" @click="showDeleteBatchDialog = false"
+                            v-tooltip.bottom="`Cancel`">
+                            <i class="pi pi-times"></i>
+                        </button>
+                        <span class="ios-nav-title">Delete Batch</span>
+                        <div style="width: 48px;"></div>
+                    </div>
+                    <div class="ios-body">
+                        <div class="ios-section">
+                            <div class="ios-card" style="background: #FFF5F5; border-color: #FECACA;">
+                                <div class="ios-row"
+                                    style="gap: 12px; padding: 14px 16px; min-height: 60px; align-items: flex-start;">
+                                    <div class="flex-shrink-0 w-9 h-9 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
+                                        <i class="pi pi-exclamation-triangle text-red-500 text-sm"></i>
+                                    </div>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <p class="text-sm font-semibold text-gray-800">{{ batchToDelete?.batch_name }}</p>
+                                        <p class="text-xs text-red-600 mt-1">
+                                            This will delete all {{ batchToDelete?.total_scholars }} scholars in this
+                                            batch. This action cannot be undone.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ios-section">
+                            <button class="ios-destructive-btn" @click="deleteBatch">Delete Batch</button>
+                        </div>
+                        <div style="height: 24px;"></div>
+                    </div>
+                </div>
+            </template>
+        </Dialog>
+
+        <!-- ══════════════════════════════════════════
+            DELETE SCHOLAR CONFIRM (iOS)
+        ══════════════════════════════════════════ -->
+        <Dialog :visible="showDeleteScholarDialog"
+            @update:visible="v => { if (!v) showDeleteScholarDialog = false; }" modal
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+            <template #container>
+                <div class="ios-modal" :style="deleteScholarDrag.modalStyle.value">
+                    <div class="ios-nav-bar" @pointerdown="deleteScholarDrag.onDragStart">
+                        <button class="ios-nav-btn ios-nav-cancel" @click="showDeleteScholarDialog = false"
+                            v-tooltip.bottom="`Cancel`">
+                            <i class="pi pi-times"></i>
+                        </button>
+                        <span class="ios-nav-title">Remove Scholar</span>
+                        <div style="width: 48px;"></div>
+                    </div>
+                    <div class="ios-body">
+                        <div class="ios-section">
+                            <div class="ios-card" style="background: #FFF5F5; border-color: #FECACA;">
+                                <div class="ios-row"
+                                    style="gap: 12px; padding: 14px 16px; min-height: 60px; align-items: flex-start;">
+                                    <div class="flex-shrink-0 w-9 h-9 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
+                                        <i class="pi pi-exclamation-triangle text-red-500 text-sm"></i>
+                                    </div>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <p class="text-sm font-semibold text-gray-700">{{ scholarToDelete?.scholar_name }}</p>
+                                        <p class="text-xs text-red-600 mt-1">This action cannot be undone.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ios-section">
+                            <button class="ios-destructive-btn" @click="deleteScholar">Remove from Batch</button>
+                        </div>
+                        <div style="height: 24px;"></div>
+                    </div>
+                </div>
             </template>
         </Dialog>
 
         <!-- Preview Scholar Drawer -->
         <div v-if="showPreviewScholarDialog && Array.isArray(scholarForm.selectedProfile) && scholarForm.selectedProfile.length > 0"
-            class="fixed right-0 top-0 h-screen w-80 bg-white border-l border-gray-300 shadow-2xl overflow-y-auto"
-            style="z-index: 9999; background: #ffffff;">
+            class="fixed right-0 top-0 h-screen w-80 bg-white border-l border-gray-200 shadow-2xl overflow-y-auto rounded-l-2xl"
+            style="z-index: 9999;">
             <div class="p-4">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-semibold text-gray-900">Selected Scholars</h3>
-                    <button @click="showPreviewScholarDialog = false" class="text-gray-400 hover:text-gray-700">
-                        <i class="pi pi-times"></i>
+                    <h3 class="font-semibold text-gray-900 text-sm">Selected Scholars</h3>
+                    <button @click="showPreviewScholarDialog = false" class="text-gray-400 hover:text-gray-600">
+                        <i class="pi pi-times text-sm"></i>
                     </button>
                 </div>
                 <div class="space-y-2">
                     <div v-for="(scholar, index) in scholarForm.selectedProfile" :key="scholar.id"
-                        class="bg-blue-50 p-3 rounded border border-blue-200">
+                        class="bg-blue-50 p-3 rounded-2xl border border-blue-100">
                         <p class="font-semibold text-gray-800 text-sm">{{ index + 1 }}. {{ scholar.label }}</p>
                     </div>
                 </div>
@@ -501,7 +736,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, reactive } from 'vue';
+import { ref, watch, computed, reactive, onBeforeUnmount } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
@@ -514,6 +749,43 @@ import DatePicker from 'primevue/datepicker';
 import Toast from 'primevue/toast';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import { usePermission } from '@/composable/permissions';
+
+// ─── Draggable Modal Factory ───
+function useDraggable(width) {
+    const dragOffset = ref({ x: 0, y: 0 });
+    const dragStart = ref(null);
+    const modalStyle = computed(() => ({
+        width,
+        transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
+    }));
+    function onDragStart(e) {
+        if (e.target.closest('button, .p-editor')) return;
+        dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
+        document.addEventListener('pointermove', onDragMove);
+        document.addEventListener('pointerup', onDragEnd);
+    }
+    function onDragMove(e) {
+        if (!dragStart.value) return;
+        dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
+    }
+    function onDragEnd() {
+        dragStart.value = null;
+        document.removeEventListener('pointermove', onDragMove);
+        document.removeEventListener('pointerup', onDragEnd);
+    }
+    function cleanup() {
+        document.removeEventListener('pointermove', onDragMove);
+        document.removeEventListener('pointerup', onDragEnd);
+    }
+    return { modalStyle, onDragStart, cleanup };
+}
+
+const batchDrag = useDraggable('520px');
+const scholarDrag = useDraggable('600px');
+const viewScholarDrag = useDraggable('480px');
+const viewBatchDrag = useDraggable('90vw');
+const deleteBatchDrag = useDraggable('420px');
+const deleteScholarDrag = useDraggable('420px');
 
 const props = defineProps({
     batches: Array,
@@ -1330,4 +1602,146 @@ const filteredScholars = computed(() => {
         scholar.completion_status?.toLowerCase().includes(query)
     );
 });
+
+onBeforeUnmount(() => {
+    batchDrag.cleanup();
+    scholarDrag.cleanup();
+    viewScholarDrag.cleanup();
+    viewBatchDrag.cleanup();
+    deleteBatchDrag.cleanup();
+    deleteScholarDrag.cleanup();
+});
 </script>
+
+<style scoped>
+/* ── iOS Row Layout ── */
+.ios-row-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.ios-row-control {
+    flex: 0 0 200px;
+    width: 200px;
+    min-width: 0;
+}
+
+.ios-row-control > :deep(*) {
+    width: 100%;
+    min-width: 0;
+}
+
+.ios-row-stacked {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 16px;
+    min-height: auto;
+    gap: 6px;
+}
+
+.ios-full-input {
+    width: 100%;
+}
+
+/* Wide batch view modal */
+.ios-modal-wide {
+    height: 85vh;
+}
+
+/* Destructive Button */
+.ios-destructive-btn {
+    display: block;
+    width: 100%;
+    background: #FFFFFF;
+    border: 0.5px solid #E5E5EA;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    font-size: 15px;
+    color: #FF3B30;
+    cursor: pointer;
+    letter-spacing: -0.4px;
+    transition: background 0.15s;
+}
+
+.ios-destructive-btn:hover {
+    background: #F2F2F7;
+}
+
+/* ── PrimeVue Select override (ios-select class) ── */
+:deep(.ios-select .p-select) {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 13px;
+    width: 100%;
+    min-height: unset;
+}
+
+:deep(.ios-select .p-select-label) {
+    color: #8E8E93 !important;
+    text-align: right;
+    padding: 4px 2px 4px 8px;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:deep(.ios-select .p-select-dropdown) {
+    color: #C7C7CC !important;
+}
+
+/* ── PrimeVue DatePicker override (ios-datepicker class) ── */
+:deep(.ios-datepicker .p-datepicker) {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+:deep(.ios-datepicker .p-inputtext) {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-align: right;
+    color: #8E8E93;
+    font-size: 13px;
+    padding: 4px 40px 4px 8px;
+}
+
+/* ── InputNumber override (ios-inputnumber class) ── */
+:deep(.ios-inputnumber .p-inputnumber-input) {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-align: right;
+    color: #8E8E93;
+    font-size: 13px;
+    padding: 4px 8px;
+}
+
+/* ── Full-width text inputs ── */
+:deep(.ios-full-input.p-inputtext),
+:deep(.ios-full-input .p-inputtext) {
+    font-size: 13px;
+    border-radius: 6px;
+    width: 100%;
+}
+
+:deep(.ios-full-input.p-textarea),
+:deep(.ios-full-input .p-textarea) {
+    font-size: 13px;
+    border-radius: 6px;
+    resize: none;
+    width: 100%;
+}
+
+:deep(.ios-full-input .p-multiselect),
+:deep(.ios-full-input.p-multiselect) {
+    font-size: 13px;
+    border-radius: 8px;
+    width: 100%;
+}
+</style>

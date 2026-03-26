@@ -466,12 +466,14 @@
         $totalAmount += $scholar['amount'];
         }
         @endphp
+        @elseif($voucher->obr_type === 'REIMBURSEMENT')
+        @php $totalAmount = $voucher->amount; @endphp
         @endif
 
         <!-- Bottom Section -->
         <div class="obr-bottom-section" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <!-- TOTAL Row -->
-            @if(!empty($scholars))
+            @if(!empty($scholars) || $voucher->obr_type === 'REIMBURSEMENT')
             <div class="obr-info-row no-border-bottom border-top">
                 <div class="column_1" style="border: none;"></div>
                 <div class="column_2" style="border: none;"></div>
