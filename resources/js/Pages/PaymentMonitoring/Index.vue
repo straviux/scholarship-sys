@@ -33,7 +33,7 @@ const props = defineProps({
 
 // Reactive state
 const searchInput = ref(props.filters.search);
-const selectedStatus = ref(props.filters.transaction_status);
+const selectedStatus = ref(props.filters.transaction_status || 'all');
 const selectedAcademicYear = ref(props.filters.academic_year);
 const selectedSemester = ref(props.filters.semester);
 const selectedProgram = ref(props.filters.program || '');
@@ -59,7 +59,7 @@ const applyFilters = () => {
 
         router.get(route('payment-monitoring.index'), {
             search: searchInput.value,
-            transaction_status: selectedStatus.value,
+            transaction_status: selectedStatus.value === 'all' ? '' : selectedStatus.value,
             academic_year: selectedAcademicYear.value,
             semester: selectedSemester.value,
             program: typeof selectedProgram.value === 'object' ? selectedProgram.value?.name : selectedProgram.value,
@@ -75,7 +75,7 @@ const applyFilters = () => {
 const clearFilters = () => {
     clearTimeout(filterTimeout);
     searchInput.value = '';
-    selectedStatus.value = '';
+    selectedStatus.value = 'all';
     selectedAcademicYear.value = '';
     selectedSemester.value = '';
     selectedProgram.value = '';
@@ -104,12 +104,12 @@ const statusCounts = computed(() => {
         all: props.paymentData.length,
         'no-obr': props.paymentData.filter(item => !item.transaction_status).length,
         'LOA': props.paymentData.filter(item => item.transaction_status === 'LOA').length,
-        'IRREGULAR': props.paymentData.filter(item => item.transaction_status === 'IRREGULAR').length,
-        'TRANSFERRED': props.paymentData.filter(item => item.transaction_status === 'TRANSFERRED').length,
-        'CLAIMED': props.paymentData.filter(item => item.transaction_status === 'CLAIMED').length,
-        'PAID': props.paymentData.filter(item => item.transaction_status === 'PAID').length,
-        'ON PROCESS': props.paymentData.filter(item => item.transaction_status === 'ON PROCESS').length,
-        'DENIED': props.paymentData.filter(item => item.transaction_status === 'DENIED').length,
+        'Irregular': props.paymentData.filter(item => item.transaction_status === 'Irregular').length,
+        'Transferred': props.paymentData.filter(item => item.transaction_status === 'Transferred').length,
+        'Claimed': props.paymentData.filter(item => item.transaction_status === 'Claimed').length,
+        'Paid': props.paymentData.filter(item => item.transaction_status === 'Paid').length,
+        'On Process': props.paymentData.filter(item => item.transaction_status === 'On Process').length,
+        'Denied': props.paymentData.filter(item => item.transaction_status === 'Denied').length,
     };
     return counts;
 });
@@ -126,7 +126,7 @@ const filteredData = computed(() => {
         );
     }
 
-    if (selectedStatus.value && selectedStatus.value !== '') {
+    if (selectedStatus.value && selectedStatus.value !== 'all') {
         if (selectedStatus.value === 'no-obr') {
             data = data.filter((item) => !item.transaction_status);
         } else {
@@ -169,12 +169,12 @@ const filteredData = computed(() => {
 const getStatusSeverity = (status) => {
     const map = {
         'LOA': 'info',
-        'IRREGULAR': 'warn',
-        'TRANSFERRED': 'secondary',
-        'CLAIMED': 'contrast',
-        'PAID': 'success',
-        'ON PROCESS': 'warn',
-        'DENIED': 'danger',
+        'Irregular': 'warn',
+        'Transferred': 'secondary',
+        'Claimed': 'contrast',
+        'Paid': 'success',
+        'On Process': 'warn',
+        'Denied': 'danger',
     };
     return map[status] || 'secondary';
 };
@@ -184,12 +184,12 @@ const getStatusBadgeClass = (status) => {
     const baseClass = 'px-2 sm:px-3 py-1 rounded-full text-xs font-semibold';
     const statusMap = {
         'LOA': 'bg-blue-100 text-blue-800',
-        'IRREGULAR': 'bg-yellow-100 text-yellow-800',
-        'TRANSFERRED': 'bg-purple-100 text-purple-800',
-        'CLAIMED': 'bg-indigo-100 text-indigo-800',
-        'PAID': 'bg-green-100 text-green-800',
-        'ON PROCESS': 'bg-orange-100 text-orange-800',
-        'DENIED': 'bg-red-100 text-red-800',
+        'Irregular': 'bg-yellow-100 text-yellow-800',
+        'Transferred': 'bg-purple-100 text-purple-800',
+        'Claimed': 'bg-indigo-100 text-indigo-800',
+        'Paid': 'bg-green-100 text-green-800',
+        'On Process': 'bg-orange-100 text-orange-800',
+        'Denied': 'bg-red-100 text-red-800',
         '': 'bg-gray-100 text-gray-800',
     };
     return `${baseClass} ${statusMap[status] || statusMap['']}`;
@@ -277,15 +277,15 @@ const formatDate = (date) => {
                 <!-- Status filter row -->
                 <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
                     <label v-for="opt in [
-                        { label: 'All', value: '', count: statusCounts.all },
+                        { label: 'All', value: 'all', count: statusCounts.all },
                         { label: 'No OBR', value: 'no-obr', count: statusCounts['no-obr'] },
                         { label: 'LOA', value: 'LOA', count: statusCounts['LOA'] },
-                        { label: 'Irregular', value: 'IRREGULAR', count: statusCounts['IRREGULAR'] },
-                        { label: 'Transferred', value: 'TRANSFERRED', count: statusCounts['TRANSFERRED'] },
-                        { label: 'Claimed', value: 'CLAIMED', count: statusCounts['CLAIMED'] },
-                        { label: 'Paid', value: 'PAID', count: statusCounts['PAID'] },
-                        { label: 'On Process', value: 'ON PROCESS', count: statusCounts['ON PROCESS'] },
-                        { label: 'Denied', value: 'DENIED', count: statusCounts['DENIED'] },
+                        { label: 'Irregular', value: 'Irregular', count: statusCounts['Irregular'] },
+                        { label: 'Transferred', value: 'Transferred', count: statusCounts['Transferred'] },
+                        { label: 'Claimed', value: 'Claimed', count: statusCounts['Claimed'] },
+                        { label: 'Paid', value: 'Paid', count: statusCounts['Paid'] },
+                        { label: 'On Process', value: 'On Process', count: statusCounts['On Process'] },
+                        { label: 'Denied', value: 'Denied', count: statusCounts['Denied'] },
                     ]" :key="opt.value" class="flex items-center gap-1.5 cursor-pointer">
                         <RadioButton v-model="selectedStatus" name="pmStatus" :value="opt.value" />
                         <span class="text-sm text-gray-700 whitespace-nowrap">{{ opt.label }}</span>
@@ -301,11 +301,11 @@ const formatDate = (date) => {
                     <div class="text-xs text-gray-500">Total Records</div>
                 </div>
                 <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl font-bold text-orange-500">{{ statusCounts['ON PROCESS'] }}</div>
+                    <div class="text-2xl font-bold text-orange-500">{{ statusCounts['On Process'] }}</div>
                     <div class="text-xs text-gray-500">On Process</div>
                 </div>
                 <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl font-bold text-green-600">{{ statusCounts['PAID'] }}</div>
+                    <div class="text-2xl font-bold text-green-600">{{ statusCounts['Paid'] }}</div>
                     <div class="text-xs text-gray-500">Paid</div>
                 </div>
                 <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
@@ -367,7 +367,7 @@ const formatDate = (date) => {
                     <Column header="OBR Date" style="min-width: 110px">
                         <template #body="{ data }">
                             <span v-if="data.date_obligated" class="text-gray-700">{{ formatDate(data.date_obligated)
-                                }}</span>
+                            }}</span>
                             <span v-else class="text-gray-400">—</span>
                         </template>
                     </Column>
