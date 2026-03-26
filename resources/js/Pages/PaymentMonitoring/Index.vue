@@ -380,7 +380,7 @@ const formatDate = (date) => {
                     <Column header="OBR Date" style="min-width: 110px">
                         <template #body="{ data }">
                             <span v-if="data.date_obligated" class="text-gray-700">{{ formatDate(data.date_obligated)
-                            }}</span>
+                                }}</span>
                             <span v-else class="text-gray-400">—</span>
                         </template>
                     </Column>
