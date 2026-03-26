@@ -334,11 +334,24 @@ const formatDate = (date) => {
                         </template>
                     </Column>
 
+                    <Column field="obr_type" header="OBR Type" sortable style="min-width: 140px">
+                        <template #body="{ data }">
+                            <span v-if="data.obr_type" class="text-xs font-medium" :class="{
+                                'text-gray-700': data.obr_type === 'REGULAR',
+                                'text-yellow-600': data.obr_type === 'FINANCIAL ASSISTANCE',
+                                'text-purple-600': data.obr_type === 'REIMBURSEMENT',
+                            }">{{ data.obr_type }}</span>
+                            <span v-else class="text-gray-400 text-xs">—</span>
+                        </template>
+                    </Column>
+
                     <Column field="disbursement_type" header="Type" sortable style="min-width: 110px">
                         <template #body="{ data }">
-                            <Tag v-if="data.disbursement_type"
-                                :value="data.disbursement_type === 'disbursements' ? 'Disbursement' : data.disbursement_type === 'payroll' ? 'Payroll' : data.disbursement_type"
-                                :severity="data.disbursement_type === 'disbursements' ? 'info' : 'success'" rounded />
+                            <span v-if="data.disbursement_type" class="text-xs font-medium" :class="{
+                                'text-blue-600': data.disbursement_type === 'disbursements',
+                                'text-green-600': data.disbursement_type === 'payroll',
+                            }">{{ data.disbursement_type === 'disbursements' ? 'Disbursement' : data.disbursement_type
+                                === 'payroll' ? 'Payroll' : data.disbursement_type }}</span>
                             <span v-else class="text-gray-400 text-xs">—</span>
                         </template>
                     </Column>

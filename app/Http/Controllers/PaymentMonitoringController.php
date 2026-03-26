@@ -123,6 +123,7 @@ class PaymentMonitoringController extends Controller
                     'school' => $record->school?->name ?? '',
                     // OBR data
                     'obr_no' => $fundTransaction->obr_no ?? '',
+                    'obr_type' => $fundTransaction->obr_type ?? '',
                     'transaction_status' => $fundTransaction->transaction_status ?? '',
                     'disbursement_type' => $fundTransaction->disbursement_type ?? '',
                     'amount' => $individualAmount,
