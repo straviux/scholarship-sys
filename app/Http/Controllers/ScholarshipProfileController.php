@@ -1107,6 +1107,37 @@ class ScholarshipProfileController extends Controller
     /**
      * Submit interview assessment for a scholarship record
      */
+    public function updateInterview(Request $request, ScholarshipRecord $record)
+    {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'academic_potential' => 'required|string|in:excellent,good,fair',
+            'financial_need_level' => 'required|string|in:high,moderate,low',
+            'communication_skills' => 'required|string|in:excellent,good,fair',
+            'recommendation' => 'required|string|in:recommended,further_evaluation,not_recommended',
+            'interview_remarks' => 'nullable|string|max:2000',
+        ]);
+
+        try {
+            $record->update($validated);
+
+            return response()->json(['message' => 'Interview assessment updated successfully.']);
+        } catch (\Exception $e) {
+            Log::error('Interview assessment update failed', [
+                'record_id' => $record->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json(['message' => 'Failed to update interview assessment.'], 500);
+        }
+    }
+
+    /**
+     * Submit interview assessment (API)
+     */
     public function submitInterview(Request $request, ScholarshipRecord $record)
     {
         if (!Gate::allows('applicants.approve')) {

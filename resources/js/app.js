@@ -1,6 +1,7 @@
 import './bootstrap';
 import '../css/app.css';
 import '../css/ios-design-system.css';
+import 'vue3-toastify/dist/index.css';
 
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
@@ -16,6 +17,7 @@ import VueDeviceDetect from '@basitcodeenv/vue3-device-detect';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import 'primeicons/primeicons.css';
+import Vue3Toastify from 'vue3-toastify';
 import permissionDirective from './directives/permission';
 import smoothScrollDirective from './directives/smoothScroll';
 import animateTableRowsDirective from './directives/animateTableRows';
@@ -132,6 +134,7 @@ createInertiaApp({
 			})
 			.use(ToastService)
 			.use(ConfirmationService)
+			.use(Vue3Toastify, { autoClose: 3000 })
 			.use(animationPlugin)
 			.component('VueDatePicker', VueDatePicker)
 			.directive('can', permissionDirective)

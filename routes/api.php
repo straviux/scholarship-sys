@@ -46,6 +46,9 @@ Route::middleware(['web', 'auth'])->group(function () {
     // Interview assessment submission
     Route::post('/scholarship/{record}/interview', [ScholarshipProfileController::class, 'submitInterview']);
 
+    // Interview assessment update
+    Route::post('/scholarship/{record}/update-interview', [ScholarshipProfileController::class, 'updateInterview']);
+
     // Scholar Ledger PDF
     Route::get('/scholars/{profileId}/ledger-pdf', [ScholarshipProfileController::class, 'generateLedgerPdf']);
 });

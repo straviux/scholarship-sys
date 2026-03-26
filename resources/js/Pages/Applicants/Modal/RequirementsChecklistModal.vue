@@ -8,6 +8,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 import axios from 'axios';
+import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
 
 const props = defineProps({
     visible: {
@@ -37,12 +38,6 @@ const qrCountdownInterval = ref(null);
 const showPreviewModal = ref(false);
 const previewFile = ref(null);
 const pendingUncheck = ref(null);
-const previewZoom = ref(100);
-// Image preview drag (NOT modal drag)
-const isImageDragging = ref(false);
-const imageDragStart = ref({ x: 0, y: 0 });
-const panX = ref(0);
-const panY = ref(0);
 
 // Computed
 const visibleDialog = computed({
@@ -226,16 +221,9 @@ const downloadFile = (requirement) => {
 
 const viewAttachment = (requirement) => {
     if (!requirement.file_path || !requirement.file_name) return;
-    const fileExtension = requirement.file_name.split('.').pop().toLowerCase();
-    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
-    const isImage = imageExtensions.includes(fileExtension);
-
     previewFile.value = {
         file_name: requirement.file_name,
-        file_path: requirement.file_path,
-        isImage,
-        type: fileExtension,
-        requirementName: requirement.name
+        file_url: requirement.file_path,
     };
     showPreviewModal.value = true;
 };
@@ -269,32 +257,6 @@ const showQrUpload = async (requirement) => {
         toast.error('Failed to generate QR code');
     }
 };
-
-const zoomIn = () => { if (previewZoom.value < 300) previewZoom.value += 20; };
-const zoomOut = () => { if (previewZoom.value > 50) previewZoom.value -= 20; };
-const resetZoom = () => { previewZoom.value = 100; };
-
-const handlePreviewWheel = (event) => {
-    event.preventDefault();
-    if (event.deltaY < 0) zoomIn();
-    else zoomOut();
-};
-
-const onImageMouseDown = (event) => {
-    if (previewZoom.value <= 100) return;
-    isImageDragging.value = true;
-    imageDragStart.value = { x: event.clientX, y: event.clientY };
-};
-
-const onImageMouseMove = (event) => {
-    if (!isImageDragging.value) return;
-    panX.value += event.clientX - imageDragStart.value.x;
-    panY.value += event.clientY - imageDragStart.value.y;
-    imageDragStart.value = { x: event.clientX, y: event.clientY };
-};
-
-const onImageMouseUp = () => { isImageDragging.value = false; };
-const onImageMouseLeave = () => { isImageDragging.value = false; };
 
 const startQrCountdown = () => {
     const updateCountdown = () => {
@@ -358,14 +320,6 @@ watch(visibleDialog, (newValue) => {
     }
 });
 
-watch(showPreviewModal, (newValue) => {
-    if (newValue) {
-        previewZoom.value = 100;
-        panX.value = 0;
-        panY.value = 0;
-    }
-});
-
 onMounted(() => {
     if (props.visible && requirementsData.value.length === 0) {
         loadRequirements();
@@ -425,29 +379,6 @@ function onQrDragEnd() {
     document.removeEventListener('pointerup', onQrDragEnd);
 }
 
-/* ── Preview Modal Drag ── */
-const prevDragOffset = ref({ x: 0, y: 0 });
-const prevDragStart = ref(null);
-const previewModalStyle = computed(() => ({
-    width: '85vw',
-    transform: `translate(${prevDragOffset.value.x}px, ${prevDragOffset.value.y}px)`,
-}));
-
-function onPrevDragStart(e) {
-    if (e.target.closest('button, input, textarea, select, a, img')) return;
-    prevDragStart.value = { x: e.clientX - prevDragOffset.value.x, y: e.clientY - prevDragOffset.value.y };
-    document.addEventListener('pointermove', onPrevDragMove);
-    document.addEventListener('pointerup', onPrevDragEnd);
-}
-function onPrevDragMove(e) {
-    if (!prevDragStart.value) return;
-    prevDragOffset.value = { x: e.clientX - prevDragStart.value.x, y: e.clientY - prevDragStart.value.y };
-}
-function onPrevDragEnd() {
-    prevDragStart.value = null;
-    document.removeEventListener('pointermove', onPrevDragMove);
-    document.removeEventListener('pointerup', onPrevDragEnd);
-}
 </script>
 
 <template>
@@ -620,86 +551,7 @@ function onPrevDragEnd() {
     </Dialog>
 
     <!-- File Preview Modal -->
-    <Dialog :visible="showPreviewModal" modal @update:visible="val => { if (!val) showPreviewModal = false; }"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal ios-modal-preview" :style="previewModalStyle">
-                <div class="ios-nav-bar" @pointerdown="onPrevDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="showPreviewModal = false"><i
-                            class="pi pi-times"></i></button>
-                    <span class="ios-nav-title" style="font-size: 15px;">{{ previewFile?.file_name || 'Preview'
-                        }}</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="downloadFile(previewFile)">
-                        <i class="pi pi-download" style="font-size: 14px;"></i>
-                    </button>
-                </div>
-
-                <div class="ios-body" v-if="previewFile">
-                    <!-- Image Preview -->
-                    <div v-if="previewFile.isImage">
-                        <!-- Zoom Controls -->
-                        <div class="ios-section" style="margin-top: 12px;">
-                            <div class="ios-card"
-                                style="padding: 8px 16px; display: flex; align-items: center; justify-content: center; gap: 12px;">
-                                <button class="ios-icon-btn" @click="zoomOut" :disabled="previewZoom <= 50">
-                                    <i class="pi pi-minus" style="font-size: 13px; color: #007AFF;"></i>
-                                </button>
-                                <span
-                                    style="font-size: 13px; font-weight: 600; color: #000; min-width: 40px; text-align: center;">{{
-                                        previewZoom }}%</span>
-                                <button class="ios-icon-btn" @click="zoomIn" :disabled="previewZoom >= 300">
-                                    <i class="pi pi-plus" style="font-size: 13px; color: #007AFF;"></i>
-                                </button>
-                                <div style="width: 1px; height: 20px; background: #E5E5EA;"></div>
-                                <button class="ios-icon-btn" @click="resetZoom"
-                                    style="font-size: 12px; color: #007AFF;">Reset</button>
-                            </div>
-                        </div>
-
-                        <!-- Image Container -->
-                        <div class="ios-section">
-                            <div class="ios-preview-container" @wheel="handlePreviewWheel">
-                                <img :src="previewFile.file_path" :alt="previewFile.file_name" :style="{
-                                    transform: `translate(${panX}px, ${panY}px) scale(${previewZoom / 100})`,
-                                    cursor: previewZoom > 100 ? 'grab' : 'default',
-                                    userSelect: 'none',
-                                    maxWidth: '100%',
-                                    borderRadius: '8px',
-                                }" @mousedown="onImageMouseDown" @mousemove="onImageMouseMove"
-                                    @mouseup="onImageMouseUp" @mouseleave="onImageMouseLeave" draggable="false" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Non-image -->
-                    <div v-else style="text-align: center; padding: 40px 0; color: #8E8E93;">
-                        <i class="pi pi-file" style="font-size: 36px; display: block; margin-bottom: 10px;"></i>
-                        <div style="font-size: 14px;">Cannot preview {{ previewFile.type.toUpperCase() }} files</div>
-                        <div style="font-size: 12px; margin-top: 4px;">Use the download button to open the file</div>
-                    </div>
-
-                    <!-- File Info -->
-                    <div class="ios-section" style="margin-bottom: 16px;">
-                        <div class="ios-card">
-                            <div class="ios-row">
-                                <span class="ios-row-label">File</span>
-                                <span style="font-size: 13px; color: #8E8E93;">{{ previewFile.file_name }}</span>
-                            </div>
-                            <div class="ios-row">
-                                <span class="ios-row-label">Requirement</span>
-                                <span style="font-size: 13px; color: #8E8E93;">{{ previewFile.requirementName }}</span>
-                            </div>
-                            <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">Type</span>
-                                <span style="font-size: 13px; color: #8E8E93;">{{ previewFile.type.toUpperCase()
-                                    }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    <ViewAttachmentModal v-model:visible="showPreviewModal" :attachment="previewFile" />
 </template>
 
 <style scoped>
@@ -712,10 +564,6 @@ function onPrevDragEnd() {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
     overflow: hidden;
     margin: 0 auto;
-}
-
-.ios-modal-preview {
-    max-height: 92vh;
 }
 
 .ios-nav-bar {

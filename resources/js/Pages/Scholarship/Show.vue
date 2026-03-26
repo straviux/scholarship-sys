@@ -17,19 +17,17 @@
                         <p class="text-sm text-gray-500 mt-1">Scholar Profile</p>
                     </div>
                 </div>
-                <div class="flex items-center bg-white/80 backdrop-blur-sm border border-gray-200/80 rounded-2xl shadow-sm p-1 gap-0.5">
+                <div
+                    class="flex items-center bg-white/80 backdrop-blur-sm border border-gray-200/80 rounded-2xl shadow-sm p-1 gap-0.5">
                     <Button icon="pi pi-book" label="Generate Ledger" size="small" rounded text
-                        class="!font-medium !text-gray-700"
-                        @click="generateLedger"
+                        class="!font-medium !text-gray-700" @click="generateLedger"
                         v-tooltip.top="'Generate Scholar Ledger'" />
                     <div class="w-px h-6 bg-gray-200 mx-0.5 self-center flex-shrink-0"></div>
-                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-user" label="Edit Personal" size="small" rounded text
-                        class="!font-medium !text-gray-700"
-                        @click="showPersonalInfoModal = true"
+                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-user" label="Edit Personal" size="small"
+                        rounded text class="!font-medium !text-gray-700" @click="showPersonalInfoModal = true"
                         v-tooltip.top="'Edit Personal Information'" />
-                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-home" label="Edit Family" size="small" rounded text
-                        class="!font-medium !text-gray-700"
-                        @click="showFamilyInfoModal = true"
+                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-home" label="Edit Family" size="small"
+                        rounded text class="!font-medium !text-gray-700" @click="showFamilyInfoModal = true"
                         v-tooltip.top="'Edit Family Information'" />
                 </div>
             </div>
@@ -349,7 +347,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -434,7 +432,7 @@
                                                     <div>
                                                         <h5 class="font-semibold text-gray-900">
                                                             Status: <span class="text-blue-600">{{ timeline.new_status
-                                                                }}</span>
+                                                            }}</span>
                                                         </h5>
                                                         <p class="text-sm text-gray-600">{{
                                                             formatDateTime(timeline.performed_at) }}</p>
@@ -446,13 +444,13 @@
                                                         <p class="text-xs text-gray-600">Previous Status</p>
                                                         <p class="text-sm font-medium text-gray-900">{{
                                                             timeline.old_status || 'N/A'
-                                                            }}</p>
+                                                        }}</p>
                                                     </div>
                                                     <div>
                                                         <p class="text-xs text-gray-600">New Status</p>
                                                         <p class="text-sm font-medium text-gray-900">{{
                                                             timeline.new_status || 'N/A'
-                                                            }}</p>
+                                                        }}</p>
                                                     </div>
                                                 </div>
 
@@ -460,7 +458,7 @@
                                                     <p class="text-xs text-gray-600">Encoded by</p>
                                                     <p class="text-sm font-medium text-gray-900">{{
                                                         timeline.changed_by?.name || 'System'
-                                                        }}</p>
+                                                    }}</p>
                                                 </div>
 
                                                 <div v-if="timeline.remarks"
@@ -576,8 +574,7 @@
 
         <!-- Manage Attachments Modal -->
         <ManageAttachmentsModal v-model:visible="showAttachmentsModal" :record="selectedRecord"
-            :has-edit-permission="hasPermission('applicants.edit')" @view-attachment="onViewAttachment"
-            @success="handleModalSuccess" />
+            :has-edit-permission="hasPermission('applicants.edit')" @success="handleModalSuccess" />
 
         <!-- View Attachment Modal -->
         <ViewAttachmentModal v-model:visible="showViewerModal" :attachment="viewerAttachment" />
@@ -895,11 +892,6 @@ const getStatusClass = (status) => {
 const manageAttachments = (record) => {
     selectedRecord.value = record;
     showAttachmentsModal.value = true;
-};
-
-const onViewAttachment = (attachment) => {
-    viewerAttachment.value = attachment;
-    showViewerModal.value = true;
 };
 
 // QR Code for mobile upload

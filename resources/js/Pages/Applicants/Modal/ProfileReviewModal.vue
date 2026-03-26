@@ -5,6 +5,7 @@ import axios from 'axios';
 import moment from 'moment';
 import { usePermission } from '@/composable/permissions';
 import { Tag } from 'primevue';
+import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
 
 const { hasRole } = usePermission();
 
@@ -19,6 +20,8 @@ const emit = defineEmits(['update:visible', 'interview', 'closed']);
 const reviewRequirements = ref([]);
 const currentProfileIndex = ref(-1);
 const currentApplicant = ref(null);
+const showPreviewModal = ref(false);
+const previewFile = ref(null);
 
 const hasPreviousProfile = computed(() => currentProfileIndex.value > 0);
 const hasNextProfile = computed(() => currentProfileIndex.value < (props.applicants?.length || 0) - 1);
@@ -88,7 +91,11 @@ const formatDate = (date) => {
 
 const previewRequirementFile = (requirement) => {
     if (!requirement.file_path) return;
-    window.open(requirement.file_path, '_blank');
+    previewFile.value = {
+        file_name: requirement.file_name || requirement.name,
+        file_url: requirement.file_path,
+    };
+    showPreviewModal.value = true;
 };
 
 const downloadRequirementFile = (requirement) => {
@@ -197,7 +204,7 @@ onBeforeUnmount(() => {
                                     <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
                                         <Tag severity="info">
                                             <span style="font-size: 10px;">#{{ currentApplicant.sequence_number || '-'
-                                                }} {{ currentApplicant.scholarship_grant?.[0]?.program?.shortname
+                                            }} {{ currentApplicant.scholarship_grant?.[0]?.program?.shortname
                                                 }}</span>
                                         </Tag>
                                         <Tag severity="warn">
@@ -294,17 +301,17 @@ onBeforeUnmount(() => {
                                                     <span class="ios-info-label">Gender</span>
                                                     <span class="ios-info-value">{{ currentApplicant.gender === 'M' ?
                                                         'Male' : currentApplicant.gender === 'F' ? 'Female' : 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Contact</span>
                                                     <span class="ios-info-value">{{ currentApplicant.contact_no || 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Email</span>
                                                     <span class="ios-info-value">{{ currentApplicant.email || 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item" style="grid-column: 1 / -1;">
                                                     <span class="ios-info-label">Income</span>
@@ -348,13 +355,13 @@ onBeforeUnmount(() => {
                                                     <span class="ios-info-label">Year Level</span>
                                                     <span class="ios-info-value">{{
                                                         currentApplicant.scholarship_grant?.[0]?.year_level || 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Academic Year</span>
                                                     <span class="ios-info-value">{{
                                                         currentApplicant.scholarship_grant?.[0]?.academic_year || 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Term</span>
@@ -446,7 +453,7 @@ onBeforeUnmount(() => {
                         <i class="pi pi-chevron-left" style="font-size: 12px; margin-right: 4px;"></i>Previous
                     </button>
                     <span class="ios-footer-counter">{{ currentProfileIndex + 1 }} / {{ applicants?.length || 0
-                        }}</span>
+                    }}</span>
                     <button class="ios-footer-btn" @click="goToNextProfile" :disabled="!hasNextProfile">
                         Next<i class="pi pi-chevron-right" style="font-size: 12px; margin-left: 4px;"></i>
                     </button>
@@ -454,6 +461,8 @@ onBeforeUnmount(() => {
             </div>
         </template>
     </Dialog>
+
+    <ViewAttachmentModal v-model:visible="showPreviewModal" :attachment="previewFile" />
 </template>
 
 <style scoped>

@@ -2,31 +2,39 @@
     <Dialog :visible="visible" modal :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
         @update:visible="val => emit('update:visible', val)">
         <template #container>
-            <div class="ios-modal ios-modal-maximized" :style="dragStyle">
+            <div class="ios-modal" :class="{ 'ios-modal-maximized': isMaximized }" :style="dragStyle">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
                     <span class="ios-nav-title">{{ attachment?.file_name }}</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="downloadAttachment(attachment)">
-                        <i class="pi pi-download"></i>
-                    </button>
+                    <div
+                        style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); display: flex; gap: 4px;">
+                        <button class="ios-nav-btn ios-nav-action" style="position: static; transform: none;"
+                            @click="isMaximized = !isMaximized" v-tooltip.bottom="isMaximized ? 'Restore' : 'Maximize'">
+                            <i :class="isMaximized ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"></i>
+                        </button>
+                        <button class="ios-nav-btn ios-nav-action" style="position: static; transform: none;"
+                            @click="downloadAttachment(attachment)">
+                            <i class="pi pi-download"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="ios-body" style="padding: 0;">
-                    <div class="flex items-center justify-center bg-gray-100 relative overflow-hidden"
-                        style="min-height: 80vh;">
+                <div class="ios-body"
+                    style="padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                    <div class="flex items-center justify-center bg-gray-100 relative overflow-hidden" style="flex: 1;">
                         <!-- PDF Viewer -->
-                        <iframe v-if="attachment && attachment.file_type?.includes('pdf')"
-                            :src="getAttachmentUrl(attachment)" class="w-full h-full" style="min-height: 80vh;"
-                            frameborder="0">
+                        <iframe v-if="attachment && getFileType(attachment).includes('pdf')"
+                            :src="getAttachmentUrl(attachment)" class="w-full h-full"
+                            style="position: absolute; inset: 0;" frameborder="0">
                         </iframe>
 
                         <!-- Image Viewer with Zoom -->
-                        <div v-else-if="attachment && attachment.file_type?.includes('image')"
-                            class="w-full h-full flex items-center justify-center relative" style="min-height: 80vh;"
-                            @wheel="handleWheel" @mousedown="handleMouseDown" @mousemove="handleMouseMove"
-                            @mouseup="handleMouseUp" @mouseleave="handleMouseUp"
+                        <div v-else-if="attachment && getFileType(attachment).includes('image')"
+                            class="w-full h-full flex items-center justify-center relative" @wheel="handleWheel"
+                            @mousedown="handleMouseDown" @mousemove="handleMouseMove" @mouseup="handleMouseUp"
+                            @mouseleave="handleMouseUp"
                             :style="{ cursor: imageZoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }">
                             <img :src="getAttachmentUrl(attachment)" :alt="attachment.file_name"
-                                class="max-w-full max-h-[80vh] object-contain select-none" draggable="false" :style="{
+                                class="max-w-full max-h-full object-contain select-none" draggable="false" :style="{
                                     transform: `scale(${imageZoom}) translate(${imagePosition.x / imageZoom}px, ${imagePosition.y / imageZoom}px)`,
                                     transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                                 }" />
@@ -78,6 +86,8 @@ const emit = defineEmits(['update:visible']);
 
 const { dragStyle, onDragStart, resetDrag } = useDraggableModal();
 
+const isMaximized = ref(false);
+
 const imageZoom = ref(1);
 const imagePosition = ref({ x: 0, y: 0 });
 const isDragging = ref(false);
@@ -88,6 +98,7 @@ watch(() => props.visible, (val) => {
     if (val) {
         imageZoom.value = 1;
         imagePosition.value = { x: 0, y: 0 };
+        isMaximized.value = false;
     }
 });
 
@@ -140,14 +151,28 @@ const zoomOut = () => {
 
 const downloadAttachment = (attachment) => {
     if (!attachment) return;
+    if (attachment.file_url) {
+        window.open(attachment.file_url, '_blank');
+        return;
+    }
     const routeName = attachment.download_route || 'scholarship.records.attachments.download';
     window.open(route(routeName, attachment.attachment_id), '_blank');
 };
 
 const getAttachmentUrl = (attachment) => {
     if (!attachment) return '';
+    if (attachment.file_url) return attachment.file_url;
     const routeName = attachment.view_route || 'scholarship.records.attachments.view';
     return route(routeName, attachment.attachment_id);
+};
+
+const getFileType = (attachment) => {
+    if (!attachment) return '';
+    if (attachment.file_type) return attachment.file_type;
+    const ext = attachment.file_name?.split('.').pop()?.toLowerCase() || '';
+    if (ext === 'pdf') return 'application/pdf';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return 'image/jpeg';
+    return '';
 };
 
 const formatFileSize = (bytes) => {
@@ -162,7 +187,9 @@ const formatFileSize = (bytes) => {
 .ios-modal {
     background: #F2F2F7;
     border-radius: 14px;
-    max-height: 90vh;
+    width: min(900px, 92vw);
+    height: 85vh;
+    max-height: 85vh;
     display: flex;
     flex-direction: column;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
@@ -171,7 +198,7 @@ const formatFileSize = (bytes) => {
 .ios-modal-maximized {
     width: 100vw !important;
     height: 100vh !important;
-    max-height: 100vh;
+    max-height: 100vh !important;
     border-radius: 0;
 }
 

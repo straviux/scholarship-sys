@@ -35,7 +35,7 @@
                                     </div>
                                 </div>
                                 <div class="flex gap-1">
-                                    <button class="ios-icon-btn" @click="emit('view-attachment', attachment)"
+                                    <button class="ios-icon-btn" @click="viewAttachment(attachment)"
                                         v-tooltip.top="'View'">
                                         <i class="pi pi-eye"></i>
                                     </button>
@@ -88,11 +88,14 @@
             </div>
         </template>
     </Dialog>
+
+    <ViewAttachmentModal v-model:visible="showViewerModal" :attachment="viewerAttachment" />
 </template>
 
 <script setup>
 import { ref } from 'vue';
 import { useDraggableModal } from '@/composables/useDraggableModal';
+import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
 
@@ -102,9 +105,17 @@ const props = defineProps({
     hasEditPermission: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(['update:visible', 'view-attachment', 'success']);
+const emit = defineEmits(['update:visible', 'success']);
 
 const { dragStyle, onDragStart, resetDrag } = useDraggableModal();
+
+const showViewerModal = ref(false);
+const viewerAttachment = ref(null);
+
+const viewAttachment = (attachment) => {
+    viewerAttachment.value = attachment;
+    showViewerModal.value = true;
+};
 
 const uploading = ref(false);
 const fileInput = ref(null);

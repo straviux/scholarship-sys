@@ -1,7 +1,5 @@
 <template>
     <div class="p-6 relative">
-        <!-- Backdrop overlay when viewer modal is open -->
-        <div v-if="showViewerModal" class="fixed inset-0 bg-black/30 z-[999]" style="margin: -1.5rem;"></div>
 
         <!-- Header with Add Button and Summary Toggle -->
         <div class="flex justify-between items-center mb-6">
@@ -133,7 +131,7 @@
                                         <p class="text-xs font-medium">OBR Date</p>
                                         <p class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
                                             item.date_obligated ? formatDate(item.date_obligated) : '-'
-                                        }}</p>
+                                            }}</p>
                                     </div>
                                     <div v-if="item.obr_no" class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">OBR No.</p>
@@ -189,33 +187,33 @@
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Year:</span>
                                                 <span class="font-medium text-gray-900">{{ item.year_level || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Term:</span>
                                                 <span class="font-medium text-gray-900">{{ item.semester || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">AY:</span>
                                                 <span class="font-medium text-gray-900">{{ item.academic_year || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Course:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">School:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -516,65 +514,7 @@
         </Dialog>
 
         <!-- View Attachment Modal -->
-        <Dialog v-model:visible="showViewerModal" :header="viewerAttachment?.file_name"
-            :breakpoints="{ '1199px': '90vw', '575px': '98vw' }" :style="{ width: '85vw', maxWidth: '1200px' }"
-            :maximizable="true" :pt="{
-                mask: { style: 'pointer-events: none' },
-                root: { style: 'pointer-events: auto' }
-            }">
-            <div class="flex items-center justify-center bg-gray-100 rounded relative overflow-hidden min-h-[70vh]">
-                <!-- PDF Viewer -->
-                <iframe v-if="viewerAttachment && viewerAttachment.file_type?.includes('pdf')"
-                    :src="getAttachmentUrl(viewerAttachment)" class="w-full h-full rounded" frameborder="0">
-                </iframe>
-
-                <!-- Image Viewer with Zoom -->
-                <div v-else-if="viewerAttachment && viewerAttachment.file_type?.includes('image')"
-                    class="w-full h-full flex items-center justify-center relative overflow-auto" @wheel="handleWheel"
-                    @mousedown="handleMouseDown" @mousemove="handleMouseMove" @mouseup="handleMouseUp"
-                    @mouseleave="handleMouseUp"
-                    :style="{ cursor: imageZoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }">
-                    <img :src="getAttachmentUrl(viewerAttachment)" :alt="viewerAttachment.file_name"
-                        class="max-w-full max-h-full object-contain rounded select-none" draggable="false" :style="{
-                            transform: `scale(${imageZoom}) translate(${imagePosition.x / imageZoom}px, ${imagePosition.y / imageZoom}px)`,
-                            transition: isDragging ? 'none' : 'transform 0.1s ease-out'
-                        }" />
-                </div>
-
-                <!-- Fallback -->
-                <div v-else class="text-center p-4 sm:p-8">
-                    <i class="pi pi-file text-4xl sm:text-6xl text-gray-400 mb-4"></i>
-                    <p class="text-sm sm:text-base text-gray-600">Unable to preview this file type</p>
-                    <Button label="Download Instead" icon="pi pi-download" class="mt-4" size="small"
-                        @click="downloadAttachment(viewerAttachment)" />
-                </div>
-            </div>
-
-            <template #footer>
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 w-full pt-4">
-                    <!-- Zoom Controls (only show for images) -->
-                    <div v-if="viewerAttachment && viewerAttachment.file_type?.includes('image')"
-                        class="flex items-center gap-2">
-                        <Button icon="pi pi-minus" @click="zoomOut" size="small" severity="secondary" rounded
-                            :disabled="imageZoom <= 0.5" />
-                        <span class="px-3 py-2 text-sm font-semibold min-w-[60px] text-center">{{ Math.round(imageZoom *
-                            100) }}%</span>
-                        <Button icon="pi pi-plus" @click="zoomIn" size="small" severity="secondary" rounded
-                            :disabled="imageZoom >= 5" />
-                        <Button icon="pi pi-refresh" @click="resetZoom" size="small" severity="secondary" rounded
-                            v-tooltip.top="'Reset Zoom'" />
-                    </div>
-                    <div v-else></div>
-
-                    <!-- Action Buttons -->
-                    <div class="flex gap-2">
-                        <Button label="Download" icon="pi pi-download" @click="downloadAttachment(viewerAttachment)"
-                            size="small" />
-                        <Button label="Close" severity="secondary" @click="showViewerModal = false" size="small" />
-                    </div>
-                </div>
-            </template>
-        </Dialog>
+        <ViewAttachmentModal v-model:visible="showViewerModal" :attachment="viewerAttachment" />
 
         <!-- QR Code Modal -->
         <Dialog v-model:visible="showQrModal" modal header="Mobile Upload QR Code"
@@ -637,6 +577,7 @@ import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
 import { usePermission } from '@/composable/permissions';
+import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
@@ -660,8 +601,6 @@ const showDeleteDialog = ref(false);
 const showAttachmentsModal = ref(false);
 const showViewerModal = ref(false);
 const showQrModal = ref(false);
-const showSummary = ref(true);
-const expandedYears = ref({});
 const qrCodeData = ref(null);
 const qrCountdown = ref('');
 const qrCountdownInterval = ref(null);
@@ -670,12 +609,6 @@ const chequeEditMode = ref(false);
 const selectedDisbursement = ref(null);
 const viewerAttachment = ref(null);
 const fileInput = ref(null);
-
-// Image zoom state
-const imageZoom = ref(1);
-const imagePosition = ref({ x: 0, y: 0 });
-const isDragging = ref(false);
-const dragStart = ref({ x: 0, y: 0 });
 
 // Form data
 const form = ref({
@@ -1152,14 +1085,13 @@ const uploadAttachment = async () => {
 };
 
 const viewAttachment = (attachment) => {
-    viewerAttachment.value = attachment;
+    viewerAttachment.value = {
+        ...attachment,
+        file_name: attachment.file_name || attachment.attachment_type,
+        view_route: 'disbursements.attachments.view',
+        download_route: 'disbursements.attachments.download',
+    };
     showViewerModal.value = true;
-};
-
-const getAttachmentUrl = (attachment) => {
-    if (!attachment) return '';
-    // Use the view route for proper access control
-    return route('disbursements.attachments.view', attachment.attachment_id);
 };
 
 const downloadAttachment = async (attachment) => {
@@ -1296,56 +1228,7 @@ const copyToClipboard = async (text) => {
     }
 };
 
-// Image zoom functions
-const handleWheel = (event) => {
-    event.preventDefault();
-    const delta = event.deltaY > 0 ? -0.1 : 0.1;
-    imageZoom.value = Math.max(0.5, Math.min(5, imageZoom.value + delta));
-};
-
-const handleMouseDown = (event) => {
-    if (imageZoom.value > 1) {
-        isDragging.value = true;
-        dragStart.value = {
-            x: event.clientX - imagePosition.value.x,
-            y: event.clientY - imagePosition.value.y
-        };
-    }
-};
-
-const handleMouseMove = (event) => {
-    if (isDragging.value) {
-        imagePosition.value = {
-            x: event.clientX - dragStart.value.x,
-            y: event.clientY - dragStart.value.y
-        };
-    }
-};
-
-const handleMouseUp = () => {
-    isDragging.value = false;
-};
-
-const resetZoom = () => {
-    imageZoom.value = 1;
-    imagePosition.value = { x: 0, y: 0 };
-};
-
-const zoomIn = () => {
-    imageZoom.value = Math.min(5, imageZoom.value + 0.25);
-};
-
-const zoomOut = () => {
-    imageZoom.value = Math.max(0.5, imageZoom.value - 0.25);
-};
-
-// Reset zoom when viewer modal opens
-watch(showViewerModal, (newValue) => {
-    if (newValue) {
-        imageZoom.value = 1;
-        imagePosition.value = { x: 0, y: 0 };
-    }
-});
+// Image zoom functions removed — handled internally by ViewAttachmentModal
 
 // Computed properties for summary
 const totalAmount = computed(() => {

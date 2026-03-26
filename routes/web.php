@@ -354,6 +354,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/scholarship/{record}/decline', [ScholarshipProfileController::class, 'decline'])
         ->name('scholarship.record.decline');
 
+    Route::post('/scholarship/{record}/update-interview', [ScholarshipProfileController::class, 'updateInterview'])
+        ->name('scholarship.record.update-interview');
+
     // Fund Transactions routes
     Route::get('/fund-transactions', function () {
         return inertia('FundTransactions/index');

@@ -7,6 +7,15 @@ const props = defineProps({
     modelValue: Boolean,
     applicant: Object,
     recordId: [Number, String],
+    initialValues: Object,
+    isEdit: {
+        type: Boolean,
+        default: false,
+    },
+    successMessage: {
+        type: String,
+        default: 'Interview assessment submitted successfully.',
+    },
 });
 
 const emit = defineEmits(['update:modelValue', 'submitted']);
@@ -58,11 +67,11 @@ watch(visible, (val) => {
 
 const resetForm = () => {
     form.value = {
-        academic_potential: null,
-        financial_need_level: null,
-        communication_skills: null,
-        recommendation: null,
-        interview_remarks: '',
+        academic_potential: props.initialValues?.academic_potential || null,
+        financial_need_level: props.initialValues?.financial_need_level || null,
+        communication_skills: props.initialValues?.communication_skills || null,
+        recommendation: props.initialValues?.recommendation || null,
+        interview_remarks: props.initialValues?.interview_remarks || '',
     };
     errors.value = {};
 };
@@ -90,9 +99,13 @@ const submitAssessment = async () => {
     }
 
     submitting.value = true;
+    const endpoint = props.isEdit
+        ? `/api/scholarship/${props.recordId}/update-interview`
+        : `/api/scholarship/${props.recordId}/interview`;
+
     try {
-        await axios.post(`/api/scholarship/${props.recordId}/interview`, form.value);
-        toast.success('Interview assessment submitted successfully.');
+        await axios.post(endpoint, form.value);
+        toast.success(props.successMessage);
         visible.value = false;
         emit('submitted');
     } catch (error) {
@@ -263,7 +276,7 @@ onBeforeUnmount(() => {
                             </button>
                         </div>
                         <div v-if="errors.recommendation" class="ios-section-footer ios-error">{{ errors.recommendation
-                        }}</div>
+                            }}</div>
                     </div>
 
                     <!-- Remarks -->
