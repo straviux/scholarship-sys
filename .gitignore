@@ -1,6 +1,5 @@
 /.phpunit.cache
 /node_modules
-/public/build
 /public/hot
 /public/storage
 /storage/*.key
@@ -27,3 +26,14 @@ yarn-error.log
 
 # Exclude seeders from production
 /database/seeders
+
+# Dev-only files not needed on production server
+/documentation
+/utilities
+/instructions
+/tests
+phpunit.xml
+build-output.txt
+download-cdn-assets.ps1
+scholarship_program_devmode
+*.md
