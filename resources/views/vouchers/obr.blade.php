@@ -349,7 +349,7 @@
 
         <!-- OBR Particulars Description Row -->
         @php $isEfa = stripos($voucher->particulars_name ?? '', 'EFA') !== false; @endphp
-        @if($voucher->particulars_description && ($voucher->obr_type !== 'FINANCIAL ASSISTANCE' || $isEfa))
+        @if($voucher->particulars_description)
         <div class="obr-info-row no-border-bottom" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <div class="column_1">&nbsp;</div>
             <div class="column_2 center" style="font-size: 11pt;line-height:1.2">
