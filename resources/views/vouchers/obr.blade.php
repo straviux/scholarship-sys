@@ -348,7 +348,8 @@
         </div>
 
         <!-- OBR Particulars Description Row -->
-        @if($voucher->particulars_description)
+        @php $isEfa = stripos($voucher->particulars_name ?? '', 'EFA') !== false; @endphp
+        @if($voucher->particulars_description && ($voucher->obr_type !== 'FINANCIAL ASSISTANCE' || $isEfa))
         <div class="obr-info-row no-border-bottom" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <div class="column_1">&nbsp;</div>
             <div class="column_2 center" style="font-size: 11pt;line-height:1.2">
@@ -363,7 +364,7 @@
         @endif
 
         <!-- OBR Name of Scholars Rows (Hidden if REIMBURSEMENT) -->
-        @if($voucher->obr_type !== 'REIMBURSEMENT' && $voucher->scholar_ids && count($voucher->scholar_ids) > 0)
+        @if($voucher->obr_type !== 'REIMBURSEMENT' && ($voucher->obr_type !== 'FINANCIAL ASSISTANCE' || $isEfa) && $voucher->scholar_ids && count($voucher->scholar_ids) > 0)
         @php
         // Fetch scholar details for each profile_id
         $scholars = [];

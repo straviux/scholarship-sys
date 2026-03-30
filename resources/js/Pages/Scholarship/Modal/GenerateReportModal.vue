@@ -621,14 +621,14 @@ function downloadPdf() {
         ...lastParams.value,
         paper_size: paperSize.value,
         orientation: orientation.value,
-    });
+    }, false);
     window.open(url, '_blank');
 }
 
 function downloadExcel() {
     const url = route('report.scholarship.excel', {
         ...lastParams.value,
-    });
+    }, false);
     window.open(url, '_blank');
 }
 

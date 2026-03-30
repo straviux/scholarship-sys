@@ -378,8 +378,9 @@
                 <div class="column_5" style="justify-content:flex-end!important;padding-right:10px;">₱ {{ number_format($voucher->amount,2) ?? '_______________' }}</div>
             </div>
 
-            <!-- Scholar's name ROW (Hidden if REIMBURSEMENT) -->
-            @if($voucher->obr_type !== 'REIMBURSEMENT')
+            <!-- Scholar's name ROW (Hidden if REIMBURSEMENT or FINANCIAL ASSISTANCE unless EFA) -->
+            @php $isDvEfa = stripos($voucher->particulars_name ?? '', 'EFA') !== false; @endphp
+            @if($voucher->obr_type !== 'REIMBURSEMENT' && ($voucher->obr_type !== 'FINANCIAL ASSISTANCE' || $isDvEfa))
             <div class="obr-info-row no-border-bottom">
                 <div class="column_2 center" style=font-weight:600;">
                     <br>

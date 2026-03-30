@@ -369,14 +369,14 @@ function saveAsPdf() {
         ...props.params,
         paper_size: paperSize.value,
         orientation: orientation.value
-    });
+    }, false);
     window.open(url, '_blank');
 }
 
 function saveAsExcel() {
     const url = route('report.scholarship.excel', {
         ...props.params
-    });
+    }, false);
     window.open(url, '_blank');
 }
 
