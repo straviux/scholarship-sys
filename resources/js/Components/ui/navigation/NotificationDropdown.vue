@@ -1,24 +1,25 @@
 <template>
     <div>
         <!-- Notification Bell Button -->
-        <Button type="button" label="System Updates" icon="pi pi-bell" @click="togglePopover"
-            :severity="unreadCount > 0 ? 'info' : 'contrast'"
-            :badge="(unreadCount > 99 ? '99+' : unreadCount).toString() || ''" size="small" />
+        <Button type="button" icon="pi pi-bell" @click="togglePopover" :severity="unreadCount > 0 ? 'info' : 'contrast'"
+            :badge="(unreadCount > 99 ? '99+' : unreadCount).toString() || ''" size="small" text rounded
+            v-tooltip.bottom="'System Updates Notifications'" />
 
         <!-- Popover Menu -->
-        <Popover ref="popoverRef" class="w-96">
+        <Popover ref="popoverRef" class="w-96 !rounded-2xl">
             <div class="max-h-96 overflow-hidden flex flex-col">
                 <!-- Header -->
-                <div class="px-4 py-3 border-b border-gray-100 flex-shrink-0">
+                <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
                             <i class="pi pi-bell text-blue-600"></i>
-                            <h3 class="text-base font-semibold text-gray-900">System Updates</h3>
+                            <h3 class="text-base font-semibold">System Updates</h3>
                         </div>
                         <Button v-if="unreadCount > 0" @click="markAllAsRead" :disabled="isMarkingAllAsRead"
-                            :label="isMarkingAllAsRead ? 'Marking...' : 'Mark all'" severity="info" variant="text" size="small" />
+                            :label="isMarkingAllAsRead ? 'Marking...' : 'Mark all'" severity="info" variant="text"
+                            size="small" />
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">
+                    <p class="text-xs opacity-60 mt-1">
                         {{ unreadCount }} unread
                     </p>
                 </div>
@@ -28,22 +29,22 @@
                     <!-- Loading State -->
                     <div v-if="isLoading" class="px-4 py-6 text-center">
                         <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                        <p class="text-xs text-gray-500 mt-2">Loading...</p>
+                        <p class="text-xs opacity-60 mt-2">Loading...</p>
                     </div>
 
                     <!-- Empty State -->
                     <div v-else-if="notifications.length === 0" class="px-4 py-8 text-center">
-                        <i class="pi pi-bell text-gray-300" style="font-size: 2rem"></i>
-                        <h4 class="text-sm font-medium text-gray-900 mb-1 mt-2">No notifications</h4>
-                        <p class="text-xs text-gray-500">You're all caught up!</p>
+                        <i class="pi pi-bell opacity-30" style="font-size: 2rem"></i>
+                        <h4 class="text-sm font-medium mb-1 mt-2">No notifications</h4>
+                        <p class="text-xs opacity-60">You're all caught up!</p>
                     </div>
 
                     <!-- Notifications -->
-                    <div v-else class="divide-y divide-gray-100">
+                    <div v-else class="divide-y divide-gray-100 dark:divide-gray-700">
                         <div v-for="notification in notifications" :key="notification.id"
-                            class="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-200" :class="{
-                                'bg-blue-50': !notification.is_read,
-                                'bg-white': notification.is_read
+                            class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors duration-200" :class="{
+                                'bg-blue-50 dark:bg-blue-900/30': !notification.is_read,
+                                'bg-white dark:bg-transparent': notification.is_read
                             }" @click="openNotificationModal(notification)">
 
                             <!-- Notification Content -->
@@ -51,7 +52,7 @@
                                 <div class="flex items-start justify-between">
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center space-x-2">
-                                            <h4 class="text-xs font-medium text-gray-900 line-clamp-2 leading-4">
+                                            <h4 class="text-xs font-medium line-clamp-2 leading-4">
                                                 {{ notification.title }}
                                             </h4>
                                             <!-- Simple Priority Dot -->
@@ -62,7 +63,7 @@
                                                 }">
                                             </div>
                                         </div>
-                                        <p class="text-xs text-gray-600 mt-1 line-clamp-2 leading-4">
+                                        <p class="text-xs opacity-70 mt-1 line-clamp-2 leading-4">
                                             {{ notification.content }}
                                         </p>
                                     </div>
@@ -70,8 +71,8 @@
                                     <div class="flex items-center ml-2 flex-shrink-0">
                                         <!-- Mark as read button -->
                                         <Button v-if="!notification.is_read" @click.stop="markAsRead(notification)"
-                                            icon="pi pi-check-circle" severity="info" variant="text" rounded size="small"
-                                            v-tooltip.top="'Mark as read'" />
+                                            icon="pi pi-check-circle" severity="info" variant="text" rounded
+                                            size="small" v-tooltip.top="'Mark as read'" />
                                         <!-- Type Icon -->
                                         <i :class="[getTypeIcon(notification.type), getTypeIconClass(notification.type)]"
                                             style="font-size: 0.75rem; margin-left: 0.25rem"></i>
@@ -83,7 +84,7 @@
                                 </div>
 
                                 <!-- Footer -->
-                                <div class="flex items-center justify-between mt-2 text-xs text-gray-400">
+                                <div class="flex items-center justify-between mt-2 text-xs opacity-50">
                                     <span class="truncate">{{ notification.created_by }}</span>
                                     <span class="text-xs">{{ notification.created_at }}</span>
                                 </div>
@@ -94,8 +95,9 @@
 
                 <!-- Footer -->
                 <div v-if="notifications.length > 0"
-                    class="px-4 py-2 border-t border-gray-100 bg-gray-50 flex-shrink-0">
-                    <Button @click="viewAllNotifications" label="View all" severity="info" variant="text" size="small" class="w-full" />
+                    class="px-4 py-2 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+                    <Button @click="viewAllNotifications" label="View all" severity="info" variant="text" size="small"
+                        class="w-full" />
                 </div>
             </div>
         </Popover>
@@ -111,7 +113,7 @@
                     <i :class="[getTypeIcon(selectedNotification?.type), getTypeIconClass(selectedNotification?.type)]"
                         style="font-size: 1.5rem"></i>
                     <div class="flex items-center space-x-2 flex-1">
-                        <h3 class="text-lg font-medium text-gray-900">
+                        <h3 class="text-lg font-medium">
                             {{ selectedNotification?.title }}
                         </h3>
                         <!-- Priority indicator -->
@@ -129,19 +131,19 @@
             <div class="space-y-4">
                 <div>
                     <!-- Markdown content with v-html -->
-                    <div v-if="isMarkdownContent" class="markdown-content text-sm text-gray-700 leading-relaxed"
+                    <div v-if="isMarkdownContent" class="markdown-content text-sm leading-relaxed"
                         v-html="renderedContent">
                     </div>
                     <!-- Regular text content -->
-                    <p v-else class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    <p v-else class="text-sm leading-relaxed whitespace-pre-wrap">
                         {{ renderedContent }}
                     </p>
                 </div>
 
                 <!-- Metadata -->
-                <div class="pt-4 border-t border-gray-200">
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
                     <div
-                        class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500 space-y-2 sm:space-y-0">
+                        class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs opacity-60 space-y-2 sm:space-y-0">
                         <div class="flex items-center space-x-4">
                             <!-- <span>Type: <span class="font-medium">{{ selectedNotification?.type }}</span></span> -->
                             <span>Priority: <span class="font-medium capitalize">{{ selectedNotification?.priority

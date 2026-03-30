@@ -265,18 +265,18 @@ const displayLoading = computed(() => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 short:p-3">
         <div class="max-w-7xl mx-auto">
             <!-- Header -->
-            <div class="mb-8">
-                <h1 class="text-4xl font-bold text-gray-900 flex items-center gap-3">
+            <div class="mb-6 short:mb-3">
+                <h1 class="text-4xl short:text-2xl font-bold text-gray-900 flex items-center gap-3">
                     <i class="pi pi-history text-blue-600"></i>
                     OBR Tracking Timeline
                 </h1>
                 <p class="text-gray-600 mt-2">View the complete tracking history for an OBR and Disbursement Voucher</p>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
                 <!-- Info Banner -->
                 <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4">
                     <h3 class="font-semibold text-yellow-900 mb-2">
@@ -300,7 +300,8 @@ const displayLoading = computed(() => {
 
 
                 <!-- Search Tab -->
-                <div v-if="testState.selectedTab === 'search'" class="bg-white rounded-lg shadow-md p-6 space-y-4">
+                <div v-if="testState.selectedTab === 'search'"
+                    class="bg-white rounded-lg shadow-md p-4 short:p-3 space-y-4">
                     <h2 class="text-xl font-semibold text-gray-900">Search by OBR Number</h2>
 
                     <div>
@@ -340,7 +341,7 @@ const displayLoading = computed(() => {
                 </div>
 
                 <!-- Filter Tab -->
-                <div v-else class="bg-white rounded-lg shadow-md p-6 space-y-4">
+                <div v-else class="bg-white rounded-lg shadow-md p-4 short:p-3 space-y-4">
                     <h2 class="text-xl font-semibold text-gray-900">Advanced Filter</h2>
 
                     <div class="grid grid-cols-2 gap-3">
@@ -383,12 +384,14 @@ const displayLoading = computed(() => {
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">OBR Number (optional)</label>
-                        <InputText v-model="testState.filters.obrNo" type="text" placeholder="e.g., 200-25-12-24188" class="w-full" />
+                        <InputText v-model="testState.filters.obrNo" type="text" placeholder="e.g., 200-25-12-24188"
+                            class="w-full" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Payee (optional)</label>
-                        <InputText v-model="testState.filters.payee" type="text" placeholder="Payee name" class="w-full" />
+                        <InputText v-model="testState.filters.payee" type="text" placeholder="Payee name"
+                            class="w-full" />
                     </div>
 
                     <!-- Filter Buttons -->
@@ -408,14 +411,16 @@ const displayLoading = computed(() => {
                 </div>
 
                 <!-- Tracking Info Tab -->
-                <div v-if="testState.selectedTab === 'tracking'" class="bg-white rounded-lg shadow-md p-6 space-y-4">
+                <div v-if="testState.selectedTab === 'tracking'"
+                    class="bg-white rounded-lg shadow-md p-4 short:p-3 space-y-4">
                     <h2 class="text-xl font-semibold text-gray-900">Get Tracking Details</h2>
                     <p class="text-sm text-gray-600">Fetch detailed tracking information for a specific OBR and DV</p>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Fiscal Year</label>
-                            <InputText v-model.number="testState.trackingInfoParams.fiscal_year" type="number" class="w-full" />
+                            <InputText v-model.number="testState.trackingInfoParams.fiscal_year" type="number"
+                                class="w-full" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
@@ -433,8 +438,8 @@ const displayLoading = computed(() => {
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">DV Number *</label>
-                        <InputText v-model="testState.trackingInfoParams.dv_no" type="text" placeholder="e.g., 25-12-23743"
-                            class="w-full" />
+                        <InputText v-model="testState.trackingInfoParams.dv_no" type="text"
+                            placeholder="e.g., 25-12-23743" class="w-full" />
                     </div>
 
                     <!-- Get Tracking Info Buttons -->
@@ -501,8 +506,8 @@ const displayLoading = computed(() => {
                         <Button label="Clear" icon="pi pi-times" severity="secondary" class="flex-1"
                             @click="clearAll" />
                     </div>
-                    <Button label="Open in Tracking System" icon="pi pi-external-link"
-                        class="w-full" severity="help" @click="openInTrackingSystem" />
+                    <Button label="Open in Tracking System" icon="pi pi-external-link" class="w-full" severity="help"
+                        @click="openInTrackingSystem" />
                 </div>
             </div>
 
@@ -513,11 +518,12 @@ const displayLoading = computed(() => {
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <p class="text-gray-600 text-sm">Results Found</p>
-                            <p class="text-3xl font-bold text-green-600">{{ displayResults.length }}</p>
+                            <p class="text-3xl short:text-xl font-bold text-green-600">{{ displayResults.length }}</p>
                         </div>
                         <div>
                             <p class="text-gray-600 text-sm">Response Time</p>
-                            <p class="text-3xl font-bold text-blue-600">{{ testState.responseTime || 0 }}ms</p>
+                            <p class="text-3xl short:text-xl font-bold text-blue-600">{{ testState.responseTime || 0
+                                }}ms</p>
                         </div>
                     </div>
                     <div v-if="testState.rawResponse && testState.rawResponse.recordsFiltered !== undefined"
@@ -528,16 +534,16 @@ const displayLoading = computed(() => {
                 </div>
 
                 <!-- Results Table -->
-                <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="bg-white rounded-lg shadow-md p-4 short:p-3">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Results</h3>
 
                     <div v-if="displayLoading" class="text-center py-8">
-                        <i class="pi pi-spin pi-spinner text-3xl text-blue-600"></i>
+                        <i class="pi pi-spin pi-spinner text-3xl short:text-xl text-blue-600"></i>
                         <p class="mt-2 text-gray-600">Loading...</p>
                     </div>
 
                     <div v-else-if="displayResults.length === 0" class="text-center py-8 text-gray-500">
-                        <i class="pi pi-inbox text-4xl mb-2"></i>
+                        <i class="pi pi-inbox text-4xl short:text-2xl mb-2"></i>
                         <p>No results yet. Start a search above.</p>
                     </div>
 
@@ -609,7 +615,7 @@ const displayLoading = computed(() => {
                 </div>
 
                 <!-- Raw Response -->
-                <div v-if="testState.rawResponse" class="bg-white rounded-lg shadow-md p-6">
+                <div v-if="testState.rawResponse" class="bg-white rounded-lg shadow-md p-4 short:p-3">
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">Raw Response</h3>
                     <p class="text-xs text-gray-600 mb-3">
                         <i class="pi pi-info-circle mr-1"></i>
@@ -621,7 +627,7 @@ const displayLoading = computed(() => {
             </div>
 
             <!-- Footer Info -->
-            <div class="mt-8 bg-white rounded-lg shadow-md p-6">
+            <div class="mt-6 short:mt-3 bg-white rounded-lg shadow-md p-4 short:p-3">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">API Endpoints</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div class="bg-gray-50 p-4 rounded-lg">

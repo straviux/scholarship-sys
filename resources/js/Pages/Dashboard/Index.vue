@@ -199,17 +199,17 @@ onMounted(() => {
             </div>
         </template>
 
-        <div class="p-6 space-y-6">
+        <div class="p-4 short:p-3 space-y-4 short:space-y-2">
 
             <!-- Summary Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 short:gap-2">
                 <!-- Today's Applications -->
                 <Card class="shadow-sm">
                     <template #content>
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-600">Today</p>
-                                <p class="text-2xl font-bold text-blue-600">{{ recentStats.today }}</p>
+                                <p class="text-2xl short:text-xl font-bold text-blue-600">{{ recentStats.today }}</p>
                                 <p class="text-xs text-gray-500 mt-1">
                                     <span
                                         :class="formattedStats.todayVsYesterday.value >= 0 ? 'text-green-600' : 'text-red-600'">
@@ -232,7 +232,8 @@ onMounted(() => {
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-600">This Week</p>
-                                <p class="text-2xl font-bold text-green-600">{{ recentStats.thisWeek }}</p>
+                                <p class="text-2xl short:text-xl font-bold text-green-600">{{ recentStats.thisWeek }}
+                                </p>
                                 <p class="text-xs text-gray-500 mt-1">Applications filed</p>
                             </div>
                             <div class="bg-green-100 p-3 rounded-full">
@@ -248,7 +249,8 @@ onMounted(() => {
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-600">This Month</p>
-                                <p class="text-2xl font-bold text-purple-600">{{ recentStats.thisMonth }}</p>
+                                <p class="text-2xl short:text-xl font-bold text-purple-600">{{ recentStats.thisMonth }}
+                                </p>
                                 <p class="text-xs text-gray-500 mt-1">Applications filed</p>
                             </div>
                             <div class="bg-purple-100 p-3 rounded-full">
@@ -264,7 +266,7 @@ onMounted(() => {
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-600">Total Applications</p>
-                                <p class="text-2xl font-bold text-orange-600">{{ recentStats.total }}</p>
+                                <p class="text-2xl short:text-xl font-bold text-orange-600">{{ recentStats.total }}</p>
                                 <p class="text-xs text-gray-500 mt-1">All time</p>
                             </div>
                             <div class="bg-orange-100 p-3 rounded-full">
@@ -276,7 +278,7 @@ onMounted(() => {
             </div>
 
             <!-- Status Overview Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 short:gap-2">
                 <!-- Pending Applications -->
                 <Card class="shadow-sm border-l-4 border-yellow-400">
                     <template #content>
@@ -318,7 +320,7 @@ onMounted(() => {
             </div>
 
             <!-- Charts Row 1 - Time-based Analytics -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 short:gap-2">
                 <!-- Daily Statistics -->
                 <Card class="shadow-sm">
                     <template #header>
@@ -366,7 +368,7 @@ onMounted(() => {
             </div>
 
             <!-- Charts Row 2 -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
                 <!-- Program Distribution -->
                 <Card class="shadow-sm">
                     <template #header>
@@ -402,7 +404,7 @@ onMounted(() => {
         </div>
 
         <!-- Geographic Distribution Section -->
-        <div class="grid grid-cols-1 gap-6 mt-6">
+        <div class="grid grid-cols-1 gap-4 short:gap-2 mt-4 short:mt-2">
             <Card class="shadow-sm">
                 <template #header>
                     <div class="flex justify-between items-center p-4 border-b">
@@ -411,7 +413,7 @@ onMounted(() => {
                     </div>
                 </template>
                 <template #content>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
                         <div>
                             <h4 class="font-semibold mb-3">Top Municipalities</h4>
                             <div class="space-y-2 max-h-64 overflow-y-auto">
@@ -452,7 +454,7 @@ onMounted(() => {
         </div>
 
         <!-- Academic Analysis Section -->
-        <div class="grid grid-cols-1 gap-6 mt-6">
+        <div class="grid grid-cols-1 gap-4 short:gap-2 mt-4 short:mt-2">
             <Card class="shadow-sm">
                 <template #header>
                     <div class="flex justify-between items-center p-4 border-b">
@@ -461,7 +463,7 @@ onMounted(() => {
                     </div>
                 </template>
                 <template #content>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
                         <div>
                             <h4 class="font-semibold mb-3">Top Courses</h4>
                             <div class="space-y-2 max-h-64 overflow-y-auto">

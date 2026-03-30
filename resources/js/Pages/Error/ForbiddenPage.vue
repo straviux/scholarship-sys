@@ -11,17 +11,17 @@ defineProps({
 
 <template>
     <div
-        class="w-screen h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex flex-col items-center justify-center px-4 py-12 fixed top-0 left-0 overflow-auto">
+        class="w-screen h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex flex-col items-center justify-center px-4 py-8 short:py-4 fixed top-0 left-0 overflow-auto">
 
         <Head title="Access Forbidden" />
 
         <!-- Main Container -->
         <div class="w-full max-w-lg">
             <!-- Error Icon/Animation -->
-            <div class="text-center mb-8">
+            <div class="text-center mb-6 short:mb-3">
                 <div
-                    class="inline-flex items-center justify-center w-24 h-24 bg-red-100 dark:bg-red-900/30 rounded-full mb-6">
-                    <i class="pi pi-lock text-red-600 dark:text-red-400" style="font-size: 3rem"></i>
+                    class="inline-flex items-center justify-center w-24 short:w-16 h-24 short:h-16 bg-red-100 dark:bg-red-900/30 rounded-full mb-4 short:mb-2">
+                    <i class="pi pi-lock text-red-600 dark:text-red-400 text-[3rem] short:text-[2rem]"></i>
                 </div>
 
                 <!-- Status Code -->
@@ -31,7 +31,7 @@ defineProps({
                 </h1>
 
                 <!-- Title -->
-                <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                <h2 class="text-3xl short:text-xl font-bold text-gray-900 dark:text-white mb-4">
                     Access Forbidden
                 </h2>
 
@@ -46,7 +46,7 @@ defineProps({
 
             <!-- Info Card -->
             <div
-                class="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 mb-8 shadow-sm">
+                class="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4 short:p-3 mb-6 short:mb-3 shadow-sm">
                 <div class="flex items-start">
                     <div class="flex-shrink-0">
                         <i class="pi pi-info-circle h-5 w-5 text-blue-500"></i>

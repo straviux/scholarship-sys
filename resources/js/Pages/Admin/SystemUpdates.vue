@@ -4,10 +4,10 @@
             Manage Updates
         </template>
 
-        <div class="py-6">
+        <div class="py-4 short:py-2">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Header Panel -->
-                <Panel class="mb-6">
+                <Panel class="mb-4 short:mb-2">
                     <template #header>
                         <div class="flex items-center gap-2">
                             <i class="pi pi-megaphone text-xl"></i>

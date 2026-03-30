@@ -2,10 +2,10 @@
 
     <Head title="Settings" />
     <AdminLayout>
-        <div class="p-4 md:p-6">
+        <div class="p-4 md:p-6 short:p-3">
             <!-- Header -->
-            <div class="mb-6">
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Settings</h1>
+            <div class="mb-4 short:mb-2">
+                <h1 class="text-2xl md:text-3xl short:text-xl font-bold text-gray-900">Settings</h1>
             </div>
 
             <!-- Settings List -->
@@ -262,39 +262,51 @@
             </Dialog>
 
             <!-- Theme Dialog -->
-            <Dialog v-model:visible="showThemeDialog" header="Theme Preference" :modal="true" class="w-full md:w-96">
+            <Dialog v-model:visible="showThemeDialog" header="Theme Preference" :modal="true" class="w-full md:w-96"
+                @show="selectedTheme = theme">
                 <div class="space-y-4">
                     <p class="text-gray-700 text-sm">Select your preferred theme</p>
 
                     <div class="space-y-2">
                         <label class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
-                            :class="theme === 'light' ? 'border-purple-600 bg-purple-50' : 'border-gray-300 hover:border-gray-400'">
+                            :class="selectedTheme === 'light' ? 'border-purple-600 bg-purple-50' : 'border-gray-300 hover:border-gray-400'">
                             <div class="flex items-center space-x-3">
-                                <RadioButton v-model="theme" inputId="theme-light" name="theme" value="light" />
+                                <RadioButton v-model="selectedTheme" inputId="theme-light" name="theme" value="light" />
                                 <div>
-                                    <span class="font-semibold text-gray-900">Light Theme</span>
+                                    <span class="font-semibold text-gray-900">Light</span>
                                     <p class="text-sm text-gray-500">Bright and clean interface</p>
                                 </div>
+                                <i class="pi pi-sun ml-auto text-yellow-500"></i>
                             </div>
                         </label>
 
                         <label class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
-                            :class="theme === 'dark' ? 'border-purple-600 bg-purple-50' : 'border-gray-300 hover:border-gray-400'">
+                            :class="selectedTheme === 'dark' ? 'border-purple-600 bg-purple-50' : 'border-gray-300 hover:border-gray-400'">
                             <div class="flex items-center space-x-3">
-                                <RadioButton v-model="theme" inputId="theme-dark" name="theme" value="dark" />
+                                <RadioButton v-model="selectedTheme" inputId="theme-dark" name="theme" value="dark" />
                                 <div>
-                                    <span class="font-semibold text-gray-900">Dark Theme</span>
+                                    <span class="font-semibold text-gray-900">Dark</span>
                                     <p class="text-sm text-gray-500">Easy on the eyes</p>
                                 </div>
+                                <i class="pi pi-moon ml-auto text-indigo-500"></i>
+                            </div>
+                        </label>
+
+                        <label class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
+                            :class="selectedTheme === 'system' ? 'border-purple-600 bg-purple-50' : 'border-gray-300 hover:border-gray-400'">
+                            <div class="flex items-center space-x-3">
+                                <RadioButton v-model="selectedTheme" inputId="theme-system" name="theme"
+                                    value="system" />
+                                <div>
+                                    <span class="font-semibold text-gray-900">System</span>
+                                    <p class="text-sm text-gray-500">Follow device preference</p>
+                                </div>
+                                <i class="pi pi-desktop ml-auto text-gray-500"></i>
                             </div>
                         </label>
                     </div>
 
-                    <p class="text-xs text-gray-500 italic mt-4">
-                        More theme options coming soon
-                    </p>
-
-                    <div class="flex gap-3 pt-4">
+                    <div class="flex gap-3 pt-2">
                         <Button label="Close" severity="secondary" outlined class="flex-1"
                             @click="showThemeDialog = false" />
                     </div>
@@ -353,6 +365,7 @@ import { useForm, usePage, Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
+import { useTheme } from '@/composables/useTheme';
 
 const page = usePage();
 
@@ -405,7 +418,10 @@ const photoForm = useForm({
 });
 
 // Theme state
-const theme = ref(props.preferences?.theme || 'light');
+const { theme, setTheme } = useTheme();
+// Local copy for dialog — reflects live changes; closes on Apply
+const selectedTheme = ref(theme.value);
+watch(selectedTheme, (val) => setTheme(val));
 
 // QR code state
 const showQrModal = ref(false);

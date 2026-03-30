@@ -395,7 +395,7 @@ function onQrDragEnd() {
                 </div>
 
                 <!-- Applicant name subtitle -->
-                <div class="ios-subtitle text-gray-800 font-semibold" v-if="applicant">
+                <div class="ios-subtitle font-semibold" v-if="applicant">
                     {{ applicant?.last_name }}, {{ applicant?.first_name }}
                 </div>
 
@@ -421,8 +421,9 @@ function onQrDragEnd() {
 
                                     <!-- Requirement Info -->
                                     <div style="flex: 1; min-width: 0; margin-left: 10px;">
-                                        <div style="font-size: 14px; font-weight: 500; color: #000;">{{ requirement.name
-                                            }}</div>
+                                        <div class="req-name" style="font-size: 14px; font-weight: 500;">{{
+                                            requirement.name
+                                        }}</div>
                                         <!-- File status -->
                                         <div v-if="requirement.is_submitted && requirement.file_name"
                                             style="font-size: 11px; color: #34C759; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
@@ -555,74 +556,15 @@ function onQrDragEnd() {
 </template>
 
 <style scoped>
-.ios-modal {
-    background: #F2F2F7;
-    border-radius: 14px;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-    overflow: hidden;
-    margin: 0 auto;
-}
-
-.ios-nav-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    padding: 14px 16px;
-    background: #FFFFFF;
-    border-bottom: 0.5px solid #E5E5EA;
-    flex-shrink: 0;
-    cursor: grab;
-    user-select: none;
-}
-
-.ios-nav-bar:active {
-    cursor: grabbing;
-}
-
+/* Component-unique: title truncation for narrow modals */
 .ios-nav-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: #000;
-    letter-spacing: -0.4px;
     max-width: 60%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.ios-nav-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    font-size: 15px;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 8px;
-    transition: opacity 0.15s;
-}
-
-.ios-nav-btn:hover {
-    opacity: 0.6;
-}
-
-.ios-nav-cancel {
-    left: 16px;
-    color: #8E8E93;
-    font-size: 20px;
-}
-
-.ios-nav-action {
-    right: 16px;
-    color: #007AFF;
-    font-weight: 600;
-}
-
+/* Component-unique: applicant name subtitle bar */
 .ios-subtitle {
     padding: 6px 16px;
     background: #FFFFFF;
@@ -632,33 +574,12 @@ function onQrDragEnd() {
     flex-shrink: 0;
 }
 
-.ios-body {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 0 16px;
-}
-
+/* Component-unique: section spacing override */
 .ios-section {
     margin-top: 16px;
 }
 
-.ios-section-label {
-    font-size: 13px;
-    font-weight: 400;
-    color: #6D6D72;
-    text-transform: uppercase;
-    letter-spacing: -0.08px;
-    padding: 0 16px 6px;
-}
-
-.ios-card {
-    background: #FFFFFF;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 0.5px solid #E5E5EA;
-}
-
+/* Component-unique: requirement row (taller than standard ios-row) */
 .ios-req-row {
     display: flex;
     align-items: center;
@@ -672,39 +593,11 @@ function onQrDragEnd() {
     background: rgba(0, 0, 0, 0.02);
 }
 
-.ios-row-last {
-    border-bottom: none;
-}
-
 .ios-req-row:last-child {
     border-bottom: none;
 }
 
-.ios-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 16px;
-    min-height: 36px;
-    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
-}
-
-.ios-row-last {
-    border-bottom: none;
-}
-
-.ios-row:last-child {
-    border-bottom: none;
-}
-
-.ios-row-label {
-    font-size: 14px;
-    color: #000;
-    letter-spacing: -0.4px;
-    font-weight: 500;
-    flex-shrink: 0;
-}
-
+/* Component-unique: icon action buttons */
 .ios-icon-btn {
     background: none;
     border: none;
@@ -726,6 +619,7 @@ function onQrDragEnd() {
     cursor: not-allowed;
 }
 
+/* Component-unique: bottom footer bar */
 .ios-footer {
     display: flex;
     align-items: center;
@@ -751,6 +645,7 @@ function onQrDragEnd() {
     opacity: 0.6;
 }
 
+/* Component-unique: file preview container */
 .ios-preview-container {
     background: #F2F2F7;
     border: 0.5px solid #E5E5EA;
@@ -761,6 +656,11 @@ function onQrDragEnd() {
     justify-content: center;
     align-items: flex-start;
     padding: 8px;
+}
+
+/* Requirement name text — needs dark override */
+.req-name {
+    color: #1f2937;
 }
 </style>
 
@@ -777,5 +677,29 @@ function onQrDragEnd() {
 
 .ios-dialog-mask {
     background: rgba(0, 0, 0, 0.4);
+}
+
+/* Dark overrides for RequirementsChecklistModal-unique classes */
+.dark .ios-subtitle {
+    background: #2a3040 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+    color: #d1d5db !important;
+}
+
+.dark .ios-footer {
+    background: #2a3040 !important;
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .ios-footer-close {
+    color: #9ca3af !important;
+}
+
+.dark .ios-req-row:hover {
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.dark .req-name {
+    color: #d1d5db !important;
 }
 </style>

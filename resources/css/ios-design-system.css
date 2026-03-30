@@ -265,3 +265,191 @@
 .ios-datepicker .p-inputtext {
 	padding-right: 40px !important;
 }
+
+/* ══════════════════════════════════════════
+   DARK MODE OVERRIDES
+   ══════════════════════════════════════════ */
+
+/* Modal shell */
+.dark .ios-modal {
+	background: #222831;
+}
+
+/* Nav bar */
+.dark .ios-nav-bar {
+	background: #2a3040;
+	border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .ios-nav-title {
+	color: #d1d5db;
+}
+
+.dark .ios-nav-cancel {
+	color: #9ca3af;
+}
+
+.dark .ios-nav-action {
+	color: #d1d5db;
+}
+
+/* Body scrollbar */
+.dark .ios-body:hover {
+	scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.dark .ios-body:hover::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.15);
+}
+
+/* Section labels */
+.dark .ios-section-label {
+	color: #9ca3af;
+}
+
+.dark .ios-section-footer {
+	color: #6b7280;
+}
+
+/* Cards & Rows */
+.dark .ios-card {
+	background: #222831;
+	border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .ios-row {
+	border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.dark .ios-row-label {
+	color: #d1d5db;
+}
+
+/* Segmented control */
+.dark .ios-segmented-control {
+	background: #2a3040;
+	border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .ios-segment {
+	color: #d1d5db;
+}
+
+/* Icon button */
+.dark .ios-info-card {
+	background: #2a3040;
+	border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .ios-list-item {
+	background: #2a3040;
+	border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .ios-icon-btn {
+	color: #d1d5db;
+	background: rgba(255, 255, 255, 0.07);
+}
+
+.dark .ios-icon-btn:hover {
+	background: rgba(255, 255, 255, 0.12);
+}
+
+/* DataTable dark mode surface */
+.dark .p-datatable {
+	--p-datatable-header-background: #1e242b;
+	--p-datatable-header-cell-background: #1e242b;
+	--p-datatable-header-cell-hover-background: #22272e;
+	--p-datatable-header-cell-color: #d7dbe0;
+	--p-datatable-header-cell-hover-color: #d7dbe0;
+	--p-datatable-footer-background: #1e242b;
+	--p-datatable-footer-cell-background: #1e242b;
+	--p-datatable-footer-cell-color: #d7dbe0;
+	--p-datatable-row-background: #272f38;
+	--p-datatable-row-hover-background: #22272e;
+	--p-datatable-row-striped-background: #222831;
+	--p-datatable-row-color: #d7dbe0;
+	--p-datatable-row-hover-color: #d7dbe0;
+	color: #d7dbe0;
+}
+
+.dark .p-datatable .p-datatable-tbody > tr > td,
+.dark .p-datatable .p-datatable-thead > tr > th,
+.dark .p-datatable .p-datatable-tfoot > tr > td {
+	color: #d7dbe0;
+}
+
+/* Page headers / titles in dark mode */
+.dark .content-scroll h1,
+.dark .content-scroll h2 {
+	color: #e5e7eb;
+}
+
+/* Page subtitle/description text in toolbars */
+.dark .p-toolbar p,
+.dark .content-scroll > div > div > p {
+	color: #9ca3af;
+}
+
+/* iOS modal inline-style overrides for dark mode
+   These use !important to override inline style="" attributes
+   that use hardcoded light-mode hex colors */
+.dark .ios-modal .ios-body [style*="color: #000"],
+.dark .ios-modal .ios-body [style*="color: #1c1c1e"],
+.dark .ios-modal .ios-body [style*="color: #3c3c43"],
+.dark .ios-modal .ios-body [style*="color: #333"] {
+	color: #d1d5db !important;
+}
+
+.dark .ios-modal .ios-body [style*="color: #8E8E93"],
+.dark .ios-modal .ios-body [style*="color: #8e8e93"],
+.dark .ios-modal .ios-body [style*="color: #6D6D72"],
+.dark .ios-modal .ios-body [style*="color: #6b7280"],
+.dark .ios-modal .ios-body [style*="color: #999"] {
+	color: #9ca3af !important;
+}
+
+.dark .ios-modal .ios-body [style*="color: #636366"],
+.dark .ios-modal .ios-body [style*="color: #555"] {
+	color: #b0b5bc !important;
+}
+
+.dark .ios-modal .ios-body [style*="background: #FFF2F2"],
+.dark .ios-modal .ios-body [style*="background: #fff1f2"] {
+	background: rgba(239, 68, 68, 0.12) !important;
+}
+
+.dark .ios-modal .ios-body [style*="background: #FFFBF0"],
+.dark .ios-modal .ios-body [style*="background: #fffbeb"] {
+	background: rgba(245, 158, 11, 0.12) !important;
+}
+
+.dark .ios-modal .ios-body [style*="background: #eff6ff"] {
+	background: rgba(59, 130, 246, 0.12) !important;
+}
+
+.dark .ios-modal .ios-body [style*="background: #f0fdf4"] {
+	background: rgba(34, 197, 94, 0.12) !important;
+}
+
+.dark .ios-modal .ios-body [style*="background: #fff"],
+.dark .ios-modal .ios-body [style*="background: #FFF"],
+.dark .ios-modal .ios-body [style*="background: #FFFFFF"] {
+	background: #2a3040 !important;
+}
+
+.dark .ios-modal .ios-body [style*="border: 1px solid #FFD2D2"],
+.dark .ios-modal .ios-body [style*="border: 2px solid #E5E5EA"] {
+	border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Dark-on-light accent colors that need lightening in dark mode */
+.dark .ios-modal .ios-body [style*="color: #166534"],
+.dark .ios-modal .ios-body [style*="color: #15803d"] {
+	color: #4ade80 !important;
+}
+
+.dark .ios-modal .ios-body [style*="color: #92400e"],
+.dark .ios-modal .ios-body [style*="color: #8B6914"] {
+	color: #fbbf24 !important;
+}

@@ -2,16 +2,16 @@
 
     <Head title="Review Deleted Records" />
     <AdminLayout>
-        <div class="px-6 py-8">
-            <div class="flex items-center justify-between mb-8">
+        <div class="px-4 short:px-3 py-6 short:py-3">
+            <div class="flex items-center justify-between mb-6 short:mb-3">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Deleted Records Management</h1>
+                    <h1 class="text-3xl short:text-xl font-bold text-gray-900">Deleted Records Management</h1>
                     <p class="text-gray-600 mt-2">Review and restore deleted applicants and scholarship records</p>
                 </div>
             </div>
 
             <!-- Search Filter -->
-            <div class="mb-6">
+            <div class="mb-4 short:mb-2">
                 <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-3">
                     <i class="pi pi-search text-gray-500"></i>
                     <InputText v-model="searchQuery" type="text" placeholder="Search by name..." class="flex-1" />
@@ -21,7 +21,7 @@
             </div>
 
             <!-- Tabs for switching between deleted profiles and records -->
-            <div class="mb-6 border-b border-gray-200">
+            <div class="mb-4 short:mb-2 border-b border-gray-200">
                 <nav class="flex gap-4">
                     <button @click="activeTab = 'profiles'" :class="[
                         'px-4 py-2 font-medium text-sm border-b-2 transition-colors',
@@ -43,11 +43,13 @@
             </div>
 
             <!-- Info banner -->
-            <div v-if="activeTab === 'profiles'" class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div v-if="activeTab === 'profiles'"
+                class="mb-4 short:mb-2 bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p class="text-sm text-blue-800"><strong>✓ Tip:</strong> Restoring a profile will restore the entire
                     profile AND all their deleted scholarship grants.</p>
             </div>
-            <div v-if="activeTab === 'records'" class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div v-if="activeTab === 'records'"
+                class="mb-4 short:mb-2 bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p class="text-sm text-blue-800"><strong>✓ Tip:</strong> Restoring a scholarship grant will restore
                     only that individual grant record. The applicant profile must exist to restore this.</p>
             </div>

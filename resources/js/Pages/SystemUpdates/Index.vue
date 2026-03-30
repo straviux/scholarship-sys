@@ -4,12 +4,12 @@
             System Updates
         </template>
 
-        <div class="py-6">
+        <div class="py-4 short:py-2">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Header -->
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex justify-between items-center mb-4 short:mb-2">
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-900">System Updates</h2>
+                        <h2 class="text-2xl short:text-xl font-bold text-gray-900">System Updates</h2>
                         <p class="text-sm text-gray-600 mt-1">Stay informed about important announcements and changes
                         </p>
                     </div>
@@ -18,7 +18,7 @@
                 </div>
 
                 <!-- Filter Tabs -->
-                <div class="mb-6">
+                <div class="mb-4 short:mb-2">
                     <div class="border-b border-gray-200">
                         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                             <button @click="currentFilter = 'all'" :class="[
@@ -62,8 +62,8 @@
                 </div>
 
                 <!-- Updates List -->
-                <div v-if="loading" class="text-center py-12">
-                    <i class="pi pi-spinner pi-spin text-4xl text-blue-500"></i>
+                <div v-if="loading" class="text-center py-8 short:py-4">
+                    <i class="pi pi-spinner pi-spin text-4xl short:text-2xl text-blue-500"></i>
                     <p class="mt-4 text-gray-600">Loading updates...</p>
                 </div>
 

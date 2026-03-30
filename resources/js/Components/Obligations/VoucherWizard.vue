@@ -1149,7 +1149,7 @@ onBeforeUnmount(() => {
                     </button>
                 </div>
                 <div ref="wizardContentRef" class="ios-body">
-                    <div class="space-y-6" style="padding-top: 12px; padding-bottom: 24px;">
+                    <div class="space-y-4 short:space-y-2" style="padding-top: 12px; padding-bottom: 24px;">
                         <!-- Progress Bar -->
                         <div class="space-y-2">
                             <div class="flex justify-between text-sm text-gray-600">
@@ -1185,7 +1185,7 @@ onBeforeUnmount(() => {
 
                                 <!-- Loading State -->
                                 <div v-if="loading" class="text-center py-8">
-                                    <i class="pi pi-spin pi-spinner text-3xl text-blue-600"></i>
+                                    <i class="pi pi-spin pi-spinner text-3xl short:text-xl text-blue-600"></i>
                                     <p class="mt-2 text-gray-600">Loading scholars...</p>
                                 </div>
 
@@ -1239,7 +1239,7 @@ onBeforeUnmount(() => {
                                 <div v-if="selectedCount === 0"
                                     class="flex-1 flex items-center justify-center text-center py-8 text-gray-400">
                                     <div>
-                                        <i class="pi pi-users text-3xl mb-2 block text-gray-300"></i>
+                                        <i class="pi pi-users text-3xl short:text-xl mb-2 block text-gray-300"></i>
                                         <p class="text-sm">No scholars selected yet</p>
                                     </div>
                                 </div>
@@ -1374,7 +1374,7 @@ onBeforeUnmount(() => {
                                         <div class="flex items-center justify-between gap-3 mb-2">
                                             <label class="text-xs font-medium text-gray-900">Selected Scholars ({{
                                                 voucherData.scholars.length
-                                            }})</label>
+                                                }})</label>
                                             <div class="flex items-center gap-2 shrink-0">
                                                 <Checkbox id="applyToAll" v-model="applyToAllChecked" :binary="true" />
                                                 <label for="applyToAll"
@@ -1395,7 +1395,7 @@ onBeforeUnmount(() => {
                                                 <div class="flex items-center flex-1">
                                                     <i class="pi pi-check text-green-600 mr-3 text-xs"></i>
                                                     <span class="font-medium text-sm">{{ formatScholarFullName(scholar)
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="flex items-center gap-2">
                                                     <span class="text-gray-600 text-xs">PHP</span>
@@ -1409,7 +1409,7 @@ onBeforeUnmount(() => {
                                             <span class="font-semibold text-sm text-blue-900">Total Amount:</span>
                                             <span class="text-base font-bold text-blue-600">{{
                                                 formatCurrency(totalAmount)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                     </div>
 
@@ -1534,7 +1534,7 @@ onBeforeUnmount(() => {
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
                                 <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Particulars
                                         (Descriptions)</label>
@@ -1646,7 +1646,7 @@ onBeforeUnmount(() => {
                                                 <span>{{ formatScholarFullName(scholar) }}</span>
                                                 <span class="font-semibold">{{ formatCurrency(scholar.individualAmount
                                                     || 0)
-                                                    }}</span>
+                                                }}</span>
                                             </li>
                                         </ol>
                                         <div

@@ -265,11 +265,11 @@ onMounted(() => {
 
     <Head title="Responsibility Centers" />
     <Toast position="top-right" :life="3500" :baseZIndex="20000" />
-    <div class="p-6 space-y-6">
+    <div class="p-4 short:p-3 space-y-4 short:space-y-2">
         <!-- Header -->
         <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Responsibility Centers</h1>
+                <h1 class="text-3xl short:text-xl font-bold text-gray-900">Responsibility Centers</h1>
                 <p class="text-gray-600 mt-1">Manage responsibility centers and their particulars</p>
             </div>
             <button @click="openRCModal()"
@@ -285,13 +285,13 @@ onMounted(() => {
 
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-12">
-            <i class="pi pi-spin pi-spinner text-4xl text-blue-600"></i>
+            <i class="pi pi-spin pi-spinner text-4xl short:text-2xl text-blue-600"></i>
             <p class="mt-3 text-gray-600">Loading responsibility centers...</p>
         </div>
 
         <!-- Empty State -->
         <div v-else-if="responsibilityCenters.length === 0" class="text-center py-12">
-            <i class="pi pi-inbox text-4xl text-gray-300 mb-3"></i>
+            <i class="pi pi-inbox text-4xl short:text-2xl text-gray-300 mb-3"></i>
             <p class="text-gray-500">No responsibility centers yet</p>
         </div>
 
@@ -304,7 +304,7 @@ onMounted(() => {
                     <div class="flex-1">
                         <h3 class="text-lg font-semibold text-gray-900">{{ rc.name }}</h3>
                         <p class="text-sm text-gray-600 mt-1">Code: <span class="font-mono font-medium">{{ rc.code
-                                }}</span></p>
+                        }}</span></p>
                         <p v-if="rc.fiscal_year" class="text-sm text-gray-600 mt-1">Fiscal Year: <span
                                 class="font-medium">{{ rc.fiscal_year }}</span></p>
                     </div>

@@ -60,24 +60,24 @@ const resetForm = () => {
     <Dialog :visible="visible" modal header="Select YAKAP Category" :style="{ width: '50vw' }"
         @update:visible="emit('update:visible', $event)" @hide="handleCancel">
         <div class="space-y-6">
-            <p class="text-gray-700">Please select a YAKAP category for this new applicant:</p>
+            <p class="text-gray-700 dark:text-gray-300">Please select a YAKAP category for this new applicant:</p>
 
             <div class="flex flex-col gap-3">
-                <label for="yakap-select" class="font-medium text-gray-700">YAKAP Category:</label>
+                <label for="yakap-select" class="font-medium text-gray-700 dark:text-gray-300">YAKAP Category:</label>
                 <Select v-model="selectedCategory" :options="yakapCategoryOptions" optionLabel="label"
                     optionValue="value" placeholder="Select YAKAP Category" class="w-full" inputId="yakap-select" />
             </div>
 
             <!-- Municipality Selection for YAKAP Field -->
             <div v-if="selectedCategory === 'yakap-field'" class="flex flex-col gap-3">
-                <label for="yakap-municipality" class="font-medium text-gray-700">Municipality:</label>
+                <label for="yakap-municipality" class="font-medium text-gray-700 dark:text-gray-300">Municipality:</label>
                 <MunicipalitySelect v-model="selectedLocation" placeholder="Select Municipality" class="w-full"
                     :clearable="false" inputId="yakap-municipality" />
             </div>
 
             <!-- School Selection for YAKAP School -->
             <div v-if="selectedCategory === 'yakap-school'" class="flex flex-col gap-3">
-                <label for="yakap-school" class="font-medium text-gray-700">School:</label>
+                <label for="yakap-school" class="font-medium text-gray-700 dark:text-gray-300">School:</label>
                 <SchoolSelect v-model="selectedLocation" placeholder="Select School" class="w-full" :clearable="false"
                     inputId="yakap-school" />
             </div>

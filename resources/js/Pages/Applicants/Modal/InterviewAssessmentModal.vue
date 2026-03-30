@@ -175,11 +175,11 @@ onBeforeUnmount(() => {
                         </div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <span class="ios-row-label" style="color: #333;">{{ applicant.last_name }}, {{
+                                <span class="ios-row-label applicant-name">{{ applicant.last_name }}, {{
                                     applicant.first_name }}</span>
                             </div>
                             <div class="ios-row ios-row-last">
-                                <span class="ios-row-label" style="color: #999; font-weight: 400;">
+                                <span class="ios-row-label applicant-sub">
                                     {{ applicant.scholarship_grant?.[0]?.program?.shortname }} — {{
                                         applicant.scholarship_grant?.[0]?.course?.shortname }}
                                 </span>
@@ -276,7 +276,7 @@ onBeforeUnmount(() => {
                             </button>
                         </div>
                         <div v-if="errors.recommendation" class="ios-section-footer ios-error">{{ errors.recommendation
-                        }}</div>
+                            }}</div>
                     </div>
 
                     <!-- Remarks -->
@@ -311,3 +311,22 @@ onBeforeUnmount(() => {
         </template>
     </Dialog>
 </template>
+
+<style>
+.applicant-name {
+    color: #333;
+}
+
+.applicant-sub {
+    color: #999;
+    font-weight: 400;
+}
+
+.dark .applicant-name {
+    color: #d1d5db !important;
+}
+
+.dark .applicant-sub {
+    color: #9ca3af !important;
+}
+</style>

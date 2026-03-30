@@ -4,7 +4,7 @@
         <form @submit.prevent="submit" class="space-y-6" v-if="user">
             <!-- Name Field -->
             <div class="field">
-                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
                 <InputText id="name" v-model="form.name" placeholder="Enter full name" class="w-full"
                     :class="{ 'p-invalid': form.errors.name }" />
                 <small v-if="form.errors.name" class="p-error">{{ form.errors.name }}</small>
@@ -12,7 +12,7 @@
 
             <!-- Username Field -->
             <div class="field">
-                <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Username</label>
                 <InputText id="username" v-model="form.username" placeholder="Enter username" class="w-full"
                     :class="{ 'p-invalid': form.errors.username }" />
                 <small v-if="form.errors.username" class="p-error">{{ form.errors.username }}</small>
@@ -20,7 +20,7 @@
 
             <!-- Office Designation Field -->
             <div class="field">
-                <label for="office_designation" class="block text-sm font-medium text-gray-700 mb-2">Office
+                <label for="office_designation" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Office
                     Designation</label>
                 <InputText id="office_designation" v-model="form.office_designation" class="w-full"
                     :class="{ 'p-invalid': form.errors.office_designation }" />
@@ -30,7 +30,7 @@
 
             <!-- Role Selection -->
             <div class="field">
-                <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role</label>
                 <Select v-model="form.roles" :options="availableRoles" optionLabel="name" placeholder="Select a role"
                     class="w-full" :class="{ 'p-invalid': form.errors.roles }">
                     <template #option="slotProps">
@@ -51,17 +51,17 @@
             </div>
 
             <!-- User Info Display -->
-            <div class="bg-gray-50 p-4 rounded-lg border">
-                <h4 class="font-medium text-gray-700 mb-2">User Information</h4>
+            <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
+                <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-2">User Information</h4>
                 <div class="flex items-center gap-3">
                     <Avatar v-if="user.has_profile_photo" :image="user.profile_photo_url"
                         class="border-2 border-gray-200" shape="circle" size="large" />
                     <Avatar v-else :label="user.name.charAt(0).toUpperCase()" class="bg-blue-500 text-white"
                         shape="circle" size="large" />
                     <div>
-                        <div class="font-semibold text-gray-800">{{ user.name }}</div>
-                        <div class="text-sm text-gray-500">@{{ user.username }}</div>
-                        <div class="text-xs text-gray-400">User ID: {{ user.id }}</div>
+                        <div class="font-semibold text-gray-800 dark:text-gray-200">{{ user.name }}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">@{{ user.username }}</div>
+                        <div class="text-xs text-gray-400 dark:text-gray-500">User ID: {{ user.id }}</div>
                     </div>
                 </div>
             </div>

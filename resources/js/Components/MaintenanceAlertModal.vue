@@ -1,50 +1,50 @@
 <template>
     <Teleport to="body">
         <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in">
                 <!-- Header -->
-                <div class="bg-gradient-to-r from-orange-500 to-red-600 px-6 py-6 text-center">
-                    <i class="pi pi-exclamation-circle text-white mb-3" style="font-size: 3rem"></i>
+                <div class="bg-gradient-to-r from-orange-500 to-red-600 px-4 short:px-3 py-4 short:py-3 text-center">
+                    <i class="pi pi-exclamation-circle text-white text-[3rem] short:text-[2rem] mb-3"></i>
                     <h2 class="text-xl font-bold text-white">Scheduled Maintenance</h2>
                 </div>
 
                 <!-- Content -->
-                <div class="px-6 py-6">
+                <div class="px-4 short:px-3 py-4 short:py-3">
                     <!-- Maintenance Title -->
                     <div class="mb-4">
-                        <p class="text-lg font-semibold text-gray-800">{{ announcement.title }}</p>
+                        <p class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ announcement.title }}</p>
                     </div>
 
                     <!-- Message -->
-                    <div class="mb-6">
-                        <p class="text-gray-600 text-sm leading-relaxed">
+                    <div class="mb-4 short:mb-2">
+                        <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
                             {{ announcement.message }}
                         </p>
                     </div>
 
                     <!-- Countdown -->
-                    <div class="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 mb-6">
-                        <p class="text-xs text-gray-600 text-center mb-2 font-semibold">MAINTENANCE STARTS IN</p>
-                        <div class="text-3xl font-mono font-bold text-center text-orange-600">
+                    <div class="bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-4 short:mb-2">
+                        <p class="text-xs text-gray-600 dark:text-gray-400 text-center mb-2 font-semibold">MAINTENANCE STARTS IN</p>
+                        <div class="text-3xl short:text-xl font-mono font-bold text-center text-orange-600 dark:text-orange-400">
                             {{ countdownDisplay }}
                         </div>
-                        <p class="text-xs text-gray-500 text-center mt-2">{{ startTimeFormatted }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-500 text-center mt-2">{{ startTimeFormatted }}</p>
                     </div>
 
                     <!-- Alert Type Badge -->
-                    <div class="flex justify-center mb-6">
+                    <div class="flex justify-center mb-4 short:mb-2">
                         <span class="px-4 py-2 rounded-full text-sm font-semibold" :class="{
-                            'bg-blue-100 text-blue-800': announcement.type === 'info',
-                            'bg-yellow-100 text-yellow-800': announcement.type === 'warning',
-                            'bg-red-100 text-red-800': announcement.type === 'critical',
+                            'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300': announcement.type === 'info',
+                            'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300': announcement.type === 'warning',
+                            'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300': announcement.type === 'critical',
                         }">
                             {{ announcement.type.toUpperCase() }}
                         </span>
                     </div>
 
                     <!-- Info Message -->
-                    <div class="bg-blue-50 border border-blue-200 rounded p-3 mb-6">
-                        <p class="text-xs text-blue-800">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3 mb-4 short:mb-2">
+                        <p class="text-xs text-blue-800 dark:text-blue-300">
                             ℹ️ Maintenance begins in 5 minutes. Please save your work immediately and log out if
                             possible.
                         </p>

@@ -45,10 +45,10 @@ const faqs = ref([
                 <template #start>
                     <div class="flex items-center gap-4">
                         <div class="flex items-center justify-center w-16 h-1">
-                            <i class="pi pi-book text-indigo-900" style="font-size: 2rem;"></i>
+                            <i class="pi pi-book text-indigo-900 text-[2rem] short:text-[1.5rem]"></i>
                         </div>
                         <div>
-                            <h1 class="text-2xl font-bold text-gray-700">Help & Instructions</h1>
+                            <h1 class="text-2xl short:text-xl font-bold text-gray-700">Help & Instructions</h1>
                             <p class="text-gray-600 mt-1">Learn how to use the Scholarship Program Management System</p>
                         </div>
                     </div>
@@ -56,7 +56,7 @@ const faqs = ref([
             </Toolbar>
 
             <!-- System Overview -->
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 short:p-3">
                 <div class="flex items-start gap-4">
                     <i class="pi pi-info-circle text-blue-600 text-2xl flex-shrink-0 mt-1"></i>
                     <div>
@@ -648,7 +648,7 @@ const faqs = ref([
             </Accordion>
 
             <!-- Need More Help -->
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 short:p-3">
                 <div class="flex items-start gap-4">
                     <i class="pi pi-question-circle text-blue-600 text-2xl flex-shrink-0 mt-1"></i>
                     <div>

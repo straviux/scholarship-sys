@@ -8,10 +8,12 @@ import ScrollToTop from "@/Components/ui/ScrollToTop.vue";
 import { Link, usePage, router } from "@inertiajs/vue3";
 import { useSmoothScroll } from "@/composables/useSmoothScroll";
 import { usePermission } from "@/composable/permissions";
+import { useTheme } from "@/composables/useTheme";
 import logger from '@/utils/logger';
 
 const { hasRole, hasPermission } = usePermission();
 const { scrollToTop } = useSmoothScroll();
+const { theme, navDark, cycleTheme, getThemeIcon, getThemeLabel } = useTheme();
 const $page = usePage();
 const toggleMenu = ref(false);
 const sidebarMinimized = ref(localStorage.getItem('sidebarMinimized') === 'true');
@@ -531,23 +533,23 @@ onUnmounted(() => {
         class="fixed inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center z-[999]">
         <div class="max-w-md w-full mx-4 text-center flex flex-col items-center justify-center">
             <!-- Icon -->
-            <div class="mb-6">
-                <i class="pi pi-exclamation-triangle text-yellow-500 animate-pulse" style="font-size: 5rem"></i>
+            <div class="mb-6 short:mb-3">
+                <i class="pi pi-exclamation-triangle text-yellow-500 animate-pulse text-[5rem] short:text-[3rem]"></i>
             </div>
 
             <!-- Title -->
-            <h1 class="text-4xl font-bold text-white mb-4 break-words">
+            <h1 class="text-4xl short:text-2xl font-bold text-white mb-4 short:mb-2 break-words">
                 {{ maintenanceStatus?.announcement?.title || 'System Maintenance' }}
             </h1>
 
             <!-- Message -->
-            <p class="text-gray-300 text-lg mb-6 leading-relaxed w-full max-w-sm mx-auto">
+            <p class="text-gray-300 text-lg short:text-sm mb-6 short:mb-3 leading-relaxed w-full max-w-sm mx-auto">
                 {{ maintenanceStatus?.announcement?.message || `We are performing scheduled maintenance. Please try
                 again later.` }}
             </p>
 
             <!-- Status Badge -->
-            <div class="inline-block px-6 py-3 rounded-full mb-8" :class="{
+            <div class="inline-block px-6 short:px-3 py-3 short:py-2 rounded-full mb-8 short:mb-4" :class="{
                 'bg-blue-500': maintenanceStatus?.announcement?.type === 'info',
                 'bg-yellow-500': maintenanceStatus?.announcement?.type === 'warning',
                 'bg-red-500': maintenanceStatus?.announcement?.type === 'critical',
@@ -558,7 +560,8 @@ onUnmounted(() => {
             </div>
 
             <!-- End Time Info -->
-            <div class="bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg p-6 mb-8 w-full max-w-sm mx-auto">
+            <div
+                class="bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg p-4 short:p-2 mb-8 short:mb-4 w-full max-w-sm mx-auto">
                 <p class="text-gray-400 text-sm mb-2">Expected to complete:</p>
                 <p class="text-white text-xl font-mono font-semibold break-words">
                     {{ maintenanceStatus?.announcement?.countdown?.end_time ? new
@@ -575,7 +578,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Refresh Hint -->
-            <p class="text-gray-500 text-xs mt-8">
+            <p class="text-gray-500 text-xs mt-8 short:mt-4">
                 This page will automatically update when maintenance is complete.
             </p>
         </div>
@@ -587,16 +590,17 @@ onUnmounted(() => {
 
         <!-- Floating Sidebar -->
         <aside
-            class="fixed z-30 md:z-10 top-0 left-0 md:top-20 md:left-4 flex flex-col bg-[#222831] transition-[width,transform] duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-96px)]"
+            class="fixed z-30 md:z-10 top-0 left-0 md:top-20 md:left-4 flex flex-col dark:bg-[#222831] transition-[width,transform] duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-96px)]"
             :class="[
                 sidebarMinimized ? 'md:w-[110px]' : 'md:w-[220px]',
                 toggleMenu ? 'w-[280px] translate-x-0' : '-translate-x-full md:translate-x-0',
+                navDark ? 'dark' : '',
             ]">
 
             <div class="flex-1 flex flex-col min-h-0 min-w-0 p-0 overflow-hidden rounded-4xl">
                 <Button v-slot="slotProps" asChild>
                     <button v-bind="slotProps.a11yAttrs" @click="toggleSidebarMinimized"
-                        class="flex w-full bg-[#222831] pt-4 px-4 text-gray-500 cursor-pointer justify-end">
+                        class="flex w-full dark:bg-[#222831] pt-4 px-4 text-gray-400 dark:text-gray-500 cursor-pointer justify-end">
                         <i :class="{ 'pi pi-window-maximize': sidebarMinimized, 'pi pi-window-minimize': !sidebarMinimized }"
                             style="font-size: 0.7rem;margin-right: 8px;"></i>
                     </button>
@@ -607,19 +611,19 @@ onUnmounted(() => {
                         :class="{ 'pi pi-chevron-right': sidebarMinimized, 'pi pi-chevron-left': !sidebarMinimized }"></i>
                 </Button> -->
                 <!-- User Profile Section -->
-                <div v-if="!sidebarMinimized" class="px-4 py-2 border-b border-gray-700">
+                <div v-if="!sidebarMinimized" class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
 
                     <div class="flex items-center space-x-3">
 
                         <Avatar
                             :image="$page.props.auth.user.has_profile_photo ? $page.props.auth.user.profile_photo_url : null"
                             :label="!$page.props.auth.user.has_profile_photo ? ($page.props.auth.user.name || 'U').charAt(0).toUpperCase() : null"
-                            size="xlarge" shape="circle" class="flex-shrink-0 sidebar-avatar-large" />
+                            size="xlarge" shape="circle" class="flex-shrink-0 sidebar-avatar-large !bg-transparent" />
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-200 truncate">
+                            <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
                                 {{ $page.props.auth.user.name }}
                             </p>
-                            <p class="text-xs text-gray-400 truncate">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
                                 {{ getRoleDisplay() }}
                             </p>
                         </div>
@@ -627,7 +631,7 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Minimized User Profile -->
-                <div v-else class="flex items-center justify-center py-4 border-b border-gray-700">
+                <div v-else class="flex items-center justify-center py-4 border-b border-gray-200 dark:border-gray-700">
                     <Avatar
                         :image="$page.props.auth.user.has_profile_photo ? $page.props.auth.user.profile_photo_url : null"
                         :label="!$page.props.auth.user.has_profile_photo ? ($page.props.auth.user.name || 'U').charAt(0).toUpperCase() : null"
@@ -635,7 +639,7 @@ onUnmounted(() => {
                 </div>
                 <!-- Dynamic Menu from API (Full Width) -->
                 <ul v-if="!sidebarMinimized && (menuItems.length > 0 || !menuLoading)"
-                    class="menu space-y-3 md:space-y-2 mt-2 px-3 pb-20 text-sm md:text-xs w-full text-gray-300 hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block flex-1 relative"
+                    class="menu space-y-3 md:space-y-2 mt-2 px-3 pb-20 text-sm md:text-xs w-full text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-50 overflow-y-auto min-h-0 min-w-0 block flex-1 relative"
                     :class="{ 'opacity-60 pointer-events-none': menuLoading }">
                     <template v-for="item in menuItems" :key="item.id">
                         <!-- Menu item without children -->
@@ -652,7 +656,7 @@ onUnmounted(() => {
                         <li v-else>
                             <div @click="toggleMenuExpansion(item.id)"
                                 class="cursor-pointer flex items-center justify-between py-1 px-2 rounded transition-colors"
-                                :class="isParentMenuItemActive(item) ? 'bg-gray-700 text-white' : 'hover:bg-gray-700'">
+                                :class="isParentMenuItemActive(item) ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'">
                                 <span class="flex items-center flex-1">
                                     <i :class="[item.icon, 'mr-2 text-sm']"></i>
                                     <span class="-mr-1 font-medium">{{ item.name }}</span>
@@ -686,7 +690,7 @@ onUnmounted(() => {
                 </div>
                 <!-- Dynamic Menu from API (Minimized Width) -->
                 <ul v-if="sidebarMinimized && (menuItems.length > 0 || !menuLoading)"
-                    class="menu space-y-3 mt-2 px-2 pb-20 w-full text-gray-300 hover:text-gray-50 items-center min-h-0 min-w-0 block flex-1 overflow-y-auto overflow-x-hidden relative"
+                    class="menu space-y-3 mt-2 px-2 pb-20 w-full text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-50 items-center min-h-0 min-w-0 block flex-1 overflow-y-auto overflow-x-hidden relative"
                     :class="{ 'opacity-60 pointer-events-none': menuLoading }">
                     <template v-for="item in menuItems" :key="item.id">
                         <!-- Single menu item (minimized) -->
@@ -696,7 +700,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </SidebarLink>
                         </li>
 
@@ -705,31 +709,31 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </div>
                         </li>
                     </template>
                 </ul>
 
                 <!-- Mobile-only: Quick Actions at bottom of sidebar -->
-                <div class="md:hidden border-t border-gray-700 p-3 space-y-1">
+                <div class="md:hidden border-t border-gray-200 dark:border-gray-700 p-3 space-y-1">
                     <Link :href="route('help.index')" @click="toggleMenu = false"
-                        class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm">
+                        class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm">
                         <i class="pi pi-question-circle"></i>
                         <span>Help</span>
                     </Link>
                     <Link :href="route('user.settings')" @click="toggleMenu = false"
-                        class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm">
+                        class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm">
                         <i class="pi pi-cog"></i>
                         <span>Settings</span>
                     </Link>
                     <Link :href="route('user-activity-logs.index')" @click="toggleMenu = false"
-                        class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm">
+                        class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm">
                         <i class="pi pi-chart-line"></i>
                         <span>Activity</span>
                     </Link>
                     <button @click="handleLogout"
-                        class="flex items-center gap-3 px-3 py-2 rounded-md text-red-400 hover:text-red-300 hover:bg-gray-700 transition-colors text-sm w-full">
+                        class="flex items-center gap-3 px-3 py-2 rounded-md text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm w-full">
                         <i class="pi pi-sign-out"></i>
                         <span>Sign Out</span>
                     </button>
@@ -738,31 +742,35 @@ onUnmounted(() => {
         </aside>
 
         <div class="w-full min-w-0 flex flex-col h-screen overflow-hidden">
-            <div class="flex-shrink-0 z-10 h-16 border-b bg-[#222831] lg:py-2.5">
+            <div class="flex-shrink-0 z-10 h-16 dark:bg-[#222831] lg:py-2.5" :class="{ dark: navDark }">
                 <div class="px-4 md:px-6 flex items-center justify-between space-x-2 md:space-x-4 h-full">
                     <!-- Mobile hamburger -->
                     <button @click="toggleMenu = !toggleMenu"
-                        class="md:hidden flex-shrink-0 p-2 text-gray-300 hover:text-white cursor-pointer">
+                        class="md:hidden flex-shrink-0 p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white cursor-pointer">
                         <i class="pi text-lg" :class="toggleMenu ? 'pi-times' : 'pi-bars'"></i>
                     </button>
                     <!-- Logo and App Name -->
                     <div class="flex items-center space-x-3 flex-1 min-w-0">
                         <div class="flex items-center space-x-2">
                             <img src="/images/pgp-logo.png" class="w-8 h-8 object-contain" alt="logo" />
-                            <span class="text-lg font-semibold text-gray-200 hidden sm:inline">Scholarship
+                            <span
+                                class="text-lg font-semibold text-gray-800 dark:text-gray-200 hidden sm:inline">Scholarship
                                 Program</span>
                         </div>
-                        <div class="hidden md:block w-px h-6 bg-gray-600"></div>
+                        <div class="hidden md:block w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
                         <!-- Server Date/Time Display -->
-                        <div class="hidden md:flex flex-col items-start justify-center text-gray-300 text-sm px-4">
+                        <div
+                            class="hidden md:flex flex-col items-start justify-center text-gray-600 dark:text-gray-300 text-sm px-4">
                             <div class="font-semibold">{{ currentDateTime.toLocaleDateString('en-US', {
                                 weekday:
                                     'short', month: 'short', day: 'numeric', year: 'numeric'
                             }) }}</div>
-                            <div class="text-xs text-gray-400">{{ currentDateTime.toLocaleTimeString('en-US', {
-                                hour:
-                                    '2-digit', minute: '2-digit', second: '2-digit', hour12: true
-                            }) }} {{ serverTimezone }}
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{
+                                currentDateTime.toLocaleTimeString('en-US',
+                                    {
+                                        hour:
+                                            '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+                                    }) }} {{ serverTimezone }}
                             </div>
                         </div>
                     </div>
@@ -770,11 +778,11 @@ onUnmounted(() => {
                     <NotificationDropdown class="md:hidden flex-shrink-0"
                         :unread-count="($page.props.auth.user && $page.props.auth.user.unread_notifications_count) || 0"
                         :class="{ 'animate-shake': ($page.props.auth.user && $page.props.auth.user.unread_notifications_count) > 0 }" />
-                    <div class="space-x-6 hidden md:flex items-center justify-center">
+                    <div class="space-x-1 hidden md:flex items-center justify-center">
                         <!-- Help Link -->
                         <Link :href="route('help.index')"
-                            class="text-gray-300 hover:text-white hover:bg-gray-700 transition-colors duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
-                            :class="{ 'bg-gray-700 text-white': route().current('help.index') }">
+                            class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
+                            :class="{ 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': route().current('help.index') }">
                             <i class="pi pi-question-circle"></i>
                             <span class="hidden lg:inline">Help</span>
                         </Link>
@@ -787,6 +795,11 @@ onUnmounted(() => {
                         <!-- Activity Logs Dropdown -->
                         <ActivityLogsDropdown ref="activityLogsDropdownRef" />
 
+                        <!-- Theme Toggle -->
+                        <Button :icon="getThemeIcon()" severity="secondary" variant="text" size="large" rounded
+                            :aria-label="'Theme: ' + getThemeLabel()" :title="'Theme: ' + getThemeLabel()"
+                            @click="cycleTheme" v-tooltip.bottom="'Switch Theme'" />
+
                         <!-- User Settings Menu -->
                         <div class="relative">
                             <!-- <Button @click="toggleUserMenu" text rounded
@@ -794,18 +807,18 @@ onUnmounted(() => {
                                 <i class="pi pi-cog" style="font-size: 1.2rem"></i>
                             </Button> -->
                             <Button icon="pi pi-cog" severity="secondary" variant="text" size="large" rounded
-                                aria-label="Bookmark" @click="toggleUserMenu" />
+                                aria-label="Bookmark" @click="toggleUserMenu" v-tooltip.bottom="'User Menu'" />
 
-                            <Popover ref="userMenuRef" class="w-56">
+                            <Popover ref="userMenuRef" class="w-56 !rounded-2xl">
                                 <!-- Header -->
-                                <div class="px-4 py-3 border-b border-gray-100 flex-shrink-0">
+                                <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-2">
                                             <i class="pi pi-user text-blue-600"></i>
-                                            <h3 class="text-base font-semibold text-gray-900">User Menu</h3>
+                                            <h3 class="text-base font-semibold">User Menu</h3>
                                         </div>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-1">
+                                    <p class="text-xs opacity-60 mt-1">
                                         {{ $page.props.auth.user.name }}
                                     </p>
                                 </div>
@@ -813,35 +826,36 @@ onUnmounted(() => {
                                 <!-- Menu Items -->
                                 <div class="py-2">
                                     <Link :href="route('user.reports')"
-                                        class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
-                                        <i class="pi pi-file-pdf text-gray-600"></i>
+                                        class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
+                                        <i class="pi pi-file-pdf opacity-70"></i>
                                         <div class="flex-1">
-                                            <span class="text-sm font-medium text-gray-900">My Reports</span>
-                                            <p class="text-xs text-gray-500">View your generated reports</p>
+                                            <span class="text-sm font-medium">My Reports</span>
+                                            <p class="text-xs opacity-60">View your generated reports</p>
                                         </div>
                                     </Link>
 
                                     <Link :href="route('user.settings')"
-                                        class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
-                                        <i class="pi pi-cog text-gray-600"></i>
+                                        class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
+                                        <i class="pi pi-cog opacity-70"></i>
                                         <div class="flex-1">
-                                            <span class="text-sm font-medium text-gray-900">Settings</span>
-                                            <p class="text-xs text-gray-500">Account preferences</p>
+                                            <span class="text-sm font-medium">Settings</span>
+                                            <p class="text-xs opacity-60">Account preferences</p>
                                         </div>
                                     </Link>
 
                                     <Link :href="route('user-activity-logs.index')"
-                                        class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
-                                        <i class="pi pi-chart-line text-gray-600"></i>
+                                        class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
+                                        <i class="pi pi-chart-line opacity-70"></i>
                                         <div class="flex-1">
-                                            <span class="text-sm font-medium text-gray-900">Activity</span>
-                                            <p class="text-xs text-gray-500">View your recent activity</p>
+                                            <span class="text-sm font-medium">Activity</span>
+                                            <p class="text-xs opacity-60">View your recent activity</p>
                                         </div>
                                     </Link>
                                 </div>
 
                                 <!-- Footer -->
-                                <div class="px-4 py-2 border-t border-gray-100 bg-gray-50">
+                                <div
+                                    class="px-4 py-2 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                                     <Button @click="handleLogout" label="Sign Out" icon="pi pi-sign-out"
                                         severity="danger" variant="text" class="w-full" />
                                 </div>
@@ -853,7 +867,7 @@ onUnmounted(() => {
             </div>
 
             <div ref="contentRef"
-                class="content-scroll flex-1 overflow-y-auto px-4 md:px-6 pt-6 pb-10 transition-[margin-left] duration-300"
+                class="content-scroll flex-1 overflow-y-auto px-4 md:px-6 pt-6 short:pt-3 pb-10 short:pb-4 transition-[margin-left] duration-300"
                 :class="sidebarMinimized ? 'md:ml-[130px]' : 'md:ml-[240px]'">
                 <!-- <ToastList /> -->
                 <slot />
@@ -889,7 +903,7 @@ aside {
 
 /* PrimeVue component customizations */
 .p-avatar {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: transparent;
 }
 
 .p-button-text {
@@ -964,6 +978,18 @@ aside {
     -webkit-backdrop-filter: blur(20px);
 }
 
+/* Dark mode content background */
+.dark .content-bg,
+html.dark .content-bg {
+    background:
+        radial-gradient(ellipse at 20% 10%, rgba(34, 40, 49, 0.6) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 30%, rgba(28, 34, 44, 0.5) 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 50%, rgba(30, 37, 48, 0.4) 0%, transparent 60%),
+        linear-gradient(160deg, #16181f 0%, #1a1e27 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
 /* Auto-hide content area scrollbar */
 .content-scroll {
     scrollbar-width: thin;
@@ -1006,5 +1032,12 @@ body {
         linear-gradient(160deg, rgba(235, 239, 245, 0.5) 0%, rgba(225, 230, 238, 0.4) 100%);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+}
+
+/* Dark mode body */
+html.dark,
+html.dark body {
+    background: #16181f;
+    color-scheme: dark;
 }
 </style>

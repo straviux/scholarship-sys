@@ -94,18 +94,18 @@ const onHide = () => {
     <Dialog :visible="show" @update:visible="onHide" header="Generate Certificate" :modal="true" style="width: 500px">
         <div v-if="applicant" class="space-y-4">
             <!-- Applicant Info -->
-            <div class="bg-blue-50 p-4 rounded border-l-4 border-blue-500">
-                <div class="font-semibold text-blue-900">
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded border-l-4 border-blue-500">
+                <div class="font-semibold text-blue-900 dark:text-blue-300">
                     {{ applicant.last_name }}, {{ applicant.first_name }}
                 </div>
-                <div class="text-sm text-blue-700">
+                <div class="text-sm text-blue-700 dark:text-blue-400">
                     {{ applicant.scholarship_grant?.[0]?.course?.name || 'N/A' }}
                 </div>
             </div>
 
             <!-- Template Selection -->
             <div>
-                <label for="template" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="template" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Template
                 </label>
                 <Select id="template" v-model="template" :options="templates" optionLabel="label" optionValue="value"
@@ -114,7 +114,7 @@ const onHide = () => {
 
             <!-- Format Selection -->
             <div>
-                <label for="format" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="format" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Output Format
                 </label>
                 <Select id="format" v-model="certificateFormat" :options="formats" optionLabel="label"

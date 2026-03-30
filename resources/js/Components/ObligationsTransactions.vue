@@ -1,8 +1,8 @@
 <template>
-    <div class="p-6 relative">
+    <div class="p-4 short:p-3 relative">
 
         <!-- Header with Add Button and Summary Toggle -->
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center mb-4 short:mb-2">
             <div>
                 <h3 class="text-xl font-semibold text-gray-900">Disbursements & Cheques</h3>
                 <p class="text-sm text-gray-500 mt-1">Manage disbursements and cheque processing</p>
@@ -17,17 +17,18 @@
         </div>
 
         <!-- Summary Cards -->
-        <div v-if="showSummary" class="mb-6">
+        <div v-if="showSummary" class="mb-4 short:mb-2">
             <!-- Total Amount Card -->
             <div
-                class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 shadow-sm mb-6">
+                class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 shadow-sm mb-4 short:mb-2">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-blue-700 font-medium">Total Disbursements</p>
-                        <p class="text-2xl font-bold text-blue-900 mt-1">{{ formatCurrency(totalAmount) }}</p>
+                        <p class="text-2xl short:text-xl font-bold text-blue-900 mt-1">{{ formatCurrency(totalAmount) }}
+                        </p>
                         <p class="text-xs text-blue-600 mt-1">{{ disbursements.length }} transactions</p>
                     </div>
-                    <i class="pi pi-money-bill text-4xl text-blue-300"></i>
+                    <i class="pi pi-money-bill text-4xl short:text-2xl text-blue-300"></i>
                 </div>
             </div>
 
@@ -108,8 +109,8 @@
         <!-- Disbursements List -->
         <DataView :value="disbursements" :loading="loading">
             <template #empty>
-                <div class="text-center py-12">
-                    <i class="pi pi-money-bill text-4xl text-gray-300 mb-4"></i>
+                <div class="text-center py-8 short:py-4">
+                    <i class="pi pi-money-bill text-4xl short:text-2xl text-gray-300 mb-4"></i>
                     <p class="text-gray-500">No disbursements found</p>
                     <Button v-if="hasPermission('applicants.edit')" label="Add First Disbursement" class="mt-4"
                         @click="showAddModal = true" severity="success" size="small" raised />
@@ -126,12 +127,12 @@
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                 <!-- Left: OBR Number (Prominent) -->
 
-                                <div class="flex flex-wrap items-center gap-8">
+                                <div class="flex flex-wrap items-center gap-6 short:gap-3">
                                     <div class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">OBR Date</p>
                                         <p class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
                                             item.date_obligated ? formatDate(item.date_obligated) : '-'
-                                        }}</p>
+                                            }}</p>
                                     </div>
                                     <div v-if="item.obr_no" class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">OBR No.</p>
@@ -187,33 +188,33 @@
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Year:</span>
                                                 <span class="font-medium text-gray-900">{{ item.year_level || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Term:</span>
                                                 <span class="font-medium text-gray-900">{{ item.semester || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">AY:</span>
                                                 <span class="font-medium text-gray-900">{{ item.academic_year || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">Course:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 mr-1">School:</span>
                                                 <span class="font-medium text-gray-900">{{
                                                     item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -521,7 +522,7 @@
             :style="{ width: '30vw', minWidth: '400px' }">
             <div v-if="qrCodeData" class="text-center space-y-4">
                 <!-- QR Code -->
-                <div class="bg-white p-6 rounded-lg border-2 border-gray-200 inline-block">
+                <div class="bg-white p-4 short:p-3 rounded-lg border-2 border-gray-200 inline-block">
                     <div v-html="qrCodeData.qrCode"></div>
                 </div>
 

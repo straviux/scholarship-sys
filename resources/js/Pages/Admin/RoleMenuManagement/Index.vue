@@ -1,12 +1,12 @@
 <template>
     <AdminLayout>
         <Toast position="top-right" :life="3500" :baseZIndex="20000" />
-        <div class="p-6 bg-white rounded-lg shadow-sm">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl font-bold text-gray-900">Role Menu Management</h1>
+        <div class="p-4 short:p-3 bg-white rounded-lg shadow-sm">
+            <div class="flex justify-between items-center mb-4 short:mb-2">
+                <h1 class="text-2xl short:text-xl font-bold text-gray-900">Role Menu Management</h1>
             </div>
 
-            <div class="grid grid-cols-12 gap-6">
+            <div class="grid grid-cols-12 gap-4 short:gap-2">
                 <!-- Roles List -->
                 <div class="col-span-3">
                     <Card>

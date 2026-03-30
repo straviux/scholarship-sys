@@ -13,7 +13,7 @@
         </template>
 
         <div class="space-y-4">
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-gray-600 dark:text-gray-400">
                 {{ mode === `edit`
                     ? `Update the application information. Changes will be saved immediately.`
                     : `Complete all sections to submit a scholarship application. All information will be reviewed during
@@ -46,8 +46,8 @@
                                     v-model:temporary_address="form.temporary_address" :show-header="false" />
 
                                 <!-- Duplicate Name Warning -->
-                                <div v-if="validationError" class="mt-4 bg-red-50 border border-red-200 rounded p-3">
-                                    <p class="text-sm text-red-800 font-medium">
+                                <div v-if="validationError" class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
+                                    <p class="text-sm text-red-800 dark:text-red-300 font-medium">
                                         <i class="pi pi-exclamation-triangle mr-2"></i>
                                         {{ validationError }}
                                     </p>
@@ -105,8 +105,8 @@
                                             </FloatLabel>
                                         </div>
 
-                                        <div class="bg-blue-50 border border-blue-200 rounded p-3">
-                                            <p class="text-sm text-blue-800">
+                                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
+                                            <p class="text-sm text-blue-800 dark:text-blue-300">
                                                 <i class="pi pi-info-circle mr-2"></i>
                                                 Academic information is optional. You can complete it now or update it
                                                 later.

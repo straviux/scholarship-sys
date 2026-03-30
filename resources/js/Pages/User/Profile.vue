@@ -1,19 +1,19 @@
 <template>
     <AdminLayout>
-        <div class="p-6 space-y-6">
+        <div class="p-4 short:p-3 space-y-4 short:space-y-2">
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">My Profile</h1>
+                    <h1 class="text-3xl short:text-xl font-bold text-gray-900">My Profile</h1>
                     <p class="mt-1 text-gray-600">View your account information and encoded data</p>
                 </div>
             </div>
 
             <!-- User Info Card -->
             <div class="bg-white rounded-lg shadow">
-                <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-6">Account Information</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="p-4 short:p-3 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4 short:mb-2">Account Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 short:gap-2">
                         <!-- Name -->
                         <div>
                             <p class="text-sm text-gray-600">Full Name</p>
@@ -59,34 +59,35 @@
             </div>
 
             <!-- Statistics -->
-            <div v-if="Object.keys(stats).length > 0" class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="bg-white rounded-lg shadow p-6">
+            <div v-if="Object.keys(stats).length > 0" class="grid grid-cols-1 md:grid-cols-4 gap-4 short:gap-2">
+                <div class="bg-white rounded-lg shadow p-4 short:p-2">
                     <div class="text-gray-600 text-sm font-semibold uppercase">Total Applicants</div>
-                    <div class="text-3xl font-bold text-gray-900 mt-2">{{ stats.total_applicants }}</div>
+                    <div class="text-3xl short:text-xl font-bold text-gray-900 mt-2">{{ stats.total_applicants }}</div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="bg-white rounded-lg shadow p-4 short:p-2">
                     <div class="text-gray-600 text-sm font-semibold uppercase">Active Scholars</div>
-                    <div class="text-3xl font-bold text-gray-900 mt-2">{{ stats.total_scholars }}</div>
+                    <div class="text-3xl short:text-xl font-bold text-gray-900 mt-2">{{ stats.total_scholars }}</div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="bg-white rounded-lg shadow p-4 short:p-2">
                     <div class="text-gray-600 text-sm font-semibold uppercase">Total Vouchers</div>
-                    <div class="text-3xl font-bold text-gray-900 mt-2">{{ stats.total_vouchers }}</div>
+                    <div class="text-3xl short:text-xl font-bold text-gray-900 mt-2">{{ stats.total_vouchers }}</div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="bg-white rounded-lg shadow p-4 short:p-2">
                     <div class="text-gray-600 text-sm font-semibold uppercase">Pending Applications</div>
-                    <div class="text-3xl font-bold text-red-600 mt-2">{{ stats.pending_applications }}</div>
+                    <div class="text-3xl short:text-xl font-bold text-red-600 mt-2">{{ stats.pending_applications }}
+                    </div>
                 </div>
             </div>
 
             <!-- Encoded Data Tables -->
-            <div v-if="Object.keys(encodedData).length > 0" class="space-y-6">
+            <div v-if="Object.keys(encodedData).length > 0" class="space-y-4 short:space-y-2">
                 <!-- Applicants Table -->
                 <div v-if="encodedData.applicants && encodedData.applicants.length > 0"
                     class="bg-white rounded-lg shadow overflow-hidden">
-                    <div class="p-6 border-b border-gray-200">
+                    <div class="p-4 short:p-2 border-b border-gray-200">
                         <h3 class="text-lg font-semibold text-gray-900">Recent Applicants (Last 10)</h3>
                     </div>
                     <div class="overflow-x-auto">
@@ -123,7 +124,7 @@
                 <!-- Scholars Table -->
                 <div v-if="encodedData.scholars && encodedData.scholars.length > 0"
                     class="bg-white rounded-lg shadow overflow-hidden">
-                    <div class="p-6 border-b border-gray-200">
+                    <div class="p-4 short:p-2 border-b border-gray-200">
                         <h3 class="text-lg font-semibold text-gray-900">Active Scholars (Last 10)</h3>
                     </div>
                     <div class="overflow-x-auto">
@@ -157,7 +158,7 @@
                 <!-- Vouchers Table -->
                 <div v-if="encodedData.vouchers && encodedData.vouchers.length > 0"
                     class="bg-white rounded-lg shadow overflow-hidden">
-                    <div class="p-6 border-b border-gray-200">
+                    <div class="p-4 short:p-2 border-b border-gray-200">
                         <h3 class="text-lg font-semibold text-gray-900">Recent Vouchers (Last 10)</h3>
                     </div>
                     <div class="overflow-x-auto">

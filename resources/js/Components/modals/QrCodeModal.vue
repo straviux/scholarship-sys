@@ -11,17 +11,17 @@
                     <div v-if="qrData" class="text-center" style="display: flex; flex-direction: column; gap: 16px;">
                         <!-- QR Code -->
                         <div
-                            style="background: #fff; padding: 24px; border-radius: 12px; border: 2px solid #E5E5EA; display: inline-block; margin: 0 auto;">
+                            class="bg-white dark:bg-gray-800 p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700 inline-block mx-auto">
                             <div v-html="qrData.qrCode"></div>
                         </div>
 
                         <!-- Instructions -->
                         <div class="text-left" style="display: flex; flex-direction: column; gap: 12px;">
                             <div class="ios-info-card" style="border-left: 4px solid #007AFF;">
-                                <p class="text-sm font-semibold text-gray-900 mb-2">
+                                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
                                     <i class="pi pi-info-circle mr-2"></i>How to use:
                                 </p>
-                                <ol class="text-sm text-gray-700 list-decimal list-inside"
+                                <ol class="text-sm text-gray-700 dark:text-gray-300 list-decimal list-inside"
                                     style="display: flex; flex-direction: column; gap: 4px;">
                                     <li>Scan this QR code with your mobile device</li>
                                     <li>Take a photo or select from gallery</li>
@@ -29,8 +29,9 @@
                                 </ol>
                             </div>
 
-                            <div class="ios-info-card" style="border-left: 4px solid #FF9500; background: #FFFBF0;">
-                                <p class="text-xs" style="color: #8B6914;">
+                            <div class="ios-info-card bg-amber-50 dark:bg-amber-900/15"
+                                style="border-left: 4px solid #FF9500;">
+                                <p class="text-xs text-amber-800 dark:text-amber-300">
                                     <i class="pi pi-exclamation-triangle mr-2"></i>
                                     <strong>Expires in:</strong>
                                     <span :class="{
@@ -246,6 +247,41 @@ const copyToClipboard = async (text) => {
 
 :deep(.p-inputtext) {
     border-radius: 10px;
+}
+
+/* Dark mode */
+:global(.dark) .ios-modal {
+    background: #222831;
+}
+
+:global(.dark) .ios-nav-bar {
+    background: #2a3040;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-nav-title {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-nav-cancel {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-body {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-info-card {
+    background: #1e2433;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-label {
+    color: #d1d5db;
 }
 </style>
 

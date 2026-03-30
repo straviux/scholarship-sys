@@ -221,7 +221,7 @@
                         <!-- Active Filters Pills -->
                         <div v-if="activeFiltersCount > 0" class="ios-filter-pills">
                             <span v-if="lastParams.recommendation" class="ios-pill">{{ lastParams.recommendation
-                            }}</span>
+                                }}</span>
                             <span v-if="lastParams.program" class="ios-pill">{{ lastParams.program }}</span>
                             <span v-if="lastParams.school" class="ios-pill">{{ lastParams.school }}</span>
                             <span v-if="lastParams.course" class="ios-pill">{{ lastParams.course }}</span>
@@ -314,9 +314,9 @@
                                                 <td v-if="includeAssessment">{{ capitalize(record.academic_potential) }}
                                                 </td>
                                                 <td v-if="includeAssessment">{{ capitalize(record.financial_need_level)
-                                                }}</td>
+                                                    }}</td>
                                                 <td v-if="includeAssessment">{{ capitalize(record.communication_skills)
-                                                }}</td>
+                                                    }}</td>
                                                 <td>{{ formatDate(record.interviewed_at) }}</td>
                                                 <td>{{ record.interviewer?.name || '—' }}</td>
                                             </tr>
@@ -887,5 +887,73 @@ onBeforeUnmount(() => {
 
 :deep(.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider) {
     background: #34C759 !important;
+}
+
+/* Dark mode */
+:global(.dark) .ios-preview-body {
+    background: #1a1e27;
+}
+
+:global(.dark) .ios-report-header h1 {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-report-header p {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-group-header {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-group-count {
+    color: #9ca3af;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-table-wrap {
+    background: #1e2433;
+    box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+}
+
+:global(.dark) .ios-table thead tr {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+:global(.dark) .ios-table th {
+    color: #9ca3af;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-table td {
+    color: #d1d5db;
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+:global(.dark) .ios-summary-card {
+    background: #1e2433;
+}
+
+:global(.dark) .ios-summary-card-title {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-summary-row {
+    color: #d1d5db;
+    border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+:global(.dark) .ios-total-banner {
+    background: #1e2433;
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-empty-state {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
 }
 </style>

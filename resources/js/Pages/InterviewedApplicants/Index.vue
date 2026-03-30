@@ -8,9 +8,9 @@
             <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-comments text-blue-600" style="font-size:2rem"></i>
+                        <i class="pi pi-comments text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
                         <div>
-                            <h1 class="text-2xl font-bold text-gray-700">Interviewed Applicants</h1>
+                            <h1 class="text-2xl short:text-xl font-bold text-gray-700">Interviewed Applicants</h1>
                             <p class="text-sm text-gray-600">Review interview assessments and manage approvals</p>
                         </div>
                     </div>
@@ -24,7 +24,7 @@
             </Toolbar>
 
             <!-- Filters Panel -->
-            <Panel class="mb-6 !rounded-4xl overflow-hidden">
+            <Panel class="mb-4 short:mb-2 !rounded-4xl overflow-hidden">
                 <div class="flex items-end gap-3 -mt-6 flex-wrap">
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Recommendation</label>
@@ -42,21 +42,21 @@
             </Panel>
 
             <!-- Stats Summary -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 short:mb-2">
                 <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl font-bold text-blue-600">{{ stats.total }}</div>
+                    <div class="text-2xl short:text-xl font-bold text-blue-600">{{ stats.total }}</div>
                     <div class="text-xs text-gray-500">Total Interviewed</div>
                 </div>
                 <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl font-bold text-green-600">{{ stats.recommended }}</div>
+                    <div class="text-2xl short:text-xl font-bold text-green-600">{{ stats.recommended }}</div>
                     <div class="text-xs text-gray-500">Recommended</div>
                 </div>
                 <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl font-bold text-yellow-600">{{ stats.furtherEval }}</div>
+                    <div class="text-2xl short:text-xl font-bold text-yellow-600">{{ stats.furtherEval }}</div>
                     <div class="text-xs text-gray-500">For Further Evaluation</div>
                 </div>
                 <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl font-bold text-red-600">{{ stats.notRecommended }}</div>
+                    <div class="text-2xl short:text-xl font-bold text-red-600">{{ stats.notRecommended }}</div>
                     <div class="text-xs text-gray-500">Not Recommended</div>
                 </div>
             </div>
@@ -64,7 +64,8 @@
             <!-- Interviewed Applicants Table -->
             <Panel class="!rounded-4xl overflow-hidden shadow-sm">
                 <!-- Info Bar -->
-                <div class="md:flex hidden items-center justify-between gap-4 mb-4 p-3 bg-gray-50 rounded-4xl -mt-2">
+                <div
+                    class="md:flex hidden items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
                     <div class="flex-1 max-w-md">
                         <IconField iconPosition="left">
                             <InputIcon class="pi pi-search text-gray-400" />
@@ -370,7 +371,7 @@
                                         Date Filed
                                     </div>
                                     <span class="text-sm text-gray-700">{{ formatDate(selectedRecord.date_filed)
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>

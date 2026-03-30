@@ -9,9 +9,9 @@
             <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-graduation-cap text-blue-600" style="font-size:2rem"></i>
+                        <i class="pi pi-graduation-cap text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
                         <div>
-                            <h1 class="text-2xl font-bold text-gray-700">Return of Service</h1>
+                            <h1 class="text-2xl short:text-xl font-bold text-gray-700">Return of Service</h1>
                             <p class="text-sm text-gray-600">Manage ROS batches and track scholar service obligations
                             </p>
                         </div>
@@ -28,7 +28,7 @@
             </Toolbar>
 
             <!-- Filters Panel -->
-            <Panel class="mb-6 !rounded-4xl overflow-hidden">
+            <Panel class="mb-4 short:mb-2 !rounded-4xl overflow-hidden">
                 <div class="flex items-end gap-3 -mt-6 flex-wrap">
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Batch Name</label>
@@ -56,23 +56,25 @@
             </Panel>
 
             <!-- Stats -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 short:mb-2">
                 <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl font-bold text-blue-600">{{ batches.length }}</div>
+                    <div class="text-2xl short:text-xl font-bold text-blue-600">{{ batches.length }}</div>
                     <div class="text-xs text-gray-500">Total Batches</div>
                 </div>
                 <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl font-bold text-indigo-600">{{ filteredBatches.length }}</div>
+                    <div class="text-2xl short:text-xl font-bold text-indigo-600">{{ filteredBatches.length }}</div>
                     <div class="text-xs text-gray-500">Filtered Results</div>
                 </div>
                 <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl font-bold text-green-600">{{batches.reduce((s, b) => s + (b.total_scholars ||
+                    <div class="text-2xl short:text-xl font-bold text-green-600">{{batches.reduce((s, b) => s +
+                        (b.total_scholars ||
                         0), 0) }}
                     </div>
                     <div class="text-xs text-gray-500">Total Scholars</div>
                 </div>
                 <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl font-bold text-gray-400">{{batches.filter(b => b.result_date).length}}</div>
+                    <div class="text-2xl short:text-xl font-bold text-gray-400">{{batches.filter(b =>
+                        b.result_date).length}}</div>
                     <div class="text-xs text-gray-500">With Results</div>
                 </div>
             </div>
@@ -85,7 +87,7 @@
                 <div class="grid grid-cols-1 gap-4">
                     <div v-for="batch in filteredBatches" :key="batch.id"
                         class="bg-white !rounded-4xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                        <div class="p-6">
+                        <div class="p-4 short:p-3">
                             <div class="flex items-start justify-between mb-4">
                                 <div class="flex items-start gap-3">
                                     <div
@@ -95,7 +97,7 @@
                                     <div>
                                         <h4 class="font-semibold text-gray-900 text-base leading-tight">{{
                                             batch.batch_name
-                                            }}</h4>
+                                        }}</h4>
                                         <div class="text-xs text-gray-500 space-y-0.5 mt-1">
                                             <p v-if="batch.exam_date_from || batch.exam_date_to">
                                                 <span class="font-medium">Exam:</span>
@@ -537,7 +539,7 @@
                                         Course
                                     </div>
                                     <span class="text-sm font-medium text-gray-800">{{ viewingBatch.course_name
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div v-if="viewingBatch.exam_date_from || viewingBatch.exam_date_to" class="ios-row">
                                     <div class="ios-row-label">
@@ -555,7 +557,7 @@
                                         Result Date
                                     </div>
                                     <span class="text-sm text-gray-700">{{ formatDateLong(viewingBatch.result_date)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="ios-row">
                                     <div class="ios-row-label">
@@ -722,7 +724,7 @@
                                     </div>
                                     <div style="flex: 1; min-width: 0;">
                                         <p class="text-sm font-semibold text-gray-700">{{ scholarToDelete?.scholar_name
-                                        }}</p>
+                                            }}</p>
                                         <p class="text-xs text-red-600 mt-1">This action cannot be undone.</p>
                                     </div>
                                 </div>

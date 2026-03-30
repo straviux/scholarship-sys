@@ -3,17 +3,18 @@
 
         <Head title="Disbursement Management" />
 
-        <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-6 px-3 sm:px-6 lg:px-8">
+        <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-4 short:py-2 px-3 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto">
                 <!-- Header -->
-                <div class="mb-8">
-                    <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Disbursement Management</h1>
+                <div class="mb-6 short:mb-3">
+                    <h1 class="text-2xl sm:text-3xl short:text-xl font-bold text-slate-900 mb-2">Disbursement Management
+                    </h1>
                     <p class="text-sm sm:text-base text-slate-600">Map disbursement records to fund transactions and
                         sync OBR status</p>
                 </div>
 
                 <!-- Filters Panel -->
-                <div class="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6 border border-slate-200">
+                <div class="bg-white rounded-lg shadow-sm p-4 sm:p-4 short:p-3 mb-4 short:mb-2 border border-slate-200">
                     <form @submit.prevent="handleFilter" class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
                             <!-- Search OBR -->
@@ -113,7 +114,7 @@
                         <Column field="academic_year" header="Year/Sem" style="min-width: 95px">
                             <template #body="{ data }">
                                 <div class="text-slate-600">{{ data.academic_year }}/{{ data.semester?.substring(0, 1)
-                                }}</div>
+                                    }}</div>
                             </template>
                         </Column>
 

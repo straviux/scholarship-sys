@@ -94,7 +94,8 @@ onBeforeUnmount(() => {
                                 <i class="pi pi-exclamation-triangle"
                                     style="font-size: 24px; color: #FF3B30; flex-shrink: 0;"></i>
                                 <div>
-                                    <div style="font-size: 15px; font-weight: 600; color: #000; margin-bottom: 4px;">
+                                    <div class="del-warn-title"
+                                        style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">
                                         {{ hasRole('administrator') ? `Permanently delete this applicant?` : `Delete
                                         this applicant ? ` }}
                                     </div>
@@ -135,137 +136,18 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.ios-modal {
-    background: #F2F2F7;
-    border-radius: 14px;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-    overflow: hidden;
-    margin: 0 auto;
-}
-
-.ios-nav-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    padding: 14px 16px;
-    background: #FFFFFF;
-    border-bottom: 0.5px solid #E5E5EA;
-    flex-shrink: 0;
-    cursor: grab;
-    user-select: none;
-}
-
-.ios-nav-bar:active {
-    cursor: grabbing;
-}
-
-.ios-nav-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: #000;
-    letter-spacing: -0.4px;
-}
-
-.ios-nav-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    font-size: 17px;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 8px;
-    transition: opacity 0.15s;
-}
-
-.ios-nav-btn:hover {
-    opacity: 0.6;
-}
-
-.ios-nav-cancel {
-    left: 16px;
-    color: #8E8E93;
-    font-size: 20px;
-}
-
-.ios-nav-action {
-    right: 16px;
-    color: #374151;
-    font-weight: 600;
-}
-
-.ios-nav-action:disabled {
-    color: #C7C7CC;
-    cursor: not-allowed;
-}
-
-.ios-nav-destructive {
-    color: #FF3B30 !important;
-}
-
-.ios-body {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 0 16px;
-}
-
-.ios-section {
-    margin-top: 22px;
-}
-
-.ios-section:first-child {
-    margin-top: 16px;
-}
-
-.ios-section-label {
-    font-size: 13px;
-    font-weight: 400;
-    color: #6D6D72;
-    text-transform: uppercase;
-    letter-spacing: -0.08px;
-    padding: 0 16px 6px;
-}
-
-.ios-card {
-    background: #FFFFFF;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 0.5px solid #E5E5EA;
-}
-
-.ios-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 4px 16px;
-    min-height: 36px;
-    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
-}
-
-.ios-row-last {
-    border-bottom: none;
-}
-
-.ios-row:last-child {
-    border-bottom: none;
-}
-
-.ios-row-label {
-    font-size: 14px;
-    color: #000;
-    letter-spacing: -0.4px;
-    white-space: nowrap;
-    flex-shrink: 0;
+/* Component-unique: warning dialog title text */
+.del-warn-title {
+    color: #1f2937;
 }
 </style>
 
 <style>
+/* Dark override for DeleteConfirmModal-unique .del-warn-title */
+.dark .del-warn-title {
+    color: #d1d5db !important;
+}
+
 .ios-dialog-root.p-dialog {
     background: transparent !important;
     border: none !important;

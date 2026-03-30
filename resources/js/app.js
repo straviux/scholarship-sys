@@ -3,6 +3,13 @@ import '../css/app.css';
 import '../css/ios-design-system.css';
 import 'vue3-toastify/dist/index.css';
 
+// Apply theme immediately from localStorage to prevent flash-of-wrong-theme
+// 'dark' = full dark (global .dark); 'system' = hybrid (dark nav + light content); 'light' = all light
+(() => {
+	const saved = localStorage.getItem('theme') || 'system';
+	document.documentElement.classList.toggle('dark', saved === 'dark');
+})();
+
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
@@ -95,6 +102,20 @@ const Noir = definePreset(Aura, {
 				},
 			},
 			dark: {
+				surface: {
+					0: '#ffffff',
+					50: '#f9fafb',
+					100: '#f3f4f6',
+					200: '#e5e7eb',
+					300: '#d1d5db', // gray-300 — primary text
+					400: '#9ca3af', // gray-400 — secondary text
+					500: '#6b7280', // gray-500 — muted
+					600: '#4b5563', // borders/dividers base
+					700: '#374155', // strong borders
+					800: '#2a3040', // hover / slightly elevated
+					900: '#222831', // card / panel / dialog / table surface
+					950: '#1a1e27', // form fields / deepest surface
+				},
 				primary: {
 					color: '{zinc.50}',
 					inverseColor: '{zinc.950}',
@@ -127,7 +148,7 @@ createInertiaApp({
 					preset: Noir,
 					options: {
 						prefix: 'p',
-						darkModeSelector: false,
+						darkModeSelector: '.dark',
 						cssLayer: false,
 					},
 				},

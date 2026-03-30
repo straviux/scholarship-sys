@@ -141,17 +141,17 @@ const closeModal = () => {
 
     <Head title="My Reports" />
     <AdminLayout>
-        <div class="p-6 space-y-6">
+        <div class="p-4 short:p-3 space-y-4 short:space-y-2">
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">My Reports</h1>
+                    <h1 class="text-3xl short:text-xl font-bold text-gray-900">My Reports</h1>
                     <p class="mt-1 text-gray-600">View your encoded profiles and vouchers</p>
                 </div>
             </div>
 
             <!-- Filters -->
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white rounded-lg shadow p-4 short:p-3">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Date Range</h3>
                 <div class="flex flex-wrap items-end gap-3">
                     <Button @click="setDateRange(7)" label="Last 7 Days" severity="info" outlined size="small" />

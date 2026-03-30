@@ -1,14 +1,16 @@
 <template>
     <div>
-        <h4 v-if="showHeader" class="text-md font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <i class="pi pi-user text-gray-600"></i>
+        <h4 v-if="showHeader"
+            class="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+            <i class="pi pi-user text-gray-600 dark:text-gray-400"></i>
             <slot name="header">Personal Information</slot>
         </h4>
         <div class="space-y-4">
             <!-- Extension Name Toggle -->
             <div class="flex items-center gap-2 mt-4 pb-4">
                 <Checkbox v-model="showExtName" inputId="showExtName" binary />
-                <label for="showExtName" class="text-xs text-gray-600 cursor-pointer">With Extension Name (Jr., Sr.,
+                <label for="showExtName" class="text-xs text-gray-600 dark:text-gray-400 cursor-pointer">With Extension
+                    Name (Jr., Sr.,
                     III, etc.)</label>
             </div>
             <!-- Name Fields Row -->
@@ -78,7 +80,8 @@
                     </FloatLabel>
                     <div class="flex items-center gap-2 mt-1">
                         <Checkbox v-model="customPlaceOfBirth" inputId="customPlaceOfBirth" binary />
-                        <label for="customPlaceOfBirth" class="text-xs text-gray-600 cursor-pointer">Not in list</label>
+                        <label for="customPlaceOfBirth"
+                            class="text-xs text-gray-600 dark:text-gray-400 cursor-pointer">Not in list</label>
                     </div>
                 </div>
 
@@ -140,11 +143,12 @@
 
             <!-- Permanent Address Row -->
             <div class="flex items-center gap-4 mt-8 mb-0">
-                <h5 class="text-xs font-semibold text-gray-700">Permanent Address</h5>
+                <h5 class="text-xs font-semibold text-gray-700 dark:text-gray-300">Permanent Address</h5>
                 <div class="flex items-center gap-2">
                     <Checkbox v-model="sameAsPermanent" inputId="sameAsPermanent" binary
                         @change="handleSameAsPermanentChange" />
-                    <label for="sameAsPermanent" class="text-xs text-gray-600 cursor-pointer">Same as Present
+                    <label for="sameAsPermanent" class="text-xs text-gray-600 dark:text-gray-400 cursor-pointer">Same as
+                        Present
                         Address</label>
                 </div>
             </div>
@@ -175,7 +179,7 @@
             <!-- Present Address Row -->
             <Transition name="slide-address">
                 <div v-if="!sameAsPermanent">
-                    <h5 class="text-xs font-semibold text-gray-700 mt-6 mb-0">Present Address</h5>
+                    <h5 class="text-xs font-semibold text-gray-700 dark:text-gray-300 mt-6 mb-0">Present Address</h5>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
                         <div>
                             <FloatLabel>
@@ -389,6 +393,22 @@ onMounted(() => {
 
 .p-datepicker.p-variant-filled .p-datepicker-input {
     background-color: #ffffff !important;
+}
+
+/* Dark mode overrides */
+.dark .p-inputtext.p-variant-filled {
+    background-color: #1a1e27 !important;
+    color: #d1d5db !important;
+}
+
+.dark .p-select.p-variant-filled .p-select-label {
+    background-color: #1a1e27 !important;
+    color: #d1d5db !important;
+}
+
+.dark .p-datepicker.p-variant-filled .p-datepicker-input {
+    background-color: #1a1e27 !important;
+    color: #d1d5db !important;
 }
 
 .dob-hide-label label {

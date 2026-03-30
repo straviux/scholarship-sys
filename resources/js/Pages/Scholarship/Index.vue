@@ -179,7 +179,7 @@
                 <Panel class="!rounded-4xl overflow-hidden">
                     <!-- Info Bar -->
                     <div
-                        class="md:flex hidden items-center justify-between gap-4 mb-4 p-3 bg-gray-50 rounded-4xl -mt-2">
+                        class="md:flex hidden items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
                         <div class="flex-1 max-w-md">
                             <IconField iconPosition="left">
                                 <InputIcon class="pi pi-search text-gray-400" />
@@ -404,7 +404,7 @@
                                     <Column header="Year" style="min-width: 80px;">
                                         <template #body="r">
                                             <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—'
-                                            }}</span>
+                                                }}</span>
                                         </template>
                                     </Column>
                                     <Column header="Academic Year" style="min-width: 110px;">

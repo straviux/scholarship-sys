@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h4 v-if="showHeader" class="text-base font-semibold text-gray-700 mb-4">
+        <h4 v-if="showHeader" class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-4">
             <slot name="header">Family Information</slot>
         </h4>
         <div class="space-y-4">

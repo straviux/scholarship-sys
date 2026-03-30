@@ -1095,12 +1095,10 @@ const truncateText = (text, maxLength = 80) => {
             <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
-
-                        <i class="pi pi-users text-indigo-900" style="font-size:2rem"></i>
-
                         <div>
-                            <h1 class="text-2xl font-bold text-gray-700">Applicants Management</h1>
-                            <p class="text-sm text-gray-600">Manage scholarship applicants and their profiles</p>
+                            <h1 class="text-2xl short:text-xl font-bold text-gray-700">Applicants Management</h1>
+                            <p class="text-sm short:text-xs text-gray-600">Manage scholarship applicants and their
+                                profiles</p>
                         </div>
                     </div>
                 </template>
@@ -1124,9 +1122,12 @@ const truncateText = (text, maxLength = 80) => {
                             <Divider layout="vertical" class="h-6" />
                         </template>
 
-                        <Button icon="pi pi-user-plus" @click="openYakapCategoryModal"
-                            v-if="hasPermission('applicants.create')" severity="success" rounded outlined
-                            v-tooltip.bottom="'Add New Applicant'" />
+                        <Button @click="openYakapCategoryModal" v-if="hasPermission('applicants.create')"
+                            severity="success" text rounded v-tooltip.bottom="'Add New Applicant'">
+                            <i class="pi pi-user-plus !text-2xl"></i>
+                        </Button>
+
+
                         <!-- <Button as="a" label="Existing" icon="pi pi-user"
                             v-if="hasPermission('applicants.create') && !hasRole('user')"
                             :href="route('applicants.index', { action: 'add-existing' })" severity="secondary"
@@ -1139,44 +1140,59 @@ const truncateText = (text, maxLength = 80) => {
             <Panel class="!rounded-4xl overflow-hidden">
                 <!-- Filters Section - Single Row -->
                 <div class="flex items-end gap-3 -mt-6 flex-wrap">
-                    <Button icon="pi pi-filter" severity="warn" text rounded @click="openDrawer()"
-                        v-tooltip.bottom="'More Filters'" />
                     <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
+                        <IconField iconPosition="left">
+                            <InputIcon class="pi pi-search text-gray-400" />
+                            <InputText v-model="globalFilter" placeholder="Type name, remarks etc.." class="!w-68"
+                                size="small" />
+                        </IconField>
+                    </div>
+
+                    <div class="flex flex-col">
                         <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="All Programs"
                             size="small" class="w-full" />
                     </div>
                     <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
                         <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses" size="small"
                             class="w-full" :scholarship-program-id="filter.program?.id" />
                     </div>
                     <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
                         <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels" size="small"
                             class="w-full" />
                     </div>
                     <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Date Filed</label>
                         <div class="flex gap-2">
-                            <InputGroup>
+                            <InputGroup class="!w-52">
                                 <InputGroupAddon>
-                                    <span class="text-xs">From</span>
+                                    <span class="text-xs">Filed From</span>
                                 </InputGroupAddon>
                                 <DatePicker v-model="filter.date_from" size="small" class="w-full"
                                     date-format="M dd, yy" showIcon iconDisplay="input" />
                             </InputGroup>
-                            <InputGroup>
+                            <InputGroup class="!w-52">
                                 <InputGroupAddon>
-                                    <span class="text-xs">To</span>
+                                    <span class="text-xs">Filed To</span>
                                 </InputGroupAddon>
                                 <DatePicker v-model="filter.date_to" size="small" class="w-full" date-format="M dd, yy"
                                     showIcon iconDisplay="input" />
                             </InputGroup>
                         </div>
                     </div>
-                    <Button severity="secondary" outlined rounded size="small" icon="pi pi-history" @click="clearFilter"
+                    <Button icon="pi pi-filter" severity="warn" text rounded @click="openDrawer()"
+                        v-tooltip.bottom="'More Filters'" />
+                    <Button icon="pi pi-history" severity="danger" text rounded @click="clearFilter"
                         v-tooltip.bottom="'Clear Filters'" />
+                    <div class="flex-1"></div>
+                    <div class="flex items-end gap-4">
+                        <div class="text-sm text-gray-600 flex items-center gap-2">
+                            <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
+                            <span>/ <strong>{{ totalRecords }}</strong></span>
+                        </div>
+                        <Button :icon="simpleView ? 'pi pi-table' : 'pi pi-list'" severity="secondary" rounded outlined
+                            size="small"
+                            v-tooltip.bottom="simpleView ? 'Switch to Detailed View' : 'Switch to Simple View'"
+                            @click="simpleView = !simpleView" />
+                    </div>
                 </div>
             </Panel>
 
@@ -1307,295 +1323,260 @@ const truncateText = (text, maxLength = 80) => {
                     </div>
                 </div>
 
-                <Panel class="!rounded-4xl overflow-hidden">
-                    <!-- Info Bar -->
-                    <div
-                        class="md:flex hidden items-center justify-between gap-4 mb-4 p-3 bg-gray-50 rounded-4xl -mt-2">
-                        <div class="flex-1 max-w-md">
-                            <IconField iconPosition="left">
-                                <InputIcon class="pi pi-search text-gray-400" />
-                                <InputText v-model="globalFilter" placeholder="Search..." class="w-full" size="small" />
-                            </IconField>
-                        </div>
-                        <div class="flex">
-                            <span class="text-sm opacity-60" v-if="simpleView">Right click on applicant row to show
-                                context
-                                menu</span>
-                        </div>
-                        <div class="flex items-center justify-center gap-4">
-                            <div class="text-sm text-gray-600 flex items-center justify-center gap-2">
-                                <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
-                                <span>/ <strong>{{ totalRecords }}</strong></span>
+                <!-- Context Menu -->
+                <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
+
+                <!-- Table View -->
+                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="applicants" stripedRows
+                    showGridlines responsiveLayout="scroll" :emptyMessage="'No applicants to display'" :lazy="true"
+                    paginator :rows="rows" :totalRecords="totalRecords" :first="first" @page="onPageChange"
+                    paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                    :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
+                    v-model:selection="selectedRows" dataKey="profile_id"
+                    :rowsPerPageOptions="[10, 25, 50, 100, 250, 500]" :scrollable="true"
+                    @row-contextmenu="onRowContextMenu" contextMenu>
+
+                    <!-- Selection Column -->
+                    <Column selectionMode="multiple" :exportable="false" style="width: 3rem"></Column>
+
+                    <!-- Date Filed Column -->
+                    <Column header="Date Filed" style="width: 110px">
+                        <template #body="slotProps">
+                            <div class="text-xs font-medium">
+                                {{ formatDateFiled(slotProps.data.date_filed) }}
                             </div>
-                            <div class="flex items-center gap-2">
-                                <label class="text-xs text-gray-600">Simple View</label>
-                                <ToggleSwitch v-model="simpleView"
-                                    style="transform: scale(0.75); origin: right center;" />
-                            </div>
-                        </div>
-                    </div>
+                        </template>
+                    </Column>
 
-                    <!-- Context Menu -->
-                    <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
-
-                    <!-- Table View -->
-                    <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="applicants" stripedRows
-                        showGridlines responsiveLayout="scroll" :emptyMessage="'No applicants to display'" :lazy="true"
-                        paginator :rows="rows" :totalRecords="totalRecords" :first="first" @page="onPageChange"
-                        paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                        :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
-                        v-model:selection="selectedRows" dataKey="profile_id"
-                        :rowsPerPageOptions="[10, 25, 50, 100, 250, 500]" :scrollable="true"
-                        @row-contextmenu="onRowContextMenu" contextMenu>
-
-                        <!-- Selection Column -->
-                        <Column selectionMode="multiple" :exportable="false" style="width: 3rem"></Column>
-
-                        <!-- Date Filed Column -->
-                        <Column header="Date Filed" style="width: 110px">
-                            <template #body="slotProps">
-                                <div class="text-xs font-medium">
-                                    {{ formatDateFiled(slotProps.data.date_filed) }}
-                                </div>
-                            </template>
-                        </Column>
-
-                        <!-- Sequence Number & Name Column -->
-                        <Column header="Applicant" style="min-width: 300px">
-                            <template #body="slotProps">
-                                <div class="flex flex-col gap-2">
-                                    <!-- <span class="text-gray-400 text-sm">#{{
+                    <!-- Sequence Number & Name Column -->
+                    <Column header="Applicant" style="min-width: 300px">
+                        <template #body="slotProps">
+                            <div class="flex flex-col gap-2">
+                                <!-- <span class="text-gray-400 text-sm">#{{
                                         slotProps.data.sequence_number_by_school_course || '-' }}</span> -->
-                                    <div class="flex gap-2 items-start w-full">
+                                <div class="flex gap-2 items-start w-full">
 
-                                        <div class="flex flex-col gap-1 flex-1 min-w-0">
-                                            <div class="flex gap-1 items-center w-full">
-                                                <div v-if="slotProps.data.gender" class="flex-shrink-0">
-                                                    <img v-if="slotProps.data.gender == 'M'"
-                                                        src="/images/male-avatar.png" alt="avatar"
-                                                        class="rounded-full w-6 h-6" />
-                                                    <img v-if="slotProps.data.gender == 'F'"
-                                                        src="/images/female-avatar.png" alt="avatar"
-                                                        class="rounded-full w-6 h-6" />
-                                                </div>
-                                                <div v-else class="flex-shrink-0">
-                                                    <div
-                                                        class="ml-1 w-5 h-5 rounded-full bg-gray-400 flex items-center justify-center text-xs text-white font-semibold">
-                                                        {{ getApplicantInitials(slotProps.data) }}
-                                                    </div>
-                                                </div>
-                                                <div class="font-semibold text-sky-700 text-sm flex-1 min-w-0 cursor-pointer hover:text-sky-800 underline underline-offset-4 transition-all"
-                                                    @click="openProfileReviewModal(slotProps.data)">
-                                                    {{ slotProps.data.last_name }}, {{ slotProps.data.first_name }} {{
-                                                        slotProps.data.middle_name || '' }} {{
-                                                        slotProps.data.extension_name || '' }}
-                                                </div>
-                                                <!-- Priority Badge (visible in simple view) - Fixed position on the right -->
-                                                <div v-if="simpleView && slotProps.data.priority_level"
-                                                    class="flex-shrink-0 ml-2 flex items-center justify-center"
-                                                    v-tooltip.top="formatPriorityName(slotProps.data.priority_level) + (slotProps.data.priority_reason ? ': ' + slotProps.data.priority_reason : '')">
-                                                    <!-- Star for High and Urgent -->
-                                                    <i v-if="slotProps.data.priority_level === 'urgent' || slotProps.data.priority_level === 'high'"
-                                                        class="pi pi-star-fill" :class="{
-                                                            'text-red-500': slotProps.data.priority_level === 'urgent',
-                                                            'text-orange-500': slotProps.data.priority_level === 'high'
-                                                        }" style="font-size: 0.85rem;"></i>
-                                                    <!-- Circle for Normal -->
-                                                    <div v-else-if="slotProps.data.priority_level === 'normal'"
-                                                        class="w-3 h-3 rounded-full bg-blue-500"></div>
+                                    <div class="flex flex-col gap-1 flex-1 min-w-0">
+                                        <div class="flex gap-1 items-center w-full">
+                                            <div v-if="slotProps.data.gender" class="flex-shrink-0">
+                                                <img v-if="slotProps.data.gender == 'M'" src="/images/male-avatar.png"
+                                                    alt="avatar" class="rounded-full w-6 h-6" />
+                                                <img v-if="slotProps.data.gender == 'F'" src="/images/female-avatar.png"
+                                                    alt="avatar" class="rounded-full w-6 h-6" />
+                                            </div>
+                                            <div v-else class="flex-shrink-0">
+                                                <div
+                                                    class="ml-1 w-5 h-5 rounded-full bg-gray-400 flex items-center justify-center text-xs text-white font-semibold">
+                                                    {{ getApplicantInitials(slotProps.data) }}
                                                 </div>
                                             </div>
-
+                                            <div class="font-semibold text-sky-700 text-sm flex-1 min-w-0 cursor-pointer hover:text-sky-800 underline underline-offset-4 transition-all"
+                                                @click="openProfileReviewModal(slotProps.data)">
+                                                {{ slotProps.data.last_name }}, {{ slotProps.data.first_name }} {{
+                                                    slotProps.data.middle_name || '' }} {{
+                                                    slotProps.data.extension_name || '' }}
+                                            </div>
+                                            <!-- Priority Badge (visible in simple view) - Fixed position on the right -->
+                                            <div v-if="simpleView && slotProps.data.priority_level"
+                                                class="flex-shrink-0 ml-2 flex items-center justify-center"
+                                                v-tooltip.top="formatPriorityName(slotProps.data.priority_level) + (slotProps.data.priority_reason ? ': ' + slotProps.data.priority_reason : '')">
+                                                <!-- Star for High and Urgent -->
+                                                <i v-if="slotProps.data.priority_level === 'urgent' || slotProps.data.priority_level === 'high'"
+                                                    class="pi pi-star-fill" :class="{
+                                                        'text-red-500': slotProps.data.priority_level === 'urgent',
+                                                        'text-orange-500': slotProps.data.priority_level === 'high'
+                                                    }" style="font-size: 0.85rem;"></i>
+                                                <!-- Circle for Normal -->
+                                                <div v-else-if="slotProps.data.priority_level === 'normal'"
+                                                    class="w-3 h-3 rounded-full bg-blue-500"></div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <div class="flex items-center gap-1"
-                                            v-tooltip.bottom="'Program #' + (slotProps.data.sequence_number || '-')">
-                                            <i class="pi pi-bookmark text-indigo-500" style="font-size: 0.7rem;"></i>
-                                            <span class="text-xs font-bold text-gray-600">#{{
-                                                slotProps.data.sequence_number || '-' }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1"
-                                            v-tooltip.bottom="'Course #' + (slotProps.data.sequence_number_by_course || '-')">
-                                            <i class="pi pi-book text-teal-500" style="font-size: 0.7rem;"></i>
-                                            <span class="text-xs font-bold text-gray-600">#{{
-                                                slotProps.data.sequence_number_by_course || '-' }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1"
-                                            v-tooltip.bottom="'School #' + (slotProps.data.sequence_number_by_school_course || '-')">
-                                            <i class="pi pi-building text-amber-500" style="font-size: 0.7rem;"></i>
-                                            <span class="text-xs font-bold text-gray-600">#{{
-                                                slotProps.data.sequence_number_by_school_course || '-' }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1"
-                                            v-tooltip.bottom="'Daily #' + (slotProps.data.daily_sequence_number || '-')">
-                                            <i class="pi pi-calendar text-gray-400" style="font-size: 0.7rem;"></i>
-                                            <span class="text-xs font-bold text-gray-600">#{{
-                                                slotProps.data.daily_sequence_number || '-' }}</span>
-                                        </div>
+
                                     </div>
                                 </div>
-                            </template>
-                        </Column>
-
-                        <!-- Academic Column -->
-                        <Column header="Academic" style="min-width: 200px">
-                            <template #body="slotProps">
-                                <div v-if="slotProps.data.scholarship_grant[0]" class="text-xs flex flex-col gap-0.5">
-                                    <div class="font-medium" v-if="slotProps.data.scholarship_grant[0]?.school">
-                                        {{ slotProps.data.scholarship_grant[0].school.shortname }}
+                                <div class="flex gap-2">
+                                    <div class="flex items-center gap-1"
+                                        v-tooltip.bottom="'Program #' + (slotProps.data.sequence_number || '-')">
+                                        <i class="pi pi-bookmark text-indigo-500" style="font-size: 0.7rem;"></i>
+                                        <span class="text-xs font-bold text-gray-600">#{{
+                                            slotProps.data.sequence_number || '-' }}</span>
                                     </div>
-                                    <div v-if="slotProps.data.scholarship_grant[0]?.course">
-                                        {{ slotProps.data.scholarship_grant[0].course.shortname }}
+                                    <div class="flex items-center gap-1"
+                                        v-tooltip.bottom="'Course #' + (slotProps.data.sequence_number_by_course || '-')">
+                                        <i class="pi pi-book text-teal-500" style="font-size: 0.7rem;"></i>
+                                        <span class="text-xs font-bold text-gray-600">#{{
+                                            slotProps.data.sequence_number_by_course || '-' }}</span>
                                     </div>
-                                    <div class="text-gray-600" v-if="slotProps.data.scholarship_grant[0]?.year_level">
-                                        Year: {{ slotProps.data.scholarship_grant[0].year_level }}
+                                    <div class="flex items-center gap-1"
+                                        v-tooltip.bottom="'School #' + (slotProps.data.sequence_number_by_school_course || '-')">
+                                        <i class="pi pi-building text-amber-500" style="font-size: 0.7rem;"></i>
+                                        <span class="text-xs font-bold text-gray-600">#{{
+                                            slotProps.data.sequence_number_by_school_course || '-' }}</span>
                                     </div>
-                                </div>
-                                <span v-else class="text-gray-400">-</span>
-                            </template>
-                        </Column>
-
-                        <!-- Address Column -->
-                        <Column header="Address" style="min-width: 150px">
-                            <template #body="slotProps">
-
-                                <div class="ml-1 text-xs  mt-0.5 flex items-center gap-3 "
-                                    v-if="slotProps.data.municipality">
-                                    <i class="pi pi-map text-gray-500" style="font-size: 0.75rem;"></i>
-                                    <span>{{ slotProps.data.municipality }}{{ slotProps.data.barangay ? `,
-                                        ${slotProps.data.barangay}` : '' }}</span>
-                                </div>
-                                <span v-else class="text-gray-400">-</span>
-                                <div class="ml-1 text-xs  mt-0.5 flex items-center gap-3 ">
-                                    <i class="pi pi-phone text-gray-500" style="font-size: 0.75rem;"></i>
-                                    <span>{{ slotProps.data.contact_no || 'No contact no.' }}</span>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <!-- Parent/Guardian Column (only visible when showJpmColumns is enabled) -->
-                        <Column header="Parent/Guardian" v-if="hasPermission('jpm.view') && showJpmColumns"
-                            style="min-width: 200px">
-                            <template #body="slotProps">
-                                <div class="text-xs space-y-1">
-                                    <div v-if="slotProps.data.father_name">
-                                        <span class="font-medium">{{ slotProps.data.father_name }}</span>
-                                        <span class="text-gray-500 italic"> (father)</span>
-                                    </div>
-                                    <div v-if="slotProps.data.mother_name">
-                                        <span class="font-medium">{{ slotProps.data.mother_name }}</span>
-                                        <span class="text-gray-500 italic"> (mother)</span>
-                                    </div>
-                                    <div v-if="slotProps.data.guardian_name">
-                                        <span class="font-medium">{{ slotProps.data.guardian_name }}</span>
-                                        <span class="text-gray-500 italic"> (guardian)</span>
-                                    </div>
-                                    <span
-                                        v-if="!slotProps.data.father_name && !slotProps.data.mother_name && !slotProps.data.guardian_name"
-                                        class="text-gray-400">-</span>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <!-- JPM Status Column (only visible when showJpmColumns is enabled) -->
-                        <Column header="JPM" v-if="hasPermission('jpm.view') && showJpmColumns" style="width: 80px">
-                            <template #body="slotProps">
-                                <div class="flex items-center justify-center">
-                                    <div v-if="getJpmStatus(slotProps.data)?.status === 'member'"
-                                        v-tooltip.top="'JPM Member: ' + getJpmMemberDetails(getJpmStatus(slotProps.data))">
-                                        <i class="pi pi-check-circle text-green-500" style="font-size: 1.1rem;"></i>
-                                    </div>
-                                    <div v-else-if="getJpmStatus(slotProps.data)?.status === 'not_member'"
-                                        v-tooltip.top="'Not a JPM Member'">
-                                        <i class="pi pi-times-circle text-orange-400" style="font-size: 1.1rem;"></i>
-                                    </div>
-                                    <span v-else class="text-gray-300">-</span>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <!-- Remarks Column (hidden when JPM columns visible) -->
-                        <Column header="Remarks" v-if="!showJpmColumns" style="max-width: 200px">
-                            <template #body="slotProps">
-                                <div v-if="slotProps.data.remarks" v-tooltip.top="slotProps.data.remarks"
-                                    class="text-xs text-gray-700 cursor-help">
-                                    {{ truncateText(slotProps.data.remarks, 80) }}
-                                </div>
-                                <span v-else class="text-xs text-gray-400">-</span>
-                            </template>
-                        </Column>
-
-                        <!-- Encoded By Column (only visible for admins) -->
-                        <!-- <Column header="Encoded" v-if="hasRole('administrator')" style="min-width: 180px"> -->
-                        <Column header="Encoder" style="min-width: 180px">
-                            <template #body="slotProps">
-                                <div class="flex flex-col gap-1 text-xs">
-                                    <div v-if="slotProps.data.created_by" class="font-medium text-gray-700">
-                                        {{ slotProps.data.created_by.name }}
-                                    </div>
-                                    <div v-if="slotProps.data.created_at" class="text-gray-500">
-                                        {{ formatDateFiled(slotProps.data.created_at) }}
-                                    </div>
-                                    <span v-if="!slotProps.data.created_by && !slotProps.data.created_at"
-                                        class="text-gray-400">-</span>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <!-- JPM Actions Column (visible when JPM columns enabled) -->
-                        <Column header="Tagging" v-if="hasPermission('jpm.view') && showJpmColumns"
-                            style="min-width: 150px">
-                            <template #body="slotProps">
-                                <div class="flex flex-col gap-2 items-center">
-                                    <Button @click="openJpmModal(slotProps.data)" rounded icon="pi pi-tags"
-                                        severity="info" size="small" outlined :disabled="!hasPermission('jpm.manage')"
-                                        v-tooltip.top="'Edit JPM tagging and remarks'" />
-
-                                    <!-- Quick preview of remarks if exists -->
-                                    <div v-if="slotProps.data.jpm_remarks"
-                                        class="text-xs text-gray-600 italic truncate">
-                                        "{{ slotProps.data.jpm_remarks }}"
+                                    <div class="flex items-center gap-1"
+                                        v-tooltip.bottom="'Daily #' + (slotProps.data.daily_sequence_number || '-')">
+                                        <i class="pi pi-calendar text-gray-400" style="font-size: 0.7rem;"></i>
+                                        <span class="text-xs font-bold text-gray-600">#{{
+                                            slotProps.data.daily_sequence_number || '-' }}</span>
                                     </div>
                                 </div>
-                            </template>
-                        </Column>
+                            </div>
+                        </template>
+                    </Column>
 
-                        <!-- Priority Column -->
-                        <Column header="Priority" style="width: 80px"
-                            v-if="hasPermission('priority.manage') && !simpleView">
-                            <template #body="slotProps">
-                                <div class="flex items-center justify-center">
-                                    <div v-if="slotProps.data.priority_level === 'urgent'"
-                                        v-tooltip.top="'Urgent' + (slotProps.data.priority_reason ? ': ' + slotProps.data.priority_reason : '')">
-                                        <i class="pi pi-exclamation-triangle text-red-500"
-                                            style="font-size: 1.1rem;"></i>
-                                    </div>
-                                    <div v-else-if="slotProps.data.priority_level === 'high'"
-                                        v-tooltip.top="'High' + (slotProps.data.priority_reason ? ': ' + slotProps.data.priority_reason : '')">
-                                        <i class="pi pi-star-fill text-orange-500" style="font-size: 1.1rem;"></i>
-                                    </div>
-                                    <div v-else v-tooltip.top="'Normal'">
-                                        <i class="pi pi-minus text-gray-300" style="font-size: 0.9rem;"></i>
-                                    </div>
+                    <!-- Academic Column -->
+                    <Column header="Academic" style="min-width: 200px">
+                        <template #body="slotProps">
+                            <div v-if="slotProps.data.scholarship_grant[0]" class="text-xs flex flex-col gap-0.5">
+                                <div class="font-medium" v-if="slotProps.data.scholarship_grant[0]?.school">
+                                    {{ slotProps.data.scholarship_grant[0].school.shortname }}
                                 </div>
-                            </template>
-                        </Column>
-
-                        <!-- Actions Column -->
-                        <Column header="Actions" style="width: 60px" v-if="!simpleView">
-                            <template #body="slotProps">
-                                <div class="flex justify-center">
-                                    <Button icon="pi pi-ellipsis-v" rounded outlined severity="secondary" size="small"
-                                        @click="(event) => showRowContextMenu(event, slotProps.data)"
-                                        v-tooltip.top="'More actions'" />
+                                <div v-if="slotProps.data.scholarship_grant[0]?.course">
+                                    {{ slotProps.data.scholarship_grant[0].course.shortname }}
                                 </div>
-                            </template>
-                        </Column>
-                    </DataTable>
+                                <div class="text-gray-600" v-if="slotProps.data.scholarship_grant[0]?.year_level">
+                                    Year: {{ slotProps.data.scholarship_grant[0].year_level }}
+                                </div>
+                            </div>
+                            <span v-else class="text-gray-400">-</span>
+                        </template>
+                    </Column>
 
+                    <!-- Address Column -->
+                    <Column header="Address" style="min-width: 150px">
+                        <template #body="slotProps">
 
-                </Panel>
+                            <div class="ml-1 text-xs  mt-0.5 flex items-center gap-3 "
+                                v-if="slotProps.data.municipality">
+                                <i class="pi pi-map text-gray-500" style="font-size: 0.75rem;"></i>
+                                <span>{{ slotProps.data.municipality }}{{ slotProps.data.barangay ? `,
+                                    ${slotProps.data.barangay}` : '' }}</span>
+                            </div>
+                            <span v-else class="text-gray-400">-</span>
+                            <div class="ml-1 text-xs  mt-0.5 flex items-center gap-3 ">
+                                <i class="pi pi-phone text-gray-500" style="font-size: 0.75rem;"></i>
+                                <span>{{ slotProps.data.contact_no || 'No contact no.' }}</span>
+                            </div>
+                        </template>
+                    </Column>
+
+                    <!-- Parent/Guardian Column (only visible when showJpmColumns is enabled) -->
+                    <Column header="Parent/Guardian" v-if="hasPermission('jpm.view') && showJpmColumns"
+                        style="min-width: 200px">
+                        <template #body="slotProps">
+                            <div class="text-xs space-y-1">
+                                <div v-if="slotProps.data.father_name">
+                                    <span class="font-medium">{{ slotProps.data.father_name }}</span>
+                                    <span class="text-gray-500 italic"> (father)</span>
+                                </div>
+                                <div v-if="slotProps.data.mother_name">
+                                    <span class="font-medium">{{ slotProps.data.mother_name }}</span>
+                                    <span class="text-gray-500 italic"> (mother)</span>
+                                </div>
+                                <div v-if="slotProps.data.guardian_name">
+                                    <span class="font-medium">{{ slotProps.data.guardian_name }}</span>
+                                    <span class="text-gray-500 italic"> (guardian)</span>
+                                </div>
+                                <span
+                                    v-if="!slotProps.data.father_name && !slotProps.data.mother_name && !slotProps.data.guardian_name"
+                                    class="text-gray-400">-</span>
+                            </div>
+                        </template>
+                    </Column>
+
+                    <!-- JPM Status Column (only visible when showJpmColumns is enabled) -->
+                    <Column header="JPM" v-if="hasPermission('jpm.view') && showJpmColumns" style="width: 80px">
+                        <template #body="slotProps">
+                            <div class="flex items-center justify-center">
+                                <div v-if="getJpmStatus(slotProps.data)?.status === 'member'"
+                                    v-tooltip.top="'JPM Member: ' + getJpmMemberDetails(getJpmStatus(slotProps.data))">
+                                    <i class="pi pi-check-circle text-green-500" style="font-size: 1.1rem;"></i>
+                                </div>
+                                <div v-else-if="getJpmStatus(slotProps.data)?.status === 'not_member'"
+                                    v-tooltip.top="'Not a JPM Member'">
+                                    <i class="pi pi-times-circle text-orange-400" style="font-size: 1.1rem;"></i>
+                                </div>
+                                <span v-else class="text-gray-300">-</span>
+                            </div>
+                        </template>
+                    </Column>
+
+                    <!-- Remarks Column (hidden when JPM columns visible) -->
+                    <Column header="Remarks" v-if="!showJpmColumns" style="max-width: 200px">
+                        <template #body="slotProps">
+                            <div v-if="slotProps.data.remarks" v-tooltip.top="slotProps.data.remarks"
+                                class="text-xs cursor-help">
+                                {{ truncateText(slotProps.data.remarks, 80) }}
+                            </div>
+                            <span v-else class="text-xs text-gray-400">-</span>
+                        </template>
+                    </Column>
+
+                    <!-- Encoded By Column (only visible for admins) -->
+                    <!-- <Column header="Encoded" v-if="hasRole('administrator')" style="min-width: 180px"> -->
+                    <Column header="Encoder" style="min-width: 180px">
+                        <template #body="slotProps">
+                            <div class="flex flex-col gap-1 text-xs">
+                                <div v-if="slotProps.data.created_by" class="font-medium">
+                                    {{ slotProps.data.created_by.name }}
+                                </div>
+                                <div v-if="slotProps.data.created_at" class="text-gray-500">
+                                    {{ formatDateFiled(slotProps.data.created_at) }}
+                                </div>
+                                <span v-if="!slotProps.data.created_by && !slotProps.data.created_at"
+                                    class="text-gray-400">-</span>
+                            </div>
+                        </template>
+                    </Column>
+
+                    <!-- JPM Actions Column (visible when JPM columns enabled) -->
+                    <Column header="Tagging" v-if="hasPermission('jpm.view') && showJpmColumns"
+                        style="min-width: 150px">
+                        <template #body="slotProps">
+                            <div class="flex flex-col gap-2 items-center">
+                                <Button @click="openJpmModal(slotProps.data)" rounded icon="pi pi-tags" severity="info"
+                                    size="small" outlined :disabled="!hasPermission('jpm.manage')"
+                                    v-tooltip.top="'Edit JPM tagging and remarks'" />
+
+                                <!-- Quick preview of remarks if exists -->
+                                <div v-if="slotProps.data.jpm_remarks" class="text-xs text-gray-600 italic truncate">
+                                    "{{ slotProps.data.jpm_remarks }}"
+                                </div>
+                            </div>
+                        </template>
+                    </Column>
+
+                    <!-- Priority Column -->
+                    <Column header="Priority" style="width: 80px"
+                        v-if="hasPermission('priority.manage') && !simpleView">
+                        <template #body="slotProps">
+                            <div class="flex items-center justify-center">
+                                <div v-if="slotProps.data.priority_level === 'urgent'"
+                                    v-tooltip.top="'Urgent' + (slotProps.data.priority_reason ? ': ' + slotProps.data.priority_reason : '')">
+                                    <i class="pi pi-exclamation-triangle text-red-500" style="font-size: 1.1rem;"></i>
+                                </div>
+                                <div v-else-if="slotProps.data.priority_level === 'high'"
+                                    v-tooltip.top="'High' + (slotProps.data.priority_reason ? ': ' + slotProps.data.priority_reason : '')">
+                                    <i class="pi pi-star-fill text-orange-500" style="font-size: 1.1rem;"></i>
+                                </div>
+                                <div v-else v-tooltip.top="'Normal'">
+                                    <i class="pi pi-minus text-gray-300" style="font-size: 0.9rem;"></i>
+                                </div>
+                            </div>
+                        </template>
+                    </Column>
+
+                    <!-- Actions Column -->
+                    <Column header="Actions" style="width: 60px" v-if="!simpleView">
+                        <template #body="slotProps">
+                            <div class="flex justify-center">
+                                <Button icon="pi pi-ellipsis-v" rounded outlined severity="secondary" size="small"
+                                    @click="(event) => showRowContextMenu(event, slotProps.data)"
+                                    v-tooltip.top="'More actions'" />
+                            </div>
+                        </template>
+                    </Column>
+                </DataTable>
             </div>
         </div>
 

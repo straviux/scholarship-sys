@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h4 v-if="showHeader" class="text-base font-semibold text-gray-700 mb-4">
+        <h4 v-if="showHeader" class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-4">
             <slot name="header">Academic Information</slot>
         </h4>
         <div class="space-y-4">
@@ -49,7 +49,7 @@
 
             <!-- Remarks Field -->
             <div class="grid grid-cols-1 gap-3 mt-10">
-                <label class="text-sm font-medium text-gray-600 mb-1">Remarks (Optional)</label>
+                <label class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Remarks (Optional)</label>
                 <Editor :modelValue="remarks" @update:modelValue="$emit('update:remarks', $event)"
                     editorStyle="height: 120px">
                     <template #toolbar>
@@ -118,5 +118,14 @@ const emit = defineEmits([
 .p-select.p-variant-filled .p-select-label,
 .p-datepicker.p-variant-filled .p-datepicker-input {
     background-color: #ffffff !important;
+}
+
+/* Dark mode overrides */
+.dark .p-inputtext.p-variant-filled,
+.dark .p-textarea.p-variant-filled,
+.dark .p-select.p-variant-filled .p-select-label,
+.dark .p-datepicker.p-variant-filled .p-datepicker-input {
+    background-color: #1a1e27 !important;
+    color: #d1d5db !important;
 }
 </style>

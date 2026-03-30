@@ -20,7 +20,8 @@
                 </div>
                 <div class="ios-body"
                     style="padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                    <div class="flex items-center justify-center bg-gray-100 relative overflow-hidden" style="flex: 1;">
+                    <div class="flex items-center justify-center bg-gray-100 dark:bg-gray-900 relative overflow-hidden"
+                        style="flex: 1;">
                         <!-- PDF Viewer -->
                         <iframe v-if="attachment && getFileType(attachment).includes('pdf')"
                             :src="getAttachmentUrl(attachment)" class="w-full h-full"
@@ -40,12 +41,12 @@
                                 }" />
 
                             <!-- Zoom Controls -->
-                            <div class="absolute bottom-4 right-4 flex gap-1"
-                                style="background: #fff; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); padding: 4px;">
+                            <div
+                                class="absolute bottom-4 right-4 flex gap-1 bg-white dark:bg-gray-800 rounded-[10px] shadow-lg p-1">
                                 <button class="ios-icon-btn" @click="zoomOut" :disabled="imageZoom <= 0.5">
                                     <i class="pi pi-minus"></i>
                                 </button>
-                                <span style="padding: 6px 10px; font-size: 13px; font-weight: 600; color: #000;">{{
+                                <span class="px-2.5 py-1.5 text-[13px] font-semibold text-black dark:text-gray-200">{{
                                     Math.round(imageZoom * 100) }}%</span>
                                 <button class="ios-icon-btn" @click="zoomIn" :disabled="imageZoom >= 5">
                                     <i class="pi pi-plus"></i>
@@ -57,9 +58,9 @@
                         </div>
 
                         <!-- Fallback -->
-                        <div v-else class="text-center p-8">
-                            <i class="pi pi-file text-6xl text-gray-400 mb-4"></i>
-                            <p class="text-gray-600">Unable to preview this file type</p>
+                        <div v-else class="text-center p-6 short:p-4">
+                            <i class="pi pi-file text-6xl text-gray-400 dark:text-gray-500 mb-4"></i>
+                            <p class="text-gray-600 dark:text-gray-400">Unable to preview this file type</p>
                             <button class="ios-icon-btn" style="margin-top: 12px;"
                                 @click="downloadAttachment(attachment)">
                                 <i class="pi pi-download"></i> Download Instead
@@ -271,6 +272,36 @@ const formatFileSize = (bytes) => {
 
 .ios-icon-btn:hover {
     background: rgba(0, 122, 255, 0.1);
+}
+
+/* Dark mode */
+:global(.dark) .ios-modal {
+    background: #222831;
+}
+
+:global(.dark) .ios-nav-bar {
+    background: #2a3040;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-nav-title {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-nav-cancel {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-body {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-icon-btn:hover {
+    background: rgba(0, 122, 255, 0.15);
 }
 </style>
 

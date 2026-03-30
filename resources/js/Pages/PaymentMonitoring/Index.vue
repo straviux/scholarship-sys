@@ -214,21 +214,22 @@ const formatDate = (date) => {
 
         <div>
             <!-- Toolbar -->
-            <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+            <Toolbar class="mb-4 -mt-2 short:mb-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-dollar text-blue-600" style="font-size:2rem"></i>
+                        <i class="pi pi-dollar text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
                         <div>
-                            <h1 class="text-2xl font-bold text-gray-700">Payment Monitoring</h1>
-                            <p class="text-sm text-gray-600">Track OBR status for active scholarship records</p>
+                            <h1 class="text-2xl font-bold text-gray-700 short:text-xl">Payment Monitoring</h1>
+                            <p class="text-sm text-gray-600 short:text-xs">Track OBR status for active scholarship
+                                records</p>
                         </div>
                     </div>
                 </template>
             </Toolbar>
 
             <!-- Filters Panel -->
-            <Panel class="mb-6 !rounded-4xl overflow-hidden">
-                <div class="flex items-end gap-3 -mt-6 flex-wrap">
+            <Panel class="mb-6 short:mb-3 !rounded-4xl overflow-hidden">
+                <div class="flex items-end gap-3 short:gap-2 -mt-6 short:-mt-3 flex-wrap">
                     <!-- Search -->
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Scholar Name</label>
@@ -275,7 +276,7 @@ const formatDate = (date) => {
                 </div>
 
                 <!-- Status filter row -->
-                <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
+                <div class="flex flex-wrap gap-2 short:gap-1 mt-4 short:mt-2 pt-4 short:pt-2 border-t border-gray-100">
                     <label v-for="opt in [
                         { label: 'All', value: 'all', count: statusCounts.all },
                         { label: 'No OBR', value: 'no-obr', count: statusCounts['no-obr'] },
@@ -295,28 +296,28 @@ const formatDate = (date) => {
             </Panel>
 
             <!-- Stats Summary -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl font-bold text-blue-600">{{ statusCounts.all }}</div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 short:gap-2 mb-6 short:mb-3">
+                <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
+                    <div class="text-2xl short:text-xl font-bold text-blue-600">{{ statusCounts.all }}</div>
                     <div class="text-xs text-gray-500">Total Records</div>
                 </div>
-                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl font-bold text-orange-500">{{ statusCounts['On Process'] }}</div>
+                <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
+                    <div class="text-2xl short:text-xl font-bold text-orange-500">{{ statusCounts['On Process'] }}</div>
                     <div class="text-xs text-gray-500">On Process</div>
                 </div>
-                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl font-bold text-green-600">{{ statusCounts['Paid'] }}</div>
+                <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
+                    <div class="text-2xl short:text-xl font-bold text-green-600">{{ statusCounts['Paid'] }}</div>
                     <div class="text-xs text-gray-500">Paid</div>
                 </div>
-                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl font-bold text-gray-400">{{ statusCounts['no-obr'] }}</div>
+                <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
+                    <div class="text-2xl short:text-xl font-bold text-gray-400">{{ statusCounts['no-obr'] }}</div>
                     <div class="text-xs text-gray-500">No OBR</div>
                 </div>
             </div>
 
             <!-- Data Table -->
             <Panel class="!rounded-4xl overflow-hidden shadow-sm">
-                <div class="flex items-center justify-between mb-4 -mt-2">
+                <div class="flex items-center justify-between mb-4 short:mb-2 -mt-2">
                     <span class="text-sm text-gray-500">{{ filteredData.length }} record(s)</span>
                 </div>
 
@@ -380,7 +381,7 @@ const formatDate = (date) => {
                     <Column header="OBR Date" style="min-width: 110px">
                         <template #body="{ data }">
                             <span v-if="data.date_obligated" class="text-gray-700">{{ formatDate(data.date_obligated)
-                                }}</span>
+                            }}</span>
                             <span v-else class="text-gray-400">—</span>
                         </template>
                     </Column>

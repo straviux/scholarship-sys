@@ -6,7 +6,7 @@
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
                     <span class="ios-nav-title">{{ mode === 'add' ? 'Add Scholarship Record' : 'Edit Scholarship Record'
-                    }}</span>
+                        }}</span>
                     <button class="ios-nav-btn ios-nav-action" @click.stop="submitRecord" :disabled="processing">
                         <i class="pi pi-check"></i>
                     </button>
@@ -329,6 +329,36 @@ const submitRecord = async () => {
 
 :deep(.p-datepicker) {
     border-radius: 10px;
+}
+
+/* Dark mode */
+:global(.dark) .ios-modal {
+    background: #222831;
+}
+
+:global(.dark) .ios-nav-bar {
+    background: #2a3040;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-nav-title {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-nav-cancel {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-body {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-label {
+    color: #d1d5db;
 }
 </style>
 

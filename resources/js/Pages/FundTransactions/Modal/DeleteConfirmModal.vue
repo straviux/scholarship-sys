@@ -19,8 +19,8 @@
                             <div class="flex items-center gap-3">
                                 <i class="pi pi-exclamation-triangle text-2xl text-red-500"></i>
                                 <div>
-                                    <p class="font-semibold text-gray-900">Delete Transaction</p>
-                                    <p class="text-sm text-gray-600">This action cannot be undone</p>
+                                    <p class="font-semibold text-gray-900 dark:text-gray-100">Delete Transaction</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">This action cannot be undone</p>
                                 </div>
                             </div>
                         </div>

@@ -1,23 +1,22 @@
 <template>
     <div>
         <!-- Activity Logs Bell Button -->
-        <Button type="button" icon="pi pi-history" @click="togglePopover"
-            :severity="badgeCount > 0 ? 'info' : 'contrast'"
-            :badge="(badgeCount > 99 ? '99+' : badgeCount).toString() || ''" size="small"
+        <Button type="button" icon="pi pi-history" @click="togglePopover" :severity="'contrast'"
+            :badge="(badgeCount > 99 ? '99+' : badgeCount).toString() || ''" size="small" text rounded
             v-tooltip.bottom="'Your Activity Logs'" />
 
         <!-- Popover Menu -->
-        <Popover ref="popoverRef" class="w-80">
+        <Popover ref="popoverRef" class="w-80 !rounded-2xl">
             <div class="max-h-96 overflow-hidden flex flex-col">
                 <!-- Header -->
-                <div class="px-4 py-3 border-b border-gray-100 flex-shrink-0">
+                <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
                             <i class="pi pi-history text-blue-600"></i>
-                            <h3 class="text-base font-semibold text-gray-900">Your Activities</h3>
+                            <h3 class="text-base font-semibold">Your Activities</h3>
                         </div>
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">
+                    <p class="text-xs opacity-60 mt-1">
                         {{ badgeCount }} latest activities
                     </p>
                 </div>
@@ -27,18 +26,18 @@
                     <!-- Loading State -->
                     <div v-if="isLoading" class="px-4 py-6 text-center">
                         <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                        <p class="text-xs text-gray-500 mt-2">Loading...</p>
+                        <p class="text-xs opacity-60 mt-2">Loading...</p>
                     </div>
 
                     <!-- Empty State -->
                     <div v-else-if="activities.length === 0" class="px-4 py-8 text-center">
-                        <i class="pi pi-history text-gray-300" style="font-size: 2rem"></i>
-                        <h4 class="text-sm font-medium text-gray-900 mb-1 mt-2">No activities yet</h4>
-                        <p class="text-xs text-gray-500">Your activities will appear here</p>
+                        <i class="pi pi-history opacity-30" style="font-size: 2rem"></i>
+                        <h4 class="text-sm font-medium mb-1 mt-2">No activities yet</h4>
+                        <p class="text-xs opacity-60">Your activities will appear here</p>
                     </div>
 
                     <!-- Activities List -->
-                    <div v-else class="divide-y divide-gray-100">
+                    <div v-else class="divide-y divide-gray-100 dark:divide-gray-700">
                         <div v-for="activity in activities" :key="activity.id" class="px-4 py-3">
 
                             <!-- Activity Content -->
@@ -52,7 +51,7 @@
                                                 <i :class="getActivityIcon(activity.activity_type)"
                                                     style="font-size: 0.65rem"></i>
                                             </div>
-                                            <h4 class="text-xs font-medium text-gray-900 line-clamp-1">
+                                            <h4 class="text-xs font-medium line-clamp-1">
                                                 {{ activity.activity_type }}
                                             </h4>
                                         </div>
@@ -60,14 +59,14 @@
                                             class="text-xs text-blue-600 font-medium mt-1 ml-7">
                                             <i class="pi pi-user text-xs mr-1"></i>{{ activity.profile_name }}
                                         </p>
-                                        <p class="text-xs text-gray-600 mt-1 ml-7 line-clamp-2">
+                                        <p class="text-xs opacity-70 mt-1 ml-7 line-clamp-2">
                                             {{ activity.remarks || activity.description || 'No details' }}
                                         </p>
                                     </div>
                                 </div>
 
                                 <!-- Footer -->
-                                <div class="flex items-center justify-between mt-2 ml-7 text-xs text-gray-400">
+                                <div class="flex items-center justify-between mt-2 ml-7 text-xs opacity-50">
                                     <span class="truncate">{{ activity.user?.name || 'System' }}</span>
                                     <span class="text-xs">{{ formatDate(activity.performed_at) }}</span>
                                 </div>
@@ -77,9 +76,9 @@
                 </div>
 
                 <!-- Footer -->
-                <div v-if="activities.length > 0" class="px-4 py-2 border-t border-gray-100 bg-gray-50 flex-shrink-0">
+                <div v-if="activities.length > 0" class="px-4 py-2 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <button @click="viewAllActivities"
-                        class="w-full text-center text-xs text-blue-600 hover:text-blue-800 focus:outline-none font-medium transition-colors duration-200 cursor-pointer">
+                        class="w-full text-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 focus:outline-none font-medium transition-colors duration-200 cursor-pointer">
                         View all
                     </button>
                 </div>

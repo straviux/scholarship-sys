@@ -557,7 +557,7 @@ const runCleanup = async () => {
 
                         <!-- ROLES & PERMISSIONS TAB -->
                         <TabPanel value="1">
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 short:gap-2">
                                 <!-- Left Sidebar: Roles List -->
                                 <div class="lg:col-span-1">
                                     <h3 class="font-semibold text-gray-700 mb-3">Available Roles</h3>
@@ -589,7 +589,7 @@ const runCleanup = async () => {
                                             ]">
                                             <div class="flex items-center justify-between">
                                                 <span class="font-medium text-gray-700 capitalize">{{ role.name
-                                                }}</span>
+                                                    }}</span>
                                                 <Tag v-if="role.permissions" :value="`${role.permissions.length}`"
                                                     severity="info" size="small" />
                                             </div>
@@ -601,7 +601,7 @@ const runCleanup = async () => {
                                 <div class="lg:col-span-2">
                                     <div v-if="!selectedRole"
                                         class="flex flex-col items-center justify-center h-96 text-gray-400">
-                                        <i class="pi pi-sliders-h text-4xl mb-2"></i>
+                                        <i class="pi pi-sliders-h text-4xl short:text-2xl mb-2"></i>
                                         <p class="text-lg font-medium">Select a role to manage permissions</p>
                                     </div>
 

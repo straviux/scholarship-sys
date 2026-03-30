@@ -7,9 +7,9 @@
             System Stats
         </template>
 
-        <div class="p-6 space-y-6">
+        <div class="p-4 short:p-3 space-y-4 short:space-y-2">
             <!-- Header Panel -->
-            <Panel class="mb-6">
+            <Panel class="mb-4 short:mb-2">
                 <template #header>
                     <div class="flex items-center gap-2">
                         <i class="pi pi-chart-bar text-xl"></i>
@@ -42,10 +42,10 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Total Records</p>
-                                <p class="text-2xl font-bold text-blue-600">{{
+                                <p class="text-2xl short:text-xl font-bold text-blue-600">{{
                                     report.executive_summary.total_scholarship_records }}</p>
                             </div>
-                            <i class="pi pi-file-text text-3xl text-blue-500"></i>
+                            <i class="pi pi-file-text text-3xl short:text-xl text-blue-500"></i>
                         </div>
                     </template>
                 </Card>
@@ -55,10 +55,10 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Pending Applications</p>
-                                <p class="text-2xl font-bold text-yellow-600">{{
+                                <p class="text-2xl short:text-xl font-bold text-yellow-600">{{
                                     report.executive_summary.pending_applications }}</p>
                             </div>
-                            <i class="pi pi-clock text-3xl text-yellow-500"></i>
+                            <i class="pi pi-clock text-3xl short:text-xl text-yellow-500"></i>
                         </div>
                     </template>
                 </Card>
@@ -68,10 +68,11 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Approval Rate</p>
-                                <p class="text-2xl font-bold text-green-600">{{ report.executive_summary.approval_rate
-                                }}%</p>
+                                <p class="text-2xl short:text-xl font-bold text-green-600">{{
+                                    report.executive_summary.approval_rate
+                                    }}%</p>
                             </div>
-                            <i class="pi pi-check-circle text-3xl text-green-500"></i>
+                            <i class="pi pi-check-circle text-3xl short:text-xl text-green-500"></i>
                         </div>
                     </template>
                 </Card>
@@ -81,9 +82,10 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-gray-600">System Health</p>
-                                <p class="text-2xl font-bold" :class="systemHealthColor">{{ systemHealthStatus }}</p>
+                                <p class="text-2xl short:text-xl font-bold" :class="systemHealthColor">{{
+                                    systemHealthStatus }}</p>
                             </div>
-                            <i class="pi pi-shield text-3xl" :class="systemHealthColor"></i>
+                            <i class="pi pi-shield text-3xl short:text-xl" :class="systemHealthColor"></i>
                         </div>
                     </template>
                 </Card>
@@ -102,7 +104,7 @@
                         <div class="p-4 bg-red-50 rounded-lg border border-red-200">
                             <p class="text-sm text-red-600">Records without Programs</p>
                             <p class="text-xl font-bold text-red-700">{{ report.data_integrity.records_without_programs
-                            }}</p>
+                                }}</p>
                         </div>
                         <div class="p-4 bg-orange-50 rounded-lg border border-orange-200">
                             <p class="text-sm text-orange-600">Records without Courses</p>
@@ -117,14 +119,14 @@
                         <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
                             <p class="text-sm text-purple-600">Orphaned Requirements</p>
                             <p class="text-xl font-bold text-purple-700">{{ report.data_integrity.orphaned_requirements
-                            }}</p>
+                                }}</p>
                         </div>
                     </div>
                 </template>
             </Card>
 
             <!-- Application Status Charts -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
                 <Card>
                     <template #title>Application Status Distribution</template>
                     <template #content>
@@ -149,20 +151,20 @@
                     </div>
                 </template>
                 <template #content>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 short:gap-2">
                         <div class="text-center p-4 bg-blue-50 rounded-lg">
                             <p class="text-sm text-blue-600">Average Processing Time</p>
-                            <p class="text-2xl font-bold text-blue-700">{{
+                            <p class="text-2xl short:text-xl font-bold text-blue-700">{{
                                 report.performance_metrics.average_processing_time_days }} days</p>
                         </div>
                         <div class="text-center p-4 bg-green-50 rounded-lg">
                             <p class="text-sm text-green-600">Applications This Month</p>
-                            <p class="text-2xl font-bold text-green-700">{{
+                            <p class="text-2xl short:text-xl font-bold text-green-700">{{
                                 report.performance_metrics.applications_this_month }}</p>
                         </div>
                         <div class="text-center p-4 bg-purple-50 rounded-lg">
                             <p class="text-sm text-purple-600">Applications Last Month</p>
-                            <p class="text-2xl font-bold text-purple-700">{{
+                            <p class="text-2xl short:text-xl font-bold text-purple-700">{{
                                 report.performance_metrics.applications_last_month }}</p>
                         </div>
                     </div>
@@ -178,7 +180,7 @@
                     </div>
                 </template>
                 <template #content>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
                         <div>
                             <h4 class="font-semibold mb-3">Top Municipalities</h4>
                             <div class="space-y-2 max-h-64 overflow-y-auto">
@@ -215,7 +217,7 @@
                     </div>
                 </template>
                 <template #content>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
                         <div>
                             <h4 class="font-semibold mb-3">Top Courses</h4>
                             <div class="space-y-2 max-h-64 overflow-y-auto">
@@ -287,21 +289,25 @@
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div class="text-center p-4 bg-indigo-50 rounded-lg">
                             <p class="text-sm text-indigo-600">Total Users</p>
-                            <p class="text-2xl font-bold text-indigo-700">{{ report.user_activity.total_users }}</p>
+                            <p class="text-2xl short:text-xl font-bold text-indigo-700">{{
+                                report.user_activity.total_users }}</p>
                         </div>
                         <div class="text-center p-4 bg-green-50 rounded-lg">
                             <p class="text-sm text-green-600">Active Today</p>
-                            <p class="text-2xl font-bold text-green-700">{{ report.user_activity.active_users_today }}
+                            <p class="text-2xl short:text-xl font-bold text-green-700">{{
+                                report.user_activity.active_users_today }}
                             </p>
                         </div>
                         <div class="text-center p-4 bg-blue-50 rounded-lg">
                             <p class="text-sm text-blue-600">New This Month</p>
-                            <p class="text-2xl font-bold text-blue-700">{{ report.user_activity.new_users_this_month }}
+                            <p class="text-2xl short:text-xl font-bold text-blue-700">{{
+                                report.user_activity.new_users_this_month }}
                             </p>
                         </div>
                         <div class="text-center p-4 bg-orange-50 rounded-lg">
                             <p class="text-sm text-orange-600">Inactive Users</p>
-                            <p class="text-2xl font-bold text-orange-700">{{ report.user_activity.inactive_users }}</p>
+                            <p class="text-2xl short:text-xl font-bold text-orange-700">{{
+                                report.user_activity.inactive_users }}</p>
                         </div>
                     </div>
                 </template>

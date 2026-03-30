@@ -13,7 +13,7 @@
         </template>
 
         <div class="space-y-4">
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-gray-600 dark:text-gray-400">
                 {{ mode === `edit`
                     ? `Update the application information. Changes will be saved immediately.`
                     : `Complete all sections to submit a scholarship application. All information will be reviewed during
@@ -46,8 +46,8 @@
                                     v-model:temporary_address="form.temporary_address" :show-header="false" />
 
                                 <!-- Duplicate Name Warning -->
-                                <div v-if="validationError" class="mt-4 bg-red-50 border border-red-200 rounded p-3">
-                                    <p class="text-sm text-red-800 font-medium">
+                                <div v-if="validationError" class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
+                                    <p class="text-sm text-red-800 dark:text-red-300 font-medium">
                                         <i class="pi pi-exclamation-triangle mr-2"></i>
                                         {{ validationError }}
                                     </p>
@@ -57,22 +57,22 @@
                                 <Dialog v-model:visible="showDuplicateDialog" modal header="Possible Duplicate Found"
                                     :style="{ width: '550px' }">
                                     <div class="space-y-3">
-                                        <p class="text-sm text-gray-700">
+                                        <p class="text-sm text-gray-700 dark:text-gray-300">
                                             <i class="pi pi-exclamation-triangle text-yellow-500 mr-1"></i>
                                             The following existing record(s) match the name
                                             <strong>{{ form.first_name }} {{ form.last_name }}</strong>:
                                         </p>
                                         <div class="max-h-60 overflow-y-auto border rounded divide-y">
                                             <div v-for="match in duplicateMatches" :key="match.profile_id"
-                                                class="p-3 flex items-center gap-3 hover:bg-gray-50">
-                                                <i class="pi pi-user text-gray-400"></i>
+                                                class="p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                                <i class="pi pi-user text-gray-400 dark:text-gray-500"></i>
                                                 <div class="flex-1 text-sm">
-                                                    <div class="font-semibold text-gray-800">
+                                                    <div class="font-semibold text-gray-800 dark:text-gray-200">
                                                         {{ match.last_name }}, {{ match.first_name }} {{
                                                         match.middle_name || ''
                                                         }} {{ match.extension_name || '' }}
                                                     </div>
-                                                    <div class="text-xs text-gray-500">
+                                                    <div class="text-xs text-gray-500 dark:text-gray-400">
                                                         {{ match.municipality || 'No address' }}{{ match.barangay ? `,
                                                         ${match.barangay}` : '' }}
                                                         <span v-if="match.contact_no" class="ml-2">· {{ match.contact_no
@@ -81,7 +81,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-xs text-gray-500">Are you sure this is a different person? You
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Are you sure this is a different person? You
                                             may
                                             proceed or cancel to review.</p>
                                     </div>
@@ -146,8 +146,8 @@
                                             </FloatLabel>
                                         </div>
 
-                                        <div class="bg-blue-50 border border-blue-200 rounded p-3">
-                                            <p class="text-sm text-blue-800">
+                                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
+                                            <p class="text-sm text-blue-800 dark:text-blue-300">
                                                 <i class="pi pi-info-circle mr-2"></i>
                                                 Academic information is optional. You can complete it now or update it
                                                 later.

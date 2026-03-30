@@ -80,8 +80,8 @@
 
                                             <!-- Duplicate Name Warning -->
                                             <div v-if="validationError"
-                                                class="mt-4 bg-red-50 border border-red-200 rounded p-3">
-                                                <p class="text-sm text-red-800 font-medium">
+                                                class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
+                                                <p class="text-sm text-red-800 dark:text-red-300 font-medium">
                                                     <i class="pi pi-exclamation-triangle mr-2"></i>
                                                     {{ validationError }}
                                                 </p>
@@ -108,7 +108,7 @@
                                                                         style="color: #FF9500;"></i>
                                                                     The following record(s) match
                                                                     <strong>{{ form.first_name }} {{ form.last_name
-                                                                        }}</strong>:
+                                                                    }}</strong>:
                                                                 </div>
                                                             </div>
                                                             <div class="ios-section">
@@ -199,8 +199,9 @@
                                                         </FloatLabel>
                                                     </div>
 
-                                                    <div class="bg-blue-50 border border-blue-200 rounded p-3">
-                                                        <p class="text-sm text-blue-800">
+                                                    <div
+                                                        class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
+                                                        <p class="text-sm text-blue-800 dark:text-blue-300">
                                                             <i class="pi pi-info-circle mr-2"></i>
                                                             Academic information is optional. You can complete it now or
                                                             update it later.
@@ -730,64 +731,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* Override global max-height (ios-design-system.css uses 85vh) for this larger multi-step form */
 .ios-modal {
-    background: #F2F2F7;
-    border-radius: 14px;
     max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-    overflow: hidden;
-    margin: 0 auto;
 }
 
-.ios-nav-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    padding: 14px 16px;
-    background: #FFFFFF;
-    border-bottom: 0.5px solid #E5E5EA;
-    flex-shrink: 0;
-    cursor: grab;
-    user-select: none;
-}
-
-.ios-nav-bar:active {
-    cursor: grabbing;
-}
-
-.ios-nav-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: #000;
-    letter-spacing: -0.4px;
-}
-
-.ios-nav-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    font-size: 17px;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 8px;
-    transition: opacity 0.15s;
-}
-
-.ios-nav-btn:hover {
-    opacity: 0.6;
-}
-
-.ios-nav-cancel {
-    left: 16px;
-    color: #8E8E93;
-    font-size: 20px;
-}
-
+/* Nav right area (step counter + maximize button) */
 .ios-nav-right {
     position: absolute;
     right: 16px;
@@ -802,6 +751,10 @@ onBeforeUnmount(() => {
     font-size: 13px;
     color: #8E8E93;
     font-weight: 400;
+}
+
+.dark .ios-nav-step-text {
+    color: #6b7280;
 }
 
 .ios-nav-maximize {
@@ -820,6 +773,7 @@ onBeforeUnmount(() => {
     opacity: 0.6;
 }
 
+/* Maximized state */
 .ios-modal-maximized {
     border-radius: 0;
     max-height: 100vh;
@@ -829,6 +783,7 @@ onBeforeUnmount(() => {
     cursor: default;
 }
 
+/* Footer */
 .ios-footer {
     display: flex;
     align-items: center;
@@ -837,6 +792,11 @@ onBeforeUnmount(() => {
     background: #FFFFFF;
     border-top: 0.5px solid #E5E5EA;
     flex-shrink: 0;
+}
+
+.dark .ios-footer {
+    background: #2a3040;
+    border-top-color: rgba(255, 255, 255, 0.08);
 }
 
 .ios-footer-btn {
@@ -857,6 +817,10 @@ onBeforeUnmount(() => {
     background: rgba(0, 0, 0, 0.04);
 }
 
+.dark .ios-footer-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
 .ios-footer-btn:disabled {
     color: #C7C7CC;
     cursor: not-allowed;
@@ -868,6 +832,10 @@ onBeforeUnmount(() => {
     font-weight: 400;
 }
 
+.dark .ios-footer-back {
+    color: #9ca3af;
+}
+
 .ios-footer-next {
     color: #007AFF;
 }
@@ -876,38 +844,7 @@ onBeforeUnmount(() => {
     color: #34C759;
 }
 
-.ios-body {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 0 16px;
-}
-
-.ios-section {
-    margin-top: 22px;
-}
-
-.ios-section:first-child {
-    margin-top: 16px;
-}
-
-.ios-section-label {
-    font-size: 13px;
-    font-weight: 400;
-    color: #6D6D72;
-    text-transform: uppercase;
-    letter-spacing: -0.08px;
-    padding: 0 16px 6px;
-}
-
-.ios-section-footer {
-    font-size: 13px;
-    color: #6D6D72;
-    padding: 6px 0 0;
-    line-height: 1.3;
-}
-
-/* Duplicate dialog */
+/* Duplicate detection dialog */
 .ios-dup-modal {
     width: 480px;
     max-height: 85vh;
@@ -917,6 +854,10 @@ onBeforeUnmount(() => {
     flex-direction: column;
     overflow: hidden;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.dark .ios-dup-modal {
+    background: #222831;
 }
 
 .ios-dup-nav {
@@ -934,6 +875,11 @@ onBeforeUnmount(() => {
 
 .ios-dup-nav:active {
     cursor: grabbing;
+}
+
+.dark .ios-dup-nav {
+    background: rgba(42, 48, 64, 0.94);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
 .ios-dup-nav .ios-nav-btn {
@@ -1041,5 +987,23 @@ onBeforeUnmount(() => {
     background: #e5e7eb;
     align-self: center;
     border-radius: 1px;
+}
+
+/* Step button dark mode */
+.dark .ios-step-btn {
+    color: #6b7280;
+}
+
+.dark .ios-step-btn:hover {
+    color: #9ca3af;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.dark .ios-step-btn.ios-step-active {
+    color: #d1d5db;
+}
+
+.dark .ios-step-separator {
+    background: rgba(255, 255, 255, 0.1);
 }
 </style>

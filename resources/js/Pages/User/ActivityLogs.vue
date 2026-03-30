@@ -3,12 +3,12 @@
     <Head title="Your Activity Logs" />
 
     <AdminLayout>
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 short:py-3">
             <!-- Header -->
-            <div class="mb-8">
+            <div class="mb-6 short:mb-3">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-900">Your Activity Logs</h1>
+                        <h1 class="text-3xl short:text-xl font-bold text-gray-900">Your Activity Logs</h1>
                         <p class="text-sm text-gray-600 mt-1">Complete history of your actions in the system</p>
                     </div>
                     <div class="flex gap-2">
@@ -18,7 +18,7 @@
             </div>
 
             <!-- Filters -->
-            <div class="bg-white rounded-lg shadow mb-6 p-6">
+            <div class="bg-white rounded-lg shadow mb-4 short:mb-2 p-4 short:p-3">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Search by Name</label>

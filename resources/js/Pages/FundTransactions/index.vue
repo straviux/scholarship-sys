@@ -1374,7 +1374,8 @@ onMounted(() => {
             <!-- List/Summary Section -->
             <Panel class="!rounded-4xl overflow-hidden mt-8">
                 <!-- Info Bar -->
-                <div class="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 rounded-4xl -mt-2">
+                <div
+                    class="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
                     <div class="flex-1 max-w-md">
                         <IconField iconPosition="left">
                             <InputIcon class="pi pi-search text-gray-400" />
@@ -1512,7 +1513,7 @@ onMounted(() => {
                     <Column header="Processed By" style="min-width: 130px">
                         <template #body="slotProps">
                             <span class="text-xs font-semibold text-gray-600">{{ slotProps.data.creator?.name || '---'
-                                }}</span>
+                            }}</span>
                         </template>
                     </Column>
 
@@ -1557,7 +1558,7 @@ onMounted(() => {
                         <div class="ios-row">
                             <span class="ios-row-label">Date Obligated</span>
                             <span>{{ selectedVoucher.date_obligated ? formatDate(selectedVoucher.date_obligated) : '---'
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="ios-row">
                             <span class="ios-row-label">Disbursement Type</span>
@@ -1577,7 +1578,7 @@ onMounted(() => {
                         <div class="ios-row">
                             <span class="ios-row-label">Amount</span>
                             <span style="font-weight: 600;">{{ formatAmount(selectedVoucher.amount)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="ios-row">
                             <span class="ios-row-label">Created By</span>

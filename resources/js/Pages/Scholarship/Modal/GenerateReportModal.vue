@@ -976,6 +976,89 @@ onBeforeUnmount(() => {
 :deep(.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider) {
     background: #34C759 !important;
 }
+
+/* Dark mode */
+:global(.dark) .ios-modal {
+    background: #222831;
+}
+
+:global(.dark) .ios-nav-bar {
+    background: #2a3040;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-nav-title {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-nav-cancel {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-nav-action {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-preview-body {
+    background: #1a1e27;
+}
+
+:global(.dark) .ios-body {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-footer {
+    background: #2a3040;
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-section-label {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-section-footer {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-card {
+    background: #1e2433;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-row {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+:global(.dark) .ios-row-label {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-segmented-control {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+:global(.dark) .ios-segment {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-segment-active {
+    background: #2a3040;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+:global(.dark) .ios-destructive-btn {
+    background: #1e2433;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-destructive-btn:hover {
+    background: #252d3d;
+}
 </style>
 
 <!-- Unscoped: targets teleported Dialog elements at body level -->

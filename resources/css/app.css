@@ -8,6 +8,11 @@
 @source '../../storage/framework/views/*.php';
 @source '../views';
 
+@custom-variant short (@media (max-height: 800px));
+
+/* Class-based dark mode — apply .dark on <html> to activate */
+@custom-variant dark (&:is(.dark, .dark *));
+
 @theme {
 	--font-sans: Figtree, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
 		'Segoe UI Symbol', 'Noto Color Emoji';
@@ -86,7 +91,11 @@
 	}
 
 	html {
-		color-scheme: light !important;
+		color-scheme: light;
+	}
+
+	html.dark {
+		color-scheme: dark;
 	}
 
 	/* Ensure fixed sizing for critical elements */
@@ -163,4 +172,140 @@
 	.p-panel .p-panel-content {
 		padding: 1rem;
 	}
+}
+
+/* ─── Dark mode overrides for standard PrimeVue components ─── */
+/* Uses surface values from the Noir preset: 800=#2a3040, 900=#222831, 950=#1a1e27 */
+.dark .p-dialog {
+	background: #222831;
+	color: #d1d5db;
+}
+.dark .p-dialog .p-dialog-header {
+	background: #222831;
+	color: #d1d5db;
+	border-color: #374155;
+}
+.dark .p-dialog .p-dialog-content {
+	background: #222831;
+	color: #d1d5db;
+}
+.dark .p-dialog .p-dialog-footer {
+	background: #222831;
+	border-color: #374155;
+}
+
+/* Form inputs */
+.dark .p-inputtext,
+.dark .p-textarea {
+	background: #1a1e27;
+	color: #d1d5db;
+	border-color: #374155;
+}
+.dark .p-inputtext:enabled:focus,
+.dark .p-textarea:enabled:focus {
+	border-color: #6366f1;
+}
+.dark .p-inputtext::placeholder,
+.dark .p-textarea::placeholder {
+	color: #6b7280;
+}
+.dark .p-floatlabel > label {
+	color: #9ca3af;
+}
+
+/* Select / Dropdown */
+.dark .p-select {
+	background: #1a1e27;
+	color: #d1d5db;
+	border-color: #374155;
+}
+.dark .p-select-overlay {
+	background: #222831;
+	color: #d1d5db;
+	border-color: #374155;
+}
+.dark .p-select-option:hover,
+.dark .p-select-option.p-select-option-selected {
+	background: #2a3040;
+}
+
+/* AutoComplete */
+.dark .p-autocomplete-input {
+	background: #1a1e27;
+	color: #d1d5db;
+	border-color: #374155;
+}
+.dark .p-autocomplete-overlay {
+	background: #222831;
+	border-color: #374155;
+}
+
+/* DatePicker */
+.dark .p-datepicker {
+	background: #1a1e27;
+	color: #d1d5db;
+	border-color: #374155;
+}
+.dark .p-datepicker-panel {
+	background: #222831;
+	color: #d1d5db;
+}
+
+/* Checkbox */
+.dark .p-checkbox-box {
+	background: #1a1e27;
+	border-color: #374155;
+}
+
+/* Stepper */
+.dark .p-stepper {
+	background: transparent;
+}
+.dark .p-step-title {
+	color: #9ca3af;
+}
+.dark .p-step-number {
+	background: #374155;
+	color: #d1d5db;
+	border-color: #374155;
+}
+.dark .p-step.p-step-active .p-step-number {
+	background: #6366f1;
+	color: #ffffff;
+	border-color: #6366f1;
+}
+.dark .p-step.p-step-active .p-step-title {
+	color: #d1d5db;
+}
+
+/* Radio buttons */
+.dark .p-radiobutton-box {
+	background: #1a1e27;
+	border-color: #374155;
+}
+
+/* Editor (Quill) */
+.dark .p-editor-container .p-editor-toolbar {
+	background: #2a3040;
+	border-color: #374155;
+}
+.dark .p-editor-container .p-editor-toolbar .ql-stroke {
+	stroke: #9ca3af;
+}
+.dark .p-editor-container .p-editor-toolbar .ql-fill {
+	fill: #9ca3af;
+}
+.dark .p-editor-container .p-editor-toolbar .ql-picker-label {
+	color: #9ca3af;
+}
+.dark .p-editor-container .p-editor-content {
+	background: #1a1e27;
+	color: #d1d5db;
+	border-color: #374155;
+}
+.dark .p-editor-container .p-editor-content .ql-editor {
+	color: #d1d5db;
+}
+.dark .p-editor-container .p-editor-content .ql-editor.ql-blank::before {
+	color: #6b7280;
 }

@@ -3,15 +3,15 @@
 
         <Head title="Map Disbursement to Fund Transaction" />
 
-        <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-6 px-3 sm:px-6 lg:px-8">
+        <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-4 short:py-2 px-3 sm:px-6 lg:px-8">
             <div class="max-w-4xl mx-auto">
                 <!-- Header -->
-                <div class="mb-8">
+                <div class="mb-6 short:mb-3">
                     <Link :href="route('disbursement-management.index')"
                         class="text-blue-600 hover:text-blue-800 text-sm mb-4 flex items-center gap-1">
                         <i class="pi pi-arrow-left text-xs"></i> Back
                     </Link>
-                    <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">{{ obrNo }}</h1>
+                    <h1 class="text-2xl sm:text-3xl short:text-xl font-bold text-slate-900 mb-2">{{ obrNo }}</h1>
                     <p class="text-sm sm:text-base text-slate-600">
                         {{ existingTransaction ? 'Update' : 'Create' }} fund transaction mapping for {{
                             disbursements.length }} profile(s)
@@ -19,11 +19,11 @@
                 </div>
 
                 <!-- Disbursements Summary -->
-                <div class="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6 border border-slate-200">
+                <div class="bg-white rounded-lg shadow-sm p-4 sm:p-4 short:p-3 mb-4 short:mb-2 border border-slate-200">
                     <h2 class="text-lg font-semibold text-slate-900 mb-4">Disbursement Details</h2>
 
                     <div
-                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 pb-6 border-b border-slate-200">
+                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 short:mb-2 pb-4 short:pb-2 border-b border-slate-200">
                         <div>
                             <div class="text-xs sm:text-sm text-slate-500">OBR Status</div>
                             <Badge :value="disbursements[0].obr_status"
@@ -113,7 +113,7 @@
                                 option-value="value" placeholder="Select Payee Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_type }" />
                             <div v-if="errors.payee_type" class="text-red-600 text-xs mt-1">{{ errors.payee_type[0]
-                                }}</div>
+                            }}</div>
                         </div>
 
                         <!-- Payee Name -->
@@ -122,7 +122,7 @@
                             <InputText v-model="form.payee_name" placeholder="Name of payee" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_name }" />
                             <div v-if="errors.payee_name" class="text-red-600 text-xs mt-1">{{ errors.payee_name[0]
-                                }}</div>
+                            }}</div>
                         </div>
 
                         <!-- Payee Address -->
@@ -140,7 +140,7 @@
                                 class="w-full text-sm" :class="{ 'border-red-500': errors.disbursement_type }" />
                             <div v-if="errors.disbursement_type" class="text-red-600 text-xs mt-1">{{
                                 errors.disbursement_type[0]
-                                }}</div>
+                            }}</div>
                         </div>
 
                         <!-- Explanation -->

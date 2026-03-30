@@ -14,8 +14,10 @@
                 <div class="ios-body" style="padding: 16px;">
                     <!-- Record Info -->
                     <div v-if="record" class="ios-info-card" style="margin-bottom: 16px;">
-                        <p class="text-sm font-semibold text-gray-900">{{ record.program?.name || 'N/A' }}</p>
-                        <p class="text-xs text-gray-600">{{ record.academic_year }} - {{ record.term }}</p>
+                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ record.program?.name ||
+                            'N/A' }}</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">{{ record.academic_year }} - {{ record.term
+                            }}</p>
                     </div>
 
                     <!-- Existing Attachments -->
@@ -28,10 +30,12 @@
                                     <i :class="getFileIcon(attachment.file_type)" class="text-2xl"
                                         style="color: #007AFF;"></i>
                                     <div>
-                                        <p class="text-sm font-medium text-gray-900">{{ attachment.attachment_name }}
+                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{
+                                            attachment.attachment_name }}
                                         </p>
-                                        <p class="text-xs text-gray-500">{{ attachment.file_name }} – {{
-                                            formatFileSize(attachment.file_size) }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ attachment.file_name }} –
+                                            {{
+                                                formatFileSize(attachment.file_size) }}</p>
                                     </div>
                                 </div>
                                 <div class="flex gap-1">
@@ -79,7 +83,7 @@
                             <p class="ios-hint">Accepted formats: PDF, JPG, PNG (Max 25MB)</p>
                         </div>
                         <div v-if="attachmentForm.file" class="ios-info-card">
-                            <p class="text-sm text-gray-700">Selected: <span class="font-medium">{{
+                            <p class="text-sm text-gray-700 dark:text-gray-300">Selected: <span class="font-medium">{{
                                 attachmentForm.file.name }}</span></p>
                         </div>
                     </div>
@@ -368,6 +372,56 @@ const formatFileSize = (bytes) => {
 :deep(.p-inputtext),
 :deep(.p-select) {
     border-radius: 10px;
+}
+
+/* Dark mode */
+:global(.dark) .ios-modal {
+    background: #222831;
+}
+
+:global(.dark) .ios-nav-bar {
+    background: #2a3040;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-nav-title {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-nav-cancel {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-body {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-info-card,
+:global(.dark) .ios-list-item {
+    background: #1e2433;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-section-label {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-label {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-hint {
+    color: #6b7280;
+}
+
+:global(.dark) .ios-file-input {
+    background: #1e2433;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #d1d5db;
 }
 </style>
 

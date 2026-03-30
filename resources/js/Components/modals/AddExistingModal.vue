@@ -27,8 +27,8 @@
                         <div class="flex flex-col h-full">
                             <div class="flex-auto">
                                 <PersonalInformationFields v-model="personalInfo" :show-header="false" />
-                                <div v-if="validationError" class="mt-4 bg-red-50 border border-red-200 rounded p-3">
-                                    <p class="text-sm text-red-800 font-medium">
+                                <div v-if="validationError" class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
+                                    <p class="text-sm text-red-800 dark:text-red-300 font-medium">
                                         <i class="pi pi-exclamation-triangle mr-2"></i>
                                         {{ validationError }}
                                     </p>
@@ -57,7 +57,7 @@
                         <div class="flex flex-col h-full">
                             <div class="flex-auto">
                                 <div>
-                                    <h4 class="text-md font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                    <h4 class="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
                                         <i class="pi pi-book text-blue-600"></i>
                                         Academic Information (Required)
                                     </h4>
@@ -68,7 +68,7 @@
                                         <div class="grid grid-cols-1 md:grid-cols-6 gap-3 mt-10">
                                             <div class="md:col-span-4">
                                                 <label
-                                                    class="text-sm font-medium text-gray-600 mb-1 block">Remarks</label>
+                                                    class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 block">Remarks</label>
                                                 <Editor v-model="form.remarks" editorStyle="height: 100px">
                                                     <template #toolbar>
                                                         <span class="ql-formats">

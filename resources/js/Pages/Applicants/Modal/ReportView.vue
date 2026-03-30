@@ -1,7 +1,7 @@
 <template>
-    <div class="h-full flex flex-col bg-white">
+    <div class="h-full flex flex-col bg-white dark:bg-gray-900">
         <!-- Minimalist Toolbar -->
-        <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-200">
+        <div class="bg-white dark:bg-gray-800 px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-center gap-3">
                 <Button label="Back" icon="pi pi-arrow-left" @click="goBack" severity="secondary" text size="small" />
                 <Button label="Refresh" icon="pi pi-refresh" @click="regenerate" severity="secondary" text size="small"
@@ -11,12 +11,12 @@
             <div class="flex items-center gap-6">
                 <!-- Paper Settings -->
                 <div class="flex items-center gap-2 text-sm">
-                    <label class="text-gray-600">Paper:</label>
+                    <label class="text-gray-600 dark:text-gray-400">Paper:</label>
                     <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label" optionValue="value"
                         class="w-32" size="small" />
                 </div>
                 <div class="flex items-center gap-2 text-sm">
-                    <label class="text-gray-600">Orientation:</label>
+                    <label class="text-gray-600 dark:text-gray-400">Orientation:</label>
                     <Select v-model="orientation" :options="orientationOptions" optionLabel="label" optionValue="value"
                         class="w-36" size="small" />
                 </div>
@@ -32,24 +32,24 @@
         </div>
 
         <!-- Content Area -->
-        <div class="flex-1 overflow-auto p-8 bg-gray-50">
+        <div class="flex-1 overflow-auto p-8 bg-gray-50 dark:bg-gray-900">
             <!-- Loading State -->
             <div v-if="loading" class="flex flex-col items-center justify-center h-full">
                 <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="4" animationDuration="1s" />
-                <p class="mt-4 text-gray-600 font-medium">Loading report...</p>
+                <p class="mt-4 text-gray-600 dark:text-gray-400 font-medium">Loading report...</p>
             </div>
 
             <!-- Report Content -->
             <div v-else class="max-w-7xl mx-auto">
                 <!-- Minimalist Report Header -->
-                <div class="mb-8 pb-6 border-b border-gray-200">
+                <div class="mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-start justify-between">
                         <div>
-                            <h1 class="text-3xl font-light text-gray-900 mb-2">
+                            <h1 class="text-3xl font-light text-gray-900 dark:text-gray-100 mb-2">
                                 {{ reportType === 'list' ? 'Applicants' : 'Summary Report' }}
                             </h1>
                         </div>
-                        <div class="text-right text-sm text-gray-500">
+                        <div class="text-right text-sm text-gray-500 dark:text-gray-400">
                             <p>{{ moment().format('MMM DD, YYYY') }}</p>
                             <p>{{ moment().format('hh:mm A') }}</p>
                         </div>
@@ -57,14 +57,14 @@
                 </div>
 
                 <!-- Minimalist Applied Filters -->
-                <div v-if="hasActiveFilters" class="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                    <p class="text-xs uppercase tracking-wide text-gray-600 mb-3 font-medium">
+                <div v-if="hasActiveFilters" class="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                    <p class="text-xs uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-3 font-medium">
                         Active Filters
                     </p>
                     <div class="flex flex-wrap gap-2">
                         <span v-for="(filter, key) in activeFilters" :key="key"
-                            class="inline-flex items-center px-3 py-1 bg-white border border-gray-200 rounded-full text-sm text-gray-700">
-                            <span class="font-medium text-gray-900">{{ key }}:</span>
+                            class="inline-flex items-center px-3 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-gray-700 dark:text-gray-300">
+                            <span class="font-medium text-gray-900 dark:text-gray-100">{{ key }}:</span>
                             <span class="ml-1">{{ filter }}</span>
                         </span>
                     </div>
@@ -72,11 +72,11 @@
 
                 <!-- Minimalist JPM Legend -->
                 <div v-if="reportType === 'list' && canViewJpm"
-                    class="mb-8 p-4 bg-emerald-50 rounded-lg border border-emerald-100">
-                    <p class="text-xs uppercase tracking-wide text-gray-600 mb-3 font-medium">
+                    class="mb-8 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-100 dark:border-emerald-800">
+                    <p class="text-xs uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-3 font-medium">
                         Legend
                     </p>
-                    <div class="flex items-center gap-2 text-sm text-gray-700">
+                    <div class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                         <div class="w-4 h-4 rounded bg-emerald-100 border border-emerald-300"></div>
                         <span>JPM Member</span>
                     </div>
@@ -87,85 +87,85 @@
                     <div v-for="(school, schoolIdx) in groupedBySchool" :key="schoolIdx" class="mb-12">
                         <!-- Group Header (hide if "All Records" and no grouping) -->
                         <div v-if="params.group_by && params.group_by !== 'none'"
-                            class="mb-4 pb-3 border-b border-gray-300">
+                            class="mb-4 pb-3 border-b border-gray-300 dark:border-gray-600">
                             <div class="flex justify-between items-baseline">
-                                <h2 class="text-xl font-medium text-gray-900">
+                                <h2 class="text-xl font-medium text-gray-900 dark:text-gray-100">
                                     {{ school.name.toUpperCase() }}
                                 </h2>
-                                <span class="text-sm text-gray-500">
+                                <span class="text-sm text-gray-500 dark:text-gray-400">
                                     {{ school.count }} records
                                 </span>
                             </div>
                         </div>
 
                         <!-- Minimalist Table -->
-                        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                             <table class="w-full text-sm">
                                 <thead>
-                                    <tr class="bg-gray-50 border-b border-gray-200">
-                                        <th class="px-4 py-3 text-left font-medium text-gray-700">
+                                    <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+                                        <th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
                                             Name</th>
                                         <th v-if="!params.municipality && params.group_by !== 'municipality'"
-                                            class="px-4 py-3 text-left font-medium text-gray-700">
+                                            class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
                                             Address</th>
                                         <th v-if="!params.program && params.group_by !== 'program'"
-                                            class="px-4 py-3 text-left font-medium text-gray-700">
+                                            class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
                                             Program</th>
                                         <th v-if="!params.school && params.group_by !== 'school'"
-                                            class="px-4 py-3 text-left font-medium text-gray-700">
+                                            class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
                                             School</th>
                                         <th v-if="!params.courses && params.group_by !== 'course'"
-                                            class="px-4 py-3 text-left font-medium text-gray-700">
+                                            class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
                                             Course</th>
                                         <th v-if="!params.year_level && params.group_by !== 'year_level'"
-                                            class="px-4 py-3 text-left font-medium text-gray-700">
+                                            class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
                                             Year Level</th>
-                                        <th class="px-4 py-3 text-left font-medium text-gray-700">
+                                        <th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
                                             Date Filed</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr v-for="(item, idx) in school.items" :key="`${schoolIdx}-${idx}`" :class="[
-                                        'border-b border-gray-100 hover:bg-gray-50 transition-colors',
-                                        isJpm(item) ? 'bg-emerald-50' : ''
+                                        'border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors',
+                                        isJpm(item) ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
                                     ]">
-                                        <td class="px-4 py-3 text-gray-900">
+                                        <td class="px-4 py-3 text-gray-900 dark:text-gray-100">
                                             <div>
                                                 {{ (item.last_name + ', ' + item.first_name + ' ' +
                                                     item.middle_name).toUpperCase() }}
                                             </div>
                                             <div v-if="params.show_sequence_numbers == 1"
-                                                class="text-xs text-gray-500 mt-1">
+                                                class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                                 § Prog.<span class="font-semibold">#{{ item._sequenceProgram }}</span> |
                                                 Sch.<span class="font-semibold">#{{ item._sequenceSchool }}</span> |
                                                 Course<span class="font-semibold">#{{ item._sequenceCourse }}</span> –
                                             </div>
                                         </td>
                                         <td v-if="!params.municipality && params.group_by !== 'municipality'"
-                                            class="px-4 py-3 text-gray-600">
+                                            class="px-4 py-3 text-gray-600 dark:text-gray-400">
                                             <span v-if="item.municipality">{{ item.municipality.toUpperCase() }}</span>
                                             <span v-if="item.municipality && item.barangay">, </span>
                                             <span v-if="item.barangay">{{ item.barangay.toUpperCase() }}</span>
                                             <span v-if="!item.municipality && !item.barangay"
-                                                class="text-gray-400">-</span>
+                                                class="text-gray-400 dark:text-gray-500">-</span>
                                         </td>
                                         <td v-if="!params.program && params.group_by !== 'program'"
-                                            class="px-4 py-3 text-gray-600">
+                                            class="px-4 py-3 text-gray-600 dark:text-gray-400">
                                             {{ item.scholarship_grant[0]?.program?.shortname?.toUpperCase() || '-' }}
                                         </td>
                                         <td v-if="!params.school && params.group_by !== 'school'"
-                                            class="px-4 py-3 text-gray-600">
+                                            class="px-4 py-3 text-gray-600 dark:text-gray-400">
                                             {{ item.scholarship_grant[0]?.school?.shortname?.toUpperCase() || '-' }}
                                         </td>
                                         <td v-if="!params.courses && params.group_by !== 'course'"
-                                            class="px-4 py-3 text-gray-900 font-medium">
+                                            class="px-4 py-3 text-gray-900 dark:text-gray-100 font-medium">
                                             {{ item.scholarship_grant[0]?.course?.shortname?.toUpperCase() || '-' }}
                                         </td>
                                         <td v-if="!params.year_level && params.group_by !== 'year_level'"
-                                            class="px-4 py-3 text-gray-600">
+                                            class="px-4 py-3 text-gray-600 dark:text-gray-400">
                                             {{ item.scholarship_grant[0]?.year_level?.toString().toUpperCase() || '-' }}
                                         </td>
-                                        <td class="px-4 py-3 text-gray-600">
+                                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
                                             {{ item.scholarship_grant[0]?.date_filed ?
                                                 moment(item.scholarship_grant[0]?.date_filed).format('MMM DD, YYYY') : '-'
                                             }}
@@ -180,13 +180,13 @@
                 <!-- Summary Report -->
                 <div v-else>
                     <!-- Total Count Card -->
-                    <div class="mb-8 bg-white border border-gray-200 rounded-lg p-6">
+                    <div class="mb-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm font-medium text-gray-600 mb-1">Total Records</p>
-                                <p class="text-4xl font-light text-gray-900">{{ report.summary?.total || 0 }}</p>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Total Records</p>
+                                <p class="text-4xl font-light text-gray-900 dark:text-gray-100">{{ report.summary?.total || 0 }}</p>
                             </div>
-                            <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center">
+                            <div class="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
                                 <i class="pi pi-users text-2xl text-blue-600"></i>
                             </div>
                         </div>
@@ -197,42 +197,42 @@
                         <div v-for="(group, idx) in visibleSummaryGroups" :key="idx">
                             <div class="mb-8">
                                 <!-- Minimalist Group Header -->
-                                <div class="mb-4 pb-3 border-b border-gray-300 flex items-center justify-between">
+                                <div class="mb-4 pb-3 border-b border-gray-300 dark:border-gray-600 flex items-center justify-between">
                                     <div class="flex items-center gap-3">
-                                        <i :class="['text-xl text-gray-600', getSummaryIcon(group.key)]"></i>
-                                        <h2 class="text-xl font-medium text-gray-900">
+                                        <i :class="['text-xl text-gray-600 dark:text-gray-400', getSummaryIcon(group.key)]"></i>
+                                        <h2 class="text-xl font-medium text-gray-900 dark:text-gray-100">
                                             {{ group.label }}
                                         </h2>
                                     </div>
-                                    <span class="text-sm text-gray-500">
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">
                                         {{ group.data.length }} {{ group.data.length === 1 ? 'item' : 'items' }}
                                     </span>
                                 </div>
 
                                 <!-- Minimalist Summary Table -->
-                                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                                     <table class="w-full text-sm">
                                         <thead>
-                                            <tr class="bg-gray-50 border-b border-gray-200">
-                                                <th class="px-4 py-3 text-left font-medium text-gray-700">
+                                            <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+                                                <th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
                                                     {{ group.label }}
                                                 </th>
-                                                <th class="px-4 py-3 text-right font-medium text-gray-700 w-32">
+                                                <th class="px-4 py-3 text-right font-medium text-gray-700 dark:text-gray-300 w-32">
                                                     Count
                                                 </th>
-                                                <th class="px-4 py-3 text-right font-medium text-gray-700 w-32">
+                                                <th class="px-4 py-3 text-right font-medium text-gray-700 dark:text-gray-300 w-32">
                                                     Percentage
                                                 </th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr v-for="(item, i) in group.data" :key="i"
-                                                class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                                <td class="px-4 py-3 text-gray-900">
+                                                class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                                <td class="px-4 py-3 text-gray-900 dark:text-gray-100">
                                                     <div class="flex items-center gap-3">
                                                         <div class="flex items-center gap-2">
                                                             <span
-                                                                class="text-sm font-bold text-gray-500 min-w-[1.5rem]">{{
+                                                                class="text-sm font-bold text-gray-500 dark:text-gray-400 min-w-[1.5rem]">{{
                                                                     i + 1 }}.</span>
                                                         </div>
                                                         <span>{{ item.name }}</span>
@@ -240,28 +240,28 @@
                                                 </td>
                                                 <td class="px-4 py-3 text-right">
                                                     <span
-                                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
                                                         {{ item.count }}
                                                     </span>
                                                 </td>
                                                 <td class="px-4 py-3 text-right">
-                                                    <span class="text-gray-600 text-xs">
+                                                    <span class="text-gray-600 dark:text-gray-400 text-xs">
                                                         {{ calculatePercentage(item.count) }}%
                                                     </span>
                                                 </td>
                                             </tr>
                                         </tbody>
                                         <tfoot v-if="group.data.length > 1">
-                                            <tr class="bg-gray-50 font-medium">
-                                                <td class="px-4 py-3 text-gray-900">Total</td>
+                                            <tr class="bg-gray-50 dark:bg-gray-700/50 font-medium">
+                                                <td class="px-4 py-3 text-gray-900 dark:text-gray-100">Total</td>
                                                 <td class="px-4 py-3 text-right">
                                                     <span
-                                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-900">
+                                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100">
                                                         {{group.data.reduce((sum, item) => sum + item.count, 0)}}
                                                     </span>
                                                 </td>
                                                 <td class="px-4 py-3 text-right">
-                                                    <span class="text-gray-600 text-xs font-medium">100%</span>
+                                                    <span class="text-gray-600 dark:text-gray-400 text-xs font-medium">100%</span>
                                                 </td>
                                             </tr>
                                         </tfoot>
@@ -274,11 +274,11 @@
 
                 <!-- Minimalist Empty State -->
                 <div v-if="!loading && isReportEmpty" class="text-center py-20">
-                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-                        <i class="pi pi-inbox text-3xl text-gray-400"></i>
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                        <i class="pi pi-inbox text-3xl text-gray-400 dark:text-gray-500"></i>
                     </div>
-                    <p class="text-gray-600 text-lg mb-1">No data found</p>
-                    <p class="text-gray-400 text-sm">Try adjusting your filters</p>
+                    <p class="text-gray-600 dark:text-gray-400 text-lg mb-1">No data found</p>
+                    <p class="text-gray-400 dark:text-gray-500 text-sm">Try adjusting your filters</p>
                 </div>
             </div>
         </div>

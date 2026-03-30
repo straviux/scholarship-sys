@@ -112,21 +112,21 @@ const clearAll = () => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 short:p-3">
         <div class="max-w-6xl mx-auto">
             <!-- Header -->
-            <div class="mb-8">
-                <h1 class="text-4xl font-bold text-gray-900 flex items-center gap-3">
+            <div class="mb-6 short:mb-3">
+                <h1 class="text-4xl short:text-2xl font-bold text-gray-900 flex items-center gap-3">
                     <i class="pi pi-history text-blue-600"></i>
                     OBR Tracking Timeline
                 </h1>
                 <p class="text-gray-600 mt-2">View the complete tracking history for an OBR and Disbursement Voucher</p>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 short:gap-2">
                 <!-- Input Form -->
                 <div class="lg:col-span-1">
-                    <div class="bg-white rounded-lg shadow-md p-6 space-y-4 sticky top-6">
+                    <div class="bg-white rounded-lg shadow-md p-4 short:p-3 space-y-4 sticky top-4">
                         <h2 class="text-xl font-semibold text-gray-900">Parameters</h2>
 
                         <div>
@@ -143,7 +143,8 @@ const clearAll = () => {
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">OBR Number *</label>
-                            <InputText v-model="state.params.obr_no" type="text" placeholder="e.g., 200-25-12-24188" class="w-full" />
+                            <InputText v-model="state.params.obr_no" type="text" placeholder="e.g., 200-25-12-24188"
+                                class="w-full" />
                         </div>
 
                         <div>
@@ -152,15 +153,17 @@ const clearAll = () => {
                                 <span v-if="state.params.dv_no && state.rawResponse?.used_dv_no"
                                     class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Auto-fetched</span>
                             </div>
-                            <InputText v-model="state.params.dv_no" type="text" placeholder="e.g., 25-12-23743 (optional)" class="w-full" />
+                            <InputText v-model="state.params.dv_no" type="text"
+                                placeholder="e.g., 25-12-23743 (optional)" class="w-full" />
                         </div>
 
                         <!-- Get Timeline Button -->
-                        <Button label="Get Timeline" icon="pi pi-search" :loading="state.loading"
-                            class="w-full" @click="getTrackingInfo" />
+                        <Button label="Get Timeline" icon="pi pi-search" :loading="state.loading" class="w-full"
+                            @click="getTrackingInfo" />
 
                         <!-- Action Buttons -->
-                        <Button label="Clear" icon="pi pi-times" severity="secondary" class="w-full" @click="clearAll" />
+                        <Button label="Clear" icon="pi pi-times" severity="secondary" class="w-full"
+                            @click="clearAll" />
 
                         <!-- Error -->
                         <div v-if="state.error"
@@ -189,7 +192,7 @@ const clearAll = () => {
                 <!-- Tracking Timeline -->
                 <div class="lg:col-span-2">
                     <div v-if="state.loading" class="text-center py-12">
-                        <i class="pi pi-spin pi-spinner text-4xl text-blue-600"></i>
+                        <i class="pi pi-spin pi-spinner text-4xl short:text-2xl text-blue-600"></i>
                         <p class="mt-4 text-gray-600">Fetching tracking information...</p>
                     </div>
 
@@ -204,7 +207,7 @@ const clearAll = () => {
                     </div>
 
                     <div v-else-if="state.trackingData && state.trackingData.tracking_information"
-                        class="bg-white rounded-lg shadow-md p-6">
+                        class="bg-white rounded-lg shadow-md p-4 short:p-3">
                         <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
                             <i class="pi pi-list text-blue-600 mr-2"></i>
                             Tracking History

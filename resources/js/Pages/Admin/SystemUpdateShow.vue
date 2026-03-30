@@ -4,11 +4,11 @@
             Update Details
         </template>
 
-        <div class="py-6">
+        <div class="py-4 short:py-2">
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <!-- Loading State -->
                 <div v-if="loading" class="text-center py-12">
-                    <i class="pi pi-spinner pi-spin text-4xl text-blue-500"></i>
+                    <i class="pi pi-spinner pi-spin text-4xl short:text-2xl text-blue-500"></i>
                     <p class="mt-4 text-gray-600">Loading update...</p>
                 </div>
 
@@ -22,7 +22,7 @@
                 </div>
 
                 <!-- Update Content -->
-                <div v-else-if="update" class="space-y-6">
+                <div v-else-if="update" class="space-y-4 short:space-y-2">
                     <!-- Back Button -->
                     <div>
                         <Button @click="goBack" label="Back to Management" icon="pi pi-arrow-left" text size="small" />
@@ -32,7 +32,7 @@
                     <Card class="w-full">
                         <template #content>
                             <!-- Admin Info Banner -->
-                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 short:mb-2">
                                 <div class="flex items-start gap-3">
                                     <i class="pi pi-info-circle text-blue-600 text-xl mt-0.5"></i>
                                     <div class="flex-1">
@@ -45,7 +45,7 @@
                                             </p>
                                             <p><strong>Global:</strong> {{ update.is_global ? 'Yes' : 'No' }}</p>
                                             <p v-if="update.expires_at"><strong>Expires:</strong> {{ update.expires_at
-                                            }}
+                                                }}
                                             </p>
                                         </div>
                                     </div>
@@ -53,7 +53,7 @@
                             </div>
 
                             <!-- Header Section -->
-                            <div class="border-b border-gray-200 pb-6 mb-6">
+                            <div class="border-b border-gray-200 pb-4 short:pb-2 mb-4 short:mb-2">
                                 <!-- Priority & Type Badges -->
                                 <div class="flex items-center gap-2 mb-4 flex-wrap">
                                     <Tag :value="update.priority" :severity="getPrioritySeverity(update.priority)" />
@@ -63,7 +63,7 @@
                                 </div>
 
                                 <!-- Title -->
-                                <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ update.title }}</h1>
+                                <h1 class="text-3xl short:text-xl font-bold text-gray-900 mb-4">{{ update.title }}</h1>
 
                                 <!-- Meta Information -->
                                 <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
@@ -79,7 +79,7 @@
                             </div>
 
                             <!-- Content Section -->
-                            <div class="mb-6">
+                            <div class="mb-4 short:mb-2">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-3">Content</h3>
                                 <div class="prose prose-lg max-w-none">
                                     <!-- Markdown Content -->

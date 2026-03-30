@@ -22,7 +22,7 @@
                             scholarship record?</p>
                         <div v-if="record" class="ios-info-card" style="width: 100%; text-align: left;">
                             <p style="font-size: 14px; font-weight: 500; color: #000;">{{ record.program?.name || 'N/A'
-                            }}</p>
+                                }}</p>
                             <p style="font-size: 12px; color: #8E8E93;">{{ record.academic_year }} - {{ record.term }}
                             </p>
                         </div>
@@ -145,6 +145,37 @@ const deleteRecord = async () => {
     border-radius: 10px;
     padding: 12px;
     border: 0.5px solid #E5E5EA;
+}
+
+/* Dark mode */
+:global(.dark) .ios-modal {
+    background: #222831;
+}
+
+:global(.dark) .ios-nav-bar {
+    background: #2a3040;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-nav-title {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-nav-cancel {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-body {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-info-card {
+    background: #1e2433;
+    border-color: rgba(255, 255, 255, 0.08);
 }
 </style>
 

@@ -1,26 +1,26 @@
 <template>
     <AdminLayout>
         <div class="maintenance-panel">
-            <div class="container mx-auto p-6">
+            <div class="container mx-auto p-4 short:p-3">
                 <!-- Header -->
-                <div class="mb-8">
-                    <h1 class="text-4xl font-bold text-gray-900">Maintenance Management</h1>
+                <div class="mb-6 short:mb-3">
+                    <h1 class="text-4xl short:text-2xl font-bold text-gray-900">Maintenance Management</h1>
                     <p class="text-gray-600 mt-2">Manage system maintenance schedules and alerts</p>
                 </div>
 
                 <!-- Status Overview -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 short:gap-2 mb-6 short:mb-3">
                     <!-- Current Status Card -->
                     <div class="bg-white rounded-lg shadow-md overflow-hidden">
                         <div :class="[
-                            'p-6 border-t-4',
+                            'p-4 short:p-3 border-t-4',
                             isActive
                                 ? 'bg-red-50 border-red-500'
                                 : 'bg-green-50 border-green-500'
                         ]">
                             <p class="text-sm text-gray-600 font-semibold uppercase">Current Status</p>
                             <p :class="[
-                                'text-3xl font-bold mt-2',
+                                'text-3xl short:text-xl font-bold mt-2',
                                 isActive ? 'text-red-600' : 'text-green-600'
                             ]">
                                 {{ isActive ? '[MAINT] MAINTENANCE' : '[OPER] OPERATIONAL' }}
@@ -32,9 +32,10 @@
                     <!-- Countdown Card -->
                     <div v-if="countdown && countdown.status === 'upcoming'"
                         class="bg-white rounded-lg shadow-md overflow-hidden">
-                        <div class="p-6 bg-blue-50 border-t-4 border-blue-500">
+                        <div class="p-4 short:p-3 bg-blue-50 border-t-4 border-blue-500">
                             <p class="text-sm text-gray-600 font-semibold uppercase">Starting In</p>
-                            <p class="text-3xl font-bold mt-2 text-blue-600 font-mono">{{ countdownDisplay }}</p>
+                            <p class="text-3xl short:text-xl font-bold mt-2 text-blue-600 font-mono">{{ countdownDisplay
+                                }}</p>
                             <p class="text-xs text-gray-500 mt-3">{{ formatTime(countdown.start_time) }}</p>
                         </div>
                     </div>
@@ -42,9 +43,10 @@
                     <!-- Remaining Time Card -->
                     <div v-if="countdown && countdown.status === 'active'"
                         class="bg-white rounded-lg shadow-md overflow-hidden">
-                        <div class="p-6 bg-orange-50 border-t-4 border-orange-500">
+                        <div class="p-4 short:p-3 bg-orange-50 border-t-4 border-orange-500">
                             <p class="text-sm text-gray-600 font-semibold uppercase">Duration</p>
-                            <p class="text-3xl font-bold mt-2 text-orange-600">{{ countdown.duration_minutes || '?' }}
+                            <p class="text-3xl short:text-xl font-bold mt-2 text-orange-600">{{
+                                countdown.duration_minutes || '?' }}
                                 min</p>
                             <p class="text-xs text-gray-500 mt-3 animate-pulse"> MAINTENANCE IN PROGRESS</p>
                         </div>
@@ -52,13 +54,13 @@
                 </div>
 
                 <!-- Two Column Layout -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 short:gap-2">
                     <!-- Left Column - Configuration Form -->
                     <div class="lg:col-span-2">
                         <!-- Control Panel -->
-                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                            <div class="flex items-center justify-between mb-6">
-                                <h2 class="text-2xl font-bold text-gray-900">Configuration</h2>
+                        <div class="bg-white rounded-lg shadow-md p-4 short:p-3 mb-4 short:mb-2">
+                            <div class="flex items-center justify-between mb-4 short:mb-2">
+                                <h2 class="text-2xl short:text-xl font-bold text-gray-900">Configuration</h2>
                                 <div v-if="isActive" class="flex items-center gap-2 px-3 py-1 bg-red-100 rounded-full">
                                     <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
                                     <span class="text-sm font-semibold text-red-600">ACTIVE</span>
@@ -92,9 +94,8 @@
                                 <!-- Message -->
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-900 mb-2">Message</label>
-                                    <Textarea v-model="form.message" class="w-full"
-                                        rows="4" placeholder="Inform users about what's happening..."
-                                        maxlength="500" />
+                                    <Textarea v-model="form.message" class="w-full" rows="4"
+                                        placeholder="Inform users about what's happening..." maxlength="500" />
                                     <p class="text-xs text-gray-500 mt-1">{{ form.message.length }}/500 characters</p>
                                 </div>
 
@@ -176,8 +177,8 @@
                         </div>
 
                         <!-- Preview Banner -->
-                        <div class="bg-white rounded-lg shadow-md p-6">
-                            <h2 class="text-2xl font-bold text-gray-900 mb-5">Preview</h2>
+                        <div class="bg-white rounded-lg shadow-md p-4 short:p-3">
+                            <h2 class="text-2xl short:text-xl font-bold text-gray-900 mb-5">Preview</h2>
                             <div v-if="form.is_active" class="rounded-lg overflow-hidden" :class="[
                                 form.type === 'info' ? 'bg-blue-50 border-l-4 border-blue-500' : '',
                                 form.type === 'warning' ? 'bg-yellow-50 border-l-4 border-yellow-500' : '',
@@ -205,22 +206,23 @@
 
                     <!-- Right Column - Maintenance History -->
                     <div class="lg:col-span-1">
-                        <div class="bg-white rounded-lg shadow-md p-6 sticky top-6">
-                            <h2 class="text-2xl font-bold text-gray-900 mb-4">History</h2>
+                        <div class="bg-white rounded-lg shadow-md p-4 short:p-3 sticky top-6">
+                            <h2 class="text-2xl short:text-xl font-bold text-gray-900 mb-4">History</h2>
 
                             <div v-if="history.length > 0" class="space-y-3 max-h-screen overflow-y-auto">
                                 <div v-for="record in history" :key="record.id"
                                     class="p-3 bg-gray-50 rounded-lg border-l-4 border-gray-300 hover:border-blue-400 transition">
                                     <div class="flex items-start gap-2">
                                         <span class="text-lg mt-0.5">
-                                            {{ record.type === 'info' ? '[INFO]' : record.type === 'warning' ? '[WARN]' : '[ERROR]'
+                                            {{ record.type === 'info' ? '[INFO]' : record.type === 'warning' ? '[WARN]'
+                                                : '[ERROR]'
                                             }}
                                         </span>
                                         <div class="flex-1 min-w-0">
                                             <p class="font-semibold text-sm text-gray-900 truncate">{{ record.title }}
                                             </p>
                                             <p class="text-xs text-gray-600 mt-0.5">{{ record.message.substring(0, 40)
-                                            }}...</p>
+                                                }}...</p>
                                             <div class="flex items-center gap-2 mt-1.5">
                                                 <span class="px-2 py-0.5 rounded text-xs font-semibold inline-block"
                                                     :class="{

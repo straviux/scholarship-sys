@@ -608,11 +608,11 @@ const debouncedSaveOrder = () => {
             </template>
         </Dialog>
 
-        <div class="space-y-6">
+        <div class="space-y-4 short:space-y-2">
             <!-- Header -->
             <div class="flex justify-between items-center">
                 <div>
-                    <h2 class="text-3xl font-bold text-gray-900">Menu Management</h2>
+                    <h2 class="text-3xl short:text-xl font-bold text-gray-900">Menu Management</h2>
                     <p class="text-gray-600 mt-1">Create groups, add standalone links, and add items to groups. Drag &
                         drop to
                         reorder.</p>
@@ -758,7 +758,7 @@ const debouncedSaveOrder = () => {
                             </template>
                             <template #header v-if="allTreeNodes.length === 0">
                                 <div class="text-center py-12">
-                                    <i class="pi pi-inbox text-4xl text-gray-300 mb-4"></i>
+                                    <i class="pi pi-inbox text-4xl short:text-2xl text-gray-300 mb-4"></i>
                                     <p class="text-gray-500">No menu items yet. Create a group to get started!</p>
                                 </div>
                             </template>

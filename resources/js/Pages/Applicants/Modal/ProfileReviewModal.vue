@@ -186,12 +186,13 @@ onBeforeUnmount(() => {
                                 <Avatar :label="getApplicantInitials(currentApplicant)" size="large" shape="circle"
                                     style="background: #007AFF; color: white; flex-shrink: 0;" />
                                 <div style="flex: 1; min-width: 0;">
-                                    <div style="font-size: 16px; font-weight: 600; color: #000; cursor: pointer; letter-spacing: -0.4px;"
+                                    <div class="profile-name"
+                                        style="font-size: 16px; font-weight: 600; cursor: pointer; letter-spacing: -0.4px;"
                                         @click="visitProfile">
                                         {{ getApplicantFullName(currentApplicant) }}
                                     </div>
-                                    <div
-                                        style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; font-size: 12px; color: #8E8E93;">
+                                    <div class="profile-meta"
+                                        style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; font-size: 12px;">
                                         <span><i class="pi pi-phone" style="font-size: 10px; margin-right: 3px;"></i>{{
                                             currentApplicant.contact_no || 'N/A' }}</span>
                                         <span><i class="pi pi-envelope"
@@ -204,7 +205,7 @@ onBeforeUnmount(() => {
                                     <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
                                         <Tag severity="info">
                                             <span style="font-size: 10px;">#{{ currentApplicant.sequence_number || '-'
-                                            }} {{ currentApplicant.scholarship_grant?.[0]?.program?.shortname
+                                                }} {{ currentApplicant.scholarship_grant?.[0]?.program?.shortname
                                                 }}</span>
                                         </Tag>
                                         <Tag severity="warn">
@@ -233,8 +234,8 @@ onBeforeUnmount(() => {
                             <TabPanels>
                                 <!-- Requirements Tab -->
                                 <TabPanel value="requirements">
-                                    <div v-if="reviewRequirements.length === 0"
-                                        style="padding: 32px 0; text-align: center; color: #8E8E93;">
+                                    <div v-if="reviewRequirements.length === 0" class="req-empty"
+                                        style="padding: 32px 0; text-align: center;">
                                         <i class="pi pi-inbox"
                                             style="font-size: 28px; display: block; margin-bottom: 8px;"></i>
                                         No requirements found
@@ -245,23 +246,24 @@ onBeforeUnmount(() => {
                                             :style="{ opacity: req.is_checked ? 1 : 0.55 }">
                                             <div
                                                 style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
-                                                <span v-if="req.is_checked"
-                                                    style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #E8F5E9; flex-shrink: 0;">
+                                                <span v-if="req.is_checked" class="req-check-dot"
+                                                    style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;">
                                                     <i class="pi pi-check" style="font-size: 11px; color: #34C759;"></i>
                                                 </span>
-                                                <span v-else
-                                                    style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #F2F2F7; flex-shrink: 0;">
+                                                <span v-else class="req-uncheck-dot"
+                                                    style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;">
                                                     <i class="pi pi-circle"
                                                         style="font-size: 11px; color: #C7C7CC;"></i>
                                                 </span>
                                                 <div style="flex: 1; min-width: 0;">
-                                                    <div style="font-size: 14px; font-weight: 500; color: #000;">{{
-                                                        req.name }}</div>
+                                                    <div class="req-item-name"
+                                                        style="font-size: 14px; font-weight: 500;">{{
+                                                            req.name }}</div>
                                                     <div v-if="req.file_path"
                                                         style="font-size: 11px; color: #007AFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                         {{ req.file_name }}
                                                     </div>
-                                                    <div v-else style="font-size: 11px; color: #8E8E93;">No file
+                                                    <div v-else class="req-no-file" style="font-size: 11px;">No file
                                                         uploaded</div>
                                                 </div>
                                             </div>
@@ -301,17 +303,17 @@ onBeforeUnmount(() => {
                                                     <span class="ios-info-label">Gender</span>
                                                     <span class="ios-info-value">{{ currentApplicant.gender === 'M' ?
                                                         'Male' : currentApplicant.gender === 'F' ? 'Female' : 'N/A'
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Contact</span>
                                                     <span class="ios-info-value">{{ currentApplicant.contact_no || 'N/A'
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Email</span>
                                                     <span class="ios-info-value">{{ currentApplicant.email || 'N/A'
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div class="ios-info-item" style="grid-column: 1 / -1;">
                                                     <span class="ios-info-label">Income</span>
@@ -355,13 +357,13 @@ onBeforeUnmount(() => {
                                                     <span class="ios-info-label">Year Level</span>
                                                     <span class="ios-info-value">{{
                                                         currentApplicant.scholarship_grant?.[0]?.year_level || 'N/A'
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Academic Year</span>
                                                     <span class="ios-info-value">{{
                                                         currentApplicant.scholarship_grant?.[0]?.academic_year || 'N/A'
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Term</span>
@@ -453,7 +455,7 @@ onBeforeUnmount(() => {
                         <i class="pi pi-chevron-left" style="font-size: 12px; margin-right: 4px;"></i>Previous
                     </button>
                     <span class="ios-footer-counter">{{ currentProfileIndex + 1 }} / {{ applicants?.length || 0
-                    }}</span>
+                        }}</span>
                     <button class="ios-footer-btn" @click="goToNextProfile" :disabled="!hasNextProfile">
                         Next<i class="pi pi-chevron-right" style="font-size: 12px; margin-left: 4px;"></i>
                     </button>
@@ -466,117 +468,28 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.ios-modal {
-    background: #F2F2F7;
-    border-radius: 14px;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-    overflow: hidden;
-    margin: 0 auto;
+/* Component-unique styles — standard ios-* classes handled by ios-design-system.css */
+
+/* Override: this modal uses tighter spacing than global 22px */
+.ios-section {
+    margin-top: 16px;
 }
 
-.ios-nav-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    padding: 14px 16px;
-    background: #FFFFFF;
-    border-bottom: 0.5px solid #E5E5EA;
-    flex-shrink: 0;
-    cursor: grab;
-    user-select: none;
-}
-
-.ios-nav-bar:active {
-    cursor: grabbing;
-}
-
-.ios-nav-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: #000;
-    letter-spacing: -0.4px;
-}
-
-.ios-nav-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    font-size: 15px;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 8px;
-    transition: opacity 0.15s;
-}
-
-.ios-nav-btn:hover {
-    opacity: 0.6;
-}
-
-.ios-nav-cancel {
-    left: 16px;
-    color: #8E8E93;
-    font-size: 20px;
-}
-
+/* Override: action button is blue (interactive) unlike global gray */
 .ios-nav-action {
-    right: 16px;
     color: #007AFF;
-    font-weight: 600;
     font-size: 14px;
     display: flex;
     align-items: center;
 }
 
-.ios-body {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 0 16px;
-}
-
-.ios-section {
-    margin-top: 16px;
-}
-
-.ios-section-label {
-    font-size: 13px;
-    font-weight: 400;
-    color: #6D6D72;
-    text-transform: uppercase;
-    letter-spacing: -0.08px;
-    padding: 0 16px 6px;
-}
-
-.ios-card {
-    background: #FFFFFF;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 0.5px solid #E5E5EA;
-}
-
+/* Override: rows have larger padding than global 4px 16px */
 .ios-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     padding: 8px 16px;
     min-height: 40px;
-    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
 }
 
-.ios-row-last {
-    border-bottom: none;
-}
-
-.ios-row:last-child {
-    border-bottom: none;
-}
-
+/* Component-unique classes */
 .ios-icon-btn {
     background: none;
     border: none;
@@ -673,5 +586,97 @@ onBeforeUnmount(() => {
 
 .ios-dialog-mask {
     background: rgba(0, 0, 0, 0.4);
+}
+
+/* Dark mode — component-unique classes */
+.dark .ios-nav-action {
+    color: #60a5fa !important;
+}
+
+.dark .ios-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .ios-info-value {
+    color: #d1d5db !important;
+}
+
+.dark .ios-info-label {
+    color: #9ca3af !important;
+}
+
+.dark .ios-footer {
+    background: #2a3040 !important;
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .ios-footer-btn {
+    color: #60a5fa !important;
+}
+
+.dark .ios-footer-btn:disabled {
+    color: #4b5563 !important;
+}
+
+.dark .ios-footer-counter {
+    color: #9ca3af !important;
+}
+
+/* Header card */
+.profile-name {
+    color: #000;
+}
+
+.profile-meta {
+    color: #8E8E93;
+}
+
+.dark .profile-name {
+    color: #d1d5db !important;
+}
+
+.dark .profile-meta {
+    color: #9ca3af !important;
+}
+
+/* Requirements tab */
+.req-empty {
+    color: #8E8E93;
+}
+
+.dark .req-empty {
+    color: #9ca3af !important;
+}
+
+.req-check-dot {
+    background: #E8F5E9;
+}
+
+.dark .req-check-dot {
+    background: rgba(52, 199, 89, 0.15) !important;
+}
+
+.req-uncheck-dot {
+    background: #F2F2F7;
+}
+
+.dark .req-uncheck-dot {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.req-item-name {
+    color: #000;
+}
+
+.dark .req-item-name {
+    color: #d1d5db !important;
+}
+
+.req-no-file {
+    color: #8E8E93;
+}
+
+.dark .req-no-file {
+    color: #6b7280 !important;
 }
 </style>

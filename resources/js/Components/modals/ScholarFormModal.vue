@@ -79,8 +79,8 @@
 
                                             <!-- Validation Messages -->
                                             <div v-if="validationError"
-                                                class="mt-4 bg-red-50 border border-red-200 rounded p-3">
-                                                <p class="text-sm text-red-800 font-medium">
+                                                class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
+                                                <p class="text-sm text-red-800 dark:text-red-300 font-medium">
                                                     <i class="pi pi-exclamation-triangle mr-2"></i>
                                                     {{ validationError }}
                                                 </p>
@@ -142,8 +142,9 @@
                                                         </FloatLabel>
                                                     </div>
 
-                                                    <div class="bg-blue-50 border border-blue-200 rounded p-3">
-                                                        <p class="text-sm text-blue-800">
+                                                    <div
+                                                        class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
+                                                        <p class="text-sm text-blue-800 dark:text-blue-300">
                                                             <i class="pi pi-info-circle mr-2"></i>
                                                             <strong>Note:</strong> All academic fields are required for
                                                             scholars.
@@ -154,8 +155,8 @@
 
                                             <!-- Academic Validation Messages -->
                                             <div v-if="academicValidationError"
-                                                class="mt-4 bg-red-50 border border-red-200 rounded p-3">
-                                                <p class="text-sm text-red-800 font-medium">
+                                                class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
+                                                <p class="text-sm text-red-800 dark:text-red-300 font-medium">
                                                     <i class="pi pi-exclamation-triangle mr-2"></i>
                                                     {{ academicValidationError }}
                                                 </p>
@@ -730,6 +731,49 @@ const handleSubmit = () => {
     -webkit-overflow-scrolling: touch;
     padding: 0 16px;
 }
+
+/* Dark mode */
+:global(.dark) .ios-modal {
+    background: #222831;
+}
+
+:global(.dark) .ios-nav-bar {
+    background: #2a3040;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-nav-title {
+    color: #d1d5db;
+}
+
+:global(.dark) .ios-nav-cancel {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-nav-step-text {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-nav-maximize {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-footer {
+    background: #2a3040;
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .ios-footer-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+:global(.dark) .ios-footer-back {
+    color: #9ca3af;
+}
+
+:global(.dark) .ios-body {
+    color: #d1d5db;
+}
 </style>
 
 <style>
@@ -809,5 +853,22 @@ const handleSubmit = () => {
     background: #e5e7eb;
     align-self: center;
     border-radius: 1px;
+}
+
+.dark .ios-step-btn {
+    color: #9ca3af;
+}
+
+.dark .ios-step-btn:hover {
+    color: #d1d5db;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.dark .ios-step-btn.ios-step-active {
+    color: #d1d5db;
+}
+
+.dark .ios-step-separator {
+    background: rgba(255, 255, 255, 0.1);
 }
 </style>

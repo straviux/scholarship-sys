@@ -46,20 +46,20 @@ const closeModal = () => {
             <div class="mt-4 flex justify-between gap-4">
                 <div class="w-3/4">
                     <InputLabel for="name" value="Name" />
-                    <div class="p-2 bg-gray-100 mt-2 text-lg font-medium text-gray-700">{{
+                    <div class="p-2 bg-gray-100 dark:bg-gray-800 mt-2 text-lg font-medium text-gray-700 dark:text-gray-300">{{
                         props.program.name
                         }}</div>
                 </div>
                 <div class="w-1/4">
                     <InputLabel for="shortname" value="Shortname" />
-                    <div class="p-2 bg-gray-100 mt-2 text-lg font-medium text-gray-700">{{
+                    <div class="p-2 bg-gray-100 dark:bg-gray-800 mt-2 text-lg font-medium text-gray-700 dark:text-gray-300">{{
                         props.program.shortname }}</div>
                 </div>
             </div>
 
             <fieldset class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4 mt-4 text-lg">
-                <legend class="fieldset-legend text-gray-700">Requirements</legend>
-                <label class="flex items-center gap-2 my-2 text-gray-600 cursor-pointer" v-for="req in requirements"
+                <legend class="fieldset-legend text-gray-700 dark:text-gray-300">Requirements</legend>
+                <label class="flex items-center gap-2 my-2 text-gray-600 dark:text-gray-400 cursor-pointer" v-for="req in requirements"
                     :key="req.id">
                     <Checkbox v-model="form.requirements" :inputId="'req_' + req.id" :value="req.id" />
                     {{ req.name }}

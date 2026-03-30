@@ -161,9 +161,9 @@ const quickLinks = [
         <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
-                    <i class="pi pi-graduation-cap text-indigo-900" style="font-size: 2rem"></i>
+                    <i class="pi pi-graduation-cap text-indigo-900 text-[2rem] short:text-[1.5rem]"></i>
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-700">PGP Scholarship Portal</h1>
+                        <h1 class="text-2xl short:text-xl font-bold text-gray-700">PGP Scholarship Portal</h1>
                         <p class="text-sm text-gray-600">A centralized platform for managing scholarship applications,
                             requirements, and updates.</p>
                     </div>
@@ -171,15 +171,15 @@ const quickLinks = [
             </template>
         </Toolbar>
 
-        <div class="space-y-6">
+        <div class="space-y-4 short:space-y-2">
 
             <!-- ─── Services Section ─── -->
             <div class="ios-section">
                 <div class="ios-section-label">SERVICES</div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 short:gap-2">
                     <div v-for="card in serviceCards" :key="card.id" class="ios-card service-card group cursor-pointer"
                         @click="card.action">
-                        <div class="p-6 flex flex-col items-center text-center">
+                        <div class="p-4 short:p-3 flex flex-col items-center text-center">
                             <div
                                 :class="[card.iconBg, 'w-12 h-12 rounded-[14px] flex items-center justify-center mb-3 shadow-sm transition-transform duration-200 group-hover:scale-110']">
                                 <i :class="card.icon" class="text-white" style="font-size: 1.25rem"></i>
@@ -197,7 +197,7 @@ const quickLinks = [
             </div>
 
             <!-- ─── System Updates + Quick Links ─── -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 short:gap-2">
 
                 <!-- System Updates -->
                 <div class="lg:col-span-2 ios-section">
