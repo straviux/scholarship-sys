@@ -50,13 +50,24 @@ class FundTransaction extends Model
 
     protected $casts = [
         'scholar_ids' => 'array',
-        'particulars_description' => 'array',
         'amount' => 'decimal:2',
         'upload_token_expires_at' => 'datetime',
-
     ];
 
     protected $appends = ['obr_status'];
+
+    /**
+     * Normalize particulars_description: handles raw HTML and previously JSON-encoded strings.
+     */
+    public function getParticularsDescriptionAttribute($value)
+    {
+        if (is_null($value)) return null;
+        $decoded = json_decode($value, true);
+        if (is_string($decoded)) {
+            return $decoded; // was stored as JSON-encoded HTML string via old array cast
+        }
+        return $value; // plain HTML string
+    }
 
     /**
      * Get obr_status as an alias for transaction_status.
