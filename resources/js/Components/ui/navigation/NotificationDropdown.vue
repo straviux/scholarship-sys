@@ -42,7 +42,8 @@
                     <!-- Notifications -->
                     <div v-else class="divide-y divide-gray-100 dark:divide-gray-700">
                         <div v-for="notification in notifications" :key="notification.id"
-                            class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors duration-200" :class="{
+                            class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors duration-200"
+                            :class="{
                                 'bg-blue-50 dark:bg-blue-900/30': !notification.is_read,
                                 'bg-white dark:bg-transparent': notification.is_read
                             }" @click="openNotificationModal(notification)">
@@ -147,7 +148,7 @@
                         <div class="flex items-center space-x-4">
                             <!-- <span>Type: <span class="font-medium">{{ selectedNotification?.type }}</span></span> -->
                             <span>Priority: <span class="font-medium capitalize">{{ selectedNotification?.priority
-                            }}</span></span>
+                                    }}</span></span>
                         </div>
                         <div class="flex items-center space-x-4">
                             <span>@<span class="font-medium">{{ selectedNotification?.created_by }}</span></span>

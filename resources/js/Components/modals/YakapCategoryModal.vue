@@ -70,7 +70,8 @@ const resetForm = () => {
 
             <!-- Municipality Selection for YAKAP Field -->
             <div v-if="selectedCategory === 'yakap-field'" class="flex flex-col gap-3">
-                <label for="yakap-municipality" class="font-medium text-gray-700 dark:text-gray-300">Municipality:</label>
+                <label for="yakap-municipality"
+                    class="font-medium text-gray-700 dark:text-gray-300">Municipality:</label>
                 <MunicipalitySelect v-model="selectedLocation" placeholder="Select Municipality" class="w-full"
                     :clearable="false" inputId="yakap-municipality" />
             </div>

@@ -4,7 +4,8 @@
         <form @submit.prevent="submit" class="space-y-6">
             <!-- Name Field -->
             <div class="field">
-                <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
+                <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full
+                    Name</label>
                 <InputText id="name" v-model="form.name" placeholder="Enter full name" class="w-full"
                     :class="{ 'p-invalid': form.errors.name }" />
                 <small v-if="form.errors.name" class="p-error">{{ form.errors.name }}</small>
@@ -12,7 +13,8 @@
 
             <!-- Username Field -->
             <div class="field">
-                <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Username</label>
+                <label for="username"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Username</label>
                 <InputText id="username" v-model="form.username" placeholder="Enter username" class="w-full"
                     :class="{ 'p-invalid': form.errors.username }" />
                 <small v-if="form.errors.username" class="p-error">{{ form.errors.username }}</small>
@@ -20,12 +22,13 @@
 
             <!-- Office Designation Field -->
             <div class="field">
-                <label for="office_designation" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Office
+                <label for="office_designation"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Office
                     Designation</label>
                 <InputText id="office_designation" v-model="form.office_designation" class="w-full"
                     :class="{ 'p-invalid': form.errors.office_designation }" />
                 <small v-if="form.errors.office_designation" class="p-error">{{ form.errors.office_designation
-                    }}</small>
+                }}</small>
             </div>
 
             <!-- Role Selection -->
@@ -52,7 +55,8 @@
 
             <!-- Password Field -->
             <div class="field">
-                <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
+                <label for="password"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
                 <Password v-model="form.password" placeholder="Enter password" toggleMask class="w-full"
                     :class="{ 'p-invalid': form.errors.password }" :feedback="false" :promptLabel="'Choose a password'"
                     :weakLabel="'Too simple'" :mediumLabel="'Average complexity'" :strongLabel="'Complex password'" />
@@ -64,12 +68,13 @@
 
             <!-- Confirm Password Field -->
             <div class="field">
-                <label for="password_confirmation" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirm
+                <label for="password_confirmation"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirm
                     Password</label>
                 <Password v-model="form.password_confirmation" placeholder="Confirm password" toggleMask class="w-full"
                     :class="{ 'p-invalid': form.errors.password_confirmation }" :feedback="false" />
                 <small v-if="form.errors.password_confirmation" class="p-error">{{ form.errors.password_confirmation
-                }}</small>
+                    }}</small>
             </div>
         </form>
 

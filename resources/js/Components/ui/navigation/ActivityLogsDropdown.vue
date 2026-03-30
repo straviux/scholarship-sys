@@ -76,7 +76,8 @@
                 </div>
 
                 <!-- Footer -->
-                <div v-if="activities.length > 0" class="px-4 py-2 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+                <div v-if="activities.length > 0"
+                    class="px-4 py-2 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <button @click="viewAllActivities"
                         class="w-full text-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 focus:outline-none font-medium transition-colors duration-200 cursor-pointer">
                         View all

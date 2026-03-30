@@ -27,7 +27,8 @@
                         <div class="flex flex-col h-full">
                             <div class="flex-auto">
                                 <PersonalInformationFields v-model="personalInfo" :show-header="false" />
-                                <div v-if="validationError" class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
+                                <div v-if="validationError"
+                                    class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
                                     <p class="text-sm text-red-800 dark:text-red-300 font-medium">
                                         <i class="pi pi-exclamation-triangle mr-2"></i>
                                         {{ validationError }}
@@ -57,7 +58,8 @@
                         <div class="flex flex-col h-full">
                             <div class="flex-auto">
                                 <div>
-                                    <h4 class="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                                    <h4
+                                        class="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
                                         <i class="pi pi-book text-blue-600"></i>
                                         Academic Information (Required)
                                     </h4>

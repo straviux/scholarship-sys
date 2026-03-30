@@ -10,8 +10,10 @@
                 </StepList>
                 <StepPanels>
                     <StepPanel v-slot="{ activateCallback }" value="1">
-                        <div class="bg-white dark:bg-gray-800/50 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 mb-4">
-                            <h2 class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                        <div
+                            class="bg-white dark:bg-gray-800/50 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 mb-4">
+                            <h2
+                                class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                                 <span class="inline-block w-2 h-5 bg-blue-500 rounded mr-2"></span>Personal
                                 Information
                             </h2>
@@ -115,8 +117,10 @@
                     </StepPanel>
 
                     <StepPanel v-slot="{ activateCallback }" value="2">
-                        <div class="bg-white dark:bg-gray-800/50 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 mb-4">
-                            <h2 class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                        <div
+                            class="bg-white dark:bg-gray-800/50 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 mb-4">
+                            <h2
+                                class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                                 <span class="inline-block w-2 h-5 bg-green-500 rounded mr-2"></span>Parent's
                                 Information
                             </h2>
@@ -161,8 +165,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-white dark:bg-gray-800/50 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 mb-4">
-                            <h2 class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                        <div
+                            class="bg-white dark:bg-gray-800/50 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 mb-4">
+                            <h2
+                                class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                                 <span class="inline-block w-2 h-5 bg-purple-500 rounded mr-2"></span>Guardian
                                 Information
                             </h2>
@@ -193,8 +199,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-white dark:bg-gray-800/50 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 mb-4">
-                            <h2 class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                        <div
+                            class="bg-white dark:bg-gray-800/50 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 mb-4">
+                            <h2
+                                class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                                 <span class="inline-block w-2 h-5 bg-yellow-500 rounded mr-2"></span>Parents/Guardian
                                 Gross Monthly Income
                             </h2>
@@ -220,7 +228,8 @@
                         </div>
                     </StepPanel>
                     <StepPanel v-slot="{ activateCallback }" value="3">
-                        <div class="bg-white dark:bg-gray-800/50 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 mb-4">
+                        <div
+                            class="bg-white dark:bg-gray-800/50 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 mb-4">
                             <AcademicInformationFields v-model:program="form.program" v-model:school="form.school"
                                 v-model:course="form.course" v-model:year_level="form.year_level"
                                 v-model:term="form.term" v-model:academic_year="form.academic_year"

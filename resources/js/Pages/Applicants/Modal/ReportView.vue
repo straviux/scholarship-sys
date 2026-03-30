@@ -1,7 +1,8 @@
 <template>
     <div class="h-full flex flex-col bg-white dark:bg-gray-900">
         <!-- Minimalist Toolbar -->
-        <div class="bg-white dark:bg-gray-800 px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+        <div
+            class="bg-white dark:bg-gray-800 px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-center gap-3">
                 <Button label="Back" icon="pi pi-arrow-left" @click="goBack" severity="secondary" text size="small" />
                 <Button label="Refresh" icon="pi pi-refresh" @click="regenerate" severity="secondary" text size="small"
@@ -57,7 +58,8 @@
                 </div>
 
                 <!-- Minimalist Applied Filters -->
-                <div v-if="hasActiveFilters" class="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                <div v-if="hasActiveFilters"
+                    class="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
                     <p class="text-xs uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-3 font-medium">
                         Active Filters
                     </p>
@@ -99,10 +101,12 @@
                         </div>
 
                         <!-- Minimalist Table -->
-                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                        <div
+                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                             <table class="w-full text-sm">
                                 <thead>
-                                    <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+                                    <tr
+                                        class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
                                         <th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
                                             Name</th>
                                         <th v-if="!params.municipality && params.group_by !== 'municipality'"
@@ -180,13 +184,16 @@
                 <!-- Summary Report -->
                 <div v-else>
                     <!-- Total Count Card -->
-                    <div class="mb-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                    <div
+                        class="mb-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Total Records</p>
-                                <p class="text-4xl font-light text-gray-900 dark:text-gray-100">{{ report.summary?.total || 0 }}</p>
+                                <p class="text-4xl font-light text-gray-900 dark:text-gray-100">{{ report.summary?.total
+                                    || 0 }}</p>
                             </div>
-                            <div class="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                            <div
+                                class="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
                                 <i class="pi pi-users text-2xl text-blue-600"></i>
                             </div>
                         </div>
@@ -197,9 +204,11 @@
                         <div v-for="(group, idx) in visibleSummaryGroups" :key="idx">
                             <div class="mb-8">
                                 <!-- Minimalist Group Header -->
-                                <div class="mb-4 pb-3 border-b border-gray-300 dark:border-gray-600 flex items-center justify-between">
+                                <div
+                                    class="mb-4 pb-3 border-b border-gray-300 dark:border-gray-600 flex items-center justify-between">
                                     <div class="flex items-center gap-3">
-                                        <i :class="['text-xl text-gray-600 dark:text-gray-400', getSummaryIcon(group.key)]"></i>
+                                        <i
+                                            :class="['text-xl text-gray-600 dark:text-gray-400', getSummaryIcon(group.key)]"></i>
                                         <h2 class="text-xl font-medium text-gray-900 dark:text-gray-100">
                                             {{ group.label }}
                                         </h2>
@@ -210,17 +219,22 @@
                                 </div>
 
                                 <!-- Minimalist Summary Table -->
-                                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                <div
+                                    class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                                     <table class="w-full text-sm">
                                         <thead>
-                                            <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
-                                                <th class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
+                                            <tr
+                                                class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+                                                <th
+                                                    class="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
                                                     {{ group.label }}
                                                 </th>
-                                                <th class="px-4 py-3 text-right font-medium text-gray-700 dark:text-gray-300 w-32">
+                                                <th
+                                                    class="px-4 py-3 text-right font-medium text-gray-700 dark:text-gray-300 w-32">
                                                     Count
                                                 </th>
-                                                <th class="px-4 py-3 text-right font-medium text-gray-700 dark:text-gray-300 w-32">
+                                                <th
+                                                    class="px-4 py-3 text-right font-medium text-gray-700 dark:text-gray-300 w-32">
                                                     Percentage
                                                 </th>
                                             </tr>
@@ -261,7 +275,8 @@
                                                     </span>
                                                 </td>
                                                 <td class="px-4 py-3 text-right">
-                                                    <span class="text-gray-600 dark:text-gray-400 text-xs font-medium">100%</span>
+                                                    <span
+                                                        class="text-gray-600 dark:text-gray-400 text-xs font-medium">100%</span>
                                                 </td>
                                             </tr>
                                         </tfoot>
@@ -274,7 +289,8 @@
 
                 <!-- Minimalist Empty State -->
                 <div v-if="!loading && isReportEmpty" class="text-center py-20">
-                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <div
+                        class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                         <i class="pi pi-inbox text-3xl text-gray-400 dark:text-gray-500"></i>
                     </div>
                     <p class="text-gray-600 dark:text-gray-400 text-lg mb-1">No data found</p>

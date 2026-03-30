@@ -1,7 +1,8 @@
 <template>
     <Teleport to="body">
         <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in">
+            <div
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in">
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-orange-500 to-red-600 px-4 short:px-3 py-4 short:py-3 text-center">
                     <i class="pi pi-exclamation-circle text-white text-[3rem] short:text-[2rem] mb-3"></i>
@@ -23,12 +24,16 @@
                     </div>
 
                     <!-- Countdown -->
-                    <div class="bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-4 short:mb-2">
-                        <p class="text-xs text-gray-600 dark:text-gray-400 text-center mb-2 font-semibold">MAINTENANCE STARTS IN</p>
-                        <div class="text-3xl short:text-xl font-mono font-bold text-center text-orange-600 dark:text-orange-400">
+                    <div
+                        class="bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-4 short:mb-2">
+                        <p class="text-xs text-gray-600 dark:text-gray-400 text-center mb-2 font-semibold">MAINTENANCE
+                            STARTS IN</p>
+                        <div
+                            class="text-3xl short:text-xl font-mono font-bold text-center text-orange-600 dark:text-orange-400">
                             {{ countdownDisplay }}
                         </div>
-                        <p class="text-xs text-gray-500 dark:text-gray-500 text-center mt-2">{{ startTimeFormatted }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-500 text-center mt-2">{{ startTimeFormatted }}
+                        </p>
                     </div>
 
                     <!-- Alert Type Badge -->
@@ -43,7 +48,8 @@
                     </div>
 
                     <!-- Info Message -->
-                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3 mb-4 short:mb-2">
+                    <div
+                        class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3 mb-4 short:mb-2">
                         <p class="text-xs text-blue-800 dark:text-blue-300">
                             ℹ️ Maintenance begins in 5 minutes. Please save your work immediately and log out if
                             possible.

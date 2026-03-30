@@ -379,38 +379,49 @@ onBeforeUnmount(() => {
 :global(.dark) .ios-modal {
     background: #222831;
 }
+
 :global(.dark) .ios-nav-bar {
     background: #2a3040;
     border-bottom-color: rgba(255, 255, 255, 0.08);
 }
+
 :global(.dark) .ios-nav-title {
     color: #d1d5db;
 }
+
 :global(.dark) .ios-nav-cancel {
     color: #9ca3af;
 }
+
 :global(.dark) .ios-nav-action {
     color: #d1d5db;
 }
+
 :global(.dark) .ios-section-label {
     color: #9ca3af;
 }
+
 :global(.dark) .ios-section-footer {
     color: #6b7280;
 }
+
 :global(.dark) .ios-card {
     background: #222831;
     border-color: rgba(255, 255, 255, 0.08);
 }
+
 :global(.dark) .ios-row {
     border-bottom-color: rgba(255, 255, 255, 0.06);
 }
+
 :global(.dark) .ios-row-label {
     color: #d1d5db;
 }
+
 :global(.dark) .ios-body {
     scrollbar-color: transparent transparent;
 }
+
 :global(.dark) .ios-body:hover {
     scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }

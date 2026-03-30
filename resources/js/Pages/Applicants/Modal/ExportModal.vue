@@ -5,17 +5,21 @@
         <form @submit.prevent="exportData" class="p-4">
             <!-- Export Configuration -->
             <div class="mb-6">
-                <h4 class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-3 pb-2 border-b dark:border-gray-700">Export Settings</h4>
+                <h4
+                    class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-3 pb-2 border-b dark:border-gray-700">
+                    Export Settings</h4>
 
                 <!-- Paper Settings -->
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Paper Size</label>
+                        <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Paper
+                            Size</label>
                         <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label" optionValue="value"
                             placeholder="Select size" class="w-full" />
                     </div>
                     <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Orientation</label>
+                        <label
+                            class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Orientation</label>
                         <Select v-model="orientation" :options="orientationOptions" optionLabel="label"
                             optionValue="value" placeholder="Select orientation" class="w-full" />
                     </div>
@@ -38,7 +42,8 @@
                 </div>
 
                 <!-- Info Message -->
-                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3 text-sm text-blue-700 dark:text-blue-300">
+                <div
+                    class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3 text-sm text-blue-700 dark:text-blue-300">
                     <i class="pi pi-info-circle mr-2"></i>
                     <span>Export will use the current filter settings and display {{ totalRecords }} record(s).</span>
                 </div>

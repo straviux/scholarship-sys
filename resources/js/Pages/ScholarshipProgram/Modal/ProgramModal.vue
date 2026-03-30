@@ -137,11 +137,13 @@ const closeModal = () => {
                 <div class="flex gap-4 mt-2">
                     <div class="flex items-center gap-2">
                         <RadioButton v-model="form.is_active" inputId="is_active_yes" name="is_active" :value="1" />
-                        <label for="is_active_yes" class="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer">Yes</label>
+                        <label for="is_active_yes"
+                            class="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer">Yes</label>
                     </div>
                     <div class="flex items-center gap-2">
                         <RadioButton v-model="form.is_active" inputId="is_active_no" name="is_active" :value="0" />
-                        <label for="is_active_no" class="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer">No</label>
+                        <label for="is_active_no"
+                            class="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer">No</label>
                     </div>
                 </div>
                 <InputError class="mt-2" :message="form.errors.is_active" />
