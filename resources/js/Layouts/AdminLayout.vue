@@ -590,7 +590,7 @@ onUnmounted(() => {
 
         <!-- Floating Sidebar -->
         <aside
-            class="fixed z-30 md:z-10 top-0 left-0 md:top-20 md:left-4 flex flex-col dark:bg-[#222831] transition-[width,transform] duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-96px)]"
+            class="fixed z-30 md:z-20 top-0 left-0 md:top-20 md:left-4 flex flex-col bg-white dark:bg-[#222831] shadow dark:shadow-none transition-[width,transform] duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-96px)]"
             :class="[
                 sidebarMinimized ? 'md:w-[110px]' : 'md:w-[220px]',
                 toggleMenu ? 'w-[280px] translate-x-0' : '-translate-x-full md:translate-x-0',
@@ -600,7 +600,7 @@ onUnmounted(() => {
             <div class="flex-1 flex flex-col min-h-0 min-w-0 p-0 overflow-hidden rounded-4xl">
                 <Button v-slot="slotProps" asChild>
                     <button v-bind="slotProps.a11yAttrs" @click="toggleSidebarMinimized"
-                        class="flex w-full dark:bg-[#222831] pt-4 px-4 text-gray-400 dark:text-gray-500 cursor-pointer justify-end">
+                        class="flex w-full dark:bg-transparent pt-4 px-4 text-gray-400 dark:text-gray-500 cursor-pointer justify-end">
                         <i :class="{ 'pi pi-window-maximize': sidebarMinimized, 'pi pi-window-minimize': !sidebarMinimized }"
                             style="font-size: 0.7rem;margin-right: 8px;"></i>
                     </button>
@@ -742,7 +742,8 @@ onUnmounted(() => {
         </aside>
 
         <div class="w-full min-w-0 flex flex-col h-screen overflow-hidden">
-            <div class="flex-shrink-0 z-10 h-16 dark:bg-[#222831] lg:py-2.5" :class="{ dark: navDark }">
+            <div class="flex-shrink-0 relative z-20 h-16 bg-white dark:bg-[#222831] border-b border-gray-200/80 dark:border-white/5 lg:py-2.5"
+                :class="{ dark: navDark }">
                 <div class="px-4 md:px-6 flex items-center justify-between space-x-2 md:space-x-4 h-full">
                     <!-- Mobile hamburger -->
                     <button @click="toggleMenu = !toggleMenu"

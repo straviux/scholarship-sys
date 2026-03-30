@@ -370,6 +370,8 @@
 	--p-datatable-row-striped-background: #222831;
 	--p-datatable-row-color: #d7dbe0;
 	--p-datatable-row-hover-color: #d7dbe0;
+	--p-datatable-border-color: rgba(255, 255, 255, 0.18);
+	border-color: rgba(255, 255, 255, 0.18);
 	color: #d7dbe0;
 }
 
@@ -377,12 +379,31 @@
 .dark .p-datatable .p-datatable-thead > tr > th,
 .dark .p-datatable .p-datatable-tfoot > tr > td {
 	color: #d7dbe0;
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+.dark .p-datatable .p-paginator {
+	border-color: rgba(255, 255, 255, 0.18);
 }
 
 /* Page headers / titles in dark mode */
 .dark .content-scroll h1,
 .dark .content-scroll h2 {
 	color: #e5e7eb;
+}
+
+/* PrimeVue Toolbar dark surface — matches the app's #222831 dark palette */
+.dark .p-toolbar {
+	--p-toolbar-background: #1e242b;
+	--p-toolbar-border-color: rgba(255, 255, 255, 0.08);
+	--p-toolbar-color: #d7dbe0;
+}
+
+/* PrimeVue Panel dark surface — matches ios-card dark bg */
+.dark .p-panel {
+	--p-panel-background: #222831;
+	--p-panel-border-color: rgba(255, 255, 255, 0.08);
+	--p-panel-color: #d7dbe0;
 }
 
 /* Page subtitle/description text in toolbars */
@@ -452,4 +473,92 @@
 .dark .ios-modal .ios-body [style*='color: #92400e'],
 .dark .ios-modal .ios-body [style*='color: #8B6914'] {
 	color: #fbbf24 !important;
+}
+
+/* ============================================================
+   Global PrimeVue component styling — rounded inputs, selects,
+   InputGroups, DataTable borders & rounded corners.
+   Previously duplicated in per-page scoped CSS; centralized here.
+   ============================================================ */
+
+/* Rounded text inputs, selects, datepicker inputs */
+.p-inputtext {
+	border-radius: 1rem;
+}
+.p-select {
+	border-radius: 1rem;
+}
+.p-datepicker .p-inputtext {
+	border-radius: 1rem;
+}
+.p-iconfield .p-inputtext {
+	border-radius: 1rem;
+}
+
+/* InputGroup — single container border, children borderless */
+.p-inputgroup {
+	border-radius: 1rem;
+	overflow: hidden;
+	border: 1px solid var(--p-inputtext-border-color, #d1d5db);
+}
+.p-inputgroup:focus-within {
+	border-color: var(--p-inputtext-focus-border-color, #6366f1);
+}
+.p-inputgroup .p-inputgroupaddon {
+	border-radius: 0;
+	border: none;
+}
+.p-inputgroup .p-inputtext {
+	border-radius: 0;
+	border: none;
+}
+.p-inputgroup .p-datepicker {
+	border-radius: 0;
+	flex: 1;
+}
+.p-inputgroup .p-datepicker .p-inputtext {
+	border-radius: 0;
+	border: none;
+}
+.p-inputgroup .p-datepicker .p-datepicker-input-icon-container {
+	border-radius: 0;
+}
+
+/* Rounded DataTable with clean outer border */
+.p-datatable {
+	border-radius: 1.5rem;
+	overflow: hidden;
+	border: 1px solid var(--p-datatable-border-color, #e2e8f0);
+}
+.p-datatable .p-datatable-table-container {
+	border-radius: 0;
+	overflow: hidden;
+}
+
+/* Remove outer-edge cell borders to prevent double-border with container */
+.p-datatable .p-datatable-thead > tr > th:first-child,
+.p-datatable .p-datatable-tbody > tr > td:first-child {
+	border-left: none;
+}
+.p-datatable .p-datatable-thead > tr > th:last-child,
+.p-datatable .p-datatable-tbody > tr > td:last-child {
+	border-right: none;
+}
+.p-datatable .p-datatable-thead > tr:first-child > th {
+	border-top: none;
+}
+.p-datatable .p-datatable-tbody > tr:last-child > td {
+	border-bottom: none;
+}
+
+.p-datatable .p-paginator {
+	border-radius: 0;
+	border: none;
+	border-top: 1px solid var(--p-datatable-border-color, #e2e8f0);
+}
+.p-datatable .p-datatable-header {
+	border-radius: 0;
+}
+.p-datatable .p-datatable-footer {
+	border-radius: 0;
 }

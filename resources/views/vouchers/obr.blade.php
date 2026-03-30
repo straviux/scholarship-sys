@@ -331,6 +331,7 @@
         </div>
 
         <!-- OBR PARTICULARS Row -->
+        @php $isEfa = stripos($voucher->particulars_name ?? '', 'EFA') !== false; @endphp
         <div class="obr-info-row no-border-bottom" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <div class="column_1 center">{{ $voucher->responsibility_center ?? '_______________' }}</div>
             <div class="column_2 center" style="font-weight:600">{{ $voucher->particulars_name ?? '_______________' }}</div>
@@ -338,7 +339,7 @@
                 <div class="fpp">&nbsp;</div>
                 <div class="account-code" style="font-size: 9pt; font-weight: normal;">{{ $voucher->account_code ?? '_______________' }}</div>
                 <div class="amount" style="font-size: 11pt; font-weight: normal;">
-                    @if($voucher->obr_type === 'REIMBURSEMENT')
+                    @if($voucher->obr_type === 'REIMBURSEMENT' || ($voucher->obr_type === 'FINANCIAL ASSISTANCE' && !$isEfa))
                     ₱{{ number_format($voucher->amount, 2) }}
                     @else
                     &nbsp;
@@ -348,7 +349,6 @@
         </div>
 
         <!-- OBR Particulars Description Row -->
-        @php $isEfa = stripos($voucher->particulars_name ?? '', 'EFA') !== false; @endphp
         @if($voucher->particulars_description)
         <div class="obr-info-row no-border-bottom" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <div class="column_1">&nbsp;</div>
@@ -467,14 +467,14 @@
         $totalAmount += $scholar['amount'];
         }
         @endphp
-        @elseif($voucher->obr_type === 'REIMBURSEMENT')
+        @elseif($voucher->obr_type === 'REIMBURSEMENT' || ($voucher->obr_type === 'FINANCIAL ASSISTANCE' && !$isEfa))
         @php $totalAmount = $voucher->amount; @endphp
         @endif
 
         <!-- Bottom Section -->
         <div class="obr-bottom-section" style="border-left:1px solid #333!important;border-right:1px solid #333!important;">
             <!-- TOTAL Row -->
-            @if(!empty($scholars) || $voucher->obr_type === 'REIMBURSEMENT')
+            @if(!empty($scholars) || $voucher->obr_type === 'REIMBURSEMENT' || ($voucher->obr_type === 'FINANCIAL ASSISTANCE' && !$isEfa))
             <div class="obr-info-row no-border-bottom border-top">
                 <div class="column_1" style="border: none;"></div>
                 <div class="column_2" style="border: none;"></div>

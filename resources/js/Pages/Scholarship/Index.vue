@@ -8,7 +8,7 @@
             <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-users text-indigo-900" style="font-size:2rem"></i>
+                        <i class="pi pi-users text-indigo-500" style="font-size:2rem"></i>
                         <div>
                             <h1 class="text-2xl font-bold text-gray-700">Scholarship Profiles</h1>
                             <p class="text-sm text-gray-600">Browse and manage scholarship applicant profiles</p>
@@ -298,7 +298,7 @@
                                     </div>
                                 </template>
                                 <div v-else
-                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block bg-gray-100 text-gray-800 border-gray-300">
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600">
                                     No Record
                                 </div>
                             </template>
@@ -366,7 +366,7 @@
                                 </div>
                                 <DataTable :value="slotProps.data.scholarship_grant" size="small"
                                     v-if="slotProps.data.scholarship_grant?.length"
-                                    :rowClass="(row) => row.id === slotProps.data.latest_scholarship_record?.id ? 'bg-blue-50' : ''">
+                                    :rowClass="(row) => row.id === slotProps.data.latest_scholarship_record?.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''">
                                     <Column header="#" style="width: 2.5rem;">
                                         <template #body="r">
                                             <span class="text-xs text-gray-400">{{
@@ -404,7 +404,7 @@
                                     <Column header="Year" style="min-width: 80px;">
                                         <template #body="r">
                                             <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—'
-                                                }}</span>
+                                            }}</span>
                                         </template>
                                     </Column>
                                     <Column header="Academic Year" style="min-width: 110px;">
@@ -571,7 +571,7 @@
                                     }}
                                 </div>
                             </div>
-                            <p v-else class="text-sm font-medium text-gray-500">N/A</p>
+                            <p v-else class="text-sm font-medium text-gray-500 dark:text-gray-400">N/A</p>
                         </div>
                         <div>
                             <label class="text-xs font-medium text-gray-600">School</label>
@@ -609,11 +609,11 @@
                         Summary
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="text-center p-4 bg-blue-50 rounded-lg">
-                            <div class="text-2xl font-bold text-blue-600">
+                        <div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                 {{ selectedProfile.total_scholarships || 0 }}
                             </div>
-                            <div class="text-xs text-gray-600 mt-1">Total Applications</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Total Applications</div>
                         </div>
                     </div>
                 </div>
@@ -634,17 +634,19 @@
             :style="{ width: '500px' }">
             <div class="space-y-4" v-if="selectedProfileForGrant">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Scholar Name</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Scholar Name</label>
                     <p class="text-base font-semibold">{{ getFullName(selectedProfileForGrant) }}</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Scholarship Record</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Scholarship
+                        Record</label>
                     <Select v-model="grantProvisionForm.scholarship_record_id" :options="scholarshipRecordOptions"
                         optionLabel="label" optionValue="value" placeholder="Select scholarship record" class="w-full"
                         @change="onScholarshipRecordChange" />
                 </div>
                 <div v-if="grantProvisionForm.scholarship_record_id">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Grant Provision</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Grant
+                        Provision</label>
                     <Select v-model="grantProvisionForm.grant_provision" :options="grantProvisionOptions"
                         placeholder="Select provision type" class="w-full" showClear />
                 </div>
@@ -663,12 +665,14 @@
                 <div class="flex items-center gap-3">
                     <i class="pi pi-exclamation-triangle text-2xl text-orange-500"></i>
                     <div>
-                        <p class="font-semibold text-gray-900">Soft Delete Profile</p>
-                        <p class="text-sm text-gray-600">This action can be undone from the Deleted Records page</p>
+                        <p class="font-semibold text-gray-900 dark:text-gray-100">Soft Delete Profile</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">This action can be undone from the Deleted
+                            Records
+                            page</p>
                     </div>
                 </div>
-                <div class="bg-blue-50 border border-blue-200 rounded p-3">
-                    <p class="text-sm text-blue-800">
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
+                    <p class="text-sm text-blue-800 dark:text-blue-300">
                         <strong>Profile:</strong> {{ profileToDelete ? getFullName(profileToDelete) : 'N/A' }}
                     </p>
                 </div>
@@ -1285,6 +1289,7 @@ onBeforeUnmount(() => {
     justify-self: end;
 }
 
+/* Compact DataTable */
 :deep(.compact-table .p-datatable-tbody > tr > td) {
     padding: 0.5rem 0.75rem;
 }
@@ -1308,102 +1313,5 @@ onBeforeUnmount(() => {
     filter: blur(1.5px);
     transition: opacity 0.25s ease, filter 0.25s ease;
     pointer-events: none;
-}
-
-/* Rounded inputs, selects, and datepickers to match macOS layout */
-:deep(.p-inputtext) {
-    border-radius: 1rem;
-}
-
-:deep(.p-select) {
-    border-radius: 1rem;
-}
-
-:deep(.p-datepicker .p-inputtext) {
-    border-radius: 1rem;
-}
-
-:deep(.p-inputgroup) {
-    border-radius: 1rem;
-    overflow: hidden;
-    border: 1px solid var(--p-inputtext-border-color, #d1d5db);
-}
-
-:deep(.p-inputgroup:focus-within) {
-    border-color: var(--p-inputtext-focus-border-color, #6366f1);
-}
-
-:deep(.p-inputgroup .p-inputgroupaddon) {
-    border-radius: 0;
-    border: none;
-}
-
-:deep(.p-inputgroup .p-inputtext) {
-    border-radius: 0;
-    border: none;
-}
-
-:deep(.p-inputgroup .p-datepicker) {
-    border-radius: 0;
-    flex: 1;
-}
-
-:deep(.p-inputgroup .p-datepicker .p-inputtext) {
-    border-radius: 0;
-    border: none;
-}
-
-:deep(.p-inputgroup .p-datepicker .p-datepicker-input-icon-container) {
-    border-radius: 0;
-}
-
-/* Rounded DataTable — covers scrollable wrapper and all inner containers */
-:deep(.p-datatable) {
-    border-radius: 1.5rem;
-    overflow: hidden;
-    border: 1px solid var(--p-datatable-border-color, #e2e8f0);
-}
-
-:deep(.p-datatable .p-datatable-table-container) {
-    border-radius: 0;
-    overflow: hidden;
-}
-
-/* Remove outer-edge cell borders so they don't double up with the container border */
-:deep(.p-datatable .p-datatable-thead > tr > th:first-child),
-:deep(.p-datatable .p-datatable-tbody > tr > td:first-child) {
-    border-left: none;
-}
-
-:deep(.p-datatable .p-datatable-thead > tr > th:last-child),
-:deep(.p-datatable .p-datatable-tbody > tr > td:last-child) {
-    border-right: none;
-}
-
-:deep(.p-datatable .p-datatable-thead > tr:first-child > th) {
-    border-top: none;
-}
-
-:deep(.p-datatable .p-datatable-tbody > tr:last-child > td) {
-    border-bottom: none;
-}
-
-:deep(.p-datatable .p-paginator) {
-    border-radius: 0;
-    border: none;
-    border-top: 1px solid var(--p-datatable-border-color, #e2e8f0);
-}
-
-:deep(.p-datatable .p-datatable-header) {
-    border-radius: 0;
-}
-
-:deep(.p-datatable .p-datatable-footer) {
-    border-radius: 0;
-}
-
-/* Rounded IconField search wrapper */
-:deep(.p-iconfield .p-inputtext) {
-    border-radius: 1rem;
 }
 </style>
