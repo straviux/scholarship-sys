@@ -18,15 +18,32 @@
                     <div class="p-4">
                         <!-- Voucher Header -->
                         <div v-if="modelValue" class="ios-section">
-                            <div class="ios-card" style="padding: 12px 16px; background: #eff6ff;">
-                                <p style="font-size: 12px; color: #3b82f6; margin-top: 2px;">{{
-                                    modelValue.payee_name }}</p>
+                            <div class="ios-card px-4 py-2">
+                                <p class="flex justify-between"><span class="text-xs">Payee:</span> <span
+                                        class="font-medium text-gray-700 dark:text-gray-100"> {{
+                                            modelValue.payee_name }}</span></p>
+                                <p class="flex justify-between"><span class="text-xs">OBR No:</span> <span
+                                        class="font-medium text-gray-700 dark:text-gray-100">
+                                        {{
+                                            modelValue.obr_no }}</span></p>
+                                <p class="flex justify-between"><span class="text-xs">OBR Type:</span> <span
+                                        class="font-medium text-gray-700 dark:text-gray-100">
+                                        {{
+                                            modelValue.obr_type }}</span></p>
+                                <p class="flex justify-between"><span class="text-xs">OBR Status:</span> <span
+                                        class="font-medium text-gray-700 dark:text-gray-100">
+                                        {{
+                                            modelValue.obr_status }}</span></p>
+                                <p class="flex justify-between"><span class="text-xs">Disbursement Type:</span> <span
+                                        class="font-medium text-gray-700 dark:text-gray-100 capitalize">
+                                        {{
+                                            modelValue.disbursement_type }}</span></p>
                             </div>
                         </div>
 
                         <div class="ios-section" v-if="!isComplete">
-                            <div class="ios-card" style="padding: 12px 16px;">
-                                <p style="font-size: 13px; color: #6b7280;">Enter OBR details to update this
+                            <div class="ios-card px-4 py-2">
+                                <p class="text-sm text-gray-500">Enter OBR details to update this
                                     voucher's tracking information</p>
                             </div>
                         </div>
@@ -38,17 +55,16 @@
                                 <div class="ios-row">
                                     <span class="ios-row-label">Fiscal Year *</span>
                                     <InputText v-model.number="formData.fiscal_year" type="number"
-                                        placeholder="e.g., 2025" style="width: 140px; text-align: right;" />
+                                        placeholder="e.g., 2025" class="w-48 text-right" />
                                 </div>
                                 <div class="ios-row">
                                     <span class="ios-row-label">OBR Number *</span>
                                     <InputText v-model="formData.obr_no" type="text" placeholder="e.g., 200-25-12-24188"
-                                        style="width: 200px; text-align: right;" />
+                                        class="w-48 text-right" />
                                 </div>
                                 <div class="ios-row" style="border-bottom: none;">
                                     <span class="ios-row-label">Date Obligated</span>
-                                    <InputText v-model="formData.date_obligated" type="date"
-                                        style="width: 160px; text-align: right;" />
+                                    <InputText v-model="formData.date_obligated" type="date" class="w-48" />
                                 </div>
                             </div>
                         </div>
@@ -61,7 +77,8 @@
                                 <div style="font-size: 13px; color: #15803d; line-height: 1.8;">
                                     <p><strong>Fiscal Year:</strong> {{ formData.fiscal_year }}</p>
                                     <p><strong>OBR Number:</strong> {{ formData.obr_no }}</p>
-                                    <p v-if="formData.date_obligated"><strong>Date Obligated:</strong> {{ formData.date_obligated }}</p>
+                                    <p v-if="formData.date_obligated"><strong>Date Obligated:</strong> {{
+                                        formData.date_obligated }}</p>
                                 </div>
                             </div>
                         </div>
@@ -73,12 +90,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onBeforeUnmount } from 'vue';
+import { ref, reactive, computed, watch, onBeforeUnmount } from 'vue';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import { useToast } from 'primevue/usetoast';
 
-defineProps({
+const props = defineProps({
     show: {
         type: Boolean,
         required: true
@@ -105,6 +122,16 @@ const formData = reactive({
     fiscal_year: new Date().getFullYear(),
     obr_no: '',
     date_obligated: null
+});
+
+// Pre-populate form when dialog opens with voucher data
+watch(() => props.show, (visible) => {
+    if (visible && props.modelValue) {
+        const v = props.modelValue;
+        formData.fiscal_year = v.fiscal_year || new Date().getFullYear();
+        formData.obr_no = v.obr_no || '';
+        formData.date_obligated = v.date_obligated ? v.date_obligated.substring(0, 10) : null;
+    }
 });
 const dragOffset = ref({ x: 0, y: 0 });
 const dragStart = ref(null);

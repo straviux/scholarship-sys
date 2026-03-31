@@ -475,6 +475,15 @@
 	color: #fbbf24 !important;
 }
 
+/* Dark navy blue colors used in light-mode info cards */
+.dark .ios-modal .ios-body [style*='color: #1e3a5f'] {
+	color: #93c5fd !important;
+}
+
+.dark .ios-modal .ios-body [style*='color: #1d4ed8'] {
+	color: #93c5fd !important;
+}
+
 /* ============================================================
    Global PrimeVue component styling — rounded inputs, selects,
    InputGroups, DataTable borders & rounded corners.
@@ -561,4 +570,195 @@
 }
 .p-datatable .p-datatable-footer {
 	border-radius: 0;
+}
+/* ══════════════════════════════════════════
+   VOUCHER WIZARD DARK MODE
+   ══════════════════════════════════════════ */
+
+/* Card backgrounds */
+.dark .ios-modal .ios-body .bg-white {
+	background-color: #2a3040 !important;
+}
+.dark .ios-modal .ios-body .bg-gray-50 {
+	background-color: #1e2535 !important;
+}
+.dark .ios-modal .ios-body .bg-gray-100 {
+	background-color: #374151 !important;
+}
+.dark .ios-modal .ios-body .bg-gray-200 {
+	background-color: #374151 !important;
+}
+
+/* Borders */
+.dark .ios-modal .ios-body .border-\[\#e5e5ea\] {
+	border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.dark .ios-modal .ios-body .border-gray-200 {
+	border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.dark .ios-modal .ios-body .border-gray-300 {
+	border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Text — primary */
+.dark .ios-modal .ios-body .text-gray-900 {
+	color: #f3f4f6 !important;
+}
+.dark .ios-modal .ios-body .text-gray-800 {
+	color: #e5e7eb !important;
+}
+/* Text — secondary */
+.dark .ios-modal .ios-body .text-gray-700 {
+	color: #d1d5db !important;
+}
+.dark .ios-modal .ios-body .text-gray-600 {
+	color: #9ca3af !important;
+}
+.dark .ios-modal .ios-body .text-gray-500 {
+	color: #9ca3af !important;
+}
+.dark .ios-modal .ios-body .text-gray-400 {
+	color: #6b7280 !important;
+}
+
+/* Blue info banners */
+.dark .ios-modal .ios-body .bg-blue-50 {
+	background-color: rgba(30, 58, 138, 0.25) !important;
+}
+.dark .ios-modal .ios-body .border-blue-200 {
+	border-color: rgba(59, 130, 246, 0.3) !important;
+}
+.dark .ios-modal .ios-body .text-blue-900 {
+	color: #93c5fd !important;
+}
+.dark .ios-modal .ios-body .text-blue-700 {
+	color: #93c5fd !important;
+}
+.dark .ios-modal .ios-body .text-blue-800 {
+	color: #93c5fd !important;
+}
+.dark .ios-modal .ios-body .text-blue-500 {
+	color: #60a5fa !important;
+}
+
+/* Red error banners */
+.dark .ios-modal .ios-body .bg-red-50 {
+	background-color: rgba(127, 29, 29, 0.3) !important;
+}
+.dark .ios-modal .ios-body .border-red-200 {
+	border-color: rgba(239, 68, 68, 0.3) !important;
+}
+.dark .ios-modal .ios-body .text-red-700 {
+	color: #fca5a5 !important;
+}
+
+/* Green selected-scholar items */
+.dark .ios-modal .ios-body .bg-green-50 {
+	background-color: rgba(6, 78, 59, 0.3) !important;
+}
+.dark .ios-modal .ios-body .border-green-200 {
+	border-color: rgba(34, 197, 94, 0.3) !important;
+}
+
+/* Yellow notes banner */
+.dark .ios-modal .ios-body .bg-yellow-50 {
+	background-color: rgba(120, 53, 15, 0.25) !important;
+}
+.dark .ios-modal .ios-body .border-yellow-200 {
+	border-color: rgba(234, 179, 8, 0.3) !important;
+}
+.dark .ios-modal .ios-body .text-yellow-900 {
+	color: #fcd34d !important;
+}
+.dark .ios-modal .ios-body .text-yellow-800 {
+	color: #fde68a !important;
+}
+
+/* Total amount row in scholar breakdown */
+.dark .ios-modal .ios-body .border-blue-200 {
+	border-color: rgba(59, 130, 246, 0.25) !important;
+}
+.dark .ios-modal .ios-body .text-blue-900 {
+	color: #93c5fd !important;
+}
+
+/* Quill editor dark mode */
+.dark .ios-modal .ios-body .ql-toolbar {
+	background-color: #1e2535 !important;
+	border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .ios-modal .ios-body .ql-container {
+	background-color: #2a3040 !important;
+	border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .ios-modal .ios-body .ql-editor {
+	background-color: #2a3040 !important;
+	color: #e5e7eb !important;
+	min-height: 400px;
+}
+
+.dark .ios-modal .ios-body .ql-editor::placeholder {
+	color: #9ca3af !important;
+}
+
+.dark .ios-modal .ios-body .ql-editor.ql-blank::before {
+	color: #9ca3af !important;
+}
+
+/* Quill toolbar buttons and controls in dark mode */
+.dark .ios-modal .ios-body .ql-toolbar button,
+.dark .ios-modal .ios-body .ql-toolbar button:hover,
+.dark .ios-modal .ios-body .ql-toolbar button.ql-active,
+.dark .ios-modal .ios-body .ql-toolbar button:focus,
+.dark .ios-modal .ios-body .ql-toolbar.ql-snow button:hover,
+.dark .ios-modal .ios-body .ql-toolbar.ql-snow button.ql-active {
+	color: #d1d5db !important;
+}
+
+.dark .ios-modal .ios-body .ql-toolbar.ql-snow button:hover::after,
+.dark .ios-modal .ios-body .ql-toolbar.ql-snow button.ql-active::after {
+	background-color: #9ca3af !important;
+}
+
+.dark .ios-modal .ios-body .ql-toolbar.ql-snow .ql-stroke {
+	stroke: #d1d5db !important;
+}
+
+.dark .ios-modal .ios-body .ql-toolbar.ql-snow .ql-fill,
+.dark .ios-modal .ios-body .ql-toolbar.ql-snow .ql-stroke.ql-fill {
+	fill: #d1d5db !important;
+}
+
+.dark .ios-modal .ios-body .ql-toolbar.ql-snow button:hover .ql-stroke {
+	stroke: #f3f4f6 !important;
+}
+
+.dark .ios-modal .ios-body .ql-toolbar.ql-snow button:hover .ql-fill,
+.dark .ios-modal .ios-body .ql-toolbar.ql-snow button:hover .ql-stroke.ql-fill {
+	fill: #f3f4f6 !important;
+}
+
+.dark .ios-modal .ios-body .ql-toolbar.ql-snow button.ql-active .ql-stroke {
+	stroke: #93c5fd !important;
+}
+
+.dark .ios-modal .ios-body .ql-toolbar.ql-snow button.ql-active .ql-fill,
+.dark .ios-modal .ios-body .ql-toolbar.ql-snow button.ql-active .ql-stroke.ql-fill {
+	fill: #93c5fd !important;
+}
+
+/* Quill list markers and text styling in dark mode */
+.dark .ios-modal .ios-body .ql-editor ol li,
+.dark .ios-modal .ios-body .ql-editor ul li {
+	color: #e5e7eb !important;
+}
+
+.dark .ios-modal .ios-body .ql-editor strong {
+	color: #f3f4f6 !important;
+}
+
+.dark .ios-modal .ios-body .ql-editor em {
+	color: #d1d5db !important;
 }

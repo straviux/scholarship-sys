@@ -13,7 +13,7 @@
                     </button>
                 </div>
                 <div class="ios-body">
-                    <div v-if="modelValue" style="padding-top: 16px;">
+                    <div v-if="modelValue" class="pt-6 pb-12">
                         <div class="ios-section">
                             <div class="ios-card" style="padding: 12px 16px;">
                                 <p style="font-size: 14px; font-weight: 500; color: #3c3c43;">Transaction ID: {{
@@ -24,32 +24,8 @@
                         </div>
                         <div class="ios-section">
                             <p class="ios-section-label">OBR Status</p>
-                            <div class="ios-card" style="padding: 12px 16px;">
-                                <Dropdown v-model="status" :options="statusOptions" placeholder="Select a status"
-                                    class="w-full" />
-                            </div>
-                        </div>
-                        <div class="ios-section" style="margin-bottom: 16px;">
-                            <p class="ios-section-label">Remarks (Optional)</p>
-                            <div class="ios-card" style="padding: 12px 16px;">
-                                <Editor :modelValue="remarksText" @update:modelValue="remarksText = $event"
-                                    editorStyle="height: 120px">
-                                    <template #toolbar>
-                                        <span class="ql-formats">
-                                            <button class="ql-bold"></button>
-                                            <button class="ql-italic"></button>
-                                            <button class="ql-underline"></button>
-                                        </span>
-                                        <span class="ql-formats">
-                                            <button class="ql-list" value="ordered"></button>
-                                            <button class="ql-list" value="bullet"></button>
-                                        </span>
-                                        <span class="ql-formats">
-                                            <button class="ql-clean"></button>
-                                        </span>
-                                    </template>
-                                </Editor>
-                            </div>
+                            <Select v-model="status" :options="statusOptions" placeholder="Select a status"
+                                class="w-full" />
                         </div>
                     </div>
                 </div>
@@ -61,8 +37,7 @@
 <script setup>
 import { ref, watch, computed, onBeforeUnmount } from 'vue';
 import Dialog from 'primevue/dialog';
-import Dropdown from 'primevue/dropdown';
-import Editor from 'primevue/editor';
+import Select from 'primevue/select';
 
 const props = defineProps({
     show: {
@@ -87,7 +62,6 @@ const emit = defineEmits(['update:show', 'save']);
 
 const elModal = ref(null);
 const status = ref('on process');
-const remarksText = ref('');
 const dragOffset = ref({ x: 0, y: 0 });
 const dragStart = ref(null);
 
@@ -127,8 +101,7 @@ watch(() => props.modelValue, (newVal) => {
 
 const saveStatus = () => {
     emit('save', {
-        status: status.value,
-        remarks: remarksText.value
+        status: status.value
     });
 };
 </script>

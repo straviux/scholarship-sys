@@ -31,7 +31,7 @@ class MobileUploadRequest extends FormRequest
                 'required',
                 'file',
                 'max:25600',  // 25MB max
-                File::types(['jpg', 'jpeg', 'png', 'pdf']),
+                File::types(['jpg', 'jpeg', 'png', 'gif', 'pdf']),
             ],
         ];
     }
@@ -42,7 +42,7 @@ class MobileUploadRequest extends FormRequest
             'file.required' => 'File is required',
             'file.file' => 'Please upload a valid file',
             'file.max' => 'File must not exceed 25MB',
-            'file.mimes' => 'File must be JPG, PNG, or PDF',
+            'file.mimes' => 'File must be JPG, PNG, GIF, or PDF',
         ];
     }
 

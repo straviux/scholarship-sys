@@ -53,16 +53,57 @@ class FundTransactionController extends Controller
     }
 
     /**
-     * Get all vouchers.
+     * Get all vouchers with optional server-side filtering.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
-            $vouchers = FundTransaction::with('creator')
-                ->latest()
-                ->get();
+            $query = FundTransaction::with('creator')->latest();
 
-            return response()->json(['data' => $vouchers], 200);
+            if ($search = $request->get('search')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('transaction_id', 'like', "%{$search}%")
+                        ->orWhere('payee_name', 'like', "%{$search}%")
+                        ->orWhere('disbursement_type', 'like', "%{$search}%")
+                        ->orWhereHas('creator', fn($q2) => $q2->where('name', 'like', "%{$search}%"));
+
+                    // Search scholar names stored in scholar_ids JSON objects [{name: "...", ...}]
+                    // JSON_SEARCH is case-sensitive, so use LOWER() + LIKE on cast JSON for case-insensitive search
+                    $q->orWhereRaw("LOWER(CAST(scholar_ids AS CHAR)) LIKE ?", ['%"name":"%' . strtolower($search) . '%"%']);
+                });
+            }
+
+            if ($status = $request->get('obr_status')) {
+                $query->where('obr_status', $status);
+            }
+
+            if ($type = $request->get('obr_type')) {
+                $query->where('obr_type', $type);
+            }
+
+            if ($disbType = $request->get('disbursement_type')) {
+                $query->where('disbursement_type', $disbType);
+            }
+
+            if ($createdBy = $request->get('created_by')) {
+                $query->where('created_by', $createdBy);
+            }
+
+            $perPage = (int) $request->get('per_page', 10);
+            $paginated = $query->paginate($perPage);
+
+            $total = FundTransaction::count();
+            $myCount = Auth::id() ? FundTransaction::where('created_by', Auth::id())->count() : 0;
+
+            return response()->json([
+                'data'             => $paginated->items(),
+                'total'            => $total,
+                'filtered_total'   => $paginated->total(),
+                'per_page'         => $paginated->perPage(),
+                'current_page'     => $paginated->currentPage(),
+                'last_page'        => $paginated->lastPage(),
+                'my_records_count' => $myCount,
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error fetching vouchers',

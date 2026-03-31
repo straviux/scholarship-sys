@@ -590,7 +590,7 @@ onUnmounted(() => {
 
         <!-- Floating Sidebar -->
         <aside
-            class="fixed z-30 md:z-20 top-0 left-0 md:top-20 md:left-4 flex flex-col bg-white dark:bg-[#222831] shadow dark:shadow-none transition-[width,transform] duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-96px)]"
+            class="fixed z-30 md:z-20 top-0 left-0 md:top-20 md:left-4 flex flex-col dark:bg-[#222831] dark:shadow-none transition-[width,transform] duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-96px)]"
             :class="[
                 sidebarMinimized ? 'md:w-[110px]' : 'md:w-[220px]',
                 toggleMenu ? 'w-[280px] translate-x-0' : '-translate-x-full md:translate-x-0',
@@ -611,7 +611,7 @@ onUnmounted(() => {
                         :class="{ 'pi pi-chevron-right': sidebarMinimized, 'pi pi-chevron-left': !sidebarMinimized }"></i>
                 </Button> -->
                 <!-- User Profile Section -->
-                <div v-if="!sidebarMinimized" class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                <div v-if="!sidebarMinimized" class="px-4 py-2 dark:border-b dark:border-gray-700">
 
                     <div class="flex items-center space-x-3">
 
@@ -631,7 +631,7 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Minimized User Profile -->
-                <div v-else class="flex items-center justify-center py-4 border-b border-gray-200 dark:border-gray-700">
+                <div v-else class="flex items-center justify-center py-4 dark:border-b dark:border-gray-700">
                     <Avatar
                         :image="$page.props.auth.user.has_profile_photo ? $page.props.auth.user.profile_photo_url : null"
                         :label="!$page.props.auth.user.has_profile_photo ? ($page.props.auth.user.name || 'U').charAt(0).toUpperCase() : null"
@@ -700,7 +700,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </SidebarLink>
                         </li>
 
@@ -709,14 +709,14 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </div>
                         </li>
                     </template>
                 </ul>
 
                 <!-- Mobile-only: Quick Actions at bottom of sidebar -->
-                <div class="md:hidden border-t border-gray-200 dark:border-gray-700 p-3 space-y-1">
+                <div class="md:hidden dark:border-t dark:border-gray-700 p-3 space-y-1">
                     <Link :href="route('help.index')" @click="toggleMenu = false"
                         class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm">
                         <i class="pi pi-question-circle"></i>
@@ -742,7 +742,7 @@ onUnmounted(() => {
         </aside>
 
         <div class="w-full min-w-0 flex flex-col h-screen overflow-hidden">
-            <div class="flex-shrink-0 relative z-20 h-16 bg-white dark:bg-[#222831] border-b border-gray-200/80 dark:border-white/5 lg:py-2.5"
+            <div class="flex-shrink-0 relative z-20 h-16 dark:bg-[#222831] dark:border-b dark:border-white/5 lg:py-2.5"
                 :class="{ dark: navDark }">
                 <div class="px-4 md:px-6 flex items-center justify-between space-x-2 md:space-x-4 h-full">
                     <!-- Mobile hamburger -->

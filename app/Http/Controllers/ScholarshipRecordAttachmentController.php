@@ -53,12 +53,26 @@ class ScholarshipRecordAttachmentController extends Controller
         $processedContent = $fileContent;
         $extension = '';
 
+        // Load image settings from admin configuration (DB-first, config fallback)
+        $imgSettings    = \App\Models\MobileUploadSetting::getCurrent()['image'];
+        $jpegQuality    = $imgSettings['jpeg_quality']             ?? 60;
+        $maxWidth       = $imgSettings['max_width']                ?? 1920;
+        $maxHeight      = $imgSettings['max_height']               ?? 1920;
+        $autoRotate     = $imgSettings['auto_rotate']              ?? true;
+        $preserveFormat = $imgSettings['preserve_original_format'] ?? true;
+
+        // Determine source format for format-preservation logic
+        $sourceMime = $file->getMimeType();
+        $isPng      = $sourceMime === 'image/png';
+        $isGif      = $sourceMime === 'image/gif';
+        $keepFormat = $preserveFormat && ($isPng || $isGif);
+
         // Try to load as image
         $image = @imagecreatefromstring($fileContent);
 
         if ($image !== false) {
-            // Fix image orientation based on EXIF data
-            if (function_exists('exif_read_data')) {
+            // Fix EXIF orientation (only relevant for JPEG/camera photos)
+            if ($autoRotate && !$isPng && !$isGif && function_exists('exif_read_data')) {
                 $exif = @exif_read_data($file->getRealPath());
                 if ($exif && isset($exif['Orientation'])) {
                     switch ($exif['Orientation']) {
@@ -75,34 +89,48 @@ class ScholarshipRecordAttachmentController extends Controller
                 }
             }
 
-            // Successfully loaded as image - highly compress it
-            $width = imagesx($image);
+            $width  = imagesx($image);
             $height = imagesy($image);
 
-            // Force portrait orientation (height > width)
-            if ($width > $height) {
-                // Rotate landscape to portrait
+            // Force portrait orientation for JPEG/camera photos (not documents/screenshots)
+            if (!$keepFormat && $width > $height) {
                 $image = imagerotate($image, 90, 0);
+                [$width, $height] = [$height, $width];
             }
 
-            // Aggressive resize - max 1280px height for high compression
-            $maxDimension = 1280;
-            if ($height > $maxDimension) {
-                $newHeight = $maxDimension;
-                $newWidth = intval($width * ($maxDimension / $height));
+            // Resize if exceeds max dimensions (maintain aspect ratio)
+            if ($width > $maxWidth || $height > $maxHeight) {
+                $ratio     = min($maxWidth / $width, $maxHeight / $height);
+                $newWidth  = (int) round($width  * $ratio);
+                $newHeight = (int) round($height * $ratio);
 
-                $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
-                imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                $resized = imagecreatetruecolor($newWidth, $newHeight);
+                if ($isPng && $keepFormat) {
+                    // Preserve alpha channel transparency for PNG
+                    imagealphablending($resized, false);
+                    imagesavealpha($resized, true);
+                    $transparent = imagecolorallocatealpha($resized, 0, 0, 0, 127);
+                    imagefilledrectangle($resized, 0, 0, $newWidth, $newHeight, $transparent);
+                }
+                imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
                 imagedestroy($image);
-                $image = $resizedImage;
+                $image = $resized;
             }
 
-            // High compression JPEG - 40% quality for maximum size reduction
+            // Encode to appropriate format
             ob_start();
-            imagejpeg($image, null, 40);
+            if ($isPng && $keepFormat) {
+                imagepng($image, null, 9);   // Lossless — level 9 = maximum compression
+                $mimeType = 'image/png';
+            } elseif ($isGif && $keepFormat) {
+                imagegif($image);
+                $mimeType = 'image/gif';
+            } else {
+                imagejpeg($image, null, $jpegQuality);
+                $mimeType = 'image/jpeg';
+            }
             $processedContent = ob_get_clean();
             imagedestroy($image);
-            $mimeType = 'image/jpeg';
         } elseif ($mimeType === 'application/pdf') {
             // Compress PDFs with gzip
             $processedContent = gzencode($fileContent, 9);
@@ -112,8 +140,12 @@ class ScholarshipRecordAttachmentController extends Controller
         // Get file extension from original filename or determine from mime type
         $fileExtension = pathinfo($originalFileName, PATHINFO_EXTENSION);
         if (empty($fileExtension)) {
-            // Determine extension from mime type
-            if (strpos($mimeType, 'image/') === 0) {
+            // Derive extension from the actual output mime type
+            if ($mimeType === 'image/png') {
+                $fileExtension = 'png';
+            } elseif ($mimeType === 'image/gif') {
+                $fileExtension = 'gif';
+            } elseif (strpos($mimeType, 'image/') === 0) {
                 $fileExtension = 'jpg';
             } elseif ($mimeType === 'application/pdf') {
                 $fileExtension = 'pdf';

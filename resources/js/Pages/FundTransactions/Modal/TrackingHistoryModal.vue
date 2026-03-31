@@ -2,46 +2,44 @@
     <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal
         :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
         <template #container>
-            <div ref="elModal" class="ios-modal" style="width: 90vw; max-width: 500px;" :style="modalStyle">
+            <div ref="elModal" class="ios-modal w-[90vw] max-w-[500px]" :style="modalStyle">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)"><i
                             class="pi pi-times"></i></button>
                     <span class="ios-nav-title">Tracking Timeline</span>
-                    <span class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
+                    <span class="ios-nav-btn invisible">_</span>
                 </div>
                 <div class="ios-body">
-                    <div style="padding-top: 16px;">
-                        <div v-if="trackingData" class="ios-section" style="margin-bottom: 16px;">
+                    <div class="pt-4">
+                        <div v-if="trackingData" class="ios-section mb-4">
                             <!-- Tracking Timeline -->
                             <div v-if="trackingData.tracking_information && trackingData.tracking_information.length > 0"
-                                class="ios-card" style="padding: 0 16px;">
+                                class="ios-card px-4">
                                 <div v-for="(entry, index) in trackingData.tracking_information" :key="index"
-                                    style="display: flex; gap: 12px; padding: 12px 0;"
-                                    :style="index < trackingData.tracking_information.length - 1 ? 'border-bottom: 0.5px solid #e5e5ea;' : ''">
+                                    class="flex gap-3 py-3"
+                                    :class="index < trackingData.tracking_information.length - 1 ? '[border-bottom:0.5px_solid_#e5e5ea]' : ''">
                                     <div
-                                        style="width: 28px; height: 28px; background: #007AFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
-                                        <i class="pi pi-check" style="color: white; font-size: 11px;"></i>
+                                        class="w-7 h-7 bg-[#007AFF] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <i class="pi pi-check text-white text-[11px]"></i>
                                     </div>
-                                    <div style="flex: 1; min-width: 0;">
-                                        <p style="font-size: 13px; color: #1c1c1e;">{{ entry.trn_remarks ||
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-[13px] text-[#1c1c1e] dark:text-gray-200">{{ entry.trn_remarks ||
                                             entry.transaction_description || entry.description }}</p>
-                                        <p style="font-size: 12px; color: #8E8E93; margin-top: 3px;">{{
+                                        <p class="text-[12px] text-[#8E8E93] mt-[3px]">{{
                                             formatDate(entry.trn_date || entry.transaction_date || entry.date)
-                                        }}</p>
+                                            }}</p>
                                     </div>
                                 </div>
                             </div>
                             <!-- No Timeline -->
-                            <div v-else class="ios-card"
-                                style="padding: 32px 16px; text-align: center; color: #8E8E93;">
-                                <p style="font-size: 14px;">No tracking information</p>
+                            <div v-else class="ios-card py-8 px-4 text-center text-[#8E8E93]">
+                                <p class="text-sm">No tracking information</p>
                             </div>
                         </div>
 
-                        <div v-else style="padding: 48px; text-align: center; color: #8E8E93;">
-                            <i class="pi pi-spin pi-spinner"
-                                style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
-                            <p style="font-size: 13px;">Loading...</p>
+                        <div v-else class="p-12 text-center text-[#8E8E93]">
+                            <i class="pi pi-spin pi-spinner text-2xl mb-2 block"></i>
+                            <p class="text-[13px]">Loading...</p>
                         </div>
                     </div>
                 </div>

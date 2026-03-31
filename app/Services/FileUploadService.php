@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\MobileUploadSetting;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
@@ -41,16 +42,33 @@ class FileUploadService
     }
 
     /**
-     * Process image file with compression and orientation fix
-     * 
-     * Returns compressed JPEG at 40% quality
+     * Process image file with compression and orientation fix.
+     *
+     * PNG and GIF are preserved in their original format (lossless).
+     * JPEG and other formats are compressed using the configured quality.
+     * Quality, maximum dimensions, and format preferences are read from
+     * MobileUploadSetting (admin settings page).
      */
     private function processImage(UploadedFile $file): FileProcessingResult
     {
         try {
             $fileContent = file_get_contents($file->getRealPath());
 
-            // Step 1: Try to load as image using GD
+            // Read image settings from admin configuration (DB-first, config fallback)
+            $imgSettings    = MobileUploadSetting::getCurrent()['image'];
+            $jpegQuality    = $imgSettings['jpeg_quality']             ?? 60;
+            $maxWidth       = $imgSettings['max_width']                ?? 1920;
+            $maxHeight      = $imgSettings['max_height']               ?? 1920;
+            $autoRotate     = $imgSettings['auto_rotate']              ?? true;
+            $preserveFormat = $imgSettings['preserve_original_format'] ?? true;
+
+            // Determine source format
+            $sourceMime = $file->getMimeType();
+            $isPng      = $sourceMime === 'image/png';
+            $isGif      = $sourceMime === 'image/gif';
+            $keepFormat = $preserveFormat && ($isPng || $isGif);
+
+            // Step 1: Load image
             $image = @imagecreatefromstring($fileContent);
 
             if ($image === false) {
@@ -60,63 +78,68 @@ class FileUploadService
                 );
             }
 
-            // Step 2: Fix EXIF orientation (mobile photos often rotated)
-            $image = $this->fixImageOrientation($image, $file->getRealPath());
+            // Step 2: Fix EXIF orientation (only relevant for JPEG/camera photos)
+            if ($autoRotate && !$isPng && !$isGif) {
+                $image = $this->fixImageOrientation($image, $file->getRealPath());
+            }
 
-            // Step 3: Enforce portrait orientation (height > width required)
-            $width = imagesx($image);
+            // Step 3: Enforce portrait orientation for JPEG/camera photos only
+            $width  = imagesx($image);
             $height = imagesy($image);
 
-            if ($width > $height) {
-                // Rotate landscape to portrait
+            if (!$keepFormat && $width > $height) {
                 $image = imagerotate($image, -90, 0);
-                $temp = $width;
-                $width = $height;
-                $height = $temp;
+                [$width, $height] = [$height, $width];
             }
 
-            // Step 4: Resize to standard dimensions if needed (maintain aspect ratio)
-            // Max height 1280px
-            $maxDimension = 1280;
-            if ($height > $maxDimension) {
-                $newHeight = $maxDimension;
-                $newWidth = intval($width * ($maxDimension / $height));
+            // Step 4: Resize if exceeds max dimensions (maintain aspect ratio)
+            if ($width > $maxWidth || $height > $maxHeight) {
+                $ratio     = min($maxWidth / $width, $maxHeight / $height);
+                $newWidth  = (int) round($width  * $ratio);
+                $newHeight = (int) round($height * $ratio);
 
-                $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
+                $resized = imagecreatetruecolor($newWidth, $newHeight);
 
-                // Enable smooth scaling for better quality
-                imagecopyresampled(
-                    $resizedImage,
-                    $image,
-                    0,
-                    0,
-                    0,
-                    0,
-                    $newWidth,
-                    $newHeight,
-                    $width,
-                    $height
-                );
+                if ($isPng && $keepFormat) {
+                    // Preserve alpha channel transparency for PNG
+                    imagealphablending($resized, false);
+                    imagesavealpha($resized, true);
+                    $transparent = imagecolorallocatealpha($resized, 0, 0, 0, 127);
+                    imagefilledrectangle($resized, 0, 0, $newWidth, $newHeight, $transparent);
+                }
 
+                imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
                 imagedestroy($image);
-                $image = $resizedImage;
+                $image = $resized;
             }
 
-            // Step 5: Compress to JPEG at 40% quality
+            // Step 5: Encode to appropriate format
             ob_start();
-            imagejpeg($image, null, 40);
+            if ($isPng && $keepFormat) {
+                imagepng($image, null, 9);   // Lossless deflate — level 9 = maximum compression
+                $ext        = 'png';
+                $outputMime = 'image/png';
+            } elseif ($isGif && $keepFormat) {
+                imagegif($image);            // GIF — no quality parameter
+                $ext        = 'gif';
+                $outputMime = 'image/gif';
+            } else {
+                imagejpeg($image, null, $jpegQuality);
+                $ext        = 'jpg';
+                $outputMime = 'image/jpeg';
+            }
             $compressed = ob_get_clean();
             imagedestroy($image);
 
             // Step 6: Calculate processing metrics
-            $originalSize = $file->getSize();
-            $compressedSize = strlen($compressed);
+            $originalSize     = $file->getSize();
+            $compressedSize   = strlen($compressed);
             $compressionRatio = $originalSize > 0
                 ? round(($originalSize - $compressedSize) / $originalSize * 100, 2)
                 : 0;
 
-            // Step 7: Generate unique filename
-            $filename = 'image_' . Str::random(12) . '_' . now()->timestamp . '.jpg';
+            // Step 7: Generate unique filename with correct extension
+            $filename = 'image_' . Str::random(12) . '_' . now()->timestamp . '.' . $ext;
 
             return new FileProcessingResult(
                 success: true,
@@ -125,7 +148,7 @@ class FileUploadService
                 originalSize: $originalSize,
                 compressedSize: $compressedSize,
                 compressionRatio: $compressionRatio,
-                mimeType: 'image/jpeg',
+                mimeType: $outputMime,
             );
         } catch (\Exception $e) {
             return new FileProcessingResult(

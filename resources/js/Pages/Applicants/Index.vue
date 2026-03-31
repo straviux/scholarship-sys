@@ -1504,7 +1504,7 @@ const truncateText = (text, maxLength = 80) => {
                     <!-- Remarks Column (hidden when JPM columns visible) -->
                     <Column header="Remarks" v-if="!showJpmColumns" style="max-width: 200px">
                         <template #body="slotProps">
-                            <div v-if="slotProps.data.remarks" v-tooltip.top="slotProps.data.remarks"
+                            <div v-if="slotProps.data.remarks" v-tooltip.top="truncateText(slotProps.data.remarks, 300)"
                                 class="text-xs cursor-help">
                                 {{ truncateText(slotProps.data.remarks, 80) }}
                             </div>

@@ -98,12 +98,19 @@ class SettingsController extends Controller
                 $photo = $request->file('photo');
 
                 // Delete old profile photo if exists
-                if ($user->profile_photo && Storage::disk('public')->exists($user->profile_photo)) {
-                    Storage::disk('public')->delete($user->profile_photo);
+                // Normalize path — strip any accidental 'storage/' prefix stored by older code
+                $oldPhoto = preg_replace('#^/?storage/#', '', $user->profile_photo ?? '');
+                if ($oldPhoto && Storage::disk('public')->exists($oldPhoto)) {
+                    Storage::disk('public')->delete($oldPhoto);
                 }
 
-                // Generate unique filename
-                $filename = 'profile-' . $user->id . '-' . time() . '.jpg';
+                // Generate unique filename with format-appropriate extension
+                $ext = match ($photo->getMimeType()) {
+                    'image/png' => 'png',
+                    'image/gif' => 'gif',
+                    default     => 'jpg',
+                };
+                $filename = 'profile-' . $user->id . '-' . time() . '.' . $ext;
 
                 // Process and compress the image
                 $processedImagePath = $this->processAndCompressImage($photo, $filename);
@@ -128,10 +135,22 @@ class SettingsController extends Controller
     }
 
     /**
-     * Process and compress image (max 400x400 for profile photos)
+     * Process and compress image (max 400x400 for profile photos).
+     * PNG and GIF are preserved in their original format; JPEG/WebP are saved as JPEG.
      */
     private function processAndCompressImage($uploadedFile, $filename): string
     {
+        $sourceMime = $uploadedFile->getMimeType();
+        $isPng      = $sourceMime === 'image/png';
+        $isGif      = $sourceMime === 'image/gif';
+
+        // GIFs must be stored as-is — GD only captures the first frame, destroying animation
+        if ($isGif) {
+            $storagePath = 'profile-photos/' . $filename;
+            Storage::disk('public')->put($storagePath, file_get_contents($uploadedFile->getPathname()));
+            return $storagePath;
+        }
+
         // Create image resource from uploaded file
         $imageResource = $this->createImageResource($uploadedFile);
 
@@ -140,41 +159,43 @@ class SettingsController extends Controller
         }
 
         // Get original dimensions
-        $originalWidth = imagesx($imageResource);
+        $originalWidth  = imagesx($imageResource);
         $originalHeight = imagesy($imageResource);
 
         // Calculate new dimensions (max 400x400 for profile photos)
-        $maxSize = 400;
-        $ratio = min($maxSize / $originalWidth, $maxSize / $originalHeight);
-        $newWidth = (int)($originalWidth * $ratio);
+        $maxSize  = 400;
+        $ratio    = min($maxSize / $originalWidth, $maxSize / $originalHeight);
+        $newWidth  = (int)($originalWidth  * $ratio);
         $newHeight = (int)($originalHeight * $ratio);
 
-        // Create new image with calculated dimensions
+        // Create new image canvas
         $newImage = imagecreatetruecolor($newWidth, $newHeight);
 
-        // Set white background for transparency
-        $white = imagecolorallocate($newImage, 255, 255, 255);
-        imagefill($newImage, 0, 0, $white);
+        if ($isPng) {
+            // Preserve alpha channel transparency for PNG
+            imagealphablending($newImage, false);
+            imagesavealpha($newImage, true);
+            $transparent = imagecolorallocatealpha($newImage, 0, 0, 0, 127);
+            imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
+        } else {
+            // White background for JPEG / GIF
+            $white = imagecolorallocate($newImage, 255, 255, 255);
+            imagefill($newImage, 0, 0, $white);
+        }
 
-        // Resize image with high quality
-        imagecopyresampled(
-            $newImage,
-            $imageResource,
-            0,
-            0,
-            0,
-            0,
-            $newWidth,
-            $newHeight,
-            $originalWidth,
-            $originalHeight
-        );
+        // Resize with high quality
+        imagecopyresampled($newImage, $imageResource, 0, 0, 0, 0, $newWidth, $newHeight, $originalWidth, $originalHeight);
 
-        // Save to temporary location
+        // Save to temporary location in the correct format
         $tempPath = sys_get_temp_dir() . '/' . $filename;
 
-        // Save as JPEG with 85% quality for good compression
-        imagejpeg($newImage, $tempPath, 85);
+        if ($isPng) {
+            imagepng($newImage, $tempPath, 9);   // Lossless — level 9 = max compression
+        } elseif ($isGif) {
+            imagegif($newImage, $tempPath);
+        } else {
+            imagejpeg($newImage, $tempPath, 85);
+        }
 
         // Clean up memory
         imagedestroy($imageResource);

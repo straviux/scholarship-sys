@@ -8,7 +8,7 @@
             <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-users text-indigo-500" style="font-size:2rem"></i>
+                        <i class="pi pi-users text-indigo-500 text-[2rem]"></i>
                         <div>
                             <h1 class="text-2xl font-bold text-gray-700">Scholarship Profiles</h1>
                             <p class="text-sm text-gray-600">Browse and manage scholarship applicant profiles</p>
@@ -87,7 +87,7 @@
                 <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded class="cursor-pointer"
                     @click="removeFilter(tag.key)">
                     <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
-                    <i class="pi pi-times ml-1" style="font-size: 0.6rem"></i>
+                    <i class="pi pi-times ml-1 text-[0.6rem]"></i>
                 </Tag>
             </div>
 
@@ -216,9 +216,9 @@
                         :rowClass="(row) => expandedRows.length && !expandedRows.some(r => r.profile_id === row.profile_id) ? 'row-blurred' : ''"
                         v-model:expandedRows="expandedRows">
 
-                        <Column expander style="width: 3rem" />
+                        <Column expander headerClass="w-12" bodyClass="w-12" />
 
-                        <Column field="unique_id" header="ID" style="min-width: 120px;">
+                        <Column field="unique_id" header="ID" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
                             <template #body="slotProps">
                                 <div class="flex items-center gap-3">
                                     <div class="w-[40px]">
@@ -249,7 +249,8 @@
                         </Column>
 
 
-                        <Column field="contact_no" header="Contact" style="min-width: 130px;">
+                        <Column field="contact_no" header="Contact" headerClass="min-w-[130px]"
+                            bodyClass="min-w-[130px]">
                             <template #body="slotProps">
                                 <div class="text-sm">
                                     <div>{{ slotProps.data.contact_no || 'N/A' }}</div>
@@ -258,7 +259,7 @@
                             </template>
                         </Column>
 
-                        <Column field="program" header="Program" style="min-width: 150px;">
+                        <Column field="program" header="Program" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
                             <template #body="slotProps">
                                 <div v-if="slotProps.data.latest_scholarship_record"
                                     class="text-sm font-semibold truncate">
@@ -268,7 +269,7 @@
                             </template>
                         </Column>
 
-                        <Column field="course" header="Course" style="min-width: 150px;">
+                        <Column field="course" header="Course" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
                             <template #body="slotProps">
                                 <div v-if="slotProps.data.latest_scholarship_record">
                                     <div class="text-sm font-medium truncate">
@@ -286,10 +287,10 @@
                             </template>
                         </Column>
 
-                        <Column field="status" header="Status" style="min-width: 120px;">
+                        <Column field="status" header="Status" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
                             <template #body="slotProps">
                                 <template v-if="slotProps.data.latest_scholarship_record">
-                                    <div :style="getStatusStyle(slotProps.data.latest_scholarship_record.unified_status)"
+                                    <div :class="getStatusBadgeClass(slotProps.data.latest_scholarship_record.unified_status)"
                                         :v-tooltip="getStatusTooltip(slotProps.data.latest_scholarship_record.unified_status)"
                                         class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
                                         {{
@@ -304,13 +305,13 @@
                             </template>
                         </Column>
 
-                        <Column header="Previous Records" style="min-width: 150px;">
+                        <Column header="Previous Records" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
                             <template #body="slotProps">
                                 <div v-if="Object.keys(slotProps.data.previous_record_statuses ?? {}).length"
                                     class="flex flex-wrap gap-1">
                                     <div v-for="(count, status) in slotProps.data.previous_record_statuses"
                                         :key="status" class="flex items-center gap-1">
-                                        <div :style="getStatusStyle(status)"
+                                        <div :class="getStatusBadgeClass(status)"
                                             class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block">
                                             {{ getScholarshipStatusLabel(status) }}
                                         </div>
@@ -322,8 +323,8 @@
                             </template>
                         </Column>
 
-                        <Column field="grant_provision" header="Grant Provision" style="min-width: 160px;"
-                            v-if="!simpleView">
+                        <Column field="grant_provision" header="Grant Provision" headerClass="min-w-[160px]"
+                            bodyClass="min-w-[160px]" v-if="!simpleView">
                             <template #body="slotProps">
                                 <div v-if="slotProps.data.latest_scholarship_record" class="flex items-center gap-2">
                                     <Chip v-if="slotProps.data.latest_scholarship_record.grant_provision"
@@ -342,7 +343,8 @@
                             </template>
                         </Column>
 
-                        <Column header="Actions" style="min-width: 120px;" v-if="!simpleView">
+                        <Column header="Actions" headerClass="min-w-[120px]" bodyClass="min-w-[120px]"
+                            v-if="!simpleView">
                             <template #body="slotProps">
                                 <div class="flex gap-2">
                                     <Button icon="pi pi-eye" size="small" severity="info" outlined rounded
@@ -367,16 +369,16 @@
                                 <DataTable :value="slotProps.data.scholarship_grant" size="small"
                                     v-if="slotProps.data.scholarship_grant?.length"
                                     :rowClass="(row) => row.id === slotProps.data.latest_scholarship_record?.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''">
-                                    <Column header="#" style="width: 2.5rem;">
+                                    <Column header="#" headerClass="w-10" bodyClass="w-10">
                                         <template #body="r">
                                             <span class="text-xs text-gray-400">{{
                                                 slotProps.data.scholarship_grant.indexOf(r.data) + 1 }}</span>
                                         </template>
                                     </Column>
-                                    <Column header="Status" style="min-width: 110px;">
+                                    <Column header="Status" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">
                                         <template #body="r">
                                             <div class="flex items-center gap-1">
-                                                <div :style="getStatusStyle(r.data.unified_status)"
+                                                <div :class="getStatusBadgeClass(r.data.unified_status)"
                                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border inline-block">
                                                     {{ getScholarshipStatusLabel(r.data.unified_status) }}
                                                 </div>
@@ -386,49 +388,52 @@
                                             </div>
                                         </template>
                                     </Column>
-                                    <Column header="Program" style="min-width: 100px;">
+                                    <Column header="Program" headerClass="min-w-[100px]" bodyClass="min-w-[100px]">
                                         <template #body="r">
                                             <span class="text-xs">{{ r.data.program?.shortname || '—' }}</span>
                                         </template>
                                     </Column>
-                                    <Column header="Course" style="min-width: 120px;">
+                                    <Column header="Course" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
                                         <template #body="r">
                                             <span class="text-xs">{{ r.data.course?.shortname || '—' }}</span>
                                         </template>
                                     </Column>
-                                    <Column header="School" style="min-width: 120px;">
+                                    <Column header="School" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
                                         <template #body="r">
                                             <span class="text-xs">{{ r.data.school?.shortname || '—' }}</span>
                                         </template>
                                     </Column>
-                                    <Column header="Year" style="min-width: 80px;">
+                                    <Column header="Year" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
                                         <template #body="r">
                                             <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—'
-                                            }}</span>
+                                                }}</span>
                                         </template>
                                     </Column>
-                                    <Column header="Academic Year" style="min-width: 110px;">
+                                    <Column header="Academic Year" headerClass="min-w-[110px]"
+                                        bodyClass="min-w-[110px]">
                                         <template #body="r">
                                             <span class="text-xs">{{ r.data.academic_year || '—' }}</span>
                                         </template>
                                     </Column>
-                                    <Column header="Term" style="min-width: 80px;">
+                                    <Column header="Term" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
                                         <template #body="r">
                                             <span class="text-xs">{{ r.data.term || '—' }}</span>
                                         </template>
                                     </Column>
-                                    <Column header="Grant Provision" style="min-width: 110px;">
+                                    <Column header="Grant Provision" headerClass="min-w-[110px]"
+                                        bodyClass="min-w-[110px]">
                                         <template #body="r">
                                             <span class="text-xs">{{ r.data.grant_provision || '—' }}</span>
                                         </template>
                                     </Column>
-                                    <Column header="Date Filed" style="min-width: 100px;">
+                                    <Column header="Date Filed" headerClass="min-w-[100px]" bodyClass="min-w-[100px]">
                                         <template #body="r">
                                             <span class="text-xs">{{ r.data.date_filed ? formatDate(r.data.date_filed) :
                                                 '—' }}</span>
                                         </template>
                                     </Column>
-                                    <Column header="Date Approved" style="min-width: 110px;">
+                                    <Column header="Date Approved" headerClass="min-w-[110px]"
+                                        bodyClass="min-w-[110px]">
                                         <template #body="r">
                                             <span class="text-xs">{{ r.data.date_approved ?
                                                 formatDate(r.data.date_approved) : '—' }}</span>
@@ -452,8 +457,8 @@
         </div>
 
         <!-- Full Profile View Dialog -->
-        <Dialog v-model:visible="showProfileDialog" modal header="Profile Details"
-            :style="{ width: '90vw', maxWidth: '900px' }" :closable="true">
+        <Dialog v-model:visible="showProfileDialog" modal header="Profile Details" class="w-[90vw] max-w-[900px]"
+            :closable="true">
             <template #header>
                 <div class="flex items-center gap-2">
                     <i class="pi pi-user text-lg text-blue-600"></i>
@@ -515,7 +520,7 @@
                             <label class="text-xs font-medium text-gray-600">Status</label>
                             <div class="mt-1" v-if="selectedProfile.latest_scholarship_record.unified_status">
                                 <div v-if="selectedProfile.latest_scholarship_record.unified_status === 'pending'"
-                                    :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
+                                    :class="getStatusBadgeClass(selectedProfile.latest_scholarship_record.unified_status)"
                                     v-tooltip="'Awaiting review'"
                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
                                     {{
@@ -523,7 +528,7 @@
                                     }}
                                 </div>
                                 <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'interviewed'"
-                                    :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
+                                    :class="getStatusBadgeClass(selectedProfile.latest_scholarship_record.unified_status)"
                                     v-tooltip="'Interviewed, awaiting decision'"
                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
                                     {{
@@ -531,7 +536,7 @@
                                     }}
                                 </div>
                                 <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'approved'"
-                                    :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
+                                    :class="getStatusBadgeClass(selectedProfile.latest_scholarship_record.unified_status)"
                                     v-tooltip="'Complete approval in Interviewed Applicants'"
                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
                                     {{
@@ -539,7 +544,7 @@
                                     }}
                                 </div>
                                 <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'denied'"
-                                    :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
+                                    :class="getStatusBadgeClass(selectedProfile.latest_scholarship_record.unified_status)"
                                     v-tooltip="'Application has been denied'"
                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
                                     {{
@@ -547,7 +552,7 @@
                                     }}
                                 </div>
                                 <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'active'"
-                                    :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
+                                    :class="getStatusBadgeClass(selectedProfile.latest_scholarship_record.unified_status)"
                                     v-tooltip="'Enrolled as scholar'"
                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
                                     {{
@@ -555,7 +560,7 @@
                                     }}
                                 </div>
                                 <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'completed'"
-                                    :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
+                                    :class="getStatusBadgeClass(selectedProfile.latest_scholarship_record.unified_status)"
                                     v-tooltip="'Scholarship completed'"
                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
                                     {{
@@ -563,7 +568,7 @@
                                     }}
                                 </div>
                                 <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'unknown'"
-                                    :style="getStatusStyle(selectedProfile.latest_scholarship_record.unified_status)"
+                                    :class="getStatusBadgeClass(selectedProfile.latest_scholarship_record.unified_status)"
                                     v-tooltip="'Status unknown'"
                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
                                     {{
@@ -630,8 +635,7 @@
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" />
 
         <!-- Grant Provision Update Dialog -->
-        <Dialog v-model:visible="showGrantProvisionDialog" modal header="Update Grant Provision"
-            :style="{ width: '500px' }">
+        <Dialog v-model:visible="showGrantProvisionDialog" modal header="Update Grant Provision" class="w-[500px]">
             <div class="space-y-4" v-if="selectedProfileForGrant">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Scholar Name</label>
@@ -659,8 +663,7 @@
         </Dialog>
 
         <!-- Delete Confirmation Modal -->
-        <Dialog v-model:visible="showDeleteConfirmDialog" modal header="Confirm Soft Delete"
-            :style="{ width: '500px' }">
+        <Dialog v-model:visible="showDeleteConfirmDialog" modal header="Confirm Soft Delete" class="w-[500px]">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
                     <i class="pi pi-exclamation-triangle text-2xl text-orange-500"></i>
@@ -948,7 +951,7 @@ const profileToDelete = ref(null);
 
 // Inject the refresh function from AdminLayout
 const refreshActivityLogs = inject('refreshActivityLogs', null);
-const { statusOptions, getStatusLabel, getStatusSeverity, getStatusStyle } = useScholarshipStatus();
+const { statusOptions, getStatusLabel, getStatusSeverity } = useScholarshipStatus();
 
 const unifiedStatusOptions = computed(() => {
     const ordered = [
@@ -1099,6 +1102,24 @@ const getStatusTooltip = (status) => {
         unknown: 'Status unknown',
     };
     return tooltips[status] || 'Unrecognized status';
+};
+
+const getStatusBadgeClass = (status) => {
+    const key = String(status || 'unknown').toLowerCase();
+    const classes = {
+        pending: 'bg-amber-100 text-amber-800 border-amber-500 dark:bg-amber-900/40 dark:text-amber-200 dark:border-amber-600',
+        interviewed: 'bg-indigo-100 text-indigo-800 border-indigo-500 dark:bg-indigo-900/40 dark:text-indigo-200 dark:border-indigo-600',
+        approved: 'bg-blue-100 text-blue-800 border-blue-500 dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-600',
+        denied: 'bg-red-100 text-red-800 border-red-500 dark:bg-red-900/40 dark:text-red-200 dark:border-red-600',
+        active: 'bg-emerald-100 text-emerald-800 border-emerald-500 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-600',
+        completed: 'bg-gray-100 text-gray-800 border-gray-400 dark:bg-gray-700/50 dark:text-gray-200 dark:border-gray-500',
+        withdrawn: 'bg-violet-100 text-violet-800 border-violet-500 dark:bg-violet-900/40 dark:text-violet-200 dark:border-violet-600',
+        loa: 'bg-yellow-100 text-yellow-800 border-yellow-500 dark:bg-yellow-900/40 dark:text-yellow-200 dark:border-yellow-600',
+        suspended: 'bg-rose-100 text-rose-800 border-rose-500 dark:bg-rose-900/40 dark:text-rose-200 dark:border-rose-600',
+        unknown: 'bg-slate-100 text-slate-700 border-slate-400 dark:bg-slate-700/50 dark:text-slate-200 dark:border-slate-500',
+    };
+
+    return classes[key] || classes.unknown;
 };
 
 const formatDate = (date) => {

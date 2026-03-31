@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 
     <Head :title="`${profile.first_name} ${profile.last_name} - Scholar Profile`" />
 
@@ -10,30 +10,31 @@
                     <Button icon="pi pi-arrow-left" text rounded severity="secondary" @click="goBackToProfiles()"
                         v-tooltip.top="'Back to Profiles'" />
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-900">
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
                             {{ profile.first_name }} {{ profile.middle_name }} {{ profile.last_name }}
                             {{ profile.extension_name }}
                         </h1>
-                        <p class="text-sm text-gray-500 mt-1">Scholar Profile</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Scholar Profile</p>
                     </div>
                 </div>
                 <div
-                    class="flex items-center bg-white/80 backdrop-blur-sm border border-gray-200/80 rounded-2xl shadow-sm p-1 gap-0.5">
+                    class="flex items-center bg-white/80 dark:bg-[#1f2633]/90 backdrop-blur-sm border border-gray-200/80 dark:border-white/10 rounded-2xl shadow-sm p-1 gap-0.5">
                     <Button icon="pi pi-book" label="Generate Ledger" size="small" rounded text
-                        class="!font-medium !text-gray-700" @click="generateLedger"
+                        class="!font-medium !text-gray-700 dark:text-gray-300" @click="generateLedger"
                         v-tooltip.top="'Generate Scholar Ledger'" />
                     <div class="w-px h-6 bg-gray-200 mx-0.5 self-center flex-shrink-0"></div>
                     <Button v-if="hasPermission('applicants.edit')" icon="pi pi-user" label="Edit Personal" size="small"
-                        rounded text class="!font-medium !text-gray-700" @click="showPersonalInfoModal = true"
-                        v-tooltip.top="'Edit Personal Information'" />
+                        rounded text class="!font-medium !text-gray-700 dark:text-gray-300"
+                        @click="showPersonalInfoModal = true" v-tooltip.top="'Edit Personal Information'" />
                     <Button v-if="hasPermission('applicants.edit')" icon="pi pi-home" label="Edit Family" size="small"
-                        rounded text class="!font-medium !text-gray-700" @click="showFamilyInfoModal = true"
-                        v-tooltip.top="'Edit Family Information'" />
+                        rounded text class="!font-medium !text-gray-700 dark:text-gray-300"
+                        @click="showFamilyInfoModal = true" v-tooltip.top="'Edit Family Information'" />
                 </div>
             </div>
 
             <!-- Tab Navigation -->
-            <div class="!rounded-4xl overflow-hidden bg-white shadow-sm border border-gray-200">
+            <div
+                class="!rounded-4xl overflow-hidden bg-white dark:bg-[#1f2633] shadow-sm border border-gray-200 dark:border-white/10">
                 <Tabs v-model:value="activeTab">
                     <TabList>
                         <Tab value="0"><i class="pi pi-user mr-2"></i>Personal Information</Tab>
@@ -50,80 +51,101 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
                                 <!-- Basic Information -->
                                 <div class="space-y-4">
-                                    <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Basic Information</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b pb-2">
+                                        Basic Information</h3>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Full Name</label>
-                                        <p class="text-gray-900">{{ fullName }}</p>
+                                        <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Full
+                                            Name</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ fullName }}</p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Date of Birth</label>
-                                        <p class="text-gray-900">{{ formatDate(profile.date_of_birth) }}</p>
+                                        <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Date of
+                                            Birth</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ formatDate(profile.date_of_birth)
+                                            }}</p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Age</label>
-                                        <p class="text-gray-900">{{ calculateAge(profile.date_of_birth) }} years old</p>
+                                        <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Age</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{
+                                            calculateAge(profile.date_of_birth) }} years old</p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Gender</label>
-                                        <p class="text-gray-900">{{ profile.gender || 'N/A' }}</p>
+                                        <label
+                                            class="text-sm font-medium text-gray-600 dark:text-gray-400">Gender</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.gender || 'N/A' }}</p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Civil Status</label>
-                                        <p class="text-gray-900">{{ profile.civil_status || 'N/A' }}</p>
+                                        <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Civil
+                                            Status</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.civil_status || 'N/A' }}
+                                        </p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Religion</label>
-                                        <p class="text-gray-900">{{ profile.religion || 'N/A' }}</p>
+                                        <label
+                                            class="text-sm font-medium text-gray-600 dark:text-gray-400">Religion</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.religion || 'N/A' }}</p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Place of Birth</label>
-                                        <p class="text-gray-900">{{ profile.place_of_birth || 'N/A' }}</p>
+                                        <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Place of
+                                            Birth</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.place_of_birth || 'N/A'
+                                            }}</p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Indigenous Group</label>
-                                        <p class="text-gray-900">{{ profile.indigenous_group || 'N/A' }}</p>
+                                        <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Indigenous
+                                            Group</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.indigenous_group || 'N/A'
+                                            }}</p>
                                     </div>
                                 </div>
 
                                 <!-- Contact Information -->
                                 <div class="space-y-4">
-                                    <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Contact Information
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b pb-2">
+                                        Contact Information
                                     </h3>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Primary Contact</label>
-                                        <p class="text-gray-900">{{ profile.contact_no || 'N/A' }}</p>
+                                        <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Primary
+                                            Contact</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.contact_no || 'N/A' }}
+                                        </p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Secondary Contact</label>
-                                        <p class="text-gray-900">{{ profile.contact_no_2 || 'N/A' }}</p>
+                                        <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Secondary
+                                            Contact</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.contact_no_2 || 'N/A' }}
+                                        </p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Email</label>
-                                        <p class="text-gray-900">{{ profile.email || 'N/A' }}</p>
+                                        <label
+                                            class="text-sm font-medium text-gray-600 dark:text-gray-400">Email</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.email || 'N/A' }}</p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Permanent Address</label>
-                                        <p class="text-gray-900">
+                                        <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Permanent
+                                            Address</label>
+                                        <p class="text-gray-900 dark:text-gray-100">
                                             {{ profile.address }}<br>
                                             {{ profile.barangay }}, {{ profile.municipality }}
                                         </p>
                                     </div>
 
                                     <div v-if="profile.temporary_address || profile.temporary_municipality">
-                                        <label class="text-sm font-medium text-gray-600">Present Address</label>
-                                        <p class="text-gray-900">
+                                        <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Present
+                                            Address</label>
+                                        <p class="text-gray-900 dark:text-gray-100">
                                             {{ profile.temporary_address || 'N/A' }}<br>
                                             {{ profile.temporary_barangay || 'N/A' }}, {{ profile.temporary_municipality
                                                 ||
@@ -139,78 +161,100 @@
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
                                 <!-- Father's Information -->
                                 <div class="space-y-4">
-                                    <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Father's Information
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b pb-2">
+                                        Father's Information
                                     </h3>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Name</label>
-                                        <p class="text-gray-900">{{ profile.father_name || 'N/A' }}</p>
+                                        <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Name</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.father_name || 'N/A' }}
+                                        </p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Occupation</label>
-                                        <p class="text-gray-900">{{ profile.father_occupation || 'N/A' }}</p>
+                                        <label
+                                            class="text-sm font-medium text-gray-600 dark:text-gray-400">Occupation</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.father_occupation ||
+                                            'N/A' }}</p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Contact</label>
-                                        <p class="text-gray-900">{{ profile.father_contact_no || 'N/A' }}</p>
+                                        <label
+                                            class="text-sm font-medium text-gray-600 dark:text-gray-400">Contact</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.father_contact_no ||
+                                            'N/A' }}</p>
                                     </div>
                                 </div>
 
                                 <!-- Mother's Information -->
                                 <div class="space-y-4">
-                                    <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Mother's Information
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b pb-2">
+                                        Mother's Information
                                     </h3>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Name</label>
-                                        <p class="text-gray-900">{{ profile.mother_name || 'N/A' }}</p>
+                                        <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Name</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.mother_name || 'N/A' }}
+                                        </p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Occupation</label>
-                                        <p class="text-gray-900">{{ profile.mother_occupation || 'N/A' }}</p>
+                                        <label
+                                            class="text-sm font-medium text-gray-600 dark:text-gray-400">Occupation</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.mother_occupation ||
+                                            'N/A' }}</p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Contact</label>
-                                        <p class="text-gray-900">{{ profile.mother_contact_no || 'N/A' }}</p>
+                                        <label
+                                            class="text-sm font-medium text-gray-600 dark:text-gray-400">Contact</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.mother_contact_no ||
+                                            'N/A' }}</p>
                                     </div>
                                 </div>
 
                                 <!-- Guardian's Information -->
                                 <div class="space-y-4">
-                                    <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Guardian's Information
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b pb-2">
+                                        Guardian's Information
                                     </h3>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Name</label>
-                                        <p class="text-gray-900">{{ profile.guardian_name || 'N/A' }}</p>
+                                        <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Name</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.guardian_name || 'N/A' }}
+                                        </p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Relationship</label>
-                                        <p class="text-gray-900">{{ profile.guardian_relationship || 'N/A' }}</p>
+                                        <label
+                                            class="text-sm font-medium text-gray-600 dark:text-gray-400">Relationship</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.guardian_relationship ||
+                                            'N/A' }}</p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Occupation</label>
-                                        <p class="text-gray-900">{{ profile.guardian_occupation || 'N/A' }}</p>
+                                        <label
+                                            class="text-sm font-medium text-gray-600 dark:text-gray-400">Occupation</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.guardian_occupation ||
+                                            'N/A' }}</p>
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Contact</label>
-                                        <p class="text-gray-900">{{ profile.guardian_contact_no || 'N/A' }}</p>
+                                        <label
+                                            class="text-sm font-medium text-gray-600 dark:text-gray-400">Contact</label>
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.guardian_contact_no ||
+                                            'N/A' }}</p>
                                     </div>
                                 </div>
 
                                 <!-- Gross Monthly Income -->
                                 <div class="col-span-full">
                                     <div>
-                                        <label class="text-sm font-medium text-gray-600">Parents/Guardian Gross Monthly
+                                        <label
+                                            class="text-sm font-medium text-gray-600 dark:text-gray-400">Parents/Guardian
+                                            Gross Monthly
                                             Income</label>
-                                        <p class="text-gray-900 text-lg font-semibold">
+                                        <p class="text-gray-900 dark:text-gray-100 text-lg font-semibold">
                                             {{ formatCurrency(profile.parents_guardian_gross_monthly_income) }}
                                         </p>
                                     </div>
@@ -222,31 +266,35 @@
                         <TabPanel value="2">
                             <div class="p-6">
                                 <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-lg font-semibold text-gray-900">Scholarship Records</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Scholarship
+                                        Records</h3>
                                     <Button v-if="hasPermission('applicants.edit')" icon="pi pi-plus" label="Add Record"
                                         @click="openAddRecordModal" severity="success" size="small" />
                                 </div>
                                 <div v-if="scholarshipRecords.length > 0">
                                     <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
                                         :value="scholarshipRecords" stripedRows showGridlines>
-                                        <Column header="Program & School" style="min-width: 250px">
+                                        <Column header="Program & School" headerClass="min-w-[250px]"
+                                            bodyClass="min-w-[250px]">
                                             <template #body="slotProps">
                                                 <div class="space-y-1">
-                                                    <p class="font-semibold text-gray-900">{{
+                                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{
                                                         slotProps.data.program?.name || 'N/A' }}</p>
-                                                    <p class="text-sm text-gray-600">{{ slotProps.data.school?.name ||
+                                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{
+                                                        slotProps.data.school?.name ||
                                                         'N/A' }}</p>
                                                 </div>
                                             </template>
                                         </Column>
 
-                                        <Column header="Course" style="min-width: 200px">
+                                        <Column header="Course" headerClass="min-w-[200px]" bodyClass="min-w-[200px]">
                                             <template #body="slotProps">
                                                 {{ slotProps.data.course?.name || 'N/A' }}
                                             </template>
                                         </Column>
 
-                                        <Column header="Academic Details" style="min-width: 180px">
+                                        <Column header="Academic Details" headerClass="min-w-[180px]"
+                                            bodyClass="min-w-[180px]">
                                             <template #body="slotProps">
                                                 <div class="space-y-1">
                                                     <p class="text-sm"><span class="font-medium">Year:</span> {{
@@ -259,7 +307,7 @@
                                             </template>
                                         </Column>
 
-                                        <Column header="Dates" style="min-width: 160px">
+                                        <Column header="Dates" headerClass="min-w-[160px]" bodyClass="min-w-[160px]">
                                             <template #body="slotProps">
                                                 <div class="space-y-1">
                                                     <p class="text-sm"><span class="font-medium">Filed:</span> {{
@@ -270,7 +318,7 @@
                                             </template>
                                         </Column>
 
-                                        <Column header="Status" style="min-width: 120px">
+                                        <Column header="Status" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
                                             <template #body="slotProps">
                                                 <Chip v-if="slotProps.data.unified_status"
                                                     :label="slotProps.data.unified_status"
@@ -278,9 +326,16 @@
                                             </template>
                                         </Column>
 
-                                        <Column field="remarks" header="Remarks" style="min-width: 200px" />
+                                        <Column header="Remarks" headerClass="min-w-[200px]" bodyClass="min-w-[200px]">
+                                            <template #body="slotProps">
+                                                <div v-if="slotProps.data.remarks" v-html="slotProps.data.remarks"
+                                                    class="prose prose-sm max-w-none dark:prose-invert"></div>
+                                                <span v-else class="text-gray-400 dark:text-gray-500">—</span>
+                                            </template>
+                                        </Column>
 
-                                        <Column header="Attachments" style="min-width: 150px">
+                                        <Column header="Attachments" headerClass="min-w-[150px]"
+                                            bodyClass="min-w-[150px]">
                                             <template #body="slotProps">
                                                 <div class="flex gap-2">
                                                     <Button v-if="hasPermission('applicants.edit')" icon="pi pi-qrcode"
@@ -294,12 +349,12 @@
                                                     <Chip
                                                         v-if="slotProps.data.attachments && slotProps.data.attachments.length > 0"
                                                         :label="slotProps.data.attachments.length.toString()"
-                                                        class="bg-blue-100 text-blue-800" />
+                                                        class="bg-blue-100 text-blue-800 dark:text-blue-300" />
                                                 </div>
                                             </template>
                                         </Column>
 
-                                        <Column header="Actions" style="min-width: 150px"
+                                        <Column header="Actions" headerClass="min-w-[150px]" bodyClass="min-w-[150px]"
                                             v-if="hasPermission('applicants.edit')">
                                             <template #body="slotProps">
                                                 <div class="flex gap-1">
@@ -316,7 +371,7 @@
                                 </div>
                                 <div v-else class="text-center py-12">
                                     <i class="pi pi-info-circle text-4xl text-gray-300 mb-4"></i>
-                                    <p class="text-gray-500">No scholarship records available</p>
+                                    <p class="text-gray-500 dark:text-gray-400">No scholarship records available</p>
                                 </div>
                             </div>
                         </TabPanel>
@@ -331,56 +386,61 @@
                         <TabPanel value="4">
                             <div class="p-6">
                                 <div v-if="allAttachments.length > 0">
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">All Attachments</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">All
+                                        Attachments</h3>
                                     <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
                                         :value="allAttachments" stripedRows showGridlines paginator :rows="10">
-                                        <Column header="Source" style="min-width: 150px">
+                                        <Column header="Source" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
                                             <template #body="slotProps">
                                                 <Chip :label="slotProps.data.attachment_source"
-                                                    :class="slotProps.data.attachment_source === 'Scholarship Record' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'" />
+                                                    :class="slotProps.data.attachment_source === 'Scholarship Record' ? 'bg-blue-100 text-blue-800 dark:text-blue-300' : 'bg-green-100 text-green-800'" />
                                             </template>
                                         </Column>
 
-                                        <Column header="Attachment Name" style="min-width: 200px">
+                                        <Column header="Attachment Name" headerClass="min-w-[200px]"
+                                            bodyClass="min-w-[200px]">
                                             <template #body="slotProps">
                                                 <div class="flex items-center gap-2">
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
-                                                        class="text-blue-600"></i>
+                                                        class="text-blue-600 dark:text-blue-400"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                             </template>
                                         </Column>
 
-                                        <Column header="Related Record" style="min-width: 250px">
+                                        <Column header="Related Record" headerClass="min-w-[250px]"
+                                            bodyClass="min-w-[250px]">
                                             <template #body="slotProps">
                                                 <div class="space-y-1">
-                                                    <p class="font-semibold text-gray-900">{{
+                                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{
                                                         slotProps.data.record_info.program }}</p>
-                                                    <p class="text-sm text-gray-600">{{
+                                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{
                                                         slotProps.data.record_info.academic_year }} - {{
                                                             slotProps.data.record_info.term }}</p>
                                                 </div>
                                             </template>
                                         </Column>
 
-                                        <Column header="File Details" style="min-width: 200px">
+                                        <Column header="File Details" headerClass="min-w-[200px]"
+                                            bodyClass="min-w-[200px]">
                                             <template #body="slotProps">
                                                 <div class="space-y-1">
-                                                    <p class="text-sm text-gray-700">{{ slotProps.data.file_name }}</p>
-                                                    <p class="text-xs text-gray-500">{{
+                                                    <p class="text-sm text-gray-700 dark:text-gray-300">{{
+                                                        slotProps.data.file_name }}</p>
+                                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{
                                                         formatFileSize(slotProps.data.file_size) }}</p>
                                                 </div>
                                             </template>
                                         </Column>
 
-                                        <Column header="Uploaded" style="min-width: 150px">
+                                        <Column header="Uploaded" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
                                             <template #body="slotProps">
                                                 {{ formatDateShort(slotProps.data.created_at) }}
                                             </template>
                                         </Column>
 
-                                        <Column header="Actions" style="min-width: 200px">
+                                        <Column header="Actions" headerClass="min-w-[200px]" bodyClass="min-w-[200px]">
                                             <template #body="slotProps">
                                                 <div class="flex gap-2">
                                                     <Button icon="pi pi-eye" size="small" outlined label="View"
@@ -396,8 +456,9 @@
                                 </div>
                                 <div v-else class="text-center py-12">
                                     <i class="pi pi-paperclip text-4xl text-gray-300 mb-4"></i>
-                                    <p class="text-gray-500 text-lg">No Attachments Available</p>
-                                    <p class="text-gray-400 text-sm mt-2">Upload attachments from the Academic
+                                    <p class="text-gray-500 dark:text-gray-400 text-lg">No Attachments Available</p>
+                                    <p class="text-gray-400 dark:text-gray-500 text-sm mt-2">Upload attachments from the
+                                        Academic
                                         Information tab</p>
                                 </div>
                             </div>
@@ -409,8 +470,10 @@
                                 <!-- Status Timeline -->
                                 <div v-if="statusTimeline && statusTimeline.length > 0" class="space-y-4">
                                     <div class="mb-4">
-                                        <h3 class="text-lg font-semibold text-gray-900">Status Change Timeline</h3>
-                                        <p class="text-sm text-gray-600">Complete history of all status updates</p>
+                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Status Change
+                                            Timeline</h3>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">Complete history of all
+                                            status updates</p>
                                     </div>
 
                                     <div v-for="(timeline, timelineIndex) in statusTimeline" :key="timeline.id"
@@ -418,8 +481,8 @@
                                         <!-- Timeline Dot and Line -->
                                         <div class="flex flex-col items-center">
                                             <div
-                                                class="w-10 h-10 rounded-full bg-blue-50 border-2 flex items-center justify-center border-blue-400">
-                                                <i class="pi pi-check text-xs text-blue-600"></i>
+                                                class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 border-2 flex items-center justify-center border-blue-400">
+                                                <i class="pi pi-check text-xs text-blue-600 dark:text-blue-400"></i>
                                             </div>
                                             <div v-if="timelineIndex < (statusTimeline.length - 1)"
                                                 class="w-0.5 h-12 bg-gray-300 mt-2"></div>
@@ -427,45 +490,54 @@
 
                                         <!-- Timeline Content -->
                                         <div class="flex-1 pb-4">
-                                            <div class="bg-white p-4 rounded border border-gray-200">
+                                            <div
+                                                class="bg-white dark:bg-[#1f2633] p-4 rounded border border-gray-200 dark:border-white/10">
                                                 <div class="flex items-start justify-between mb-2">
                                                     <div>
-                                                        <h5 class="font-semibold text-gray-900">
-                                                            Status: <span class="text-blue-600">{{ timeline.new_status
-                                                            }}</span>
+                                                        <h5 class="font-semibold text-gray-900 dark:text-gray-100">
+                                                            Status: <span class="text-blue-600 dark:text-blue-400">{{
+                                                                timeline.new_status
+                                                                }}</span>
                                                         </h5>
-                                                        <p class="text-sm text-gray-600">{{
+                                                        <p class="text-sm text-gray-600 dark:text-gray-400">{{
                                                             formatDateTime(timeline.performed_at) }}</p>
                                                     </div>
                                                 </div>
 
                                                 <div class="grid grid-cols-2 gap-4 mb-3">
                                                     <div>
-                                                        <p class="text-xs text-gray-600">Previous Status</p>
-                                                        <p class="text-sm font-medium text-gray-900">{{
-                                                            timeline.old_status || 'N/A'
-                                                        }}</p>
+                                                        <p class="text-xs text-gray-600 dark:text-gray-400">Previous
+                                                            Status</p>
+                                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                            {{
+                                                                timeline.old_status || 'N/A'
+                                                            }}</p>
                                                     </div>
                                                     <div>
-                                                        <p class="text-xs text-gray-600">New Status</p>
-                                                        <p class="text-sm font-medium text-gray-900">{{
-                                                            timeline.new_status || 'N/A'
-                                                        }}</p>
+                                                        <p class="text-xs text-gray-600 dark:text-gray-400">New Status
+                                                        </p>
+                                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                            {{
+                                                                timeline.new_status || 'N/A'
+                                                            }}</p>
                                                     </div>
                                                 </div>
 
                                                 <div class="mb-3">
-                                                    <p class="text-xs text-gray-600">Encoded by</p>
-                                                    <p class="text-sm font-medium text-gray-900">{{
+                                                    <p class="text-xs text-gray-600 dark:text-gray-400">Encoded by</p>
+                                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{
                                                         timeline.changed_by?.name || 'System'
-                                                    }}</p>
+                                                        }}</p>
                                                 </div>
 
                                                 <div v-if="timeline.remarks"
-                                                    class="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
-                                                    <p class="text-xs text-blue-700 font-semibold mb-1">Remarks:
+                                                    class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded border-l-4 border-blue-400">
+                                                    <p
+                                                        class="text-xs text-blue-700 dark:text-blue-300 font-semibold mb-1">
+                                                        Remarks:
                                                     </p>
-                                                    <p class="text-sm text-blue-900" v-html="timeline.remarks"></p>
+                                                    <p class="text-sm text-blue-900 dark:text-blue-200"
+                                                        v-html="timeline.remarks"></p>
                                                 </div>
                                             </div>
                                         </div>
@@ -473,10 +545,11 @@
                                 </div>
 
                                 <!-- Empty state for status timeline -->
-                                <div v-else class="text-center py-12 text-gray-500">
-                                    <i class="pi pi-inbox text-4xl mb-4" style="opacity: 0.5"></i>
+                                <div v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
+                                    <i class="pi pi-inbox text-4xl mb-4 opacity-50"></i>
                                     <p class="text-lg">No Status History</p>
-                                    <p class="text-sm text-gray-400 mt-2">No status changes have been recorded yet</p>
+                                    <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">No status changes have been
+                                        recorded yet</p>
                                 </div>
                             </div>
                         </TabPanel>
@@ -503,21 +576,24 @@
 
                                             <!-- Activity Card -->
                                             <div
-                                                class="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow p-4">
+                                                class="bg-white dark:bg-[#1f2633] rounded-lg border border-gray-200 dark:border-white/10 hover:shadow-md transition-shadow p-4">
                                                 <div class="flex items-start justify-between mb-2">
-                                                    <h5 class="font-semibold text-gray-900">
+                                                    <h5 class="font-semibold text-gray-900 dark:text-gray-100">
                                                         {{ getActivityLabel(activity.activity_type) }}
                                                     </h5>
-                                                    <span class="text-xs text-gray-500 whitespace-nowrap ml-2">
+                                                    <span
+                                                        class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">
                                                         {{ getRelativeTime(activity.performed_at) }}
                                                     </span>
                                                 </div>
 
-                                                <p class="text-sm text-gray-600 mb-3">{{ activity.description }}</p>
+                                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">{{
+                                                    activity.description }}</p>
 
                                                 <!-- User Info -->
-                                                <div class="text-sm text-gray-600 mb-2">
-                                                    <span class="font-medium text-gray-900">{{ activity.user?.name ||
+                                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                                    <span class="font-medium text-gray-900 dark:text-gray-100">{{
+                                                        activity.user?.name ||
                                                         'System' }}</span>
                                                     <span v-if="activity.user?.office_designation">
                                                         ({{ activity.user.office_designation }})
@@ -525,19 +601,25 @@
                                                 </div>
 
                                                 <!-- Datetime Info -->
-                                                <div class="text-xs text-gray-500 mb-3 pb-3 border-b border-gray-100">
+                                                <div
+                                                    class="text-xs text-gray-500 dark:text-gray-400 mb-3 pb-3 border-b border-gray-100 dark:border-white/10">
                                                     {{ formatDateTime(activity.performed_at) }}
                                                 </div>
 
                                                 <!-- Details -->
                                                 <div v-if="activity.details" class="mb-3">
-                                                    <div class="text-xs text-gray-600 font-semibold mb-2">Details:</div>
+                                                    <div
+                                                        class="text-xs text-gray-600 dark:text-gray-400 font-semibold mb-2">
+                                                        Details:</div>
                                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                                                         <div v-for="(value, key) in activity.details" :key="key"
-                                                            class="text-sm bg-gray-50 p-2 rounded">
-                                                            <span class="text-gray-600">{{ formatDetailKey(key) }}:
+                                                            class="text-sm bg-gray-50 dark:bg-[#2a3040] p-2 rounded">
+                                                            <span class="text-gray-600 dark:text-gray-400">{{
+                                                                formatDetailKey(key) }}:
                                                             </span>
-                                                            <span class="text-gray-900 font-medium">{{ maskIdValue(key,
+                                                            <span
+                                                                class="text-gray-900 dark:text-gray-100 font-medium">{{
+                                                                    maskIdValue(key,
                                                                 value) }}</span>
                                                         </div>
                                                     </div>
@@ -545,18 +627,22 @@
 
                                                 <!-- Remarks -->
                                                 <div v-if="activity.remarks"
-                                                    class="p-2 bg-blue-50 rounded border-l-4 border-blue-400">
-                                                    <p class="text-xs text-blue-700 font-semibold mb-1">Remarks:</p>
-                                                    <p class="text-sm text-blue-900">{{ activity.remarks }}</p>
+                                                    class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded border-l-4 border-blue-400">
+                                                    <p
+                                                        class="text-xs text-blue-700 dark:text-blue-300 font-semibold mb-1">
+                                                        Remarks:</p>
+                                                    <p class="text-sm text-blue-900 dark:text-blue-200"
+                                                        v-html="activity.remarks"></p>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div v-else class="text-center py-12 text-gray-500">
-                                    <i class="pi pi-history text-4xl mb-4" style="opacity: 0.5"></i>
+                                <div v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
+                                    <i class="pi pi-history text-4xl mb-4 opacity-50"></i>
                                     <p class="text-lg">No Activity Records</p>
-                                    <p class="text-sm text-gray-400 mt-2">No activities have been logged for this
+                                    <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">No activities have been
+                                        logged for this
                                         profile yet</p>
                                 </div>
                             </div>
@@ -819,19 +905,19 @@ const getHistoryStatusClass = (action) => {
         'approved': 'border-green-400 bg-green-50',
         'denied': 'border-red-400 bg-red-50',
         'pending': 'border-yellow-400 bg-yellow-50',
-        'active': 'border-blue-400 bg-blue-50',
-        'completed': 'border-gray-400 bg-gray-50',
+        'active': 'border-blue-400 bg-blue-50 dark:bg-blue-900/20',
+        'completed': 'border-gray-400 bg-gray-50 dark:bg-[#2a3040]',
         'withdrawn': 'border-purple-400 bg-purple-50',
         'loa': 'border-orange-400 bg-orange-50',
         'suspended': 'border-red-900 bg-red-50',
-        'unknown': 'border-gray-300 bg-gray-50',
+        'unknown': 'border-gray-300 bg-gray-50 dark:bg-[#2a3040]',
         'declined': 'border-red-400 bg-red-50',
-        'conditional': 'border-blue-400 bg-blue-50',
+        'conditional': 'border-blue-400 bg-blue-50 dark:bg-blue-900/20',
         'resubmitted': 'border-yellow-400 bg-yellow-50',
         'discontinued': 'border-orange-400 bg-orange-50',
         'renewal_application': 'border-purple-400 bg-purple-50'
     };
-    return classes[action] || 'border-gray-400 bg-gray-50';
+    return classes[action] || 'border-gray-400 bg-gray-50 dark:bg-[#2a3040]';
 };
 
 const handleSuccess = () => {
@@ -878,14 +964,14 @@ const confirmDeleteRecord = (record) => {
 const getStatusClass = (status) => {
     const classes = {
         'pending': 'bg-yellow-100 text-yellow-800',
-        'approved': 'bg-blue-100 text-blue-800',
+        'approved': 'bg-blue-100 text-blue-800 dark:text-blue-300',
         'active': 'bg-green-100 text-green-800',
         'completed': 'bg-gray-100 text-gray-800',
         'denied': 'bg-red-100 text-red-800',
         'withdrawn': 'bg-purple-100 text-purple-800',
-        'unknown': 'bg-gray-200 text-gray-700',
+        'unknown': 'bg-gray-200 text-gray-700 dark:text-gray-300',
     };
-    return classes[status?.toLowerCase()] || 'bg-gray-200 text-gray-700';
+    return classes[status?.toLowerCase()] || 'bg-gray-200 text-gray-700 dark:text-gray-300';
 };
 
 // Attachment methods

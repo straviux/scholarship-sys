@@ -118,6 +118,14 @@
                             @click="showQrCode" />
                     </div>
 
+                    <!-- GIF selected: no canvas editor, file will be uploaded as-is -->
+                    <div v-if="selectedImageFile?.type === 'image/gif'"
+                        class="mt-3 flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
+                        <i class="pi pi-image text-purple-500"></i>
+                        <span class="truncate flex-1">{{ selectedImageFile.name }}</span>
+                        <span class="text-xs text-gray-400 shrink-0">GIF will be preserved</span>
+                    </div>
+
                     <!-- Image Editor Canvas -->
                     <div v-if="showImageEditor" class="space-y-3">
                         <p class="text-sm text-gray-600 text-center mb-4">Zoom and drag to position your photo</p>
@@ -471,13 +479,7 @@ const drawCanvas = () => {
         editorImage.value.height * imageScale.value
     );
 
-    // Restore context and draw circle border
     ctx.restore();
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#a78bfa';
-    ctx.lineWidth = 2;
-    ctx.stroke();
 };
 
 const handleMouseDown = (e) => {
@@ -575,7 +577,12 @@ const onPhotoSelect = (event) => {
 
         selectedImageFile.value = file;
 
-        // Initialize image editor
+        // GIFs cannot be cropped via canvas — upload the original file directly
+        if (file.type === 'image/gif') {
+            return;
+        }
+
+        // Initialize image editor for non-GIF formats
         const img = new Image();
         img.onload = () => {
             editorImage.value = img;
@@ -630,18 +637,63 @@ const closePhotoDialog = () => {
     photoForm.clearErrors();
 };
 
-const submitPhotoForm = async () => {
-    if (!selectedImageFile.value || !showImageEditor.value) {
-        // First click - move to editor
-        if (!showImageEditor.value && selectedImageFile.value) {
-            return; // Editor should be shown already
-        }
+const doPhotoUpload = (formData) => {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || page.props.csrf_token;
+
+    if (!csrfToken) {
+        alert('Security token missing. Please reload the page and try again.');
+        photoProcessing.value = false;
         return;
     }
 
-    // Submit the cropped image
+    fetch(route('user.settings.photo'), {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-CSRF-TOKEN': csrfToken },
+    })
+        .then((response) => {
+            if (response.ok) {
+                successMsg.photo = true;
+                setTimeout(() => {
+                    successMsg.photo = false;
+                    cancelEditor();
+                    showPhotoDialog.value = false;
+                }, 2000);
+            } else {
+                response.json().then(data => {
+                    alert(data.message || 'Failed to upload photo. Please try again.');
+                }).catch(() => {
+                    alert('Failed to upload photo. Please try again.');
+                });
+            }
+        })
+        .catch((error) => {
+            console.error('Photo upload error:', error);
+            alert('Failed to upload photo. Please try again.');
+        })
+        .finally(() => {
+            photoProcessing.value = false;
+        });
+};
+
+const submitPhotoForm = async () => {
+    if (!selectedImageFile.value) return;
+
     successMsg.photo = false;
     photoProcessing.value = true;
+
+    // GIFs cannot be exported from canvas — upload the original file directly to preserve format
+    if (selectedImageFile.value.type === 'image/gif') {
+        const formData = new FormData();
+        formData.append('photo', selectedImageFile.value, selectedImageFile.value.name);
+        doPhotoUpload(formData);
+        return;
+    }
+
+    if (!showImageEditor.value) {
+        photoProcessing.value = false;
+        return;
+    }
 
     try {
         // Convert canvas to blob
@@ -649,46 +701,7 @@ const submitPhotoForm = async () => {
             (blob) => {
                 const formData = new FormData();
                 formData.append('photo', blob, 'profile-photo.png');
-
-                // Get CSRF token from meta tag or Inertia props
-                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || page.props.csrf_token;
-
-                if (!csrfToken) {
-                    alert('Security token missing. Please reload the page and try again.');
-                    photoProcessing.value = false;
-                    return;
-                }
-
-                fetch(route('user.settings.photo'), {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                })
-                    .then((response) => {
-                        if (response.ok) {
-                            successMsg.photo = true;
-                            setTimeout(() => {
-                                successMsg.photo = false;
-                                cancelEditor();
-                                showPhotoDialog.value = false;
-                            }, 2000);
-                        } else {
-                            response.json().then(data => {
-                                alert(data.message || 'Failed to upload photo. Please try again.');
-                            }).catch(() => {
-                                alert('Failed to upload photo. Please try again.');
-                            });
-                        }
-                    })
-                    .catch((error) => {
-                        console.error('Photo upload error:', error);
-                        alert('Failed to upload photo. Please try again.');
-                    })
-                    .finally(() => {
-                        photoProcessing.value = false;
-                    });
+                doPhotoUpload(formData);
             },
             'image/png'
         );

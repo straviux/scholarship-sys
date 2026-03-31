@@ -1135,7 +1135,7 @@ onBeforeUnmount(() => {
                         <i class="pi pi-times"></i>
                     </button>
                     <button v-else class="ios-nav-btn ios-nav-cancel" @click="previousStep">
-                        <i class="pi pi-chevron-left" style="font-size: 13px;"></i>
+                        <i class="pi pi-arrow-left" style="font-size: 13px;"></i>
                     </button>
                     <span class="ios-nav-title">{{ getStepTitle() }}</span>
                     <button v-if="step < 5" class="ios-nav-btn ios-nav-action" @click="nextStep"
@@ -1492,14 +1492,14 @@ onBeforeUnmount(() => {
                                         :class="[
                                             'flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all duration-200 text-left',
                                             voucherData.disbursements.type === 'disbursements'
-                                                ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                                                : 'border-[#e5e5ea] bg-gray-50 text-gray-600 hover:border-gray-300 hover:bg-gray-100'
+                                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                                                : 'border-[#e5e5ea] dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 hover:border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                         ]">
                                         <span :class="[
                                             'flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200',
                                             voucherData.disbursements.type === 'disbursements'
                                                 ? 'border-indigo-500 bg-indigo-500'
-                                                : 'border-gray-300 bg-white'
+                                                : 'border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-600'
                                         ]">
                                             <svg v-if="voucherData.disbursements.type === 'disbursements'"
                                                 class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24"
@@ -1513,14 +1513,14 @@ onBeforeUnmount(() => {
                                     <button type="button" @click="voucherData.disbursements.type = 'payroll'" :class="[
                                         'flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all duration-200 text-left',
                                         voucherData.disbursements.type === 'payroll'
-                                            ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                                            : 'border-[#e5e5ea] bg-gray-50 text-gray-600 hover:border-gray-300 hover:bg-gray-100'
+                                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                                            : 'border-[#e5e5ea] dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 hover:border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                     ]">
                                         <span :class="[
                                             'flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200',
                                             voucherData.disbursements.type === 'payroll'
                                                 ? 'border-indigo-500 bg-indigo-500'
-                                                : 'border-gray-300 bg-white'
+                                                : 'border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-600'
                                         ]">
                                             <svg v-if="voucherData.disbursements.type === 'payroll'"
                                                 class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24"
@@ -1535,19 +1535,25 @@ onBeforeUnmount(() => {
                             </div>
 
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
-                                <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Particulars
+                                <div
+                                    class="bg-white dark:bg-gray-900 border border-[#e5e5ea] dark:border-gray-700 rounded-2xl p-4">
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Particulars
                                         (Descriptions)</label>
-                                    <div class="border border-gray-300 rounded-2xl overflow-hidden bg-white h-full">
+                                    <div
+                                        class="border border-gray-300 dark:border-gray-600 rounded-2xl overflow-hidden">
                                         <QuillEditor v-model:content="voucherData.obligations.particulars_description"
                                             :toolbar="quillToolbar" content-type="html" theme="snow"
                                             placeholder="Enter particulars description..." style="height: 420px" />
                                     </div>
                                 </div>
 
-                                <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4">
-                                    <label class="block text-sm font-medium text-gray-900 mb-2">Explanation</label>
-                                    <div class="border border-gray-300 rounded-2xl overflow-hidden bg-white">
+                                <div
+                                    class="bg-white dark:bg-gray-900 border border-[#e5e5ea] dark:border-gray-700 rounded-2xl p-4">
+                                    <label
+                                        class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Explanation</label>
+                                    <div
+                                        class="border border-gray-300 dark:border-gray-600 rounded-2xl overflow-hidden">
                                         <QuillEditor v-model:content="voucherData.disbursements.explanation"
                                             :toolbar="quillToolbar" content-type="html" theme="snow"
                                             placeholder="Enter explanation..." style="height: 420px" />

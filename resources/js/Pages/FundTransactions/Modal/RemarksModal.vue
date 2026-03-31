@@ -16,33 +16,32 @@
                     <div v-if="modelValue" style="padding-top: 16px;">
                         <div class="ios-section">
                             <div class="ios-card" style="padding: 12px 16px;">
-                                <p style="font-size: 14px; font-weight: 500; color: #3c3c43;">Transaction ID: {{
+                                <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Transaction ID: {{
                                     modelValue.transaction_id }}</p>
-                                <p style="font-size: 12px; color: #8E8E93; margin-top: 2px;">Add or edit remarks for
+                                <p class="text-sm dark:text-gray-400 mt-4">Add or edit remarks for
                                     this voucher</p>
                             </div>
                         </div>
                         <div class="ios-section" style="margin-bottom: 16px;">
                             <p class="ios-section-label">Remarks</p>
-                            <div class="ios-card" style="padding: 12px 16px;">
-                                <Editor :modelValue="remarks" @update:modelValue="remarks = $event"
-                                    editorStyle="height: 150px">
-                                    <template #toolbar>
-                                        <span class="ql-formats">
-                                            <button class="ql-bold"></button>
-                                            <button class="ql-italic"></button>
-                                            <button class="ql-underline"></button>
-                                        </span>
-                                        <span class="ql-formats">
-                                            <button class="ql-list" value="ordered"></button>
-                                            <button class="ql-list" value="bullet"></button>
-                                        </span>
-                                        <span class="ql-formats">
-                                            <button class="ql-clean"></button>
-                                        </span>
-                                    </template>
-                                </Editor>
-                            </div>
+
+                            <Editor :modelValue="remarks" @update:modelValue="remarks = $event"
+                                class="ios-card h-48 text-lg">
+                                <template #toolbar>
+                                    <span class="ql-formats">
+                                        <button class="ql-bold"></button>
+                                        <button class="ql-italic"></button>
+                                        <button class="ql-underline"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-list" value="ordered"></button>
+                                        <button class="ql-list" value="bullet"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-clean"></button>
+                                    </span>
+                                </template>
+                            </Editor>
                         </div>
                     </div>
                 </div>

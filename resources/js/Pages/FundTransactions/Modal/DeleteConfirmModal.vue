@@ -2,20 +2,19 @@
     <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal
         :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
         <template #container>
-            <div ref="elModal" class="ios-modal" style="width: 90vw; max-width: 420px;" :style="modalStyle">
+            <div ref="elModal" class="ios-modal w-[90vw] max-w-[420px]" :style="modalStyle">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)"><i
                             class="pi pi-times"></i></button>
                     <span class="ios-nav-title">Confirm Delete</span>
-                    <button class="ios-nav-btn ios-nav-action" style="color: #ef4444;" @click="confirmDelete"
+                    <button class="ios-nav-btn ios-nav-action text-red-500" @click="confirmDelete"
                         :disabled="isDeleting">
-                        <i v-if="isDeleting" class="pi pi-spin pi-spinner"
-                            style="font-size: 12px; margin-right: 3px;"></i>Delete
+                        <i v-if="isDeleting" class="pi pi-spin pi-spinner text-[12px] mr-[3px]"></i>Delete
                     </button>
                 </div>
                 <div class="ios-body">
-                    <div class="ios-section" style="margin-top: 16px;">
-                        <div class="ios-card" style="padding: 14px 16px;">
+                    <div class="ios-section mt-4">
+                        <div class="ios-card px-4 py-3.5">
                             <div class="flex items-center gap-3">
                                 <i class="pi pi-exclamation-triangle text-2xl text-red-500"></i>
                                 <div>
@@ -25,15 +24,15 @@
                             </div>
                         </div>
                     </div>
-                    <div class="ios-section" style="margin-bottom: 16px;">
-                        <div class="ios-card" style="padding: 14px 16px; background: #fff1f2;">
-                            <p class="text-sm text-red-800" style="margin-bottom: 4px;">
+                    <div class="ios-section mb-4">
+                        <div class="ios-card px-4 py-3.5 bg-red-50 dark:bg-red-950/30">
+                            <p class="text-sm text-red-800 dark:text-red-300 mb-1">
                                 <strong>Transaction ID:</strong> FTR-{{ voucherNumber || 'N/A' }}
                             </p>
-                            <p v-if="payeeName" class="text-sm text-red-800" style="margin-bottom: 4px;">
+                            <p v-if="payeeName" class="text-sm text-red-800 dark:text-red-300 mb-1">
                                 <strong>Payee:</strong> {{ payeeName }}
                             </p>
-                            <p v-if="date" class="text-sm text-red-800">
+                            <p v-if="date" class="text-sm text-red-800 dark:text-red-300">
                                 <strong>Date Filed:</strong> {{ date }}
                             </p>
                         </div>

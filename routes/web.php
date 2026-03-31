@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\MaintenanceController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\User\ProfileController as UserProfileController;
 use App\Http\Controllers\User\SettingsController;
+use App\Http\Controllers\Admin\MobileUploadSettingController;
 use App\Http\Controllers\PaymentMonitoringController;
 use App\Http\Controllers\DisbursementManagementController;
 use App\Http\Controllers\TestPageController;
@@ -135,6 +136,10 @@ Route::middleware(['auth', 'check.role:system-report,deleted-records,maintenance
 
     // Maintenance Management Routes
     Route::inertia('/admin/maintenance', 'Admin/Maintenance/Index')->name('admin.maintenance.index');
+
+    // Mobile Upload Settings Routes
+    Route::get('/admin/mobile-upload-settings', [MobileUploadSettingController::class, 'index'])->name('admin.mobile-upload-settings.index');
+    Route::post('/admin/mobile-upload-settings', [MobileUploadSettingController::class, 'update'])->name('admin.mobile-upload-settings.update');
 
     // Role Permissions API Routes (used by AccessControl.vue)
     Route::post('/permission-management/update-role', [PermissionManagementController::class, 'updateRolePermissions'])->middleware('check.permission:permissions.manage')->name('permissions.update-role');

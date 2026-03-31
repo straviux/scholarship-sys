@@ -13,6 +13,7 @@ import StatusModal from '@/Pages/FundTransactions/Modal/StatusModal.vue';
 import QrCodeModal from '@/Pages/FundTransactions/Modal/QrCodeModal.vue';
 import TrackingHistoryModal from '@/Pages/FundTransactions/Modal/TrackingHistoryModal.vue';
 import ObrTrackingModal from '@/Pages/FundTransactions/Modal/ObrTrackingModal.vue';
+import RecordsSelect from '@/Components/selects/RecordsSelect.vue';
 
 import axios from 'axios';
 
@@ -24,6 +25,7 @@ const ftDrawerPt = {
 };
 
 const page = usePage();
+const _url = new URLSearchParams(window.location.search);
 const showWizard = ref(false);
 const currentStep = ref(1);
 const voucherType = ref('obligations');
@@ -33,9 +35,10 @@ const loading = ref(false);
 const deletingId = ref(null);
 const showDeleteConfirmDialog = ref(false);
 const voucherToDelete = ref(null);
-const searchQuery = ref('');
+const searchQuery = ref(_url.get('search') || '');
 const showViewDialog = ref(false);
 const selectedVoucher = ref(null);
+const viewModalTab = ref('details');
 const scholarsDetails = ref([]);
 const loadingScholars = ref(false);
 const scholarsCache = ref(new Map()); // Cache for scholar details by ID
@@ -61,8 +64,13 @@ const savingStatus = ref(false);
 const obrStatuses = ['No OBR', 'LOA', 'Irregular', 'Transferred', 'Claimed', 'Paid', 'On Process', 'Denied'];
 const showOBRTrackingDialog = ref(false);
 const selectedVoucherForOBRTracking = ref(null);
-const statusFilter = ref('');  // Status filter
-const userFilter = ref('all');  // User filter - 'all' for all records, 'my-records' for current user
+const statusFilter = ref(_url.get('status') || '');
+const obrTypeFilter = ref(_url.get('type') || '');
+const disbursementTypeFilter = ref(_url.get('dv_type') || '');
+const userFilter = ref(_url.get('user') || 'all');
+const currentPage = ref(parseInt(_url.get('page') || '1'));
+const perPage = ref(parseInt(_url.get('per_page') || '10'));
+const filteredTotal = ref(0);
 const obrTrackingForm = reactive({
     fiscal_year: new Date().getFullYear(),
     obr_no: '',
@@ -90,6 +98,10 @@ const fileInputs = ref({
 });
 const uploadingFile = ref(null);
 const voucherDocuments = ref(new Map()); // Map to store documents by voucher ID
+const selectedVoucherDocuments = computed(() => {
+    if (!selectedVoucher.value) return {};
+    return voucherDocuments.value.get(selectedVoucher.value.id) || {};
+});
 
 // Preview state
 const showPreviewModal = ref(false);
@@ -110,11 +122,7 @@ const quillToolbar = [
     ['link']
 ];
 
-// Filter drawer
-const showFilterDrawer = ref(false);
-
 const statusFilterOptions = [
-    { label: 'All Status', value: '' },
     { label: 'On Process', value: 'On Process' },
     { label: 'No OBR', value: 'No OBR' },
     { label: 'LOA', value: 'LOA' },
@@ -123,6 +131,17 @@ const statusFilterOptions = [
     { label: 'Claimed', value: 'Claimed' },
     { label: 'Paid', value: 'Paid' },
     { label: 'Denied', value: 'Denied' },
+];
+
+const obrTypeFilterOptions = [
+    { label: 'Regular', value: 'REGULAR' },
+    { label: 'Financial Assistance', value: 'FINANCIAL ASSISTANCE' },
+    { label: 'Reimbursement', value: 'REIMBURSEMENT' },
+];
+
+const disbursementTypeFilterOptions = [
+    { label: 'Disbursement Voucher', value: 'disbursements' },
+    { label: 'Payroll', value: 'payroll' },
 ];
 
 const handleCreateVoucher = () => {
@@ -433,8 +452,23 @@ const handleScholarSelection = (scholars, type) => {
 const fetchVouchers = async () => {
     loading.value = true;
     try {
-        const response = await axios.get('/api/fund-transactions');
+        const params = {};
+        if (searchQuery.value.trim()) params.search = searchQuery.value.trim();
+        if (statusFilter.value) params.obr_status = statusFilter.value;
+        if (obrTypeFilter.value) params.obr_type = obrTypeFilter.value;
+        if (disbursementTypeFilter.value) params.disbursement_type = disbursementTypeFilter.value;
+        if (userFilter.value === 'my-records') {
+            const userId = page.props.auth?.user?.id;
+            if (userId) params.created_by = userId;
+        }
+        params.page = currentPage.value;
+        params.per_page = perPage.value;
+
+        const response = await axios.get('/api/fund-transactions', { params });
         vouchers.value = response.data.data || [];
+        totalRecordsCount.value = response.data.total ?? 0;
+        filteredTotal.value = response.data.filtered_total ?? 0;
+        myRecordsCount.value = response.data.my_records_count ?? 0;
 
         // Fetch and cache scholars for school payees
         for (const voucher of vouchers.value) {
@@ -512,59 +546,6 @@ const fetchScholarsDetails = async (scholarIds) => {
     }
 };
 
-// Computed stats
-const totalVouchers = computed(() => vouchers.value.length);
-const filteredVouchers = computed(() => {
-    let filtered = vouchers.value;
-
-    // Filter by creator if "My Records" selected
-    if (userFilter.value === 'my-records') {
-        const currentUserId = page.props.auth?.user?.id;
-        if (currentUserId) {
-            filtered = filtered.filter(v => v.created_by == currentUserId);
-        }
-    }
-    // 'all' — no filter applied
-
-    // Filter by status if selected
-    if (statusFilter.value) {
-        filtered = filtered.filter(v => v.obr_status === statusFilter.value);
-    }
-
-    // Filter by search query
-    if (!searchQuery.value.trim()) {
-        return filtered;
-    }
-
-    const search = searchQuery.value.toLowerCase();
-    return filtered.filter(v => {
-        // Check standard fields
-        const standardMatch =
-            v.transaction_id?.toLowerCase().includes(search) ||
-            v.payee_name?.toLowerCase().includes(search) ||
-            v.disbursement_type?.toLowerCase().includes(search) ||
-            v.creator?.name?.toLowerCase().includes(search);
-
-        // If standard field matches, return true
-        if (standardMatch) return true;
-
-        // Check if search matches any scholar names from the cached details
-        if (v.scholar_ids && v.scholar_ids.length > 0) {
-            // Look through our cached scholar details
-            for (const scholarId of v.scholar_ids) {
-                const scholarData = scholarsCache.value.get(scholarId);
-                if (scholarData) {
-                    const fullName = `${scholarData.first_name || ''} ${scholarData.last_name || ''}`.toLowerCase();
-                    if (fullName.includes(search)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
-    });
-});
 const isAdmin = computed(() => {
     const user = page.props.auth?.user;
     if (!user) return false;
@@ -573,27 +554,10 @@ const isAdmin = computed(() => {
     return user.roles?.includes('administrator') ?? false;
 });
 
-// Computed property for status counts
-const statusCounts = computed(() => {
-    return {
-        'On Process': vouchers.value.filter(v => v.obr_status === 'On Process').length,
-        'No OBR': vouchers.value.filter(v => !v.obr_status || v.obr_status === '').length,
-        'LOA': vouchers.value.filter(v => v.obr_status === 'LOA').length,
-        'Irregular': vouchers.value.filter(v => v.obr_status === 'Irregular').length,
-        'Transferred': vouchers.value.filter(v => v.obr_status === 'Transferred').length,
-        'Claimed': vouchers.value.filter(v => v.obr_status === 'Claimed').length,
-        'Paid': vouchers.value.filter(v => v.obr_status === 'Paid').length,
-        'Denied': vouchers.value.filter(v => v.obr_status === 'Denied').length
-    };
-});
-
 // Computed property for user record counts
-const myRecordsCount = computed(() => {
-    const userId = page.props.auth?.user?.id;
-    return userId ? vouchers.value.filter(v => v.created_by == userId).length : 0;
-});
+const myRecordsCount = ref(0);
 
-const totalRecordsCount = computed(() => vouchers.value.length);
+const totalRecordsCount = ref(0);
 
 // Fetch tracking history for a voucher
 const fetchTrackingHistory = async (voucher) => {
@@ -667,10 +631,14 @@ const viewVoucher = async (voucherId) => {
     const voucher = vouchers.value.find(v => v.id === voucherId);
     if (voucher) {
         selectedVoucher.value = voucher;
+        viewModalTab.value = 'details';
         showViewDialog.value = true;
 
-        // Fetch scholar details
-        await fetchScholarsDetails(voucher.scholar_ids || []);
+        // Load both scholar details and document metadata for tab content.
+        await Promise.all([
+            fetchScholarsDetails(voucher.scholar_ids || []),
+            loadVoucherDocuments(voucher.id)
+        ]);
     }
 };
 
@@ -1074,16 +1042,16 @@ const calculateTotalAmount = (voucher) => {
 // Get status color for badge
 const getStatusColor = (status) => {
     const statusColors = {
-        'No OBR': 'bg-gray-100 text-gray-800',
-        'LOA': 'bg-blue-100 text-blue-800',
-        'Irregular': 'bg-orange-100 text-orange-800',
-        'Transferred': 'bg-purple-100 text-purple-800',
-        'Claimed': 'bg-indigo-100 text-indigo-800',
-        'Paid': 'bg-green-100 text-green-800',
-        'On Process': 'bg-yellow-100 text-yellow-800',
-        'Denied': 'bg-red-100 text-red-800'
+        'No OBR': 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200',
+        'LOA': 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200',
+        'Irregular': 'bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200',
+        'Transferred': 'bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200',
+        'Claimed': 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-200',
+        'Paid': 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200',
+        'On Process': 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200',
+        'Denied': 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200'
     };
-    return statusColors[status] || 'bg-gray-100 text-gray-800';
+    return statusColors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
 };
 
 // Check if payee is school
@@ -1306,6 +1274,53 @@ const saveOBRTracking = async () => {
     }
 };
 
+// Sync current filter state to the browser URL (replaceState — no navigation)
+const syncFiltersToUrl = () => {
+    const params = new URLSearchParams();
+    if (searchQuery.value?.trim()) params.set('search', searchQuery.value.trim());
+    if (statusFilter.value) params.set('status', statusFilter.value);
+    if (obrTypeFilter.value) params.set('type', obrTypeFilter.value);
+    if (disbursementTypeFilter.value) params.set('dv_type', disbursementTypeFilter.value);
+    if (userFilter.value && userFilter.value !== 'all') params.set('user', userFilter.value);
+    if (currentPage.value > 1) params.set('page', currentPage.value);
+    if (perPage.value !== 10) params.set('per_page', perPage.value);
+    const qs = params.toString();
+    window.history.replaceState(null, '', qs ? `${window.location.pathname}?${qs}` : window.location.pathname);
+};
+
+// Pagination handler (matches Applicants pattern)
+const onPageChange = (e) => {
+    currentPage.value = e.page + 1;
+    perPage.value = e.rows;
+    syncFiltersToUrl();
+    fetchVouchers();
+};
+
+// Re-fetch when dropdown filters or user filter changes (reset to page 1)
+watch([statusFilter, obrTypeFilter, disbursementTypeFilter, userFilter], () => {
+    currentPage.value = 1;
+    syncFiltersToUrl();
+    fetchVouchers();
+});
+
+// Re-fetch when records-per-page changes via RecordsSelect (reset to page 1)
+watch(perPage, () => {
+    currentPage.value = 1;
+    syncFiltersToUrl();
+    fetchVouchers();
+});
+
+// Debounced re-fetch for search input (reset to page 1)
+let searchTimeout = null;
+watch(searchQuery, () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        currentPage.value = 1;
+        syncFiltersToUrl();
+        fetchVouchers();
+    }, 400);
+});
+
 // Watch for editFormData changes to ensure responsibility center is properly set
 watch(
     () => editFormData.value?.responsibility_center,
@@ -1357,9 +1372,10 @@ onMounted(() => {
             <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-credit-card text-indigo-900" style="font-size: 2rem"></i>
+                        <i class="pi pi-credit-card text-indigo-900 text-[2rem]"></i>
                         <div>
-                            <h1 class="text-2xl font-bold text-gray-700">Fund Transactions Management</h1>
+                            <h1 class="text-2xl font-bold text-gray-700 dark:text-gray-200">Fund Transactions Management
+                            </h1>
                             <p class="text-sm text-gray-600">Create and manage financial transactions</p>
                         </div>
                     </div>
@@ -1379,7 +1395,7 @@ onMounted(() => {
                     <div class="flex-1 max-w-md">
                         <IconField iconPosition="left">
                             <InputIcon class="pi pi-search text-gray-400" />
-                            <InputText v-model="searchQuery" placeholder="Search voucher, payee, or scholar..."
+                            <InputText v-model="searchQuery" placeholder="Search obr no, payee, or scholar..."
                                 class="w-full" size="small" />
                         </IconField>
                     </div>
@@ -1391,100 +1407,90 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <!-- Record Filter + Active Tag Row -->
+                <!-- Record Filter + Dropdowns Row -->
                 <div class="flex flex-wrap gap-3 items-center mb-4">
-                    <Button icon="pi pi-filter" :badge="statusFilter ? '!' : undefined" badgeSeverity="danger"
-                        severity="warn" text rounded @click="showFilterDrawer = true" v-tooltip.bottom="'Filters'" />
                     <label class="flex items-center gap-2 cursor-pointer">
                         <RadioButton v-model="userFilter" name="userFilter" value="all" inputId="uf-all" />
-                        <span class="text-sm text-gray-700">All Records</span>
+                        <span class="text-sm text-gray-700 dark:text-gray-300">All Records</span>
                         <Badge :value="totalRecordsCount" severity="secondary" />
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
                         <RadioButton v-model="userFilter" name="userFilter" value="my-records" inputId="uf-my" />
-                        <span class="text-sm text-gray-700">My Records</span>
+                        <span class="text-sm text-gray-700 dark:text-gray-300">My Records</span>
                         <Badge :value="myRecordsCount" severity="secondary" />
                     </label>
 
-                    <template v-if="statusFilter">
-                        <span class="text-gray-300 mx-1">|</span>
-                        <Tag severity="secondary" rounded class="cursor-pointer" @click="statusFilter = ''">
-                            <span class="text-xs">Status: <strong>{{ statusFilter }}</strong></span>
-                            <i class="pi pi-times ml-1" style="font-size: 0.6rem"></i>
-                        </Tag>
-                    </template>
-                </div>
+                    <span class="text-gray-300 dark:text-gray-600 mx-1">|</span>
 
-                <!-- Status Filter Drawer -->
-                <FloatingDrawer v-model:visible="showFilterDrawer" header="Filters" position="right" class="!w-[360px]"
-                    :modal="true">
-                    <div class="flex flex-col gap-2 mt-2">
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">OBR Status</p>
-                        <label v-for="opt in statusFilterOptions" :key="opt.value"
-                            class="flex items-center justify-between px-4 py-3 rounded-2xl cursor-pointer transition-colors select-none"
-                            :class="statusFilter === opt.value
-                                ? 'bg-indigo-50 ring-1 ring-indigo-400'
-                                : 'bg-gray-50 hover:bg-gray-100'" @click="statusFilter = opt.value">
-                            <div class="flex items-center gap-3">
-                                <span
-                                    class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-                                    :class="statusFilter === opt.value ? 'border-indigo-500' : 'border-gray-300'">
-                                    <span v-if="statusFilter === opt.value"
-                                        class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                                </span>
-                                <span class="text-sm font-medium text-gray-800">{{ opt.label }}</span>
-                            </div>
-                            <Badge v-if="opt.value" :value="statusCounts[opt.value] ?? 0" severity="secondary" />
-                        </label>
+                    <Select v-model="statusFilter" :options="statusFilterOptions" optionLabel="label"
+                        optionValue="value" placeholder="OBR Status" size="small" class="w-40" showClear />
+                    <Select v-model="obrTypeFilter" :options="obrTypeFilterOptions" optionLabel="label"
+                        optionValue="value" placeholder="OBR Type" size="small" class="w-44" showClear />
+                    <Select v-model="disbursementTypeFilter" :options="disbursementTypeFilterOptions"
+                        optionLabel="label" optionValue="value" placeholder="DV Type" size="small" class="w-44"
+                        showClear />
+
+                    <Button
+                        v-if="statusFilter || obrTypeFilter || disbursementTypeFilter || searchQuery || userFilter !== 'all'"
+                        icon="pi pi-history" severity="danger" size="small" text rounded
+                        @click="statusFilter = null; obrTypeFilter = null; disbursementTypeFilter = null; searchQuery = ''; userFilter = 'all'"
+                        v-tooltip.bottom="'Clear all filters'" />
+
+                    <div class="ml-auto flex items-center gap-2">
+                        <RecordsSelect v-model="perPage" size="small" class="w-auto" />
+                        <span class="text-sm text-gray-600 dark:text-gray-400">/ <strong>{{ filteredTotal
+                        }}</strong></span>
                     </div>
-                    <div class="flex gap-2 justify-end mt-6 pt-4 border-t">
-                        <Button severity="secondary" outlined size="small" icon="pi pi-history" label="Clear"
-                            @click="statusFilter = ''" />
-                        <Button label="Done" icon="pi pi-check" severity="info" size="small"
-                            @click="showFilterDrawer = false" />
-                    </div>
-                </FloatingDrawer>
+                </div>
 
                 <!-- Context Menu -->
                 <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
 
                 <!-- DataTable -->
-                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredVouchers" stripedRows
+                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="vouchers" stripedRows
                     showGridlines responsiveLayout="scroll" :loading="loading"
-                    :emptyMessage="vouchers.length === 0 ? 'No vouchers created yet. Click Create Fund Transaction to get started.' : 'No vouchers match your search.'"
+                    :emptyMessage="filteredTotal === 0 ? 'No vouchers created yet. Click Create Fund Transaction to get started.' : 'No vouchers match your search.'"
                     :scrollable="true" scrollHeight="600px" @row-contextmenu="onRowContextMenu" contextMenu
-                    v-model:contextMenuSelection="selectedContextVoucher">
+                    v-model:contextMenuSelection="selectedContextVoucher" lazy paginator :rows="perPage"
+                    :totalRecords="filteredTotal" :first="(currentPage - 1) * perPage"
+                    :rowsPerPageOptions="[10, 15, 25, 50]"
+                    paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                    :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
+                    @page="onPageChange">
 
-                    <Column header="OBR No" style="min-width: 140px">
+                    <Column header="OBR No" :headerStyle="{ minWidth: '140px' }" :bodyStyle="{ minWidth: '140px' }">
                         <template #body="slotProps">
-                            <span class="text-sm font-medium text-blue-600">{{ slotProps.data.obr_no || '---' }}</span>
+                            <span class="text-sm font-medium text-blue-600 dark:text-blue-400">{{ slotProps.data.obr_no
+                                || '---' }}</span>
                         </template>
                     </Column>
 
-                    <Column header="Payee" style="min-width: 200px">
+                    <Column header="Payee" :headerStyle="{ minWidth: '200px' }" :bodyStyle="{ minWidth: '200px' }">
                         <template #body="slotProps">
-                            <div class="text-sm font-semibold text-gray-800">{{ slotProps.data.payee_name }}</div>
+                            <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{
+                                slotProps.data.payee_name }}</div>
                             <div v-if="isPayeeSchool(slotProps.data)"
-                                class="text-xs font-medium italic text-gray-600 mt-1">
+                                class="text-xs font-medium italic text-gray-600 dark:text-gray-400 mt-1">
                                 {{ getFirstScholarNameFromCache(slotProps.data) || '---' }}
                             </div>
                         </template>
                     </Column>
 
-                    <Column header="OBR Type" style="min-width: 130px">
+                    <Column header="OBR Type" :headerStyle="{ minWidth: '130px' }" :bodyStyle="{ minWidth: '130px' }">
                         <template #body="slotProps">
                             <span :class="{
                                 'px-3 py-1 rounded-full text-xs font-medium': true,
-                                'text-gray-800': slotProps.data.obr_type === 'REGULAR',
-                                'text-yellow-800': slotProps.data.obr_type === 'FINANCIAL ASSISTANCE',
-                                'text-purple-800': slotProps.data.obr_type === 'REIMBURSEMENT'
+                                'text-gray-800 dark:text-gray-200': slotProps.data.obr_type === 'REGULAR',
+                                'text-yellow-800 dark:text-yellow-200': slotProps.data.obr_type === 'FINANCIAL ASSISTANCE',
+                                'text-purple-800 dark:text-purple-200': slotProps.data.obr_type === 'REIMBURSEMENT'
                             }">
                                 {{ slotProps.data.obr_type || '---' }}
                             </span>
                         </template>
                     </Column>
 
-                    <Column header="Disbursement Type" style="min-width: 150px">
+                    <Column header="Disbursement Type" :headerStyle="{ minWidth: '150px' }"
+                        :bodyStyle="{ minWidth: '150px' }">
                         <template #body="slotProps">
                             <span class="text-xs font-medium uppercase">
                                 {{ slotProps.data.disbursement_type === 'disbursements' ? 'DV' :
@@ -1494,7 +1500,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column header="Status" style="min-width: 140px">
+                    <Column header="Status" :headerStyle="{ minWidth: '140px' }" :bodyStyle="{ minWidth: '140px' }">
                         <template #body="slotProps">
                             <span
                                 :class="['px-3 py-1 rounded-full text-xs font-medium', getStatusColor(slotProps.data.obr_status)]">
@@ -1503,27 +1509,37 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column header="Total Amount" style="min-width: 130px">
+                    <Column header="Total Amount" :headerStyle="{ minWidth: '130px' }"
+                        :bodyStyle="{ minWidth: '130px' }">
                         <template #body="slotProps">
-                            <span class="text-sm font-medium text-gray-900">{{
+                            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{
                                 formatAmount(calculateTotalAmount(slotProps.data)) }}</span>
                         </template>
                     </Column>
 
-                    <Column header="Processed By" style="min-width: 130px">
+                    <Column header="Processed By" :headerStyle="{ minWidth: '130px' }"
+                        :bodyStyle="{ minWidth: '130px' }">
                         <template #body="slotProps">
-                            <span class="text-xs font-semibold text-gray-600">{{ slotProps.data.creator?.name || '---'
+                            <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">{{
+                                slotProps.data.creator?.name || '---'
                             }}</span>
+                            <div class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{
+                                formatDate(slotProps.data.created_at) }}</div>
                         </template>
                     </Column>
 
-                    <Column header="Date" style="min-width: 110px">
+                    <Column header="OBR Date" :headerStyle="{ minWidth: '110px' }" :bodyStyle="{ minWidth: '110px' }">
                         <template #body="slotProps">
-                            <span class="text-xs text-gray-600">{{ formatDate(slotProps.data.created_at) }}</span>
+                            <span class="text-xs text-gray-600 dark:text-gray-400">{{
+                                slotProps.data.date_obligated ? new
+                                    Date(slotProps.data.date_obligated).toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short', day: 'numeric'
+                                    }) : '---' }}</span>
                         </template>
                     </Column>
 
-                    <Column header="Actions" style="width: 70px">
+                    <Column header="Actions" :headerStyle="{ width: '70px' }" :bodyStyle="{ width: '70px' }">
                         <template #body="slotProps">
                             <Button icon="pi pi-ellipsis-v" @click="(e) => openContextMenu(e, slotProps.data)" text
                                 rounded size="small" v-tooltip="'Actions'" />
@@ -1547,148 +1563,188 @@ onMounted(() => {
 
         <!-- View Fund Transaction Dialog -->
         <ViewTransactionModal :show="showViewDialog" @update:show="showViewDialog = $event">
-            <div v-if="selectedVoucher" style="padding-top: 16px;">
-                <!-- Fund Transaction Info -->
-                <div class="ios-section">
-                    <div class="ios-card">
-                        <div class="ios-row">
-                            <span class="ios-row-label">OBR Number</span>
-                            <span style="font-weight: 500;">{{ selectedVoucher.obr_no || '---' }}</span>
-                        </div>
-                        <div class="ios-row">
-                            <span class="ios-row-label">Date Obligated</span>
-                            <span>{{ selectedVoucher.date_obligated ? formatDate(selectedVoucher.date_obligated) : '---'
-                            }}</span>
-                        </div>
-                        <div class="ios-row">
-                            <span class="ios-row-label">Disbursement Type</span>
-                            <span>{{ selectedVoucher.disbursement_type === 'disbursements' ? `Disbursement
-                                Voucher` : (selectedVoucher.disbursement_type === 'payroll' ? 'Payroll' :
-                                selectedVoucher.disbursement_type) }}</span>
-                        </div>
-                        <div class="ios-row">
-                            <span class="ios-row-label">Payee</span>
-                            <div style="text-align: right;">
-                                <p>{{ selectedVoucher.payee_name }}</p>
-                                <p v-if="isPayeeSchool(selectedVoucher)"
-                                    style="font-size: 12px; color: #8E8E93; margin-top: 2px;">Scholar: {{
-                                        getFirstScholarName(selectedVoucher) || '---' }}</p>
-                            </div>
-                        </div>
-                        <div class="ios-row">
-                            <span class="ios-row-label">Amount</span>
-                            <span style="font-weight: 600;">{{ formatAmount(selectedVoucher.amount)
-                            }}</span>
-                        </div>
-                        <div class="ios-row">
-                            <span class="ios-row-label">Created By</span>
-                            <span>{{ selectedVoucher.creator?.name || '---' }}</span>
-                        </div>
-                        <div class="ios-row">
-                            <span class="ios-row-label">Date</span>
-                            <span>{{ formatDate(selectedVoucher.created_at) }}</span>
-                        </div>
-                        <div class="ios-row">
-                            <span class="ios-row-label">OBR Type</span>
-                            <span>{{ selectedVoucher.obr_type || '---' }}</span>
-                        </div>
-                        <div class="ios-row" style="border-bottom: none;">
-                            <span class="ios-row-label">OBR Status</span>
-                            <span
-                                :class="['px-3 py-1 rounded-full text-xs font-medium inline-block', getStatusColor(selectedVoucher.obr_status)]">{{
-                                    selectedVoucher.obr_status || 'On Process' }}</span>
-                        </div>
-                    </div>
-                </div>
+            <div v-if="selectedVoucher" class="pt-2 h-[78vh] max-h-[780px] flex flex-col">
+                <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+                    <Tabs v-model:value="viewModalTab" class="relative ">
+                        <TabList
+                            class="sticky top-0 z-30 -mx-4 w-[calc(100%+2rem)] bg-white/95 dark:bg-[#2a3040]/95 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden px-2 pt-2">
+                            <Tab value="details">Transaction Details</Tab>
+                            <Tab value="tracking">Tracking Info</Tab>
+                            <Tab value="documents">Uploaded Documents</Tab>
+                        </TabList>
 
-                <!-- Remarks -->
-                <div v-if="selectedVoucher.remarks" class="ios-section">
-                    <p class="ios-section-label">Remarks</p>
-                    <div class="ios-card" style="padding: 12px 16px;">
-                        <div class="text-sm text-gray-900" v-html="selectedVoucher.remarks"></div>
-                    </div>
-                </div>
+                        <TabPanels>
+                            <TabPanel value="details">
+                                <div class="ios-section">
+                                    <div class="ios-card">
+                                        <div class="ios-row">
+                                            <span class="ios-row-label">OBR Number</span>
+                                            <span class="font-medium">{{ selectedVoucher.obr_no || '---' }}</span>
+                                        </div>
+                                        <div class="ios-row">
+                                            <span class="ios-row-label">Date Obligated</span>
+                                            <span>{{ selectedVoucher.date_obligated ?
+                                                formatDate(selectedVoucher.date_obligated)
+                                                : '---' }}</span>
+                                        </div>
+                                        <div class="ios-row">
+                                            <span class="ios-row-label">Disbursement Type</span>
+                                            <span>{{ selectedVoucher.disbursement_type === 'disbursements' ?
+                                                `Disbursement
+                                                Voucher` : (selectedVoucher.disbursement_type === 'payroll' ? 'Payroll'
+                                                    :
+                                                    selectedVoucher.disbursement_type) }}</span>
+                                        </div>
+                                        <div class="ios-row">
+                                            <span class="ios-row-label">Payee</span>
+                                            <div class="text-right">
+                                                <p>{{ selectedVoucher.payee_name }}</p>
+                                                <p v-if="isPayeeSchool(selectedVoucher)"
+                                                    class="text-xs text-[#8E8E93] mt-0.5">
+                                                    Scholar: {{ getFirstScholarName(selectedVoucher) || '---' }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="ios-row">
+                                            <span class="ios-row-label">Amount</span>
+                                            <span class="font-semibold">{{ formatAmount(selectedVoucher.amount)
+                                            }}</span>
+                                        </div>
+                                        <div class="ios-row">
+                                            <span class="ios-row-label">Created By</span>
+                                            <span>{{ selectedVoucher.creator?.name || '---' }}</span>
+                                        </div>
+                                        <div class="ios-row">
+                                            <span class="ios-row-label">Date</span>
+                                            <span>{{ formatDate(selectedVoucher.created_at) }}</span>
+                                        </div>
+                                        <div class="ios-row">
+                                            <span class="ios-row-label">OBR Type</span>
+                                            <span>{{ selectedVoucher.obr_type || '---' }}</span>
+                                        </div>
+                                        <div class="ios-row [border-bottom:none]">
+                                            <span class="ios-row-label">OBR Status</span>
+                                            <span
+                                                :class="['px-3 py-1 rounded-full text-xs font-medium inline-block', getStatusColor(selectedVoucher.obr_status)]">{{
+                                                    selectedVoucher.obr_status || 'On Process' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
 
-                <!-- Scholars List -->
-                <div class="ios-section">
-                    <p class="ios-section-label">Scholars ({{ selectedVoucher.scholar_ids?.length || 0 }})
-                    </p>
-                    <div class="ios-card" style="padding: 12px 16px;">
-                        <div v-if="loadingScholars" class="text-center py-2">
-                            <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span class="text-xs">Loading...</span>
-                        </div>
-                        <div v-else-if="scholarsDetails && scholarsDetails.length > 0"
-                            class="space-y-1 max-h-48 overflow-y-auto">
-                            <div v-for="(scholar, index) in scholarsDetails" :key="index"
-                                class="text-xs text-gray-700 py-1 px-2 bg-gray-50 rounded flex items-center justify-between gap-2">
-                                <span class="font-medium">{{ index + 1 }}. {{ scholar.first_name }} {{
-                                    scholar.last_name }}</span>
-                                <span class="text-gray-600 whitespace-nowrap">
-                                    <span v-if="scholar.course_name">{{ scholar.course_name }}</span>
-                                    <span v-if="scholar.year_level" class="ml-1">| {{
-                                        /^(1st|2nd|3rd|4th)$/i.test(scholar.year_level) ? scholar.year_level
-                                            + ' YEAR' :
-                                            scholar.year_level
-                                    }}</span>
-                                    <span v-if="scholar.academic_year" class="ml-1">| {{
-                                        scholar.academic_year }}</span>
-                                    <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
-                                </span>
-                            </div>
-                        </div>
-                        <div v-else class="text-xs text-gray-500">No scholars</div>
-                    </div>
-                </div>
+                                <div v-if="selectedVoucher.remarks" class="ios-section">
+                                    <p class="ios-section-label">Remarks</p>
+                                    <div class="ios-card px-4 py-3">
+                                        <div class="text-sm text-gray-900 dark:text-gray-100"
+                                            v-html="selectedVoucher.remarks">
+                                        </div>
+                                    </div>
+                                </div>
 
-                <!-- Total Amount -->
-                <div class="ios-section">
-                    <div class="ios-card" style="padding: 14px 16px; background: #eff6ff;">
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <p style="font-size: 14px; font-weight: 600; color: #1e3a5f;">Total Amount</p>
-                            <p style="font-size: 18px; font-weight: 700; color: #2563eb;">{{
-                                formatAmount(calculateTotalAmount(selectedVoucher)) }}</p>
-                        </div>
-                    </div>
-                </div>
+                                <div class="ios-section">
+                                    <p class="ios-section-label">Scholars ({{ selectedVoucher.scholar_ids?.length || 0
+                                    }})</p>
+                                    <div class="ios-card px-4 py-3">
+                                        <div v-if="loadingScholars" class="text-center py-2">
+                                            <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span
+                                                class="text-xs">Loading...</span>
+                                        </div>
+                                        <div v-else-if="scholarsDetails && scholarsDetails.length > 0"
+                                            class="space-y-1 max-h-48 overflow-y-auto">
+                                            <div v-for="(scholar, index) in scholarsDetails" :key="index"
+                                                class="text-xs text-gray-700 dark:text-gray-300 py-1 px-2 bg-gray-50 dark:bg-[#272f38] rounded flex items-center justify-between gap-2">
+                                                <span class="font-medium">{{ index + 1 }}. {{ scholar.first_name }} {{
+                                                    scholar.last_name }}</span>
+                                                <span class="text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                                    <span v-if="scholar.course_name">{{ scholar.course_name }}</span>
+                                                    <span v-if="scholar.year_level" class="ml-1">| {{
+                                                        /^(1st|2nd|3rd|4th)$/i.test(scholar.year_level) ?
+                                                            scholar.year_level + ` YEAR` : scholar.year_level }}</span>
+                                                    <span v-if="scholar.academic_year" class="ml-1">| {{
+                                                        scholar.academic_year
+                                                    }}</span>
+                                                    <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div v-else class="text-xs text-gray-500 dark:text-gray-400">No scholars</div>
+                                    </div>
+                                </div>
 
-                <!-- Generate Section -->
-                <div class="ios-section">
-                    <p class="ios-section-label">Generate</p>
-                    <div class="ios-card" style="padding: 12px 16px;">
-                        <div class="flex gap-2">
-                            <Button label="OBR" @click="generateDocument('OBR')" class="flex-1" severity="info">
-                                <template #icon><i class="pi pi-file-pdf"></i></template>
-                            </Button>
-                            <Button :label="getDocumentButtonLabel()" @click="generateDocument(getDocumentType())"
-                                class="flex-1" severity="success">
-                                <template #icon><i class="pi pi-money-bill"></i></template>
-                            </Button>
-                            <Button label="LOS" @click="generateDocument('LOS')" class="flex-1" severity="help">
-                                <template #icon><i class="pi pi-users"></i></template>
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+                                <div class="ios-section">
+                                    <div class="ios-card px-4 py-3.5 bg-blue-50 dark:bg-blue-950/30">
+                                        <div class="flex items-center justify-between">
+                                            <p class="text-sm font-semibold text-[#1e3a5f] dark:text-blue-200">Total
+                                                Amount</p>
+                                            <p class="text-lg font-bold text-blue-600 dark:text-blue-400">{{
+                                                formatAmount(calculateTotalAmount(selectedVoucher)) }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </TabPanel>
 
-                <!-- Tracking Section -->
-                <div class="ios-section">
-                    <p class="ios-section-label">Tracking</p>
-                    <div class="ios-card" style="padding: 12px 16px;">
-                        <Button v-if="selectedVoucher?.fiscal_year && selectedVoucher?.obr_no"
-                            label="View Tracking History" @click="fetchTrackingHistory(selectedVoucher)" class="w-full"
-                            severity="info" :loading="loadingTrackingHistory">
-                            <template #icon><i class="pi pi-history"></i></template>
+                            <TabPanel value="tracking">
+                                <div class="ios-section">
+                                    <p class="ios-section-label">Tracking</p>
+                                    <div class="ios-card px-4 py-3">
+                                        <Button v-if="selectedVoucher?.fiscal_year && selectedVoucher?.obr_no"
+                                            label="View Tracking History" @click="fetchTrackingHistory(selectedVoucher)"
+                                            class="w-full" severity="info" :loading="loadingTrackingHistory">
+                                            <template #icon><i class="pi pi-history"></i></template>
+                                        </Button>
+                                        <p v-else class="text-xs text-gray-500 dark:text-gray-400">No OBR info available
+                                        </p>
+                                    </div>
+                                </div>
+                            </TabPanel>
+
+                            <TabPanel value="documents">
+                                <div class="ios-section">
+                                    <p class="ios-section-label">Uploaded Files</p>
+                                    <div class="ios-card px-4 py-3 space-y-2">
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-700 dark:text-gray-300">OBR</span>
+                                            <Tag :value="selectedVoucherDocuments.obr ? 'Uploaded' : 'Missing'"
+                                                :severity="selectedVoucherDocuments.obr ? 'success' : 'contrast'" />
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-700 dark:text-gray-300">DV/Payroll</span>
+                                            <Tag :value="selectedVoucherDocuments.dv_payroll ? 'Uploaded' : 'Missing'"
+                                                :severity="selectedVoucherDocuments.dv_payroll ? 'success' : 'contrast'" />
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-700 dark:text-gray-300">LOS</span>
+                                            <Tag :value="selectedVoucherDocuments.los ? 'Uploaded' : 'Missing'"
+                                                :severity="selectedVoucherDocuments.los ? 'success' : 'contrast'" />
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-700 dark:text-gray-300">Cheque</span>
+                                            <Tag :value="selectedVoucherDocuments.cheque ? 'Uploaded' : 'Missing'"
+                                                :severity="selectedVoucherDocuments.cheque ? 'success' : 'contrast'" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </TabPanel>
+                        </TabPanels>
+                    </Tabs>
+                </div>
+                <div
+                    class="sticky bottom-0 z-20 -mx-4 w-[calc(100%+2rem)] bg-white/95 dark:bg-[#2a3040]/95 backdrop-blur-md border-t border-gray-200 dark:border-white/10 py-3">
+                    <div class="flex w-full items-center gap-1.5 flex-nowrap overflow-x-auto px-3">
+                        <Button label="OBR" @click="generateDocument('OBR')" severity="info" size="small"
+                            class="flex-1 whitespace-nowrap !rounded-xl text-xs" v-tooltip.bottom="'Generate OBR'">
+                            <template #icon><i class="pi pi-file-pdf"></i></template>
                         </Button>
-                        <p v-else class="text-xs text-gray-500">No OBR info available</p>
-                    </div>
-                </div>
-
-                <!-- File Upload Section -->
-                <div class="ios-section" style="margin-bottom: 16px;">
-                    <p class="ios-section-label">Documents</p>
-                    <div class="ios-card" style="padding: 12px 16px;">
-                        <Button label="Upload Documents" @click="openFileUploadDialog(selectedVoucher)" class="w-full"
-                            severity="warning">
+                        <Button :label="getDocumentButtonLabel()" @click="generateDocument(getDocumentType())"
+                            severity="success" size="small" class="flex-1 whitespace-nowrap !rounded-xl text-xs"
+                            v-tooltip.bottom="'Generate DV/PR'">
+                            <template #icon><i class="pi pi-money-bill"></i></template>
+                        </Button>
+                        <Button label="LOS" @click="generateDocument('LOS')" severity="danger" size="small"
+                            class="flex-1 whitespace-nowrap !rounded-xl text-xs" v-tooltip.bottom="'Generate LOS'">
+                            <template #icon><i class="pi pi-users"></i></template>
+                        </Button>
+                        <Button label="Upload" @click="openFileUploadDialog(selectedVoucher)" severity="warning" outline
+                            size="small" class="flex-1 whitespace-nowrap !rounded-xl text-xs"
+                            v-tooltip.bottom="'Upload Documents'">
                             <template #icon><i class="pi pi-upload"></i></template>
                         </Button>
                     </div>
@@ -1698,24 +1754,24 @@ onMounted(() => {
 
         <!-- File Upload Dialog -->
         <FileUploadModal :show="showFileUploadDialog" @update:show="showFileUploadDialog = $event">
-            <div v-if="selectedVoucherForUpload" style="padding-top: 16px;">
+            <div v-if="selectedVoucherForUpload" class="pt-4">
                 <!-- Voucher Header -->
                 <div class="ios-section">
-                    <div class="ios-card" style="padding: 12px 16px; background: #eff6ff;">
-                        <p
-                            style="font-size: 11px; font-weight: 600; color: #1d4ed8; text-transform: uppercase; margin-bottom: 4px;">
+                    <div class="ios-card px-4 py-3 bg-blue-50 dark:bg-blue-950/30">
+                        <p class="text-[11px] font-semibold text-blue-700 dark:text-blue-400 uppercase mb-1">
                             Voucher</p>
-                        <p style="font-size: 14px; font-weight: 600; color: #1e3a5f;">{{
+                        <p class="text-sm font-semibold text-[#1e3a5f] dark:text-blue-200">{{
                             selectedVoucherForUpload.transaction_id }}</p>
-                        <p style="font-size: 12px; color: #3b82f6; margin-top: 2px;">{{
+                        <p class="text-xs text-blue-500 mt-0.5">{{
                             selectedVoucherForUpload.payee_name }}</p>
                     </div>
                 </div>
 
                 <div class="ios-section">
                     <p class="ios-section-label">Instructions</p>
-                    <div class="ios-card" style="padding: 12px 16px;">
-                        <p class="text-sm text-gray-600">Upload up to four documents: OBR, DV/Payroll, LOS,
+                    <div class="ios-card px-4 py-3">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Upload up to four documents: OBR,
+                            DV/Payroll, LOS,
                             and Cheque. Maximum 10MB per file.</p>
                     </div>
                 </div>
@@ -1723,15 +1779,15 @@ onMounted(() => {
                 <!-- OBR Document -->
                 <div class="ios-section">
                     <p class="ios-section-label">OBR — Obligation Request</p>
-                    <div class="ios-card" style="padding: 14px 16px;">
+                    <div class="ios-card px-4 py-3.5">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
                                 <i class="pi pi-file-pdf text-red-600 text-lg"></i>
-                                <span class="text-sm font-semibold text-gray-900">OBR</span>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">OBR</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input ref="fileInputs.obr" type="file" accept=".pdf,.doc,.docx"
-                                    @change="(e) => handleFileSelect('obr', e)" style="display: none;" />
+                                    @change="(e) => handleFileSelect('obr', e)" class="hidden" />
                                 <Button icon="pi pi-folder-open" @click="$refs['fileInputs.obr'][0]?.click()"
                                     severity="info" text size="small" v-tooltip="'Select File'" />
                                 <Button icon="pi pi-qrcode" @click="showQrCode(selectedVoucherForUpload, 'obr')"
@@ -1742,8 +1798,9 @@ onMounted(() => {
                             </div>
                         </div>
                         <div v-if="uploadedFiles.obr"
-                            class="mb-3 flex items-center justify-between bg-white p-2 rounded border border-gray-200">
-                            <p class="text-xs text-gray-700 flex-1 truncate">{{ uploadedFiles.obr.name }}
+                            class="mb-3 flex items-center justify-between bg-white dark:bg-[#272f38] p-2 rounded border border-gray-200 dark:border-white/10">
+                            <p class="text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">{{
+                                uploadedFiles.obr.name }}
                             </p>
                         </div>
                         <div class="flex gap-2">
@@ -1764,15 +1821,15 @@ onMounted(() => {
                 <!-- DV/Payroll Document -->
                 <div class="ios-section">
                     <p class="ios-section-label">DV/Payroll — Disbursement Voucher or Payroll</p>
-                    <div class="ios-card" style="padding: 14px 16px;">
+                    <div class="ios-card px-4 py-3.5">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
                                 <i class="pi pi-file-pdf text-red-600 text-lg"></i>
-                                <span class="text-sm font-semibold text-gray-900">DV/Payroll</span>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">DV/Payroll</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input ref="fileInputs.dv_payroll" type="file" accept=".pdf,.doc,.docx"
-                                    @change="(e) => handleFileSelect('dv_payroll', e)" style="display: none;" />
+                                    @change="(e) => handleFileSelect('dv_payroll', e)" class="hidden" />
                                 <Button icon="pi pi-folder-open" @click="$refs['fileInputs.dv_payroll'][0]?.click()"
                                     severity="info" text size="small" v-tooltip="'Select File'" />
                                 <Button icon="pi pi-qrcode" @click="showQrCode(selectedVoucherForUpload, 'dv_payroll')"
@@ -1783,8 +1840,8 @@ onMounted(() => {
                             </div>
                         </div>
                         <div v-if="uploadedFiles.dv_payroll"
-                            class="mb-3 flex items-center justify-between bg-white p-2 rounded border border-gray-200">
-                            <p class="text-xs text-gray-700 flex-1 truncate">{{
+                            class="mb-3 flex items-center justify-between bg-white dark:bg-[#272f38] p-2 rounded border border-gray-200 dark:border-white/10">
+                            <p class="text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">{{
                                 uploadedFiles.dv_payroll.name }}</p>
                         </div>
                         <div class="flex gap-2">
@@ -1806,15 +1863,16 @@ onMounted(() => {
                 <!-- LOS Document -->
                 <div class="ios-section">
                     <p class="ios-section-label">LOS — List of Scholars</p>
-                    <div class="ios-card" style="padding: 14px 16px;">
+                    <div class="ios-card px-4 py-3.5">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
                                 <i class="pi pi-file-pdf text-red-600 text-lg"></i>
-                                <span class="text-sm font-semibold text-gray-900">List of Scholars</span>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">List of
+                                    Scholars</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input ref="fileInputs.los" type="file" accept=".pdf,.doc,.docx"
-                                    @change="(e) => handleFileSelect('los', e)" style="display: none;" />
+                                    @change="(e) => handleFileSelect('los', e)" class="hidden" />
                                 <Button icon="pi pi-folder-open" @click="$refs['fileInputs.los'][0]?.click()"
                                     severity="info" text size="small" v-tooltip="'Select File'" />
                                 <Button icon="pi pi-qrcode" @click="showQrCode(selectedVoucherForUpload, 'los')"
@@ -1825,8 +1883,9 @@ onMounted(() => {
                             </div>
                         </div>
                         <div v-if="uploadedFiles.los"
-                            class="mb-3 flex items-center justify-between bg-white p-2 rounded border border-gray-200">
-                            <p class="text-xs text-gray-700 flex-1 truncate">{{ uploadedFiles.los.name }}
+                            class="mb-3 flex items-center justify-between bg-white dark:bg-[#272f38] p-2 rounded border border-gray-200 dark:border-white/10">
+                            <p class="text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">{{
+                                uploadedFiles.los.name }}
                             </p>
                         </div>
                         <div class="flex gap-2">
@@ -1845,17 +1904,17 @@ onMounted(() => {
                 </div>
 
                 <!-- Cheque Document -->
-                <div class="ios-section" style="margin-bottom: 16px;">
+                <div class="ios-section mb-4">
                     <p class="ios-section-label">Cheques — Cheque Copy or Payment Proof</p>
-                    <div class="ios-card" style="padding: 14px 16px;">
+                    <div class="ios-card px-4 py-3.5">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
                                 <i class="pi pi-file-pdf text-red-600 text-lg"></i>
-                                <span class="text-sm font-semibold text-gray-900">Cheques</span>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">Cheques</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input ref="fileInputs.cheque" type="file" accept=".pdf,.doc,.docx"
-                                    @change="(e) => handleFileSelect('cheque', e)" style="display: none;" />
+                                    @change="(e) => handleFileSelect('cheque', e)" class="hidden" />
                                 <Button icon="pi pi-folder-open" @click="$refs['fileInputs.cheque'][0]?.click()"
                                     severity="info" text size="small" v-tooltip="'Select File'" />
                                 <Button icon="pi pi-qrcode" @click="showQrCode(selectedVoucherForUpload, 'cheque')"
@@ -1866,8 +1925,9 @@ onMounted(() => {
                             </div>
                         </div>
                         <div v-if="uploadedFiles.cheque"
-                            class="mb-3 flex items-center justify-between bg-white p-2 rounded border border-gray-200">
-                            <p class="text-xs text-gray-700 flex-1 truncate">{{ uploadedFiles.cheque.name }}
+                            class="mb-3 flex items-center justify-between bg-white dark:bg-[#272f38] p-2 rounded border border-gray-200 dark:border-white/10">
+                            <p class="text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">{{
+                                uploadedFiles.cheque.name }}
                             </p>
                         </div>
                         <div class="flex gap-2">
@@ -1916,26 +1976,25 @@ onMounted(() => {
         <Drawer v-model:visible="showPreviewModal" position="right" class="!w-[800px]" :modal="true" :pt="ftDrawerPt">
             <template #header>
                 <div class="flex items-center justify-between w-full pr-2">
-                    <span class="font-semibold text-gray-900 text-base">Document Preview</span>
+                    <span class="font-semibold text-gray-900 dark:text-gray-100 text-base">Document Preview</span>
                     <a v-if="previewData" :href="previewData.url" :download="previewData.filename"
-                        class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-                        style="text-decoration: none;">
-                        <i class="pi pi-download" style="font-size: 13px;"></i>Download
+                        class="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-medium no-underline">
+                        <i class="pi pi-download text-[13px]"></i>Download
                     </a>
                 </div>
             </template>
-            <div v-if="previewData" style="padding-top: 8px;">
+            <div v-if="previewData" class="pt-2">
                 <!-- File Info -->
                 <div class="ios-section">
                     <div class="ios-card">
                         <div class="ios-row">
                             <span class="ios-row-label">Filename</span>
-                            <span style="font-size: 13px; word-break: break-all; text-align: right;">{{
+                            <span class="text-[13px] break-all text-right">{{
                                 previewData.filename }}</span>
                         </div>
-                        <div class="ios-row" style="border-bottom: none;">
+                        <div class="ios-row [border-bottom:none]">
                             <span class="ios-row-label">Type</span>
-                            <span style="font-size: 13px;">{{ previewData.docType }} | {{
+                            <span class="text-[13px]">{{ previewData.docType }} | {{
                                 previewData.mimeType }}</span>
                         </div>
                     </div>
@@ -1944,11 +2003,11 @@ onMounted(() => {
                 <!-- Zoom Controls for Images -->
                 <div v-if="previewData.mimeType && previewData.mimeType.startsWith('image/')" class="ios-section">
                     <p class="ios-section-label">Zoom</p>
-                    <div class="ios-card" style="padding: 10px 16px;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="ios-card px-4 py-2.5">
+                        <div class="flex items-center gap-2">
                             <Button icon="pi pi-minus" @click="previewZoom -= 10" :disabled="previewZoom <= 50" text
                                 size="small" />
-                            <span style="font-size: 13px; font-weight: 500; width: 48px; text-align: center;">{{
+                            <span class="text-[13px] font-medium w-12 text-center">{{
                                 previewZoom }}%</span>
                             <Button icon="pi pi-plus" @click="previewZoom += 10" :disabled="previewZoom >= 200" text
                                 size="small" />
@@ -1959,12 +2018,11 @@ onMounted(() => {
                 </div>
 
                 <!-- Image Preview -->
-                <div v-if="previewData.mimeType && previewData.mimeType.startsWith('image/')" class="ios-section"
-                    style="margin-bottom: 16px;">
-                    <div class="ios-card" style="padding: 16px; overflow: auto;">
-                        <div style="display: flex; justify-content: center;">
+                <div v-if="previewData.mimeType && previewData.mimeType.startsWith('image/')" class="ios-section mb-4">
+                    <div class="ios-card p-4 overflow-auto">
+                        <div class="flex justify-center">
                             <img :src="previewData.path" :alt="previewData.filename"
-                                style="border-radius: 8px; border: 1px solid #e5e5ea;"
+                                class="rounded-lg border border-[#e5e5ea] dark:border-white/10"
                                 :style="{ width: previewZoom + '%', maxWidth: 'none' }" @error="() => {
                                     console.error('Failed to load image:', previewData.path);
                                     toast.add({
@@ -1979,26 +2037,24 @@ onMounted(() => {
                 </div>
 
                 <!-- PDF Preview -->
-                <div v-else-if="previewData.mimeType && previewData.mimeType.includes('pdf')" class="ios-section"
-                    style="margin-bottom: 16px;">
-                    <div class="ios-card" style="padding: 16px;">
-                        <p style="font-size: 13px; color: #8E8E93; margin-bottom: 12px;">PDFs open in a new
+                <div v-else-if="previewData.mimeType && previewData.mimeType.includes('pdf')" class="ios-section mb-4">
+                    <div class="ios-card p-4">
+                        <p class="text-[13px] text-[#8E8E93] mb-3">PDFs open in a new
                             window for best viewing experience</p>
                         <Button label="Open PDF in Viewer" @click="() => window.open(previewData.url, '_blank')"
                             icon="pi pi-external-link" class="w-full" severity="info" />
-                        <p style="font-size: 12px; color: #8E8E93; margin-top: 8px;">Or use the Download
+                        <p class="text-xs text-[#8E8E93] mt-2">Or use the Download
                             button above to save to your device</p>
                     </div>
                 </div>
 
                 <!-- Other File Types -->
-                <div v-else class="ios-section" style="margin-bottom: 16px;">
-                    <div class="ios-card" style="padding: 32px 16px; text-align: center;">
-                        <i class="pi pi-file"
-                            style="font-size: 48px; color: #8E8E93; display: block; margin-bottom: 12px;"></i>
-                        <p style="font-size: 14px; color: #3c3c43; margin-bottom: 6px;">Preview not
+                <div v-else class="ios-section mb-4">
+                    <div class="ios-card px-4 py-8 text-center">
+                        <i class="pi pi-file text-[48px] text-[#8E8E93] block mb-3"></i>
+                        <p class="text-sm text-[#3c3c43] dark:text-gray-300 mb-1.5">Preview not
                             available for this file type</p>
-                        <p style="font-size: 12px; color: #8E8E93; margin-bottom: 16px;">{{
+                        <p class="text-xs text-[#8E8E93] mb-4">{{
                             previewData.mimeType || 'File type unknown' }}</p>
                         <Button label="Download File" @click="() => window.open(previewData.url, '_blank')"
                             icon="pi pi-download" class="w-full" />

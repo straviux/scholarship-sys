@@ -2,14 +2,14 @@
     <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal
         :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
         <template #container>
-            <div ref="elModal" class="ios-modal" style="width: 90vw; max-width: 700px;" :style="modalStyle">
+            <div ref="elModal" class="ios-modal w-[700px] max-w-[90vw]" :style="modalStyle">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)"><i
                             class="pi pi-times"></i></button>
                     <span class="ios-nav-title">Fund Transaction Details</span>
-                    <span class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
+                    <span class="ios-nav-btn invisible">_</span>
                 </div>
-                <div class="ios-body" style="padding-top: 16px;">
+                <div class="ios-body pt-4">
                     <slot></slot>
                 </div>
             </div>
