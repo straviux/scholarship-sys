@@ -325,6 +325,7 @@
                         <div class="ios-section" v-if="reportType === 'summary'">
                             <div class="ios-section-label">Summary Breakdown</div>
                             <div class="ios-card">
+                                <!-- Primary Axis -->
                                 <div class="ios-row">
                                     <div class="ios-row-label">
                                         <i class="pi pi-chart-bar" style="color: #5856D6; font-size: 13px;"></i>
@@ -333,6 +334,32 @@
                                     <div class="ios-row-control">
                                         <Select v-model="groupBy" :options="groupByOptions" optionLabel="label"
                                             optionValue="value" class="ios-select" />
+                                    </div>
+                                </div>
+
+                                <!-- Secondary Axis -->
+                                <div class="ios-row" v-if="groupBy && groupBy !== 'none'">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-objects-column" style="color: #8E8E93; font-size: 13px;"></i>
+                                        Secondary Axis
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <Select v-model="groupBySecondary" :options="secondaryGroupByOptions"
+                                            optionLabel="label" optionValue="value" placeholder="None" showClear
+                                            class="ios-select" />
+                                    </div>
+                                </div>
+
+                                <!-- Tertiary Axis -->
+                                <div class="ios-row" v-if="groupBySecondary && groupBySecondary !== 'none'">
+                                    <div class="ios-row-label">
+                                        <i class="pi pi-objects-column" style="color: #C7C7CC; font-size: 13px;"></i>
+                                        3rd Axis
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <Select v-model="groupByTertiary" :options="tertiaryGroupByOptions"
+                                            optionLabel="label" optionValue="value" placeholder="None" showClear
+                                            class="ios-select" />
                                     </div>
                                 </div>
                             </div>

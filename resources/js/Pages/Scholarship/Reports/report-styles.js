@@ -22,25 +22,51 @@ body {
   background: #fff;
   padding: 8mm 10mm;
   line-height: 1.4;
+  counter-reset: page;
 }
 
 @page {
   size: {{PAGE_SIZE}};
-  margin: 0;
+  margin: 10mm 10mm 14mm 10mm;
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 7pt;
+    color: #888;
+  }
 }
 
 @media print {
-  body { padding: 8mm 10mm; }
+  body { padding: 0; }
   .no-print { display: none !important; }
   .page-break { page-break-before: always; }
 }
 
 /* ── Report Header ─────────────────────────── */
 .report-header {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 8pt;
   margin-bottom: 6pt;
-  padding-bottom: 4pt;
+  padding-bottom: 6pt;
   border-bottom: 1.5pt solid #000;
+}
+
+.report-header-logos {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.report-logo {
+  width: 48pt;
+  height: 48pt;
+  object-fit: contain;
+}
+
+.report-header-text {
+  flex: 1;
+  text-align: center;
 }
 
 .report-header h1 {
@@ -59,6 +85,15 @@ body {
 .report-header .subtitle {
   font-size: 9pt;
   color: #444;
+}
+
+/* ── Record Total (top of page 1) ─────────── */
+.report-total-line {
+  font-size: 8.5pt;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6pt;
+  padding: 3pt 0;
 }
 
 /* ── Filter Badges ─────────────────────────── */
@@ -245,6 +280,275 @@ body {
   text-align: center;
   width: 60pt;
 }
+
+/* ── Summary Report — Modern Layout ────────── */
+
+/* Top metric cards row */
+.sum-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6pt;
+  margin-bottom: 10pt;
+}
+
+.sum-metric-card {
+  border: 1pt solid #cbd5e1;
+  border-radius: 5pt;
+  padding: 8pt 10pt;
+}
+
+.sum-metric-label {
+  font-size: 6.5pt;
+  color: #64748b;
+  margin-bottom: 3pt;
+  text-transform: uppercase;
+  letter-spacing: 0.4pt;
+}
+
+.sum-metric-value {
+  font-size: 22pt;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1;
+}
+
+/* Two-column section */
+.sum-two-col {
+  display: grid;
+  grid-template-columns: 52% 46%;
+  gap: 8pt;
+  margin-bottom: 10pt;
+}
+
+.sum-panel {
+  border: 0.5pt solid #e2e8f0;
+  border-radius: 5pt;
+  padding: 8pt 10pt;
+}
+
+.sum-panel-title {
+  font-size: 8.5pt;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 7pt;
+  padding-bottom: 4pt;
+  border-bottom: 0.5pt solid #e2e8f0;
+}
+
+.sum-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5pt;
+}
+
+.sum-status-row-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2pt;
+}
+
+.sum-status-row {
+  display: flex;
+  align-items: center;
+  gap: 5pt;
+}
+
+.sum-dot {
+  width: 7pt;
+  height: 7pt;
+  border-radius: 50%;
+  flex-shrink: 0;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.sum-dot-pending     { background: #F59E0B; }
+.sum-dot-interviewed { background: #6366F1; }
+.sum-dot-approved    { background: #3B82F6; }
+.sum-dot-denied      { background: #EF4444; }
+.sum-dot-active      { background: #10B981; }
+.sum-dot-completed   { background: #6B7280; }
+.sum-dot-withdrawn   { background: #8B5CF6; }
+.sum-dot-loa         { background: #D97706; }
+.sum-dot-suspended   { background: #DC2626; }
+
+.sum-status-name {
+  flex: 1;
+  font-size: 8pt;
+  color: #334155;
+}
+
+.sum-status-count {
+  font-size: 9pt;
+  font-weight: 700;
+  color: #0f172a;
+  min-width: 20pt;
+  text-align: right;
+}
+
+.sum-pct-label {
+  font-size: 7pt;
+  color: #64748b;
+  min-width: 26pt;
+  text-align: right;
+}
+
+.sum-bar-track {
+  width: 100%;
+  height: 4pt;
+  background: #e2e8f0;
+  border-radius: 2pt;
+  overflow: hidden;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.sum-bar-fill {
+  height: 100%;
+  border-radius: 2pt;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.sum-bar-pending     { background: #F59E0B; }
+.sum-bar-interviewed { background: #6366F1; }
+.sum-bar-approved    { background: #3B82F6; }
+.sum-bar-denied      { background: #EF4444; }
+.sum-bar-active      { background: #10B981; }
+.sum-bar-completed   { background: #6B7280; }
+.sum-bar-withdrawn   { background: #8B5CF6; }
+.sum-bar-loa         { background: #D97706; }
+.sum-bar-suspended   { background: #DC2626; }
+
+/* Rank list (right panel) */
+.sum-rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7pt;
+}
+
+.sum-rank-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2pt;
+}
+
+.sum-rank-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 3pt;
+}
+
+.sum-rank-num {
+  font-size: 7pt;
+  font-weight: 700;
+  color: #94a3b8;
+  min-width: 10pt;
+}
+
+.sum-rank-name {
+  font-size: 7.5pt;
+  color: #334155;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120pt;
+}
+
+.sum-rank-count {
+  font-size: 8.5pt;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sum-rank-pct {
+  font-size: 7pt;
+  color: #94a3b8;
+  min-width: 24pt;
+  text-align: right;
+}
+
+.sum-rank-track {
+  height: 5pt;
+  background: #e2e8f0;
+  border-radius: 2.5pt;
+  overflow: hidden;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.sum-rank-fill {
+  height: 100%;
+  background: #3b82f6;
+  border-radius: 2.5pt;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Full-width section title */
+.sum-section-title {
+  font-size: 8pt;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.5pt;
+  margin: 10pt 0 5pt;
+  padding: 4pt 8pt;
+  background: #f1f5f9;
+  border-left: 3pt solid #3b82f6;
+  border-radius: 2pt;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Hierarchy depth rows */
+.sum-depth-0 {
+  background: #f1f5f9;
+  font-weight: 700;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.sum-depth-0-cell {
+  color: #0f172a;
+  font-weight: 700;
+}
+.sum-depth-1 {
+  background: #ffffff;
+}
+.sum-depth-1-cell {
+  padding-left: 14pt !important;
+  color: #334155;
+  font-style: italic;
+}
+.sum-depth-2 {
+  background: #fafafa;
+}
+.sum-depth-2-cell {
+  padding-left: 26pt !important;
+  color: #64748b;
+  font-size: 7.5pt;
+}
+
+/* Modern table dark header */
+.modern-table thead th {
+  background: #1e293b !important;
+  color: #fff !important;
+  font-size: 7.5pt;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Status-tinted column headers */
+.status-th-pending     { background: #FEF3C7 !important; color: #92400E !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.status-th-interviewed { background: #EEF2FF !important; color: #3730A3 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.status-th-approved    { background: #DBEAFE !important; color: #1E40AF !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.status-th-denied      { background: #FEE2E2 !important; color: #991B1B !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.status-th-active      { background: #D1FAE5 !important; color: #065F46 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.status-th-completed   { background: #F3F4F6 !important; color: #374151 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.status-th-withdrawn   { background: #EDE9FE !important; color: #5B21B6 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.status-th-loa         { background: #FEF3C7 !important; color: #92400E !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.status-th-suspended   { background: #FEE2E2 !important; color: #991B1B !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
 /* ── Utilities ─────────────────────────────── */
 .bold { font-weight: bold; }

@@ -16,9 +16,16 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
 <template>
     <div>
         <div class="report-header">
-            <h1>COMPLETED SCHOLARS</h1>
-            <h2>Detailed List</h2>
-            <div class="subtitle">{{ generatedAt }}</div>
+            <div class="report-header-logos">
+                <img src="/images/pgp-logo.png" alt="PGP Logo" class="report-logo" />
+            </div>
+            <div class="report-header-text">
+                <h1>COMPLETED SCHOLARS</h1>
+                <h2>Detailed List</h2>
+            </div>
+            <div class="report-header-logos">
+                <img src="/images/yakap-logo.png" alt="YAKAP Logo" class="report-logo" />
+            </div>
         </div>
 
         <div v-if="Object.keys(filters).length" class="filter-bar">
@@ -26,6 +33,7 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
                 <strong>{{ key }}:</strong> {{ val }}
             </span>
         </div>
+        <div class="report-total-line">Total: <strong>{{ records.length }}</strong> record(s)</div>
 
         <template v-if="!grouped">
             <table class="report-table">
@@ -159,8 +167,8 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
         </template>
 
         <div class="report-footer">
-            <span>Total: {{ records.length }} completed scholars</span>
             <span>Generated: {{ generatedAt }}</span>
+            <span>Total: {{ records.length }} completed scholars</span>
         </div>
     </div>
 </template>

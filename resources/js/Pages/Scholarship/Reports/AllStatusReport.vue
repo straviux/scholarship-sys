@@ -28,9 +28,16 @@ const showCol = (col) => {
     <div>
         <!-- Header -->
         <div class="report-header">
-            <h1>SCHOLARSHIP REPORT</h1>
-            <h2>All Statuses — Detailed List</h2>
-            <div class="subtitle">{{ generatedAt }}</div>
+            <div class="report-header-logos">
+                <img src="/images/pgp-logo.png" alt="PGP Logo" class="report-logo" />
+            </div>
+            <div class="report-header-text">
+                <h1>SCHOLARSHIP REPORT</h1>
+                <h2>All Statuses — Detailed List</h2>
+            </div>
+            <div class="report-header-logos">
+                <img src="/images/yakap-logo.png" alt="YAKAP Logo" class="report-logo" />
+            </div>
         </div>
 
         <!-- Filters -->
@@ -39,6 +46,8 @@ const showCol = (col) => {
                 <strong>{{ key }}:</strong> {{ val }}
             </span>
         </div>
+
+        <div class="report-total-line">Total: <strong>{{ records.length }}</strong> record(s)</div>
 
         <!-- Ungrouped -->
         <template v-if="!grouped">
@@ -216,8 +225,8 @@ const showCol = (col) => {
 
         <!-- Footer -->
         <div class="report-footer">
-            <span>Total: {{ records.length }} records</span>
             <span>Generated: {{ generatedAt }}</span>
+            <span>Total: {{ records.length }} records</span>
         </div>
     </div>
 </template>
