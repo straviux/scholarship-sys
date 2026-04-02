@@ -27,9 +27,9 @@ const summaryCards = computed(() => {
 });
 
 /* ── Axes ────── */
-const primaryAxis   = computed(() => props.options.groupBy || 'program');
+const primaryAxis = computed(() => props.options.groupBy || 'program');
 const secondaryAxis = computed(() => props.options.groupBySecondary || null);
-const tertiaryAxis  = computed(() => props.options.groupByTertiary  || null);
+const tertiaryAxis = computed(() => props.options.groupByTertiary || null);
 
 const axisLabels = {
     program: 'Program', school: 'School', course: 'Course',
@@ -165,7 +165,8 @@ const maxBreakdownTotal = computed(() => {
                             <div :class="['sum-dot', `sum-dot-${card.status}`]"></div>
                             <span class="sum-status-name">{{ card.label }}</span>
                             <span class="sum-status-count">{{ card.count }}</span>
-                            <span class="sum-pct-label">{{ records.length ? ((card.count / records.length) * 100).toFixed(1) : 0 }}%</span>
+                            <span class="sum-pct-label">{{ records.length ? ((card.count / records.length) *
+                                100).toFixed(1) : 0 }}%</span>
                         </div>
                         <div class="sum-bar-track">
                             <div :class="['sum-bar-fill', `sum-bar-${card.status}`]"
@@ -185,7 +186,8 @@ const maxBreakdownTotal = computed(() => {
                             <span class="sum-rank-num">{{ idx + 1 }}</span>
                             <span class="sum-rank-name">{{ row.key }}</span>
                             <span class="sum-rank-count">{{ row.total }}</span>
-                            <span class="sum-rank-pct">{{ records.length ? ((row.total / records.length) * 100).toFixed(1) : 0 }}%</span>
+                            <span class="sum-rank-pct">{{ records.length ? ((row.total / records.length) *
+                                100).toFixed(1) : 0 }}%</span>
                         </div>
                         <div class="sum-rank-track">
                             <div class="sum-rank-fill"
@@ -221,7 +223,8 @@ const maxBreakdownTotal = computed(() => {
                 <tr class="total-row">
                     <td><strong>Grand Total</strong></td>
                     <td v-for="s in activeStatuses" :key="s" class="count-col">
-                        <strong>{{ hierarchyRows.filter(r => r.depth === (tertiaryAxis ? 2 : secondaryAxis ? 1 : 0)).reduce((sum, r) => sum + (r.byStatus[s] || 0), 0) }}</strong>
+                        <strong>{{hierarchyRows.filter(r => r.depth === (tertiaryAxis ? 2 : secondaryAxis ? 1 :
+                            0)).reduce((sum, r) => sum + (r.byStatus[s] || 0), 0) }}</strong>
                     </td>
                     <td class="count-col"><strong>{{ records.length }}</strong></td>
                 </tr>

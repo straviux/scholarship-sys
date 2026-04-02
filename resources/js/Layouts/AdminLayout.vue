@@ -700,7 +700,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                }}</span>
+                                    }}</span>
                             </SidebarLink>
                         </li>
 
@@ -709,7 +709,7 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                }}</span>
+                                    }}</span>
                             </div>
                         </li>
                     </template>
@@ -1041,5 +1041,4 @@ html.dark body {
     background: #16181f;
     color-scheme: dark;
 }
-
 </style>

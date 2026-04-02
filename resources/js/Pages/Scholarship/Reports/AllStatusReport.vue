@@ -207,7 +207,7 @@ const showCol = (col) => {
                                             <td>{{ rec.contact_no || '—' }}</td>
                                             <td><span
                                                     :class="'status-badge status-' + (rec.approval_status || rec.unified_status || 'unknown')">{{
-                                                    formatStatus(rec.approval_status || rec.unified_status) }}</span>
+                                                        formatStatus(rec.approval_status || rec.unified_status) }}</span>
                                             </td>
                                             <td v-if="showCol('program')">{{ rec.program_name || '—' }}</td>
                                             <td v-if="showCol('school')">{{ rec.school_name || '—' }}</td>

@@ -411,7 +411,7 @@
                             <i class="pi pi-minus" style="font-size: 10px;"></i>
                         </button>
                         <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-center">{{ zoomLevel
-                            }}%</span>
+                        }}%</span>
                         <button @click="zoomLevel = Math.min(200, zoomLevel + 10)"
                             class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
                             :disabled="zoomLevel >= 200">
