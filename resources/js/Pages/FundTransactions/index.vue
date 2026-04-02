@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
 import { Head, usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -14,10 +14,22 @@ import QrCodeModal from '@/Pages/FundTransactions/Modal/QrCodeModal.vue';
 import TrackingHistoryModal from '@/Pages/FundTransactions/Modal/TrackingHistoryModal.vue';
 import ObrTrackingModal from '@/Pages/FundTransactions/Modal/ObrTrackingModal.vue';
 import RecordsSelect from '@/Components/selects/RecordsSelect.vue';
-
 import axios from 'axios';
+import { usePdfPrint, renderVueTemplate } from '@/composables/usePdfPrint';
+import ObrTemplate from '@/Pages/FundTransactions/Pdf/ObrTemplate.vue';
+import DvTemplate from '@/Pages/FundTransactions/Pdf/DvTemplate.vue';
+import PayrollTemplate from '@/Pages/FundTransactions/Pdf/PayrollTemplate.vue';
+import LosTemplate from '@/Pages/FundTransactions/Pdf/LosTemplate.vue';
+import PdfPreviewModal from '@/Pages/FundTransactions/Modal/PdfPreviewModal.vue';
 
 const toast = useToast();
+const { buildHtmlDoc, printHtml } = usePdfPrint();
+
+// PDF Preview modal state
+const showPdfPreview = ref(false);
+const pdfPreviewHtml = ref('');
+const pdfPreviewTitle = ref('');
+const pdfPreviewSize = ref('a4');
 
 const ftDrawerPt = {
     root: { class: 'ft-floating-drawer' },
@@ -708,49 +720,66 @@ const saveVoucher = async () => {
 const generateDocument = async (docType) => {
     if (!selectedVoucher.value) return;
 
-    try {
-        let url = '';
-        let fileType = '';
-
-        if (docType === 'OBR') {
-            url = `/api/fund-transactions/${selectedVoucher.value.id}/obr-pdf`;
-            fileType = 'pdf';
-        } else if (docType === 'DV') {
-            url = `/api/fund-transactions/${selectedVoucher.value.id}/dv-pdf`;
-            fileType = 'pdf';
-        } else if (docType === 'PR') {
-            url = `/api/fund-transactions/${selectedVoucher.value.id}/payroll-pdf`;
-            fileType = 'pdf';
-        } else if (docType === 'LOS') {
-            url = `/api/fund-transactions/${selectedVoucher.value.id}/list-of-scholars-pdf`;
-            fileType = 'pdf';
+    if (docType === 'OBR') {
+        // Client-side PDF — no Node.js / Browsershot needed
+        try {
+            const html = renderVueTemplate(ObrTemplate, { voucher: selectedVoucher.value, scholarDetails: scholarsDetails.value });
+            const title = `OBR-${selectedVoucher.value.transaction_id || selectedVoucher.value.id}`;
+            pdfPreviewHtml.value = buildHtmlDoc(html, title);
+            pdfPreviewTitle.value = title;
+            pdfPreviewSize.value = 'a4';
+            showPdfPreview.value = true;
+        } catch (error) {
+            console.error('Error generating OBR:', error);
+            toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to generate OBR: ' + error.message, life: 5000 });
         }
+        return;
+    }
 
-        // Show loading toast
-        toast.add({
-            severity: 'info',
-            summary: 'Generating',
-            detail: `${docType} document generation in progress...`,
-            life: 2000
-        });
+    if (docType === 'DV') {
+        try {
+            const html = renderVueTemplate(DvTemplate, { voucher: selectedVoucher.value, scholarDetails: scholarsDetails.value });
+            const title = `DV-${selectedVoucher.value.transaction_id || selectedVoucher.value.id}`;
+            pdfPreviewHtml.value = buildHtmlDoc(html, title, 'long');
+            pdfPreviewTitle.value = title;
+            pdfPreviewSize.value = 'long';
+            showPdfPreview.value = true;
+        } catch (error) {
+            console.error('Error generating DV:', error);
+            toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to generate DV: ' + error.message, life: 5000 });
+        }
+        return;
+    }
 
-        // Open the file in a new tab
-        window.open(url, '_blank');
+    if (docType === 'PR') {
+        try {
+            const html = renderVueTemplate(PayrollTemplate, { voucher: selectedVoucher.value, scholarDetails: scholarsDetails.value });
+            const title = `Payroll-${selectedVoucher.value.transaction_id || selectedVoucher.value.id}`;
+            pdfPreviewHtml.value = buildHtmlDoc(html, title, 'landscape');
+            pdfPreviewTitle.value = title;
+            pdfPreviewSize.value = 'landscape';
+            showPdfPreview.value = true;
+        } catch (error) {
+            console.error('Error generating Payroll:', error);
+            toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to generate Payroll: ' + error.message, life: 5000 });
+        }
+        return;
+    }
 
-        toast.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: `${docType} document generated successfully`,
-            life: 3000
-        });
-    } catch (error) {
-        console.error(`Error generating ${docType}:`, error);
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: `Failed to generate ${docType} document`,
-            life: 5000
-        });
+    // LOS — client-side
+    if (docType === 'LOS') {
+        try {
+            const html = renderVueTemplate(LosTemplate, { voucher: selectedVoucher.value, scholarDetails: scholarsDetails.value });
+            const title = `ListOfScholars-${selectedVoucher.value.transaction_id || selectedVoucher.value.id}`;
+            pdfPreviewHtml.value = buildHtmlDoc(html, title, 'a4');
+            pdfPreviewTitle.value = title;
+            pdfPreviewSize.value = 'a4';
+            showPdfPreview.value = true;
+        } catch (error) {
+            console.error('Error generating LOS:', error);
+            toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to generate LOS: ' + error.message, life: 5000 });
+        }
+        return;
     }
 };
 
@@ -1386,7 +1415,6 @@ onMounted(() => {
                 </template>
             </Toolbar>
 
-
             <!-- List/Summary Section -->
             <Panel class="!rounded-4xl overflow-hidden mt-8">
                 <!-- Info Bar -->
@@ -1961,6 +1989,10 @@ onMounted(() => {
         <StatusModal :show="showStatusDialog" @update:show="showStatusDialog = $event"
             :model-value="selectedVoucherForStatus" :status-options="obrStatuses" :is-saving="savingStatus"
             @save="(data) => { statusForm.obr_status = data.status; statusForm.remarks = data.remarks; saveStatus(); }" />
+
+        <!-- PDF Preview Modal -->
+        <PdfPreviewModal :show="showPdfPreview" @update:show="showPdfPreview = $event" :html-doc="pdfPreviewHtml"
+            :title="pdfPreviewTitle" :paper-size="pdfPreviewSize" />
 
         <!-- OBR Tracking Dialog -->
         <ObrTrackingModal :show="showOBRTrackingDialog" @update:show="showOBRTrackingDialog = $event"

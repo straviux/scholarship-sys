@@ -8,7 +8,7 @@
 .ios-modal {
 	background: #f2f2f7;
 	border-radius: 14px;
-	max-height: 85vh;
+	max-height: 90vh;
 	display: flex;
 	flex-direction: column;
 	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
@@ -43,6 +43,11 @@
 	background: rgba(0, 0, 0, 0.4) !important;
 	-webkit-backdrop-filter: blur(4px);
 	backdrop-filter: blur(4px);
+}
+
+.ios-dialog-root .p-dialog-content {
+	padding: 0 !important;
+	background: transparent !important;
 }
 
 /* ── Navigation Bar ── */
@@ -180,6 +185,84 @@
 	border: 0.5px solid #e5e5ea;
 }
 
+/* ── Info Card & List Item ── */
+.ios-info-card {
+	background: #ffffff;
+	border-radius: 10px;
+	padding: 12px;
+	border: 0.5px solid #e5e5ea;
+}
+
+.ios-list-item {
+	background: #ffffff;
+	border-radius: 10px;
+	padding: 12px;
+	border: 0.5px solid #e5e5ea;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+/* ── Icon Buttons ── */
+.ios-icon-btn {
+	background: none;
+	border: none;
+	cursor: pointer;
+	padding: 6px;
+	border-radius: 8px;
+	color: #007aff;
+	font-size: 14px;
+	transition: background 0.2s;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.ios-icon-btn:hover {
+	background: rgba(0, 122, 255, 0.1);
+}
+
+.ios-icon-btn-danger {
+	color: #ff3b30;
+}
+
+.ios-icon-btn-danger:hover {
+	background: rgba(255, 59, 48, 0.1);
+}
+
+/* ── Form Components ── */
+.ios-form-group {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.ios-label {
+	font-size: 13px;
+	font-weight: 500;
+	color: #3c3c43;
+	padding-left: 2px;
+}
+
+.ios-hint {
+	font-size: 11px;
+	color: #8e8e93;
+	padding-left: 2px;
+}
+
+.ios-file-input {
+	border: 2px dashed #c7c7cc;
+	border-radius: 10px;
+	padding: 12px;
+	background: #ffffff;
+	cursor: pointer;
+	transition: border-color 0.2s;
+}
+
+.ios-file-input:hover {
+	border-color: #007aff;
+}
+
 .ios-row {
 	display: flex;
 	align-items: center;
@@ -259,6 +342,14 @@
 .fade-scale-leave-to {
 	opacity: 0;
 	transform: scale(0.5);
+}
+
+/* ── PrimeVue input overrides inside ios-modal ── */
+.ios-modal .p-inputtext,
+.ios-modal .p-select,
+.ios-modal .p-datepicker,
+.ios-modal .p-inputnumber-input {
+	border-radius: 10px;
 }
 
 /* ── Date Input Override (Calendar Icon Clearance) ── */
@@ -353,6 +444,18 @@
 
 .dark .ios-icon-btn:hover {
 	background: rgba(255, 255, 255, 0.12);
+}
+
+.dark .ios-nav-btn:hover {
+	background: rgba(255, 255, 255, 0.08);
+}
+
+.dark .ios-icon-btn-danger {
+	color: #ff6b6b;
+}
+
+.dark .ios-icon-btn-danger:hover {
+	background: rgba(255, 107, 107, 0.12);
 }
 
 /* DataTable dark mode surface */
@@ -487,88 +590,89 @@
 /* ============================================================
    Global PrimeVue component styling — rounded inputs, selects,
    InputGroups, DataTable borders & rounded corners.
-   Previously duplicated in per-page scoped CSS; centralized here.
+   Scoped to .content-scroll so they only affect page content,
+   NOT AdminLayout sidebar/navbar components.
    ============================================================ */
 
 /* Rounded text inputs, selects, datepicker inputs */
-.p-inputtext {
+.content-scroll .p-inputtext {
 	border-radius: 1rem;
 }
-.p-select {
+.content-scroll .p-select {
 	border-radius: 1rem;
 }
-.p-datepicker .p-inputtext {
+.content-scroll .p-datepicker .p-inputtext {
 	border-radius: 1rem;
 }
-.p-iconfield .p-inputtext {
+.content-scroll .p-iconfield .p-inputtext {
 	border-radius: 1rem;
 }
 
 /* InputGroup — single container border, children borderless */
-.p-inputgroup {
+.content-scroll .p-inputgroup {
 	border-radius: 1rem;
 	overflow: hidden;
 	border: 1px solid var(--p-inputtext-border-color, #d1d5db);
 }
-.p-inputgroup:focus-within {
+.content-scroll .p-inputgroup:focus-within {
 	border-color: var(--p-inputtext-focus-border-color, #6366f1);
 }
-.p-inputgroup .p-inputgroupaddon {
+.content-scroll .p-inputgroup .p-inputgroupaddon {
 	border-radius: 0;
 	border: none;
 }
-.p-inputgroup .p-inputtext {
+.content-scroll .p-inputgroup .p-inputtext {
 	border-radius: 0;
 	border: none;
 }
-.p-inputgroup .p-datepicker {
+.content-scroll .p-inputgroup .p-datepicker {
 	border-radius: 0;
 	flex: 1;
 }
-.p-inputgroup .p-datepicker .p-inputtext {
+.content-scroll .p-inputgroup .p-datepicker .p-inputtext {
 	border-radius: 0;
 	border: none;
 }
-.p-inputgroup .p-datepicker .p-datepicker-input-icon-container {
+.content-scroll .p-inputgroup .p-datepicker .p-datepicker-input-icon-container {
 	border-radius: 0;
 }
 
 /* Rounded DataTable with clean outer border */
-.p-datatable {
+.content-scroll .p-datatable {
 	border-radius: 1.5rem;
 	overflow: hidden;
 	border: 1px solid var(--p-datatable-border-color, #e2e8f0);
 }
-.p-datatable .p-datatable-table-container {
+.content-scroll .p-datatable .p-datatable-table-container {
 	border-radius: 0;
 	overflow: hidden;
 }
 
 /* Remove outer-edge cell borders to prevent double-border with container */
-.p-datatable .p-datatable-thead > tr > th:first-child,
-.p-datatable .p-datatable-tbody > tr > td:first-child {
+.content-scroll .p-datatable .p-datatable-thead > tr > th:first-child,
+.content-scroll .p-datatable .p-datatable-tbody > tr > td:first-child {
 	border-left: none;
 }
-.p-datatable .p-datatable-thead > tr > th:last-child,
-.p-datatable .p-datatable-tbody > tr > td:last-child {
+.content-scroll .p-datatable .p-datatable-thead > tr > th:last-child,
+.content-scroll .p-datatable .p-datatable-tbody > tr > td:last-child {
 	border-right: none;
 }
-.p-datatable .p-datatable-thead > tr:first-child > th {
+.content-scroll .p-datatable .p-datatable-thead > tr:first-child > th {
 	border-top: none;
 }
-.p-datatable .p-datatable-tbody > tr:last-child > td {
+.content-scroll .p-datatable .p-datatable-tbody > tr:last-child > td {
 	border-bottom: none;
 }
 
-.p-datatable .p-paginator {
+.content-scroll .p-datatable .p-paginator {
 	border-radius: 0;
 	border: none;
 	border-top: 1px solid var(--p-datatable-border-color, #e2e8f0);
 }
-.p-datatable .p-datatable-header {
+.content-scroll .p-datatable .p-datatable-header {
 	border-radius: 0;
 }
-.p-datatable .p-datatable-footer {
+.content-scroll .p-datatable .p-datatable-footer {
 	border-radius: 0;
 }
 /* ══════════════════════════════════════════
@@ -696,7 +800,6 @@
 .dark .ios-modal .ios-body .ql-editor {
 	background-color: #2a3040 !important;
 	color: #e5e7eb !important;
-	min-height: 400px;
 }
 
 .dark .ios-modal .ios-body .ql-editor::placeholder {
@@ -760,5 +863,324 @@
 }
 
 .dark .ios-modal .ios-body .ql-editor em {
+	color: #d1d5db !important;
+}
+
+/* ══════════════════════════════════════════
+   iOS MODAL EXTENDED COMPONENTS
+   (Footer, Row Controls, Steps, Selectable rows, etc.)
+   ══════════════════════════════════════════ */
+
+/* ── Full-height modal variant ── */
+.ios-modal-full {
+	max-height: 90vh;
+}
+
+/* ── Nav Actions Area (multiple icon buttons) ── */
+.ios-nav-actions {
+	position: absolute;
+	right: 16px;
+	top: 50%;
+	transform: translateY(-50%);
+	display: flex;
+	gap: 6px;
+}
+
+/* ── Footer Bar ── */
+.ios-footer {
+	flex-shrink: 0;
+	padding: 8px 16px;
+	padding-bottom: max(8px, env(safe-area-inset-bottom));
+	border-top: 0.5px solid rgba(60, 60, 67, 0.12);
+	background: rgba(242, 242, 247, 0.95);
+}
+
+/* ── Row Control (right-side input area) ── */
+.ios-row-control {
+	flex: 0 0 200px;
+	width: 200px;
+	display: flex;
+	justify-content: flex-end;
+	overflow: hidden;
+}
+
+.ios-row-control > * {
+	width: 100%;
+	min-width: 0;
+}
+
+/* ── Dual Date Row ── */
+.ios-row-dates {
+	gap: 4px;
+}
+
+.ios-row-dates .ios-row-control {
+	flex: 0 0 150px;
+	width: 150px;
+}
+
+.ios-date-separator {
+	color: #8e8e93;
+	font-size: 14px;
+	flex-shrink: 0;
+}
+
+/* ── Destructive Button ── */
+.ios-destructive-btn {
+	display: block;
+	width: 100%;
+	background: #ffffff;
+	border: 0.5px solid #e5e5ea;
+	border-radius: 10px;
+	padding: 8px;
+	text-align: center;
+	font-size: 13px;
+	color: #ff3b30;
+	cursor: pointer;
+	letter-spacing: -0.4px;
+	transition: background 0.15s;
+}
+
+.ios-destructive-btn:hover {
+	background: #f2f2f7;
+}
+
+/* ── Selectable Rows ── */
+.ios-row-selectable {
+	cursor: pointer;
+	transition: background 0.15s;
+}
+
+.ios-row-selectable:hover {
+	background: rgba(0, 0, 0, 0.02);
+}
+
+.ios-row-selected {
+	background: rgba(0, 122, 255, 0.05) !important;
+}
+
+/* ── Step Indicator (dot-style) ── */
+.step-indicator {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 10px 0 2px;
+	background: #f2f2f7;
+}
+
+.step-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: #d1d1d6;
+	transition: all 0.3s ease;
+}
+
+.step-dot-active {
+	background: #007aff;
+	width: 24px;
+	border-radius: 4px;
+}
+
+.step-dot-done {
+	background: #34c759;
+}
+
+.status-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+/* ── PrimeVue overrides inside iOS card ── */
+.ios-select .p-select {
+	border: none !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	font-size: 13px;
+	color: #8e8e93;
+	text-align: left;
+	padding: 0;
+	width: 100%;
+	max-width: 100%;
+	min-height: unset;
+}
+
+.ios-select .p-select-label {
+	color: #8e8e93 !important;
+	text-align: left;
+	padding: 4px 2px 4px 8px;
+	font-size: 13px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.ios-select .p-select-dropdown {
+	color: #c7c7cc !important;
+}
+
+.ios-datepicker .p-datepicker {
+	border: none !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+.ios-datepicker .p-inputtext {
+	border: none !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	text-align: right;
+	color: #8e8e93;
+	font-size: 13px;
+	padding: 4px 24px 4px 8px;
+}
+
+.ios-modal .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
+	background: #34c759 !important;
+}
+
+/* ── Dark Mode: Extended Components ── */
+.dark .ios-footer {
+	background: #2a3040;
+	border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .ios-body {
+	color: #d1d5db;
+}
+
+.dark .ios-destructive-btn {
+	background: #1e2433;
+	border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .ios-destructive-btn:hover {
+	background: #252d3d;
+}
+
+.dark .ios-row-selectable:hover {
+	background: rgba(255, 255, 255, 0.03);
+}
+
+.dark .ios-row-selected {
+	background: rgba(96, 165, 250, 0.08) !important;
+}
+
+.dark .ios-label {
+	color: #d1d5db;
+}
+
+.dark .ios-hint {
+	color: #6b7280;
+}
+
+.dark .ios-file-input {
+	background: #1e2433;
+	border-color: rgba(255, 255, 255, 0.12);
+	color: #d1d5db;
+}
+
+.dark .ios-file-input:hover {
+	border-color: rgba(96, 165, 250, 0.5);
+}
+
+/* ── Row input (CourseModal) ── */
+.dark .ios-row-input {
+	color: #d1d5db;
+}
+
+/* ── Segment active ── */
+.dark .ios-segment-active {
+	background: #2a3040;
+	box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Preview body (report modals) ── */
+.dark .ios-preview-body {
+	background: #1a1e27;
+}
+
+/* ── Report header ── */
+.dark .ios-report-header h1 {
+	color: #d1d5db;
+}
+.dark .ios-report-header p {
+	color: #9ca3af;
+}
+
+/* ── Report group header / count ── */
+.dark .ios-group-header {
+	border-bottom-color: rgba(255, 255, 255, 0.08);
+	color: #d1d5db;
+}
+.dark .ios-group-count {
+	color: #9ca3af;
+	background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Report table ── */
+.dark .ios-table-wrap {
+	background: #1e2433;
+	box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+}
+.dark .ios-table thead tr {
+	background: rgba(255, 255, 255, 0.04);
+}
+.dark .ios-table th {
+	color: #9ca3af;
+	border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+.dark .ios-table td {
+	color: #d1d5db;
+	border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Summary card ── */
+.dark .ios-summary-card {
+	background: #1e2433;
+}
+.dark .ios-summary-card-title {
+	color: #9ca3af;
+}
+.dark .ios-summary-row {
+	color: #d1d5db;
+	border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Total banner ── */
+.dark .ios-total-banner {
+	background: #1e2433;
+	color: #d1d5db;
+}
+
+/* ── Empty state ── */
+.dark .ios-empty-state {
+	color: #9ca3af;
+}
+
+.dark .step-indicator {
+	background: #222831;
+}
+
+.dark .step-dot {
+	background: #4b5563;
+}
+
+/* ── PrimeVue filled variant overrides (global) ── */
+.p-inputtext.p-variant-filled,
+.p-textarea.p-variant-filled,
+.p-select.p-variant-filled .p-select-label,
+.p-datepicker.p-variant-filled .p-datepicker-input {
+	background-color: #ffffff !important;
+}
+
+.dark .p-inputtext.p-variant-filled,
+.dark .p-textarea.p-variant-filled,
+.dark .p-select.p-variant-filled .p-select-label,
+.dark .p-datepicker.p-variant-filled .p-datepicker-input {
+	background-color: #1a1e27 !important;
 	color: #d1d5db !important;
 }

@@ -4,8 +4,8 @@
         <!-- Header with Add Button and Summary Toggle -->
         <div class="flex justify-between items-center mb-4 short:mb-2">
             <div>
-                <h3 class="text-xl font-semibold text-gray-900">Disbursements & Cheques</h3>
-                <p class="text-sm text-gray-500 mt-1">Manage disbursements and cheque processing</p>
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-300">Obligations and Transactions</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage disbursements and cheque processing</p>
             </div>
             <div class="flex gap-2">
                 <Button :icon="showSummary ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
@@ -20,15 +20,17 @@
         <div v-if="showSummary" class="mb-4 short:mb-2">
             <!-- Total Amount Card -->
             <div
-                class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 shadow-sm mb-4 short:mb-2">
+                class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 border border-blue-200 dark:border-blue-800/40 rounded-lg p-4 shadow-sm mb-4 short:mb-2">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-blue-700 font-medium">Total Disbursements</p>
-                        <p class="text-2xl short:text-xl font-bold text-blue-900 mt-1">{{ formatCurrency(totalAmount) }}
+                        <p class="text-sm text-blue-700 dark:text-blue-300 font-medium">Total Disbursements</p>
+                        <p class="text-2xl short:text-xl font-bold text-blue-900 dark:text-blue-100 mt-1">{{
+                            formatCurrency(totalAmount) }}
                         </p>
-                        <p class="text-xs text-blue-600 mt-1">{{ disbursements.length }} transactions</p>
+                        <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">{{ disbursements.length }} transactions
+                        </p>
                     </div>
-                    <i class="pi pi-money-bill text-4xl short:text-2xl text-blue-300"></i>
+                    <i class="pi pi-money-bill text-4xl short:text-2xl text-blue-300 dark:text-blue-600"></i>
                 </div>
             </div>
 
@@ -44,39 +46,45 @@
                 <template v-for="(yearData, year) in semesterSummary" :key="year">
                     <!-- Year Card (Collapsible) -->
                     <div
-                        class="bg-white border-2 border-gray-300 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        class="bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                         <!-- Year Header -->
                         <button @click="expandedYears[year] = !expandedYears[year]"
-                            class="w-full px-4 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-300 hover:from-gray-100 hover:to-gray-150 transition-colors text-left">
+                            class="w-full px-4 py-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-700 border-b-2 border-gray-300 dark:border-gray-600 hover:from-gray-100 hover:to-gray-150 transition-colors text-left">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3 flex-1">
                                     <i :class="expandedYears[year] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-                                        class="text-gray-600"></i>
+                                        class="text-gray-600 dark:text-gray-400"></i>
                                     <div>
-                                        <p class="text-sm font-bold text-gray-800">Academic Year: {{ year }}</p>
-                                        <p class="text-xs text-gray-600 mt-0.5">{{ yearData.count }} transactions • {{
-                                            formatCurrency(yearData.total) }}</p>
+                                        <p class="text-sm font-bold text-gray-800 dark:text-gray-200">Academic Year: {{
+                                            year }}</p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ yearData.count }}
+                                            transactions • {{
+                                                formatCurrency(yearData.total) }}</p>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-lg font-bold text-gray-900">{{ formatCurrency(yearData.total) }}</p>
+                                    <p class="text-lg font-bold text-gray-900 dark:text-gray-100">{{
+                                        formatCurrency(yearData.total) }}</p>
                                 </div>
                             </div>
                         </button>
 
                         <!-- Semesters (Collapsible) -->
                         <template v-if="expandedYears[year]">
-                            <div class="p-4 space-y-3 bg-gray-50">
+                            <div class="p-4 space-y-3 bg-gray-50 dark:bg-gray-700/50">
                                 <template v-for="(semData, semester) in yearData.semesters"
                                     :key="`${year}-${semester}`">
                                     <!-- Semester Card -->
-                                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                                    <div
+                                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                                         <!-- Semester Header -->
-                                        <div class="mb-3 pb-3 border-b border-gray-200">
-                                            <p class="text-sm font-bold text-gray-800">{{ semester }}</p>
-                                            <p class="text-lg font-bold text-gray-900 mt-1">{{
+                                        <div class="mb-3 pb-3 border-b border-gray-200 dark:border-gray-600">
+                                            <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ semester }}
+                                            </p>
+                                            <p class="text-lg font-bold text-gray-900 dark:text-gray-100 mt-1">{{
                                                 formatCurrency(semData.total) }}</p>
-                                            <p class="text-xs text-gray-600 mt-0.5">{{ semData.count }} transactions</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ semData.count
+                                                }} transactions</p>
                                         </div>
 
                                         <!-- Status Breakdown -->
@@ -120,24 +128,29 @@
             <template #list="slotProps">
                 <div class="space-y-3">
                     <div v-for="(item, index) in slotProps.items" :key="index"
-                        class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
 
                         <!-- Compact Header with OBR, Type, Status, and Amount -->
-                        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                        <div
+                            class="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                 <!-- Left: OBR Number (Prominent) -->
 
                                 <div class="flex flex-wrap items-center gap-6 short:gap-3">
                                     <div class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">OBR Date</p>
-                                        <p class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
-                                            item.date_obligated ? formatDate(item.date_obligated) : '-'
+                                        <p
+                                            class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50 dark:bg-gray-700 dark:text-gray-100">
+                                            {{
+                                                item.date_obligated ? formatDate(item.date_obligated) : '-'
                                             }}</p>
                                     </div>
                                     <div v-if="item.obr_no" class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">OBR No.</p>
-                                        <p class="text-normal font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
-                                            item.obr_no }}
+                                        <p
+                                            class="text-normal font-bold px-2 py-1 rounded-lg shadow bg-gray-50 dark:bg-gray-700 dark:text-gray-100">
+                                            {{
+                                                item.obr_no }}
                                         </p>
                                     </div>
 
@@ -157,8 +170,10 @@
                                     </div>
                                     <div class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">Payee</p>
-                                        <p class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50">{{
-                                            item.payee || '-' }}
+                                        <p
+                                            class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50 dark:bg-gray-700 dark:text-gray-100">
+                                            {{
+                                                item.payee || '-' }}
                                         </p>
                                     </div>
 
@@ -167,7 +182,8 @@
                                 <!-- Right: Amount -->
                                 <div v-if="item.amount" class="text-right flex flex-col gap-2">
                                     <p class="text-xs font-medium">Amount</p>
-                                    <p class="text-lg font-bold text-gray-900">{{ formatCurrency(item.amount) }}</p>
+                                    <p class="text-lg font-bold text-gray-900 dark:text-gray-100">{{
+                                        formatCurrency(item.amount) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -179,64 +195,71 @@
                                 <div class="space-y-3">
                                     <!-- Academic Information -->
                                     <div>
-                                        <h4 class="text-xs font-semibold text-gray-700 mb-2 flex items-center">
-                                            <i class="pi pi-book text-gray-500 mr-2"></i>
+                                        <h4
+                                            class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                                            <i class="pi pi-book text-gray-500 dark:text-gray-400 mr-2"></i>
                                             Academic Information
                                         </h4>
                                         <div
-                                            class="flex flex-wrap items-center gap-3 text-xs bg-gray-50 rounded px-3 py-2 border border-gray-200">
+                                            class="flex flex-wrap items-center gap-3 text-xs bg-gray-50 dark:bg-gray-700/50 rounded px-3 py-2 border border-gray-200 dark:border-gray-600">
                                             <div class="flex items-center">
-                                                <span class="text-gray-500 mr-1">Year:</span>
-                                                <span class="font-medium text-gray-900">{{ item.year_level || '-'
-                                                }}</span>
-                                            </div>
-                                            <span class="text-gray-300">•</span>
-                                            <div class="flex items-center">
-                                                <span class="text-gray-500 mr-1">Term:</span>
-                                                <span class="font-medium text-gray-900">{{ item.semester || '-'
-                                                }}</span>
-                                            </div>
-                                            <span class="text-gray-300">•</span>
-                                            <div class="flex items-center">
-                                                <span class="text-gray-500 mr-1">AY:</span>
-                                                <span class="font-medium text-gray-900">{{ item.academic_year || '-'
-                                                }}</span>
-                                            </div>
-                                            <span class="text-gray-300">•</span>
-                                            <div class="flex items-center">
-                                                <span class="text-gray-500 mr-1">Course:</span>
-                                                <span class="font-medium text-gray-900">{{
-                                                    item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
+                                                <span class="text-gray-500 dark:text-gray-400 mr-1">Year:</span>
+                                                <span class="font-medium text-gray-900 dark:text-gray-100">{{
+                                                    item.year_level || '-'
                                                     }}</span>
                                             </div>
-                                            <span class="text-gray-300">•</span>
+                                            <span class="text-gray-300 dark:text-gray-600">•</span>
                                             <div class="flex items-center">
-                                                <span class="text-gray-500 mr-1">School:</span>
-                                                <span class="font-medium text-gray-900">{{
-                                                    item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
+                                                <span class="text-gray-500 dark:text-gray-400 mr-1">Term:</span>
+                                                <span class="font-medium text-gray-900 dark:text-gray-100">{{
+                                                    item.semester || '-'
+                                                    }}</span>
+                                            </div>
+                                            <span class="text-gray-300 dark:text-gray-600">•</span>
+                                            <div class="flex items-center">
+                                                <span class="text-gray-500 dark:text-gray-400 mr-1">AY:</span>
+                                                <span class="font-medium text-gray-900 dark:text-gray-100">{{
+                                                    item.academic_year || '-'
+                                                    }}</span>
+                                            </div>
+                                            <span class="text-gray-300 dark:text-gray-600">•</span>
+                                            <div class="flex items-center">
+                                                <span class="text-gray-500 dark:text-gray-400 mr-1">Course:</span>
+                                                <span class="font-medium text-gray-900 dark:text-gray-100">{{
+                                                    item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
                                                 }}</span>
+                                            </div>
+                                            <span class="text-gray-300 dark:text-gray-600">•</span>
+                                            <div class="flex items-center">
+                                                <span class="text-gray-500 dark:text-gray-400 mr-1">School:</span>
+                                                <span class="font-medium text-gray-900 dark:text-gray-100">{{
+                                                    item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
+                                                    }}</span>
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Cheque Information -->
                                     <div>
-                                        <h4 class="text-xs font-semibold text-gray-700 mb-2 flex items-center">
+                                        <h4
+                                            class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
                                             <i class="pi pi-check-circle text-green-600 mr-2"></i>
                                             Cheque Information
                                         </h4>
                                         <div
-                                            class="flex flex-wrap items-center gap-3 text-xs bg-green-50 rounded px-3 py-2 border border-green-200">
+                                            class="flex flex-wrap items-center gap-3 text-xs bg-green-50 dark:bg-green-900/20 rounded px-3 py-2 border border-green-200 dark:border-green-800/40">
                                             <div class="flex items-center">
-                                                <span class="text-gray-600 mr-1">Cheque:</span>
-                                                <span class="font-semibold text-gray-900">{{ item.cheques &&
-                                                    item.cheques.length > 0 ? item.cheques[0].cheque_no : '-' }}</span>
+                                                <span class="text-gray-600 dark:text-gray-400 mr-1">Cheque:</span>
+                                                <span class="font-semibold text-gray-900 dark:text-gray-100">{{
+                                                    item.cheques &&
+                                                        item.cheques.length > 0 ? item.cheques[0].cheque_no : '-' }}</span>
                                             </div>
-                                            <span class="text-gray-300">•</span>
+                                            <span class="text-gray-300 dark:text-gray-600">•</span>
                                             <div class="flex items-center">
-                                                <span class="text-gray-600 mr-1">Released:</span>
-                                                <span class="font-medium text-gray-900">{{ item.cheques &&
-                                                    item.cheques.length > 0 && item.cheques[0].date_released ?
+                                                <span class="text-gray-600 dark:text-gray-400 mr-1">Released:</span>
+                                                <span class="font-medium text-gray-900 dark:text-gray-100">{{
+                                                    item.cheques &&
+                                                        item.cheques.length > 0 && item.cheques[0].date_released ?
                                                     formatDate(item.cheques[0].date_released) : '-' }}</span>
                                             </div>
                                         </div>
@@ -244,30 +267,35 @@
 
                                     <!-- Remarks -->
                                     <div>
-                                        <h4 class="text-xs font-semibold text-gray-700 mb-2 flex items-center">
+                                        <h4
+                                            class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
                                             <i class="pi pi-comment text-yellow-600 mr-2"></i>
                                             Remarks
                                         </h4>
-                                        <div class="text-xs bg-yellow-50 border-l-2 border-yellow-400 px-3 py-2">
-                                            <span class="text-gray-700">{{ item.remarks || '-' }}</span>
+                                        <div
+                                            class="text-xs bg-yellow-50 dark:bg-yellow-900/20 border-l-2 border-yellow-400 dark:border-yellow-600 px-3 py-2">
+                                            <span class="text-gray-700 dark:text-gray-300">{{ item.remarks || '-'
+                                                }}</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Column 2: Attachments (Compact) -->
                                 <div>
-                                    <h4 class="text-xs font-semibold text-gray-700 mb-2 flex items-center">
+                                    <h4
+                                        class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
                                         <i class="pi pi-paperclip text-blue-600 mr-2"></i>
                                         Attachments ({{ item.attachments ? item.attachments.length : 0 }})
                                     </h4>
                                     <div v-if="item.attachments && item.attachments.length > 0"
-                                        class="flex flex-col gap-1 text-xs bg-blue-50 rounded px-2 py-2 border border-blue-200">
+                                        class="flex flex-col gap-1 text-xs bg-blue-50 dark:bg-blue-900/20 rounded px-2 py-2 border border-blue-200 dark:border-blue-800/40">
                                         <div v-for="attachment in item.attachments" :key="attachment.attachment_id"
-                                            class="flex items-center gap-1 bg-white px-2 py-1 rounded border border-blue-200">
+                                            class="flex items-center gap-1 bg-white dark:bg-gray-700 px-2 py-1 rounded border border-blue-200 dark:border-blue-800/40">
                                             <i :class="getFileIcon(attachment.file_type)"
                                                 class="text-blue-600 text-sm"></i>
-                                            <span class="font-medium text-gray-900 flex-1 truncate text-xs">{{
-                                                attachment.attachment_type }}</span>
+                                            <span
+                                                class="font-medium text-gray-900 dark:text-gray-100 flex-1 truncate text-xs">{{
+                                                    attachment.attachment_type }}</span>
                                             <div class="flex gap-1">
                                                 <Button icon="pi pi-eye" size="small" text rounded
                                                     v-tooltip.top="'View'" @click="viewAttachment(attachment)"
@@ -278,13 +306,15 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div v-else class="text-xs bg-blue-50 rounded px-3 py-2 border border-blue-200">
-                                        <span class="text-gray-600">-</span>
+                                    <div v-else
+                                        class="text-xs bg-blue-50 dark:bg-blue-900/20 rounded px-3 py-2 border border-blue-200 dark:border-blue-800/40">
+                                        <span class="text-gray-600 dark:text-gray-400">-</span>
                                     </div>
                                 </div>
 
                                 <!-- Column 3: Actions Section -->
-                                <div class="flex lg:flex-col gap-2 lg:border-l lg:border-gray-200 lg:pl-4">
+                                <div
+                                    class="flex lg:flex-col gap-2 lg:border-l lg:border-gray-200 lg:dark:border-gray-600 lg:pl-4">
                                     <Button v-if="hasPermission('applicants.edit')" icon="pi pi-qrcode" size="small"
                                         severity="info" outlined rounded v-tooltip.top="'Show QR Code'"
                                         @click="showQrCode(item)" :disabled="showViewerModal" />
@@ -315,7 +345,7 @@
             <div class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Type {{ !['LOA', 'IRREGULAR', 'TRANSFERRED'].includes(form.obr_status) ? '*' : '' }}
                         </label>
                         <Select v-model="form.disbursement_type" :options="disbursementTypes" optionLabel="label"
@@ -323,47 +353,51 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Payee {{ !['LOA', 'IRREGULAR', 'TRANSFERRED'].includes(form.obr_status) ? '*' : '' }}
                         </label>
                         <InputText v-model="form.payee" placeholder="Enter payee name" class="w-full" />
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">OBR No.</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">OBR No.</label>
                         <InputText v-model="form.obr_no" placeholder="Enter OBR number" class="w-full" />
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">OBR Status</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">OBR
+                            Status</label>
                         <Select v-model="form.obr_status" :options="obrStatusOptions" optionLabel="label"
                             optionValue="value" placeholder="Select OBR status" class="w-full" />
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Date Obligated</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date
+                            Obligated</label>
                         <DatePicker v-model="form.date_obligated" dateFormat="mm/dd/yy"
                             placeholder="MM/DD/YYYY, YYYY-MM-DD, or Oct. 22, 2025" class="w-full" :manualInput="true"
                             @input="handleDateInput($event, 'date_obligated')" />
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Year Level</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Year
+                            Level</label>
                         <YearLevelSelect v-model="form.year_level" />
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Semester</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Semester</label>
                         <TermSelect v-model="form.semester" />
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Academic Year</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Academic
+                            Year</label>
                         <AcademicYearSelect v-model="form.academic_year" />
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Amount {{ !['LOA', 'IRREGULAR', 'TRANSFERRED'].includes(form.obr_status) ? '*' : '' }}
                         </label>
                         <InputNumber v-model="form.amount" mode="currency" currency="PHP" locale="en-PH"
@@ -372,7 +406,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Remarks</label>
                     <Editor v-model="form.remarks" editorStyle="height: 120px">
                         <template #toolbar>
                             <span class="ql-formats">
@@ -404,19 +438,19 @@
             appendTo="body">
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Cheque No. *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cheque No. *</label>
                     <InputText v-model="chequeForm.cheque_no" placeholder="Enter cheque number" class="w-full" />
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Date Released</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date Released</label>
                     <DatePicker v-model="chequeForm.date_released" dateFormat="mm/dd/yy"
                         placeholder="MM/DD/YYYY, YYYY-MM-DD, or Oct. 22, 2025" class="w-full" :manualInput="true"
                         @input="handleDateInput($event, 'date_released', true)" />
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Remarks</label>
                     <Editor v-model="chequeForm.remarks" editorStyle="height: 120px">
                         <template #toolbar>
                             <span class="ql-formats">
@@ -458,16 +492,19 @@
                 <!-- Existing Attachments -->
                 <div
                     v-if="selectedDisbursement && selectedDisbursement.attachments && selectedDisbursement.attachments.length > 0">
-                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Existing Attachments</h4>
+                    <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Existing Attachments</h4>
                     <div class="space-y-2">
                         <div v-for="attachment in selectedDisbursement.attachments" :key="attachment.attachment_id"
-                            class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
+                            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">
                             <div class="flex items-center gap-3">
                                 <i :class="getFileIcon(attachment.file_type)" class="text-2xl text-blue-600"></i>
                                 <div>
-                                    <p class="text-sm font-medium text-gray-900">{{ attachment.file_name }}</p>
-                                    <p class="text-xs text-gray-500">{{ attachment.attachment_type }} • {{
-                                        formatFileSize(attachment.file_size) }}</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{
+                                        attachment.file_name }}
+                                    </p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ attachment.attachment_type }}
+                                        • {{
+                                            formatFileSize(attachment.file_size) }}</p>
                                 </div>
                             </div>
                             <div class="flex gap-2">
@@ -484,21 +521,27 @@
 
                 <!-- Upload New Attachment -->
                 <div v-if="hasPermission('applicants.edit')">
-                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Upload New Attachment</h4>
+                    <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Upload New Attachment</h4>
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Attachment Type *</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attachment
+                                Type
+                                *</label>
                             <Select v-model="attachmentForm.attachment_type" :options="attachmentTypes"
                                 optionLabel="label" optionValue="value" placeholder="Select type" class="w-full" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">File (PDF or Image) *</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">File (PDF or
+                                Image)
+                                *</label>
                             <input type="file" ref="fileInput" @change="handleFileSelect" accept=".pdf,.jpg,.jpeg,.png"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            <p class="text-xs text-gray-500 mt-1">Accepted formats: PDF, JPG, PNG (Max 25MB)</p>
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Accepted formats: PDF, JPG, PNG
+                                (Max 25MB)
+                            </p>
                         </div>
                         <div v-if="attachmentForm.file">
-                            <p class="text-sm text-gray-700">Selected: <span class="font-medium">{{
+                            <p class="text-sm text-gray-700 dark:text-gray-300">Selected: <span class="font-medium">{{
                                 attachmentForm.file.name
                                     }}</span></p>
                         </div>
@@ -522,25 +565,26 @@
             :style="{ width: '30vw', minWidth: '400px' }">
             <div v-if="qrCodeData" class="text-center space-y-4">
                 <!-- QR Code -->
-                <div class="bg-white p-4 short:p-3 rounded-lg border-2 border-gray-200 inline-block">
+                <div
+                    class="bg-white dark:bg-gray-800 p-4 short:p-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 inline-block">
                     <div v-html="qrCodeData.qrCode"></div>
                 </div>
 
                 <!-- Instructions -->
                 <div class="text-left space-y-3">
-                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                        <p class="text-sm font-semibold text-gray-900 mb-2">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded">
+                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
                             <i class="pi pi-info-circle mr-2"></i>How to use:
                         </p>
-                        <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                        <ol class="text-sm text-gray-700 dark:text-gray-300 space-y-1 list-decimal list-inside">
                             <li>Scan this QR code with your mobile device</li>
                             <li>Take a photo or select from gallery</li>
                             <li>Upload will be automatically optimized</li>
                         </ol>
                     </div>
 
-                    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
-                        <p class="text-xs text-yellow-800">
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded">
+                        <p class="text-xs text-yellow-800 dark:text-yellow-300">
                             <i class="pi pi-exclamation-triangle mr-2"></i>
                             <strong>Expires in:</strong>
                             <span :class="{
@@ -555,7 +599,8 @@
 
                     <!-- Mobile URL (for copying) -->
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Or copy this link:</label>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Or copy this
+                            link:</label>
                         <div class="flex gap-2">
                             <InputText type="text" :value="qrCodeData.url" readonly class="flex-1 text-xs" />
                             <Button icon="pi pi-copy" size="small" @click="copyToClipboard(qrCodeData.url)"
@@ -934,74 +979,74 @@ const formatDisbursementType = (type) => {
 
 const getDisbursementTypeClass = (type) => {
     const classes = {
-        'regular': 'bg-blue-100 text-blue-800',
-        'reimbursement': 'bg-orange-100 text-orange-800',
-        'financial_assistance': 'bg-purple-100 text-purple-800',
+        'regular': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+        'reimbursement': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+        'financial_assistance': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
     };
     return classes[type] || '';
 };
 
 const getChequeStatusClass = (status) => {
     const classes = {
-        'pending': 'bg-yellow-100 text-yellow-800',
-        'released': 'bg-blue-100 text-blue-800',
-        'cleared': 'bg-green-100 text-green-800',
-        'cancelled': 'bg-red-100 text-red-800',
-        'bounced': 'bg-red-100 text-red-800',
+        'pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+        'released': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+        'cleared': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+        'cancelled': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+        'bounced': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
     };
     return classes[status] || '';
 };
 
 const getObrStatusClass = (status) => {
     const classes = {
-        'LOA': 'bg-orange-100 text-orange-800',
-        'IRREGULAR': 'bg-yellow-100 text-yellow-800',
-        'TRANSFERRED': 'bg-blue-100 text-blue-800',
-        'CLAIMED': 'bg-purple-100 text-purple-800',
-        'PAID': 'bg-green-100 text-green-800',
-        'ON PROCESS': 'bg-cyan-100 text-cyan-800',
-        'DENIED': 'bg-red-100 text-red-800',
+        'LOA': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+        'IRREGULAR': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+        'TRANSFERRED': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+        'CLAIMED': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+        'PAID': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+        'ON PROCESS': 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
+        'DENIED': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
     };
     return classes[status] || '';
 };
 
 const getStatusCardClass = (status) => {
     const classes = {
-        'LOA': 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200',
-        'IRREGULAR': 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200',
-        'TRANSFERRED': 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200',
-        'CLAIMED': 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200',
-        'PAID': 'bg-gradient-to-br from-green-50 to-green-100 border-green-200',
-        'ON PROCESS': 'bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200',
-        'DENIED': 'bg-gradient-to-br from-red-50 to-red-100 border-red-200',
+        'LOA': 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-900/30 border-orange-200 dark:border-orange-800/40',
+        'IRREGULAR': 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-900/30 border-yellow-200 dark:border-yellow-800/40',
+        'TRANSFERRED': 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 border-blue-200 dark:border-blue-800/40',
+        'CLAIMED': 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-900/30 border-purple-200 dark:border-purple-800/40',
+        'PAID': 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/30 border-green-200 dark:border-green-800/40',
+        'ON PROCESS': 'bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-900/30 border-cyan-200 dark:border-cyan-800/40',
+        'DENIED': 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/30 border-red-200 dark:border-red-800/40',
     };
-    return classes[status] || 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200';
+    return classes[status] || 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-gray-200 dark:border-gray-600';
 };
 
 const getStatusBgClass = (status) => {
     const classes = {
-        'LOA': 'bg-orange-50',
-        'IRREGULAR': 'bg-yellow-50',
-        'TRANSFERRED': 'bg-blue-50',
-        'CLAIMED': 'bg-purple-50',
-        'PAID': 'bg-green-50',
-        'ON PROCESS': 'bg-cyan-50',
-        'DENIED': 'bg-red-50',
+        'LOA': 'bg-orange-50 dark:bg-orange-900/20',
+        'IRREGULAR': 'bg-yellow-50 dark:bg-yellow-900/20',
+        'TRANSFERRED': 'bg-blue-50 dark:bg-blue-900/20',
+        'CLAIMED': 'bg-purple-50 dark:bg-purple-900/20',
+        'PAID': 'bg-green-50 dark:bg-green-900/20',
+        'ON PROCESS': 'bg-cyan-50 dark:bg-cyan-900/20',
+        'DENIED': 'bg-red-50 dark:bg-red-900/20',
     };
-    return classes[status] || 'bg-gray-50';
+    return classes[status] || 'bg-gray-50 dark:bg-gray-700';
 };
 
 const getStatusTextClass = (status) => {
     const classes = {
-        'LOA': 'text-orange-700',
-        'IRREGULAR': 'text-yellow-700',
-        'TRANSFERRED': 'text-blue-700',
-        'CLAIMED': 'text-purple-700',
-        'PAID': 'text-green-700',
-        'ON PROCESS': 'text-cyan-700',
-        'DENIED': 'text-red-700',
+        'LOA': 'text-orange-700 dark:text-orange-400',
+        'IRREGULAR': 'text-yellow-700 dark:text-yellow-400',
+        'TRANSFERRED': 'text-blue-700 dark:text-blue-400',
+        'CLAIMED': 'text-purple-700 dark:text-purple-400',
+        'PAID': 'text-green-700 dark:text-green-400',
+        'ON PROCESS': 'text-cyan-700 dark:text-cyan-400',
+        'DENIED': 'text-red-700 dark:text-red-400',
     };
-    return classes[status] || 'text-gray-700';
+    return classes[status] || 'text-gray-700 dark:text-gray-300';
 };
 
 const getFileIcon = (fileType) => {

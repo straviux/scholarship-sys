@@ -111,7 +111,7 @@ onBeforeUnmount(() => {
                             <div class="ios-row ios-row-last">
                                 <span class="ios-row-label">Selected Applicants</span>
                                 <span style="font-size: 15px; font-weight: 600; color: #007AFF;">{{ selectedRows.length
-                                    }}</span>
+                                }}</span>
                             </div>
                         </div>
                     </div>
@@ -176,7 +176,7 @@ onBeforeUnmount(() => {
                             <div v-for="(row, idx) in selectedRows.slice(0, 10)" :key="idx" class="ios-row"
                                 :class="{ 'ios-row-last': idx === Math.min(selectedRows.length, 10) - 1 }">
                                 <span style="font-size: 13px; color: #000;">{{ row.last_name }}, {{ row.first_name
-                                    }}</span>
+                                }}</span>
                             </div>
                             <div v-if="selectedRows.length > 10" class="ios-row ios-row-last"
                                 style="justify-content: center;">
@@ -365,57 +365,6 @@ onBeforeUnmount(() => {
 .ios-export-excel {
     background: #34C759;
     color: #FFFFFF;
-}
-
-/* Dark mode overrides */
-:global(.dark) .ios-modal {
-    background: #222831;
-}
-
-:global(.dark) .ios-nav-bar {
-    background: #2a3040;
-    border-bottom-color: rgba(255, 255, 255, 0.08);
-}
-
-:global(.dark) .ios-nav-title {
-    color: #d1d5db;
-}
-
-:global(.dark) .ios-nav-cancel {
-    color: #9ca3af;
-}
-
-:global(.dark) .ios-nav-action {
-    color: #d1d5db;
-}
-
-:global(.dark) .ios-section-label {
-    color: #9ca3af;
-}
-
-:global(.dark) .ios-section-footer {
-    color: #6b7280;
-}
-
-:global(.dark) .ios-card {
-    background: #222831;
-    border-color: rgba(255, 255, 255, 0.08);
-}
-
-:global(.dark) .ios-row {
-    border-bottom-color: rgba(255, 255, 255, 0.06);
-}
-
-:global(.dark) .ios-row-label {
-    color: #d1d5db;
-}
-
-:global(.dark) .ios-body {
-    scrollbar-color: transparent transparent;
-}
-
-:global(.dark) .ios-body:hover {
-    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 </style>
 

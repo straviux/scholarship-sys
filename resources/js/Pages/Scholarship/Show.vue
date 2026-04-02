@@ -20,14 +20,14 @@
                 <div
                     class="flex items-center bg-white/80 dark:bg-[#1f2633]/90 backdrop-blur-sm border border-gray-200/80 dark:border-white/10 rounded-2xl shadow-sm p-1 gap-0.5">
                     <Button icon="pi pi-book" label="Generate Ledger" size="small" rounded text
-                        class="!font-medium !text-gray-700 dark:text-gray-300" @click="generateLedger"
+                        class="!font-medium text-gray-700 dark:text-gray-300" @click="generateLedger"
                         v-tooltip.top="'Generate Scholar Ledger'" />
                     <div class="w-px h-6 bg-gray-200 mx-0.5 self-center flex-shrink-0"></div>
                     <Button v-if="hasPermission('applicants.edit')" icon="pi pi-user" label="Edit Personal" size="small"
-                        rounded text class="!font-medium !text-gray-700 dark:text-gray-300"
+                        rounded text class="!font-medium text-gray-700 dark:text-gray-300"
                         @click="showPersonalInfoModal = true" v-tooltip.top="'Edit Personal Information'" />
                     <Button v-if="hasPermission('applicants.edit')" icon="pi pi-home" label="Edit Family" size="small"
-                        rounded text class="!font-medium !text-gray-700 dark:text-gray-300"
+                        rounded text class="!font-medium text-gray-700 dark:text-gray-300"
                         @click="showFamilyInfoModal = true" v-tooltip.top="'Edit Family Information'" />
                 </div>
             </div>
@@ -51,7 +51,8 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
                                 <!-- Basic Information -->
                                 <div class="space-y-4">
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b pb-2">
+                                    <h3
+                                        class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b dark:border-gray-700 pb-2">
                                         Basic Information</h3>
 
                                     <div>
@@ -109,7 +110,8 @@
 
                                 <!-- Contact Information -->
                                 <div class="space-y-4">
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b pb-2">
+                                    <h3
+                                        class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b dark:border-gray-700 pb-2">
                                         Contact Information
                                     </h3>
 
@@ -161,7 +163,8 @@
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
                                 <!-- Father's Information -->
                                 <div class="space-y-4">
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b pb-2">
+                                    <h3
+                                        class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b dark:border-gray-700 pb-2">
                                         Father's Information
                                     </h3>
 
@@ -188,7 +191,8 @@
 
                                 <!-- Mother's Information -->
                                 <div class="space-y-4">
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b pb-2">
+                                    <h3
+                                        class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b dark:border-gray-700 pb-2">
                                         Mother's Information
                                     </h3>
 
@@ -215,7 +219,8 @@
 
                                 <!-- Guardian's Information -->
                                 <div class="space-y-4">
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b pb-2">
+                                    <h3
+                                        class="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b dark:border-gray-700 pb-2">
                                         Guardian's Information
                                     </h3>
 
@@ -485,7 +490,7 @@
                                                 <i class="pi pi-check text-xs text-blue-600 dark:text-blue-400"></i>
                                             </div>
                                             <div v-if="timelineIndex < (statusTimeline.length - 1)"
-                                                class="w-0.5 h-12 bg-gray-300 mt-2"></div>
+                                                class="w-0.5 h-12 bg-gray-300 dark:bg-gray-600 mt-2"></div>
                                         </div>
 
                                         <!-- Timeline Content -->
@@ -569,7 +574,7 @@
                                             class="relative pl-16">
 
                                             <!-- Timeline dot -->
-                                            <div class="absolute left-0 top-1 w-9 h-9 rounded-full flex items-center justify-center text-white font-bold shadow-lg ring-4 ring-white"
+                                            <div class="absolute left-0 top-1 w-9 h-9 rounded-full flex items-center justify-center text-white font-bold shadow-lg ring-4 ring-white dark:ring-[#1f2633]"
                                                 :class="getActivityColor(activity.activity_type)">
                                                 <i :class="getActivityIcon(activity.activity_type)"></i>
                                             </div>
@@ -620,7 +625,7 @@
                                                             <span
                                                                 class="text-gray-900 dark:text-gray-100 font-medium">{{
                                                                     maskIdValue(key,
-                                                                value) }}</span>
+                                                                        value) }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -678,6 +683,7 @@
 </template>
 
 <script setup>
+import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { ref, computed, watch, onMounted, inject } from 'vue';
 import axios from 'axios';
@@ -685,7 +691,7 @@ import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 import { usePermission } from '@/composable/permissions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
-import AdminLayout from '@/Layouts/AdminLayout.vue';
+
 import PersonalInformationModal from '@/Components/modals/PersonalInformationModal.vue';
 import FamilyInformationModal from '@/Components/modals/FamilyInformationModal.vue';
 import ManageAttachmentsModal from '@/Components/modals/ManageAttachmentsModal.vue';
@@ -902,20 +908,20 @@ const getHistoryIcon = (action) => {
 
 const getHistoryStatusClass = (action) => {
     const classes = {
-        'approved': 'border-green-400 bg-green-50',
-        'denied': 'border-red-400 bg-red-50',
-        'pending': 'border-yellow-400 bg-yellow-50',
+        'approved': 'border-green-400 bg-green-50 dark:bg-green-900/20',
+        'denied': 'border-red-400 bg-red-50 dark:bg-red-900/20',
+        'pending': 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20',
         'active': 'border-blue-400 bg-blue-50 dark:bg-blue-900/20',
         'completed': 'border-gray-400 bg-gray-50 dark:bg-[#2a3040]',
-        'withdrawn': 'border-purple-400 bg-purple-50',
-        'loa': 'border-orange-400 bg-orange-50',
-        'suspended': 'border-red-900 bg-red-50',
+        'withdrawn': 'border-purple-400 bg-purple-50 dark:bg-purple-900/20',
+        'loa': 'border-orange-400 bg-orange-50 dark:bg-orange-900/20',
+        'suspended': 'border-red-900 bg-red-50 dark:bg-red-900/20',
         'unknown': 'border-gray-300 bg-gray-50 dark:bg-[#2a3040]',
-        'declined': 'border-red-400 bg-red-50',
+        'declined': 'border-red-400 bg-red-50 dark:bg-red-900/20',
         'conditional': 'border-blue-400 bg-blue-50 dark:bg-blue-900/20',
-        'resubmitted': 'border-yellow-400 bg-yellow-50',
-        'discontinued': 'border-orange-400 bg-orange-50',
-        'renewal_application': 'border-purple-400 bg-purple-50'
+        'resubmitted': 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20',
+        'discontinued': 'border-orange-400 bg-orange-50 dark:bg-orange-900/20',
+        'renewal_application': 'border-purple-400 bg-purple-50 dark:bg-purple-900/20'
     };
     return classes[action] || 'border-gray-400 bg-gray-50 dark:bg-[#2a3040]';
 };
@@ -963,15 +969,15 @@ const confirmDeleteRecord = (record) => {
 
 const getStatusClass = (status) => {
     const classes = {
-        'pending': 'bg-yellow-100 text-yellow-800',
-        'approved': 'bg-blue-100 text-blue-800 dark:text-blue-300',
-        'active': 'bg-green-100 text-green-800',
-        'completed': 'bg-gray-100 text-gray-800',
-        'denied': 'bg-red-100 text-red-800',
-        'withdrawn': 'bg-purple-100 text-purple-800',
-        'unknown': 'bg-gray-200 text-gray-700 dark:text-gray-300',
+        'pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+        'approved': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+        'active': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+        'completed': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+        'denied': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+        'withdrawn': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+        'unknown': 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
     };
-    return classes[status?.toLowerCase()] || 'bg-gray-200 text-gray-700 dark:text-gray-300';
+    return classes[status?.toLowerCase()] || 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
 };
 
 // Attachment methods

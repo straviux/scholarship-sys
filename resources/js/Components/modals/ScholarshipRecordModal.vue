@@ -6,7 +6,7 @@
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
                     <span class="ios-nav-title">{{ mode === 'add' ? 'Add Scholarship Record' : 'Edit Scholarship Record'
-                        }}</span>
+                    }}</span>
                     <button class="ios-nav-btn ios-nav-action" @click.stop="submitRecord" :disabled="processing">
                         <i class="pi pi-check"></i>
                     </button>
@@ -16,13 +16,13 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div class="ios-form-group">
                                 <label class="ios-label">Program <span v-if="isG12Record"
-                                        class="text-xs text-gray-500">(Optional for G12)</span><span
+                                        class="text-xs text-gray-500 dark:text-gray-400">(Optional for G12)</span><span
                                         v-else>*</span></label>
                                 <ProgramSelect v-model="form.program_id" />
                             </div>
                             <div class="ios-form-group">
                                 <label class="ios-label">School <span v-if="isG12Record"
-                                        class="text-xs text-gray-500">(Optional for G12)</span><span
+                                        class="text-xs text-gray-500 dark:text-gray-400">(Optional for G12)</span><span
                                         v-else>*</span></label>
                                 <SchoolSelect v-model="form.school_id" />
                             </div>
@@ -31,7 +31,8 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div class="ios-form-group">
                                 <label class="ios-label">Course <span v-if="isG12Record"
-                                        class="text-xs text-gray-500">(N/A for G12)</span><span v-else>*</span></label>
+                                        class="text-xs text-gray-500 dark:text-gray-400">(N/A for G12)</span><span
+                                        v-else>*</span></label>
                                 <CourseSelect v-model="form.course_id"
                                     :scholarship-program-id="typeof form.program_id === 'object' ? form.program_id?.id : form.program_id"
                                     :disabled="isG12Record" />
@@ -45,13 +46,13 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div class="ios-form-group">
                                 <label class="ios-label">Academic Year <span v-if="isG12Record"
-                                        class="text-xs text-gray-500">(Optional for G12)</span><span
+                                        class="text-xs text-gray-500 dark:text-gray-400">(Optional for G12)</span><span
                                         v-else>*</span></label>
                                 <AcademicYearSelect v-model="form.academic_year" />
                             </div>
                             <div class="ios-form-group">
                                 <label class="ios-label">Term <span v-if="isG12Record"
-                                        class="text-xs text-gray-500">(Optional for G12)</span><span
+                                        class="text-xs text-gray-500 dark:text-gray-400">(Optional for G12)</span><span
                                         v-else>*</span></label>
                                 <TermSelect v-model="form.term" />
                             </div>
@@ -245,137 +246,3 @@ const submitRecord = async () => {
     }
 };
 </script>
-
-<style scoped>
-.ios-modal {
-    background: #F2F2F7;
-    border-radius: 14px;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-}
-
-.ios-nav-bar {
-    padding: 14px 16px;
-    background: #FFFFFF;
-    border-bottom: 0.5px solid #E5E5EA;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    min-height: 48px;
-    cursor: grab;
-}
-
-.ios-nav-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: #000;
-    letter-spacing: -0.4px;
-}
-
-.ios-nav-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
-
-.ios-nav-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-.ios-nav-cancel {
-    left: 16px;
-    color: #8E8E93;
-    font-size: 20px;
-}
-
-
-.ios-body {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 0 16px;
-}
-
-
-.ios-form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.ios-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: #3C3C43;
-    padding-left: 2px;
-}
-
-:deep(.p-inputtext),
-:deep(.p-select) {
-    border-radius: 10px;
-}
-
-:deep(.p-datepicker) {
-    border-radius: 10px;
-}
-
-/* Dark mode */
-:global(.dark) .ios-modal {
-    background: #222831;
-}
-
-:global(.dark) .ios-nav-bar {
-    background: #2a3040;
-    border-bottom-color: rgba(255, 255, 255, 0.08);
-}
-
-:global(.dark) .ios-nav-title {
-    color: #d1d5db;
-}
-
-:global(.dark) .ios-nav-cancel {
-    color: #9ca3af;
-}
-
-:global(.dark) .ios-nav-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-:global(.dark) .ios-body {
-    color: #d1d5db;
-}
-
-:global(.dark) .ios-label {
-    color: #d1d5db;
-}
-</style>
-
-<style>
-.ios-dialog-root.p-dialog {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-}
-
-.ios-dialog-root .p-dialog-content {
-    padding: 0 !important;
-    background: transparent !important;
-}
-
-.ios-dialog-mask {
-    background: rgba(0, 0, 0, 0.4);
-}
-</style>

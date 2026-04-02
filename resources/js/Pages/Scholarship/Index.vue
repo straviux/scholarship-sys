@@ -33,7 +33,7 @@
                         </Popover>
                         <!-- <Button icon="pi pi-refresh" @click="refreshData" severity="secondary" outlined
                             v-tooltip.bottom="'Refresh'" /> -->
-                        <Button icon="pi pi-print" @click="showReportModal = true" severity="secondary"
+                        <Button icon="pi pi-print" @click="showReportWizard = true" severity="secondary"
                             v-tooltip.bottom="'Generate Report'" v-if="hasPermission('reports.view')" rounded
                             outlined />
                     </div>
@@ -632,7 +632,8 @@
         </Dialog>
 
         <!-- Generate Report Modal -->
-        <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" />
+        <!-- <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" /> -->
+        <ReportWizardModal :show="showReportWizard" @update:show="showReportWizard = $event" /> -->
 
         <!-- Grant Provision Update Dialog -->
         <Dialog v-model:visible="showGrantProvisionDialog" modal header="Update Grant Provision" class="w-[500px]">
@@ -686,9 +687,6 @@
             </template>
         </Dialog>
 
-        <!-- Application Form Modal -->
-        <ApplicantFormModal v-model:visible="showAddApplicantModal" :profiles="profiles" @success="refreshData" />
-
         <!-- Scholar Form Modal (Create) -->
         <ScholarFormModal v-model:visible="showAddActiveModal" mode="create" @success="refreshData" />
 
@@ -698,19 +696,18 @@
 </template>
 
 <script setup>
+import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue';
-import AdminLayout from '@/Layouts/AdminLayout.vue';
-import moment from 'moment';
 import { usePermission } from '@/composable/permissions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { useFilterManager } from '@/composables/useFilterManager';
-import axios from 'axios';
+
 import FloatingDrawer from '@/Components/FloatingDrawer.vue';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
-
-
+import axios from 'axios';
+import moment from 'moment';
 // Custom Select Components
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
@@ -722,9 +719,9 @@ import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 
 // Modal Components
-import ApplicantFormModal from '@/Components/modals/ApplicantFormModal.vue';
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
-import GenerateReportModal from './Modal/GenerateReportModal.vue';
+// import GenerateReportModal from './Modal/GenerateReportModal.vue';
+import ReportWizardModal from './Modal/ReportWizardModal.vue';
 
 // Props
 const props = defineProps({
@@ -931,8 +928,8 @@ const selectedProfile = ref(null);
 
 // Modal states
 const showReportModal = ref(false);
+const showReportWizard = ref(false);
 
-const showAddApplicantModal = ref(false);
 const showAddActiveModal = ref(false);
 const addRecordPopover = ref();
 
@@ -1239,11 +1236,6 @@ const updateGrantProvision = () => {
 
 
 // Add Record methods
-const openAddApplicantModal = () => {
-    addRecordPopover.value.hide();
-    showAddApplicantModal.value = true;
-};
-
 const openAddActiveModal = () => {
     addRecordPopover.value.hide();
     showAddActiveModal.value = true;

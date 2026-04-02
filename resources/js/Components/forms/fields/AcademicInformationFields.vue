@@ -111,21 +111,3 @@ const emit = defineEmits([
 
 
 </script>
-
-<style>
-.p-inputtext.p-variant-filled,
-.p-textarea.p-variant-filled,
-.p-select.p-variant-filled .p-select-label,
-.p-datepicker.p-variant-filled .p-datepicker-input {
-    background-color: #ffffff !important;
-}
-
-/* Dark mode overrides */
-.dark .p-inputtext.p-variant-filled,
-.dark .p-textarea.p-variant-filled,
-.dark .p-select.p-variant-filled .p-select-label,
-.dark .p-datepicker.p-variant-filled .p-datepicker-input {
-    background-color: #1a1e27 !important;
-    color: #d1d5db !important;
-}
-</style>

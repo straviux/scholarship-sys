@@ -579,57 +579,6 @@ onBeforeUnmount(() => {
 :deep(.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider) {
     background: #34C759 !important;
 }
-
-/* Dark mode */
-:global(.dark) .ios-modal {
-    background: #222831;
-}
-
-:global(.dark) .ios-nav-bar {
-    background: #2a3040;
-    border-bottom-color: rgba(255, 255, 255, 0.08);
-}
-
-:global(.dark) .ios-nav-title {
-    color: #d1d5db;
-}
-
-:global(.dark) .ios-nav-cancel {
-    color: #9ca3af;
-}
-
-:global(.dark) .ios-nav-action {
-    color: #d1d5db;
-}
-
-:global(.dark) .ios-body {
-    color: #d1d5db;
-}
-
-:global(.dark) .ios-section-label {
-    color: #9ca3af;
-}
-
-:global(.dark) .ios-section-footer {
-    color: #9ca3af;
-}
-
-:global(.dark) .ios-card {
-    background: #1e2433;
-    border-color: rgba(255, 255, 255, 0.08);
-}
-
-:global(.dark) .ios-row {
-    border-bottom-color: rgba(255, 255, 255, 0.06);
-}
-
-:global(.dark) .ios-row-label {
-    color: #d1d5db;
-}
-
-:global(.dark) .ios-row-input {
-    color: #d1d5db;
-}
 </style>
 
 <!-- Unscoped: targets teleported Dialog elements at body level -->

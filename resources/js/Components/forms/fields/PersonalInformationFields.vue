@@ -382,35 +382,7 @@ onMounted(() => {
 
 </script>
 
-<style>
-.p-inputtext.p-variant-filled {
-    background-color: #ffffff !important;
-}
-
-.p-select.p-variant-filled .p-select-label {
-    background-color: #ffffff !important;
-}
-
-.p-datepicker.p-variant-filled .p-datepicker-input {
-    background-color: #ffffff !important;
-}
-
-/* Dark mode overrides */
-.dark .p-inputtext.p-variant-filled {
-    background-color: #1a1e27 !important;
-    color: #d1d5db !important;
-}
-
-.dark .p-select.p-variant-filled .p-select-label {
-    background-color: #1a1e27 !important;
-    color: #d1d5db !important;
-}
-
-.dark .p-datepicker.p-variant-filled .p-datepicker-input {
-    background-color: #1a1e27 !important;
-    color: #d1d5db !important;
-}
-
+<style scoped>
 .dob-hide-label label {
     opacity: 0 !important;
     pointer-events: none;
