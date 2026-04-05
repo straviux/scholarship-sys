@@ -84,7 +84,7 @@
                                             <p class="text-lg font-bold text-gray-900 dark:text-gray-100 mt-1">{{
                                                 formatCurrency(semData.total) }}</p>
                                             <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ semData.count
-                                                }} transactions</p>
+                                            }} transactions</p>
                                         </div>
 
                                         <!-- Status Breakdown -->
@@ -206,35 +206,35 @@
                                                 <span class="text-gray-500 dark:text-gray-400 mr-1">Year:</span>
                                                 <span class="font-medium text-gray-900 dark:text-gray-100">{{
                                                     item.year_level || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300 dark:text-gray-600">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 dark:text-gray-400 mr-1">Term:</span>
                                                 <span class="font-medium text-gray-900 dark:text-gray-100">{{
                                                     item.semester || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300 dark:text-gray-600">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 dark:text-gray-400 mr-1">AY:</span>
                                                 <span class="font-medium text-gray-900 dark:text-gray-100">{{
                                                     item.academic_year || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <span class="text-gray-300 dark:text-gray-600">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 dark:text-gray-400 mr-1">Course:</span>
                                                 <span class="font-medium text-gray-900 dark:text-gray-100">{{
                                                     item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <span class="text-gray-300 dark:text-gray-600">•</span>
                                             <div class="flex items-center">
                                                 <span class="text-gray-500 dark:text-gray-400 mr-1">School:</span>
                                                 <span class="font-medium text-gray-900 dark:text-gray-100">{{
                                                     item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -260,7 +260,7 @@
                                                 <span class="font-medium text-gray-900 dark:text-gray-100">{{
                                                     item.cheques &&
                                                         item.cheques.length > 0 && item.cheques[0].date_released ?
-                                                    formatDate(item.cheques[0].date_released) : '-' }}</span>
+                                                        formatDate(item.cheques[0].date_released) : '-' }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -274,8 +274,8 @@
                                         </h4>
                                         <div
                                             class="text-xs bg-yellow-50 dark:bg-yellow-900/20 border-l-2 border-yellow-400 dark:border-yellow-600 px-3 py-2">
-                                            <span class="text-gray-700 dark:text-gray-300">{{ item.remarks || '-'
-                                                }}</span>
+                                            <span class="text-gray-700 dark:text-gray-300"
+                                                v-safe-html="item.remarks || '-'"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -567,7 +567,7 @@
                 <!-- QR Code -->
                 <div
                     class="bg-white dark:bg-gray-800 p-4 short:p-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 inline-block">
-                    <div v-html="qrCodeData.qrCode"></div>
+                    <div v-safe-html="qrCodeData.qrCode"></div>
                 </div>
 
                 <!-- Instructions -->

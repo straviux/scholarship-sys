@@ -727,7 +727,7 @@ const loadRecordsSummaryForMonth = async () => {
             <div v-if="qrCodeData" class="text-center space-y-4">
                 <!-- QR Code -->
                 <div class="bg-white p-6 rounded-lg border-2 border-gray-200 inline-block">
-                    <div v-html="qrCodeData.qrCode"></div>
+                    <div v-safe-html="qrCodeData.qrCode"></div>
                 </div>
 
                 <!-- Instructions -->

@@ -123,7 +123,7 @@
             <div style="display:flex;min-height:30pt;">
                 <div class="t-11 blk center"
                     style="flex:1;border-right:1pt solid #000;line-height:1.3;text-align:center;"
-                    v-html="explanation || ph"></div>
+                    v-safe-html="explanation || ph"></div>
                 <div class="t-11"
                     style="width:100pt;display:flex;align-items:center;justify-content:flex-end;padding:2pt 8pt;">
                     {{ money(voucher.amount) }}

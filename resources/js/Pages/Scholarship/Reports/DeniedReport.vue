@@ -63,7 +63,7 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
                         <td v-if="showCol('course')">{{ rec.course_name || '—' }}</td>
                         <td v-if="showCol('year_level')">{{ rec.year_level || '—' }}</td>
                         <td class="nowrap">{{ formatDate(rec.date_filed) }}</td>
-                        <td>{{ rec.decline_reason || rec.remarks || '—' }}</td>
+                        <td v-safe-html="rec.decline_reason || rec.remarks || '—'"></td>
                     </tr>
                 </tbody>
             </table>
@@ -98,7 +98,7 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
                                 <td v-if="showCol('course')">{{ rec.course_name || '—' }}</td>
                                 <td v-if="showCol('year_level')">{{ rec.year_level || '—' }}</td>
                                 <td class="nowrap">{{ formatDate(rec.date_filed) }}</td>
-                                <td>{{ rec.decline_reason || rec.remarks || '—' }}</td>
+                                <td v-safe-html="rec.decline_reason || rec.remarks || '—'"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -124,7 +124,7 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
                                     <td v-if="showCol('program')">{{ rec.program_name || '—' }}</td>
                                     <td v-if="showCol('school')">{{ rec.school_name || '—' }}</td>
                                     <td class="nowrap">{{ formatDate(rec.date_filed) }}</td>
-                                    <td>{{ rec.decline_reason || rec.remarks || '—' }}</td>
+                                    <td v-safe-html="rec.decline_reason || rec.remarks || '—'"></td>
                                 </tr>
                             </tbody>
                         </table>

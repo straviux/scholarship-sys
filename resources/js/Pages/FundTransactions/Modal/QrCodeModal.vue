@@ -14,7 +14,8 @@
                         <!-- QR Code -->
                         <div class="ios-section">
                             <div class="ios-card" style="padding: 24px 16px; text-align: center;">
-                                <div v-if="modelValue.qrCode" v-html="modelValue.qrCode" style="display: inline-block;">
+                                <div v-if="modelValue.qrCode" v-safe-html="modelValue.qrCode"
+                                    style="display: inline-block;">
                                 </div>
                                 <div v-else style="padding: 32px 0; color: #8E8E93;">
                                     <i class="pi pi-exclamation-triangle text-2xl"></i>

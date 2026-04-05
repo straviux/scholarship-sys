@@ -15,7 +15,7 @@ class ResponsibilityCenterController extends Controller
     public function index()
     {
         try {
-            $responsibilityCenters = ResponsibilityCenter::with('particulars')
+            $responsibilityCenters = ResponsibilityCenter::with(['particulars.program'])
                 ->orderBy('code')
                 ->get();
 
@@ -155,8 +155,12 @@ class ResponsibilityCenterController extends Controller
             $responsibilityCenter = ResponsibilityCenter::findOrFail($id);
 
             $validated = $request->validate([
-                'name' => 'required|string',
-                'account_code' => 'required|string'
+                'name'                  => 'required|string',
+                'account_code'          => 'required|string',
+                'scholarship_program_id' => 'required|exists:scholarship_programs,id',
+                'allotment'             => 'required|numeric|min:0',
+                'date_approved'         => 'nullable|date',
+                'date_expired'          => 'nullable|date',
             ]);
 
             $particular = $responsibilityCenter->particulars()->create($validated);
@@ -164,7 +168,7 @@ class ResponsibilityCenterController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Particular created successfully',
-                'data' => $particular
+                'data' => $particular->load('program')
             ], 201);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
@@ -196,8 +200,12 @@ class ResponsibilityCenterController extends Controller
             $particular = $responsibilityCenter->particulars()->findOrFail($particulerId);
 
             $validated = $request->validate([
-                'name' => 'required|string',
-                'account_code' => 'required|string'
+                'name'                  => 'required|string',
+                'account_code'          => 'required|string',
+                'scholarship_program_id' => 'required|exists:scholarship_programs,id',
+                'allotment'             => 'required|numeric|min:0',
+                'date_approved'         => 'nullable|date',
+                'date_expired'          => 'nullable|date',
             ]);
 
             $particular->update($validated);
@@ -205,7 +213,7 @@ class ResponsibilityCenterController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Particular updated successfully',
-                'data' => $particular
+                'data' => $particular->load('program')
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([

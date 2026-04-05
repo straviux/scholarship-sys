@@ -37,6 +37,7 @@ class StoreFundTransactionRequest extends FormRequest
             'year_level' => ['nullable', 'string'],
             'school' => ['nullable', 'string'],
             'grant_provision' => ['nullable', 'string'],
+            'scholarship_program_id' => ['nullable', 'integer', 'exists:scholarship_programs,id'],
             'remarks' => ['nullable', 'string'],
             'transaction_status' => ['nullable', 'string'],
             'fiscal_year' => ['nullable', 'integer'],

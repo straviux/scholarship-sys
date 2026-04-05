@@ -52,6 +52,10 @@ async function refreshCsrfToken() {
 		return csrfRefreshPromise;
 	}
 
+	// Step 1: Ask Sanctum to regenerate the session CSRF token and set the XSRF-TOKEN cookie.
+	// Step 2: Fetch the raw token string from /csrf-token so we can update the meta tag.
+	// This is necessary because the meta tag is server-rendered and never auto-updated,
+	// so getCsrfTokenFromMeta() would always return the stale original value.
 	csrfRefreshPromise = originalFetch('/sanctum/csrf-cookie', {
 		method: 'GET',
 		credentials: 'include',
@@ -61,12 +65,25 @@ async function refreshCsrfToken() {
 	})
 		.then((response) => {
 			if (!response.ok) {
-				throw new Error(`Failed to refresh CSRF token: ${response.status}`);
+				throw new Error(`Failed to refresh CSRF cookie: ${response.status}`);
 			}
-
-			const latestToken = getBestCsrfToken();
-			setCsrfToken(latestToken);
-			return latestToken;
+			return originalFetch('/csrf-token', {
+				method: 'GET',
+				credentials: 'include',
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest',
+				},
+			});
+		})
+		.then((response) => {
+			if (!response.ok) {
+				throw new Error(`Failed to fetch fresh CSRF token: ${response.status}`);
+			}
+			return response.json();
+		})
+		.then(({ token }) => {
+			setCsrfToken(token);
+			return token;
 		})
 		.finally(() => {
 			csrfRefreshPromise = null;

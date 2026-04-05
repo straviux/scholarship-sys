@@ -21,8 +21,8 @@
                     <div class="flex gap-2">
                         <Button v-if="hasPermission('return-of-service.export')" icon="pi pi-download" label="Export"
                             severity="secondary" outlined rounded size="small" @click="exportRecords" />
-                        <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus" label="New Batch"
-                            severity="success" rounded size="small" @click="openNewBatchDialog" />
+                        <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus" outlined
+                            severity="success" rounded size="large" @click="openNewBatchDialog" />
                     </div>
                 </template>
             </Toolbar>
@@ -44,7 +44,7 @@
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Year</label>
                         <InputNumber v-model="batchYearFilter" placeholder="e.g., 2025" :useGrouping="false"
-                            size="small" inputStyle="width: 120px" />
+                            size="small" :inputStyle="{ width: '120px' }" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Description</label>
@@ -68,7 +68,7 @@
                 <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
                     <div class="text-2xl short:text-xl font-bold text-green-600">{{batches.reduce((s, b) => s +
                         (b.total_scholars ||
-                        0), 0) }}
+                            0), 0)}}
                     </div>
                     <div class="text-xs text-gray-500">Total Scholars</div>
                 </div>
@@ -97,7 +97,7 @@
                                     <div>
                                         <h4 class="font-semibold text-gray-900 text-base leading-tight">{{
                                             batch.batch_name
-                                        }}</h4>
+                                            }}</h4>
                                         <div class="text-xs text-gray-500 space-y-0.5 mt-1">
                                             <p v-if="batch.exam_date_from || batch.exam_date_to">
                                                 <span class="font-medium">Exam:</span>
@@ -494,7 +494,7 @@
                         <div v-if="viewingScholar.remarks" class="ios-section">
                             <div class="ios-section-label">Remarks</div>
                             <div class="ios-card" style="padding: 10px 16px;">
-                                <p class="text-sm text-gray-700" v-html="viewingScholar.remarks"></p>
+                                <p class="text-sm text-gray-700" v-safe-html="viewingScholar.remarks"></p>
                             </div>
                         </div>
 
@@ -539,7 +539,7 @@
                                         Course
                                     </div>
                                     <span class="text-sm font-medium text-gray-800">{{ viewingBatch.course_name
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div v-if="viewingBatch.exam_date_from || viewingBatch.exam_date_to" class="ios-row">
                                     <div class="ios-row-label">
@@ -557,7 +557,7 @@
                                         Result Date
                                     </div>
                                     <span class="text-sm text-gray-700">{{ formatDateLong(viewingBatch.result_date)
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="ios-row">
                                     <div class="ios-row-label">
@@ -620,7 +620,7 @@
                                 <Column field="remarks" header="Remarks" style="min-width: 200px">
                                     <template #body="slotProps">
                                         <span v-if="slotProps.data.remarks" class="text-sm text-gray-700"
-                                            v-html="slotProps.data.remarks"></span>
+                                            v-safe-html="slotProps.data.remarks"></span>
                                         <span v-else class="text-sm text-gray-400">-</span>
                                     </template>
                                 </Column>
@@ -724,7 +724,7 @@
                                     </div>
                                     <div style="flex: 1; min-width: 0;">
                                         <p class="text-sm font-semibold text-gray-700">{{ scholarToDelete?.scholar_name
-                                            }}</p>
+                                        }}</p>
                                         <p class="text-xs text-red-600 mt-1">This action cannot be undone.</p>
                                     </div>
                                 </div>
@@ -782,6 +782,7 @@ import DatePicker from 'primevue/datepicker';
 import Toast from 'primevue/toast';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import { usePermission } from '@/composable/permissions';
+import * as XLSX from 'xlsx';
 
 // ─── Draggable Modal Factory ───
 function useDraggable(width) {
@@ -1582,12 +1583,78 @@ const isScholarAlreadyInBatch = (profileId) => {
     return currentBatch.value.scholars.some(scholar => scholar.profile_id === profileId);
 };
 
+const stripHtml = (html) => {
+    if (!html) return '';
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
+};
+
 const exportBatch = (batch) => {
-    window.location.href = route('return-of-service.export') + '?batch_id=' + batch.id;
+    const wb = XLSX.utils.book_new();
+
+    const batchInfo = [
+        ['Batch Name', batch.batch_name],
+        ['Course', batch.course_name || ''],
+        ['Description', batch.description || ''],
+        ['Exam Date From', formatDateLong(batch.exam_date_from)],
+        ['Exam Date To', formatDateLong(batch.exam_date_to)],
+        ['Result Date', formatDateLong(batch.result_date)],
+        ['Created By', batch.created_by || ''],
+        ['Total Scholars', batch.total_scholars || 0],
+        [],
+    ];
+
+    const headers = ['#', 'Scholar Name', 'Years of Service', 'Service Start', 'Service End', 'Status', 'Remarks'];
+    const rows = (batch.scholars || []).map((s, i) => [
+        i + 1,
+        s.scholar_name || '',
+        s.years_of_service ?? '',
+        formatDateLong(s.service_start_date),
+        formatDateLong(s.service_end_date),
+        s.completion_status || '',
+        stripHtml(s.remarks),
+    ]);
+
+    const ws = XLSX.utils.aoa_to_sheet([...batchInfo, headers, ...rows]);
+    XLSX.utils.book_append_sheet(wb, ws, 'Scholars');
+
+    const filename = `ROS_${batch.batch_name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, filename);
 };
 
 const exportRecords = () => {
-    window.location.href = route('return-of-service.export');
+    const wb = XLSX.utils.book_new();
+
+    const headers = ['Batch Name', 'Course', 'Exam Date From', 'Exam Date To', 'Result Date',
+        'Scholar Name', 'Years of Service', 'Service Start', 'Service End', 'Status', 'Remarks'];
+    const rows = [];
+
+    for (const batch of batches.value) {
+        const scholars = batch.scholars || [];
+        if (scholars.length === 0) {
+            rows.push([
+                batch.batch_name, batch.course_name || '',
+                formatDateLong(batch.exam_date_from), formatDateLong(batch.exam_date_to),
+                formatDateLong(batch.result_date), '', '', '', '', '', '',
+            ]);
+        } else {
+            for (const s of scholars) {
+                rows.push([
+                    batch.batch_name, batch.course_name || '',
+                    formatDateLong(batch.exam_date_from), formatDateLong(batch.exam_date_to),
+                    formatDateLong(batch.result_date),
+                    s.scholar_name || '', s.years_of_service ?? '',
+                    formatDateLong(s.service_start_date), formatDateLong(s.service_end_date),
+                    s.completion_status || '', stripHtml(s.remarks),
+                ]);
+            }
+        }
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    XLSX.utils.book_append_sheet(wb, ws, 'All Records');
+
+    const filename = `ROS_All_Records_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, filename);
 };
 
 const getCompletionSeverity = (status) => {

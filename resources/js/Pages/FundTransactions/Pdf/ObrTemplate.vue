@@ -108,7 +108,7 @@
             <div v-if="desc" style="display:flex;min-height:30pt;">
                 <div style="width:70pt;border-right:1pt solid #000;">&nbsp;</div>
                 <div class="t-11 blk" style="flex:1;border-right:1pt solid #000;line-height:1.3;text-align:center;"
-                    v-html="desc"></div>
+                    v-safe-html="desc"></div>
                 <div style="width:50pt;border-right:1pt solid #000;">&nbsp;</div>
                 <div style="width:50pt;border-right:1pt solid #000;">&nbsp;</div>
                 <div style="width:100pt;">&nbsp;</div>

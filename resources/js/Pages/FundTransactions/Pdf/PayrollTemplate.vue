@@ -24,7 +24,7 @@
 
         <!-- Explanation row -->
         <div v-if="explanation" style="padding:4pt 0;text-align:center;">
-            <span class="t-10 blk" v-html="explanation"></span>
+            <span class="t-10 blk" v-safe-html="explanation"></span>
         </div>
 
         <!-- Academic year / semester -->

@@ -1537,20 +1537,44 @@ class ScholarshipProfileController extends Controller
     /**
      * Get scholars for voucher creation (API endpoint)
      */
-    public function getScholarsForVoucher()
+    public function getScholarsForVoucher(Request $request)
     {
         try {
+            $programId = $request->query('program_id');
+            // Legacy fallback: fetch specific scholars by profile_id (for vouchers with no program stored)
+            $profileIds = $request->query('profile_ids')
+                ? array_filter(array_map('trim', explode(',', $request->query('profile_ids'))))
+                : [];
+
             // Fetch ONLY active scholars with active scholarship records (unified_status = 'active')
+            // If program_id is provided, filter by program. If profile_ids is provided (legacy), fetch those specific scholars.
             $scholars = ScholarshipProfile::where('is_active', true)
-                ->whereHas('scholarshipRecords', function ($query) {
+                ->whereHas('scholarshipRecords', function ($query) use ($programId, $profileIds) {
                     $query->where('unified_status', 'active');
+                    if ($programId) {
+                        $query->where(function ($q) use ($programId) {
+                            $q->where('program_id', $programId)
+                                ->orWhereHas('course', function ($cq) use ($programId) {
+                                    $cq->where('scholarship_program_id', $programId);
+                                });
+                        });
+                    }
                 })
+                ->when(!empty($profileIds), fn($q) => $q->whereIn('profile_id', $profileIds))
                 ->select('profile_id', 'first_name', 'middle_name', 'last_name', 'extension_name')
-                ->with(['scholarshipRecords' => function ($query) {
-                    $query->where('unified_status', 'active')
-                        ->select('id', 'profile_id', 'unified_status', 'academic_year', 'term', 'year_level', 'course_id', 'school_id')
+                ->with(['scholarshipRecords' => function ($query) use ($programId, $profileIds) {
+                    $query->where('unified_status', 'active');
+                    if ($programId) {
+                        $query->where(function ($q) use ($programId) {
+                            $q->where('program_id', $programId)
+                                ->orWhereHas('course', function ($cq) use ($programId) {
+                                    $cq->where('scholarship_program_id', $programId);
+                                });
+                        });
+                    }
+                    $query->select('id', 'profile_id', 'unified_status', 'academic_year', 'term', 'year_level', 'course_id', 'school_id', 'program_id')
                         ->with(['course' => function ($q) {
-                            $q->select('id', 'name');
+                            $q->select('id', 'name', 'scholarship_program_id');
                         }, 'school' => function ($q) {
                             $q->select('id', 'name');
                         }])
@@ -1579,8 +1603,16 @@ class ScholarshipProfileController extends Controller
                         'academic_year' => $latestScholarship?->academic_year,
                         'term' => $latestScholarship?->term,
                         'active_records_count' => $scholar->scholarshipRecords->count(),
+                        'program_id' => $latestScholarship?->program_id ?? $latestScholarship?->course?->scholarship_program_id,
                     ];
                 });
+
+            Log::debug('getScholarsForVoucher', [
+                'program_id' => $programId,
+                'profile_ids' => $profileIds,
+                'scholar_count' => $scholars->count(),
+                'sample_profile_ids' => $scholars->take(3)->pluck('profile_id'),
+            ]);
 
             return response()->json($scholars);
         } catch (\Exception $e) {

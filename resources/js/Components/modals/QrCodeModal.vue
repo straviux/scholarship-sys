@@ -12,7 +12,7 @@
                         <!-- QR Code -->
                         <div
                             class="bg-white dark:bg-gray-800 p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700 inline-block mx-auto">
-                            <div v-html="qrData.qrCode"></div>
+                            <div v-safe-html="qrData.qrCode"></div>
                         </div>
 
                         <!-- Instructions -->

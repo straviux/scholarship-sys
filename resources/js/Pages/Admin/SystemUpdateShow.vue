@@ -45,7 +45,7 @@
                                             </p>
                                             <p><strong>Global:</strong> {{ update.is_global ? 'Yes' : 'No' }}</p>
                                             <p v-if="update.expires_at"><strong>Expires:</strong> {{ update.expires_at
-                                                }}
+                                            }}
                                             </p>
                                         </div>
                                     </div>
@@ -158,6 +158,7 @@ import axios from 'axios'
 
 
 import { marked } from 'marked'
+import { sanitizeHtml } from '@/utils/sanitize'
 
 // Configure marked options
 marked.setOptions({
@@ -267,7 +268,7 @@ const getTypeSeverity = (type) => {
 
 const renderMarkdown = (markdown) => {
     if (!markdown) return ''
-    return marked.parse(markdown)
+    return sanitizeHtml(marked.parse(markdown))
 }
 
 // Lifecycle

@@ -11,9 +11,13 @@
                         <i class="pi pi-times"></i>
                     </button>
                     <span class="ios-nav-title">{{ title }}</span>
+                    <button v-if="onExcel" @click="onExcel" class="ios-nav-btn" style="right:58px;"
+                        v-tooltip.bottom="'Export Excel'">
+                        <i class="pi pi-file-excel text-purple-400" style="font-size: 20px;"></i>
+                    </button>
                     <button class="ios-nav-btn ios-nav-action" @click="doPrint"
                         v-tooltip.right="'Print or Save Document'">
-                        <i class="pi pi-print text-emerald-400" style="font-size: 22px;"></i>
+                        <i class="pi pi-print text-emerald-400" style="font-size: 20px;"></i>
                     </button>
                 </div>
 
@@ -50,6 +54,7 @@
                     </div>
 
                     <div class="flex items-center gap-2">
+
                         <span class="text-xs text-gray-400 dark:text-gray-500 hidden sm:block">{{ paperLabel }}</span>
                     </div>
                 </div>
@@ -118,6 +123,11 @@ const props = defineProps({
     title: {
         type: String,
         default: 'Document Preview',
+    },
+    /** Optional excel export handler — when provided an Excel button is shown in the toolbar */
+    onExcel: {
+        type: Function,
+        default: null,
     },
 });
 

@@ -14,11 +14,15 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import RadioButton from 'primevue/radiobutton';
 import Tag from 'primevue/tag';
-import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
+import BudgetMonitoringModal from '@/Pages/PaymentMonitoring/Modal/BudgetMonitoringModal.vue';
+import BudgetReportModal from '@/Pages/PaymentMonitoring/Modal/BudgetReportModal.vue';
+import PdfPreviewModal from '@/Pages/FundTransactions/Modal/PdfPreviewModal.vue';
+import { exportBudgetReportExcel } from '@/Pages/PaymentMonitoring/Excel/BudgetReportExcel.js';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
+import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
 
 const props = defineProps({
     paymentData: {
@@ -28,6 +32,18 @@ const props = defineProps({
     filters: {
         type: Object,
         default: () => ({ search: '', transaction_status: '', academic_year: '', semester: '' }),
+    },
+    budgetParticulars: {
+        type: Array,
+        default: () => [],
+    },
+    disbursedByProgramYear: {
+        type: Object,
+        default: () => ({}),
+    },
+    fiscalYears: {
+        type: Array,
+        default: () => [],
     },
 });
 
@@ -47,6 +63,33 @@ watch(selectedProgram, () => {
 
 // Debounce timer to prevent infinite filter loops
 let filterTimeout;
+
+// Budget Monitoring modal
+const showBudgetModal = ref(false);
+
+// OBR Report modal
+const showBudgetReportModal = ref(false);
+
+// PDF Preview
+const showPdfPreview = ref(false);
+const pdfPreviewHtml = ref('');
+const pdfPreviewTitle = ref('');
+const pdfPreviewSize = ref('landscape');
+const pdfExcelFn = ref(null);
+
+function onBudgetReportPreview({ htmlDoc, title, paperSize, reportData, today }) {
+    pdfPreviewHtml.value = htmlDoc;
+    pdfPreviewTitle.value = title;
+    pdfPreviewSize.value = paperSize;
+    pdfExcelFn.value = reportData
+        ? () => exportBudgetReportExcel({ reportData, today })
+        : null;
+    showPdfPreview.value = true;
+}
+
+// Format currency helper
+const formatCurrency = (val) =>
+    parseFloat(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // Methods
 const applyFilters = () => {
@@ -204,6 +247,42 @@ const formatDate = (date) => {
         day: 'numeric',
     });
 };
+
+// Expanded rows for accordion (blur effect on other rows)
+// PrimeVue 4 uses object format { [dataKey]: true } when dataKey is set
+const expandedRows = ref({});
+const collapseExpandedRows = () => {
+    expandedRows.value = {};
+};
+
+// Group filteredData by scholar — latest transaction shown as preview row
+const groupedData = computed(() => {
+    const groups = {};
+    filteredData.value.forEach(item => {
+        if (!groups[item.profile_id]) {
+            groups[item.profile_id] = {
+                profile_id: item.profile_id,
+                scholar_name: item.scholar_name,
+                transactions: [],
+            };
+        }
+        groups[item.profile_id].transactions.push(item);
+    });
+
+    return Object.values(groups).map(g => {
+        const sorted = [...g.transactions].sort((a, b) => {
+            const dateA = a.date_obligated ? new Date(a.date_obligated) : new Date(0);
+            const dateB = b.date_obligated ? new Date(b.date_obligated) : new Date(0);
+            return dateB - dateA;
+        });
+        return {
+            ...g,
+            transactions: sorted,
+            latest: sorted[0],
+            totalAmount: g.transactions.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0),
+        };
+    }).sort((a, b) => a.scholar_name.localeCompare(b.scholar_name));
+});
 </script>
 
 <template>
@@ -223,6 +302,16 @@ const formatDate = (date) => {
                             <p class="text-sm text-gray-600 short:text-xs">Track OBR status for active scholarship
                                 records</p>
                         </div>
+                    </div>
+                </template>
+                <template #end>
+                    <div class="flex gap-3">
+                        <Button v-if="props.budgetParticulars.length" icon="pi pi-wallet" label="Budget Monitoring"
+                            severity="secondary" rounded outlined size="small" @click="showBudgetModal = true"
+                            v-tooltip.bottom="'Budget Monitoring'" />
+                        <Button icon="pi pi-file-edit" label="Budget Allotment Report" severity="secondary" rounded
+                            outlined size="small" @click="showBudgetReportModal = true"
+                            v-tooltip.bottom="'Budget Report'" />
                     </div>
                 </template>
             </Toolbar>
@@ -318,87 +407,204 @@ const formatDate = (date) => {
             <!-- Data Table -->
             <Panel class="!rounded-4xl overflow-hidden shadow-sm">
                 <div class="flex items-center justify-between mb-4 short:mb-2 -mt-2">
-                    <span class="text-sm text-gray-500">{{ filteredData.length }} record(s)</span>
+                    <span class="text-sm text-gray-500">
+                        {{ groupedData.length }} scholar(s) &middot; {{ filteredData.length }} transaction(s)
+                    </span>
                 </div>
 
-                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredData"
+                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="groupedData"
                     :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]" class="text-sm" showGridlines
-                    stripedRows scrollable>
+                    stripedRows scrollable dataKey="profile_id" v-model:expandedRows="expandedRows"
+                    :rowClass="(row) => Object.keys(expandedRows).length > 0 && !expandedRows[row.profile_id] ? 'row-blurred' : ''">
 
-                    <Column field="scholar_name" header="Scholar Name" sortable style="min-width: 180px">
+                    <Column expander headerClass="w-12" bodyClass="w-12" />
+
+                    <Column field="scholar_name" header="Scholar" sortable style="min-width: 200px">
                         <template #body="{ data }">
                             <a :href="route('scholarship.profile.show', data.profile_id)" target="_blank"
                                 class="text-blue-600 hover:text-blue-800 hover:underline font-medium flex items-center gap-1">
                                 {{ data.scholar_name }}
                                 <i class="pi pi-external-link" style="font-size: 9pt;"></i>
                             </a>
+                            <Badge v-if="data.transactions.length > 1" :value="`${data.transactions.length} records`"
+                                severity="secondary" size="small" class="mt-1" />
                         </template>
                     </Column>
 
-                    <Column field="obr_type" header="OBR Type" sortable style="min-width: 140px">
+                    <Column header="Latest Term" style="min-width: 130px">
                         <template #body="{ data }">
-                            <span v-if="data.obr_type" class="text-xs font-medium" :class="{
-                                'text-gray-700': data.obr_type === 'REGULAR',
-                                'text-yellow-600': data.obr_type === 'FINANCIAL ASSISTANCE',
-                                'text-purple-600': data.obr_type === 'REIMBURSEMENT',
-                            }">{{ data.obr_type }}</span>
+                            <div class="text-xs font-medium">{{ data.latest.academic_year || '—' }}</div>
+                            <div class="text-xs text-gray-500">
+                                {{ data.latest.term || '' }}
+                                <span v-if="data.latest.year_level"> · Yr {{ data.latest.year_level }}</span>
+                            </div>
+                        </template>
+                    </Column>
+
+                    <Column header="OBR Type / Kind" style="min-width: 160px">
+                        <template #body="{ data }">
+                            <span v-if="data.latest.obr_type" class="text-xs font-medium" :class="{
+                                'text-gray-700': data.latest.obr_type === 'REGULAR',
+                                'text-yellow-600': data.latest.obr_type === 'FINANCIAL ASSISTANCE',
+                                'text-purple-600': data.latest.obr_type === 'REIMBURSEMENT',
+                            }">{{ data.latest.obr_type }}</span>
                             <span v-else class="text-gray-400 text-xs">—</span>
+                            <div class="text-xs mt-0.5">
+                                <span v-if="data.latest.disbursement_type" class="font-medium" :class="{
+                                    'text-blue-600': data.latest.disbursement_type === 'disbursements',
+                                    'text-green-600': data.latest.disbursement_type === 'payroll',
+                                }">
+                                    {{ data.latest.disbursement_type === 'disbursements' ? 'Disbursement'
+                                        : data.latest.disbursement_type === 'payroll' ? 'Payroll'
+                                            : data.latest.disbursement_type }}
+                                </span>
+                            </div>
                         </template>
                     </Column>
 
-                    <Column field="disbursement_type" header="Type" sortable style="min-width: 110px">
+                    <Column header="Status" style="min-width: 130px">
                         <template #body="{ data }">
-                            <span v-if="data.disbursement_type" class="text-xs font-medium" :class="{
-                                'text-blue-600': data.disbursement_type === 'disbursements',
-                                'text-green-600': data.disbursement_type === 'payroll',
-                            }">{{ data.disbursement_type === 'disbursements' ? 'Disbursement' : data.disbursement_type
-                                === 'payroll' ? 'Payroll' : data.disbursement_type }}</span>
-                            <span v-else class="text-gray-400 text-xs">—</span>
-                        </template>
-                    </Column>
-
-                    <Column field="academic_year" header="Acad. Year" sortable style="min-width: 110px" />
-                    <Column field="year_level" header="Year" sortable style="min-width: 70px" />
-                    <Column field="term" header="Term" sortable style="min-width: 80px" />
-
-                    <Column header="Status" style="min-width: 140px">
-                        <template #body="{ data }">
-                            <Tag v-if="data.transaction_status" :value="data.transaction_status" rounded
-                                :severity="getStatusSeverity(data.transaction_status)" />
+                            <Tag v-if="data.latest.transaction_status" :value="data.latest.transaction_status" rounded
+                                :severity="getStatusSeverity(data.latest.transaction_status)" />
                             <span v-else class="text-gray-400 text-xs italic">No OBR</span>
                         </template>
                     </Column>
 
-                    <Column header="Amount" sortable style="min-width: 110px">
+                    <Column header="Latest Amount" style="min-width: 120px">
                         <template #body="{ data }">
-                            <span v-if="data.amount" class="font-semibold text-green-700">
-                                ₱{{ parseFloat(data.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                            <span v-if="data.latest.amount" class="font-semibold text-green-700 text-xs">
+                                ₱{{ parseFloat(data.latest.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })
+                                }}
                             </span>
-                            <span v-else class="text-gray-400">—</span>
+                            <span v-else class="text-gray-400 text-xs">—</span>
                         </template>
                     </Column>
 
-                    <Column header="OBR Date" style="min-width: 110px">
+                    <Column header="OBR No." style="min-width: 140px">
                         <template #body="{ data }">
-                            <span v-if="data.date_obligated" class="text-gray-700">{{ formatDate(data.date_obligated)
-                            }}</span>
-                            <span v-else class="text-gray-400">—</span>
+                            <span v-if="data.latest.obr_no" class="font-mono text-blue-700 text-xs">{{
+                                data.latest.obr_no }}</span>
+                            <span v-else class="text-gray-400 text-xs">—</span>
+                            <div v-if="data.latest.date_obligated" class="text-xs text-gray-500 mt-0.5">
+                                {{ formatDate(data.latest.date_obligated) }}
+                            </div>
                         </template>
                     </Column>
 
-                    <Column field="obr_no" header="OBR No." style="min-width: 130px">
+                    <Column header="Pre-Total" style="min-width: 120px">
                         <template #body="{ data }">
-                            <span v-if="data.obr_no" class="font-mono text-blue-700">{{ data.obr_no }}</span>
-                            <span v-else class="text-gray-400">—</span>
+                            <span v-if="data.totalAmount > 0" class="font-bold text-green-800 text-xs">
+                                ₱{{ data.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                            </span>
+                            <span v-else class="text-gray-400 text-xs">—</span>
+                            <div v-if="data.transactions.length > 1" class="text-xs text-gray-400 mt-0.5">
+                                {{ data.transactions.length }} records
+                            </div>
                         </template>
                     </Column>
 
-                    <Column field="remarks" header="Remarks" style="min-width: 180px">
-                        <template #body="{ data }">
-                            <span v-if="data.remarks" class="text-gray-600" v-html="data.remarks"></span>
-                            <span v-else class="text-gray-400">—</span>
-                        </template>
-                    </Column>
+                    <!-- Expansion: all transactions for this scholar -->
+                    <template #expansion="slotProps">
+                        <div class="p-4 bg-gray-50 dark:bg-[#1e242b] rounded-2xl mx-4 mb-3">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="font-semibold text-sm text-gray-700 dark:text-gray-200">
+                                    All Fund Transactions
+                                    <Badge :value="slotProps.data.transactions.length" severity="info" size="small"
+                                        class="ml-1" />
+                                </h4>
+                            </div>
+
+                            <DataTable :value="slotProps.data.transactions" showGridlines stripedRows
+                                class="text-xs nested-pm-table">
+                                <Column header="Acad. Year / Term" style="min-width: 130px">
+                                    <template #body="{ data }">
+                                        <div class="font-medium">{{ data.academic_year || '—' }}</div>
+                                        <div class="text-gray-500">
+                                            {{ data.term || '' }}
+                                            <span v-if="data.year_level"> · Yr {{ data.year_level }}</span>
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column header="OBR Type" style="min-width: 140px">
+                                    <template #body="{ data }">
+                                        <span v-if="data.obr_type" class="font-medium" :class="{
+                                            'text-gray-700': data.obr_type === 'REGULAR',
+                                            'text-yellow-600': data.obr_type === 'FINANCIAL ASSISTANCE',
+                                            'text-purple-600': data.obr_type === 'REIMBURSEMENT',
+                                        }">{{ data.obr_type }}</span>
+                                        <span v-else class="text-gray-400">—</span>
+                                    </template>
+                                </Column>
+                                <Column header="Type" style="min-width: 110px">
+                                    <template #body="{ data }">
+                                        <span v-if="data.disbursement_type" class="font-medium" :class="{
+                                            'text-blue-600': data.disbursement_type === 'disbursements',
+                                            'text-green-600': data.disbursement_type === 'payroll',
+                                        }">
+                                            {{ data.disbursement_type === 'disbursements' ? 'Disbursement'
+                                                : data.disbursement_type === 'payroll' ? 'Payroll'
+                                                    : data.disbursement_type }}
+                                        </span>
+                                        <span v-else class="text-gray-400">—</span>
+                                    </template>
+                                </Column>
+                                <Column header="Status" style="min-width: 120px">
+                                    <template #body="{ data }">
+                                        <Tag v-if="data.transaction_status" :value="data.transaction_status" rounded
+                                            :severity="getStatusSeverity(data.transaction_status)" />
+                                        <span v-else class="text-gray-400 italic">No OBR</span>
+                                    </template>
+                                </Column>
+                                <Column header="Amount" style="min-width: 110px">
+                                    <template #body="{ data }">
+                                        <span v-if="data.amount" class="font-semibold text-green-700">
+                                            ₱{{ parseFloat(data.amount).toLocaleString('en-US', {
+                                                minimumFractionDigits:
+                                                    2
+                                            }) }}
+                                        </span>
+                                        <span v-else class="text-gray-400">—</span>
+                                    </template>
+                                </Column>
+                                <Column header="OBR Date" style="min-width: 110px">
+                                    <template #body="{ data }">
+                                        <span v-if="data.date_obligated">{{ formatDate(data.date_obligated) }}</span>
+                                        <span v-else class="text-gray-400">—</span>
+                                    </template>
+                                </Column>
+                                <Column header="OBR No." style="min-width: 130px">
+                                    <template #body="{ data }">
+                                        <span v-if="data.obr_no" class="font-mono text-blue-700">{{ data.obr_no
+                                        }}</span>
+                                        <span v-else class="text-gray-400">—</span>
+                                    </template>
+                                </Column>
+                                <Column header="Remarks" style="min-width: 160px">
+                                    <template #body="{ data }">
+                                        <span v-if="data.remarks" v-safe-html="data.remarks"
+                                            class="text-gray-600"></span>
+                                        <span v-else class="text-gray-400">—</span>
+                                    </template>
+                                </Column>
+                            </DataTable>
+
+                            <!-- Pre-Total row -->
+                            <div
+                                class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 flex justify-between items-center">
+                                <span class="text-xs text-gray-500">{{ slotProps.data.transactions.length }}
+                                    transaction(s)</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-gray-600 dark:text-gray-300 font-medium">Pre-Total:</span>
+                                    <span class="text-lg font-bold text-green-700">
+                                        ₱{{ slotProps.data.totalAmount.toLocaleString('en-US', {
+                                            minimumFractionDigits:
+                                                2
+                                        }) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
 
                     <template #empty>
                         <div class="py-12 text-center text-gray-500">
@@ -409,6 +615,19 @@ const formatDate = (date) => {
                 </DataTable>
             </Panel>
         </div>
+
+        <!-- Budget Monitoring Modal -->
+        <BudgetMonitoringModal v-model:visible="showBudgetModal" :budgetParticulars="props.budgetParticulars"
+            :disbursedByProgramYear="props.disbursedByProgramYear" :fiscalYears="props.fiscalYears"
+            @preview="onBudgetReportPreview" />
+
+        <!-- OBR Allotment Report Modal -->
+        <BudgetReportModal v-model:visible="showBudgetReportModal" :fiscalYears="props.fiscalYears"
+            @preview="onBudgetReportPreview" />
+
+        <!-- PDF Preview -->
+        <PdfPreviewModal :show="showPdfPreview" @update:show="showPdfPreview = $event" :htmlDoc="pdfPreviewHtml"
+            :title="pdfPreviewTitle" :paperSize="pdfPreviewSize" :onExcel="pdfExcelFn" />
 
     </AdminLayout>
 </template>
@@ -434,5 +653,23 @@ const formatDate = (date) => {
 :deep(.p-select),
 :deep(.p-multiselect) {
     border-radius: 1rem;
+}
+
+:deep(.p-datatable-tbody > tr.row-blurred > td) {
+    opacity: 0.4;
+    filter: blur(1.5px);
+    transition: opacity 0.2s, filter 0.2s;
+    pointer-events: none;
+}
+
+:deep(.nested-pm-table .p-datatable) {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid var(--p-datatable-border-color);
+}
+
+:deep(.nested-pm-table .p-datatable-table-container) {
+    border-radius: 0;
+    overflow: hidden;
 }
 </style>

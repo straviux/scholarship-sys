@@ -40,57 +40,6 @@
                 </template>
             </Toolbar>
 
-            <!-- Filters Panel -->
-            <Panel class="!rounded-4xl overflow-hidden">
-                <!-- Filters Section - Single Row -->
-                <div class="flex items-end gap-3 -mt-6 flex-wrap">
-                    <Button icon="pi pi-filter" severity="warn" text rounded @click="openDrawer()"
-                        v-tooltip.bottom="'More Filters'" />
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
-                        <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="All Programs"
-                            size="small" class="w-full" />
-                    </div>
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
-                        <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses" size="small"
-                            class="w-full" />
-                    </div>
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
-                        <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels" size="small"
-                            class="w-full" />
-                    </div>
-                    <!-- Only show Unified Status filter -->
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Status</label>
-                        <Select v-model="filter.unified_status" :options="unifiedStatusOptions" optionLabel="label"
-                            optionValue="value" placeholder="All Statuses" showClear class="w-full" size="small" filter>
-                            <template #filter="{ value, updateModel }">
-                                <InputGroup>
-                                    <InputText :value="value" @input="updateModel($event.target.value)"
-                                        placeholder="Search status..." class="w-full" />
-                                    <Button v-if="value" icon="pi pi-times" severity="secondary" text size="small"
-                                        @click="updateModel('')" />
-                                </InputGroup>
-                            </template>
-                        </Select>
-                    </div>
-                    <Button severity="secondary" outlined rounded size="small" icon="pi pi-history"
-                        @click="clearFilters" v-tooltip.bottom="'Clear Filters'" />
-                </div>
-            </Panel>
-
-            <!-- Active Filter Tags -->
-            <div v-if="activeFilterTags.length" class="flex flex-wrap items-center gap-2 mt-2">
-                <span class="text-xs text-gray-500">Active Filters:</span>
-                <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded class="cursor-pointer"
-                    @click="removeFilter(tag.key)">
-                    <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
-                    <i class="pi pi-times ml-1 text-[0.6rem]"></i>
-                </Tag>
-            </div>
-
             <!-- Filter Drawer -->
             <FloatingDrawer v-model:visible="showFilterDrawer" header="All Filters" position="right" class="!w-[600px]">
                 <div class="grid grid-cols-2 gap-4">
@@ -174,286 +123,314 @@
                 </div>
             </FloatingDrawer>
 
-            <!-- Profiles DataView -->
-            <div class="mt-8">
-                <Panel class="!rounded-4xl overflow-hidden">
-                    <!-- Info Bar -->
-                    <div
-                        class="md:flex hidden items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
-                        <div class="flex-1 max-w-md">
-                            <IconField iconPosition="left">
-                                <InputIcon class="pi pi-search text-gray-400" />
-                                <InputText v-model="globalFilter" placeholder="Search..." class="w-full" size="small" />
-                            </IconField>
-                        </div>
-                        <div class="flex">
-                            <span class="text-sm opacity-60" v-if="simpleView">Right click on profile row to show
-                                context
-                                menu</span>
-                        </div>
-                        <div class="flex items-center justify-center gap-4">
-                            <div class="text-sm text-gray-600 flex items-center justify-center gap-2">
-                                <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
-                                <span>/ <strong>{{ totalRecords }}</strong></span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <ToggleSwitch v-model="simpleView" inputId="simpleViewToggle" size="small" />
-                                <label for="simpleViewToggle" class="text-xs text-gray-600 cursor-pointer"
-                                    @click="toggleSimpleView">Simple
-                                    View</label>
-                            </div>
-                        </div>
+            <!-- Profiles Panel (filters + dataview merged) -->
+            <Panel class="!rounded-4xl overflow-hidden mt-8">
+                <!-- Info Bar -->
+                <div
+                    class="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
+                    <div class="flex-1 max-w-md">
+                        <IconField iconPosition="left">
+                            <InputIcon class="pi pi-search text-gray-400" />
+                            <InputText v-model="globalFilter" placeholder="Search..." class="w-full" size="small" />
+                        </IconField>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <Button :icon="simpleView ? 'pi pi-table' : 'pi pi-list'" severity="secondary" rounded outlined
+                            size="small"
+                            v-tooltip.bottom="simpleView ? 'Switch to Detailed View' : 'Switch to Simple View'"
+                            @click="simpleView = !simpleView" />
+                    </div>
+                </div>
+
+                <!-- Filters Row -->
+                <div class="flex flex-wrap items-end gap-3 mt-3 mb-4">
+                    <Button icon="pi pi-filter" severity="warn" text rounded @click="openDrawer()"
+                        v-tooltip.bottom="'More Filters'" />
+                    <div class="flex flex-col">
+                        <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="All Programs"
+                            size="small" />
+                    </div>
+                    <div class="flex flex-col">
+                        <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses"
+                            size="small" />
+                    </div>
+                    <div class="flex flex-col">
+                        <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
+                            size="small" />
                     </div>
 
-                    <!-- DataTable View -->
-                    <DataTable :value="tableData" paginator :rows="dataViewRows" :totalRecords="totalRecords"
-                        :first="first" @page="onPageChange" :lazy="true"
-                        paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                        :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
-                        :rowHover="true" stripedRows class="compact-table"
-                        @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu
-                        :globalFilter="globalFilter"
-                        :rowClass="(row) => expandedRows.length && !expandedRows.some(r => r.profile_id === row.profile_id) ? 'row-blurred' : ''"
-                        v-model:expandedRows="expandedRows">
 
-                        <Column expander headerClass="w-12" bodyClass="w-12" />
+                    <div class="flex flex-col">
+                        <Select v-model="filter.unified_status" :options="unifiedStatusOptions" optionLabel="label"
+                            optionValue="value" placeholder="All Statuses" showClear size="small" filter>
+                            <template #filter="{ value, updateModel }">
+                                <InputGroup>
+                                    <InputText :value="value" @input="updateModel($event.target.value)"
+                                        placeholder="Search status..." class="w-full" />
+                                    <Button v-if="value" icon="pi pi-times" severity="secondary" text size="small"
+                                        @click="updateModel('')" />
+                                </InputGroup>
+                            </template>
+                        </Select>
+                    </div>
+                    <Button v-if="activeFilterTags.length" icon="pi pi-history" severity="danger" size="small" text
+                        rounded @click="clearFilters" v-tooltip.bottom="'Clear all filters'" />
+                    <div class="ml-auto flex items-center gap-2">
+                        <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
+                        <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
+                    </div>
+                </div>
 
-                        <Column field="unique_id" header="ID" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
-                            <template #body="slotProps">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-[40px]">
-                                        <Avatar :label="getInitials(slotProps.data)" size="normal" shape="circle"
-                                            class="bg-gradient-to-br from-blue-500 to-blue-600 text-white" />
-                                    </div>
-                                    <div>
-                                        <div as="button"
-                                            class="font-bold text-sm text-sky-700 underline underline-offset-2 cursor-pointer hover:text-blue-800"
-                                            @click="viewFullProfile(slotProps.data)"
-                                            @contextmenu.prevent="openContextMenu($event, slotProps.data)">{{
-                                                getFullName(slotProps.data) }}</div>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <div class="text-xs text-gray-500">{{ slotProps.data.unique_id || 'N/A' }}
-                                            </div>
-                                            <Badge v-if="slotProps.data.has_contract"
-                                                :value="`Contract (${slotProps.data.contract_count})`"
-                                                severity="success" size="small"
-                                                v-tooltip.bottom="'Contract attachment uploaded'" />
-                                            <Badge v-if="slotProps.data.has_voucher"
-                                                :value="`Voucher (${slotProps.data.voucher_count})`" severity="info"
-                                                size="small"
-                                                v-tooltip.bottom="'Disbursement/Voucher attachment uploaded'" />
+                <!-- Active Filter Tags -->
+                <div v-if="activeFilterTags.length" class="flex flex-wrap items-center gap-2 mb-4">
+                    <span class="text-xs text-gray-500">Active Filters:</span>
+                    <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded
+                        class="cursor-pointer" @click="removeFilter(tag.key)">
+                        <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
+                        <i class="pi pi-times ml-1 text-[0.6rem]"></i>
+                    </Tag>
+                </div>
+
+                <!-- DataTable View -->
+                <DataTable :value="tableData" paginator :rows="dataViewRows" :totalRecords="totalRecords" :first="first"
+                    @page="onPageChange" :lazy="true"
+                    paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                    :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'" :rowHover="true"
+                    stripedRows class="compact-table"
+                    @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu
+                    :globalFilter="globalFilter"
+                    :rowClass="(row) => expandedRows.length && !expandedRows.some(r => r.profile_id === row.profile_id) ? 'row-blurred' : ''"
+                    v-model:expandedRows="expandedRows">
+
+                    <Column expander headerClass="w-12" bodyClass="w-12" />
+
+                    <Column field="unique_id" header="ID" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                        <template #body="slotProps">
+                            <div class="flex items-center gap-3">
+                                <div class="w-[40px]">
+                                    <Avatar :label="getInitials(slotProps.data)" size="normal" shape="circle"
+                                        class="bg-gradient-to-br from-blue-500 to-blue-600 text-white" />
+                                </div>
+                                <div>
+                                    <div as="button"
+                                        class="font-bold text-sm text-sky-700 underline underline-offset-2 cursor-pointer hover:text-blue-800"
+                                        @click="viewFullProfile(slotProps.data)"
+                                        @contextmenu.prevent="openContextMenu($event, slotProps.data)">{{
+                                            getFullName(slotProps.data) }}</div>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <div class="text-xs text-gray-500">{{ slotProps.data.unique_id || 'N/A' }}
                                         </div>
+                                        <Badge v-if="slotProps.data.has_contract"
+                                            :value="`Contract (${slotProps.data.contract_count})`" severity="success"
+                                            size="small" v-tooltip.bottom="'Contract attachment uploaded'" />
+                                        <Badge v-if="slotProps.data.has_voucher"
+                                            :value="`Voucher (${slotProps.data.voucher_count})`" severity="info"
+                                            size="small"
+                                            v-tooltip.bottom="'Disbursement/Voucher attachment uploaded'" />
                                     </div>
                                 </div>
-                            </template>
-                        </Column>
-
-
-                        <Column field="contact_no" header="Contact" headerClass="min-w-[130px]"
-                            bodyClass="min-w-[130px]">
-                            <template #body="slotProps">
-                                <div class="text-sm">
-                                    <div>{{ slotProps.data.contact_no || 'N/A' }}</div>
-                                    <div class="text-xs text-gray-500">{{ slotProps.data.municipality || 'N/A' }}</div>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <Column field="program" header="Program" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
-                            <template #body="slotProps">
-                                <div v-if="slotProps.data.latest_scholarship_record"
-                                    class="text-sm font-semibold truncate">
-                                    {{ slotProps.data.latest_scholarship_record.program?.shortname || 'N/A' }}
-                                </div>
-                                <div v-else class="text-sm text-gray-400">N/A</div>
-                            </template>
-                        </Column>
-
-                        <Column field="course" header="Course" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
-                            <template #body="slotProps">
-                                <div v-if="slotProps.data.latest_scholarship_record">
-                                    <div class="text-sm font-medium truncate">
-                                        {{ slotProps.data.latest_scholarship_record.course?.shortname || 'N/A' }}
-                                    </div>
-                                    <div class="text-xs text-gray-500 truncate">
-                                        {{ slotProps.data.latest_scholarship_record.school?.shortname || 'N/A' }}
-                                    </div>
-                                    <div class="text-xs text-gray-600 truncate"
-                                        v-if="slotProps.data.latest_scholarship_record.year_level">
-                                        {{ slotProps.data.latest_scholarship_record.year_level }} Year
-                                    </div>
-                                </div>
-                                <div v-else class="text-sm text-gray-400">N/A</div>
-                            </template>
-                        </Column>
-
-                        <Column field="status" header="Status" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
-                            <template #body="slotProps">
-                                <template v-if="slotProps.data.latest_scholarship_record">
-                                    <div :class="getStatusBadgeClass(slotProps.data.latest_scholarship_record.unified_status)"
-                                        :v-tooltip="getStatusTooltip(slotProps.data.latest_scholarship_record.unified_status)"
-                                        class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
-                                        {{
-                                            getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
-                                        }}
-                                    </div>
-                                </template>
-                                <div v-else
-                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600">
-                                    No Record
-                                </div>
-                            </template>
-                        </Column>
-
-                        <Column header="Previous Records" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
-                            <template #body="slotProps">
-                                <div v-if="Object.keys(slotProps.data.previous_record_statuses ?? {}).length"
-                                    class="flex flex-wrap gap-1">
-                                    <div v-for="(count, status) in slotProps.data.previous_record_statuses"
-                                        :key="status" class="flex items-center gap-1">
-                                        <div :class="getStatusBadgeClass(status)"
-                                            class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block">
-                                            {{ getScholarshipStatusLabel(status) }}
-                                        </div>
-                                        <Badge v-if="count > 1" :value="count" severity="secondary" size="small"
-                                            v-tooltip.top="`${count} records with this status`" />
-                                    </div>
-                                </div>
-                                <span v-else class="text-xs text-gray-400">—</span>
-                            </template>
-                        </Column>
-
-                        <Column field="grant_provision" header="Grant Provision" headerClass="min-w-[160px]"
-                            bodyClass="min-w-[160px]" v-if="!simpleView">
-                            <template #body="slotProps">
-                                <div v-if="slotProps.data.latest_scholarship_record" class="flex items-center gap-2">
-                                    <Chip v-if="slotProps.data.latest_scholarship_record.grant_provision"
-                                        :label="slotProps.data.latest_scholarship_record.grant_provision" size="small"
-                                        class="font-medium cursor-pointer"
-                                        @click="hasPermission('applicants.edit') && openGrantProvisionDialog(slotProps.data)" />
-                                    <Button v-else-if="hasPermission('applicants.edit')" icon="pi pi-plus" label="Set"
-                                        size="small" severity="secondary" text
-                                        @click="openGrantProvisionDialog(slotProps.data)" />
-                                    <Button
-                                        v-if="slotProps.data.latest_scholarship_record.grant_provision && hasPermission('applicants.edit')"
-                                        icon="pi pi-pencil" size="small" severity="secondary" text rounded
-                                        @click="openGrantProvisionDialog(slotProps.data)" v-tooltip.top="'Edit'" />
-                                </div>
-                                <span v-else class="text-sm text-gray-400">N/A</span>
-                            </template>
-                        </Column>
-
-                        <Column header="Actions" headerClass="min-w-[120px]" bodyClass="min-w-[120px]"
-                            v-if="!simpleView">
-                            <template #body="slotProps">
-                                <div class="flex gap-2">
-                                    <Button icon="pi pi-eye" size="small" severity="info" outlined rounded
-                                        v-tooltip.top="'View'" @click="viewFullProfile(slotProps.data)" />
-                                    <Button icon="pi pi-trash" size="small" severity="danger" outlined rounded
-                                        v-tooltip.top="'Soft Delete (Admin Only)'"
-                                        @click="confirmDeleteProfile(slotProps.data)"
-                                        :disabled="!hasRole('administrator')"
-                                        :class="{ 'opacity-50': !hasRole('administrator') }" />
-                                </div>
-                            </template>
-                        </Column>
-
-                        <template #expansion="slotProps">
-                            <div class="px-4 py-3">
-                                <div class="flex items-center gap-2 mb-3">
-                                    <i class="pi pi-history text-indigo-500"></i>
-                                    <span class="text-sm font-semibold text-gray-700">Scholarship Records</span>
-                                    <Badge :value="slotProps.data.scholarship_grant?.length ?? 0" severity="secondary"
-                                        size="small" />
-                                </div>
-                                <DataTable :value="slotProps.data.scholarship_grant" size="small"
-                                    v-if="slotProps.data.scholarship_grant?.length"
-                                    :rowClass="(row) => row.id === slotProps.data.latest_scholarship_record?.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''">
-                                    <Column header="#" headerClass="w-10" bodyClass="w-10">
-                                        <template #body="r">
-                                            <span class="text-xs text-gray-400">{{
-                                                slotProps.data.scholarship_grant.indexOf(r.data) + 1 }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column header="Status" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">
-                                        <template #body="r">
-                                            <div class="flex items-center gap-1">
-                                                <div :class="getStatusBadgeClass(r.data.unified_status)"
-                                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border inline-block">
-                                                    {{ getScholarshipStatusLabel(r.data.unified_status) }}
-                                                </div>
-                                                <i v-if="r.data.id === slotProps.data.latest_scholarship_record?.id"
-                                                    class="pi pi-star-fill text-blue-400 text-xs"
-                                                    v-tooltip.top="'Latest record'" />
-                                            </div>
-                                        </template>
-                                    </Column>
-                                    <Column header="Program" headerClass="min-w-[100px]" bodyClass="min-w-[100px]">
-                                        <template #body="r">
-                                            <span class="text-xs">{{ r.data.program?.shortname || '—' }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column header="Course" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
-                                        <template #body="r">
-                                            <span class="text-xs">{{ r.data.course?.shortname || '—' }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column header="School" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
-                                        <template #body="r">
-                                            <span class="text-xs">{{ r.data.school?.shortname || '—' }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column header="Year" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
-                                        <template #body="r">
-                                            <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—'
-                                                }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column header="Academic Year" headerClass="min-w-[110px]"
-                                        bodyClass="min-w-[110px]">
-                                        <template #body="r">
-                                            <span class="text-xs">{{ r.data.academic_year || '—' }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column header="Term" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
-                                        <template #body="r">
-                                            <span class="text-xs">{{ r.data.term || '—' }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column header="Grant Provision" headerClass="min-w-[110px]"
-                                        bodyClass="min-w-[110px]">
-                                        <template #body="r">
-                                            <span class="text-xs">{{ r.data.grant_provision || '—' }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column header="Date Filed" headerClass="min-w-[100px]" bodyClass="min-w-[100px]">
-                                        <template #body="r">
-                                            <span class="text-xs">{{ r.data.date_filed ? formatDate(r.data.date_filed) :
-                                                '—' }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column header="Date Approved" headerClass="min-w-[110px]"
-                                        bodyClass="min-w-[110px]">
-                                        <template #body="r">
-                                            <span class="text-xs">{{ r.data.date_approved ?
-                                                formatDate(r.data.date_approved) : '—' }}</span>
-                                        </template>
-                                    </Column>
-                                </DataTable>
-                                <p v-else class="text-xs text-gray-400 italic">No scholarship records found.</p>
                             </div>
                         </template>
+                    </Column>
 
-                        <template #empty>
-                            <div class="text-center py-12">
-                                <i class="pi pi-users text-6xl text-gray-300 mb-4"></i>
-                                <p class="text-gray-500 text-lg">No profiles found</p>
-                                <p class="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
+
+                    <Column field="contact_no" header="Contact" headerClass="min-w-[130px]" bodyClass="min-w-[130px]">
+                        <template #body="slotProps">
+                            <div class="text-sm">
+                                <div>{{ slotProps.data.contact_no || 'N/A' }}</div>
+                                <div class="text-xs text-gray-500">{{ slotProps.data.municipality || 'N/A' }}</div>
                             </div>
                         </template>
-                    </DataTable>
-                </Panel>
-            </div>
+                    </Column>
+
+                    <Column field="program" header="Program" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
+                        <template #body="slotProps">
+                            <div v-if="slotProps.data.latest_scholarship_record" class="text-sm font-semibold truncate">
+                                {{ slotProps.data.latest_scholarship_record.program?.shortname || 'N/A' }}
+                            </div>
+                            <div v-else class="text-sm text-gray-400">N/A</div>
+                        </template>
+                    </Column>
+
+                    <Column field="course" header="Course" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
+                        <template #body="slotProps">
+                            <div v-if="slotProps.data.latest_scholarship_record">
+                                <div class="text-sm font-medium truncate">
+                                    {{ slotProps.data.latest_scholarship_record.course?.shortname || 'N/A' }}
+                                </div>
+                                <div class="text-xs text-gray-500 truncate">
+                                    {{ slotProps.data.latest_scholarship_record.school?.shortname || 'N/A' }}
+                                </div>
+                                <div class="text-xs text-gray-600 truncate"
+                                    v-if="slotProps.data.latest_scholarship_record.year_level">
+                                    {{ slotProps.data.latest_scholarship_record.year_level }} Year
+                                </div>
+                            </div>
+                            <div v-else class="text-sm text-gray-400">N/A</div>
+                        </template>
+                    </Column>
+
+                    <Column field="status" header="Status" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                        <template #body="slotProps">
+                            <template v-if="slotProps.data.latest_scholarship_record">
+                                <div :class="getStatusBadgeClass(slotProps.data.latest_scholarship_record.unified_status)"
+                                    :v-tooltip="getStatusTooltip(slotProps.data.latest_scholarship_record.unified_status)"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
+                                    {{
+                                        getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
+                                    }}
+                                </div>
+                            </template>
+                            <div v-else
+                                class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+                                No Record
+                            </div>
+                        </template>
+                    </Column>
+
+                    <Column header="Previous Records" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
+                        <template #body="slotProps">
+                            <div v-if="Object.keys(slotProps.data.previous_record_statuses ?? {}).length"
+                                class="flex flex-wrap gap-1">
+                                <div v-for="(count, status) in slotProps.data.previous_record_statuses" :key="status"
+                                    class="flex items-center gap-1">
+                                    <div :class="getStatusBadgeClass(status)"
+                                        class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block">
+                                        {{ getScholarshipStatusLabel(status) }}
+                                    </div>
+                                    <Badge v-if="count > 1" :value="count" severity="secondary" size="small"
+                                        v-tooltip.top="`${count} records with this status`" />
+                                </div>
+                            </div>
+                            <span v-else class="text-xs text-gray-400">—</span>
+                        </template>
+                    </Column>
+
+                    <Column field="grant_provision" header="Grant Provision" headerClass="min-w-[160px]"
+                        bodyClass="min-w-[160px]" v-if="!simpleView">
+                        <template #body="slotProps">
+                            <div v-if="slotProps.data.latest_scholarship_record" class="flex items-center gap-2">
+                                <Chip v-if="slotProps.data.latest_scholarship_record.grant_provision"
+                                    :label="slotProps.data.latest_scholarship_record.grant_provision" size="small"
+                                    class="font-medium cursor-pointer"
+                                    @click="hasPermission('applicants.edit') && openGrantProvisionDialog(slotProps.data)" />
+                                <Button v-else-if="hasPermission('applicants.edit')" icon="pi pi-plus" label="Set"
+                                    size="small" severity="secondary" text
+                                    @click="openGrantProvisionDialog(slotProps.data)" />
+                                <Button
+                                    v-if="slotProps.data.latest_scholarship_record.grant_provision && hasPermission('applicants.edit')"
+                                    icon="pi pi-pencil" size="small" severity="secondary" text rounded
+                                    @click="openGrantProvisionDialog(slotProps.data)" v-tooltip.top="'Edit'" />
+                            </div>
+                            <span v-else class="text-sm text-gray-400">N/A</span>
+                        </template>
+                    </Column>
+
+                    <Column header="Actions" headerClass="min-w-[120px]" bodyClass="min-w-[120px]" v-if="!simpleView">
+                        <template #body="slotProps">
+                            <div class="flex gap-2">
+                                <Button icon="pi pi-eye" size="small" severity="info" outlined rounded
+                                    v-tooltip.top="'View'" @click="viewFullProfile(slotProps.data)" />
+                                <Button icon="pi pi-trash" size="small" severity="danger" outlined rounded
+                                    v-tooltip.top="'Soft Delete (Admin Only)'"
+                                    @click="confirmDeleteProfile(slotProps.data)" :disabled="!hasRole('administrator')"
+                                    :class="{ 'opacity-50': !hasRole('administrator') }" />
+                            </div>
+                        </template>
+                    </Column>
+
+                    <template #expansion="slotProps">
+                        <div class="px-4 py-3">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="pi pi-history text-indigo-500"></i>
+                                <span class="text-sm font-semibold text-gray-700">Scholarship Records</span>
+                                <Badge :value="slotProps.data.scholarship_grant?.length ?? 0" severity="secondary"
+                                    size="small" />
+                            </div>
+                            <DataTable :value="slotProps.data.scholarship_grant" size="small"
+                                v-if="slotProps.data.scholarship_grant?.length"
+                                :rowClass="(row) => row.id === slotProps.data.latest_scholarship_record?.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''">
+                                <Column header="#" headerClass="w-10" bodyClass="w-10">
+                                    <template #body="r">
+                                        <span class="text-xs text-gray-400">{{
+                                            slotProps.data.scholarship_grant.indexOf(r.data) + 1 }}</span>
+                                    </template>
+                                </Column>
+                                <Column header="Status" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">
+                                    <template #body="r">
+                                        <div class="flex items-center gap-1">
+                                            <div :class="getStatusBadgeClass(r.data.unified_status)"
+                                                class="px-2 py-0.5 rounded-full text-xs font-semibold border inline-block">
+                                                {{ getScholarshipStatusLabel(r.data.unified_status) }}
+                                            </div>
+                                            <i v-if="r.data.id === slotProps.data.latest_scholarship_record?.id"
+                                                class="pi pi-star-fill text-blue-400 text-xs"
+                                                v-tooltip.top="'Latest record'" />
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column header="Program" headerClass="min-w-[100px]" bodyClass="min-w-[100px]">
+                                    <template #body="r">
+                                        <span class="text-xs">{{ r.data.program?.shortname || '—' }}</span>
+                                    </template>
+                                </Column>
+                                <Column header="Course" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                                    <template #body="r">
+                                        <span class="text-xs">{{ r.data.course?.shortname || '—' }}</span>
+                                    </template>
+                                </Column>
+                                <Column header="School" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                                    <template #body="r">
+                                        <span class="text-xs">{{ r.data.school?.shortname || '—' }}</span>
+                                    </template>
+                                </Column>
+                                <Column header="Year" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
+                                    <template #body="r">
+                                        <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—'
+                                            }}</span>
+                                    </template>
+                                </Column>
+                                <Column header="Academic Year" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">
+                                    <template #body="r">
+                                        <span class="text-xs">{{ r.data.academic_year || '—' }}</span>
+                                    </template>
+                                </Column>
+                                <Column header="Term" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
+                                    <template #body="r">
+                                        <span class="text-xs">{{ r.data.term || '—' }}</span>
+                                    </template>
+                                </Column>
+                                <Column header="Grant Provision" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">
+                                    <template #body="r">
+                                        <span class="text-xs">{{ r.data.grant_provision || '—' }}</span>
+                                    </template>
+                                </Column>
+                                <Column header="Date Filed" headerClass="min-w-[100px]" bodyClass="min-w-[100px]">
+                                    <template #body="r">
+                                        <span class="text-xs">{{ r.data.date_filed ? formatDate(r.data.date_filed) :
+                                            '—' }}</span>
+                                    </template>
+                                </Column>
+                                <Column header="Date Approved" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">
+                                    <template #body="r">
+                                        <span class="text-xs">{{ r.data.date_approved ?
+                                            formatDate(r.data.date_approved) : '—' }}</span>
+                                    </template>
+                                </Column>
+                            </DataTable>
+                            <p v-else class="text-xs text-gray-400 italic">No scholarship records found.</p>
+                        </div>
+                    </template>
+
+                    <template #empty>
+                        <div class="text-center py-12">
+                            <i class="pi pi-users text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500 text-lg">No profiles found</p>
+                            <p class="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
+                        </div>
+                    </template>
+                </DataTable>
+            </Panel>
         </div>
 
         <!-- Full Profile View Dialog -->

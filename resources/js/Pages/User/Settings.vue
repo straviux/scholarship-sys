@@ -328,7 +328,7 @@
                     <!-- QR Code Display -->
                     <div class="flex justify-center">
                         <div class="p-4 bg-white rounded-lg border-2 border-gray-200">
-                            <div v-html="qrCodeData.qrCode" class="w-64 h-64"></div>
+                            <div v-safe-html="qrCodeData.qrCode" class="w-64 h-64"></div>
                         </div>
                     </div>
 

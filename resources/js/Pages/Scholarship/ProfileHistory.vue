@@ -79,7 +79,7 @@
                                 <span class="text-sm text-gray-600">Approved:</span>
                                 <div class="font-medium text-green-600">{{ getStatusCount('approved') +
                                     getStatusCount('active')
-                                    }}</div>
+                                }}</div>
                             </div>
                             <div>
                                 <span class="text-sm text-gray-600">Pending:</span>
@@ -118,7 +118,7 @@
                                 </div>
                                 <div>
                                     <h5 class="font-semibold text-gray-800">{{ record.program?.name || 'Unknown Program'
-                                        }}</h5>
+                                    }}</h5>
                                     <p class="text-sm text-gray-600">{{ record.program?.shortname || '' }}</p>
                                 </div>
                             </div>
@@ -171,7 +171,8 @@
                         <!-- Remarks if any -->
                         <div v-if="record.remarks" class="mt-4 pt-4 border-t border-gray-200">
                             <span class="text-sm text-gray-600">Remarks:</span>
-                            <div class="mt-1 text-sm text-gray-800 bg-yellow-50 p-2 rounded">{{ record.remarks }}</div>
+                            <div class="mt-1 text-sm text-gray-800 bg-yellow-50 p-2 rounded"
+                                v-safe-html="record.remarks"></div>
                         </div>
                     </div>
 

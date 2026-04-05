@@ -37,6 +37,7 @@ class FundTransaction extends Model
         'transaction_status',
         'school',
         'grant_provision',
+        'scholarship_program_id',
         'created_by',
         'updated_by',
         'fiscal_year',
@@ -107,6 +108,14 @@ class FundTransaction extends Model
             return collect();
         }
         return ScholarshipProfile::whereIn('profile_id', $this->scholar_ids)->get();
+    }
+
+    /**
+     * Get the scholarship program.
+     */
+    public function scholarshipProgram()
+    {
+        return $this->belongsTo(ScholarshipProgram::class, 'scholarship_program_id', 'id');
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ScholarshipProfile;
+use App\Models\ScholarshipProgram;
 use App\Models\ScholarshipRecord;
 use Illuminate\Http\JsonResponse;
 
@@ -339,7 +340,9 @@ class ScholarshipApiController extends Controller
     public function getActiveScholars(): JsonResponse
     {
         try {
-            $records = ScholarshipRecord::with(['profile'])
+            $programNames = ScholarshipProgram::pluck('name', 'id');
+
+            $records = ScholarshipRecord::with(['profile', 'course', 'school'])
                 ->where('unified_status', 'active')
                 ->whereHas('profile', function ($query) {
                     $query->where('is_active', 1);
@@ -362,6 +365,11 @@ class ScholarshipApiController extends Controller
                             ($profile->last_name ?? '')
                     ),
                     'email' => $profile->email ?? null,
+                    'program_id' => $record->program_id ?? null,
+                    'program_name' => $programNames[$record->program_id] ?? null,
+                    'year_level' => $record->year_level ?? null,
+                    'course' => $record->course?->name ?? null,
+                    'school' => $record->school?->name ?? null,
                 ];
             });
 

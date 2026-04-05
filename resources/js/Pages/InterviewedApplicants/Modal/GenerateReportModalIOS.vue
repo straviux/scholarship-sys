@@ -187,182 +187,21 @@
         </template>
     </Dialog>
 
-    <!-- Report Preview Modal — full screen iOS style -->
-    <Dialog :visible="showPreview" @update:visible="val => showPreview = val" modal
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal ios-modal-full" :style="previewModalStyle">
-                <!-- Preview Nav Bar (drag handle) -->
-                <div class="ios-nav-bar" @pointerdown="onPreviewDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="showPreview = false">
-                        <i class="pi pi-chevron-left" style="font-size: 13px;"></i> Back
-                    </button>
-                    <span class="ios-nav-title">Report Preview</span>
-                    <div class="ios-nav-actions">
-                        <button class="ios-icon-btn ios-icon-btn-red" @click="downloadReport('pdf')"
-                            title="Download PDF">
-                            <i class="pi pi-file-pdf"></i>
-                        </button>
-                        <button class="ios-icon-btn ios-icon-btn-green" @click="downloadReport('excel')"
-                            title="Download Excel">
-                            <i class="pi pi-file-excel"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="ios-body ios-preview-body">
-                    <div class="ios-report-container">
-                        <!-- Report Header -->
-                        <div class="ios-report-header">
-                            <h1>{{ reportType === 'list' ? 'Interviewed Applicants' : 'Interview Summary' }}</h1>
-                            <p>{{ moment().format('MMMM D, YYYY · h:mm A') }}</p>
-                        </div>
-
-                        <!-- Active Filters Pills -->
-                        <div v-if="activeFiltersCount > 0" class="ios-filter-pills">
-                            <span v-if="lastParams.recommendation" class="ios-pill">{{ lastParams.recommendation
-                            }}</span>
-                            <span v-if="lastParams.program" class="ios-pill">{{ lastParams.program }}</span>
-                            <span v-if="lastParams.school" class="ios-pill">{{ lastParams.school }}</span>
-                            <span v-if="lastParams.course" class="ios-pill">{{ lastParams.course }}</span>
-                            <span v-if="lastParams.date_from || lastParams.date_to" class="ios-pill">
-                                {{ lastParams.date_from || '…' }} — {{ lastParams.date_to || '…' }}
-                            </span>
-                        </div>
-
-                        <!-- Empty State -->
-                        <div v-if="reportData.length === 0" class="ios-empty-state">
-                            <i class="pi pi-inbox"></i>
-                            <p>No records match the selected filters</p>
-                        </div>
-
-                        <!-- LIST VIEW -->
-                        <template v-else-if="reportType === 'list'">
-                            <template v-if="groupBy !== 'none'">
-                                <div v-for="(group, groupName) in groupedData" :key="groupName"
-                                    class="ios-report-group">
-                                    <div class="ios-group-header">
-                                        <span>{{ groupName }}</span>
-                                        <span class="ios-group-count">{{ group.length }}</span>
-                                    </div>
-                                    <div class="ios-table-wrap">
-                                        <table class="ios-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>#</th>
-                                                    <th>Name</th>
-                                                    <th>Program</th>
-                                                    <th>Course</th>
-                                                    <th>Recommendation</th>
-                                                    <th v-if="includeAssessment">Academic</th>
-                                                    <th v-if="includeAssessment">Financial</th>
-                                                    <th v-if="includeAssessment">Communication</th>
-                                                    <th>Date</th>
-                                                    <th>Interviewer</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr v-for="(record, idx) in group" :key="record.id">
-                                                    <td>{{ idx + 1 }}</td>
-                                                    <td class="ios-cell-name">{{ record.profile.last_name }}, {{
-                                                        record.profile.first_name }}</td>
-                                                    <td>{{ record.program?.shortname || '—' }}</td>
-                                                    <td>{{ record.course?.shortname || '—' }}</td>
-                                                    <td><span :class="'ios-rec-' + record.recommendation">{{
-                                                        formatRecommendation(record.recommendation) }}</span></td>
-                                                    <td v-if="includeAssessment">{{
-                                                        capitalize(record.academic_potential) }}</td>
-                                                    <td v-if="includeAssessment">{{
-                                                        capitalize(record.financial_need_level) }}</td>
-                                                    <td v-if="includeAssessment">{{
-                                                        capitalize(record.communication_skills) }}</td>
-                                                    <td>{{ formatDate(record.interviewed_at) }}</td>
-                                                    <td>{{ record.interviewer?.name || '—' }}</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </template>
-
-                            <template v-else>
-                                <div class="ios-table-wrap">
-                                    <table class="ios-table">
-                                        <thead>
-                                            <tr>
-                                                <th>#</th>
-                                                <th>Name</th>
-                                                <th>Program</th>
-                                                <th>Course</th>
-                                                <th>Recommendation</th>
-                                                <th v-if="includeAssessment">Academic</th>
-                                                <th v-if="includeAssessment">Financial</th>
-                                                <th v-if="includeAssessment">Communication</th>
-                                                <th>Date</th>
-                                                <th>Interviewer</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="(record, idx) in reportData" :key="record.id">
-                                                <td>{{ idx + 1 }}</td>
-                                                <td class="ios-cell-name">{{ record.profile.last_name }}, {{
-                                                    record.profile.first_name }}</td>
-                                                <td>{{ record.program?.shortname || '—' }}</td>
-                                                <td>{{ record.course?.shortname || '—' }}</td>
-                                                <td><span :class="'ios-rec-' + record.recommendation">{{
-                                                    formatRecommendation(record.recommendation) }}</span></td>
-                                                <td v-if="includeAssessment">{{ capitalize(record.academic_potential) }}
-                                                </td>
-                                                <td v-if="includeAssessment">{{ capitalize(record.financial_need_level)
-                                                }}</td>
-                                                <td v-if="includeAssessment">{{ capitalize(record.communication_skills)
-                                                }}</td>
-                                                <td>{{ formatDate(record.interviewed_at) }}</td>
-                                                <td>{{ record.interviewer?.name || '—' }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </template>
-                        </template>
-
-                        <!-- SUMMARY VIEW -->
-                        <template v-else>
-                            <div class="ios-summary-grid">
-                                <div class="ios-summary-card">
-                                    <div class="ios-summary-card-title">By Recommendation</div>
-                                    <div v-for="(count, rec) in summaryByRecommendation" :key="rec"
-                                        class="ios-summary-row">
-                                        <span :class="'ios-rec-' + rec">{{ formatRecommendation(rec) }}</span>
-                                        <span class="ios-summary-count">{{ count }}</span>
-                                    </div>
-                                </div>
-                                <div class="ios-summary-card">
-                                    <div class="ios-summary-card-title">By Program</div>
-                                    <div v-for="(count, prog) in summaryByProgram" :key="prog" class="ios-summary-row">
-                                        <span>{{ prog }}</span>
-                                        <span class="ios-summary-count">{{ count }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="ios-total-banner">
-                                Total Records: <strong>{{ reportData.length }}</strong>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    <PdfPreviewModal v-model:show="showPdfPreview" :htmlDoc="pdfPreviewHtml" :title="pdfPreviewTitle"
+        :paperSize="pdfPaperSize" />
 </template>
 
 <script setup>
 import { ref, computed, onBeforeUnmount } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import moment from 'moment';
 
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
+import PdfPreviewModal from '@/Pages/FundTransactions/Modal/PdfPreviewModal.vue';
+import InterviewedApplicantsTemplate from '../Pdf/InterviewedApplicantsTemplate.vue';
+import { usePdfPrint, renderVueTemplate } from '@/composables/usePdfPrint';
 
 const props = defineProps({
     show: Boolean,
@@ -389,10 +228,12 @@ const paperSize = ref('A4');
 const orientation = ref('landscape');
 const includeAssessment = ref(true);
 
-// Preview
-const showPreview = ref(false);
+// PDF Preview
+const showPdfPreview = ref(false);
+const pdfPreviewHtml = ref('');
+const pdfPreviewTitle = ref('');
+const pdfPaperSize = ref('a4');
 const lastParams = ref({});
-const reportData = ref([]);
 
 // Options
 const recommendationOptions = [
@@ -440,38 +281,6 @@ const activeFiltersCount = computed(() => {
 
 const previewCount = computed(() => filterApplicants().length);
 
-const groupedData = computed(() => {
-    const groups = {};
-    for (const record of reportData.value) {
-        let key;
-        if (groupBy.value === 'program') key = record.program?.shortname || 'N/A';
-        else if (groupBy.value === 'course') key = record.course?.shortname || 'N/A';
-        else if (groupBy.value === 'recommendation') key = formatRecommendation(record.recommendation);
-        else if (groupBy.value === 'interviewer') key = record.interviewer?.name || 'N/A';
-        else key = 'All';
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(record);
-    }
-    return groups;
-});
-
-const summaryByRecommendation = computed(() => {
-    const map = {};
-    for (const r of reportData.value) {
-        map[r.recommendation || 'unknown'] = (map[r.recommendation || 'unknown'] || 0) + 1;
-    }
-    return map;
-});
-
-const summaryByProgram = computed(() => {
-    const map = {};
-    for (const r of reportData.value) {
-        const key = r.program?.shortname || 'N/A';
-        map[key] = (map[key] || 0) + 1;
-    }
-    return map;
-});
-
 // Methods
 function filterApplicants() {
     let list = [...(props.interviewedApplicants || [])];
@@ -499,8 +308,8 @@ function clearAllFilters() {
 
 function generateReport() {
     if (isDateToInvalid.value) return;
-    reportData.value = filterApplicants();
-    lastParams.value = {
+    const filtered = filterApplicants();
+    const fl = {
         recommendation: selectedRecommendation.value ? recommendationOptions.find(o => o.value === selectedRecommendation.value)?.label : '',
         program: selectedProgram.value?.shortname || '',
         school: selectedSchool.value?.shortname || '',
@@ -508,20 +317,27 @@ function generateReport() {
         date_from: dateFrom.value ? moment(dateFrom.value).format('MMM DD, YYYY') : '',
         date_to: dateTo.value ? moment(dateTo.value).format('MMM DD, YYYY') : '',
     };
-    showPreview.value = true;
-}
+    lastParams.value = fl;
 
-function downloadReport(format) {
-    const ids = reportData.value.map(r => r.id).join(',');
-    const params = new URLSearchParams({
-        ids,
-        report_type: reportType.value,
-        group_by: groupBy.value,
-        paper_size: paperSize.value,
-        orientation: orientation.value,
-        include_assessment: includeAssessment.value ? '1' : '0',
+    const sizeMap = { 'A4': 'a4', 'Letter': 'letter', 'Legal': 'long' };
+    const ps = sizeMap[paperSize.value] || 'a4';
+    pdfPaperSize.value = ps;
+
+    const authUser = usePage().props.auth?.user;
+    const bodyHtml = renderVueTemplate(InterviewedApplicantsTemplate, {
+        records: filtered,
+        reportType: reportType.value,
+        groupBy: groupBy.value,
+        includeAssessment: includeAssessment.value,
+        filterLabels: fl,
+        today: moment().format('MMMM D, YYYY'),
+        preparedBy: authUser?.name ?? '',
     });
-    window.open(`/api/interviewed-applicants/export/${format}?${params.toString()}`, '_blank');
+
+    const { buildHtmlDoc } = usePdfPrint();
+    pdfPreviewTitle.value = reportType.value === 'summary' ? 'Interview-Summary-Report' : 'Interviewed-Applicants-Report';
+    pdfPreviewHtml.value = buildHtmlDoc(bodyHtml, pdfPreviewTitle.value, ps);
+    showPdfPreview.value = true;
 }
 
 function formatRecommendation(value) {
@@ -569,39 +385,9 @@ function onDragEnd() {
     document.removeEventListener('pointerup', onDragEnd);
 }
 
-// ─── Drag logic (preview modal) ───
-const previewDragOffset = ref({ x: 0, y: 0 });
-const previewDragStart = ref(null);
-
-const previewModalStyle = computed(() => ({
-    width: '95vw',
-    height: '90vh',
-    transform: `translate(${previewDragOffset.value.x}px, ${previewDragOffset.value.y}px)`,
-}));
-
-function onPreviewDragStart(e) {
-    if (e.target.closest('button')) return;
-    previewDragStart.value = { x: e.clientX - previewDragOffset.value.x, y: e.clientY - previewDragOffset.value.y };
-    document.addEventListener('pointermove', onPreviewDragMove);
-    document.addEventListener('pointerup', onPreviewDragEnd);
-}
-
-function onPreviewDragMove(e) {
-    if (!previewDragStart.value) return;
-    previewDragOffset.value = { x: e.clientX - previewDragStart.value.x, y: e.clientY - previewDragStart.value.y };
-}
-
-function onPreviewDragEnd() {
-    previewDragStart.value = null;
-    document.removeEventListener('pointermove', onPreviewDragMove);
-    document.removeEventListener('pointerup', onPreviewDragEnd);
-}
-
 onBeforeUnmount(() => {
     document.removeEventListener('pointermove', onDragMove);
     document.removeEventListener('pointerup', onDragEnd);
-    document.removeEventListener('pointermove', onPreviewDragMove);
-    document.removeEventListener('pointerup', onPreviewDragEnd);
 });
 </script>
 

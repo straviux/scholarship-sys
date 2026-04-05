@@ -1,5 +1,6 @@
 import { getPdfCss } from '@/Pages/FundTransactions/Pdf/pdf-styles.js';
 import { createApp } from 'vue';
+import safeHtmlDirective from '@/directives/safeHtml';
 
 /**
  * Renders a Vue component to an HTML string.
@@ -16,6 +17,7 @@ import { createApp } from 'vue';
 export function renderVueTemplate(Component, props = {}) {
 	const el = document.createElement('div');
 	const app = createApp(Component, props);
+	app.directive('safe-html', safeHtmlDirective);
 	app.mount(el);
 	const html = el.innerHTML;
 	app.unmount();

@@ -28,6 +28,7 @@ class UserSharedResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'username' => $this->username,
+            'office_designation' => $this->office_designation,
             'roles' => $this->getRoleNames(),
             'permissions' => $permissions,
             'profile_photo_url' => $this->profile_photo_url,

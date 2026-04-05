@@ -32,9 +32,16 @@ const loading = ref(false);
 // Local value for v-modelroute('scholarshipprograms.getactivelist')
 const localValue = ref(props.modelValue);
 
-// Sync localValue with parent prop
+// Sync localValue with parent prop — resolve against loaded programs immediately if available
 watch(() => props.modelValue, (val) => {
-    localValue.value = val;
+    if (val && programs.value.length && typeof val === 'object' && !props.multiple) {
+        const resolved = programs.value.find(p => p.id == val.id)
+            || programs.value.find(p => val.shortname && p.shortname === val.shortname)
+            || programs.value.find(p => val.name && p.name === val.name);
+        localValue.value = resolved || val;
+    } else {
+        localValue.value = val;
+    }
 });
 
 
@@ -52,8 +59,10 @@ watch(
             if (props.multiple && Array.isArray(localValue.value)) {
                 // Map each value in localValue to the corresponding school object
                 localValue.value = localValue.value.map(val => {
-                    if (typeof val == 'object' && val != null && val.shortname) {
-                        return programs.value.find(program => program.shortname == val.shortname) || val;
+                    if (typeof val == 'object' && val != null) {
+                        return programs.value.find(program => program.id == val.id)
+                            || programs.value.find(program => val.shortname && program.shortname == val.shortname)
+                            || val;
                     }
                     return programs.value.find(program =>
                         program.shortname?.toLowerCase() == String(val).toLowerCase() ||
@@ -63,8 +72,11 @@ watch(
             } else {
                 // Single value: find the matching program object
                 let val = localValue.value;
-                if (typeof val == 'object' && val != null && val.shortname) {
-                    localValue.value = programs.value.find(program => program.shortname == val.shortname) || val;
+                if (typeof val == 'object' && val != null) {
+                    // Match by id first, then shortname, then name
+                    localValue.value = programs.value.find(program => program.id == val.id)
+                        || programs.value.find(program => val.shortname && program.shortname == val.shortname)
+                        || val;
                 } else {
                     const selected = programs.value.find(program =>
                         program.shortname?.toLowerCase() == String(val).toLowerCase() ||

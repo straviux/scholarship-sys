@@ -84,7 +84,7 @@ const showCol = (col) => {
                         <td v-if="showCol('year_level')">{{ rec.year_level || '—' }}</td>
                         <td v-if="options.includeGrantProvision">{{ rec.grant_provision || '—' }}</td>
                         <td class="nowrap">{{ formatDate(rec.date_filed) }}</td>
-                        <td v-if="options.includeRemarks">{{ rec.remarks || '' }}</td>
+                        <td v-if="options.includeRemarks" v-safe-html="rec.remarks || ''"></td>
                     </tr>
                 </tbody>
             </table>
@@ -131,7 +131,7 @@ const showCol = (col) => {
                                 <td v-if="showCol('year_level')">{{ rec.year_level || '—' }}</td>
                                 <td v-if="options.includeGrantProvision">{{ rec.grant_provision || '—' }}</td>
                                 <td class="nowrap">{{ formatDate(rec.date_filed) }}</td>
-                                <td v-if="options.includeRemarks">{{ rec.remarks || '' }}</td>
+                                <td v-if="options.includeRemarks" v-safe-html="rec.remarks || ''"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -176,7 +176,7 @@ const showCol = (col) => {
                                         <td v-if="showCol('year_level')">{{ rec.year_level || '—' }}</td>
                                         <td v-if="options.includeGrantProvision">{{ rec.grant_provision || '—' }}</td>
                                         <td class="nowrap">{{ formatDate(rec.date_filed) }}</td>
-                                        <td v-if="options.includeRemarks">{{ rec.remarks || '' }}</td>
+                                        <td v-if="options.includeRemarks" v-safe-html="rec.remarks || ''"></td>
                                     </tr>
                                 </tbody>
                             </table>

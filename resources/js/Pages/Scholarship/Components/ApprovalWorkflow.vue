@@ -109,7 +109,7 @@
                                 :severity="getApprovalStatusSeverity(slotProps.item.new_status)" class="text-xs" />
                         </div>
                         <div v-if="slotProps.item.remarks" class="mt-2 text-xs text-gray-600">
-                            <strong>Remarks:</strong> {{ slotProps.item.remarks }}
+                            <strong>Remarks:</strong> <span v-safe-html="slotProps.item.remarks"></span>
                         </div>
                     </div>
                 </template>

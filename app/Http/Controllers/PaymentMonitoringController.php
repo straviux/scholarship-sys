@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\ScholarshipRecord;
 use App\Models\FundTransaction;
+use App\Models\Particular;
 use Illuminate\Support\Facades\DB;
 
 class PaymentMonitoringController extends Controller
@@ -76,6 +77,7 @@ class PaymentMonitoringController extends Controller
                     'disbursement_type' => '',
                     'amount' => '',
                     'date_obligated' => '',
+                    'fund_fiscal_year' => '',
                     'remarks' => '',
                 ]];
             }
@@ -128,6 +130,7 @@ class PaymentMonitoringController extends Controller
                     'disbursement_type' => $fundTransaction->disbursement_type ?? '',
                     'amount' => $individualAmount,
                     'date_obligated' => $fundTransaction->date_obligated ?? $fundTransaction->created_at ?? '',
+                    'fund_fiscal_year' => $fundTransaction->fiscal_year ?? '',
                     'remarks' => $fundTransaction->remarks ?? '',
                 ];
             })->toArray();
@@ -135,6 +138,120 @@ class PaymentMonitoringController extends Controller
 
         // Convert to collection for filtering operations
         $paymentData = collect($paymentData);
+
+        // ── Budget monitoring (computed before any page filters) ──────────────
+        $allParticulars = Particular::with(['program', 'responsibilityCenter'])
+            ->whereNotNull('scholarship_program_id')
+            ->whereNotNull('allotment')
+            ->get();
+
+        $budgetParticulars = $allParticulars
+            ->groupBy(fn($p) => ($p->program?->name ?? '') . '||' . ($p->responsibilityCenter?->fiscal_year ?? ''))
+            ->filter(fn($items, $key) => $key !== '||' && explode('||', $key, 2)[0] !== '')
+            ->map(function ($items, $key) {
+                [$prog, $fy] = explode('||', $key, 2);
+                return [
+                    'program' => $prog,
+                    'fiscal_year' => $fy,
+                    'total_allotment' => (float) $items->sum('allotment'),
+                ];
+            })
+            ->values();
+
+        $fiscalYears = $budgetParticulars->pluck('fiscal_year')->unique()->filter()->sort()->values();
+
+        // Build a lookup: program_id → program_name (for transactions that have scholarship_program_id)
+        $programIdToName = $allParticulars
+            ->filter(fn($p) => $p->scholarship_program_id && $p->program?->name)
+            ->mapWithKeys(fn($p) => [$p->scholarship_program_id => $p->program->name])
+            ->all();
+
+        // Build a lookup: rc_code + particular_name → [program_name, fiscal_year]
+        // (fallback for older transactions without scholarship_program_id)
+        $particularsLookup = $allParticulars
+            ->map(fn($p) => [
+                'rc_code'         => $p->responsibilityCenter?->code,
+                'particular_name' => $p->name,
+                'program_name'    => $p->program?->name,
+                'program_id'      => $p->scholarship_program_id,
+                'fiscal_year'     => $p->responsibilityCenter?->fiscal_year,
+            ])
+            ->filter(fn($p) => $p['rc_code'] && $p['program_name'])
+            ->values();
+
+        // Build a lookup: [program_id][rc_code] → fiscal_year
+        // Scoped to program so we don't cross-contaminate fiscal years between programs
+        $programRcFiscalYears = [];
+        foreach ($allParticulars as $p) {
+            $pid = $p->scholarship_program_id;
+            $rc  = $p->responsibilityCenter?->code;
+            $fy  = $p->responsibilityCenter?->fiscal_year;
+            if ($pid && $rc && $fy !== null) {
+                $programRcFiscalYears[$pid][$rc] = $fy;
+            }
+        }
+
+        // Pre-build profile_id → program_name map so we can infer the program for legacy
+        // transactions that lack scholarship_program_id, using the actual scholars in the voucher.
+        // The program() relationship is hasOneThrough(Course), so course_id must be in the select.
+        $profileProgramMap = ScholarshipRecord::with('program')
+            ->whereNotNull('course_id')
+            ->select('profile_id', 'course_id')
+            ->get()
+            ->mapWithKeys(fn($r) => [$r->profile_id => $r->program?->name])
+            ->filter()
+            ->all();
+
+        // Sum Paid/Claimed FundTransaction amounts directly — avoids active-scholar-only
+        // limitation and the scholar_ids NULL issue from paymentData-based computation.
+        $disbursedByProgramYear = [];
+        FundTransaction::whereIn('transaction_status', ['Paid', 'Claimed'])
+            ->select('responsibility_center', 'particulars_name', 'fiscal_year', 'amount', 'scholarship_program_id', 'scholar_ids')
+            ->get()
+            ->each(function ($tx) use ($particularsLookup, $programIdToName, $programRcFiscalYears, $profileProgramMap, &$disbursedByProgramYear) {
+                // Prefer direct program ID match (new transactions)
+                if ($tx->scholarship_program_id && isset($programIdToName[$tx->scholarship_program_id])) {
+                    $prog = $programIdToName[$tx->scholarship_program_id];
+                    // Infer fiscal_year from the program's own RC, not from any RC in the system
+                    $fy = $tx->fiscal_year
+                        ?? ($programRcFiscalYears[$tx->scholarship_program_id][$tx->responsibility_center] ?? '');
+                } else {
+                    // Legacy transactions without scholarship_program_id:
+                    // 1st choice — infer program from the scholars stored in the voucher.
+                    // This is the most accurate source because the scholars are always tied to a program.
+                    $prog = null;
+                    $scholarArr = is_array($tx->scholar_ids)
+                        ? $tx->scholar_ids
+                        : json_decode($tx->scholar_ids ?? '[]', true);
+                    if (is_array($scholarArr)) {
+                        foreach ($scholarArr as $s) {
+                            $pid = is_array($s) ? ($s['profile_id'] ?? null) : $s;
+                            if ($pid && isset($profileProgramMap[$pid])) {
+                                $prog = $profileProgramMap[$pid];
+                                break;
+                            }
+                        }
+                    }
+
+                    // 2nd choice — fall back to rc_code + particular_name match
+                    if (!$prog) {
+                        $match = $particularsLookup->first(
+                            fn($p) => $p['rc_code'] === $tx->responsibility_center
+                                && $p['particular_name'] === $tx->particulars_name
+                        );
+                        if (!$match) return;
+                        $prog = $match['program_name'];
+                        $fy   = $tx->fiscal_year ?? ($match['fiscal_year'] ?? '');
+                    } else {
+                        // Infer fiscal_year scoped to the inferred program's RC
+                        $progId = array_search($prog, $programIdToName);
+                        $fy = $tx->fiscal_year
+                            ?? ($progId ? ($programRcFiscalYears[$progId][$tx->responsibility_center] ?? '') : '');
+                    }
+                }
+                $disbursedByProgramYear[$prog][$fy] =
+                    ($disbursedByProgramYear[$prog][$fy] ?? 0.0) + (float) ($tx->amount ?? 0);
+            });
 
         // Apply search filter
         if ($searchQuery) {
@@ -209,6 +326,9 @@ class PaymentMonitoringController extends Controller
         return Inertia::render('PaymentMonitoring/Index', [
             'paymentData' => $paymentData->values(),
             'availableStatuses' => $statuses,
+            'budgetParticulars' => $budgetParticulars,
+            'disbursedByProgramYear' => $disbursedByProgramYear,
+            'fiscalYears' => $fiscalYears,
             'filters' => [
                 'search' => $searchQuery,
                 'transaction_status' => $transactionStatusFilter,

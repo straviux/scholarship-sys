@@ -31,6 +31,7 @@ use App\Http\Controllers\User\SettingsController;
 use App\Http\Controllers\Admin\MobileUploadSettingController;
 use App\Http\Controllers\PaymentMonitoringController;
 use App\Http\Controllers\DisbursementManagementController;
+use App\Http\Controllers\BudgetReportController;
 use App\Http\Controllers\TestPageController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
@@ -68,6 +69,12 @@ Route::get('/api/server-time', function () {
         'timezone' => config('app.timezone')
     ]);
 })->name('server-time.public');
+
+// Returns the current session's raw CSRF token so the frontend can refresh its meta tag.
+// Must be outside auth middleware — needed right after session reinitialisation.
+Route::get('/csrf-token', function () {
+    return response()->json(['token' => csrf_token()]);
+})->name('csrf.token');
 
 // TEST ROUTE: Create mock applicants (only in debug mode, auth required but CSRF exempt)
 Route::middleware(['auth'])->post('/test-add-applicants', [ApplicantController::class, 'testAddApplicants'])->name('applicants.testAddApplicants')->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
@@ -372,6 +379,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/payment-monitoring', [PaymentMonitoringController::class, 'index'])
         ->middleware('check.permission:payment-monitoring.view')
         ->name('payment-monitoring.index');
+
+    // Budget Report
+    Route::get('/api/budget-report', [BudgetReportController::class, 'api'])
+        ->middleware('check.permission:payment-monitoring.view')
+        ->name('budget-report.api');
+    Route::get('/api/budget-report/rcenters', [BudgetReportController::class, 'rcenters'])
+        ->middleware('check.permission:payment-monitoring.view')
+        ->name('budget-report.rcenters');
+    Route::get('/api/budget-report/particulars', [BudgetReportController::class, 'particulars'])
+        ->middleware('check.permission:payment-monitoring.view')
+        ->name('budget-report.particulars');
 
     // Disbursement Management routes (temporary mapping interface)
     Route::get('/disbursement-management', [DisbursementManagementController::class, 'index'])

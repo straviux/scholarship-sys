@@ -129,21 +129,21 @@ const shouldShowAction = (action) => {
                             <div class="text-xs font-semibold text-gray-500">
                                 Prog. <span class="font-bold text-gray-600">#{{
                                     applicant.sequence_number || '-'
-                                }}</span>
+                                    }}</span>
                             </div>
                         </div>
                         <div class="px-1">
                             <div class="text-xs font-semibold text-gray-500">
                                 Cour. <span class="font-bold text-gray-600">#{{
                                     applicant.sequence_number_by_course || '-'
-                                }}</span>
+                                    }}</span>
                             </div>
                         </div>
                         <div class="px-1">
                             <div class="text-xs font-semibold text-gray-500">
                                 Sch. <span class="font-bold text-gray-600">#{{
                                     applicant.sequence_number_by_school_course || '-'
-                                }}</span>
+                                    }}</span>
 
                             </div>
                         </div>
@@ -196,7 +196,7 @@ const shouldShowAction = (action) => {
                             <div class="flex items-start gap-2">
                                 <i class="pi pi-comment text-gray-400 mt-1"></i>
                                 <span v-if="applicant.remarks" class="text-gray-600 text-xs italic"
-                                    v-html="applicant.remarks"></span>
+                                    v-safe-html="applicant.remarks"></span>
                                 <span v-else class="text-gray-600 text-xs italic">-</span>
                             </div>
                         </div>

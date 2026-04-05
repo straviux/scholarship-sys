@@ -230,7 +230,8 @@ onBeforeUnmount(() => {
 
                     <Column field="remarks" header="Remarks">
                         <template #body="slotProps">
-                            <div class="text-gray-600 max-w-xs truncate" v-html="slotProps.data.remarks || '-'"></div>
+                            <div class="text-gray-600 max-w-xs truncate" v-safe-html="slotProps.data.remarks || '-'">
+                            </div>
                         </template>
                     </Column>
 

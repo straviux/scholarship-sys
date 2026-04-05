@@ -17,8 +17,8 @@
                 </template>
                 <template #end>
                     <div class="flex gap-2 items-center">
-                        <Button icon="pi pi-file-export" label="Generate Report" severity="info" outlined rounded
-                            size="small" @click="showReportModal = true" />
+                        <Button icon="pi pi-print" severity="secondary" outlined rounded size="large"
+                            @click="showReportModal = true" />
                     </div>
                 </template>
             </Toolbar>
@@ -371,7 +371,7 @@
                                         Date Filed
                                     </div>
                                     <span class="text-sm text-gray-700">{{ formatDate(selectedRecord.date_filed)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>

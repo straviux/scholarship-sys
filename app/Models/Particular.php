@@ -15,6 +15,16 @@ class Particular extends Model
         'responsibility_center_id',
         'name',
         'account_code',
+        'scholarship_program_id',
+        'allotment',
+        'date_approved',
+        'date_expired',
+    ];
+
+    protected $casts = [
+        'allotment'     => 'decimal:2',
+        'date_approved' => 'date:Y-m-d',
+        'date_expired'  => 'date:Y-m-d',
     ];
 
     /**
@@ -23,5 +33,13 @@ class Particular extends Model
     public function responsibilityCenter()
     {
         return $this->belongsTo(ResponsibilityCenter::class);
+    }
+
+    /**
+     * Get the scholarship program linked to this particular
+     */
+    public function program()
+    {
+        return $this->belongsTo(ScholarshipProgram::class, 'scholarship_program_id');
     }
 }

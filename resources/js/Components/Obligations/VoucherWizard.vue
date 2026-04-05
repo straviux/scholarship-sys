@@ -7,6 +7,7 @@ import { QuillEditor } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
+import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import logger from '@/utils/logger';
 import { quickAnimateFrom } from '@/composables/useGSAPAnimation';
 import { shouldAnimate } from '@/composables/useAnimationDefaults';
@@ -95,30 +96,50 @@ const schools = ref([
     { id: 'school_2', name: 'Secondary School' }
 ]);
 
-// Fetch scholars from API (now includes scholarship data)
-const fetchScholars = async () => {
+// Fetch scholars from API filtered by program (program_id required for a lighter query)
+const fetchScholars = async (programId = null, preSelectedIds = [], profileIds = []) => {
+    // Require either a programId or explicit profileIds (legacy fallback)
+    if (!programId && profileIds.length === 0) {
+        scholars.value = [];
+        filteredScholars.value = [];
+        return;
+    }
     loading.value = true;
     error.value = '';
     try {
-        const response = await axios.get('/api/scholars');
+        const params = {};
+        if (programId) params.program_id = programId;
+        if (!programId && profileIds.length > 0) params.profile_ids = profileIds.join(',');
+
+        const response = await axios.get('/api/scholars', { params });
         const data = Array.isArray(response.data) ? response.data : (response.data.data || []);
 
         if (!data || data.length === 0) {
-            logger.warn('No scholars found in response');
+            logger.warn('No scholars found for the selected program');
             scholars.value = [];
+            filteredScholars.value = [];
             return;
         }
 
-        // Store scholars with scholarship data included
+        // Store scholars; pre-select any IDs passed in (used by edit mode)
         scholars.value = data.map(s => ({
             ...s,
-            selected: false,
+            selected: preSelectedIds.some(id => String(id) === String(s.profile_id)),
             latestScholarship: {
                 academic_year: s.academic_year,
                 term: s.term
             }
         }));
-        logger.info(`Successfully loaded ${scholars.value.length} scholars with scholarship data`);
+        filteredScholars.value = scholars.value;
+
+        // Debug: show pre-selection result
+        const preSelectedCount = scholars.value.filter(s => s.selected).length;
+        if (preSelectedIds.length > 0) {
+            console.log('[VoucherWizard] fetchScholars preSelectedIds:', preSelectedIds);
+            console.log('[VoucherWizard] fetchScholars sample profile_ids from API:', data.slice(0, 3).map(s => s.profile_id));
+            console.log('[VoucherWizard] fetchScholars pre-selected result:', preSelectedCount, 'of', scholars.value.length);
+        }
+        logger.info(`Loaded ${scholars.value.length} scholars for program ${programId}, ${preSelectedIds.length} pre-selected (${preSelectedCount} matched)`);
     } catch (err) {
         error.value = `Failed to fetch scholars: ${err.message}`;
         logger.error('Error fetching scholars:', err);
@@ -128,42 +149,32 @@ const fetchScholars = async () => {
     }
 };
 
+// Program filter
+const programFilter = ref(null);
+const isLoadingEditData = ref(false);
+let lastFetchedProgramId = null;
+const editPreSelectedIds = ref([]); // persists during edit mode to survive watcher re-fetches
+
 // Filtered scholars based on search
 const filteredScholars = ref([]);
 const searchLoading = ref(false);
 let searchTimeout = null;
 
-// Async search function
-const performSearch = async () => {
-    if (!searchQuery.value.trim()) {
-        // When search is cleared, show empty list (search-only mode)
-        filteredScholars.value = [];
-        logger.info('Search cleared, no results displayed');
+// Search function — scholars are already filtered by program server-side;
+// this only applies client-side name search on the loaded set
+const performSearch = () => {
+    const searchTerm = searchQuery.value.trim().toLowerCase();
+    if (!searchTerm) {
+        filteredScholars.value = scholars.value;
         return;
     }
-
-    searchLoading.value = true;
-    try {
-        const searchTerm = searchQuery.value.toLowerCase();
-        logger.info(`Searching for: ${searchTerm}`);
-
-        // Local search from already loaded scholars (API doesn't support search parameter)
-        const localResults = scholars.value.filter(s =>
-            (s.first_name?.toLowerCase() || '').includes(searchTerm) ||
-            (s.last_name?.toLowerCase() || '').includes(searchTerm) ||
-            (s.middle_name?.toLowerCase() || '').includes(searchTerm) ||
-            (s.email?.toLowerCase() || '').includes(searchTerm)
-        );
-
-        filteredScholars.value = localResults;
-        logger.info(`Local search found ${localResults.length} results`);
-
-    } catch (err) {
-        logger.error('Search error:', err);
-        filteredScholars.value = [];
-    } finally {
-        searchLoading.value = false;
-    }
+    filteredScholars.value = scholars.value.filter(s =>
+        (s.first_name?.toLowerCase() || '').includes(searchTerm) ||
+        (s.last_name?.toLowerCase() || '').includes(searchTerm) ||
+        (s.middle_name?.toLowerCase() || '').includes(searchTerm) ||
+        (s.email?.toLowerCase() || '').includes(searchTerm)
+    );
+    logger.info(`Search found ${filteredScholars.value.length} results`);
 };
 
 // Watch search query for changes with manual debounce
@@ -179,7 +190,35 @@ watch(
     }
 );
 
-// Note: Scholars are only displayed when user searches (search-only mode)
+// Watch program filter — re-fetch scholars from server for the selected program
+watch(() => programFilter.value, async (newProgram) => {
+    const newId = newProgram?.id ?? null;
+    // Use String comparison to avoid int/string type mismatch
+    if (newId !== null && String(newId) === String(lastFetchedProgramId)) return;
+    lastFetchedProgramId = newId;
+    if (newProgram) {
+        await fetchScholars(newId, editPreSelectedIds.value);
+    } else {
+        editPreSelectedIds.value = [];
+        scholars.value = [];
+        filteredScholars.value = [];
+    }
+    if (editPreSelectedIds.value.length > 0) updateSelectedCount();
+    performSearch();
+});
+
+// Reactive guard: whenever scholars array is replaced (any fetch), re-apply edit pre-selections.
+// This is the final safety net — independent of watcher timing.
+watch(scholars, () => {
+    if (editPreSelectedIds.value.length === 0) return;
+    scholars.value.forEach(s => {
+        s.selected = editPreSelectedIds.value.includes(String(s.profile_id));
+    });
+    filteredScholars.value = scholars.value;
+    updateSelectedCount();
+    const reApplied = scholars.value.filter(s => s.selected).length;
+    console.log('[VoucherWizard] watch(scholars) safety net fired — re-applied', reApplied, 'selections from editPreSelectedIds:', editPreSelectedIds.value);
+});
 
 // Toggle select all
 const toggleSelectAll = () => {
@@ -346,19 +385,71 @@ const previousStep = () => {
 const loadEditData = async () => {
     if (props.mode !== 'edit' || !props.initialData) return;
 
+    isLoadingEditData.value = true;
     try {
-        // Populate voucherData with initial data
         const data = props.initialData;
 
-        // Set voucher number
+        // Step 1: Extract scholar IDs FIRST so we can pre-select during fetch
+        console.log('[VoucherWizard] loadEditData: raw scholar_ids =', JSON.stringify(data.scholar_ids));
+        console.log('[VoucherWizard] loadEditData: scholarship_program_id =', data.scholarship_program_id, 'scholarship_program =', data.scholarship_program);
+        let scholarIds = [];
+        if (data.scholar_ids && Array.isArray(data.scholar_ids)) {
+            scholarIds = data.scholar_ids.map(sid =>
+                typeof sid === 'object' ? String(sid.profile_id) : String(sid)
+            );
+        } else if (data.scholars && Array.isArray(data.scholars)) {
+            scholarIds = data.scholars.map(s =>
+                typeof s === 'object' ? String(s.profile_id) : String(s)
+            );
+        }
+
+        console.log('[VoucherWizard] loadEditData: extracted scholarIds =', scholarIds);
+        logger.info('Pre-selecting scholar IDs for edit:', scholarIds);
+
+        // Persist IDs so the programFilter watcher re-applies them on any re-fetch
+        editPreSelectedIds.value = scholarIds;
+
+        // Step 2: Fetch scholars with pre-selections baked in atomically
+        if (data.scholarship_program_id) {
+            lastFetchedProgramId = data.scholarship_program_id;
+            await fetchScholars(data.scholarship_program_id, scholarIds);
+        } else if (scholarIds.length > 0) {
+            // Legacy: voucher was saved before scholarship_program_id was tracked.
+            // Fetch the saved scholars by profile IDs first to resolve their program.
+            console.log('[VoucherWizard] loadEditData: no program_id, fetching by profile_ids (legacy)');
+            await fetchScholars(null, scholarIds, scholarIds);
+
+            // Derive program from first returned scholar, then re-fetch the full program list.
+            const derivedProgramId = scholars.value[0]?.program_id ?? null;
+            console.log('[VoucherWizard] loadEditData: derived program_id from scholar =', derivedProgramId);
+            if (derivedProgramId) {
+                // programFilter watcher will fire and re-fetch all scholars in this program
+                // with editPreSelectedIds still set, so pre-selections are maintained.
+                programFilter.value = { id: derivedProgramId, name: '', shortname: '' };
+            }
+        }
+
+        // Step 3: Call updateSelectedCount so voucherData.scholars is populated
+        if (scholarIds.length > 0) {
+            updateSelectedCount();
+
+            // Restore individual amounts
+            data.scholar_ids?.forEach(sid => {
+                if (typeof sid !== 'object' || !sid.amount) return;
+                const scholarData = voucherData.scholars.find(
+                    s => String(s.profile_id) === String(sid.profile_id)
+                );
+                if (scholarData) scholarData.individualAmount = parseFloat(sid.amount);
+            });
+        }
+
+        // Step 4: Populate form fields
         voucherData.transaction_id = data.transaction_id || data.number || '';
 
-        // Set obligations
         voucherData.obligations.payee_type = data.payee_type || 'scholar';
         voucherData.obligations.payee_id = data.payee_type === 'scholar' ? normalizeId(data.payee_id) : (data.payee_id || '');
         voucherData.obligations.payee_name = data.payee_name || '';
 
-        // For school payees, if payee_id is empty but payee_name exists, use payee_name as payee_id
         if (voucherData.obligations.payee_type === 'school' && !voucherData.obligations.payee_id && voucherData.obligations.payee_name) {
             voucherData.obligations.payee_id = voucherData.obligations.payee_name;
         }
@@ -371,7 +462,6 @@ const loadEditData = async () => {
         voucherData.obligations.amount = data.amount || '';
         voucherData.obligations.obr_type = data.obr_type || '';
 
-        // Set disbursements
         voucherData.disbursements.type = data.disbursement_type || 'disbursements';
         voucherData.disbursements.explanation = data.explanation || '';
         voucherData.disbursements.los_course = data.los_course || '';
@@ -382,50 +472,22 @@ const loadEditData = async () => {
         voucherData.disbursements.school = data.school || '';
         voucherData.disbursements.grant_provision = data.grant_provision || '';
 
-        // Set summary notes
         voucherData.summary.notes = data.notes || '';
         voucherData.summary.transaction_status = data.transaction_status || 'On Process';
 
-        // Mark scholars as selected based on scholar_ids or scholars relationship
-        await nextTick();
-        let scholarIds = [];
-
-        // Try multiple sources for scholar IDs
-        if (data.scholar_ids && Array.isArray(data.scholar_ids)) {
-            scholarIds = data.scholar_ids;
-        } else if (data.scholars && Array.isArray(data.scholars)) {
-            // If data contains scholars array with objects that have profile_id
-            scholarIds = data.scholars.map(s => typeof s === 'object' ? s.profile_id : s);
-        }
-
-        logger.info('Scholar IDs for edit:', scholarIds);
-
-        if (scholarIds && scholarIds.length > 0) {
-            scholars.value.forEach(s => {
-                s.selected = scholarIds.some(sid =>
-                    (typeof sid === 'object' ? sid.profile_id : sid) === s.profile_id
-                );
-            });
-            updateSelectedCount();
-
-            // Set individual amounts from loaded data if available
-            scholarIds.forEach(sid => {
-                const scholarId = typeof sid === 'object' ? sid.profile_id : sid;
-                const scholarData = voucherData.scholars.find(s => s.profile_id === scholarId);
-                if (scholarData && typeof sid === 'object' && sid.amount) {
-                    scholarData.individualAmount = parseFloat(sid.amount);
-                }
-            });
-
-            // In edit mode, populate filteredScholars with the selected scholars for display
-            filteredScholars.value = scholars.value.filter(s => s.selected);
-            logger.info(`Selected ${selectedScholars.value.length} scholars in edit mode`);
+        // Step 5: Set programFilter LAST (watcher is blocked by lastFetchedProgramId guard)
+        if (data.scholarship_program) {
+            programFilter.value = data.scholarship_program;
+        } else if (data.scholarship_program_id) {
+            programFilter.value = { id: data.scholarship_program_id, name: '', shortname: '' };
         }
 
         logger.info('Edit data loaded successfully');
     } catch (err) {
         logger.error('Error loading edit data:', err);
         error.value = 'Failed to load voucher data';
+    } finally {
+        isLoadingEditData.value = false;
     }
 };
 
@@ -480,7 +542,9 @@ const handleSubmit = async () => {
             particulars_description: voucherData.obligations.particulars_description,
             amount: selectedScholars.length > 0 ? computedScholarTotal : fallbackAmount,
             obr_type: voucherData.obligations.obr_type,
-            transaction_status: voucherData.summary.transaction_status
+            transaction_status: voucherData.summary.transaction_status,
+            scholarship_program_id: programFilter.value?.id ?? (selectedScholars.length > 0 ? (selectedScholars[0].program_id ?? null) : null),
+            fiscal_year: selectedRC.value?.fiscal_year ?? null,
         };
 
         // For scholar_ids, include individual amounts for each scholar
@@ -1017,6 +1081,9 @@ const resetVoucherData = () => {
     selectAll.value = false;
     filteredScholars.value = [];
     searchQuery.value = '';
+    programFilter.value = null;
+    editPreSelectedIds.value = [];
+    lastFetchedProgramId = null;
     step.value = 1;
     error.value = '';
 
@@ -1061,8 +1128,6 @@ onMounted(async () => {
         axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
     }
 
-    // Fetch scholars first and wait for it to complete
-    await fetchScholars();
     await fetchResponsibilityCentersAndParticulars();
 
     // Load edit data if in edit mode, otherwise reset for create mode
@@ -1095,7 +1160,8 @@ const dragStart = ref(null);
 const wizardModalStyle = computed(() => ({
     width: '90vw',
     maxWidth: step.value === 1 ? '900px' : step.value === 2 ? '1040px' : step.value === 4 ? '1200px' : '640px',
-    height: 'auto',
+    height: step.value === 1 ? '85vh' : 'auto',
+    minHeight: step.value === 1 ? '600px' : 'auto',
     maxHeight: 'calc(100vh - 2rem)',
     transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
 }));
@@ -1165,19 +1231,23 @@ onBeforeUnmount(() => {
                         <!-- Step 1: Scholar Selection -->
                         <div v-if="step === 1" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             <!-- Left: Search & Select -->
-                            <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4 space-y-3">
+                            <div
+                                class="bg-white border border-[#e5e5ea] rounded-2xl p-4 space-y-3 h-full flex flex-col">
                                 <label class="block text-sm font-medium text-gray-900">Select Scholars</label>
 
                                 <!-- Info Banner -->
                                 <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl">
-                                    <p class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>Only active
-                                        scholars are displayed</p>
+                                    <p class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>Select a
+                                        program to filter scholars, then search by name</p>
                                 </div>
+
+                                <!-- Program Filter -->
+                                <ProgramSelect v-model="programFilter" customPlaceholder="Filter by program..." />
 
                                 <!-- Search Input -->
                                 <div class="relative">
                                     <InputText v-model="searchQuery" type="text" placeholder="Search by name..."
-                                        class="w-full" />
+                                        class="w-full" :disabled="!programFilter && scholars.length === 0" />
                                     <div v-if="searchLoading" class="absolute right-3 top-2.5">
                                         <i class="pi pi-spin pi-spinner text-blue-600"></i>
                                     </div>
@@ -1208,7 +1278,9 @@ onBeforeUnmount(() => {
                                 <div v-if="!loading" class="space-y-1 max-h-[420px] overflow-y-auto">
                                     <div v-if="filteredScholars.length === 0" class="text-center py-8 text-gray-500">
                                         <p v-if="scholars.length === 0">No scholars available</p>
-                                        <p v-else>No scholars match your search</p>
+                                        <p v-else-if="!programFilter && !searchQuery">Select a program or type a name to
+                                            find scholars</p>
+                                        <p v-else>No scholars match your filter</p>
                                     </div>
                                     <div v-for="scholar in filteredScholars" :key="scholar.profile_id"
                                         class="flex items-center hover:bg-gray-50 p-2 rounded-xl">
@@ -1631,7 +1703,7 @@ onBeforeUnmount(() => {
                                         class="pt-2 border-t border-gray-300">
                                         <p class="text-gray-600 text-xs mb-2">Particulars (Description):</p>
                                         <div class="text-gray-700 text-sm"
-                                            v-html="voucherData.obligations.particulars_description">
+                                            v-safe-html="voucherData.obligations.particulars_description">
                                         </div>
                                     </div>
                                     <!-- Disbursements Summary -->
@@ -1641,7 +1713,7 @@ onBeforeUnmount(() => {
                                             'disbursements' ?
                                             'Disbursements' : 'Payroll' }} Explanation</p>
                                         <div class="text-gray-700 text-sm"
-                                            v-html="voucherData.disbursements.explanation">
+                                            v-safe-html="voucherData.disbursements.explanation">
                                         </div>
                                     </div>
                                     <div class="pt-2 border-t border-gray-300">

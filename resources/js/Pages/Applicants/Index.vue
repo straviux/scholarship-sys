@@ -6,6 +6,7 @@ import { Head, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref, onBeforeUnmount, watch, computed, inject } from 'vue';
 import { usePermission } from '@/composable/permissions';
 import { useFilterManager } from '@/composables/useFilterManager';
+import { stripHtml } from '@/utils/sanitize';
 import axios from 'axios';
 
 import FloatingDrawer from '@/Components/FloatingDrawer.vue';
@@ -1078,8 +1079,7 @@ const formatDate = (date) => {
 // Truncate text for display with tooltip support
 const truncateText = (text, maxLength = 80) => {
     if (!text) return '';
-    // Remove HTML tags for truncation
-    const plainText = text.replace(/<[^>]*>/g, '');
+    const plainText = stripHtml(text);
     if (plainText.length <= maxLength) return plainText;
     return plainText.substring(0, maxLength) + '...';
 };
@@ -1136,75 +1136,8 @@ const truncateText = (text, maxLength = 80) => {
                 </template>
             </Toolbar>
 
-            <!-- Header Section -->
-            <Panel class="!rounded-4xl overflow-hidden">
-                <!-- Filters Section - Single Row -->
-                <div class="flex items-end gap-3 -mt-6 flex-wrap">
-                    <div class="flex flex-col">
-                        <IconField iconPosition="left">
-                            <InputIcon class="pi pi-search text-gray-400" />
-                            <InputText v-model="globalFilter" placeholder="Type name, remarks etc.." class="!w-68"
-                                size="small" />
-                        </IconField>
-                    </div>
 
-                    <div class="flex flex-col">
-                        <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="All Programs"
-                            size="small" class="w-full" />
-                    </div>
-                    <div class="flex flex-col">
-                        <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses" size="small"
-                            class="w-full" :scholarship-program-id="filter.program?.id" />
-                    </div>
-                    <div class="flex flex-col">
-                        <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels" size="small"
-                            class="w-full" />
-                    </div>
-                    <div class="flex flex-col">
-                        <div class="flex gap-2">
-                            <InputGroup class="!w-52">
-                                <InputGroupAddon>
-                                    <span class="text-xs">Filed From</span>
-                                </InputGroupAddon>
-                                <DatePicker v-model="filter.date_from" size="small" class="w-full"
-                                    date-format="M dd, yy" showIcon iconDisplay="input" />
-                            </InputGroup>
-                            <InputGroup class="!w-52">
-                                <InputGroupAddon>
-                                    <span class="text-xs">Filed To</span>
-                                </InputGroupAddon>
-                                <DatePicker v-model="filter.date_to" size="small" class="w-full" date-format="M dd, yy"
-                                    showIcon iconDisplay="input" />
-                            </InputGroup>
-                        </div>
-                    </div>
-                    <Button icon="pi pi-filter" severity="warn" text rounded @click="openDrawer()"
-                        v-tooltip.bottom="'More Filters'" />
-                    <Button icon="pi pi-history" severity="danger" text rounded @click="clearFilter"
-                        v-tooltip.bottom="'Clear Filters'" />
-                    <div class="flex-1"></div>
-                    <div class="flex items-end gap-4">
-                        <div class="text-sm text-gray-600 flex items-center gap-2">
-                            <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
-                            <span>/ <strong>{{ totalRecords }}</strong></span>
-                        </div>
-                        <Button :icon="simpleView ? 'pi pi-table' : 'pi pi-list'" severity="secondary" rounded outlined
-                            size="small"
-                            v-tooltip.bottom="simpleView ? 'Switch to Detailed View' : 'Switch to Simple View'"
-                            @click="simpleView = !simpleView" />
-                    </div>
-                </div>
-            </Panel>
 
-            <!-- Active Filter Tags -->
-            <div v-if="activeFilterTags.length" class="flex flex-wrap items-center gap-2 mt-2">
-                <span class="text-xs text-gray-500">Active Filters:</span>
-                <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded class="cursor-pointer"
-                    @click="removeFilter(tag.key)">
-                    <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
-                    <i class="pi pi-times ml-1" style="font-size: 0.6rem"></i>
-                </Tag>
-            </div>
 
             <!-- Filter Drawer -->
             <FloatingDrawer v-model:visible="showFilterDrawer" header="All Filters" position="right" class="!w-[600px]">
@@ -1301,14 +1234,85 @@ const truncateText = (text, maxLength = 80) => {
             </FloatingDrawer>
 
             <!-- Applicants DataTable -->
-            <div class="mt-8">
+            <Panel class="!rounded-4xl overflow-hidden mt-8">
+
+                <!-- Info Bar -->
+                <div
+                    class="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
+                    <div class="flex-1 max-w-md">
+                        <IconField iconPosition="left">
+                            <InputIcon class="pi pi-search text-gray-400" />
+                            <InputText v-model="globalFilter" placeholder="Type name, remarks etc.." class="w-full"
+                                size="small" />
+                        </IconField>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <Button :icon="simpleView ? 'pi pi-table' : 'pi pi-list'" severity="secondary" rounded outlined
+                            size="small"
+                            v-tooltip.bottom="simpleView ? 'Switch to Detailed View' : 'Switch to Simple View'"
+                            @click="simpleView = !simpleView" />
+                    </div>
+                </div>
+
+                <!-- Filters Row -->
+                <div class="flex flex-wrap items-center gap-3 mb-4">
+                    <Button icon="pi pi-filter" severity="warn" text rounded @click="openDrawer()"
+                        v-tooltip.bottom="'More Filters'" />
+                    <div class="flex flex-col">
+                        <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="All Programs"
+                            size="small" />
+
+                    </div>
+                    <div class="flex flex-col">
+                        <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses" size="small"
+                            :scholarship-program-id="filter.program?.id" />
+                    </div>
+                    <div class="flex flex-col">
+                        <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
+                            size="small" />
+                    </div>
+                    <div class="flex gap-3">
+                        <InputGroup class="!w-52">
+                            <InputGroupAddon>
+                                <span class="text-xs">Filed From</span>
+                            </InputGroupAddon>
+                            <DatePicker v-model="filter.date_from" size="small" class="w-full" date-format="M dd, yy"
+                                showIcon iconDisplay="input" />
+                        </InputGroup>
+                        <InputGroup class="!w-52">
+                            <InputGroupAddon>
+                                <span class="text-xs">Filed To</span>
+                            </InputGroupAddon>
+                            <DatePicker v-model="filter.date_to" size="small" class="w-full" date-format="M dd, yy"
+                                showIcon iconDisplay="input" />
+                        </InputGroup>
+                    </div>
+                    <Button v-if="activeFilterTags.length" icon="pi pi-history" severity="danger" size="small" text
+                        rounded @click="clearFilter" v-tooltip.bottom="'Clear Filters'" />
+                    <div class="ml-auto flex items-center gap-2">
+                        <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
+                        <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
+                    </div>
+                </div>
+
+                <!-- Active Filter Tags -->
+                <div v-if="activeFilterTags.length" class="flex flex-wrap items-center gap-2 mb-4">
+                    <span class="text-xs text-gray-500">Active Filters:</span>
+                    <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded
+                        class="cursor-pointer" @click="removeFilter(tag.key)">
+                        <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
+                        <i class="pi pi-times ml-1" style="font-size: 0.6rem"></i>
+                    </Tag>
+                </div>
+
                 <!-- Batch Update Section -->
                 <div v-if="selectedRows.length > 0"
                     class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-4xl flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <i class="pi pi-exclamation-circle text-yellow-600 text-xl"></i>
                         <div>
-                            <div class="font-semibold text-yellow-900">{{ selectedRows.length }} applicant(s) selected
+                            <div class="font-semibold text-yellow-900">{{ selectedRows.length }} applicant(s)
+                                selected
                             </div>
                             <div class="text-sm text-yellow-700">Use batch update to change YAKAP category for all
                                 selected
@@ -1504,10 +1508,8 @@ const truncateText = (text, maxLength = 80) => {
                     <!-- Remarks Column (hidden when JPM columns visible) -->
                     <Column header="Remarks" v-if="!showJpmColumns" style="max-width: 200px">
                         <template #body="slotProps">
-                            <div v-if="slotProps.data.remarks" v-tooltip.top="truncateText(slotProps.data.remarks, 300)"
-                                class="text-xs cursor-help">
-                                {{ truncateText(slotProps.data.remarks, 80) }}
-                            </div>
+                            <div v-if="slotProps.data.remarks" v-safe-html="slotProps.data.remarks"
+                                class="text-xs prose prose-xs max-w-none line-clamp-3"></div>
                             <span v-else class="text-xs text-gray-400">-</span>
                         </template>
                     </Column>
@@ -1577,7 +1579,7 @@ const truncateText = (text, maxLength = 80) => {
                         </template>
                     </Column>
                 </DataTable>
-            </div>
+            </Panel>
         </div>
 
         <!-- Combined JPM Tagging & Remarks Modal -->

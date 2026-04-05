@@ -22,6 +22,9 @@
                     <Button icon="pi pi-book" label="Generate Ledger" size="small" rounded text
                         class="!font-medium text-gray-700 dark:text-gray-300" @click="generateLedger"
                         v-tooltip.top="'Generate Scholar Ledger'" />
+                    <Button icon="pi pi-file-word" label="Certification" size="small" rounded text
+                        class="!font-medium text-gray-700 dark:text-gray-300" @click="showCertPicker = true"
+                        v-tooltip.top="'Generate Certification'" />
                     <div class="w-px h-6 bg-gray-200 mx-0.5 self-center flex-shrink-0"></div>
                     <Button v-if="hasPermission('applicants.edit')" icon="pi pi-user" label="Edit Personal" size="small"
                         rounded text class="!font-medium text-gray-700 dark:text-gray-300"
@@ -333,7 +336,7 @@
 
                                         <Column header="Remarks" headerClass="min-w-[200px]" bodyClass="min-w-[200px]">
                                             <template #body="slotProps">
-                                                <div v-if="slotProps.data.remarks" v-html="slotProps.data.remarks"
+                                                <div v-if="slotProps.data.remarks" v-safe-html="slotProps.data.remarks"
                                                     class="prose prose-sm max-w-none dark:prose-invert"></div>
                                                 <span v-else class="text-gray-400 dark:text-gray-500">—</span>
                                             </template>
@@ -542,7 +545,7 @@
                                                         Remarks:
                                                     </p>
                                                     <p class="text-sm text-blue-900 dark:text-blue-200"
-                                                        v-html="timeline.remarks"></p>
+                                                        v-safe-html="timeline.remarks"></p>
                                                 </div>
                                             </div>
                                         </div>
@@ -637,7 +640,7 @@
                                                         class="text-xs text-blue-700 dark:text-blue-300 font-semibold mb-1">
                                                         Remarks:</p>
                                                     <p class="text-sm text-blue-900 dark:text-blue-200"
-                                                        v-html="activity.remarks"></p>
+                                                        v-safe-html="activity.remarks"></p>
                                                 </div>
                                             </div>
                                         </div>
@@ -679,18 +682,44 @@
 
         <!-- Delete Confirmation Dialog -->
         <DeleteRecordModal v-model:visible="showDeleteConfirm" :record="recordToDelete" @success="handleModalSuccess" />
+
+        <!-- Scholar Ledger PDF Preview -->
+        <PdfPreviewModal :show="showPdfPreview" @update:show="showPdfPreview = $event" :htmlDoc="pdfPreviewHtml"
+            :title="pdfPreviewTitle" :paperSize="pdfPreviewSize" />
+
+        <!-- Certification Type Picker -->
+        <Dialog v-model:visible="showCertPicker" modal header="Generate Certification" :style="{ width: '380px' }"
+            :draggable="false">
+            <div class="flex flex-col gap-3 mb-4">
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Course Name <span
+                        class="text-gray-400 font-normal">(optional — overrides profile)</span></label>
+                <InputText v-model="certCourseName" placeholder="e.g. Medicine" class="w-full" />
+            </div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Select the type of certification to generate:</p>
+            <div class="flex flex-col gap-2">
+                <Button label="Certification for Review" icon="pi pi-file-word" outlined rounded
+                    class="w-full justify-start" @click="generateCertification('review')" />
+                <Button label="Certification for Post-Grad" icon="pi pi-file-word" outlined rounded
+                    class="w-full justify-start" @click="generateCertification('postgrad')" />
+            </div>
+        </Dialog>
+
     </AdminLayout>
 </template>
 
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, onMounted, inject } from 'vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 import { usePermission } from '@/composable/permissions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
+import { usePdfPrint, renderVueTemplate } from '@/composables/usePdfPrint';
+import ScholarLedgerTemplate from '@/Pages/Scholarship/Pdf/ScholarLedgerTemplate.vue';
+import ScholarCertificationTemplate from '@/Pages/Scholarship/Pdf/ScholarCertificationTemplate.vue';
+import PdfPreviewModal from '@/Pages/FundTransactions/Modal/PdfPreviewModal.vue';
 
 import PersonalInformationModal from '@/Components/modals/PersonalInformationModal.vue';
 import FamilyInformationModal from '@/Components/modals/FamilyInformationModal.vue';
@@ -700,6 +729,16 @@ import QrCodeModal from '@/Components/modals/QrCodeModal.vue';
 import ScholarshipRecordModal from '@/Components/modals/ScholarshipRecordModal.vue';
 import DeleteRecordModal from '@/Components/modals/DeleteRecordModal.vue';
 import ObligationsTransactions from '@/Components/ObligationsTransactions.vue';
+
+// PDF preview state
+const showPdfPreview = ref(false);
+const pdfPreviewHtml = ref('');
+const pdfPreviewTitle = ref('');
+const pdfPreviewSize = ref('long');
+
+// Certification type picker
+const showCertPicker = ref(false);
+const certCourseName = ref('');
 
 const props = defineProps({
     profile: Object,
@@ -935,8 +974,44 @@ const handleSuccess = () => {
     }, 1500);
 };
 
+const { buildHtmlDoc } = usePdfPrint();
+
+const generateCertification = (certType) => {
+    showCertPicker.value = false;
+    const today = new Date().toLocaleDateString('en-PH', {
+        year: 'numeric', month: 'long', day: 'numeric',
+    });
+    const certBodyHtml = renderVueTemplate(ScholarCertificationTemplate, {
+        profile: props.profile,
+        certType,
+        today,
+        courseName: certCourseName.value.trim() || null,
+    });
+    const bodyHtml = '<style>@page { margin: 6mm 2.23cm; } @media screen { body { padding: 6mm 2.23cm; font-family: Verdana, Geneva, sans-serif; } } @media print { body { padding: 0; font-family: Verdana, Geneva, sans-serif; } }</style>' + certBodyHtml;
+    const safeName = `${props.profile.last_name}_${props.profile.first_name}`.replace(/\s+/g, '_');
+    const typeLabel = certType === 'review' ? 'Review' : 'PostGrad';
+    pdfPreviewTitle.value = `Certification-${typeLabel}-${safeName}`;
+    pdfPreviewSize.value = 'a4';
+    pdfPreviewHtml.value = buildHtmlDoc(bodyHtml, pdfPreviewTitle.value, 'a4');
+    showPdfPreview.value = true;
+};
+
 const generateLedger = () => {
-    window.open(`/api/scholars/${props.profile.profile_id}/ledger-pdf`, '_blank');
+    const today = new Date().toLocaleDateString('en-PH', {
+        year: 'numeric', month: 'long', day: 'numeric',
+    });
+    const authUser = usePage().props.auth?.user;
+    const bodyHtml = renderVueTemplate(ScholarLedgerTemplate, {
+        profile: props.profile,
+        preparedBy: authUser?.name ?? '',
+        preparedByDesignation: authUser?.office_designation ?? '',
+        today,
+    });
+    const safeName = `${props.profile.last_name}_${props.profile.first_name}`.replace(/\s+/g, '_');
+    pdfPreviewTitle.value = `Ledger-${safeName}`;
+    pdfPreviewSize.value = 'long';
+    pdfPreviewHtml.value = buildHtmlDoc(bodyHtml, pdfPreviewTitle.value, 'long');
+    showPdfPreview.value = true;
 };
 
 const goBackToProfiles = () => {

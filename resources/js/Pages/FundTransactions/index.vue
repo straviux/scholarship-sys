@@ -1467,7 +1467,7 @@ onMounted(() => {
                     <div class="ml-auto flex items-center gap-2">
                         <RecordsSelect v-model="perPage" size="small" class="w-auto" />
                         <span class="text-sm text-gray-600 dark:text-gray-400">/ <strong>{{ filteredTotal
-                        }}</strong></span>
+                                }}</strong></span>
                     </div>
                 </div>
 
@@ -1550,7 +1550,7 @@ onMounted(() => {
                         <template #body="slotProps">
                             <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">{{
                                 slotProps.data.creator?.name || '---'
-                            }}</span>
+                                }}</span>
                             <div class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{
                                 formatDate(slotProps.data.created_at) }}</div>
                         </template>
@@ -1635,7 +1635,7 @@ onMounted(() => {
                                         <div class="ios-row">
                                             <span class="ios-row-label">Amount</span>
                                             <span class="font-semibold">{{ formatAmount(selectedVoucher.amount)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="ios-row">
                                             <span class="ios-row-label">Created By</span>
@@ -1662,14 +1662,14 @@ onMounted(() => {
                                     <p class="ios-section-label">Remarks</p>
                                     <div class="ios-card px-4 py-3">
                                         <div class="text-sm text-gray-900 dark:text-gray-100"
-                                            v-html="selectedVoucher.remarks">
+                                            v-safe-html="selectedVoucher.remarks">
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="ios-section">
                                     <p class="ios-section-label">Scholars ({{ selectedVoucher.scholar_ids?.length || 0
-                                    }})</p>
+                                        }})</p>
                                     <div class="ios-card px-4 py-3">
                                         <div v-if="loadingScholars" class="text-center py-2">
                                             <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span
@@ -1688,7 +1688,7 @@ onMounted(() => {
                                                             scholar.year_level + ` YEAR` : scholar.year_level }}</span>
                                                     <span v-if="scholar.academic_year" class="ml-1">| {{
                                                         scholar.academic_year
-                                                    }}</span>
+                                                        }}</span>
                                                     <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                                                 </span>
                                             </div>

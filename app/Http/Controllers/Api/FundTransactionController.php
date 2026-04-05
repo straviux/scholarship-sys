@@ -74,7 +74,7 @@ class FundTransactionController extends Controller
             }
 
             if ($status = $request->get('obr_status')) {
-                $query->where('obr_status', $status);
+                $query->where('transaction_status', $status);
             }
 
             if ($type = $request->get('obr_type')) {
@@ -118,7 +118,7 @@ class FundTransactionController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $voucher = FundTransaction::with('creator')->findOrFail($id);
+            $voucher = FundTransaction::with(['creator', 'scholarshipProgram:id,name,shortname'])->findOrFail($id);
 
             return response()->json(['data' => $voucher], 200);
         } catch (\Exception $e) {

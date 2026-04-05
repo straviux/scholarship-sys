@@ -159,7 +159,7 @@ const closeDeleteModal = () => {
 
                     <Column field="remarks" header="Remarks">
                         <template #body="slotProps">
-                            <span class="text-gray-600">{{ slotProps.data.remarks || '-' }}</span>
+                            <span class="text-gray-600" v-safe-html="slotProps.data.remarks || '-'"></span>
                         </template>
                     </Column>
 

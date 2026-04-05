@@ -5,6 +5,7 @@ import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import logger from '@/utils/logger';
+import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 
 defineOptions({
     layout: AdminLayout,
@@ -35,7 +36,11 @@ const formData = ref({
 
 const particularFormData = ref({
     name: '',
-    account_code: ''
+    account_code: '',
+    allotment: '',
+    program: null,
+    date_approved: null,
+    date_expired: null,
 });
 
 // Fetch responsibility centers
@@ -163,19 +168,26 @@ const openParticularsModal = (rc, particular = null) => {
     editingRC.value = rc;
     if (particular) {
         editingParticular.value = particular;
-        particularFormData.value = { name: particular.name, account_code: particular.account_code };
+        particularFormData.value = {
+            name: particular.name,
+            account_code: particular.account_code,
+            allotment: particular.allotment ?? '',
+            program: particular.program ?? null,
+            date_approved: particular.date_approved ? new Date(particular.date_approved) : null,
+            date_expired: particular.date_expired ? new Date(particular.date_expired) : null,
+        };
     } else {
         editingParticular.value = null;
-        particularFormData.value = { name: '', account_code: '' };
+        particularFormData.value = { name: '', account_code: '', allotment: '', program: null, date_approved: null, date_expired: null };
     }
     showParticularsModal.value = true;
 };
 
 // Save particular
 const saveParticular = async () => {
-    if (!particularFormData.value.name || !particularFormData.value.account_code) {
-        error.value = 'Please fill in all particular fields';
-        toast.add({ severity: 'warn', summary: 'Validation', detail: 'Please fill in all fields', life: 3000 });
+    if (!particularFormData.value.name || !particularFormData.value.account_code || !particularFormData.value.allotment || !particularFormData.value.program) {
+        error.value = 'Please fill in all required particular fields (name, account code, allotment, program)';
+        toast.add({ severity: 'warn', summary: 'Validation', detail: 'Name, account code, allotment, and program are required', life: 3000 });
         return;
     }
 
@@ -185,11 +197,24 @@ const saveParticular = async () => {
             ? `/api/responsibility-centers/${editingRC.value.id}/particulars/${editingParticular.value.id}`
             : `/api/responsibility-centers/${editingRC.value.id}/particulars`;
 
+        const payload = {
+            name: particularFormData.value.name,
+            account_code: particularFormData.value.account_code,
+            scholarship_program_id: particularFormData.value.program?.id ?? particularFormData.value.program,
+            allotment: particularFormData.value.allotment,
+            date_approved: particularFormData.value.date_approved
+                ? new Date(particularFormData.value.date_approved).toISOString().slice(0, 10)
+                : null,
+            date_expired: particularFormData.value.date_expired
+                ? new Date(particularFormData.value.date_expired).toISOString().slice(0, 10)
+                : null,
+        };
+
         if (editingParticular.value) {
-            await axios.put(url, particularFormData.value);
+            await axios.put(url, payload);
             toast.add({ severity: 'success', summary: 'Success', detail: 'Particular updated', life: 3000 });
         } else {
-            await axios.post(url, particularFormData.value);
+            await axios.post(url, payload);
             toast.add({ severity: 'success', summary: 'Success', detail: 'Particular created', life: 3000 });
         }
 
@@ -240,24 +265,6 @@ const executeDeleteParticular = async () => {
 
 onMounted(() => {
     fetchResponsibilityCenters();
-
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-        const rcMenus = document.querySelectorAll('[id^="rc-menu"]');
-        const menuButtons = document.querySelectorAll('[aria-controls="rc-menu"]');
-
-        let isClickInside = false;
-        rcMenus.forEach(menu => {
-            if (menu.contains(e.target)) isClickInside = true;
-        });
-        menuButtons.forEach(btn => {
-            if (btn.contains(e.target)) isClickInside = true;
-        });
-
-        if (!isClickInside) {
-            activeRCId.value = null;
-        }
-    });
 });
 </script>
 
@@ -265,99 +272,130 @@ onMounted(() => {
 
     <Head title="Responsibility Centers" />
     <Toast position="top-right" :life="3500" :baseZIndex="20000" />
-    <div class="p-4 short:p-3 space-y-4 short:space-y-2">
-        <!-- Header -->
-        <div class="flex justify-between items-center">
-            <div>
-                <h1 class="text-3xl short:text-xl font-bold text-gray-900">Responsibility Centers</h1>
-                <p class="text-gray-600 mt-1">Manage responsibility centers and their particulars</p>
-            </div>
-            <button @click="openRCModal()"
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium cursor-pointer">
-                <i class="pi pi-plus mr-2"></i>Add Responsibility Center
-            </button>
-        </div>
 
-        <!-- Error Message -->
-        <div v-if="error" class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-            {{ error }}
-        </div>
-
-        <!-- Loading State -->
-        <div v-if="loading" class="text-center py-12">
-            <i class="pi pi-spin pi-spinner text-4xl short:text-2xl text-blue-600"></i>
-            <p class="mt-3 text-gray-600">Loading responsibility centers...</p>
-        </div>
-
-        <!-- Empty State -->
-        <div v-else-if="responsibilityCenters.length === 0" class="text-center py-12">
-            <i class="pi pi-inbox text-4xl short:text-2xl text-gray-300 mb-3"></i>
-            <p class="text-gray-500">No responsibility centers yet</p>
-        </div>
-
-        <!-- Responsibility Centers List -->
-        <div v-else class="space-y-4">
-            <div v-for="rc in responsibilityCenters" :key="rc.id"
-                class="border border-gray-200 rounded-lg overflow-hidden">
-                <!-- RC Header -->
-                <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 flex justify-between items-start">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-gray-900">{{ rc.name }}</h3>
-                        <p class="text-sm text-gray-600 mt-1">Code: <span class="font-mono font-medium">{{ rc.code
-                        }}</span></p>
-                        <p v-if="rc.fiscal_year" class="text-sm text-gray-600 mt-1">Fiscal Year: <span
-                                class="font-medium">{{ rc.fiscal_year }}</span></p>
-                    </div>
-                    <div class="relative">
-                        <Button icon="pi pi-ellipsis-v" class="p-button-rounded p-button-text p-button-sm"
-                            @click="toggleRCMenu(rc.id)" aria-haspopup="true" aria-controls="rc-menu" />
-                        <Menu v-if="activeRCId === rc.id" ref="rcMenuRef" id="rc-menu" :model="getRCMenuItems(rc)"
-                            @hide="activeRCId = null" class="absolute top-full right-0 z-50" />
+    <div>
+        <!-- Toolbar -->
+        <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+            <template #start>
+                <div class="flex items-center gap-3">
+                    <i class="pi pi-building text-blue-500 text-[2rem]"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-700">Responsibility Centers</h1>
+                        <p class="text-sm text-gray-600">Manage responsibility centers and their particulars</p>
                     </div>
                 </div>
+            </template>
+            <template #end>
+                <Button icon="pi pi-plus" severity="success" rounded outlined @click="openRCModal()"
+                    v-tooltip.bottom="'Add Responsibility Center'" />
+            </template>
+        </Toolbar>
 
-                <!-- Particulars Table -->
-                <div class="p-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <h4 class="font-semibold text-gray-900">Particulars</h4>
-                        <Button icon="pi pi-plus" label="Add Particular" class="p-button-sm p-button-success"
+        <!-- Loading -->
+        <div v-if="loading" class="flex items-center justify-center py-24">
+            <i class="pi pi-spin pi-spinner text-3xl text-blue-500"></i>
+        </div>
+
+        <!-- Empty -->
+        <Panel v-else-if="responsibilityCenters.length === 0" class="!rounded-4xl overflow-hidden mt-8">
+            <div class="flex flex-col items-center justify-center py-16 text-gray-400">
+                <i class="pi pi-inbox text-5xl mb-4"></i>
+                <p class="text-base">No responsibility centers yet</p>
+                <Button icon="pi pi-plus" label="Add Responsibility Center" severity="secondary" outlined rounded
+                    class="mt-4" @click="openRCModal()" />
+            </div>
+        </Panel>
+
+        <!-- RC Cards -->
+        <div v-else class="space-y-4 mt-8">
+            <Panel v-for="rc in responsibilityCenters" :key="rc.id" class="!rounded-4xl overflow-hidden">
+
+                <!-- RC Info Bar -->
+                <div
+                    class="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
+                    <div class="flex items-center gap-3">
+                        <i class="pi pi-building text-blue-500 text-xl"></i>
+                        <div>
+                            <h3 class="font-bold text-gray-700 dark:text-gray-100">{{ rc.name }}</h3>
+                            <div class="flex gap-3 text-xs text-gray-500 mt-0.5">
+                                <span>Code: <span class="font-mono font-semibold text-gray-700">{{ rc.code
+                                        }}</span></span>
+                                <span v-if="rc.fiscal_year">FY: <span class="font-medium">{{ rc.fiscal_year
+                                        }}</span></span>
+                                <span class="text-gray-400">{{ rc.particulars?.length ?? 0 }} particular(s)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <Button icon="pi pi-plus" size="small" severity="success" rounded text
                             @click="openParticularsModal(rc)" />
-                    </div>
-
-                    <div v-if="rc.particulars && rc.particulars.length > 0" class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-gray-200 bg-gray-50">
-                                    <th class="text-left p-3 font-semibold text-gray-700">Particulars Name</th>
-                                    <th class="text-left p-3 font-semibold text-gray-700">Account Code</th>
-                                    <th class="text-right p-3 font-semibold text-gray-700">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="particular in rc.particulars" :key="particular.id"
-                                    class="border-b border-gray-100 hover:bg-gray-50">
-                                    <td class="p-3 text-gray-900">{{ particular.name }}</td>
-                                    <td class="p-3 text-gray-900"><span
-                                            class="font-mono bg-gray-100 px-2 py-1 rounded">{{ particular.account_code
-                                            }}</span></td>
-                                    <td class="p-3 text-right space-x-2">
-                                        <Button icon="pi pi-pencil"
-                                            class="p-button-rounded p-button-text p-button-sm p-button-warning"
-                                            @click="openParticularsModal(rc, particular)" v-tooltip="'Edit'" />
-                                        <Button icon="pi pi-trash"
-                                            class="p-button-rounded p-button-text p-button-sm p-button-danger"
-                                            @click="confirmDeleteParticular(rc.id, particular.id)"
-                                            v-tooltip="'Delete'" />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div v-else class="text-center py-4 text-gray-500">
-                        <p>No particulars added</p>
+                        <Button icon="pi pi-pencil" severity="secondary" text rounded size="small"
+                            @click="openRCModal(rc)" v-tooltip.bottom="'Edit RC'" />
+                        <Button icon="pi pi-trash" severity="danger" text rounded size="small" @click="deleteRC(rc.id)"
+                            v-tooltip.bottom="'Delete RC'" />
                     </div>
                 </div>
-            </div>
+
+                <!-- Particulars DataTable -->
+                <DataTable v-if="rc.particulars && rc.particulars.length > 0" :value="rc.particulars" showGridlines
+                    stripedRows scrollable class="text-sm">
+                    <Column field="name" header="Particular" style="min-width: 180px">
+                        <template #body="{ data }">
+                            <span class="font-medium text-gray-800 dark:text-gray-100">{{ data.name }}</span>
+                        </template>
+                    </Column>
+                    <Column field="account_code" header="Account Code" style="min-width: 130px">
+                        <template #body="{ data }">
+                            <span class="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-lg">{{
+                                data.account_code }}</span>
+                        </template>
+                    </Column>
+                    <Column header="Program" style="min-width: 130px">
+                        <template #body="{ data }">
+                            <Tag v-if="data.program" :value="data.program.shortname ?? data.program" severity="info"
+                                rounded />
+                            <span v-else class="text-xs text-gray-400">—</span>
+                        </template>
+                    </Column>
+                    <Column header="Allotment" style="min-width: 130px">
+                        <template #body="{ data }">
+                            <span v-if="data.allotment" class="font-semibold text-green-700">
+                                ₱{{ parseFloat(data.allotment).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                            </span>
+                            <span v-else class="text-xs text-gray-400">—</span>
+                        </template>
+                    </Column>
+                    <Column header="Date Approved" style="min-width: 130px">
+                        <template #body="{ data }">
+                            <span v-if="data.date_approved" class="text-xs text-gray-600">{{ data.date_approved
+                                }}</span>
+                            <span v-else class="text-xs text-gray-400">—</span>
+                        </template>
+                    </Column>
+                    <Column header="Date Expired" style="min-width: 130px">
+                        <template #body="{ data }">
+                            <span v-if="data.date_expired" class="text-xs text-gray-600">{{ data.date_expired }}</span>
+                            <span v-else class="text-xs text-gray-400">—</span>
+                        </template>
+                    </Column>
+                    <Column header="" style="width: 90px">
+                        <template #body="{ data }">
+                            <div class="flex items-center gap-1 justify-end">
+                                <Button icon="pi pi-pencil" severity="secondary" text rounded size="small"
+                                    @click="openParticularsModal(rc, data)" v-tooltip.top="'Edit'" />
+                                <Button icon="pi pi-trash" severity="danger" text rounded size="small"
+                                    @click="confirmDeleteParticular(rc.id, data.id)" v-tooltip.top="'Delete'" />
+                            </div>
+                        </template>
+                    </Column>
+                </DataTable>
+
+                <div v-else class="flex flex-col items-center justify-center py-8 text-gray-400">
+                    <i class="pi pi-inbox text-3xl mb-2"></i>
+                    <p class="text-sm">No particulars yet</p>
+                </div>
+
+            </Panel>
         </div>
 
         <!-- RC Modal -->
@@ -367,73 +405,111 @@ onMounted(() => {
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Code</label>
-                    <InputText v-model="formData.code" type="text" placeholder="e.g., CC001" class="w-full" />
+                    <InputText v-model="formData.code" placeholder="e.g., CC001" class="w-full" />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <InputText v-model="formData.name" type="text" placeholder="e.g., Scholarship Center"
-                        class="w-full" />
+                    <InputText v-model="formData.name" placeholder="e.g., Scholarship Center" class="w-full" />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Fiscal Year</label>
-                    <InputText v-model="formData.fiscal_year" type="text" placeholder="e.g., 2024-2025"
-                        class="w-full" />
+                    <InputText v-model="formData.fiscal_year" placeholder="e.g., 2024-2025" class="w-full" />
                 </div>
             </div>
-
             <template #footer>
-                <div class="space-x-2">
-                    <Button @click="showModal = false" :disabled="processing" label="Cancel" severity="secondary" />
-                    <Button @click="saveRC" :disabled="processing" :label="processing ? 'Saving...' : 'Save'" />
-                </div>
+                <Button label="Cancel" severity="secondary" @click="showModal = false" :disabled="processing" />
+                <Button :label="processing ? 'Saving...' : 'Save'" icon="pi pi-check" @click="saveRC"
+                    :disabled="processing" />
             </template>
         </Dialog>
 
         <!-- Particulars Modal -->
         <Dialog v-model:visible="showParticularsModal" :modal="true" :closable="true"
             :header="editingParticular ? 'Edit Particular' : 'Add Particular'"
-            :style="{ width: '90%', maxWidth: '500px' }" @hide="showParticularsModal = false">
+            :style="{ width: '90%', maxWidth: '560px' }" @hide="showParticularsModal = false">
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Particulars Name</label>
-                    <InputText v-model="particularFormData.name" type="text" placeholder="e.g., Tuition Fee"
-                        class="w-full" />
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Particulars Name <span
+                            class="text-red-500">*</span></label>
+                    <InputText v-model="particularFormData.name" placeholder="e.g., Tuition Fee" class="w-full" />
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Account Code</label>
-                    <InputText v-model="particularFormData.account_code" type="text" placeholder="e.g., 5010-001"
-                        class="w-full" />
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Account Code <span
+                            class="text-red-500">*</span></label>
+                    <InputText v-model="particularFormData.account_code" placeholder="e.g., 5010-001" class="w-full" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Program <span
+                            class="text-red-500">*</span></label>
+                    <ProgramSelect v-model="particularFormData.program" class="w-full" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Allotment <span
+                            class="text-red-500">*</span></label>
+                    <InputNumber v-model="particularFormData.allotment" placeholder="e.g., 15000.00"
+                        :minFractionDigits="2" :maxFractionDigits="2" mode="decimal" class="w-full" inputClass="w-full"
+                        prefix="₱" />
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date Approved</label>
+                        <DatePicker v-model="particularFormData.date_approved" class="w-full" date-format="M dd, yy"
+                            showIcon iconDisplay="input" showButtonBar />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date Expired</label>
+                        <DatePicker v-model="particularFormData.date_expired" class="w-full" date-format="M dd, yy"
+                            showIcon iconDisplay="input" showButtonBar />
+                    </div>
                 </div>
             </div>
-
             <template #footer>
-                <div class="space-x-2">
-                    <Button @click="showParticularsModal = false" :disabled="processing" label="Cancel"
-                        severity="secondary" />
-                    <Button @click="saveParticular" :disabled="processing" :label="processing ? 'Saving...' : 'Save'" />
-                </div>
+                <Button label="Cancel" severity="secondary" @click="showParticularsModal = false"
+                    :disabled="processing" />
+                <Button :label="processing ? 'Saving...' : 'Save'" icon="pi pi-check" @click="saveParticular"
+                    :disabled="processing" />
             </template>
         </Dialog>
 
         <!-- Delete Confirmation Modal -->
         <Dialog v-model:visible="showDeleteConfirmModal" :modal="true" :closable="true" header="Confirm Delete"
             :style="{ width: '90%', maxWidth: '400px' }" @hide="showDeleteConfirmModal = false">
-            <div class="space-y-4">
-                <p class="text-gray-700">
-                    {{ deleteConfirmType === 'rc'
-                        ? 'Are you sure you want to delete this responsibility center? This action cannot be undone.'
-                        : 'Are you sure you want to delete this particular? This action cannot be undone.' }}
-                </p>
-            </div>
-
+            <p class="text-gray-700">
+                {{ deleteConfirmType === 'rc'
+                    ? 'Are you sure you want to delete this responsibility center? This action cannot be undone.'
+                    : 'Are you sure you want to delete this particular? This action cannot be undone.' }}
+            </p>
             <template #footer>
-                <div class="space-x-2">
-                    <Button @click="showDeleteConfirmModal = false" :disabled="processing" label="Cancel"
-                        severity="secondary" />
-                    <Button @click="deleteConfirmType === 'rc' ? confirmDeleteRC() : executeDeleteParticular()"
-                        :disabled="processing" :label="processing ? 'Deleting...' : 'Delete'" severity="danger" />
-                </div>
+                <Button label="Cancel" severity="secondary" @click="showDeleteConfirmModal = false"
+                    :disabled="processing" />
+                <Button :label="processing ? 'Deleting...' : 'Delete'" severity="danger" icon="pi pi-trash"
+                    @click="deleteConfirmType === 'rc' ? confirmDeleteRC() : executeDeleteParticular()"
+                    :disabled="processing" />
             </template>
         </Dialog>
     </div>
 </template>
+
+<style scoped>
+:deep(.p-datatable) {
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 1px solid var(--p-datatable-border-color);
+}
+
+:deep(.p-datatable-table-container) {
+    border-radius: 0;
+    overflow: hidden;
+}
+
+:deep(.p-paginator) {
+    border: none;
+    border-top: 1px solid var(--p-datatable-border-color);
+}
+
+:deep(.p-inputtext),
+:deep(.p-select),
+:deep(.p-datepicker .p-inputtext) {
+    border-radius: 1rem;
+}
+</style>

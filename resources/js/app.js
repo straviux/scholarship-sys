@@ -11,7 +11,7 @@ import 'vue3-toastify/dist/index.css';
 })();
 
 import { createApp, h } from 'vue';
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 // import VueDeviceDetect from '@basitcodeenv/vue3-device-detect';
@@ -28,6 +28,7 @@ import Vue3Toastify from 'vue3-toastify';
 import permissionDirective from './directives/permission';
 import smoothScrollDirective from './directives/smoothScroll';
 import animateTableRowsDirective from './directives/animateTableRows';
+import safeHtmlDirective from './directives/safeHtml';
 import animationPlugin from './plugins/animationPlugin';
 
 // PrimeVue Components - Global Registration
@@ -160,7 +161,8 @@ createInertiaApp({
 			.component('VueDatePicker', VueDatePicker)
 			.directive('can', permissionDirective)
 			.directive('smooth-scroll', smoothScrollDirective)
-			.directive('animate-table-rows', animateTableRowsDirective);
+			.directive('animate-table-rows', animateTableRowsDirective)
+			.directive('safe-html', safeHtmlDirective);
 
 		// Register PrimeVue components globally
 		app.component('Button', Button);
@@ -216,4 +218,27 @@ createInertiaApp({
 		// Whether the NProgress spinner will be shown...
 		showSpinner: true,
 	},
+});
+
+// Handle CSRF token expiry (419) for Inertia-driven requests.
+// Inertia fires 'invalid' when the server returns an unexpected (non-Inertia) response.
+// We silently refresh the token and reload so the user doesn't have to do it manually.
+router.on('invalid', (event) => {
+	if (event.detail.response.status === 419) {
+		event.preventDefault();
+		window.axios
+			.get('/sanctum/csrf-cookie')
+			.then(() => window.axios.get('/csrf-token'))
+			.then(({ data }) => {
+				const meta = document.querySelector('meta[name="csrf-token"]');
+				if (meta && data.token) {
+					meta.setAttribute('content', data.token);
+					window.axios.defaults.headers.common['X-CSRF-TOKEN'] = data.token;
+					window.axios.defaults.headers.common['X-XSRF-TOKEN'] = data.token;
+				}
+			})
+			.finally(() => {
+				router.reload();
+			});
+	}
 });
