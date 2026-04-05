@@ -330,10 +330,13 @@ class DisbursementController extends Controller
             return response()->json(['error' => 'File not found'], 404);
         }
 
-        return response()->download(
-            storage_path('app/public/' . $attachment->file_path),
-            $attachment->file_name
-        );
+        $fileContent = Storage::disk('public')->get($attachment->file_path);
+        $tempPath = storage_path('app/temp/' . $attachment->file_name);
+        if (!file_exists(dirname($tempPath))) {
+            mkdir(dirname($tempPath), 0755, true);
+        }
+        file_put_contents($tempPath, $fileContent);
+        return response()->download($tempPath, $attachment->file_name)->deleteFileAfterSend(true);
     }
 
     /**
@@ -347,12 +350,10 @@ class DisbursementController extends Controller
             return response()->json(['error' => 'File not found'], 404);
         }
 
-        $path = storage_path('app/public/' . $attachment->file_path);
-
-        return response()->file($path, [
-            'Content-Type' => $attachment->file_type,
-            'Content-Disposition' => 'inline; filename="' . $attachment->file_name . '"'
-        ]);
+        $fileContent = Storage::disk('public')->get($attachment->file_path);
+        return response($fileContent)
+            ->header('Content-Type', $attachment->file_type)
+            ->header('Content-Disposition', 'inline; filename="' . $attachment->file_name . '"');
     }
 
     /**
