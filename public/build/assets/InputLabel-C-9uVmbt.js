@@ -1,1 +1,0 @@
-import{b as a,o as s,z as e,aj as t}from"./app-BuQqq_A6.js";const p={class:"block font-medium text-sm text-gray-700"},l={key:0},o={key:1},n={__name:"InputLabel",props:{value:{type:String}},setup:n=>(u,m)=>(s(),a("label",p,[n.value?(s(),a("span",l,e(n.value),1)):(s(),a("span",o,[t(u.$slots,"default")]))]))};export{n as _};
