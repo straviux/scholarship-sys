@@ -58,11 +58,11 @@
                     <td class="b-all center" style="padding:3pt 5pt;">{{ row.fiscal_year || '—' }}</td>
                     <td class="b-all right nowrap" style="padding:3pt 5pt;">{{ money(row.total_allotment) }}</td>
                     <td class="b-all right nowrap" style="padding:3pt 5pt;">{{ money(row.disbursed) }}</td>
-                    <td class="b-all right nowrap bold"
-                        :style="row.overBudget ? 'color:#c0392b;' : 'color:#27ae60;'"
+                    <td class="b-all right nowrap bold" :style="row.overBudget ? 'color:#c0392b;' : 'color:#27ae60;'"
                         style="padding:3pt 5pt;">
                         {{ money(row.remaining) }}
-                        <span v-if="row.overBudget" style="font-size:7pt;display:block;font-weight:normal;">over budget</span>
+                        <span v-if="row.overBudget" style="font-size:7pt;display:block;font-weight:normal;">over
+                            budget</span>
                     </td>
                     <td class="b-all center" style="padding:3pt 5pt;">
                         {{ row.total_allotment > 0
@@ -77,8 +77,7 @@
                     <td class="b-all right bold nowrap t-9" style="padding:5pt 8pt;">{{ money(totals.allotment) }}</td>
                     <td class="b-all right bold nowrap t-9" style="padding:5pt 8pt;">{{ money(totals.disbursed) }}</td>
                     <td class="b-all right bold nowrap t-9"
-                        :style="totals.remaining >= 0 ? 'color:#27ae60;' : 'color:#c0392b;'"
-                        style="padding:5pt 8pt;">
+                        :style="totals.remaining >= 0 ? 'color:#27ae60;' : 'color:#c0392b;'" style="padding:5pt 8pt;">
                         {{ money(totals.remaining) }}
                     </td>
                     <td class="b-all center bold t-9" style="padding:5pt 8pt;">

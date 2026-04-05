@@ -42,8 +42,7 @@
         </div>
 
         <!-- NO RECORDS -->
-        <div v-if="records.length === 0" class="center italic"
-            style="padding:24pt;color:#888;font-size:10pt;">
+        <div v-if="records.length === 0" class="center italic" style="padding:24pt;color:#888;font-size:10pt;">
             No records match the selected filters.
         </div>
 
@@ -52,13 +51,13 @@
 
             <!-- GROUPED LIST -->
             <template v-if="groupBy !== 'none'">
-                <div v-for="(group, groupName) in groupedData" :key="groupName"
-                    style="margin-bottom:14pt;">
+                <div v-for="(group, groupName) in groupedData" :key="groupName" style="margin-bottom:14pt;">
                     <!-- Group header -->
                     <div style="display:flex;align-items:center;justify-content:space-between;
                                 border-bottom:1pt solid #000;padding:3pt 0;margin-bottom:4pt;">
                         <span class="bold" style="font-size:10pt;">{{ groupName }}</span>
-                        <span style="font-size:8pt;color:#555;">{{ group.length }} record{{ group.length !== 1 ? 's' : '' }}</span>
+                        <span style="font-size:8pt;color:#555;">{{ group.length }} record{{ group.length !== 1 ? 's' :
+                            '' }}</span>
                     </div>
                     <!-- Group table -->
                     <table style="width:100%;border-collapse:collapse;font-size:8pt;">
@@ -85,7 +84,8 @@
                                 <td :style="TD">{{ rec.program?.shortname || '—' }}</td>
                                 <td :style="TD">{{ rec.course?.shortname || '—' }}</td>
                                 <td :style="TD">
-                                    <span :style="recStyle(rec.recommendation)">{{ recLabel(rec.recommendation) }}</span>
+                                    <span :style="recStyle(rec.recommendation)">{{ recLabel(rec.recommendation)
+                                        }}</span>
                                 </td>
                                 <td v-if="includeAssessment" :style="TD + 'text-align:center;'">
                                     {{ cap(rec.academic_potential) }}
@@ -194,7 +194,8 @@
             </div>
 
             <!-- TOTAL BANNER -->
-            <div style="margin-top:12pt;padding:8pt;border:0.5pt solid #ccc;text-align:center;font-size:11pt;font-weight:700;">
+            <div
+                style="margin-top:12pt;padding:8pt;border:0.5pt solid #ccc;text-align:center;font-size:11pt;font-weight:700;">
                 Total Interviewed Applicants: {{ records.length }}
             </div>
         </template>

@@ -143,12 +143,19 @@
                             <!-- REVIEW label: spans entire review section, shown once -->
                             <td v-if="ti === 0 && ri === 0" :rowspan="totalReviewRows" :style="TD_COV">REVIEW</td>
                             <!-- Last row of the whole review section gets border-bottom:none -->
-                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{ d.academic_year || '—' }}</td>
-                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{ d.semester || '—' }}</td>
-                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{ formatDate(d.date_obligated) }}</td>
-                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{ d.obr_no || '—' }}</td>
-                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{ upper(d.disbursement_type) || '—' }}</td>
-                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE_AMT : TD_AMT">{{ d.amount != null ? money(d.amount) : '—' }}</td>
+                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{
+                                d.academic_year || '—' }}</td>
+                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{
+                                d.semester || '—' }}</td>
+                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{
+                                formatDate(d.date_obligated) }}</td>
+                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{
+                                d.obr_no || '—' }}</td>
+                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{
+                                upper(d.disbursement_type) || '—' }}</td>
+                            <td
+                                :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE_AMT : TD_AMT">
+                                {{ d.amount != null ? money(d.amount) : '—' }}</td>
                             <!-- ROS per term (merged); last term also gets border-bottom:none -->
                             <td v-if="ri === 0" :rowspan="term.rows.length"
                                 :style="ti === reviewTerms.length - 1 ? TD_PRE_AMT : TD_AMT">
