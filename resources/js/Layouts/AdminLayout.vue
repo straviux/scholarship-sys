@@ -92,6 +92,7 @@ function refreshActivityLogs() {
 
 // Provide refresh function to child components
 provide('refreshActivityLogs', refreshActivityLogs);
+provide('maintenanceStatus', maintenanceStatus);
 
 // Handle logout with full page reload
 function handleLogout() {
@@ -198,7 +199,7 @@ function scheduleSmartPolling(startTimeStr) {
     }
 }
 
-// Fetch on mount and set interval to refresh
+// Fetch on mount
 let intervalId = null;
 let dateTimeIntervalId = null;
 
@@ -478,9 +479,6 @@ onMounted(() => {
     // Fetch maintenance status for all users - they need to see upcoming maintenance
     fetchMaintenanceStatus();
 
-    // Refresh unread count every 30 seconds
-    intervalId = setInterval(fetchUnreadCount, 30000);
-
     // Update server time every second (client-side increment for smooth display)
     dateTimeIntervalId = setInterval(() => {
         currentDateTime.value = new Date(currentDateTime.value.getTime() + 1000);
@@ -700,7 +698,7 @@ onUnmounted(() => {
                                 class="flex flex-col justify-center text-center">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </SidebarLink>
                         </li>
 
@@ -709,7 +707,7 @@ onUnmounted(() => {
                             <div class="flex flex-col justify-center text-center cursor-pointer">
                                 <i :class="[item.icon, 'text-xl']"></i>
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                    }}</span>
+                                }}</span>
                             </div>
                         </li>
                     </template>

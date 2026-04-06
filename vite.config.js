@@ -32,7 +32,37 @@ export default defineConfig({
 		ssrManifest: false,
 		rollupOptions: {
 			output: {
-				manualChunks: undefined,
+				manualChunks(id) {
+					// Core Vue / Inertia — loaded on every page
+					if (
+						id.includes('node_modules/vue/') ||
+						id.includes('node_modules/@vue/') ||
+						id.includes('node_modules/@inertiajs/')
+					) {
+						return 'vendor-vue';
+					}
+					// PrimeVue UI library (large)
+					if (
+						id.includes('node_modules/primevue/') ||
+						id.includes('node_modules/@primevue/') ||
+						id.includes('node_modules/@primeuix/') ||
+						id.includes('node_modules/primeicons/')
+					) {
+						return 'vendor-primevue';
+					}
+					// Charts — only used on dashboard/reports
+					if (id.includes('node_modules/chart.js') || id.includes('node_modules/chartjs-')) {
+						return 'vendor-charts';
+					}
+					// Excel export — only used on demand
+					if (id.includes('node_modules/xlsx')) {
+						return 'vendor-xlsx';
+					}
+					// Everything else from node_modules
+					if (id.includes('node_modules/')) {
+						return 'vendor-misc';
+					}
+				},
 			},
 		},
 		chunkSizeWarningLimit: 1000,

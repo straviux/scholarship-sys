@@ -68,7 +68,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, inject, watch, onMounted, onBeforeUnmount } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
 const $page = usePage();
@@ -77,18 +77,16 @@ const announcement = ref(null);
 const countdownDisplay = ref('00:00:00');
 const startTimeFormatted = ref('');
 const countdownInterval = ref(null);
-const statusCheckInterval = ref(null);
-const lastCheckTime = ref(0);
+
+// Injected from AdminLayout — avoids duplicate polling
+const maintenanceStatus = inject('maintenanceStatus', null);
 
 const isAdministrator = () => {
     const user = $page.props.auth?.user;
     if (!user) return false;
-
-    // Check if user has admin or administrator role
     if (user.roles && Array.isArray(user.roles)) {
         return user.roles.some(role => role.name === 'admin' || role.name === 'administrator');
     }
-
     return false;
 };
 
@@ -111,7 +109,7 @@ const updateCountdown = () => {
         return;
     }
 
-    // Show modal if within 15 minutes
+    // Show modal if within 5 minutes
     showModal.value = true;
 
     // Format countdown
@@ -122,121 +120,51 @@ const updateCountdown = () => {
     countdownDisplay.value = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 };
 
-const getCheckInterval = () => {
-    // Determine polling interval based on time to maintenance
-    if (!announcement.value || !announcement.value.start_time) {
-        return 5 * 60 * 1000; // 5 minutes for no announcement
+const processMaintenanceData = (data) => {
+    if (!data) return;
+    if (isAdministrator()) return;
+
+    // Don't re-show if recently dismissed
+    const dismissedTime = localStorage.getItem('maintenanceAlertDismissed');
+    if (dismissedTime && new Date().getTime() - parseInt(dismissedTime) < 30 * 60 * 1000) return;
+
+    if (data.announcement?.countdown?.status === 'upcoming') {
+        announcement.value = {
+            title: data.announcement.title,
+            message: data.announcement.message,
+            type: data.announcement.type,
+            start_time: data.announcement.countdown.start_time,
+        };
+        startTimeFormatted.value = new Date(data.announcement.countdown.start_time).toLocaleString();
+        updateCountdown();
+    } else {
+        showModal.value = false;
     }
-
-    const now = new Date().getTime();
-    const startTime = new Date(announcement.value.start_time).getTime();
-    const secondsRemaining = Math.floor((startTime - now) / 1000);
-
-    // Within 5 minutes: check every 1 minute
-    if (secondsRemaining > 0 && secondsRemaining <= 300) {
-        return 60 * 1000;
-    }
-
-    // More than 5 minutes away: check every 10 minutes
-    return 10 * 60 * 1000;
-};
-
-const fetchMaintenanceStatus = async () => {
-    try {
-        const now = new Date().getTime();
-
-        // Throttle: don't check more than once per 5 seconds
-        if (now - lastCheckTime.value < 5000) {
-            return;
-        }
-
-        lastCheckTime.value = now;
-
-        const response = await fetch('/api/maintenance/status');
-        if (!response.ok) return;
-
-        const data = await response.json();
-
-        if (data.announcement && data.announcement.countdown) {
-            const countdown = data.announcement.countdown;
-
-            // Only process if maintenance is upcoming
-            if (countdown.status === 'upcoming') {
-                announcement.value = {
-                    title: data.announcement.title,
-                    message: data.announcement.message,
-                    type: data.announcement.type,
-                    start_time: countdown.start_time,
-                };
-
-                // Format start time
-                const startDate = new Date(countdown.start_time);
-                startTimeFormatted.value = startDate.toLocaleString();
-
-                updateCountdown();
-
-                // Smart polling: adjust interval based on time to maintenance (5 min threshold)
-                adjustCheckInterval();
-            } else {
-                showModal.value = false;
-            }
-        } else {
-            showModal.value = false;
-        }
-    } catch (error) {
-        console.error('Error fetching maintenance status:', error);
-    }
-};
-
-const adjustCheckInterval = () => {
-    // Clear existing status check interval
-    if (statusCheckInterval.value) {
-        clearInterval(statusCheckInterval.value);
-    }
-
-    // Set new interval based on time to maintenance
-    const newInterval = getCheckInterval();
-    statusCheckInterval.value = setInterval(fetchMaintenanceStatus, newInterval);
 };
 
 const dismissModal = () => {
     showModal.value = false;
     // Store dismissal time to not show again for 30 minutes
-    const dismissalTime = new Date().getTime();
-    localStorage.setItem('maintenanceAlertDismissed', dismissalTime);
+    localStorage.setItem('maintenanceAlertDismissed', new Date().getTime());
 };
 
+// React to maintenance data provided by AdminLayout — no independent polling needed
+if (maintenanceStatus) {
+    watch(maintenanceStatus, processMaintenanceData, { immediate: true, deep: true });
+}
+
 onMounted(() => {
-    // Don't show modal for administrators
-    if (isAdministrator()) {
-        return;
-    }
-
-    // Check if alert was dismissed less than 30 minutes ago
-    const dismissedTime = localStorage.getItem('maintenanceAlertDismissed');
-    const thirtyMinutesInMs = 30 * 60 * 1000;
-
-    if (dismissedTime && new Date().getTime() - parseInt(dismissedTime) < thirtyMinutesInMs) {
-        return;
-    }
-
-    // Update countdown every second when modal is visible (shows when 5 min remaining)
+    // Update countdown every second when modal is visible
     countdownInterval.value = setInterval(() => {
         if (showModal.value && announcement.value) {
             updateCountdown();
         }
     }, 1000);
-
-    // Smart polling: check every 10 minutes initially, check every 1 minute when 5 min away
-    adjustCheckInterval();
 });
 
 onBeforeUnmount(() => {
     if (countdownInterval.value) {
         clearInterval(countdownInterval.value);
-    }
-    if (statusCheckInterval.value) {
-        clearInterval(statusCheckInterval.value);
     }
 });
 </script>

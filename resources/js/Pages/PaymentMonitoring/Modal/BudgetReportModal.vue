@@ -245,7 +245,7 @@ function handleOpen() {
                                             class="ios-select" :pt="{ root: { style: 'border-radius:1rem' } }">
                                             <template #option="{ option }">
                                                 <span>{{ option.name }} <span style="opacity:.5">({{ option.code
-                                                }})</span></span>
+                                                        }})</span></span>
                                             </template>
                                         </Select>
                                     </div>
@@ -278,7 +278,7 @@ function handleOpen() {
                             <div v-if="error" class="ios-section-footer ios-error">{{ error }}</div>
                             <div v-else class="ios-section-footer">
                                 Includes OBRs with status:
-                                <strong>PAID, CLAIMED, TRANSFERRED, ON PROCESS, DENIED</strong>.
+                                <strong>PAID, CLAIMED</strong>.
                                 Amounts are shown in the Credit column.
                             </div>
                         </div>
