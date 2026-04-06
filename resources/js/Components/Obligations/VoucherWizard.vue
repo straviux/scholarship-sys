@@ -1427,7 +1427,17 @@ onBeforeUnmount(() => {
                                         <Select v-model="voucherData.obligations.account_code"
                                             :disabled="!voucherData.obligations.responsibility_center"
                                             :options="currentParticulars" optionLabel="name" optionValue="account_code"
-                                            placeholder="Select Particular" class="w-full" />
+                                            placeholder="Select Particular" class="w-full">
+                                            <template #option="{ option }">
+                                                <span>{{ option.name }}<span v-if="option.program?.shortname" class="text-gray-400"> - {{ option.program.shortname }}</span></span>
+                                            </template>
+                                            <template #value="{ value }">
+                                                <template v-if="selectedParticular">
+                                                    <span>{{ selectedParticular.name }}<span v-if="selectedParticular.program?.shortname" class="text-gray-400"> - {{ selectedParticular.program.shortname }}</span></span>
+                                                </template>
+                                                <template v-else>{{ value || 'Select Particular' }}</template>
+                                            </template>
+                                        </Select>
                                     </div>
 
                                     <!-- Account Code Display -->

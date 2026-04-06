@@ -128,13 +128,20 @@
                 <!-- Info Bar -->
                 <div
                     class="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
-                    <div class="flex-1 max-w-md">
-                        <IconField iconPosition="left">
-                            <InputIcon class="pi pi-search text-gray-400" />
-                            <InputText v-model="globalFilter" placeholder="Search..." class="w-full" size="small" />
-                        </IconField>
+                    <div class="flex gap-4 max-w-md">
+                        <InputGroup>
+                            <InputGroupAddon><i class="pi pi-search text-gray-400" /></InputGroupAddon>
+                            <InputText v-model="globalFilter" placeholder="Search..." size="small"
+                                @keyup.enter="triggerSearch()" />
+                        </InputGroup>
+                        <Button icon="pi pi-filter" severity="warn" text rounded @click="openDrawer()"
+                            v-tooltip.bottom="'More Filters'" />
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-4">
+                        <div class="ml-auto flex items-center gap-2">
+                            <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
+                            <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
+                        </div>
                         <Button :icon="simpleView ? 'pi pi-table' : 'pi pi-list'" severity="secondary" rounded outlined
                             size="small"
                             v-tooltip.bottom="simpleView ? 'Switch to Detailed View' : 'Switch to Simple View'"
@@ -142,10 +149,7 @@
                     </div>
                 </div>
 
-                <!-- Filters Row -->
-                <div class="flex flex-wrap items-end gap-3 mt-3 mb-4">
-                    <Button icon="pi pi-filter" severity="warn" text rounded @click="openDrawer()"
-                        v-tooltip.bottom="'More Filters'" />
+                <div class="flex flex-wrap items-end gap-3 mb-4">
                     <div class="flex flex-col">
                         <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="All Programs"
                             size="small" />
@@ -158,8 +162,6 @@
                         <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
                             size="small" />
                     </div>
-
-
                     <div class="flex flex-col">
                         <Select v-model="filter.unified_status" :options="unifiedStatusOptions" optionLabel="label"
                             optionValue="value" placeholder="All Statuses" showClear size="small" filter>
@@ -173,21 +175,15 @@
                             </template>
                         </Select>
                     </div>
-                    <Button v-if="activeFilterTags.length" icon="pi pi-history" severity="danger" size="small" text
-                        rounded @click="clearFilters" v-tooltip.bottom="'Clear all filters'" />
-                    <div class="ml-auto flex items-center gap-2">
-                        <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
-                        <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
-                    </div>
+                    <Button v-if="activeFilterTags.length" icon="pi pi-times" severity="danger" text rounded
+                        size="small" @click="clearFilters" v-tooltip.bottom="'Clear Filters'" />
                 </div>
 
                 <!-- Active Filter Tags -->
                 <div v-if="activeFilterTags.length" class="flex flex-wrap items-center gap-2 mb-4">
                     <span class="text-xs text-gray-500">Active Filters:</span>
-                    <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded
-                        class="cursor-pointer" @click="removeFilter(tag.key)">
+                    <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded>
                         <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
-                        <i class="pi pi-times ml-1 text-[0.6rem]"></i>
                     </Tag>
                 </div>
 
@@ -387,7 +383,7 @@
                                 <Column header="Year" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
                                     <template #body="r">
                                         <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—'
-                                            }}</span>
+                                        }}</span>
                                     </template>
                                 </Column>
                                 <Column header="Academic Year" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">

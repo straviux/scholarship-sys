@@ -112,7 +112,7 @@ const applyFilters = () => {
             preserveState: false,
             replace: true,
         });
-    }, 300);
+    }, 800);
 };
 
 const clearFilters = () => {
@@ -575,7 +575,7 @@ const groupedData = computed(() => {
                                 <Column header="OBR No." style="min-width: 130px">
                                     <template #body="{ data }">
                                         <span v-if="data.obr_no" class="font-mono text-blue-700">{{ data.obr_no
-                                        }}</span>
+                                            }}</span>
                                         <span v-else class="text-gray-400">—</span>
                                     </template>
                                 </Column>

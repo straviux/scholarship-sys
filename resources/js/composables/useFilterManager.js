@@ -20,7 +20,7 @@ export function useFilterManager({
 	routeName,
 	props,
 	filterDefs = [],
-	debounceMs = 500,
+	debounceMs = 800,
 	filterPropName,
 	totalPropName,
 	routerOptions = {},
@@ -167,12 +167,11 @@ export function useFilterManager({
 
 	// --- Watchers ---
 
-	// Global search with debounce
+	// Global search auto-fires on input with debounce
 	watch(globalFilter, () => {
-		if (debounceTimer) clearTimeout(debounceTimer);
+		clearTimeout(debounceTimer);
 		debounceTimer = setTimeout(() => {
 			search(true);
-			debounceTimer = null;
 		}, debounceMs);
 	});
 
