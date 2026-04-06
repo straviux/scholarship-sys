@@ -383,7 +383,7 @@
                                 <Column header="Year" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
                                     <template #body="r">
                                         <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—'
-                                        }}</span>
+                                            }}</span>
                                     </template>
                                 </Column>
                                 <Column header="Academic Year" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">
