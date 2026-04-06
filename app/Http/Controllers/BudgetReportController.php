@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 
 class BudgetReportController extends Controller
 {
-    private const STATUSES = ['PAID', 'CLAIMED', 'TRANSFERRED', 'ON PROCESS', 'DENIED'];
+    private const STATUSES = ['PAID', 'CLAIMED'];
 
     /**
      * JSON API endpoint for the modal report.
