@@ -30,6 +30,7 @@ export default defineConfig({
 	},
 	build: {
 		ssrManifest: false,
+		modulePreload: { polyfill: true },
 		rollupOptions: {
 			output: {
 				manualChunks(id) {

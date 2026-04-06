@@ -8,9 +8,38 @@
 
     <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-    <!-- DNS prefetch for external resources -->
+    <!-- DNS prefetch / preconnect for external resources -->
+    <link rel="preconnect" href="//fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="//fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="//fonts.googleapis.com">
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
+
+    @php
+    // Read Vite manifest to emit
+    <link rel="modulepreload"> for vendor chunks.
+    // This breaks the critical request chain: vendor chunks start downloading
+    // alongside app.js instead of waiting for app.js to be parsed first.
+    $manifestPath = public_path('build/.vite/manifest.json');
+    if (!file_exists($manifestPath)) {
+    $manifestPath = public_path('build/manifest.json');
+    }
+    $viteChunks = file_exists($manifestPath)
+    ? json_decode(file_get_contents($manifestPath), true)
+    : [];
+    @endphp
+
+    {{-- Preload vendor chunks so browser fetches them in parallel with app.js --}}
+    @foreach($viteChunks as $key => $chunk)
+    @if(isset($chunk['file']) && empty($chunk['isEntry']) && str_contains($chunk['file'], 'vendor'))
+    <link rel="modulepreload" href="/build/{{ $chunk['file'] }}" as="script">
+    @endif
+    {{-- Preload any CSS associated with entry chunks --}}
+    @if(!empty($chunk['isEntry']) && !empty($chunk['css']))
+    @foreach($chunk['css'] as $cssFile)
+    <link rel="preload" href="/build/{{ $cssFile }}" as="style">
+    @endforeach
+    @endif
+    @endforeach
 
     <!-- Scripts -->
     @routes
