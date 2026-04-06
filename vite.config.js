@@ -33,34 +33,21 @@ export default defineConfig({
 		rollupOptions: {
 			output: {
 				manualChunks(id) {
-					// Core Vue / Inertia — loaded on every page
-					if (
-						id.includes('node_modules/vue/') ||
-						id.includes('node_modules/@vue/') ||
-						id.includes('node_modules/@inertiajs/')
-					) {
-						return 'vendor-vue';
-					}
-					// PrimeVue UI library (large)
-					if (
-						id.includes('node_modules/primevue/') ||
-						id.includes('node_modules/@primevue/') ||
-						id.includes('node_modules/@primeuix/') ||
-						id.includes('node_modules/primeicons/')
-					) {
-						return 'vendor-primevue';
-					}
-					// Charts — only used on dashboard/reports
+					// Charts — only used on dashboard/reports pages
 					if (id.includes('node_modules/chart.js') || id.includes('node_modules/chartjs-')) {
 						return 'vendor-charts';
 					}
-					// Excel export — only used on demand
+					// Excel export — only loaded on demand
 					if (id.includes('node_modules/xlsx')) {
 						return 'vendor-xlsx';
 					}
-					// Everything else from node_modules
+					// Everything else from node_modules goes into one vendor chunk.
+					// Keeping Vue, PrimeVue, Inertia, and misc deps together avoids
+					// "Cannot access before initialization" circular-dependency errors
+					// that occur when Rollup splits packages that reference each other
+					// at module init time across separate chunks.
 					if (id.includes('node_modules/')) {
-						return 'vendor-misc';
+						return 'vendor';
 					}
 				},
 			},
