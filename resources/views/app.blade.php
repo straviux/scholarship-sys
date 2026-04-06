@@ -30,7 +30,11 @@
     {{-- Preload vendor chunks so browser fetches them in parallel with app.js --}}
     @foreach($viteChunks as $key => $chunk)
     @if(isset($chunk['file']) && empty($chunk['isEntry']) && str_contains($chunk['file'], 'vendor'))
-    <link rel="modulepreload" href="/build/{{ $chunk['file'] }}" as="script">
+    @if(str_ends_with($chunk['file'], '.js'))
+    <link rel="modulepreload" href="/build/{{ $chunk['file'] }}">
+    @elseif(str_ends_with($chunk['file'], '.css'))
+    <link rel="preload" href="/build/{{ $chunk['file'] }}" as="style">
+    @endif
     @endif
     {{-- Preload any CSS associated with entry chunks --}}
     @if(!empty($chunk['isEntry']) && !empty($chunk['css']))
