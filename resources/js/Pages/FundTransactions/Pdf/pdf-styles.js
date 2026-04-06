@@ -51,10 +51,10 @@ body {
   font-size: 10pt;
   color: #000;
   background: #fff;
-  padding: 6mm;
+  padding: 6mm 5mm;
 }
 
-@page { size: {{PAGE_SIZE}}; margin: 6mm 6mm; }
+@page { size: {{PAGE_SIZE}}; margin: 6mm 5mm; }
 
 /* Ensure Quill/HTML content renders correctly */
 p  { display: block !important; margin: 0 !important; padding: 0 !important; line-height: 1.5; }

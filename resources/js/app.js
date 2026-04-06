@@ -1,7 +1,6 @@
 import './bootstrap';
 import '../css/app.css';
 import '../css/ios-design-system.css';
-import 'vue3-toastify/dist/index.css';
 
 // Apply theme immediately from localStorage to prevent flash-of-wrong-theme
 // 'dark' = full dark (global .dark); 'system' = hybrid (dark nav + light content); 'light' = all light
@@ -22,9 +21,9 @@ import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 import VueDeviceDetect from '@basitcodeenv/vue3-device-detect';
 import VueDatePicker from '@vuepic/vue-datepicker';
-import '@vuepic/vue-datepicker/dist/main.css';
 import 'primeicons/primeicons.css';
 import Vue3Toastify from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
 import permissionDirective from './directives/permission';
 import smoothScrollDirective from './directives/smoothScroll';
 import animateTableRowsDirective from './directives/animateTableRows';

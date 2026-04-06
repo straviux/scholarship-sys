@@ -8,7 +8,7 @@
                        Right half = C4+C5    = 90+rest   = 288pt
         SIG ROWS merge C2+C3 → width:198pt
     -->
-    <div style="display:flex;flex-direction:column;min-height:90vh;border:1pt solid #000;">
+    <div style="display:flex;flex-direction:column;min-height:95vh;border:1pt solid #000;margin-top: 28pt;">
 
         <!-- GOVERNMENT HEADER -->
         <div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
