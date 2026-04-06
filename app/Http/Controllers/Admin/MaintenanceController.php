@@ -21,7 +21,7 @@ class MaintenanceController extends Controller
                 return response()->json([
                     'is_under_maintenance' => false,
                     'announcement' => null,
-                ]);
+                ])->header('Cache-Control', 'public, max-age=120');
             }
 
             return response()->json([
@@ -32,14 +32,14 @@ class MaintenanceController extends Controller
                     'type' => $maintenance->type,
                     'countdown' => $maintenance->getCountdownData(),
                 ],
-            ]);
+            ])->header('Cache-Control', 'public, max-age=60');
         } catch (Exception $e) {
             // If the table doesn't exist or there's a database error, return no maintenance
             // This prevents a 500 error when the migration hasn't been run
             return response()->json([
                 'is_under_maintenance' => false,
                 'announcement' => null,
-            ], 200);
+            ], 200)->header('Cache-Control', 'public, max-age=120');
         }
     }
 

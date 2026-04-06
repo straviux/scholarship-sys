@@ -25,7 +25,8 @@ class SystemUpdateController extends Controller
             })
             ->count();
 
-        return response()->json(['unread_count' => $unreadCount]);
+        return response()->json(['unread_count' => $unreadCount])
+            ->header('Cache-Control', 'private, max-age=60');
     }
 
     /**
