@@ -53,18 +53,20 @@
          media="print" causes immediate async download without blocking render.
          onload switches it to all media once downloaded. --}}
     @php
-        $deferredCss = null;
-        foreach ($viteChunks as $chunk) {
-            if (isset($chunk['src']) && str_contains($chunk['src'], 'deferred.css') && isset($chunk['file'])) {
-                $deferredCss = $chunk['file'];
-                break;
-            }
-        }
+    $deferredCss = null;
+    foreach ($viteChunks as $chunk) {
+    if (isset($chunk['src']) && str_contains($chunk['src'], 'deferred.css') && isset($chunk['file'])) {
+    $deferredCss = $chunk['file'];
+    break;
+    }
+    }
     @endphp
     @if($deferredCss)
-        <link rel="stylesheet" href="/build/{{ $deferredCss }}"
-              media="print" onload="this.media='all'">
-        <noscript><link rel="stylesheet" href="/build/{{ $deferredCss }}"></noscript>
+    <link rel="stylesheet" href="/build/{{ $deferredCss }}"
+        media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="/build/{{ $deferredCss }}">
+    </noscript>
     @endif
 </head>
 
