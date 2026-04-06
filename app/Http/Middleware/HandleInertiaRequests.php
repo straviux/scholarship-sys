@@ -33,9 +33,13 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth.user' => fn() => $request->user()
-                ? new UserSharedResource($request->user())
+                ? cache()->remember(
+                    'user_' . $request->user()->id,
+                    60, // seconds
+                    fn() => new UserSharedResource($request->user())
+                )
                 : null,
-            'localip' => getHostByName(getHostName()),
+            'localip' => cache()->remember('local_ip', 3600, fn() => getHostByName(getHostName())),
             'flash' => [
                 'success' => fn() => $request->session()->get('success'),
                 'error'   => fn() => $request->session()->get('error'),
