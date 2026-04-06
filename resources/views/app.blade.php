@@ -15,8 +15,7 @@
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
 
     @php
-    // Read Vite manifest to emit
-    <link rel="modulepreload"> for vendor chunks.
+    // Read Vite manifest to emit modulepreload hints for vendor chunks.
     // This breaks the critical request chain: vendor chunks start downloading
     // alongside app.js instead of waiting for app.js to be parsed first.
     $manifestPath = public_path('build/.vite/manifest.json');
