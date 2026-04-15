@@ -148,113 +148,97 @@ onBeforeUnmount(() => {
     <Head title="Courses" />
 
     <AdminLayout>
-        <template #header>Manage Course</template>
 
-        <div class="max-w-8xl mx-auto py-4">
-            <!-- Header Panel -->
-            <Panel>
-                <template #header>
-                    <div class="flex items-center gap-2">
-                        <i class="pi pi-book text-xl"></i>
-                        <span class="font-semibold text-lg">Course Management</span>
-                    </div>
-                </template>
-
-                <div class="flex justify-between items-center" v-if="hasPermission('courses.manage')">
-                    <div class="text-gray-600">
-                        Manage courses and their scholarship programs
-                    </div>
-                    <Button label="New Course" icon="pi pi-plus" severity="success" raised @click="openCreate" />
-                </div>
-            </Panel>
-
-            <!-- Filters Section -->
-            <div class="mt-6">
-                <div class="flex gap-4 items-center mb-4">
-                    <div class="flex-1 max-w-md">
-                        <IconField iconPosition="left">
-                            <InputIcon class="pi pi-search" />
-                            <InputText v-model="globalFilter" placeholder="Search courses..." class="w-full" />
-                        </IconField>
-                    </div>
-                    <div class="min-w-48">
-                        <Select v-model="programFilter" :options="programOptions" optionLabel="label"
-                            optionValue="value" placeholder="Filter by Program" class="w-full" />
+        <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+            <template #start>
+                <div class="flex items-center gap-3">
+                    <i class="pi pi-book text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
+                    <div>
+                        <h1 class="text-2xl short:text-xl font-bold text-gray-700">Courses</h1>
+                        <p class="text-sm text-gray-600">Manage courses and scholarship programs</p>
                     </div>
                 </div>
+            </template>
+            <template #end>
+                <Button v-if="hasPermission('courses.manage')" icon="pi pi-plus" label="Add Course" severity="success"
+                    raised rounded size="small" @click="openCreate" />
+            </template>
+        </Toolbar>
+
+        <div class="py-2">
+
+            <!-- Search & Filters -->
+            <div class="flex gap-3 items-center mb-4">
+                <IconField iconPosition="left" class="flex-1 max-w-sm">
+                    <InputIcon class="pi pi-search" />
+                    <InputText v-model="globalFilter" placeholder="Search courses..." class="w-full" />
+                </IconField>
+                <Select v-model="programFilter" :options="programOptions" optionLabel="label" optionValue="value"
+                    placeholder="All Programs" class="min-w-[180px]" />
+                <Tag :value="`${coursesList.length} course${coursesList.length !== 1 ? 's' : ''}`"
+                    severity="secondary" />
             </div>
 
             <!-- Courses DataTable -->
-            <div class="mt-6">
-                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="coursesList" stripedRows
-                    showGridlines responsiveLayout="scroll" :emptyMessage="'No data to be displayed'"
-                    :globalFilterFields="['name', 'shortname', 'field_of_study', 'program', 'remarks']"
-                    v-model:filters="filters" paginator :rows="rows" v-model:first="first"
-                    :rowsPerPageOptions="[5, 10, 20, 50]"
-                    paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                    :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
+            <DataTable :value="coursesList" stripedRows showGridlines scrollable
+                :globalFilterFields="['name', 'shortname', 'field_of_study', 'program', 'remarks']"
+                v-model:filters="filters" paginator :rows="rows" v-model:first="first"
+                :rowsPerPageOptions="[10, 25, 50]"
+                paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                :currentPageReportTemplate="'{first} - {last} of {totalRecords}'">
 
-                    <template #header>
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-lg font-semibold text-gray-800">Courses</h3>
-                            <Tag :value="`${coursesList.length} courses`" severity="info" />
+                <Column field="name" header="Course" sortable>
+                    <template #body="{ data }">
+                        <div class="font-semibold text-gray-800 text-sm">{{ data.name }}</div>
+                        <div class="text-[11px] text-[#8e8e93] font-mono mt-0.5" v-if="data.shortname">
+                            [{{ data.shortname }}]
                         </div>
                     </template>
+                </Column>
 
-                    <Column field="id" header="#" style="width: 50px">
-                        <template #body="slotProps">
-                            <div class="text-center font-mono text-sm text-gray-500">
-                                {{ first + slotProps.index + 1 }}
-                            </div>
-                        </template>
-                    </Column>
+                <Column field="field_of_study" header="Field of Study" sortable>
+                    <template #body="{ data }">
+                        <span class="text-sm text-gray-700">{{ data.field_of_study || '\u2014' }}</span>
+                    </template>
+                </Column>
 
-                    <Column field="name" header="Course" sortable>
-                        <template #body="slotProps">
-                            <div class="font-semibold text-gray-800">{{ slotProps.data.name }}</div>
-                            <div class="text-sm text-gray-500 font-bold">[{{ slotProps.data.shortname }}]</div>
-                        </template>
-                    </Column>
+                <Column field="program" header="Program" sortable>
+                    <template #body="{ data }">
+                        <span class="text-sm font-medium text-gray-700">{{ data.program }}</span>
+                    </template>
+                </Column>
 
-                    <Column field="field_of_study" header="Field of Study" sortable>
-                        <template #body="slotProps">
-                            <span class="text-gray-700">{{ slotProps.data.field_of_study || '-' }}</span>
-                        </template>
-                    </Column>
+                <Column field="remarks" header="Remarks">
+                    <template #body="{ data }">
+                        <div class="text-sm text-gray-600 max-w-xs truncate" v-safe-html="data.remarks || '\u2014'">
+                        </div>
+                    </template>
+                </Column>
 
-                    <Column field="program" header="Program" sortable>
-                        <template #body="slotProps">
-                            <span class="font-medium text-gray-700">{{ slotProps.data.program }}</span>
-                        </template>
-                    </Column>
+                <Column field="is_active" header="Status" style="width: 100px">
+                    <template #body="{ data }">
+                        <span
+                            class="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
+                            :style="data.is_active
+                                ? 'background: #d1f5e0; color: #187a3c;'
+                                : 'background: #fee2e2; color: #991b1b;'">
+                            {{ data.is_active ? 'Active' : 'Inactive' }}
+                        </span>
+                    </template>
+                </Column>
 
-                    <Column field="remarks" header="Remarks">
-                        <template #body="slotProps">
-                            <div class="text-gray-600 max-w-xs truncate" v-safe-html="slotProps.data.remarks || '-'">
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="is_active" header="Status" style="width: 120px">
-                        <template #body="slotProps">
-                            <Chip :label="slotProps.data.is_active ? 'Active' : 'Inactive'"
-                                :severity="slotProps.data.is_active ? 'success' : 'secondary'" />
-                        </template>
-                    </Column>
-
-                    <Column header="Actions" style="width: 160px">
-                        <template #body="slotProps">
-                            <div class="flex gap-2 justify-center" v-if="hasPermission('courses.manage')">
-                                <Button icon="pi pi-pen-to-square" severity="info" size="small" rounded outlined
-                                    v-tooltip.top="'Edit Course'" @click="openEdit(slotProps.data)" />
-                                <Button v-if="hasPermission('courses.delete')" icon="pi pi-trash" severity="danger"
-                                    size="small" rounded outlined v-tooltip.top="'Delete Course'"
-                                    @click="confirmDeleteCourse(slotProps.data)" />
-                            </div>
-                        </template>
-                    </Column>
-                </DataTable>
-            </div>
+                <Column header="Actions" style="width: 100px">
+                    <template #body="{ data }">
+                        <div class="flex gap-1.5 justify-center" v-if="hasPermission('courses.manage')">
+                            <Button icon="pi pi-pencil" severity="info" size="small" rounded outlined
+                                v-tooltip.top="'Edit'" @click="openEdit(data)" />
+                            <Button v-if="hasPermission('courses.delete')" icon="pi pi-trash" severity="danger"
+                                size="small" rounded outlined v-tooltip.top="'Delete'"
+                                @click="confirmDeleteCourse(data)" />
+                        </div>
+                    </template>
+                </Column>
+            </DataTable>
         </div>
 
         <!-- iOS Delete Confirmation Dialog -->
@@ -327,3 +311,53 @@ onBeforeUnmount(() => {
             :scholarshipProgramsOptions="scholarshipProgramsOptions" @saved="onCourseSaved" />
     </AdminLayout>
 </template>
+
+<style scoped>
+:deep(.p-datatable) {
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 1px solid var(--p-datatable-border-color);
+}
+
+:deep(.p-datatable-table-container) {
+    border-radius: 0;
+    overflow: hidden;
+}
+
+:deep(.p-datatable thead tr:first-child th:first-child) {
+    border-left: none;
+}
+
+:deep(.p-datatable thead tr:first-child th:last-child) {
+    border-right: none;
+}
+
+:deep(.p-datatable thead tr:first-child th) {
+    border-top: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td) {
+    border-bottom: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td:first-child) {
+    border-left: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td:last-child) {
+    border-right: none;
+}
+
+:deep(.p-paginator) {
+    border: none;
+    border-top: 1px solid var(--p-datatable-border-color);
+}
+
+:deep(.p-iconfield .p-inputtext) {
+    border-radius: 1rem;
+}
+
+:deep(.p-select) {
+    border-radius: 1rem;
+}
+</style>

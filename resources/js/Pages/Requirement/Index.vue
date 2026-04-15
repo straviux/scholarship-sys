@@ -1,67 +1,62 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import { Head, Link, router } from "@inertiajs/vue3";
+import { Head, router } from "@inertiajs/vue3";
 import { ref, watch } from "vue";
 import RequirementModal from "./Modal/RequirementModal.vue";
-
-// PrimeVue Components
+import { usePermission } from '@/composable/permissions';
 
 const props = defineProps({
-    action: String,
-    requirement: Object,
-    requirements: Object
+    requirements: Array,
 });
 
-// Search and pagination
+const { hasPermission } = usePermission();
+
+const showModal = ref(false);
+const editingRequirement = ref(null);
+const showDeleteModal = ref(false);
+const selectedRequirement = ref(null);
+const deleting = ref(false);
+
 const globalFilter = ref('');
+const filters = ref({ global: { value: null, matchMode: 'contains' } });
 const first = ref(0);
 const rows = ref(10);
-const filters = ref({
-    global: { value: null, matchMode: 'contains' }
-});
 
-// Delete confirmation modal
-const showConfirmDeleteModal = ref(false);
-const selectedRequirement = ref(null);
+watch(globalFilter, (v) => { filters.value.global.value = v; });
 
-// Watch for changes in globalFilter and update filters
-watch(globalFilter, (newValue) => {
-    filters.value.global.value = newValue;
-});
-
-const editRequirement = (requirementId) => {
-    // Navigate to the edit requirement page
-    router.get(route("program_requirements.index", {
-        id: requirementId,
-        action: 'edit'
-    }))
+const openCreate = () => {
+    editingRequirement.value = null;
+    showModal.value = true;
 };
 
-const confirmDeleteRequirement = (requirement) => {
+const openEdit = (requirement) => {
+    editingRequirement.value = requirement;
+    showModal.value = true;
+};
+
+const handleSaved = () => {
+    showModal.value = false;
+    editingRequirement.value = null;
+};
+
+const confirmDelete = (requirement) => {
     selectedRequirement.value = requirement;
-    showConfirmDeleteModal.value = true;
+    showDeleteModal.value = true;
 };
 
 const deleteRequirement = () => {
-    if (selectedRequirement.value) {
-        router.delete(route('program_requirements.destroy', selectedRequirement.value.id), {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                showConfirmDeleteModal.value = false;
-                selectedRequirement.value = null;
-            },
-            onError: () => {
-                showConfirmDeleteModal.value = false;
-                selectedRequirement.value = null;
-            }
-        });
-    }
-};
-
-const closeDeleteModal = () => {
-    showConfirmDeleteModal.value = false;
-    selectedRequirement.value = null;
+    if (!selectedRequirement.value) return;
+    deleting.value = true;
+    router.delete(route('program_requirements.destroy', selectedRequirement.value.id), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            showDeleteModal.value = false;
+            selectedRequirement.value = null;
+            deleting.value = false;
+        },
+        onError: () => { deleting.value = false; },
+    });
 };
 </script>
 
@@ -70,130 +65,154 @@ const closeDeleteModal = () => {
     <Head title="Requirements" />
 
     <AdminLayout>
-        <template #header>Manage Requirements</template>
 
-        <div class="max-w-8xl mx-auto py-4">
-            <!-- Header Panel -->
-            <Panel>
-                <template #header>
-                    <div class="flex items-center gap-2">
-                        <i class="pi pi-file-check text-xl"></i>
-                        <span class="font-semibold text-lg">Requirement Management</span>
-                    </div>
-                </template>
-
-                <div class="flex justify-between items-center">
-                    <div class="text-gray-600">
-                        Manage program requirements and documentation
-                    </div>
-                    <Button label="New Requirement" icon="pi pi-plus" severity="success" raised
-                        @click="router.get(route('program_requirements.index', { action: 'create' }))" />
-                </div>
-            </Panel>
-
-            <!-- Search Section -->
-            <div class="mt-6">
-                <div class="flex gap-4 items-center mb-4">
-                    <div class="flex-1 max-w-md">
-                        <IconField iconPosition="left">
-                            <InputIcon class="pi pi-search" />
-                            <InputText v-model="globalFilter" placeholder="Search requirements..." class="w-full" />
-                        </IconField>
+        <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+            <template #start>
+                <div class="flex items-center gap-3">
+                    <i class="pi pi-file-check text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
+                    <div>
+                        <h1 class="text-2xl short:text-xl font-bold text-gray-700">Requirements</h1>
+                        <p class="text-sm text-gray-600">Manage program requirements and documentation</p>
                     </div>
                 </div>
+            </template>
+            <template #end>
+                <Button icon="pi pi-plus" label="Add Requirement" severity="success" raised rounded size="small"
+                    @click="openCreate" />
+            </template>
+        </Toolbar>
+
+        <div class="py-2">
+
+            <!-- Search -->
+            <div class="flex gap-3 items-center mb-4">
+                <IconField iconPosition="left" class="flex-1 max-w-sm">
+                    <InputIcon class="pi pi-search" />
+                    <InputText v-model="globalFilter" placeholder="Search requirements..." class="w-full" />
+                </IconField>
+                <Tag :value="`${props.requirements?.length ?? 0} requirement${(props.requirements?.length ?? 0) !== 1 ? 's' : ''}`"
+                    severity="secondary" />
             </div>
 
-            <!-- Requirements DataTable -->
-            <div class="mt-6">
-                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="requirements" stripedRows
-                    showGridlines responsiveLayout="scroll" :emptyMessage="'No data to be displayed'"
-                    :globalFilterFields="['name', 'description', 'remarks']" v-model:filters="filters" paginator
-                    :rows="rows" v-model:first="first" :rowsPerPageOptions="[5, 10, 20, 50]"
-                    paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                    :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
+            <!-- Table -->
+            <DataTable :value="props.requirements" stripedRows showGridlines scrollable
+                :globalFilterFields="['name', 'description']" v-model:filters="filters" paginator :rows="rows"
+                v-model:first="first" :rowsPerPageOptions="[10, 25, 50]"
+                paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                :currentPageReportTemplate="'{first} - {last} of {totalRecords}'">
 
-                    <template #header>
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-lg font-semibold text-gray-800">Requirements</h3>
-                            <Tag :value="`${requirements.length} requirements`" severity="info" />
+                <Column field="name" header="Requirement" sortable>
+                    <template #body="{ data }">
+                        <div class="font-semibold text-gray-800 text-sm">{{ data.name }}</div>
+                    </template>
+                </Column>
+
+                <Column field="description" header="Description" sortable>
+                    <template #body="{ data }">
+                        <span class="text-sm text-gray-600">{{ data.description || '\u2014' }}</span>
+                    </template>
+                </Column>
+
+                <Column field="is_active" header="Status" style="width: 100px">
+                    <template #body="{ data }">
+                        <span
+                            class="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
+                            :style="data.is_active
+                                ? 'background: #d1f5e0; color: #187a3c;'
+                                : 'background: #fee2e2; color: #991b1b;'">
+                            {{ data.is_active ? 'Active' : 'Inactive' }}
+                        </span>
+                    </template>
+                </Column>
+
+                <Column header="Actions" style="width: 100px">
+                    <template #body="{ data }">
+                        <div class="flex gap-1.5 justify-center">
+                            <Button icon="pi pi-pencil" severity="info" size="small" rounded outlined
+                                v-tooltip.top="'Edit'" @click="openEdit(data)" />
+                            <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
+                                v-tooltip.top="'Delete'" @click="confirmDelete(data)" />
                         </div>
                     </template>
+                </Column>
 
-                    <Column field="id" header="#" style="width: 50px">
-                        <template #body="slotProps">
-                            <div class="text-center font-mono text-sm text-gray-500">
-                                {{ first + slotProps.index + 1 }}
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="name" header="Requirement" sortable>
-                        <template #body="slotProps">
-                            <div class="font-semibold text-gray-800">{{ slotProps.data.name }}</div>
-                        </template>
-                    </Column>
-
-                    <Column field="description" header="Description" sortable>
-                        <template #body="slotProps">
-                            <span class="text-gray-600">{{ slotProps.data.description || '-' }}</span>
-                        </template>
-                    </Column>
-
-                    <Column field="remarks" header="Remarks">
-                        <template #body="slotProps">
-                            <span class="text-gray-600">{{ slotProps.data.remarks || '-' }}</span>
-                        </template>
-                    </Column>
-
-                    <Column field="is_active" header="Status" style="width: 120px">
-                        <template #body="slotProps">
-                            <Chip :label="slotProps.data.is_active ? 'Active' : 'Inactive'"
-                                :severity="slotProps.data.is_active ? 'success' : 'secondary'" />
-                        </template>
-                    </Column>
-
-                    <Column header="Actions" style="width: 160px">
-                        <template #body="slotProps">
-                            <div class="flex gap-2 justify-center">
-                                <Button icon="pi pi-pen-to-square" severity="info" size="small" rounded outlined
-                                    v-tooltip.top="'Edit Requirement'" @click="editRequirement(slotProps.data.id)" />
-                                <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
-                                    v-tooltip.top="'Delete Requirement'"
-                                    @click="confirmDeleteRequirement(slotProps.data)" />
-                            </div>
-                        </template>
-                    </Column>
-                </DataTable>
-            </div>
+            </DataTable>
         </div>
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showConfirmDeleteModal" :style="{ width: '450px' }" header="Confirm Deletion"
-            :modal="true">
-            <div class="flex items-center gap-4">
-                <i class="pi pi-exclamation-triangle text-3xl text-red-500"></i>
-                <div>
-                    <p class="text-lg font-semibold text-gray-800 mb-2">
-                        Are you sure you want to delete this requirement?
+        <Dialog v-model:visible="showDeleteModal" modal header="Delete Requirement" :style="{ width: '420px' }">
+            <div class="flex items-start gap-4 py-2">
+                <div class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <i class="pi pi-trash text-red-600 text-sm"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm text-gray-700 mb-3">
+                        Are you sure you want to delete this requirement? This cannot be undone.
                     </p>
-                    <div class="bg-gray-100 p-3 rounded border-l-4 border-red-500" v-if="selectedRequirement">
-                        <div class="font-semibold text-red-700">{{ selectedRequirement.name }}</div>
-                        <div class="text-sm text-gray-600">{{ selectedRequirement.description }}</div>
+                    <div v-if="selectedRequirement" class="bg-[#f9f9fb] border border-[#e5e5ea] rounded-xl px-4 py-3">
+                        <div class="font-semibold text-gray-800 text-sm">{{ selectedRequirement.name }}</div>
+                        <div class="text-xs text-[#8e8e93] mt-0.5" v-if="selectedRequirement.description">
+                            {{ selectedRequirement.description }}
+                        </div>
                     </div>
-                    <p class="text-sm text-gray-600 mt-2">
-                        This action cannot be undone.
-                    </p>
                 </div>
             </div>
-
             <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeDeleteModal" outlined />
-                <Button label="Delete Requirement" severity="danger" @click="deleteRequirement" />
+                <Button label="Cancel" severity="secondary" outlined rounded size="small"
+                    @click="showDeleteModal = false; selectedRequirement = null" />
+                <Button label="Delete" severity="danger" rounded size="small" :loading="deleting"
+                    @click="deleteRequirement" />
             </template>
         </Dialog>
 
-        <!-- CREATE REQUIREMENT MODAL -->
-        <RequirementModal v-if="props.action == 'create' || props.action == 'edit'" :action="props.action"
-            :requirement="props.requirement" />
+        <!-- Requirement Modal -->
+        <RequirementModal v-model:visible="showModal" :requirement="editingRequirement" @saved="handleSaved" />
+
     </AdminLayout>
 </template>
+
+<style scoped>
+:deep(.p-datatable) {
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 1px solid var(--p-datatable-border-color);
+}
+
+:deep(.p-datatable-table-container) {
+    border-radius: 0;
+    overflow: hidden;
+}
+
+:deep(.p-datatable thead tr:first-child th:first-child) {
+    border-left: none;
+}
+
+:deep(.p-datatable thead tr:first-child th:last-child) {
+    border-right: none;
+}
+
+:deep(.p-datatable thead tr:first-child th) {
+    border-top: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td) {
+    border-bottom: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td:first-child) {
+    border-left: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td:last-child) {
+    border-right: none;
+}
+
+:deep(.p-paginator) {
+    border: none;
+    border-top: 1px solid var(--p-datatable-border-color);
+}
+
+:deep(.p-iconfield .p-inputtext) {
+    border-radius: 1rem;
+}
+</style>

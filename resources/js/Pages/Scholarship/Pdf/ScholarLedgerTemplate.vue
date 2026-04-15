@@ -115,7 +115,8 @@
                                     {{ upper(yg.yearLevel) }}
                                 </td>
                                 <td :style="TD">{{ d.academic_year || '—' }}</td>
-                                <td :style="TD">{{ d.semester || '—' }}</td>
+                                <td :style="TD">{{ resolvedSemesterLabel(d.year_level, d.semester, d.academic_year) }}
+                                </td>
                                 <td :style="TD">{{ formatDate(d.date_obligated) }}</td>
                                 <td :style="TD">{{ d.obr_no || '—' }}</td>
                                 <td :style="TD">{{ upper(d.disbursement_type) || '—' }}</td>
@@ -231,7 +232,9 @@ const props = defineProps({
     preparedBy: { type: String, default: '' },
     preparedByDesignation: { type: String, default: '' },
     today: { type: String, default: '' },
-    rosOverrides: { type: Object, default: () => ({}) }, // { 'yearLevel||academic_year||semester': '4'|'6'|'12' }
+    rosOverrides: { type: Object, default: () => ({}) },      // { 'yl||ay||sem': '4'|'6'|'12' }
+    termSemesterLabels: { type: Object, default: () => ({}) }, // { 'yl||ay||sem': 'custom label' }
+    excludedTerms: { type: Object, default: () => ({}) },      // { 'yl||ay||sem': true }
 });
 
 /* ── inline style constants (resolved by Vue before innerHTML capture) ── */
@@ -279,9 +282,20 @@ const resolvedRosLabel = (yearLevel, semester, academicYear) => {
     if (override === '4') return '4 MONTHS';
     if (override === '6') return '6 MONTHS';
     if (override === '12') return '12 MONTHS';
+    const months = parseInt(override);
+    if (!isNaN(months) && months > 0) return `${months} MONTHS`;
     return is4MonthScholar.value ? '4 MONTHS' : rosLabel(semester);
 };
 
+// Returns editable semester label if set, otherwise falls back to original value
+const resolvedSemesterLabel = (yearLevel, semester, academicYear) => {
+    const key = `${yearLevel ?? ''}||${academicYear ?? ''}||${semester ?? ''}`;
+    return props.termSemesterLabels?.[key] || semester || '—';
+};
+const isExcluded = (yearLevel, semester, academicYear) => {
+    const key = `${yearLevel ?? ''}||${academicYear ?? ''}||${semester ?? ''}`;
+    return !!props.excludedTerms?.[key];
+};
 /* ── profile derived ─────────────────────────────────────── */
 
 const upperName = computed(() => {
@@ -374,6 +388,7 @@ const yearGroupedRows = computed(() => {
     const yearMap = {};
     sortedDisbursements.value
         .filter(d => upper(d.year_level ?? '') !== 'REVIEW')
+        .filter(d => !isExcluded(d.year_level, d.semester, d.academic_year))
         .forEach(d => {
             const yl = d.year_level ?? '—';
             if (!yearMap[yl]) yearMap[yl] = {};
@@ -392,6 +407,7 @@ const reviewTerms = computed(() => {
     const termMap = {};
     sortedDisbursements.value
         .filter(d => upper(d.year_level ?? '') === 'REVIEW')
+        .filter(d => !isExcluded(d.year_level, d.semester, d.academic_year))
         .forEach(d => {
             const tk = `${d.academic_year ?? ''}|${d.semester ?? ''}`;
             if (!termMap[tk]) termMap[tk] = [];
@@ -405,7 +421,9 @@ const totalReviewRows = computed(() =>
 );
 
 const grandTotal = computed(() =>
-    disbursements.value.reduce((s, d) => s + parseFloat(d.amount || 0), 0)
+    disbursements.value
+        .filter(d => !isExcluded(d.year_level, d.semester, d.academic_year))
+        .reduce((s, d) => s + parseFloat(d.amount || 0), 0)
 );
 
 /* ── ROS total ───────────────────────────────────────────── */
@@ -413,12 +431,21 @@ const totalRosYrs = computed(() => {
     const seen = new Set();
     let totalMonths = 0;
     disbursements.value.forEach(d => {
+        if (isExcluded(d.year_level, d.semester, d.academic_year)) return;
         // Deduplicate: multiple OBRs in the same term count as one term
-        const key = `${d.year_level ?? ''}|${d.semester ?? ''}|${d.academic_year ?? ''}`;
-        if (!seen.has(key)) {
-            seen.add(key);
-            // If scholar has any 3rd-semester record, ALL terms are 4 months
-            totalMonths += (is4MonthScholar.value || is4MonthTerm(d.semester)) ? 4 : 6;
+        const termKey = `${d.year_level ?? ''}||${d.academic_year ?? ''}||${d.semester ?? ''}`;
+        const dedupeKey = `${d.year_level ?? ''}|${d.semester ?? ''}|${d.academic_year ?? ''}`;
+        if (!seen.has(dedupeKey)) {
+            seen.add(dedupeKey);
+            const override = props.rosOverrides?.[termKey];
+            const overrideMonths = parseInt(override);
+            if (!isNaN(overrideMonths) && overrideMonths > 0) {
+                totalMonths += overrideMonths;
+            } else if (override === '') {
+                // blank = excluded
+            } else {
+                totalMonths += (is4MonthScholar.value || is4MonthTerm(d.semester)) ? 4 : 6;
+            }
         }
     });
     const yrs = totalMonths / 12;
@@ -434,10 +461,20 @@ const coverageStr = computed(() => {
     const seen = new Set();
     let totalMonths = 0;
     disb.forEach(d => {
-        const key = `${d.year_level ?? ''}|${d.semester ?? ''}|${d.academic_year ?? ''}`;
-        if (!seen.has(key)) {
-            seen.add(key);
-            totalMonths += (is4MonthScholar.value || is4MonthTerm(d.semester)) ? 4 : 6;
+        if (isExcluded(d.year_level, d.semester, d.academic_year)) return;
+        const termKey = `${d.year_level ?? ''}||${d.academic_year ?? ''}||${d.semester ?? ''}`;
+        const dedupeKey = `${d.year_level ?? ''}|${d.semester ?? ''}|${d.academic_year ?? ''}`;
+        if (!seen.has(dedupeKey)) {
+            seen.add(dedupeKey);
+            const override = props.rosOverrides?.[termKey];
+            const overrideMonths = parseInt(override);
+            if (!isNaN(overrideMonths) && overrideMonths > 0) {
+                totalMonths += overrideMonths;
+            } else if (override === '') {
+                // blank = excluded
+            } else {
+                totalMonths += (is4MonthScholar.value || is4MonthTerm(d.semester)) ? 4 : 6;
+            }
         }
     });
     const yrs = totalMonths / 12;

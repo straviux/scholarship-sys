@@ -320,7 +320,7 @@ onBeforeUnmount(() => {
 
 .ios-row-label {
     font-size: 14px;
-    color: #000;
+    color: #8E8E93;
     letter-spacing: -0.4px;
     white-space: nowrap;
     flex-shrink: 0;

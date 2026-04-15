@@ -73,7 +73,7 @@
                 <div
                     class="bg-[#f2f2f7] py-[5px] px-4 border-t-[0.5px] border-b-[0.5px] border-[#e5e5ea] flex items-center justify-between">
                     <span class="text-xs font-semibold text-[#8e8e93] uppercase tracking-[0.4px]">AY {{ group.year
-                        }}</span>
+                    }}</span>
                     <span class="text-[11px] text-[#8e8e93]">{{ group.items.length }} record{{ group.items.length !== 1
                         ? 's' : '' }} · {{ formatCurrency(group.total) }}</span>
                 </div>
@@ -96,7 +96,11 @@
                             <div class="text-[13px] text-[#1c1c1e] font-medium">
                                 {{ item.date_obligated ? formatDate(item.date_obligated) : '—' }}
                             </div>
-                            <div v-if="item.obr_no" class="text-[11px] text-[#8e8e93] mt-px">{{ item.obr_no }}</div>
+                            <div v-if="item.obr_no" class="mt-[3px]">
+                                <span
+                                    class="text-[10px] font-semibold text-[#1d4ed8] bg-[#dbeafe] rounded-[6px] px-[6px] py-[2px] tracking-[0.2px]">{{
+                                    item.obr_no }}</span>
+                            </div>
                             <span v-if="item.is_legacy"
                                 class="text-[10px] bg-[#e5e5ea] text-[#636366] rounded px-[5px] py-px inline-block mt-0.5">Legacy</span>
                         </div>
@@ -207,7 +211,7 @@
                                 <div>
                                     <div class="tbl-section-header mb-[7px]">
                                         <i class="pi pi-paperclip mr-1 text-[#007AFF]"></i>Attachments ({{
-                                        item.attachments?.length || 0 }})
+                                            item.attachments?.length || 0 }})
                                     </div>
                                     <div v-if="item.attachments?.length > 0" class="flex flex-wrap gap-1.5">
                                         <div v-for="att in item.attachments" :key="att.attachment_id"
@@ -215,7 +219,7 @@
                                             <i :class="getFileIcon(att.file_type)" class="text-[#007AFF] text-xs"></i>
                                             <span
                                                 class="text-[#1c1c1e] max-w-[100px] overflow-hidden text-ellipsis whitespace-nowrap">{{
-                                                att.attachment_type }}</span>
+                                                    att.attachment_type }}</span>
                                             <button @click.stop="viewAttachment(att)"
                                                 class="bg-transparent border-0 cursor-pointer p-0 leading-none">
                                                 <i class="pi pi-eye text-[#007AFF] text-[11px]"></i>
@@ -544,6 +548,7 @@ import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
 import { usePermission } from '@/composable/permissions';
+import { useSystemOptions } from '@/composables/useSystemOptions';
 import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
@@ -615,27 +620,9 @@ const attachmentForm = ref({
 });
 
 // Options
-const disbursementTypes = [
-    { label: 'Regular', value: 'regular' },
-    { label: 'Reimbursement', value: 'reimbursement' },
-    { label: 'Financial Assistance', value: 'financial_assistance' },
-];
-
-const attachmentTypes = [
-    { label: 'Voucher', value: 'voucher' },
-    { label: 'Cheque', value: 'cheque' },
-    { label: 'Receipt', value: 'receipt' },
-];
-
-const obrStatusOptions = [
-    { label: 'LOA', value: 'LOA' },
-    { label: 'IRREGULAR', value: 'IRREGULAR' },
-    { label: 'TRANSFERRED', value: 'TRANSFERRED' },
-    { label: 'CLAIMED', value: 'CLAIMED' },
-    { label: 'PAID', value: 'PAID' },
-    { label: 'ON PROCESS', value: 'ON PROCESS' },
-    { label: 'DENIED', value: 'DENIED' },
-];
+const disbursementTypes = useSystemOptions('disbursement_type');
+const attachmentTypes = useSystemOptions('attachment_type');
+const obrStatusOptions = useSystemOptions('obr_status');
 
 // Methods
 const loadDisbursements = async () => {

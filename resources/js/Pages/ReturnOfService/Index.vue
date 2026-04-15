@@ -97,7 +97,7 @@
                                     <div>
                                         <h4 class="font-semibold text-gray-900 text-base leading-tight">{{
                                             batch.batch_name
-                                            }}</h4>
+                                        }}</h4>
                                         <div class="text-xs text-gray-500 space-y-0.5 mt-1">
                                             <p v-if="batch.exam_date_from || batch.exam_date_to">
                                                 <span class="font-medium">Exam:</span>
@@ -539,7 +539,7 @@
                                         Course
                                     </div>
                                     <span class="text-sm font-medium text-gray-800">{{ viewingBatch.course_name
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div v-if="viewingBatch.exam_date_from || viewingBatch.exam_date_to" class="ios-row">
                                     <div class="ios-row-label">
@@ -557,7 +557,7 @@
                                         Result Date
                                     </div>
                                     <span class="text-sm text-gray-700">{{ formatDateLong(viewingBatch.result_date)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="ios-row">
                                     <div class="ios-row-label">
@@ -724,7 +724,7 @@
                                     </div>
                                     <div style="flex: 1; min-width: 0;">
                                         <p class="text-sm font-semibold text-gray-700">{{ scholarToDelete?.scholar_name
-                                        }}</p>
+                                            }}</p>
                                         <p class="text-xs text-red-600 mt-1">This action cannot be undone.</p>
                                     </div>
                                 </div>
@@ -1720,6 +1720,7 @@ onBeforeUnmount(() => {
     align-items: center;
     gap: 6px;
     flex-shrink: 0;
+    color: #8E8E93;
 }
 
 .ios-row-control {

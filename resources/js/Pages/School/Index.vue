@@ -2,72 +2,66 @@
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { Head, router } from "@inertiajs/vue3";
 import { ref, watch } from "vue";
-import moment from "moment";
 import SchoolModal from "@/Pages/School/Modal/SchoolModal.vue";
 import { usePermission } from '@/composable/permissions';
 
-// PrimeVue Components
-
 const props = defineProps({
+    schools: Array,
     action: String,
-    schools: Object,
-    school: Object
+    school: Object,
 });
 
 const { hasPermission } = usePermission();
 
-// Search and pagination
+const showModal = ref(false);
+const editingSchool = ref(null);
+const showDeleteModal = ref(false);
+const selectedSchool = ref(null);
+const deleting = ref(false);
+
 const globalFilter = ref('');
+const filters = ref({ global: { value: null, matchMode: 'contains' } });
 const first = ref(0);
 const rows = ref(10);
-const filters = ref({
-    global: { value: null, matchMode: 'contains' }
-});
 
-// Delete confirmation modal
-const showConfirmDeleteModal = ref(false);
-const selectedSchool = ref(null);
+watch(globalFilter, (v) => { filters.value.global.value = v; });
 
-// Watch for changes in globalFilter and update filters
-watch(globalFilter, (newValue) => {
-    filters.value.global.value = newValue;
-});
-
-const editSchool = (schoolId) => {
-    // Navigate to the edit school page
-    router.get(route("school.index", {
-        id: schoolId,
-        action: 'edit'
-    }))
+const openCreate = () => {
+    editingSchool.value = null;
+    showModal.value = true;
 };
 
-const confirmDeleteSchool = (school) => {
+const openEdit = (school) => {
+    editingSchool.value = school;
+    showModal.value = true;
+};
+
+const handleSaved = () => {
+    showModal.value = false;
+    editingSchool.value = null;
+};
+
+const confirmDelete = (school) => {
     selectedSchool.value = school;
-    showConfirmDeleteModal.value = true;
+    showDeleteModal.value = true;
 };
 
 const deleteSchool = () => {
-    if (selectedSchool.value) {
-        router.delete(route('school.destroy', selectedSchool.value.id), {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                showConfirmDeleteModal.value = false;
-                selectedSchool.value = null;
-            },
-            onError: () => {
-                showConfirmDeleteModal.value = false;
-                selectedSchool.value = null;
-            }
-        });
-    }
+    if (!selectedSchool.value) return;
+    deleting.value = true;
+    router.delete(route('school.destroy', selectedSchool.value.id), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            showDeleteModal.value = false;
+            selectedSchool.value = null;
+            deleting.value = false;
+        },
+        onError: () => {
+            deleting.value = false;
+        },
+    });
 };
-
-const closeDeleteModal = () => {
-    showConfirmDeleteModal.value = false;
-    selectedSchool.value = null;
-};
-
 </script>
 
 <template>
@@ -75,144 +69,164 @@ const closeDeleteModal = () => {
     <Head title="Schools" />
 
     <AdminLayout>
-        <template #header>Manage Schools</template>
 
-        <div class="max-w-8xl mx-auto py-4">
-            <!-- Header Panel -->
-            <Panel>
-                <template #header>
-                    <div class="flex items-center gap-2">
-                        <i class="pi pi-building text-xl"></i>
-                        <span class="font-semibold text-lg">School Management</span>
-                    </div>
-                </template>
-
-                <div class="flex justify-between items-center" v-if="hasPermission('schools.manage')">
-                    <div class="text-gray-600">
-                        Manage educational institutions and their details
-                    </div>
-                    <Button label="Add School" icon="pi pi-plus" severity="success" raised
-                        @click="router.get(route('school.index', { action: 'create' }))" />
-                </div>
-            </Panel>
-
-            <!-- Search Section -->
-            <div class="mt-6">
-                <div class="flex gap-4 items-center mb-4">
-                    <div class="flex-1 max-w-md">
-                        <IconField iconPosition="left">
-                            <InputIcon class="pi pi-search" />
-                            <InputText v-model="globalFilter" placeholder="Search schools..." class="w-full" />
-                        </IconField>
+        <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+            <template #start>
+                <div class="flex items-center gap-3">
+                    <i class="pi pi-building text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
+                    <div>
+                        <h1 class="text-2xl short:text-xl font-bold text-gray-700">Schools</h1>
+                        <p class="text-sm text-gray-600">Manage educational institutions</p>
                     </div>
                 </div>
+            </template>
+            <template #end>
+                <Button v-if="hasPermission('schools.manage')" icon="pi pi-plus" label="Add School" severity="success"
+                    raised rounded size="small" @click="openCreate" />
+            </template>
+        </Toolbar>
+
+        <div class="py-2">
+
+            <!-- Search -->
+            <div class="flex gap-3 items-center mb-4">
+                <IconField iconPosition="left" class="flex-1 max-w-sm">
+                    <InputIcon class="pi pi-search" />
+                    <InputText v-model="globalFilter" placeholder="Search schools..." class="w-full" />
+                </IconField>
+                <Tag :value="`${props.schools.length} school${props.schools.length !== 1 ? 's' : ''}`"
+                    severity="secondary" />
             </div>
 
-            <!-- Schools DataTable -->
-            <div class="mt-6">
-                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="schools" stripedRows
-                    showGridlines responsiveLayout="scroll" :emptyMessage="'No data to be displayed'"
-                    :globalFilterFields="['name', 'shortname', 'remarks']" v-model:filters="filters" paginator
-                    :rows="rows" v-model:first="first" :rowsPerPageOptions="[5, 10, 20, 50]"
-                    paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                    :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
+            <!-- Table -->
+            <DataTable :value="props.schools" stripedRows showGridlines scrollable
+                :globalFilterFields="['name', 'shortname', 'campus', 'address']" v-model:filters="filters" paginator
+                :rows="rows" v-model:first="first" :rowsPerPageOptions="[10, 25, 50]"
+                paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                :currentPageReportTemplate="'{first} - {last} of {totalRecords}'">
 
-                    <template #header>
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-lg font-semibold text-gray-800">Schools</h3>
-                            <Tag :value="`${schools.length} schools`" severity="info" />
+                <Column field="name" header="School" sortable>
+                    <template #body="{ data }">
+                        <div class="font-semibold text-gray-800 text-sm">{{ data.name }}</div>
+                        <div class="text-[11px] text-[#8e8e93] font-mono mt-0.5" v-if="data.shortname">
+                            [{{ data.shortname }}]
                         </div>
                     </template>
+                </Column>
 
-                    <Column field="id" header="#" style="width: 50px">
-                        <template #body="slotProps">
-                            <div class="text-center font-mono text-sm text-gray-500">
-                                {{ first + slotProps.index + 1 }}
-                            </div>
-                        </template>
-                    </Column>
+                <Column field="campus" header="Campus" sortable style="min-width: 130px">
+                    <template #body="{ data }">
+                        <span class="text-sm text-gray-700">{{ data.campus || '\u2014' }}</span>
+                    </template>
+                </Column>
 
-                    <Column field="name" header="School" sortable>
-                        <template #body="slotProps">
-                            <div class="font-semibold text-gray-800">{{ slotProps.data.name }}</div>
-                            <div class="text-sm text-gray-500 font-bold">[{{ slotProps.data.shortname }}]</div>
-                        </template>
-                    </Column>
+                <Column field="address" header="Address" style="min-width: 200px">
+                    <template #body="{ data }">
+                        <span class="text-sm text-gray-600 leading-snug">{{ data.address || '\u2014' }}</span>
+                    </template>
+                </Column>
 
-                    <Column field="start_date" header="Start Date" sortable>
-                        <template #body="slotProps">
-                            <span class="text-gray-600">
-                                {{ slotProps.data.start_date ? moment(slotProps.data.start_date).format('MMM DD, YYYY')
-                                    : '-' }}
-                            </span>
-                        </template>
-                    </Column>
+                <Column field="is_active" header="Status" style="width: 100px">
+                    <template #body="{ data }">
+                        <span
+                            class="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
+                            :style="data.is_active
+                                ? 'background: #d1f5e0; color: #187a3c;'
+                                : 'background: #fee2e2; color: #991b1b;'">
+                            {{ data.is_active ? 'Active' : 'Inactive' }}
+                        </span>
+                    </template>
+                </Column>
 
-                    <Column field="end_date" header="End Date" sortable>
-                        <template #body="slotProps">
-                            <span class="text-gray-600">
-                                {{ slotProps.data.end_date ? moment(slotProps.data.end_date).format('MMM DD, YYYY') :
-                                    '-' }}
-                            </span>
-                        </template>
-                    </Column>
+                <Column header="Actions" style="width: 100px">
+                    <template #body="{ data }">
+                        <div class="flex gap-1.5 justify-center">
+                            <Button v-if="hasPermission('schools.manage')" icon="pi pi-pencil" severity="info"
+                                size="small" rounded outlined v-tooltip.top="'Edit'" @click="openEdit(data)" />
+                            <Button v-if="hasPermission('schools.delete')" icon="pi pi-trash" severity="danger"
+                                size="small" rounded outlined v-tooltip.top="'Delete'" @click="confirmDelete(data)" />
+                        </div>
+                    </template>
+                </Column>
 
-                    <Column field="remarks" header="Remarks">
-                        <template #body="slotProps">
-                            <span class="text-gray-600" v-safe-html="slotProps.data.remarks || '-'"></span>
-                        </template>
-                    </Column>
-
-                    <Column field="is_active" header="Status" style="width: 120px">
-                        <template #body="slotProps">
-                            <Chip :label="slotProps.data.is_active ? 'Active' : 'Inactive'"
-                                :severity="slotProps.data.is_active ? 'success' : 'secondary'" />
-                        </template>
-                    </Column>
-
-                    <Column header="Actions" style="width: 160px">
-                        <template #body="slotProps">
-                            <div class="flex gap-2 justify-center">
-                                <Button v-if="hasPermission('schools.manage')" icon="pi pi-pen-to-square"
-                                    severity="info" size="small" rounded outlined v-tooltip.top="'Edit School'"
-                                    @click="editSchool(slotProps.data.id)" />
-                                <Button v-if="hasPermission('schools.delete')" icon="pi pi-trash" severity="danger"
-                                    size="small" rounded outlined v-tooltip.top="'Delete School'"
-                                    @click="confirmDeleteSchool(slotProps.data)" />
-                            </div>
-                        </template>
-                    </Column>
-                </DataTable>
-            </div>
+            </DataTable>
         </div>
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showConfirmDeleteModal" :style="{ width: '450px' }" header="Confirm Deletion"
-            :modal="true">
-            <div class="flex items-center gap-4">
-                <i class="pi pi-exclamation-triangle text-3xl text-red-500"></i>
-                <div>
-                    <p class="text-lg font-semibold text-gray-800 mb-2">
-                        Are you sure you want to delete this school?
+        <Dialog v-model:visible="showDeleteModal" modal header="Delete School" :style="{ width: '420px' }">
+            <div class="flex items-start gap-4 py-2">
+                <div class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <i class="pi pi-trash text-red-600 text-sm"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm text-gray-700 mb-3">
+                        Are you sure you want to delete this school? This cannot be undone.
                     </p>
-                    <div class="bg-gray-100 p-3 rounded border-l-4 border-red-500" v-if="selectedSchool">
-                        <div class="font-semibold text-red-700">{{ selectedSchool.name }}</div>
-                        <div class="text-sm text-gray-600">{{ selectedSchool.shortname }}</div>
+                    <div v-if="selectedSchool" class="bg-[#f9f9fb] border border-[#e5e5ea] rounded-xl px-4 py-3">
+                        <div class="font-semibold text-gray-800 text-sm">{{ selectedSchool.name }}</div>
+                        <div class="text-xs text-[#8e8e93] mt-0.5">
+                            {{ selectedSchool.shortname }}{{ selectedSchool.campus ? ` \u00b7 ${selectedSchool.campus}`
+                            : '' }}
+                        </div>
                     </div>
-                    <p class="text-sm text-gray-600 mt-2">
-                        This action cannot be undone and may affect associated courses and students.
-                    </p>
                 </div>
             </div>
-
             <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeDeleteModal" outlined />
-                <Button label="Delete School" severity="danger" @click="deleteSchool" />
+                <Button label="Cancel" severity="secondary" outlined rounded size="small"
+                    @click="showDeleteModal = false; selectedSchool = null" />
+                <Button label="Delete" severity="danger" rounded size="small" :loading="deleting"
+                    @click="deleteSchool" />
             </template>
         </Dialog>
 
-        <!-- CREATE/EDIT SCHOOL MODAL -->
-        <SchoolModal v-if="props.action == 'create' || props.action == 'edit'" :action="props.action"
-            :program="props.action === 'edit' ? props.school : null" />
+        <!-- School Modal -->
+        <SchoolModal v-model:visible="showModal" :school="editingSchool" @saved="handleSaved" />
+
     </AdminLayout>
 </template>
+
+<style scoped>
+:deep(.p-datatable) {
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 1px solid var(--p-datatable-border-color);
+}
+
+:deep(.p-datatable-table-container) {
+    border-radius: 0;
+    overflow: hidden;
+}
+
+:deep(.p-datatable thead tr:first-child th:first-child) {
+    border-left: none;
+}
+
+:deep(.p-datatable thead tr:first-child th:last-child) {
+    border-right: none;
+}
+
+:deep(.p-datatable thead tr:first-child th) {
+    border-top: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td) {
+    border-bottom: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td:first-child) {
+    border-left: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td:last-child) {
+    border-right: none;
+}
+
+:deep(.p-paginator) {
+    border: none;
+    border-top: 1px solid var(--p-datatable-border-color);
+}
+
+:deep(.p-iconfield .p-inputtext) {
+    border-radius: 1rem;
+}
+</style>

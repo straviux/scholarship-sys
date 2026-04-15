@@ -68,7 +68,7 @@
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Date of
                                             Birth</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ formatDate(profile.date_of_birth)
-                                        }}</p>
+                                            }}</p>
                                     </div>
 
                                     <div>
@@ -100,14 +100,14 @@
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Place of
                                             Birth</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ profile.place_of_birth || 'N/A'
-                                        }}</p>
+                                            }}</p>
                                     </div>
 
                                     <div>
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Indigenous
                                             Group</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ profile.indigenous_group || 'N/A'
-                                        }}</p>
+                                            }}</p>
                                     </div>
                                 </div>
 
@@ -412,7 +412,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600 dark:text-blue-400"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -505,7 +505,7 @@
                                                         <h5 class="font-semibold text-gray-900 dark:text-gray-100">
                                                             Status: <span class="text-blue-600 dark:text-blue-400">{{
                                                                 timeline.new_status
-                                                            }}</span>
+                                                                }}</span>
                                                         </h5>
                                                         <p class="text-sm text-gray-600 dark:text-gray-400">{{
                                                             formatDateTime(timeline.performed_at) }}</p>
@@ -535,7 +535,7 @@
                                                     <p class="text-xs text-gray-600 dark:text-gray-400">Encoded by</p>
                                                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{
                                                         timeline.changed_by?.name || 'System'
-                                                    }}</p>
+                                                        }}</p>
                                                 </div>
 
                                                 <div v-if="timeline.remarks"
@@ -715,11 +715,12 @@
                                 <table style="width: 100%; border-collapse: collapse;">
                                     <thead>
                                         <tr style="background: #f9f9fb; border-bottom: 0.5px solid #e5e5ea;">
+                                            <th style="width: 36px; padding: 7px 4px 7px 12px;"></th>
                                             <th
                                                 style="text-align: left; padding: 7px 16px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px;">
-                                                Term</th>
+                                                Semester Label</th>
                                             <th
-                                                style="text-align: right; padding: 7px 24px 7px 8px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
+                                                style="text-align: right; padding: 7px 18px 7px 8px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
                                                 Amount</th>
                                             <th
                                                 style="text-align: right; padding: 7px 16px 7px 8px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px;">
@@ -729,33 +730,54 @@
                                     <tbody>
                                         <template v-for="(group, gi) in ledgerTermGroups" :key="group.yearLevel">
                                             <tr style="background: #f2f2f7; border-top: 0.5px solid #e5e5ea;">
-                                                <td colspan="3"
+                                                <td colspan="4"
                                                     style="padding: 5px 16px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px;">
                                                     {{ formatYearLevel(group.yearLevel) }}
                                                 </td>
                                             </tr>
                                             <tr v-for="(term, ti) in group.terms" :key="term.key"
                                                 :style="(gi < ledgerTermGroups.length - 1 || ti < group.terms.length - 1) ? 'border-bottom: 0.5px solid #e5e5ea;' : ''">
-                                                <td
-                                                    style="padding: 10px 16px; font-size: 13px; color: #1c1c1e; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                                    {{ term.label }}
+                                                <td style="padding: 10px 4px 10px 12px; white-space: nowrap;">
+                                                    <button
+                                                        @click="ledgerExcluded[term.key] = !ledgerExcluded[term.key]"
+                                                        :title="ledgerExcluded[term.key] ? 'Include in ledger' : 'Exclude from ledger'"
+                                                        :style="ledgerExcluded[term.key]
+                                                            ? 'background: #ff3b30; color: #fff; border: none; border-radius: 5px; padding: 1px 5px; font-size: 10px; cursor: pointer; line-height: 1.6;'
+                                                            : 'background: #34c759; color: #fff; border: none; border-radius: 5px; padding: 1px 5px; font-size: 10px; cursor: pointer; line-height: 1.6;'">
+                                                        <i :class="ledgerExcluded[term.key] ? 'pi pi-times' : 'pi pi-check'"
+                                                            style="font-size:8px; font-weight: 600;"></i>
+                                                    </button>
+                                                </td>
+                                                <td style="padding: 6px 12px;"
+                                                    :style="ledgerExcluded[term.key] ? { opacity: '0.35' } : {}">
+                                                    <input :value="ledgerSemesterLabels[term.key] ?? term.semester"
+                                                        @input="ledgerSemesterLabels[term.key] = $event.target.value"
+                                                        :disabled="ledgerExcluded[term.key]"
+                                                        style="width: 100%; border: 1px solid #d1d1d6; border-radius: 8px; background: #fff; font-size: 13px; color: #1c1c1e; outline: none; padding: 6px 10px; transition: border-color 0.15s;"
+                                                        @focus="$event.target.style.borderColor = '#007AFF'"
+                                                        @blur="$event.target.style.borderColor = '#d1d1d6'" />
                                                 </td>
                                                 <td
-                                                    style="padding: 10px 24px 10px 8px; font-size: 12px; color: #3a3a3c; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                                                    :style="{ padding: '10px 18px 10px 8px', fontSize: '12px', color: '#3a3a3c', textAlign: 'right', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', opacity: ledgerExcluded[term.key] ? '0.35' : '1' }">
                                                     ₱{{ term.amount.toLocaleString('en-PH', {
                                                         minimumFractionDigits: 2
                                                     }) }}
                                                 </td>
                                                 <td
                                                     style="padding: 10px 16px 10px 8px; text-align: right; white-space: nowrap;">
-                                                    <div style="display: flex; gap: 4px; justify-content: flex-end;">
-                                                        <button v-for="opt in rosOptions" :key="'ros-' + opt.value"
-                                                            @click="ledgerRosOverrides[term.key] = opt.value"
-                                                            :style="ledgerRosOverrides[term.key] === opt.value
-                                                                ? 'background: #007AFF; color: #fff; border: none; border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 600; cursor: pointer;'
-                                                                : 'background: #e5e5ea; color: #1c1c1e; border: none; border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 500; cursor: pointer;'">
-                                                            {{ opt.label }}
-                                                        </button>
+                                                    <div
+                                                        style="display: flex; gap: 4px; justify-content: flex-end; align-items: center;">
+                                                        <template v-if="!ledgerExcluded[term.key]">
+                                                            <button
+                                                                v-for="opt in [{ label: '\u2014', value: '' }, { label: '4M', value: '4' }, { label: '6M', value: '6' }, { label: '12M', value: '12' }]"
+                                                                :key="`ros-${opt.value}`"
+                                                                @click="ledgerRosOverrides[term.key] = opt.value"
+                                                                :style="ledgerRosOverrides[term.key] === opt.value
+                                                                    ? 'background: #007AFF; color: #fff; border: none; border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 600; cursor: pointer;'
+                                                                    : 'background: #e5e5ea; color: #1c1c1e; border: none; border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 500; cursor: pointer;'">
+                                                                {{ opt.label }}
+                                                            </button>
+                                                        </template>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -768,8 +790,9 @@
                                     No disbursement records —
                                     ROS auto-detected</div>
                             </div>
-                            <div class="ios-section-footer">Tap a value to set; tap again to clear (auto-detect from
-                                semester).</div>
+                            <div class="ios-section-footer">Edit the semester label as it will appear in the ledger
+                                (e.g. 1ST &amp; 2ND
+                                SEMESTER). Changes are for printing only.</div>
                         </div>
                         <div style="height: 20px;"></div>
                     </div>
@@ -876,12 +899,8 @@ const certCourseName = ref('');
 // Ledger modal
 const showLedgerModal = ref(false);
 const ledgerRosOverrides = reactive({});
-const rosOptions = [
-    { label: '—', value: '' },
-    { label: '4M', value: '4' },
-    { label: '6M', value: '6' },
-    { label: '12M', value: '12' },
-];
+const ledgerSemesterLabels = reactive({}); // { termKey: editableLabel }
+const ledgerExcluded = reactive({});       // { termKey: true/false }
 
 // Ledger modal drag
 const ledgerDragOffset = ref({ x: 0, y: 0 });
@@ -998,13 +1017,19 @@ const ledgerTermGroups = computed(() => {
         }));
 });
 
-// Pre-populate overrides with auto-detected values when modal opens
+// Pre-populate overrides + semester labels when modal opens
 watch(showLedgerModal, (val) => {
     if (val) {
         ledgerTermGroups.value.forEach(group => {
             group.terms.forEach(term => {
                 if (ledgerRosOverrides[term.key] === undefined) {
                     ledgerRosOverrides[term.key] = autoRosValue(term.semester);
+                }
+                if (ledgerSemesterLabels[term.key] === undefined) {
+                    ledgerSemesterLabels[term.key] = term.semester ?? '';
+                }
+                if (ledgerExcluded[term.key] === undefined) {
+                    ledgerExcluded[term.key] = false;
                 }
             });
         });
@@ -1278,6 +1303,8 @@ const generateLedger = () => {
         preparedByDesignation: authUser?.office_designation ?? '',
         today,
         rosOverrides: { ...ledgerRosOverrides },
+        termSemesterLabels: { ...ledgerSemesterLabels },
+        excludedTerms: { ...ledgerExcluded },
     });
     const safeName = `${props.profile.last_name}_${props.profile.first_name}`.replace(/\s+/g, '_');
     pdfPreviewTitle.value = `Ledger-${safeName}`;

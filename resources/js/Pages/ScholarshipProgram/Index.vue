@@ -8,67 +8,86 @@ import RequirementModal from "./Modal/RequirementModal.vue";
 import { usePermission } from '@/composable/permissions';
 
 const props = defineProps({
-    action: String,
-    scholarshipPrograms: Object,
-    program: Object,
-    requirements: Array
+    scholarshipPrograms: Array,
+    requirements: Array,
 });
 
 const { hasPermission } = usePermission();
 
+// Local reactive list
+const programsList = ref([...props.scholarshipPrograms]);
 
 // Search and pagination
 const globalFilter = ref('');
 const first = ref(0);
 const rows = ref(10);
-const filters = ref({
-    global: { value: null, matchMode: 'contains' }
-});
+const filters = ref({ global: { value: null, matchMode: 'contains' } });
 
-// Delete confirmation modal
+watch(globalFilter, (v) => { filters.value.global.value = v; });
+
+// Create / Edit modal
+const showModal = ref(false);
+const editingProgram = ref(null);
+
+const openCreate = () => {
+    editingProgram.value = null;
+    showModal.value = true;
+};
+const openEdit = (program) => {
+    editingProgram.value = program;
+    showModal.value = true;
+};
+const handleSaved = (program) => {
+    showModal.value = false;
+    const idx = programsList.value.findIndex(p => p.id === program.id);
+    if (idx >= 0) programsList.value[idx] = program;
+    else programsList.value.push(program);
+};
+
+// Requirements modal
+const showRequirementModal = ref(false);
+const editingProgramForReq = ref(null);
+
+const openRequirements = (program) => {
+    editingProgramForReq.value = program;
+    showRequirementModal.value = true;
+};
+const handleRequirementSaved = (program) => {
+    showRequirementModal.value = false;
+    const idx = programsList.value.findIndex(p => p.id === program.id);
+    if (idx >= 0) programsList.value[idx] = program;
+};
+
+// Delete confirmation
 const showConfirmDeleteModal = ref(false);
 const selectedProgram = ref(null);
-
-// Watch for changes in globalFilter and update filters
-watch(globalFilter, (newValue) => {
-    filters.value.global.value = newValue;
-});
-const editProgram = (programId) => {
-    // Navigate to the edit program page
-    router.get(route("scholarshipprograms.index", {
-        id: programId,
-        action: 'edit'
-    }))
-};
+const deleting = ref(false);
 
 const confirmDeleteProgram = (program) => {
     selectedProgram.value = program;
     showConfirmDeleteModal.value = true;
 };
-
 const deleteProgram = () => {
-    if (selectedProgram.value) {
-        router.delete(route('scholarshipprograms.destroy', selectedProgram.value.id), {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                showConfirmDeleteModal.value = false;
-                selectedProgram.value = null;
-            },
-            onError: () => {
-                showConfirmDeleteModal.value = false;
-                selectedProgram.value = null;
-            }
-        });
-    }
+    if (!selectedProgram.value || deleting.value) return;
+    deleting.value = true;
+    router.delete(route('scholarshipprograms.destroy', selectedProgram.value.id), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            programsList.value = programsList.value.filter(p => p.id !== selectedProgram.value.id);
+            showConfirmDeleteModal.value = false;
+            selectedProgram.value = null;
+            deleting.value = false;
+        },
+        onError: () => {
+            deleting.value = false;
+        },
+    });
 };
-
 const closeDeleteModal = () => {
     showConfirmDeleteModal.value = false;
     selectedProgram.value = null;
 };
-
-
 </script>
 
 <template>
@@ -76,152 +95,215 @@ const closeDeleteModal = () => {
     <Head title="Scholar Programs" />
 
     <AdminLayout>
-        <template #header>Manage Programs</template>
 
-        <div class="max-w-8xl mx-auto py-4">
-            <!-- Header Panel -->
-            <Panel>
-                <template #header>
-                    <div class="flex items-center gap-2">
-                        <i class="pi pi-graduation-cap text-xl"></i>
-                        <span class="font-semibold text-lg">Scholarship Program Management</span>
-                    </div>
-                </template>
-
-                <div class="flex justify-between items-center" v-if="hasPermission('programs.manage')">
-                    <div class="text-gray-600">
-                        Manage scholarship programs and their requirements
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <Button label="New Program" icon="pi pi-plus" severity="success" raised
-                            @click="router.get(route('scholarshipprograms.index', { action: 'create' }))" />
+        <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+            <template #start>
+                <div class="flex items-center gap-3">
+                    <i class="pi pi-graduation-cap text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
+                    <div>
+                        <h1 class="text-2xl short:text-xl font-bold text-gray-700">Scholarship Programs</h1>
+                        <p class="text-sm text-gray-600">Manage scholarship programs and requirements</p>
                     </div>
                 </div>
-            </Panel>
+            </template>
+            <template #end>
+                <Button v-if="hasPermission('programs.manage')" icon="pi pi-plus" label="Add Program" severity="success"
+                    raised rounded size="small" @click="openCreate" />
+            </template>
+        </Toolbar>
 
-            <!-- Search Section (only shown in table view) -->
-            <div class="mt-6">
-                <div class="flex gap-4 items-center mb-4">
-                    <div class="flex-1 max-w-md">
-                        <IconField iconPosition="left">
-                            <InputIcon class="pi pi-search" />
-                            <InputText v-model="globalFilter" placeholder="Search programs..." class="w-full" />
-                        </IconField>
-                    </div>
-                </div>
+        <div class="py-2">
+
+            <!-- Search -->
+            <div class="flex gap-3 items-center mb-4">
+                <IconField iconPosition="left" class="flex-1 max-w-sm">
+                    <InputIcon class="pi pi-search" />
+                    <InputText v-model="globalFilter" placeholder="Search programs..." class="w-full" />
+                </IconField>
+                <Tag :value="`${programsList.length} program${programsList.length !== 1 ? 's' : ''}`"
+                    severity="secondary" />
             </div>
-            <div class="mt-6">
-                <!-- Table View -->
-                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="scholarshipPrograms"
-                    stripedRows showGridlines responsiveLayout="scroll" :emptyMessage="'No data to be displayed'"
-                    :globalFilterFields="['name', 'shortname', 'remarks']" v-model:filters="filters" paginator
-                    :rows="rows" v-model:first="first" :rowsPerPageOptions="[5, 10, 20, 50]"
-                    paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                    :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
 
-                    <template #header>
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-lg font-semibold text-gray-800">Scholarship Programs</h3>
-                            <Tag :value="`${scholarshipPrograms.length} programs`" severity="info" />
+            <!-- Programs DataTable -->
+            <DataTable :value="programsList" stripedRows showGridlines scrollable
+                :globalFilterFields="['name', 'shortname', 'remarks']" v-model:filters="filters" paginator :rows="rows"
+                v-model:first="first" :rowsPerPageOptions="[10, 25, 50]"
+                paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                :currentPageReportTemplate="'{first} - {last} of {totalRecords}'">
+
+                <Column field="name" header="Program" sortable>
+                    <template #body="{ data }">
+                        <div class="font-semibold text-gray-800 text-sm">{{ data.name }}</div>
+                        <div class="text-[11px] text-[#8e8e93] font-mono mt-0.5" v-if="data.shortname">
+                            [{{ data.shortname }}]
                         </div>
                     </template>
+                </Column>
 
-                    <Column field="id" header="#" style="width: 50px">
-                        <template #body="slotProps">
-                            <div class="text-center font-mono text-sm text-gray-500">
-                                {{ first + slotProps.index + 1 }}
-                            </div>
-                        </template>
-                    </Column>
+                <Column field="start_date" header="Start Date" sortable style="min-width: 130px">
+                    <template #body="{ data }">
+                        <span class="text-sm text-gray-600">
+                            {{ data.start_date ? moment(data.start_date).format('MMM DD, YYYY') : '\u2014' }}
+                        </span>
+                    </template>
+                </Column>
 
-                    <Column field="name" header="Program" sortable>
-                        <template #body="slotProps">
-                            <div class="font-semibold text-gray-800">{{ slotProps.data.name }}</div>
-                            <div class="text-sm text-gray-500 font-bold">[{{ slotProps.data.shortname }}]</div>
-                        </template>
-                    </Column>
+                <Column field="end_date" header="End Date" sortable style="min-width: 130px">
+                    <template #body="{ data }">
+                        <span class="text-sm text-gray-600">
+                            {{ data.end_date ? moment(data.end_date).format('MMM DD, YYYY') : '\u2014' }}
+                        </span>
+                    </template>
+                </Column>
 
-                    <Column field="start_date" header="Start Date" sortable>
-                        <template #body="slotProps">
-                            <span class="text-gray-600">
-                                {{ slotProps.data.start_date ? moment(slotProps.data.start_date).format('MMM DD, YYYY')
-                                    : '-' }}
-                            </span>
-                        </template>
-                    </Column>
+                <Column field="remarks" header="Remarks">
+                    <template #body="{ data }">
+                        <span class="text-sm text-gray-600" v-safe-html="data.remarks || '\u2014'"></span>
+                    </template>
+                </Column>
 
-                    <Column field="end_date" header="End Date" sortable>
-                        <template #body="slotProps">
-                            <span class="text-gray-600">
-                                {{ slotProps.data.end_date ? moment(slotProps.data.end_date).format('MMM DD, YYYY') :
-                                    '-' }}
-                            </span>
-                        </template>
-                    </Column>
+                <Column field="is_active" header="Status" style="width: 100px">
+                    <template #body="{ data }">
+                        <span
+                            class="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
+                            :style="data.is_active
+                                ? 'background: #d1f5e0; color: #187a3c;'
+                                : 'background: #fee2e2; color: #991b1b;'">
+                            {{ data.is_active ? 'Active' : 'Inactive' }}
+                        </span>
+                    </template>
+                </Column>
 
-                    <Column field="remarks" header="Remarks">
-                        <template #body="slotProps">
-                            <span class="text-gray-600" v-safe-html="slotProps.data.remarks || '-'"></span>
-                        </template>
-                    </Column>
-
-                    <Column field="is_active" header="Status" style="width: 120px">
-                        <template #body="slotProps">
-                            <Chip :label="slotProps.data.is_active ? 'Active' : 'Inactive'"
-                                :severity="slotProps.data.is_active ? 'success' : 'secondary'" />
-                        </template>
-                    </Column>
-
-                    <Column header="Actions" style="width: 200px">
-                        <template #body="slotProps">
-                            <div class="flex gap-2 justify-center">
-                                <Button v-if="hasPermission('programs.manage')" icon="pi pi-pen-to-square"
-                                    severity="info" size="small" rounded outlined v-tooltip.top="'Edit Program'"
-                                    @click="editProgram(slotProps.data.id)" />
-                                <Button v-if="hasPermission('programs.manage')" icon="pi pi-list" severity="warn"
-                                    size="small" rounded outlined v-tooltip.top="'Requirements'"
-                                    @click="router.get(route('programs.index', { id: slotProps.data.id, action: 'update-requirement' }))" />
-                                <Button v-if="hasPermission('programs.delete')" icon="pi pi-trash" severity="danger"
-                                    size="small" rounded outlined v-tooltip.top="'Delete Program'"
-                                    @click="confirmDeleteProgram(slotProps.data)" />
-                            </div>
-                        </template>
-                    </Column>
-                </DataTable>
-
-            </div>
+                <Column header="Actions" style="width: 120px">
+                    <template #body="{ data }">
+                        <div class="flex gap-1.5 justify-center">
+                            <Button v-if="hasPermission('programs.manage')" icon="pi pi-pencil" severity="info"
+                                size="small" rounded outlined v-tooltip.top="'Edit'" @click="openEdit(data)" />
+                            <Button v-if="hasPermission('programs.manage')" icon="pi pi-list" severity="warn"
+                                size="small" rounded outlined v-tooltip.top="'Requirements'"
+                                @click="openRequirements(data)" />
+                            <Button v-if="hasPermission('programs.delete')" icon="pi pi-trash" severity="danger"
+                                size="small" rounded outlined v-tooltip.top="'Delete'"
+                                @click="confirmDeleteProgram(data)" />
+                        </div>
+                    </template>
+                </Column>
+            </DataTable>
         </div>
 
-        <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showConfirmDeleteModal" :style="{ width: '450px' }" header="Confirm Deletion"
-            :modal="true">
-            <div class="flex items-center gap-4">
-                <i class="pi pi-exclamation-triangle text-3xl text-red-500"></i>
-                <div>
-                    <p class="text-lg font-semibold text-gray-800 mb-2">
-                        Are you sure you want to delete this program?
-                    </p>
-                    <div class="bg-gray-100 p-3 rounded border-l-4 border-red-500" v-if="selectedProgram">
-                        <div class="font-semibold text-red-700">{{ selectedProgram.name }}</div>
-                        <div class="text-sm text-gray-600">{{ selectedProgram.shortname }}</div>
+        <!-- iOS Delete Confirmation Dialog -->
+        <Dialog :visible="showConfirmDeleteModal" modal @update:visible="val => !val && closeDeleteModal()"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+            <template #container>
+                <div class="ios-modal" style="width: 460px;">
+                    <!-- Nav Bar -->
+                    <div class="ios-nav-bar">
+                        <button class="ios-nav-btn ios-nav-cancel" @click="closeDeleteModal">
+                            <i class="pi pi-times"></i>
+                        </button>
+                        <span class="ios-nav-title">Confirm Deletion</span>
+                        <button class="ios-nav-btn ios-nav-action ios-nav-destructive" @click="deleteProgram">
+                            Delete
+                        </button>
                     </div>
-                    <p class="text-sm text-gray-600 mt-2">
-                        This action cannot be undone and may affect associated courses and applications.
-                    </p>
-                </div>
-            </div>
 
-            <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeDeleteModal" outlined />
-                <Button label="Delete Program" severity="danger" @click="deleteProgram" />
+                    <!-- Body -->
+                    <div class="ios-body" v-if="selectedProgram">
+                        <!-- Warning -->
+                        <div class="ios-section">
+                            <div class="ios-card">
+                                <div class="ios-row" style="padding: 12px 16px; gap: 12px;">
+                                    <i class="pi pi-exclamation-triangle"
+                                        style="font-size: 24px; color: #FF3B30; flex-shrink: 0;"></i>
+                                    <div>
+                                        <div
+                                            style="font-size: 15px; font-weight: 600; color: #000; margin-bottom: 4px;">
+                                            Permanently delete this program?
+                                        </div>
+                                        <div style="font-size: 13px; color: #8E8E93; line-height: 1.4;">
+                                            This action cannot be undone and may affect associated courses and
+                                            applications.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Program Info -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">Program</div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <span class="ios-row-label">Name</span>
+                                    <span style="font-size: 14px; color: #FF3B30; font-weight: 600;">
+                                        {{ selectedProgram.name }}
+                                    </span>
+                                </div>
+                                <div class="ios-row ios-row-last">
+                                    <span class="ios-row-label">Shortname</span>
+                                    <span style="font-size: 13px; color: #8E8E93;">{{ selectedProgram.shortname
+                                        }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="height: 20px;"></div>
+                    </div>
+                </div>
             </template>
         </Dialog>
 
-        <!-- CREATE SCHOLARSHIP PROGRAM MODAL -->
-        <ProgramModal v-if="props.action == 'create' || props.action == 'edit'" :action="props.action"
-            :program="props.program" />
+        <!-- Program Create/Edit Modal -->
+        <ProgramModal v-model:visible="showModal" :program="editingProgram" @saved="handleSaved" />
 
-        <RequirementModal v-if="props.action == 'update-requirement'" :action="props.action" :program="props.program"
-            :requirements="props.requirements" />
+        <!-- Requirements Modal -->
+        <RequirementModal v-model:visible="showRequirementModal" :program="editingProgramForReq"
+            :requirements="props.requirements" @saved="handleRequirementSaved" />
     </AdminLayout>
 </template>
+
+<style scoped>
+:deep(.p-datatable) {
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 1px solid var(--p-datatable-border-color);
+}
+
+:deep(.p-datatable-table-container) {
+    border-radius: 0;
+    overflow: hidden;
+}
+
+:deep(.p-datatable thead tr:first-child th:first-child) {
+    border-left: none;
+}
+
+:deep(.p-datatable thead tr:first-child th:last-child) {
+    border-right: none;
+}
+
+:deep(.p-datatable thead tr:first-child th) {
+    border-top: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td) {
+    border-bottom: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td:first-child) {
+    border-left: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td:last-child) {
+    border-right: none;
+}
+
+:deep(.p-paginator) {
+    border: none;
+    border-top: 1px solid var(--p-datatable-border-color);
+}
+
+:deep(.p-iconfield .p-inputtext) {
+    border-radius: 1rem;
+}
+</style>

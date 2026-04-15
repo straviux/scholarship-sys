@@ -1,79 +1,147 @@
 <script setup>
-import { ref, computed } from "vue";
-import { Link, useForm, router } from "@inertiajs/vue3";
-import InputLabel from "@/Components/ui/inputs/InputLabel.vue";
+import { ref, computed, watch, onBeforeUnmount } from "vue";
+import axios from 'axios';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
 const props = defineProps({
-    action: String,
+    visible: Boolean,
     program: Object,
     requirements: Array,
-    msg: String
+});
+const emit = defineEmits(['update:visible', 'saved']);
+
+const processing = ref(false);
+const selectedIds = ref([]);
+
+watch(() => props.visible, (val) => {
+    if (val && props.program) {
+        selectedIds.value = [...(props.program.requirements || [])].map(r => r.id);
+        dragOffset.value = { x: 0, y: 0 };
+    }
 });
 
-const isOpen = computed(() => props.action == 'update-requirement');
-const selectedRequirements = ref([...props.program.requirements].map(r => r.id));
-const form = useForm({
-    scholarship_program_id: props.program.id,
-    name: props.program?.name || "",
-    requirements: selectedRequirements || [],
+const toggleRequirement = (id) => {
+    const i = selectedIds.value.indexOf(id);
+    if (i >= 0) selectedIds.value.splice(i, 1);
+    else selectedIds.value.push(id);
+};
+
+const close = () => emit('update:visible', false);
+
+const submit = async () => {
+    if (processing.value || !props.program) return;
+    processing.value = true;
+    try {
+        const res = await axios.put(
+            route('scholarshipprograms.update-requirement', props.program.id),
+            { requirements: selectedIds.value }
+        );
+        toast.success(res.data.message || 'Requirements updated', { position: toast.POSITION.TOP_RIGHT });
+        emit('saved', res.data.program);
+        close();
+    } catch {
+        toast.error('Failed to update requirements', { position: toast.POSITION.TOP_RIGHT });
+    } finally {
+        processing.value = false;
+    }
+};
+
+/* Drag */
+const dragOffset = ref({ x: 0, y: 0 });
+const dragStart = ref(null);
+const modalStyle = computed(() => ({
+    width: '500px',
+    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
+}));
+
+function onDragStart(e) {
+    if (e.target.closest('button, a, .p-checkbox')) return;
+    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
+    document.addEventListener('pointermove', onDragMove);
+    document.addEventListener('pointerup', onDragEnd);
+}
+function onDragMove(e) {
+    if (!dragStart.value) return;
+    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
+}
+function onDragEnd() {
+    dragStart.value = null;
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragEnd);
+}
+onBeforeUnmount(() => {
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragEnd);
 });
-
-const submit = () => {
-    form.put(route("scholarshipprograms.update-requirement", props.program.id), {
-        onSuccess: (response) => {
-            toast.success("data has been updated", {
-                position: toast.POSITION.TOP_RIGHT,
-            });
-        },
-        onError: (err) => {
-            form.errors = err;
-        }
-    });
-};
-
-const closeModal = () => {
-    window.location.href = route('scholarshipprograms.index');
-};
 </script>
 
-
 <template>
-    <Dialog :visible="isOpen" modal header="Update Requirements Form" :style="{ width: '700px' }"
-        @update:visible="closeModal">
-        <form @submit.prevent="submit">
-            <div class="mt-4 flex justify-between gap-4">
-                <div class="w-3/4">
-                    <InputLabel for="name" value="Name" />
-                    <div
-                        class="p-2 bg-gray-100 dark:bg-gray-800 mt-2 text-lg font-medium text-gray-700 dark:text-gray-300">
-                        {{
-                            props.program.name
-                        }}</div>
-                </div>
-                <div class="w-1/4">
-                    <InputLabel for="shortname" value="Shortname" />
-                    <div
-                        class="p-2 bg-gray-100 dark:bg-gray-800 mt-2 text-lg font-medium text-gray-700 dark:text-gray-300">
-                        {{
-                            props.program.shortname }}</div>
-                </div>
-            </div>
+    <Dialog :visible="visible" modal @update:visible="val => !val && close()"
+        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+        <template #container>
+            <div class="ios-modal" :style="modalStyle">
 
-            <fieldset class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4 mt-4 text-lg">
-                <legend class="fieldset-legend text-gray-700 dark:text-gray-300">Requirements</legend>
-                <label class="flex items-center gap-2 my-2 text-gray-600 dark:text-gray-400 cursor-pointer"
-                    v-for="req in requirements" :key="req.id">
-                    <Checkbox v-model="form.requirements" :inputId="'req_' + req.id" :value="req.id" />
-                    {{ req.name }}
-                </label>
-            </fieldset>
-            <div class="flex items-center justify-end mt-6">
-                <Button label="Cancel" severity="secondary" text @click="closeModal" class="mr-2" />
-                <Button type="submit" label="Submit" icon="pi pi-check" :loading="form.processing"
-                    :disabled="form.processing" />
+                <!-- Nav Bar -->
+                <div class="ios-nav-bar" @pointerdown="onDragStart">
+                    <button class="ios-nav-btn ios-nav-cancel" type="button" @click="close">
+                        <i class="pi pi-times"></i>
+                    </button>
+                    <span class="ios-nav-title">Program Requirements</span>
+                    <button class="ios-nav-btn ios-nav-action" type="button" @click="submit" :disabled="processing">
+                        {{ processing ? 'Saving...' : 'Save' }}
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="ios-body">
+
+                    <!-- Program Info -->
+                    <div class="ios-section">
+                        <div class="ios-section-label">Program</div>
+                        <div class="ios-card">
+                            <div class="ios-row">
+                                <span class="ios-row-label">Name</span>
+                                <span style="font-size: 14px; color: #1c1c1e; font-weight: 600;">{{ program?.name
+                                    }}</span>
+                            </div>
+                            <div class="ios-row ios-row-last">
+                                <span class="ios-row-label">Shortname</span>
+                                <span style="font-size: 13px; color: #8E8E93;">{{ program?.shortname }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Requirements Checklist -->
+                    <div class="ios-section">
+                        <div class="ios-section-label">
+                            Requirements
+                            <span style="color: #8E8E93; font-weight: 400; margin-left: 6px;">
+                                ({{ selectedIds.length }} selected)
+                            </span>
+                        </div>
+                        <div class="ios-card">
+                            <template v-if="requirements?.length">
+                                <div v-for="(req, index) in requirements" :key="req.id" class="ios-row"
+                                    :class="index === requirements.length - 1 ? 'ios-row-last' : ''"
+                                    style="cursor: pointer;" @click="toggleRequirement(req.id)">
+                                    <span style="font-size: 14px; color: #1c1c1e; flex: 1;">{{ req.name }}</span>
+                                    <i v-if="selectedIds.includes(req.id)" class="pi pi-check-circle"
+                                        style="color: #34C759; font-size: 20px; flex-shrink: 0;"></i>
+                                    <i v-else class="pi pi-circle"
+                                        style="color: #C7C7CC; font-size: 20px; flex-shrink: 0;"></i>
+                                </div>
+                            </template>
+                            <div v-else class="ios-row ios-row-last"
+                                style="color: #8E8E93; font-size: 13px; justify-content: center; padding: 16px;">
+                                No requirements available
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="height: 20px;"></div>
+                </div>
             </div>
-        </form>
+        </template>
     </Dialog>
 </template>

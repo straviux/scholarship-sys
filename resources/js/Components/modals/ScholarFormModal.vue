@@ -107,7 +107,7 @@
                                                                         style="color: #FF9500;"></i>
                                                                     The following record(s) match
                                                                     <strong>{{ form.first_name }} {{ form.last_name
-                                                                        }}</strong>:
+                                                                    }}</strong>:
                                                                 </div>
                                                             </div>
                                                             <div class="ios-section">
@@ -129,10 +129,9 @@
                                                                                 </div>
                                                                                 <div
                                                                                     style="font-size: 12px; color: #8E8E93;">
-                                                                                    {{ match.municipality || 'No
-                                                                                    address'
-                                                                                    }}{{ match.barangay ? `,
-                                                                                    ${match.barangay}` : '' }}
+                                                                                    {{ match.municipality || `No
+                                                                                    address` }}{{ match.barangay ? `,
+                                                                                    ${match.barangay}` : `` }}
                                                                                     <span v-if="match.contact_no"> · {{
                                                                                         match.contact_no }}</span>
                                                                                 </div>

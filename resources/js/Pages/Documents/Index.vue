@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 
     <Head title="Documents and Forms" />
 
@@ -7,254 +7,356 @@
             Documents and Forms
         </template>
 
-        <div class="space-y-6">
-            <!-- Header Panel -->
-            <Panel class="mb-4">
-                <template #header>
-                    <div class="flex items-center gap-2">
-                        <i class="pi pi-file text-xl"></i>
-                        <span class="font-semibold text-lg">Documents and Forms Management</span>
+        <!-- Toolbar -->
+        <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+            <template #start>
+                <div class="flex items-center gap-3">
+                    <i class="pi pi-file text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
+                    <div>
+                        <h1 class="text-2xl short:text-xl font-bold text-gray-700">Documents &amp; Forms</h1>
+                        <p class="text-sm text-gray-600">Upload and manage downloadable documents and forms</p>
                     </div>
-                </template>
-
-                <div class="flex justify-between items-center">
-                    <div class="text-gray-600">
-                        Upload and manage downloadable documents and forms
-                    </div>
-                    <Button v-if="hasPermission('documents.upload')" icon="pi pi-upload" label="Upload File"
-                        severity="success" raised @click="openUploadDialog" />
                 </div>
-            </Panel>
+            </template>
+            <template #end>
+                <Button v-if="hasPermission('documents.upload')" icon="pi pi-upload" label="Upload File"
+                    severity="success" raised rounded size="small" @click="openUploadDialog" />
+            </template>
+        </Toolbar>
 
-            <!-- Tabs for Categories -->
-            <Card>
-                <template #content>
-                    <TabView v-model:activeIndex="activeTabIndex">
-                        <TabPanel header="All Files">
-                            <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
-                                :value="getAllDocuments()" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]" paginator
-                                :rowHover="true" stripedRows showGridlines>
-                                <Column field="title" header="Title" sortable style="min-width: 200px">
-                                    <template #body="slotProps">
-                                        <div class="flex items-center gap-2">
-                                            <i :class="getFileIcon(slotProps.data.file_type)" class="text-xl"></i>
-                                            <span class="font-semibold">{{ slotProps.data.title }}</span>
-                                        </div>
-                                    </template>
-                                </Column>
+        <div class="py-2">
+            <!-- Search + count -->
+            <div class="flex gap-3 items-center mb-4">
+                <IconField iconPosition="left" class="flex-1 max-w-sm">
+                    <InputIcon class="pi pi-search" />
+                    <InputText v-model="globalFilter" placeholder="Search documents..." class="w-full" />
+                </IconField>
+                <Tag :value="`${getAllDocuments().length} file${getAllDocuments().length !== 1 ? 's' : ''}`"
+                    severity="secondary" />
+            </div>
 
-                                <Column field="description" header="Description" style="min-width: 250px">
-                                    <template #body="slotProps">
-                                        <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                            }}</span>
-                                    </template>
-                                </Column>
+            <!-- Tabs + DataTable -->
+            <TabView v-model:activeIndex="activeTabIndex">
+                <!-- All Files -->
+                <TabPanel header="All Files">
+                    <DataTable :value="getAllDocuments()" v-model:filters="filters"
+                        :globalFilterFields="['title', 'description', 'category']" :rows="10"
+                        :rowsPerPageOptions="[5, 10, 20, 50]" paginator :rowHover="true" stripedRows showGridlines
+                        scrollable>
+                        <Column field="title" header="Title" sortable style="min-width: 200px">
+                            <template #body="slotProps">
+                                <div class="flex items-center gap-2">
+                                    <i :class="getFileIcon(slotProps.data.file_type)" class="text-xl"></i>
+                                    <span class="font-semibold">{{ slotProps.data.title }}</span>
+                                </div>
+                            </template>
+                        </Column>
+                        <Column field="description" header="Description" style="min-width: 250px">
+                            <template #body="slotProps">
+                                <span class="text-sm text-gray-600">{{ slotProps.data.description || '-' }}</span>
+                            </template>
+                        </Column>
+                        <Column field="category" header="Category" sortable style="width: 150px">
+                            <template #body="slotProps">
+                                <Tag v-if="slotProps.data.category" :value="slotProps.data.category" severity="info" />
+                                <span v-else class="text-gray-400">Uncategorized</span>
+                            </template>
+                        </Column>
+                        <Column field="file_size" header="Size" sortable style="width: 100px">
+                            <template #body="slotProps">{{ formatFileSize(slotProps.data.file_size) }}</template>
+                        </Column>
+                        <Column field="download_count" header="Downloads" sortable style="width: 120px">
+                            <template #body="slotProps">
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-download text-sm text-gray-500"></i>
+                                    <span>{{ slotProps.data.download_count }}</span>
+                                </div>
+                            </template>
+                        </Column>
+                        <Column field="is_active" header="Status" style="width: 100px">
+                            <template #body="slotProps">
+                                <span
+                                    class="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
+                                    :style="slotProps.data.is_active
+                                        ? 'background: #d1f5e0; color: #187a3c;'
+                                        : 'background: #fee2e2; color: #991b1b;'">
+                                    {{ slotProps.data.is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </template>
+                        </Column>
+                        <Column header="Actions" style="width: 160px">
+                            <template #body="slotProps">
+                                <div class="flex gap-1.5 justify-center">
+                                    <Button v-if="hasPermission('documents.view')" icon="pi pi-eye" severity="secondary"
+                                        size="small" rounded outlined @click="viewDocument(slotProps.data)"
+                                        v-tooltip.top="'View'" />
+                                    <Button v-if="hasPermission('documents.download')" icon="pi pi-download"
+                                        severity="info" size="small" rounded outlined
+                                        @click="downloadDocument(slotProps.data)" v-tooltip.top="'Download'" />
+                                    <Button v-if="hasPermission('documents.edit')" icon="pi pi-pencil" severity="warn"
+                                        size="small" rounded outlined @click="openEditDialog(slotProps.data)"
+                                        v-tooltip.top="'Edit'" />
+                                    <Button v-if="hasPermission('documents.delete')" icon="pi pi-trash"
+                                        severity="danger" size="small" rounded outlined
+                                        @click="confirmDelete(slotProps.data)" v-tooltip.top="'Delete'" />
+                                </div>
+                            </template>
+                        </Column>
+                    </DataTable>
+                </TabPanel>
 
-                                <Column field="category" header="Category" sortable style="width: 150px">
-                                    <template #body="slotProps">
-                                        <Tag v-if="slotProps.data.category" :value="slotProps.data.category"
-                                            severity="info" />
-                                        <span v-else class="text-gray-400">Uncategorized</span>
-                                    </template>
-                                </Column>
-
-                                <Column field="file_size" header="Size" sortable style="width: 100px">
-                                    <template #body="slotProps">
-                                        {{ formatFileSize(slotProps.data.file_size) }}
-                                    </template>
-                                </Column>
-
-                                <Column field="download_count" header="Downloads" sortable style="width: 120px">
-                                    <template #body="slotProps">
-                                        <div class="flex items-center gap-2">
-                                            <i class="pi pi-download text-sm text-gray-500"></i>
-                                            <span>{{ slotProps.data.download_count }}</span>
-                                        </div>
-                                    </template>
-                                </Column>
-
-                                <Column field="is_active" header="Status" style="width: 100px">
-                                    <template #body="slotProps">
-                                        <Tag :value="slotProps.data.is_active ? 'Active' : 'Inactive'"
-                                            :severity="slotProps.data.is_active ? 'success' : 'danger'" />
-                                    </template>
-                                </Column>
-
-                                <Column header="Actions" style="width: 250px">
-                                    <template #body="slotProps">
-                                        <div class="flex gap-2">
-                                            <Button v-if="hasPermission('documents.view')" icon="pi pi-eye"
-                                                severity="secondary" text size="small"
-                                                @click="viewDocument(slotProps.data)" v-tooltip.top="'View'" />
-                                            <Button v-if="hasPermission('documents.download')" icon="pi pi-download"
-                                                severity="info" text size="small"
-                                                @click="downloadDocument(slotProps.data)" v-tooltip.top="'Download'" />
-                                            <Button v-if="hasPermission('documents.edit')" icon="pi pi-pencil"
-                                                severity="warning" text size="small"
-                                                @click="openEditDialog(slotProps.data)" v-tooltip.top="'Edit'" />
-                                            <Button v-if="hasPermission('documents.delete')" icon="pi pi-trash"
-                                                severity="danger" text size="small"
-                                                @click="confirmDelete(slotProps.data)" v-tooltip.top="'Delete'" />
-                                        </div>
-                                    </template>
-                                </Column>
-                            </DataTable>
-                        </TabPanel>
-
-                        <TabPanel v-for="category in categories" :key="category.value" :header="category.label">
-                            <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
-                                :value="getDocumentsByCategory(category.value)" :rows="10"
-                                :rowsPerPageOptions="[5, 10, 20, 50]" paginator :rowHover="true" stripedRows
-                                showGridlines>
-                                <Column field="title" header="Title" sortable style="min-width: 200px">
-                                    <template #body="slotProps">
-                                        <div class="flex items-center gap-2">
-                                            <i :class="getFileIcon(slotProps.data.file_type)" class="text-xl"></i>
-                                            <span class="font-semibold">{{ slotProps.data.title }}</span>
-                                        </div>
-                                    </template>
-                                </Column>
-
-                                <Column field="description" header="Description" style="min-width: 250px">
-                                    <template #body="slotProps">
-                                        <span class="text-sm text-gray-600">{{ slotProps.data.description || '-'
-                                            }}</span>
-                                    </template>
-                                </Column>
-
-                                <Column field="file_size" header="Size" sortable style="width: 100px">
-                                    <template #body="slotProps">
-                                        {{ formatFileSize(slotProps.data.file_size) }}
-                                    </template>
-                                </Column>
-
-                                <Column field="download_count" header="Downloads" sortable style="width: 120px">
-                                    <template #body="slotProps">
-                                        <div class="flex items-center gap-2">
-                                            <i class="pi pi-download text-sm text-gray-500"></i>
-                                            <span>{{ slotProps.data.download_count }}</span>
-                                        </div>
-                                    </template>
-                                </Column>
-
-                                <Column field="is_active" header="Status" style="width: 100px">
-                                    <template #body="slotProps">
-                                        <Tag :value="slotProps.data.is_active ? 'Active' : 'Inactive'"
-                                            :severity="slotProps.data.is_active ? 'success' : 'danger'" />
-                                    </template>
-                                </Column>
-
-                                <Column header="Actions" style="width: 250px">
-                                    <template #body="slotProps">
-                                        <div class="flex gap-2">
-                                            <Button v-if="hasPermission('documents.view')" icon="pi pi-eye"
-                                                severity="secondary" text size="small"
-                                                @click="viewDocument(slotProps.data)" v-tooltip.top="'View'" />
-                                            <Button v-if="hasPermission('documents.download')" icon="pi pi-download"
-                                                severity="info" text size="small"
-                                                @click="downloadDocument(slotProps.data)" v-tooltip.top="'Download'" />
-                                            <Button v-if="hasPermission('documents.edit')" icon="pi pi-pencil"
-                                                severity="warning" text size="small"
-                                                @click="openEditDialog(slotProps.data)" v-tooltip.top="'Edit'" />
-                                            <Button v-if="hasPermission('documents.delete')" icon="pi pi-trash"
-                                                severity="danger" text size="small"
-                                                @click="confirmDelete(slotProps.data)" v-tooltip.top="'Delete'" />
-                                        </div>
-                                    </template>
-                                </Column>
-                            </DataTable>
-                        </TabPanel>
-                    </TabView>
-                </template>
-            </Card>
+                <!-- Per-category tabs -->
+                <TabPanel v-for="category in categories" :key="category.value" :header="category.label">
+                    <DataTable :value="getDocumentsByCategory(category.value)" v-model:filters="filters"
+                        :globalFilterFields="['title', 'description']" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]"
+                        paginator :rowHover="true" stripedRows showGridlines scrollable>
+                        <Column field="title" header="Title" sortable style="min-width: 200px">
+                            <template #body="slotProps">
+                                <div class="flex items-center gap-2">
+                                    <i :class="getFileIcon(slotProps.data.file_type)" class="text-xl"></i>
+                                    <span class="font-semibold">{{ slotProps.data.title }}</span>
+                                </div>
+                            </template>
+                        </Column>
+                        <Column field="description" header="Description" style="min-width: 250px">
+                            <template #body="slotProps">
+                                <span class="text-sm text-gray-600">{{ slotProps.data.description || '-' }}</span>
+                            </template>
+                        </Column>
+                        <Column field="file_size" header="Size" sortable style="width: 100px">
+                            <template #body="slotProps">{{ formatFileSize(slotProps.data.file_size) }}</template>
+                        </Column>
+                        <Column field="download_count" header="Downloads" sortable style="width: 120px">
+                            <template #body="slotProps">
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-download text-sm text-gray-500"></i>
+                                    <span>{{ slotProps.data.download_count }}</span>
+                                </div>
+                            </template>
+                        </Column>
+                        <Column field="is_active" header="Status" style="width: 100px">
+                            <template #body="slotProps">
+                                <span
+                                    class="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
+                                    :style="slotProps.data.is_active
+                                        ? 'background: #d1f5e0; color: #187a3c;'
+                                        : 'background: #fee2e2; color: #991b1b;'">
+                                    {{ slotProps.data.is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </template>
+                        </Column>
+                        <Column header="Actions" style="width: 160px">
+                            <template #body="slotProps">
+                                <div class="flex gap-1.5 justify-center">
+                                    <Button v-if="hasPermission('documents.view')" icon="pi pi-eye" severity="secondary"
+                                        size="small" rounded outlined @click="viewDocument(slotProps.data)"
+                                        v-tooltip.top="'View'" />
+                                    <Button v-if="hasPermission('documents.download')" icon="pi pi-download"
+                                        severity="info" size="small" rounded outlined
+                                        @click="downloadDocument(slotProps.data)" v-tooltip.top="'Download'" />
+                                    <Button v-if="hasPermission('documents.edit')" icon="pi pi-pencil" severity="warn"
+                                        size="small" rounded outlined @click="openEditDialog(slotProps.data)"
+                                        v-tooltip.top="'Edit'" />
+                                    <Button v-if="hasPermission('documents.delete')" icon="pi pi-trash"
+                                        severity="danger" size="small" rounded outlined
+                                        @click="confirmDelete(slotProps.data)" v-tooltip.top="'Delete'" />
+                                </div>
+                            </template>
+                        </Column>
+                    </DataTable>
+                </TabPanel>
+            </TabView>
         </div>
 
-        <!-- Upload/Edit Dialog -->
-        <Dialog v-model:visible="showDialog"
-            :header="dialogMode === 'upload' ? 'Upload Document/Form' : 'Edit Document/Form'" :modal="true"
-            :style="{ width: '600px' }">
-            <div class="space-y-4 pt-4">
-                <div>
-                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Title *</label>
-                    <InputText id="title" v-model="form.title" class="w-full"
-                        :class="{ 'p-invalid': form.errors.title }" />
-                    <small class="text-red-500" v-if="form.errors.title">{{ form.errors.title }}</small>
-                </div>
+        <!-- ── Upload / Edit iOS Modal ── -->
+        <Dialog :visible="showDialog" modal @update:visible="val => !val && (showDialog = false)"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+            <template #container>
+                <div class="ios-modal" :style="formModalStyle">
 
-                <div>
-                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <Textarea id="description" v-model="form.description" rows="3" class="w-full"
-                        :class="{ 'p-invalid': form.errors.description }" />
-                    <small class="text-red-500" v-if="form.errors.description">{{ form.errors.description }}</small>
-                </div>
+                    <!-- Nav Bar -->
+                    <div class="ios-nav-bar" @pointerdown="onFormDragStart">
+                        <button class="ios-nav-btn ios-nav-cancel" type="button" @click="showDialog = false">
+                            <i class="pi pi-times"></i>
+                        </button>
+                        <span class="ios-nav-title">{{ dialogMode === 'upload' ? 'Upload File' : 'Edit Document'
+                            }}</span>
+                        <button class="ios-nav-btn ios-nav-action" type="button" @click="submitForm"
+                            :disabled="form.processing">
+                            {{ form.processing ? 'Saving...' : (dialogMode === 'upload' ? 'Upload' : 'Save') }}
+                        </button>
+                    </div>
 
-                <div>
-                    <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                    <Select id="category" v-model="form.category" :options="categories" optionLabel="label"
-                        optionValue="value" placeholder="Select a category" class="w-full" showClear
-                        :class="{ 'p-invalid': form.errors.category }" />
-                    <small class="text-red-500" v-if="form.errors.category">{{ form.errors.category }}</small>
-                </div>
+                    <!-- Body -->
+                    <div class="ios-body">
 
-                <div>
-                    <label for="file" class="block text-sm font-medium text-gray-700 mb-2">
-                        File {{ dialogMode === 'edit' ? '(Leave empty to keep current file)' : '*' }}
-                    </label>
-                    <input type="file" id="file" @change="handleFileChange" class="block w-full text-sm text-gray-500
-                        file:mr-4 file:py-2 file:px-4
-                        file:rounded file:border-0
-                        file:text-sm file:font-semibold
-                        file:bg-blue-50 file:text-blue-700
-                        hover:file:bg-blue-100" />
-                    <small class="text-gray-500">Max file size: 10MB</small>
-                    <small class="text-red-500 block" v-if="form.errors.file">{{ form.errors.file }}</small>
-                </div>
+                        <!-- File Details -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">File Details</div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <span class="ios-row-label">Title</span>
+                                    <div class="ios-row-control">
+                                        <InputText v-model="form.title" placeholder="Document title"
+                                            class="ios-row-input" />
+                                    </div>
+                                </div>
+                                <small v-if="form.errors.title"
+                                    style="color:#FF3B30; padding: 2px 16px 6px; display:block; font-size:12px;">
+                                    {{ form.errors.title }}
+                                </small>
+                                <div class="ios-row ios-row-last">
+                                    <span class="ios-row-label">Category</span>
+                                    <div class="ios-row-control ios-select">
+                                        <Select v-model="form.category" :options="categories" optionLabel="label"
+                                            optionValue="value" placeholder="Select category" showClear />
+                                    </div>
+                                </div>
+                                <small v-if="form.errors.category"
+                                    style="color:#FF3B30; padding: 2px 16px 6px; display:block; font-size:12px;">
+                                    {{ form.errors.category }}
+                                </small>
+                            </div>
+                        </div>
 
-                <div v-if="dialogMode === 'edit' && editingDocument">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Current File</label>
-                    <div class="flex items-center gap-2 p-3 bg-gray-50 rounded">
-                        <i :class="getFileIcon(editingDocument.file_type)" class="text-2xl"></i>
-                        <span class="font-mono text-sm">{{ editingDocument.file_name }}</span>
+                        <!-- Description -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">Description</div>
+                            <div class="ios-card">
+                                <div class="ios-row ios-row-last" style="align-items: flex-start; padding: 10px 16px;">
+                                    <Textarea v-model="form.description" placeholder="Optional description..."
+                                        autoResize rows="3"
+                                        style="flex: 1; border: none; outline: none; resize: none; font-size: 14px; color: #1c1c1e; background: transparent; box-shadow: none; padding: 2px 0;" />
+                                </div>
+                                <small v-if="form.errors.description"
+                                    style="color:#FF3B30; padding: 2px 16px 6px; display:block; font-size:12px;">
+                                    {{ form.errors.description }}
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- File Upload -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">
+                                File {{ dialogMode === 'edit' ? '(leave empty to keep current)' : '*' }}
+                            </div>
+                            <div class="ios-card">
+                                <div class="ios-row ios-row-last"
+                                    style="align-items: flex-start; padding: 12px 16px; flex-direction: column; gap: 8px;">
+                                    <input type="file" id="file" @change="handleFileChange" class="block w-full text-sm text-gray-500
+                                            file:mr-4 file:py-2 file:px-4
+                                            file:rounded file:border-0
+                                            file:text-sm file:font-semibold
+                                            file:bg-blue-50 file:text-blue-700
+                                            hover:file:bg-blue-100" />
+                                    <span style="font-size: 12px; color: #8E8E93;">Max file size: 10MB</span>
+                                </div>
+                                <small v-if="form.errors.file"
+                                    style="color:#FF3B30; padding: 2px 16px 6px; display:block; font-size:12px;">
+                                    {{ form.errors.file }}
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Current File (edit mode) -->
+                        <div class="ios-section" v-if="dialogMode === 'edit' && editingDocument">
+                            <div class="ios-section-label">Current File</div>
+                            <div class="ios-card">
+                                <div class="ios-row ios-row-last" style="padding: 12px 16px; gap: 10px;">
+                                    <i :class="getFileIcon(editingDocument.file_type)"
+                                        style="font-size: 22px; color: #8E8E93; flex-shrink: 0;"></i>
+                                    <span style="font-size: 13px; color: #1c1c1e; font-family: monospace;">
+                                        {{ editingDocument.file_name }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Settings -->
+                        <div class="ios-section">
+                            <div class="ios-section-label">Settings</div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <span class="ios-row-label">Sort Order</span>
+                                    <div class="ios-row-control">
+                                        <InputNumber v-model="form.sort_order" class="ios-row-input" :min="0" />
+                                    </div>
+                                </div>
+                                <small v-if="form.errors.sort_order"
+                                    style="color:#FF3B30; padding: 2px 16px 6px; display:block; font-size:12px;">
+                                    {{ form.errors.sort_order }}
+                                </small>
+                                <div class="ios-row ios-row-last">
+                                    <span class="ios-row-label">Active</span>
+                                    <ToggleSwitch v-model="form.is_active" :trueValue="true" :falseValue="false"
+                                        size="small" style="--p-toggleswitch-checked-background: #34C759;" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="height: 20px;"></div>
                     </div>
                 </div>
-
-                <div>
-                    <label for="sort_order" class="block text-sm font-medium text-gray-700 mb-2">Sort Order</label>
-                    <InputNumber id="sort_order" v-model="form.sort_order" class="w-full"
-                        :class="{ 'p-invalid': form.errors.sort_order }" />
-                    <small class="text-red-500" v-if="form.errors.sort_order">{{ form.errors.sort_order }}</small>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <Checkbox id="is_active" v-model="form.is_active" :binary="true" />
-                    <label for="is_active" class="text-sm font-medium text-gray-700">Active</label>
-                </div>
-            </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" outlined @click="showDialog = false" />
-                <Button :label="dialogMode === 'upload' ? 'Upload' : 'Update'" severity="primary" @click="submitForm"
-                    :loading="form.processing" />
             </template>
         </Dialog>
 
-        <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showDeleteDialog" header="Confirm Deletion" :modal="true" :style="{ width: '450px' }">
-            <div class="flex items-center gap-3">
-                <i class="pi pi-exclamation-triangle text-red-500 text-2xl"></i>
-                <div>
-                    <p class="mb-2">Are you sure you want to delete this document?</p>
-                    <p class="text-sm text-gray-600 font-semibold">{{ documentToDelete?.title }}</p>
-                    <p class="text-sm text-red-600 mt-2">This will permanently delete the file.</p>
+        <!-- ── Delete Confirmation iOS Modal ── -->
+        <Dialog :visible="showDeleteDialog" modal @update:visible="val => !val && (showDeleteDialog = false)"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+            <template #container>
+                <div class="ios-modal" style="width: 460px;">
+                    <div class="ios-nav-bar">
+                        <button class="ios-nav-btn ios-nav-cancel" type="button" @click="showDeleteDialog = false">
+                            <i class="pi pi-times"></i>
+                        </button>
+                        <span class="ios-nav-title">Confirm Deletion</span>
+                        <button class="ios-nav-btn ios-nav-action ios-nav-destructive" type="button"
+                            @click="deleteDocument" :disabled="deleteForm.processing">
+                            {{ deleteForm.processing ? 'Deleting...' : 'Delete' }}
+                        </button>
+                    </div>
+                    <div class="ios-body" v-if="documentToDelete">
+                        <div class="ios-section">
+                            <div class="ios-card">
+                                <div class="ios-row" style="padding: 12px 16px; gap: 12px;">
+                                    <i class="pi pi-exclamation-triangle"
+                                        style="font-size: 24px; color: #FF3B30; flex-shrink: 0;"></i>
+                                    <div>
+                                        <div
+                                            style="font-size: 15px; font-weight: 600; color: #000; margin-bottom: 4px;">
+                                            Permanently delete this file?
+                                        </div>
+                                        <div style="font-size: 13px; color: #8E8E93; line-height: 1.4;">
+                                            This action cannot be undone and the file will be removed from storage.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ios-section">
+                            <div class="ios-section-label">Document</div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <span class="ios-row-label">Title</span>
+                                    <span style="font-size: 14px; color: #FF3B30; font-weight: 600;">
+                                        {{ documentToDelete.title }}
+                                    </span>
+                                </div>
+                                <div class="ios-row ios-row-last">
+                                    <span class="ios-row-label">File</span>
+                                    <span style="font-size: 13px; color: #8E8E93; font-family: monospace;">
+                                        {{ documentToDelete.file_name }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="height: 20px;"></div>
+                    </div>
                 </div>
-            </div>
-            <template #footer>
-                <Button label="Cancel" severity="secondary" outlined @click="showDeleteDialog = false" />
-                <Button label="Delete" severity="danger" @click="deleteDocument" :loading="deleteForm.processing" />
             </template>
         </Dialog>
 
-        <!-- View Dialog -->
+        <!-- ── View Dialog (kept as standard Dialog — full screen previewer) ── -->
         <Dialog v-model:visible="showViewDialog" header="View File" :modal="true"
             :style="{ width: '90vw', maxHeight: '90vh' }" :maximizable="true"
             :contentStyle="{ height: '75vh', overflow: 'hidden' }">
@@ -266,8 +368,9 @@
                             <i :class="getFileIcon(viewingDocument.file_type)" class="text-3xl"></i>
                             <div>
                                 <h3 class="font-semibold text-lg">{{ viewingDocument.title }}</h3>
-                                <p class="text-sm text-gray-600" v-if="viewingDocument.description">{{
-                                    viewingDocument.description }}</p>
+                                <p class="text-sm text-gray-600" v-if="viewingDocument.description">
+                                    {{ viewingDocument.description }}
+                                </p>
                                 <div class="flex gap-4 mt-2 text-sm text-gray-500">
                                     <span><i class="pi pi-file mr-1"></i>{{ viewingDocument.file_name }}</span>
                                     <span><i class="pi pi-database mr-1"></i>{{
@@ -289,12 +392,9 @@
                 <!-- File Preview -->
                 <div class="flex-1 flex items-center justify-center bg-gray-100 rounded relative overflow-hidden"
                     style="min-height: 500px;">
-                    <!-- PDF Viewer -->
                     <iframe v-if="viewingDocument.file_type?.includes('pdf')" :src="getFileUrl(viewingDocument)"
-                        class="w-full h-full rounded" style="min-height: 600px;" frameborder="0">
-                    </iframe>
+                        class="w-full h-full rounded" style="min-height: 600px;" frameborder="0" />
 
-                    <!-- Image Viewer with Zoom (same as disbursement viewer) -->
                     <div v-else-if="viewingDocument.file_type?.includes('image')"
                         class="w-full h-full flex items-center justify-center relative" style="min-height: 600px;"
                         @wheel="handleWheel" @mousedown="handleMouseDown" @mousemove="handleMouseMove"
@@ -306,8 +406,6 @@
                                 transform: `scale(${imageZoom}) translate(${imagePosition.x / imageZoom}px, ${imagePosition.y / imageZoom}px)`,
                                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                             }" />
-
-                        <!-- Zoom Controls -->
                         <div class="absolute bottom-4 right-4 flex gap-2 bg-white rounded-lg shadow-lg p-2">
                             <Button icon="pi pi-minus" @click="zoomOut" size="small" severity="secondary" rounded
                                 :disabled="imageZoom <= 0.5" />
@@ -319,12 +417,9 @@
                         </div>
                     </div>
 
-                    <!-- Text File Preview -->
                     <iframe v-else-if="viewingDocument.file_type?.includes('text')" :src="getFileUrl(viewingDocument)"
-                        class="w-full h-full rounded" style="min-height: 600px;" frameborder="0">
-                    </iframe>
+                        class="w-full h-full rounded" style="min-height: 600px;" frameborder="0" />
 
-                    <!-- Fallback -->
                     <div v-else class="text-center p-8">
                         <i class="pi pi-file text-6xl text-gray-400 mb-4"></i>
                         <p class="text-gray-600">Unable to preview this file type</p>
@@ -341,7 +436,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { usePermission } from '@/composable/permissions';
@@ -361,6 +456,37 @@ const documentToDelete = ref(null);
 const editingDocument = ref(null);
 const viewingDocument = ref(null);
 const editingDocumentId = ref(null);
+
+const globalFilter = ref('');
+const filters = ref({ global: { value: null, matchMode: 'contains' } });
+watch(globalFilter, (v) => { filters.value.global.value = v; });
+
+// Form modal drag
+const formDragOffset = ref({ x: 0, y: 0 });
+const formDragStart = ref(null);
+const formModalStyle = computed(() => ({
+    width: '560px',
+    transform: `translate(${formDragOffset.value.x}px, ${formDragOffset.value.y}px)`,
+}));
+function onFormDragStart(e) {
+    if (e.target.closest('button, a, input, textarea, .p-select, .p-inputnumber')) return;
+    formDragStart.value = { x: e.clientX - formDragOffset.value.x, y: e.clientY - formDragOffset.value.y };
+    document.addEventListener('pointermove', onFormDragMove);
+    document.addEventListener('pointerup', onFormDragEnd);
+}
+function onFormDragMove(e) {
+    if (!formDragStart.value) return;
+    formDragOffset.value = { x: e.clientX - formDragStart.value.x, y: e.clientY - formDragStart.value.y };
+}
+function onFormDragEnd() {
+    formDragStart.value = null;
+    document.removeEventListener('pointermove', onFormDragMove);
+    document.removeEventListener('pointerup', onFormDragEnd);
+}
+onBeforeUnmount(() => {
+    document.removeEventListener('pointermove', onFormDragMove);
+    document.removeEventListener('pointerup', onFormDragEnd);
+});
 
 // Image zoom state (same as disbursement viewer)
 const imageZoom = ref(1);
@@ -397,6 +523,7 @@ const openUploadDialog = () => {
     form.reset();
     form.clearErrors();
     form.is_active = true;
+    formDragOffset.value = { x: 0, y: 0 };
     showDialog.value = true;
 };
 
@@ -411,6 +538,7 @@ const openEditDialog = (document) => {
     form.sort_order = document.sort_order;
     form.is_active = document.is_active;
     form.file = null;
+    formDragOffset.value = { x: 0, y: 0 };
     showDialog.value = true;
 };
 
@@ -549,3 +677,289 @@ const getFileUrl = (document) => {
     return `/storage/${document.file_path}`;
 };
 </script>
+
+<style scoped>
+/* ── TabView ── */
+:deep(.p-tabview) {
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 1px solid var(--p-content-border-color, #e5e7eb);
+}
+:deep(.p-tabview-tablist-container) {
+    border-radius: 1.5rem 1.5rem 0 0;
+}
+:deep(.p-tabview-panels) {
+    border-radius: 0 0 1.5rem 1.5rem;
+    overflow: hidden;
+}
+
+/* ── DataTable ── */
+:deep(.p-datatable) {
+    border-radius: 0;
+    overflow: hidden;
+    border: none;
+}
+
+:deep(.p-datatable-table-container) {
+    border-radius: 0;
+    overflow: hidden;
+}
+
+:deep(.p-datatable thead tr:first-child th:first-child) {
+    border-left: none;
+}
+
+:deep(.p-datatable thead tr:first-child th:last-child) {
+    border-right: none;
+}
+
+:deep(.p-datatable thead tr:first-child th) {
+    border-top: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td) {
+    border-bottom: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td:first-child) {
+    border-left: none;
+}
+
+:deep(.p-datatable tbody tr:last-child td:last-child) {
+    border-right: none;
+}
+
+:deep(.p-paginator) {
+    border: none;
+    border-top: 1px solid var(--p-datatable-border-color);
+}
+
+:deep(.p-iconfield .p-inputtext) {
+    border-radius: 1rem;
+}
+
+/* ═══════════════════════════════════════════════
+   iOS Modal Shell
+   ═══════════════════════════════════════════════ */
+.ios-modal {
+    background: #F2F2F7;
+    border-radius: 14px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.ios-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 14px 16px;
+    background: #FFFFFF;
+    border-bottom: 0.5px solid #E5E5EA;
+    flex-shrink: 0;
+    cursor: grab;
+    user-select: none;
+}
+
+.ios-nav-bar:active {
+    cursor: grabbing;
+}
+
+.ios-nav-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #000;
+    letter-spacing: -0.4px;
+}
+
+.ios-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 17px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: opacity 0.15s;
+}
+
+.ios-nav-btn:hover {
+    opacity: 0.6;
+}
+
+.ios-nav-cancel {
+    left: 16px;
+    color: #6B7280;
+    font-weight: 400;
+}
+
+.ios-nav-action {
+    right: 16px;
+    color: #374151;
+    font-weight: 600;
+}
+
+.ios-nav-action:disabled {
+    color: #C7C7CC;
+    cursor: not-allowed;
+}
+
+.ios-nav-destructive {
+    color: #FF3B30 !important;
+}
+
+.ios-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 16px;
+}
+
+.ios-section {
+    margin-top: 22px;
+}
+
+.ios-section:first-child {
+    margin-top: 16px;
+}
+
+.ios-section-label {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6D6D72;
+    text-transform: uppercase;
+    letter-spacing: -0.08px;
+    padding: 0 16px 6px;
+}
+
+.ios-card {
+    background: #FFFFFF;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 0.5px solid #E5E5EA;
+}
+
+.ios-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 16px;
+    min-height: 36px;
+    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
+}
+
+.ios-row-last {
+    border-bottom: none;
+}
+
+.ios-row:last-child {
+    border-bottom: none;
+}
+
+.ios-row-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #8E8E93;
+    letter-spacing: -0.4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.ios-row-control {
+    flex: 0 0 200px;
+    width: 200px;
+    display: flex;
+    justify-content: flex-end;
+    overflow: hidden;
+}
+
+.ios-row-control>* {
+    width: 100%;
+    min-width: 0;
+}
+
+/* ── PrimeVue tweaks inside ios-card ── */
+:deep(.ios-row-input.p-inputtext),
+:deep(.ios-row-input) {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    text-align: right;
+    color: #1c1c1e !important;
+    font-size: 13px;
+    padding: 4px 2px 4px 8px;
+    width: 100%;
+}
+
+:deep(.ios-row-input.p-inputtext:focus),
+:deep(.ios-row-input:focus) {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+:deep(.ios-row-input .p-inputnumber-input) {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    text-align: right;
+    color: #1c1c1e !important;
+    font-size: 13px;
+    width: 100%;
+}
+
+:deep(.ios-select .p-select) {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 13px;
+    color: #8E8E93;
+    padding: 0;
+    width: 100%;
+    min-height: unset;
+}
+
+:deep(.ios-select .p-select-label) {
+    color: #1c1c1e !important;
+    text-align: right;
+    padding: 4px 2px 4px 8px;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:deep(.ios-select .p-select-dropdown) {
+    color: #C7C7CC !important;
+}
+
+:deep(.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider) {
+    background: #34C759 !important;
+}
+</style>
+
+<!-- Unscoped: targets teleported Dialog elements at body level -->
+<style>
+.ios-dialog-root.p-dialog {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: auto !important;
+}
+
+.ios-dialog-mask {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+}
+</style>

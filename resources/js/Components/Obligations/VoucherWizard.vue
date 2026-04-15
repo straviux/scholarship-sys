@@ -11,6 +11,7 @@ import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import logger from '@/utils/logger';
 import { quickAnimateFrom } from '@/composables/useGSAPAnimation';
 import { shouldAnimate } from '@/composables/useAnimationDefaults';
+import { useSystemOptions } from '@/composables/useSystemOptions';
 
 const toast = useToast(); const emit = defineEmits(['close', 'scholar-selected']);
 
@@ -84,11 +85,11 @@ const voucherData = reactive({
     }
 });
 
-const transactionStatusOptions = [
-    'No OBR', 'LOA', 'Irregular', 'Transferred', 'Claimed', 'Paid', 'On Process', 'Denied', 'Cancelled'
-];
+const _transactionStatusRaw = useSystemOptions('obr_status');
+const transactionStatusOptions = computed(() => ['No OBR', ..._transactionStatusRaw.value.map(o => o.label)]);
 
-const grantProvisionOptions = ['Matriculation', 'Related Learning Experience', 'Tuition', 'Related Learning Experience and Tuition', 'Affiliation', 'Related Learning Experience & Affiliation'];
+const _grantProvisionRaw = useSystemOptions('grant_provision');
+const grantProvisionOptions = computed(() => _grantProvisionRaw.value.map(o => o.value));
 
 // Available schools for payee selection
 const schools = ref([
@@ -1438,7 +1439,7 @@ onBeforeUnmount(() => {
                                                     <span>{{ selectedParticular.name }}<span
                                                             v-if="selectedParticular.program?.shortname"
                                                             class="text-gray-400"> - {{
-                                                            selectedParticular.program.shortname }}</span></span>
+                                                                selectedParticular.program.shortname }}</span></span>
                                                 </template>
                                                 <template v-else>{{ value || 'Select Particular' }}</template>
                                             </template>
@@ -1461,7 +1462,7 @@ onBeforeUnmount(() => {
                                         <div class="flex items-center justify-between gap-3 mb-2">
                                             <label class="text-xs font-medium text-gray-900">Selected Scholars ({{
                                                 voucherData.scholars.length
-                                            }})</label>
+                                                }})</label>
                                             <div class="flex items-center gap-2 shrink-0">
                                                 <Checkbox id="applyToAll" v-model="applyToAllChecked" :binary="true" />
                                                 <label for="applyToAll"
@@ -1482,7 +1483,7 @@ onBeforeUnmount(() => {
                                                 <div class="flex items-center flex-1">
                                                     <i class="pi pi-check text-green-600 mr-3 text-xs"></i>
                                                     <span class="font-medium text-sm">{{ formatScholarFullName(scholar)
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="flex items-center gap-2">
                                                     <span class="text-gray-600 text-xs">PHP</span>
@@ -1496,7 +1497,7 @@ onBeforeUnmount(() => {
                                             <span class="font-semibold text-sm text-blue-900">Total Amount:</span>
                                             <span class="text-base font-bold text-blue-600">{{
                                                 formatCurrency(totalAmount)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                     </div>
 
@@ -1739,7 +1740,7 @@ onBeforeUnmount(() => {
                                                 <span>{{ formatScholarFullName(scholar) }}</span>
                                                 <span class="font-semibold">{{ formatCurrency(scholar.individualAmount
                                                     || 0)
-                                                    }}</span>
+                                                }}</span>
                                             </li>
                                         </ol>
                                         <div

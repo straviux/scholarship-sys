@@ -16,8 +16,9 @@ class CreateSchoolRequest extends FormRequest
         return [
             'name' => 'required|string|max:255|unique:schools,name',
             'shortname' => 'nullable|string|max:50',
-            'description' => 'nullable|string|max:500',
-            'remarks' => 'nullable|string|max:255',
+            'campus' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:1000',
+            'remarks' => 'nullable|string|max:2000',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
             'is_active' => 'boolean',

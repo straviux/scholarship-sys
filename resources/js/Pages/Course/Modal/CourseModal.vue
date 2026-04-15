@@ -460,7 +460,7 @@ onBeforeUnmount(() => {
     align-items: center;
     gap: 8px;
     font-size: 14px;
-    color: #000;
+    color: #8E8E93;
     letter-spacing: -0.4px;
     white-space: nowrap;
     flex-shrink: 0;
@@ -545,18 +545,20 @@ onBeforeUnmount(() => {
 }
 
 /* InputText inside ios-row-control */
-.ios-row-input {
+:deep(.ios-row-input.p-inputtext),
+:deep(.ios-row-input) {
     border: none !important;
     box-shadow: none !important;
     background: transparent !important;
     text-align: right;
-    color: #8E8E93;
+    color: #1c1c1e !important;
     font-size: 13px;
     padding: 4px 2px 4px 8px;
     width: 100%;
 }
 
-.ios-row-input:focus {
+:deep(.ios-row-input.p-inputtext:focus),
+:deep(.ios-row-input:focus) {
     outline: none !important;
     box-shadow: none !important;
 }

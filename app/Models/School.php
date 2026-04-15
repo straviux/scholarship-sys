@@ -10,7 +10,8 @@ class School extends Model
     protected $fillable = [
         'name',
         'shortname',
-        'description',
+        'campus',
+        'address',
         'remarks',
         'is_active',
         'start_date',

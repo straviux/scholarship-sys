@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ScholarshipProgram;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Inertia\Response;
 use Inertia\Inertia;
 use App\Http\Requests\CreateScholarshipProgramRequest;
@@ -35,8 +36,8 @@ class ScholarshipProgramController extends Controller
         return Inertia::render('ScholarshipProgram/Index', [
             'action' => fn() => $action,
             'program' => $prog,
-            'requirements' => Requirement::where('is_active', 1)->get(),
-            'scholarshipPrograms' => ScholarshipProgram::with('createdBy')->get()->map(function ($program) {
+            'requirements' => Requirement::where('is_active', 1)->get()->map(fn($r) => ['id' => $r->id, 'name' => $r->name]),
+            'scholarshipPrograms' => ScholarshipProgram::with(['createdBy', 'requirements'])->get()->map(function ($program) {
                 return [
                     'id' => $program->id,
                     'name' => $program->name,
@@ -47,6 +48,7 @@ class ScholarshipProgramController extends Controller
                     'end_date' => $program->end_date,
                     'created_by' => $program->createdBy ? $program->createdBy->name : 'N/A',
                     'is_active' => $program->is_active,
+                    'requirements' => $program->requirements->map(fn($r) => ['id' => $r->id, 'name' => $r->name])->values(),
                 ];
             }),
         ]);
@@ -63,9 +65,10 @@ class ScholarshipProgramController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(CreateScholarshipProgramRequest $request): RedirectResponse
+    public function store(CreateScholarshipProgramRequest $request): JsonResponse
     {
         $program = ScholarshipProgram::create($request->validated());
+        $program->load(['createdBy', 'requirements']);
 
         // Log program creation
         ActivityLogService::logRecordCreated(
@@ -74,7 +77,11 @@ class ScholarshipProgramController extends Controller
             remarks: "Created scholarship program: {$program->name}"
         );
 
-        return back();
+        return response()->json([
+            'success' => true,
+            'message' => 'Program has been added',
+            'program' => $this->formatProgram($program),
+        ]);
     }
 
 
@@ -129,7 +136,13 @@ class ScholarshipProgramController extends Controller
             remarks: "Updated scholarship program: {$requirement->name}"
         );
 
-        return back();
+        $requirement->load(['createdBy', 'requirements']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Program has been updated',
+            'program' => $this->formatProgram($requirement),
+        ]);
     }
 
 
@@ -147,7 +160,29 @@ class ScholarshipProgramController extends Controller
             remarks: "Updated requirements for program: {$scholarshipProgram->name}"
         );
 
-        return back();
+        $scholarshipProgram->load(['createdBy', 'requirements']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Requirements updated',
+            'program' => $this->formatProgram($scholarshipProgram),
+        ]);
+    }
+
+    private function formatProgram(ScholarshipProgram $program): array
+    {
+        return [
+            'id' => $program->id,
+            'name' => $program->name,
+            'shortname' => $program->shortname,
+            'description' => $program->description,
+            'remarks' => $program->remarks,
+            'start_date' => $program->start_date,
+            'end_date' => $program->end_date,
+            'created_by' => $program->createdBy ? $program->createdBy->name : 'N/A',
+            'is_active' => $program->is_active,
+            'requirements' => $program->requirements->map(fn($r) => ['id' => $r->id, 'name' => $r->name])->values(),
+        ];
     }
 
     /**

@@ -16,6 +16,7 @@ import ObrTrackingModal from '@/Pages/FundTransactions/Modal/ObrTrackingModal.vu
 import RecordsSelect from '@/Components/selects/RecordsSelect.vue';
 import axios from 'axios';
 import { usePdfPrint, renderVueTemplate } from '@/composables/usePdfPrint';
+import { useSystemOptions } from '@/composables/useSystemOptions';
 import ObrTemplate from '@/Pages/FundTransactions/Pdf/ObrTemplate.vue';
 import DvTemplate from '@/Pages/FundTransactions/Pdf/DvTemplate.vue';
 import PayrollTemplate from '@/Pages/FundTransactions/Pdf/PayrollTemplate.vue';
@@ -73,7 +74,8 @@ const statusForm = reactive({
     remarks: ''
 });
 const savingStatus = ref(false);
-const obrStatuses = ['No OBR', 'LOA', 'Irregular', 'Transferred', 'Claimed', 'Paid', 'On Process', 'Denied'];
+const _obrStatusRaw = useSystemOptions('obr_status');
+const obrStatuses = computed(() => ['No OBR', ..._obrStatusRaw.value.map(o => o.label)]);
 const showOBRTrackingDialog = ref(false);
 const selectedVoucherForOBRTracking = ref(null);
 const statusFilter = ref(_url.get('status') || '');
@@ -134,22 +136,16 @@ const quillToolbar = [
     ['link']
 ];
 
-const statusFilterOptions = [
-    { label: 'On Process', value: 'On Process' },
+const statusFilterOptions = computed(() => [
     { label: 'No OBR', value: 'No OBR' },
-    { label: 'LOA', value: 'LOA' },
-    { label: 'Irregular', value: 'Irregular' },
-    { label: 'Transferred', value: 'Transferred' },
-    { label: 'Claimed', value: 'Claimed' },
-    { label: 'Paid', value: 'Paid' },
-    { label: 'Denied', value: 'Denied' },
-];
+    ..._obrStatusRaw.value.map(o => ({ label: o.label, value: o.label })),
+]);
 
-const obrTypeFilterOptions = [
-    { label: 'Regular', value: 'REGULAR' },
-    { label: 'Financial Assistance', value: 'FINANCIAL ASSISTANCE' },
-    { label: 'Reimbursement', value: 'REIMBURSEMENT' },
-];
+const _obrTypeRaw = useSystemOptions('disbursement_type');
+const obrTypeFilterOptions = computed(() => _obrTypeRaw.value.map(o => ({
+    label: o.label,
+    value: o.value.replace(/_/g, ' ').toUpperCase(),
+})));
 
 const disbursementTypeFilterOptions = [
     { label: 'Disbursement Voucher', value: 'disbursements' },
@@ -1467,7 +1463,7 @@ onMounted(() => {
                     <div class="ml-auto flex items-center gap-2">
                         <RecordsSelect v-model="perPage" size="small" class="w-auto" />
                         <span class="text-sm text-gray-600 dark:text-gray-400">/ <strong>{{ filteredTotal
-                                }}</strong></span>
+                        }}</strong></span>
                     </div>
                 </div>
 
@@ -1550,7 +1546,7 @@ onMounted(() => {
                         <template #body="slotProps">
                             <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">{{
                                 slotProps.data.creator?.name || '---'
-                                }}</span>
+                            }}</span>
                             <div class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{
                                 formatDate(slotProps.data.created_at) }}</div>
                         </template>
@@ -1635,7 +1631,7 @@ onMounted(() => {
                                         <div class="ios-row">
                                             <span class="ios-row-label">Amount</span>
                                             <span class="font-semibold">{{ formatAmount(selectedVoucher.amount)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="ios-row">
                                             <span class="ios-row-label">Created By</span>
@@ -1669,7 +1665,7 @@ onMounted(() => {
 
                                 <div class="ios-section">
                                     <p class="ios-section-label">Scholars ({{ selectedVoucher.scholar_ids?.length || 0
-                                        }})</p>
+                                    }})</p>
                                     <div class="ios-card px-4 py-3">
                                         <div v-if="loadingScholars" class="text-center py-2">
                                             <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span
@@ -1688,7 +1684,7 @@ onMounted(() => {
                                                             scholar.year_level + ` YEAR` : scholar.year_level }}</span>
                                                     <span v-if="scholar.academic_year" class="ml-1">| {{
                                                         scholar.academic_year
-                                                        }}</span>
+                                                    }}</span>
                                                     <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                                                 </span>
                                             </div>

@@ -411,7 +411,7 @@
                             <i class="pi pi-minus" style="font-size: 10px;"></i>
                         </button>
                         <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-center">{{ zoomLevel
-                        }}%</span>
+                            }}%</span>
                         <button @click="zoomLevel = Math.min(200, zoomLevel + 10)"
                             class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
                             :disabled="zoomLevel >= 200">
@@ -445,6 +445,7 @@ import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import moment from 'moment';
 import axios from 'axios';
+import { useSystemOptions } from '@/composables/useSystemOptions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { renderVueTemplate } from '@/composables/usePdfPrint';
 import { getReportCss } from '@/Pages/Scholarship/Reports/report-styles';
@@ -541,13 +542,11 @@ const statusChoices = computed(() => {
 });
 
 // ─── Options ───
-const grantProvisionOptions = [
+const _grantProvisionRaw = useSystemOptions('grant_provision');
+const grantProvisionOptions = computed(() => [
     { label: 'All Provisions', value: null },
-    { label: 'Matriculation', value: 'Matriculation' },
-    { label: 'RLE', value: 'RLE' },
-    { label: 'Tuition', value: 'Tuition' },
-    { label: 'RLE and Tuition', value: 'RLE and Tuition' },
-];
+    ..._grantProvisionRaw.value,
+]);
 
 const groupByOptions = [
     { label: 'No Grouping', value: 'none' },

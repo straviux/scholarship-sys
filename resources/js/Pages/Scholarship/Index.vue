@@ -383,7 +383,7 @@
                                 <Column header="Year" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
                                     <template #body="r">
                                         <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—'
-                                            }}</span>
+                                        }}</span>
                                     </template>
                                 </Column>
                                 <Column header="Academic Year" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">
@@ -680,6 +680,7 @@ import FloatingDrawer from '@/Components/FloatingDrawer.vue';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 import axios from 'axios';
+import { useSystemOptions } from '@/composables/useSystemOptions';
 import moment from 'moment';
 // Custom Select Components
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
@@ -878,7 +879,8 @@ const hasRole = (role) => {
 };
 
 // Grant Provision Options
-const grantProvisionOptions = ref(['Matriculation', 'RLE', 'Tuition', 'RLE and Tuition']);
+const _grantProvisionRaw = useSystemOptions('grant_provision');
+const grantProvisionOptions = computed(() => _grantProvisionRaw.value.map(o => o.value));
 
 // Academic Year Options - generate current year and previous years with all ranges first, then single years
 const academicYearOptions = computed(() => {

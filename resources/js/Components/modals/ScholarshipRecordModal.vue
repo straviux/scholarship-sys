@@ -6,7 +6,7 @@
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
                     <span class="ios-nav-title">{{ mode === 'add' ? 'Add Scholarship Record' : 'Edit Scholarship Record'
-                    }}</span>
+                        }}</span>
                     <button class="ios-nav-btn ios-nav-action" @click.stop="submitRecord" :disabled="processing">
                         <i class="pi pi-check"></i>
                     </button>
@@ -105,6 +105,7 @@ import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
+import { useSystemOptions } from '@/composables/useSystemOptions';
 
 const props = defineProps({
     visible: { type: Boolean, default: false },
@@ -120,12 +121,7 @@ const { dragStyle, onDragStart, resetDrag } = useDraggableModal();
 const { statusOptions: rawStatusOptions } = useScholarshipStatus();
 const statusOptions = computed(() => rawStatusOptions.value.filter(s => s.value !== 'unknown'));
 
-const grantProvisionOptions = [
-    { label: 'Matriculation', value: 'Matriculation' },
-    { label: 'RLE', value: 'RLE' },
-    { label: 'Tuition', value: 'Tuition' },
-    { label: 'RLE and Tuition', value: 'RLE and Tuition' }
-];
+const grantProvisionOptions = useSystemOptions('grant_provision');
 
 const processing = ref(false);
 const form = ref(getDefaultForm());

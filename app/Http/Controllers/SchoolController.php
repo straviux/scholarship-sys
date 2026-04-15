@@ -42,7 +42,8 @@ class SchoolController extends Controller
                         'id' => $school->id,
                         'name' => $school->name,
                         'shortname' => $school->shortname,
-                        'description' => $school->description,
+                        'campus' => $school->campus,
+                        'address' => $school->address,
                         'remarks' => $school->remarks,
                         'start_date' => $school->start_date,
                         'end_date' => $school->end_date,
@@ -93,16 +94,20 @@ class SchoolController extends Controller
                 'string',
                 'max:50'
             ],
-            "description" => [
-                'nullable',
-                'string',
-                'max:500'
-            ],
-
-            "remarks" => [
+            "campus" => [
                 'nullable',
                 'string',
                 'max:255'
+            ],
+            "address" => [
+                'nullable',
+                'string',
+                'max:1000'
+            ],
+            "remarks" => [
+                'nullable',
+                'string',
+                'max:2000'
             ],
             "start_date" => [
                 'nullable',
@@ -157,7 +162,6 @@ class SchoolController extends Controller
                     'id' => $school->id,
                     'name' => $school->name,
                     'shortname' => $school->shortname,
-                    'description' => $school->description,
                     'start_date' => $school->start_date,
                     'end_date' => $school->end_date,
                 ];
