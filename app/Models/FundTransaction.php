@@ -119,6 +119,14 @@ class FundTransaction extends Model
     }
 
     /**
+     * Get cheques linked to this fund transaction.
+     */
+    public function cheques()
+    {
+        return $this->hasMany(Cheque::class, 'fund_transaction_id', 'id');
+    }
+
+    /**
      * Get the responsibility center.
      */
     public function responsibilityCenter()

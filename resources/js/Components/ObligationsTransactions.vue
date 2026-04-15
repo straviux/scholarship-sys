@@ -168,6 +168,13 @@
                                                 formatDisbursementType(item.obr_status)
                                             }}</p>
                                     </div>
+                                    <div v-if="item.is_legacy" class="flex flex-col gap-2">
+                                        <p class="text-xs font-medium">Source</p>
+                                        <p class="text-xs font-semibold px-2 py-1 rounded-lg shadow bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-300"
+                                            v-tooltip.top="`Legacy record — read-only historical data`">
+                                            Legacy
+                                        </p>
+                                    </div>
                                     <div class="flex flex-col gap-2">
                                         <p class="text-xs font-medium">Payee</p>
                                         <p
@@ -777,12 +784,15 @@ const editDisbursement = (disbursement) => {
         disbursement_type: disbursement.disbursement_type,
         payee: disbursement.payee,
         obr_no: disbursement.obr_no || '',
+        obr_status: disbursement.obr_status || null,
         date_obligated: disbursement.date_obligated ? new Date(disbursement.date_obligated) : null,
         year_level: disbursement.year_level || '',
         semester: disbursement.semester || null,
         academic_year: disbursement.academic_year || '',
         amount: parseFloat(disbursement.amount) || 0,
         remarks: disbursement.remarks || '',
+        // pass profile_id so backend can sync scholar_ids amount
+        profile_id: disbursement.fund_transaction_id ? null : undefined,
     };
     showAddModal.value = true;
 };
@@ -973,6 +983,13 @@ const formatDisbursementType = (type) => {
         'regular': 'Regular',
         'reimbursement': 'Reimbursement',
         'financial_assistance': 'Financial Assistance',
+        // fund_transaction obr_type values (uppercase)
+        'REGULAR': 'Regular',
+        'REIMBURSEMENT': 'Reimbursement',
+        'FINANCIAL ASSISTANCE': 'Financial Assistance',
+        // fund_transaction disbursement_type values
+        'disbursements': 'Disbursement',
+        'payroll': 'Payroll',
     };
     return types[type] || type;
 };

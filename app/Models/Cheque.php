@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\FundTransaction;
 
 class Cheque extends Model
 {
@@ -14,6 +15,7 @@ class Cheque extends Model
 
     protected $fillable = [
         'disbursement_id',
+        'fund_transaction_id',
         'cheque_no',
         'date_released',
         'remarks',
@@ -25,11 +27,19 @@ class Cheque extends Model
     ];
 
     /**
-     * Get the disbursement that owns the cheque.
+     * Get the disbursement that owns the cheque (legacy).
      */
     public function disbursement()
     {
         return $this->belongsTo(Disbursement::class, 'disbursement_id', 'disbursement_id');
+    }
+
+    /**
+     * Get the fund transaction that owns the cheque.
+     */
+    public function fundTransaction()
+    {
+        return $this->belongsTo(FundTransaction::class, 'fund_transaction_id', 'id');
     }
 
     /**
