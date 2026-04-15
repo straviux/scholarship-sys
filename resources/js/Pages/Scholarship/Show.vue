@@ -20,7 +20,7 @@
                 <div
                     class="flex items-center bg-white/80 dark:bg-[#1f2633]/90 backdrop-blur-sm border border-gray-200/80 dark:border-white/10 rounded-2xl shadow-sm p-1 gap-0.5">
                     <Button icon="pi pi-book" label="Generate Ledger" size="small" rounded text
-                        class="!font-medium text-gray-700 dark:text-gray-300" @click="generateLedger"
+                        class="!font-medium text-gray-700 dark:text-gray-300" @click="showLedgerModal = true"
                         v-tooltip.top="'Generate Scholar Ledger'" />
                     <Button icon="pi pi-file-word" label="Certification" size="small" rounded text
                         class="!font-medium text-gray-700 dark:text-gray-300" @click="showCertPicker = true"
@@ -68,7 +68,7 @@
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Date of
                                             Birth</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ formatDate(profile.date_of_birth)
-                                            }}</p>
+                                        }}</p>
                                     </div>
 
                                     <div>
@@ -100,14 +100,14 @@
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Place of
                                             Birth</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ profile.place_of_birth || 'N/A'
-                                            }}</p>
+                                        }}</p>
                                     </div>
 
                                     <div>
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Indigenous
                                             Group</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ profile.indigenous_group || 'N/A'
-                                            }}</p>
+                                        }}</p>
                                     </div>
                                 </div>
 
@@ -412,7 +412,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600 dark:text-blue-400"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -505,7 +505,7 @@
                                                         <h5 class="font-semibold text-gray-900 dark:text-gray-100">
                                                             Status: <span class="text-blue-600 dark:text-blue-400">{{
                                                                 timeline.new_status
-                                                                }}</span>
+                                                            }}</span>
                                                         </h5>
                                                         <p class="text-sm text-gray-600 dark:text-gray-400">{{
                                                             formatDateTime(timeline.performed_at) }}</p>
@@ -535,7 +535,7 @@
                                                     <p class="text-xs text-gray-600 dark:text-gray-400">Encoded by</p>
                                                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{
                                                         timeline.changed_by?.name || 'System'
-                                                        }}</p>
+                                                    }}</p>
                                                 </div>
 
                                                 <div v-if="timeline.remarks"
@@ -687,21 +687,154 @@
         <PdfPreviewModal :show="showPdfPreview" @update:show="showPdfPreview = $event" :htmlDoc="pdfPreviewHtml"
             :title="pdfPreviewTitle" :paperSize="pdfPreviewSize" />
 
+        <!-- Ledger Options Modal (iOS style) -->
+        <Dialog v-model:visible="showLedgerModal" modal
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+            <template #container>
+                <div class="ios-modal" :style="ledgerModalStyle">
+                    <!-- Nav Bar -->
+                    <div class="ios-nav-bar" @pointerdown="onLedgerDragStart">
+                        <button class="ios-nav-btn ios-nav-cancel" @click="showLedgerModal = false">
+                            <i class="pi pi-times"></i>
+                        </button>
+                        <span class="ios-nav-title">Generate Scholar Ledger</span>
+                        <button class="ios-nav-btn ios-nav-action" @click="generateLedger">
+                            Generate
+                        </button>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="ios-body">
+                        <div class="ios-section">
+                            <div class="ios-section-label">
+                                <i class="pi pi-calendar"
+                                    style="color: #34C759; font-size: 11px; margin-right: 4px;"></i>
+                                Equivalent No. of Years for ROS
+                            </div>
+                            <div v-if="ledgerTermGroups.length > 0" class="ios-card" style="overflow: hidden;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="background: #f9f9fb; border-bottom: 0.5px solid #e5e5ea;">
+                                            <th
+                                                style="text-align: left; padding: 7px 16px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px;">
+                                                Term</th>
+                                            <th
+                                                style="text-align: right; padding: 7px 24px 7px 8px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
+                                                Amount</th>
+                                            <th
+                                                style="text-align: right; padding: 7px 16px 7px 8px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px;">
+                                                ROS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template v-for="(group, gi) in ledgerTermGroups" :key="group.yearLevel">
+                                            <tr style="background: #f2f2f7; border-top: 0.5px solid #e5e5ea;">
+                                                <td colspan="3"
+                                                    style="padding: 5px 16px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px;">
+                                                    {{ formatYearLevel(group.yearLevel) }}
+                                                </td>
+                                            </tr>
+                                            <tr v-for="(term, ti) in group.terms" :key="term.key"
+                                                :style="(gi < ledgerTermGroups.length - 1 || ti < group.terms.length - 1) ? 'border-bottom: 0.5px solid #e5e5ea;' : ''">
+                                                <td
+                                                    style="padding: 10px 16px; font-size: 13px; color: #1c1c1e; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                    {{ term.label }}
+                                                </td>
+                                                <td
+                                                    style="padding: 10px 24px 10px 8px; font-size: 12px; color: #3a3a3c; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                                                    ₱{{ term.amount.toLocaleString('en-PH', {
+                                                        minimumFractionDigits: 2
+                                                    }) }}
+                                                </td>
+                                                <td
+                                                    style="padding: 10px 16px 10px 8px; text-align: right; white-space: nowrap;">
+                                                    <div style="display: flex; gap: 4px; justify-content: flex-end;">
+                                                        <button v-for="opt in rosOptions" :key="'ros-' + opt.value"
+                                                            @click="ledgerRosOverrides[term.key] = opt.value"
+                                                            :style="ledgerRosOverrides[term.key] === opt.value
+                                                                ? 'background: #007AFF; color: #fff; border: none; border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 600; cursor: pointer;'
+                                                                : 'background: #e5e5ea; color: #1c1c1e; border: none; border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 500; cursor: pointer;'">
+                                                            {{ opt.label }}
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div v-else class="ios-card">
+                                <div class="ios-row" style="color: #8e8e93; font-size: 13px; justify-content: center;">
+                                    No disbursement records —
+                                    ROS auto-detected</div>
+                            </div>
+                            <div class="ios-section-footer">Tap a value to set; tap again to clear (auto-detect from
+                                semester).</div>
+                        </div>
+                        <div style="height: 20px;"></div>
+                    </div>
+                </div>
+            </template>
+        </Dialog>
+
         <!-- Certification Type Picker -->
-        <Dialog v-model:visible="showCertPicker" modal header="Generate Certification" :style="{ width: '380px' }"
-            :draggable="false">
-            <div class="flex flex-col gap-3 mb-4">
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Course Name <span
-                        class="text-gray-400 font-normal">(optional — overrides profile)</span></label>
-                <InputText v-model="certCourseName" placeholder="e.g. Medicine" class="w-full" />
-            </div>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Select the type of certification to generate:</p>
-            <div class="flex flex-col gap-2">
-                <Button label="Certification for Review" icon="pi pi-file-word" outlined rounded
-                    class="w-full justify-start" @click="generateCertification('review')" />
-                <Button label="Certification for Post-Grad" icon="pi pi-file-word" outlined rounded
-                    class="w-full justify-start" @click="generateCertification('postgrad')" />
-            </div>
+        <Dialog v-model:visible="showCertPicker" modal
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+            <template #container>
+                <div class="ios-modal" :style="certModalStyle">
+                    <!-- Nav Bar -->
+                    <div class="ios-nav-bar" @pointerdown="onCertDragStart">
+                        <button class="ios-nav-btn ios-nav-cancel" @click="showCertPicker = false">
+                            <i class="pi pi-times"></i>
+                        </button>
+                        <span class="ios-nav-title">Generate Certification</span>
+                        <div style="width: 60px;"></div>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="ios-body">
+                        <div class="ios-section">
+                            <div class="ios-section-label">Course Name <span
+                                    style="color: #8e8e93; font-weight: 400;">(optional)</span></div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <InputText v-model="certCourseName" placeholder="e.g. Medicine"
+                                        style="border: none; background: transparent; box-shadow: none; padding: 0; font-size: 14px; color: #1c1c1e; width: 100%; outline: none;" />
+                                </div>
+                            </div>
+                            <div class="ios-section-footer">Leave blank to use the course from the scholar's profile.
+                            </div>
+                        </div>
+
+                        <div class="ios-section">
+                            <div class="ios-section-label">Certification Type</div>
+                            <div class="ios-card">
+                                <div class="ios-row" style="cursor: pointer; border-bottom: 0.5px solid #e5e5ea;"
+                                    @click="generateCertification('review')">
+                                    <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                                        <i class="pi pi-file-word" style="color: #007AFF; font-size: 16px;"></i>
+                                        <span style="font-size: 14px; color: #1c1c1e;">Certification for Review</span>
+                                    </div>
+                                    <i class="pi pi-chevron-right"
+                                        style="color: #c7c7cc; font-size: 12px; flex-shrink: 0;"></i>
+                                </div>
+                                <div class="ios-row" style="cursor: pointer;"
+                                    @click="generateCertification('postgrad')">
+                                    <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                                        <i class="pi pi-file-word" style="color: #007AFF; font-size: 16px;"></i>
+                                        <span style="font-size: 14px; color: #1c1c1e;">Certification for
+                                            Post-Grad</span>
+                                    </div>
+                                    <i class="pi pi-chevron-right"
+                                        style="color: #c7c7cc; font-size: 12px; flex-shrink: 0;"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="height: 20px;"></div>
+                    </div>
+                </div>
+            </template>
         </Dialog>
 
     </AdminLayout>
@@ -710,7 +843,7 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { ref, computed, watch, onMounted, inject } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount, inject, reactive } from 'vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
@@ -739,6 +872,144 @@ const pdfPreviewSize = ref('long');
 // Certification type picker
 const showCertPicker = ref(false);
 const certCourseName = ref('');
+
+// Ledger modal
+const showLedgerModal = ref(false);
+const ledgerRosOverrides = reactive({});
+const rosOptions = [
+    { label: '—', value: '' },
+    { label: '4M', value: '4' },
+    { label: '6M', value: '6' },
+    { label: '12M', value: '12' },
+];
+
+// Ledger modal drag
+const ledgerDragOffset = ref({ x: 0, y: 0 });
+const ledgerDragStart = ref(null);
+const ledgerModalStyle = computed(() => ({
+    width: '560px',
+    transform: `translate(${ledgerDragOffset.value.x}px, ${ledgerDragOffset.value.y}px)`,
+}));
+function onLedgerDragStart(e) {
+    if (e.target.closest('button, input, select, a, .p-select')) return;
+    ledgerDragStart.value = { x: e.clientX - ledgerDragOffset.value.x, y: e.clientY - ledgerDragOffset.value.y };
+    document.addEventListener('pointermove', onLedgerDragMove);
+    document.addEventListener('pointerup', onLedgerDragEnd);
+}
+function onLedgerDragMove(e) {
+    if (!ledgerDragStart.value) return;
+    ledgerDragOffset.value = { x: e.clientX - ledgerDragStart.value.x, y: e.clientY - ledgerDragStart.value.y };
+}
+function onLedgerDragEnd() {
+    ledgerDragStart.value = null;
+    document.removeEventListener('pointermove', onLedgerDragMove);
+    document.removeEventListener('pointerup', onLedgerDragEnd);
+}
+
+const certDragOffset = ref({ x: 0, y: 0 });
+const certDragStart = ref(null);
+const certModalStyle = computed(() => ({
+    width: '380px',
+    transform: `translate(${certDragOffset.value.x}px, ${certDragOffset.value.y}px)`,
+}));
+function onCertDragStart(e) {
+    if (e.target.closest('button, input, select, a, .p-inputtext')) return;
+    certDragStart.value = { x: e.clientX - certDragOffset.value.x, y: e.clientY - certDragOffset.value.y };
+    document.addEventListener('pointermove', onCertDragMove);
+    document.addEventListener('pointerup', onCertDragEnd);
+}
+function onCertDragMove(e) {
+    if (!certDragStart.value) return;
+    certDragOffset.value = { x: e.clientX - certDragStart.value.x, y: e.clientY - certDragStart.value.y };
+}
+function onCertDragEnd() {
+    certDragStart.value = null;
+    document.removeEventListener('pointermove', onCertDragMove);
+    document.removeEventListener('pointerup', onCertDragEnd);
+}
+
+onBeforeUnmount(() => {
+    document.removeEventListener('pointermove', onLedgerDragMove);
+    document.removeEventListener('pointerup', onLedgerDragEnd);
+    document.removeEventListener('pointermove', onCertDragMove);
+    document.removeEventListener('pointerup', onCertDragEnd);
+});
+
+const LEDGER_YEAR_ORDER = ['1ST YEAR', '2ND YEAR', '3RD YEAR', '4TH YEAR', '5TH YEAR'];
+const NUMERIC_YEAR_RE = /^(1ST|2ND|3RD|4TH|5TH|6TH|7TH|8TH)(\s+YEAR)?$/i;
+const formatYearLevel = (yl) => {
+    const u = String(yl ?? '').toUpperCase().trim();
+    if (NUMERIC_YEAR_RE.test(u)) {
+        const base = u.replace(/\s+YEAR$/i, '').trim();
+        return `${base} YEAR`;
+    }
+    return u || '—';
+};
+
+const is4MonthTerm = (semester) => {
+    if (typeof semester !== 'string') return false;
+    const s = semester.toLowerCase();
+    return s.includes('trimester') || s.includes('3rd semester') || s.includes('3rd sem');
+};
+const isScholar4Month = computed(() =>
+    (props.profile?.disbursements || []).some(d => is4MonthTerm(d.semester))
+);
+
+const autoRosValue = (semester) => {
+    if (isScholar4Month.value || is4MonthTerm(semester)) return '4';
+    return '6';
+};
+const ledgerTermGroups = computed(() => {
+    const disburse = props.profile?.disbursements || [];
+    const yearMap = {};
+    disburse.forEach(d => {
+        const yl = d.year_level ?? '—';
+        const key = `${yl}||${d.academic_year ?? ''}||${d.semester ?? ''}`;
+        if (!yearMap[yl]) yearMap[yl] = {};
+        if (!yearMap[yl][key]) {
+            yearMap[yl][key] = {
+                key,
+                label: [d.academic_year, d.semester].filter(Boolean).join(' · ') || '—',
+                semester: d.semester,
+                amount: 0,
+            };
+        }
+        yearMap[yl][key].amount += parseFloat(d.amount) || 0;
+    });
+    return Object.entries(yearMap)
+        .sort(([a], [b]) => {
+            const au = formatYearLevel(a);
+            const bu = formatYearLevel(b);
+            const isRevA = au === 'REVIEW' ? 1 : 0;
+            const isRevB = bu === 'REVIEW' ? 1 : 0;
+            if (isRevA !== isRevB) return isRevA - isRevB;
+            const ia = LEDGER_YEAR_ORDER.indexOf(au);
+            const ib = LEDGER_YEAR_ORDER.indexOf(bu);
+            return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+        })
+        .map(([yearLevel, terms]) => ({
+            yearLevel,
+            terms: Object.values(terms).sort((a, b) => {
+                const [, ayA, semA] = a.key.split('||');
+                const [, ayB, semB] = b.key.split('||');
+                if (ayA !== ayB) return ayA < ayB ? -1 : 1;
+                return semA < semB ? -1 : semA > semB ? 1 : 0;
+            }),
+        }));
+});
+
+// Pre-populate overrides with auto-detected values when modal opens
+watch(showLedgerModal, (val) => {
+    if (val) {
+        ledgerTermGroups.value.forEach(group => {
+            group.terms.forEach(term => {
+                if (ledgerRosOverrides[term.key] === undefined) {
+                    ledgerRosOverrides[term.key] = autoRosValue(term.semester);
+                }
+            });
+        });
+    }
+});
 
 const props = defineProps({
     profile: Object,
@@ -1006,11 +1277,13 @@ const generateLedger = () => {
         preparedBy: authUser?.name ?? '',
         preparedByDesignation: authUser?.office_designation ?? '',
         today,
+        rosOverrides: { ...ledgerRosOverrides },
     });
     const safeName = `${props.profile.last_name}_${props.profile.first_name}`.replace(/\s+/g, '_');
     pdfPreviewTitle.value = `Ledger-${safeName}`;
     pdfPreviewSize.value = 'long';
     pdfPreviewHtml.value = buildHtmlDoc(bodyHtml, pdfPreviewTitle.value, 'long');
+    showLedgerModal.value = false;
     showPdfPreview.value = true;
 };
 

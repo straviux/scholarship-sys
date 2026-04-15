@@ -1,350 +1,264 @@
 <template>
     <div class="p-4 short:p-3 relative">
 
-        <!-- Header with Add Button and Summary Toggle -->
-        <div class="flex justify-between items-center mb-4 short:mb-2">
-            <div>
+        <!-- Header -->
+        <div class="flex justify-between items-start mb-4 short:mb-3 gap-4">
+            <!-- Left: Title -->
+            <div class="flex-shrink-0">
                 <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-300">Obligations and Transactions</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage disbursements and cheque processing</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ disbursements.length }} record{{
+                    disbursements.length !== 1 ? 's' : '' }}</p>
             </div>
-            <div class="flex gap-2">
-                <Button :icon="showSummary ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
-                    :label="showSummary ? 'Hide Summary' : 'Show Summary'" outlined severity="secondary" size="small"
-                    @click="showSummary = !showSummary" />
-                <Button v-if="hasPermission('applicants.edit')" icon="pi pi-plus" label="Add Disbursement"
-                    @click="showAddModal = true" severity="success" size="small" raised />
-            </div>
-        </div>
 
-        <!-- Summary Cards -->
-        <div v-if="showSummary" class="mb-4 short:mb-2">
-            <!-- Total Amount Card -->
-            <div
-                class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 border border-blue-200 dark:border-blue-800/40 rounded-lg p-4 shadow-sm mb-4 short:mb-2">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-blue-700 dark:text-blue-300 font-medium">Total Disbursements</p>
-                        <p class="text-2xl short:text-xl font-bold text-blue-900 dark:text-blue-100 mt-1">{{
-                            formatCurrency(totalAmount) }}
-                        </p>
-                        <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">{{ disbursements.length }} transactions
-                        </p>
-                    </div>
-                    <i class="pi pi-money-bill text-4xl short:text-2xl text-blue-300 dark:text-blue-600"></i>
+            <!-- Center: Totals -->
+            <div class="flex items-center gap-3 flex-wrap flex-1 justify-center">
+                <!-- Total -->
+                <div
+                    class="flex flex-col items-center bg-[#f0f4ff] border-[0.5px] border-[#c7d2fe] rounded-xl py-[7px] px-4 min-w-[110px]">
+                    <span class="text-[10px] font-semibold text-[#6366f1] uppercase tracking-[0.4px]">Total</span>
+                    <span class="text-[15px] font-bold text-[#3730a3] mt-px tabular-nums whitespace-nowrap">{{
+                        formatCurrency(totalAmount) }}</span>
+                </div>
+                <!-- On Process -->
+                <div v-if="pendingCount > 0"
+                    class="flex flex-col items-center bg-[#fffbeb] border-[0.5px] border-[#fcd34d] rounded-xl py-[7px] px-4 min-w-[110px]"
+                    v-tooltip.top="`${pendingCount} record(s) not yet settled`">
+                    <span class="text-[10px] font-semibold text-[#d97706] uppercase tracking-[0.4px]">On Process</span>
+                    <span class="text-[15px] font-bold text-[#92400e] mt-px tabular-nums whitespace-nowrap">{{
+                        formatCurrency(pendingAmount) }}</span>
+                </div>
+                <!-- Settled -->
+                <div v-if="settledAmount > 0"
+                    class="flex flex-col items-center bg-[#f0fdf4] border-[0.5px] border-[#86efac] rounded-xl py-[7px] px-4 min-w-[110px]">
+                    <span class="text-[10px] font-semibold text-[#16a34a] uppercase tracking-[0.4px]">Settled</span>
+                    <span class="text-[15px] font-bold text-[#14532d] mt-px tabular-nums whitespace-nowrap">{{
+                        formatCurrency(settledAmount) }}</span>
                 </div>
             </div>
 
-            <!-- Summary by Year -->
-            <div class="mb-4 flex gap-2">
-                <Button label="Expand All Years" icon="pi pi-expand" size="small" text rounded
-                    @click="Object.keys(semesterSummary).forEach(year => expandedYears[year] = true)" />
-                <Button label="Collapse All Years" icon="pi pi-compress" size="small" text rounded
-                    @click="Object.keys(semesterSummary).forEach(year => expandedYears[year] = false)" />
+            <!-- Right: Actions -->
+            <div class="flex-shrink-0">
+                <Button v-if="hasPermission('applicants.edit')" icon="pi pi-plus" label="Add Disbursement"
+                    @click="showAddModal = true" severity="success" size="small" raised disabled />
+            </div>
+        </div>
+
+        <!-- Loading state -->
+        <div v-if="loading" class="text-center py-12">
+            <i class="pi pi-spin pi-spinner text-3xl text-gray-300"></i>
+        </div>
+
+        <!-- Empty state -->
+        <div v-else-if="disbursements.length === 0" class="text-center py-12">
+            <i class="pi pi-inbox text-4xl text-gray-300 mb-4 block"></i>
+            <p class="text-gray-500 dark:text-gray-400">No disbursements found</p>
+        </div>
+
+        <!-- iOS Expandable Table -->
+        <div v-else class="rounded-2xl overflow-hidden border-[0.5px] border-[#e5e5ea] bg-white">
+
+            <!-- Column Headers -->
+            <div class="grid bg-[#f9f9fb] border-b-[0.5px] border-[#e5e5ea] py-[7px] px-4 gap-2 items-center"
+                style="grid-template-columns: 36px 130px 170px 1fr 110px 120px;">
+                <div></div>
+                <div class="tbl-col-header">Date / OBR</div>
+                <div class="tbl-col-header">Year / Term</div>
+                <div class="tbl-col-header">Payee</div>
+                <div class="tbl-col-header">Status</div>
+                <div class="tbl-col-header text-right pr-1">Amount</div>
             </div>
 
-            <div class="space-y-4">
-                <template v-for="(yearData, year) in semesterSummary" :key="year">
-                    <!-- Year Card (Collapsible) -->
-                    <div
-                        class="bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                        <!-- Year Header -->
-                        <button @click="expandedYears[year] = !expandedYears[year]"
-                            class="w-full px-4 py-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-700 border-b-2 border-gray-300 dark:border-gray-600 hover:from-gray-100 hover:to-gray-150 transition-colors text-left">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3 flex-1">
-                                    <i :class="expandedYears[year] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-                                        class="text-gray-600 dark:text-gray-400"></i>
-                                    <div>
-                                        <p class="text-sm font-bold text-gray-800 dark:text-gray-200">Academic Year: {{
-                                            year }}</p>
-                                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ yearData.count }}
-                                            transactions • {{
-                                                formatCurrency(yearData.total) }}</p>
+            <template v-for="(group, gi) in groupedDisbursements" :key="group.year">
+                <!-- Academic Year Group Header -->
+                <div
+                    class="bg-[#f2f2f7] py-[5px] px-4 border-t-[0.5px] border-b-[0.5px] border-[#e5e5ea] flex items-center justify-between">
+                    <span class="text-xs font-semibold text-[#8e8e93] uppercase tracking-[0.4px]">AY {{ group.year
+                        }}</span>
+                    <span class="text-[11px] text-[#8e8e93]">{{ group.items.length }} record{{ group.items.length !== 1
+                        ? 's' : '' }} · {{ formatCurrency(group.total) }}</span>
+                </div>
+
+                <template v-for="(item, rowIdx) in group.items" :key="item.disbursement_id">
+                    <!-- Main Row -->
+                    <div @click="toggleRow(item.disbursement_id)"
+                        class="grid py-[11px] px-4 gap-2 items-center cursor-pointer border-b-[0.5px] border-[#e5e5ea] transition-[background] duration-150"
+                        style="grid-template-columns: 36px 130px 170px 1fr 110px 120px;"
+                        :style="{ background: expandedRows[item.disbursement_id] ? '#eef4ff' : '#ffffff' }">
+
+                        <!-- Toggle Chevron -->
+                        <div class="flex items-center justify-center">
+                            <i class="pi pi-chevron-right text-[11px] text-[#c7c7cc] transition-transform duration-200"
+                                :style="{ transform: expandedRows[item.disbursement_id] ? 'rotate(90deg)' : 'rotate(0deg)' }"></i>
+                        </div>
+
+                        <!-- Date / OBR No. -->
+                        <div>
+                            <div class="text-[13px] text-[#1c1c1e] font-medium">
+                                {{ item.date_obligated ? formatDate(item.date_obligated) : '—' }}
+                            </div>
+                            <div v-if="item.obr_no" class="text-[11px] text-[#8e8e93] mt-px">{{ item.obr_no }}</div>
+                            <span v-if="item.is_legacy"
+                                class="text-[10px] bg-[#e5e5ea] text-[#636366] rounded px-[5px] py-px inline-block mt-0.5">Legacy</span>
+                        </div>
+
+                        <!-- Year Level / Semester -->
+                        <div>
+                            <div class="text-[13px] text-[#1c1c1e]">{{ item.year_level || '—' }}</div>
+                            <div class="text-[11px] text-[#8e8e93] mt-px">{{ item.semester || '—' }}</div>
+                        </div>
+
+                        <!-- Payee / Type -->
+                        <div class="overflow-hidden">
+                            <div class="text-[13px] text-[#1c1c1e] overflow-hidden text-ellipsis whitespace-nowrap">
+                                {{ item.payee || '—' }}</div>
+                            <div v-if="item.disbursement_type" class="text-[11px] text-[#8e8e93] mt-px">{{
+                                formatDisbursementType(item.disbursement_type) }}</div>
+                        </div>
+
+                        <!-- Status -->
+                        <div>
+                            <span v-if="item.obr_status"
+                                class="text-[11px] font-semibold py-[3px] px-[9px] rounded-[20px] inline-block whitespace-nowrap"
+                                :style="getObrStatusIosStyle(item.obr_status)">
+                                {{ item.obr_status }}
+                            </span>
+                            <span v-else class="text-[#8e8e93] text-xs">—</span>
+                        </div>
+
+                        <!-- Amount -->
+                        <div
+                            class="text-right text-sm font-semibold text-[#1c1c1e] tabular-nums whitespace-nowrap pr-1">
+                            {{ item.amount ? formatCurrency(item.amount) : '—' }}
+                        </div>
+                    </div>
+
+                    <!-- Expanded Detail Panel -->
+                    <div v-if="expandedRows[item.disbursement_id]"
+                        class="bg-[#f5f7ff] border-b-[0.5px] border-[#d0d5e8] pt-4 pr-6 pb-4 pl-[52px]">
+                        <div class="grid grid-cols-2 gap-5 mb-[14px]">
+
+                            <!-- Left: Academic + Cheque -->
+                            <div>
+                                <!-- Academic subsection -->
+                                <div class="mb-[14px]">
+                                    <div class="tbl-section-header mb-[7px]">
+                                        <i class="pi pi-book mr-1 text-[#007AFF]"></i>Academic
+                                    </div>
+                                    <div class="flex flex-wrap gap-4">
+                                        <div v-if="item.academic_year">
+                                            <div class="tbl-detail-label">Academic Year</div>
+                                            <div class="tbl-detail-value">{{ item.academic_year }}</div>
+                                        </div>
+                                        <div v-if="item.year_level">
+                                            <div class="tbl-detail-label">Year Level</div>
+                                            <div class="tbl-detail-value">{{ item.year_level }}</div>
+                                        </div>
+                                        <div v-if="item.semester">
+                                            <div class="tbl-detail-label">Semester</div>
+                                            <div class="tbl-detail-value">{{ item.semester }}</div>
+                                        </div>
+                                        <div v-if="item.profile?.scholarship_grant?.[0]?.course?.shortname">
+                                            <div class="tbl-detail-label">Course</div>
+                                            <div class="tbl-detail-value">{{
+                                                item.profile.scholarship_grant[0].course.shortname }}</div>
+                                        </div>
+                                        <div v-if="item.profile?.scholarship_grant?.[0]?.school?.shortname">
+                                            <div class="tbl-detail-label">School</div>
+                                            <div class="tbl-detail-value">{{
+                                                item.profile.scholarship_grant[0].school.shortname }}</div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-lg font-bold text-gray-900 dark:text-gray-100">{{
-                                        formatCurrency(yearData.total) }}</p>
-                                </div>
-                            </div>
-                        </button>
 
-                        <!-- Semesters (Collapsible) -->
-                        <template v-if="expandedYears[year]">
-                            <div class="p-4 space-y-3 bg-gray-50 dark:bg-gray-700/50">
-                                <template v-for="(semData, semester) in yearData.semesters"
-                                    :key="`${year}-${semester}`">
-                                    <!-- Semester Card -->
-                                    <div
-                                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                        <!-- Semester Header -->
-                                        <div class="mb-3 pb-3 border-b border-gray-200 dark:border-gray-600">
-                                            <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ semester }}
-                                            </p>
-                                            <p class="text-lg font-bold text-gray-900 dark:text-gray-100 mt-1">{{
-                                                formatCurrency(semData.total) }}</p>
-                                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ semData.count
-                                            }} transactions</p>
+                                <!-- Cheque subsection -->
+                                <div>
+                                    <div class="tbl-section-header mb-[7px]">
+                                        <i class="pi pi-check-circle mr-1 text-[#34C759]"></i>Cheque
+                                    </div>
+                                    <div class="flex gap-5">
+                                        <div>
+                                            <div class="tbl-detail-label">Cheque No.</div>
+                                            <div class="tbl-detail-value">{{ item.cheques?.[0]?.cheque_no || '—' }}
+                                            </div>
                                         </div>
-
-                                        <!-- Status Breakdown -->
-                                        <div class="space-y-2">
-                                            <template v-for="(statusData, status) in semData.byStatus"
-                                                :key="`${year}-${semester}-${status}`">
-                                                <div class="flex items-center justify-between p-2 rounded"
-                                                    :class="getStatusBgClass(status)">
-                                                    <div class="flex flex-col">
-                                                        <p class="text-xs font-semibold"
-                                                            :class="getStatusTextClass(status)">{{ status }}</p>
-                                                        <p class="text-xs" :class="getStatusTextClass(status)">{{
-                                                            statusData.count }} item{{ statusData.count !== 1 ? 's' : ''
-                                                            }}</p>
-                                                    </div>
-                                                    <p class="text-sm font-bold" :class="getStatusTextClass(status)">{{
-                                                        formatCurrency(statusData.amount) }}</p>
-                                                </div>
-                                            </template>
+                                        <div>
+                                            <div class="tbl-detail-label">Date Released</div>
+                                            <div class="tbl-detail-value">
+                                                {{ item.cheques?.[0]?.date_released ?
+                                                    formatDate(item.cheques[0].date_released) : '—' }}
+                                            </div>
                                         </div>
                                     </div>
-                                </template>
+                                </div>
                             </div>
-                        </template>
+
+                            <!-- Right: Remarks + Attachments -->
+                            <div>
+                                <!-- Remarks subsection -->
+                                <div v-if="item.remarks" class="mb-[14px]">
+                                    <div class="tbl-section-header mb-[7px]">
+                                        <i class="pi pi-comment mr-1 text-[#FF9500]"></i>Remarks
+                                    </div>
+                                    <div class="text-xs text-[#3a3a3c] border-l-2 border-[#d0d5e8] pl-2 leading-[1.5]"
+                                        v-safe-html="item.remarks"></div>
+                                </div>
+
+                                <!-- Attachments subsection -->
+                                <div>
+                                    <div class="tbl-section-header mb-[7px]">
+                                        <i class="pi pi-paperclip mr-1 text-[#007AFF]"></i>Attachments ({{
+                                        item.attachments?.length || 0 }})
+                                    </div>
+                                    <div v-if="item.attachments?.length > 0" class="flex flex-wrap gap-1.5">
+                                        <div v-for="att in item.attachments" :key="att.attachment_id"
+                                            class="flex items-center gap-[5px] bg-white border-[0.5px] border-[#d0d5e8] rounded-lg py-1 px-[9px] text-[11px]">
+                                            <i :class="getFileIcon(att.file_type)" class="text-[#007AFF] text-xs"></i>
+                                            <span
+                                                class="text-[#1c1c1e] max-w-[100px] overflow-hidden text-ellipsis whitespace-nowrap">{{
+                                                att.attachment_type }}</span>
+                                            <button @click.stop="viewAttachment(att)"
+                                                class="bg-transparent border-0 cursor-pointer p-0 leading-none">
+                                                <i class="pi pi-eye text-[#007AFF] text-[11px]"></i>
+                                            </button>
+                                            <button @click.stop="downloadAttachment(att)"
+                                                class="bg-transparent border-0 cursor-pointer p-0 leading-none">
+                                                <i class="pi pi-download text-[#007AFF] text-[11px]"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div v-else class="text-xs text-[#8e8e93]">No attachments</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex flex-wrap gap-2 pt-3 border-t-[0.5px] border-[#d0d5e8] justify-end">
+                            <button v-if="hasPermission('applicants.edit')" @click.stop="showQrCode(item)"
+                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5]">
+                                <i class="pi pi-qrcode text-xs"></i> QR Upload
+                            </button>
+                            <button v-if="hasPermission('applicants.edit')" @click.stop="manageAttachments(item)"
+                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5]">
+                                <i class="pi pi-paperclip text-xs"></i> Attachments
+                            </button>
+                            <button v-if="hasPermission('applicants.edit')" @click.stop="manageCheque(item)"
+                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5]">
+                                <i class="pi pi-file text-xs"></i> Cheque
+                            </button>
+                            <button v-if="hasPermission('applicants.edit')" @click.stop="editDisbursement(item)"
+                                class="tbl-action-btn text-[#FF9500] bg-[#fff8ec]">
+                                <i class="pi pi-pencil text-xs"></i> Edit
+                            </button>
+                            <button v-if="hasPermission('applicants.delete')" @click.stop="confirmDelete(item)"
+                                class="tbl-action-btn text-[#FF3B30] bg-[#fff0f0]">
+                                <i class="pi pi-trash text-xs"></i> Delete
+                            </button>
+                        </div>
                     </div>
                 </template>
-            </div>
+            </template>
         </div>
 
-        <!-- Disbursements List -->
-        <DataView :value="disbursements" :loading="loading">
-            <template #empty>
-                <div class="text-center py-8 short:py-4">
-                    <i class="pi pi-money-bill text-4xl short:text-2xl text-gray-300 mb-4"></i>
-                    <p class="text-gray-500">No disbursements found</p>
-                    <Button v-if="hasPermission('applicants.edit')" label="Add First Disbursement" class="mt-4"
-                        @click="showAddModal = true" severity="success" size="small" raised />
-                </div>
-            </template>
-
-            <template #list="slotProps">
-                <div class="space-y-3">
-                    <div v-for="(item, index) in slotProps.items" :key="index"
-                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-
-                        <!-- Compact Header with OBR, Type, Status, and Amount -->
-                        <div
-                            class="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                <!-- Left: OBR Number (Prominent) -->
-
-                                <div class="flex flex-wrap items-center gap-6 short:gap-3">
-                                    <div class="flex flex-col gap-2">
-                                        <p class="text-xs font-medium">OBR Date</p>
-                                        <p
-                                            class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50 dark:bg-gray-700 dark:text-gray-100">
-                                            {{
-                                                item.date_obligated ? formatDate(item.date_obligated) : '-'
-                                            }}</p>
-                                    </div>
-                                    <div v-if="item.obr_no" class="flex flex-col gap-2">
-                                        <p class="text-xs font-medium">OBR No.</p>
-                                        <p
-                                            class="text-normal font-bold px-2 py-1 rounded-lg shadow bg-gray-50 dark:bg-gray-700 dark:text-gray-100">
-                                            {{
-                                                item.obr_no }}
-                                        </p>
-                                    </div>
-
-                                    <div v-if="item.disbursement_type" class="flex flex-col gap-2">
-                                        <p class="text-xs font-medium">Type</p>
-                                        <p class="text-sm font-bold px-2 py-1 rounded-lg shadow"
-                                            :class="getDisbursementTypeClass(item.disbursement_type)">{{
-                                                formatDisbursementType(item.disbursement_type)
-                                            }}</p>
-                                    </div>
-                                    <div v-if="item.obr_status" class="flex flex-col gap-2">
-                                        <p class="text-xs font-medium">Status</p>
-                                        <p class="text-sm font-bold px-2 py-1 rounded-lg shadow"
-                                            :class="getObrStatusClass(item.obr_status)">{{
-                                                formatDisbursementType(item.obr_status)
-                                            }}</p>
-                                    </div>
-                                    <div v-if="item.is_legacy" class="flex flex-col gap-2">
-                                        <p class="text-xs font-medium">Source</p>
-                                        <p class="text-xs font-semibold px-2 py-1 rounded-lg shadow bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-300"
-                                            v-tooltip.top="`Legacy record — read-only historical data`">
-                                            Legacy
-                                        </p>
-                                    </div>
-                                    <div class="flex flex-col gap-2">
-                                        <p class="text-xs font-medium">Payee</p>
-                                        <p
-                                            class="text-sm font-bold px-2 py-1 rounded-lg shadow bg-gray-50 dark:bg-gray-700 dark:text-gray-100">
-                                            {{
-                                                item.payee || '-' }}
-                                        </p>
-                                    </div>
-
-                                </div>
-
-                                <!-- Right: Amount -->
-                                <div v-if="item.amount" class="text-right flex flex-col gap-2">
-                                    <p class="text-xs font-medium">Amount</p>
-                                    <p class="text-lg font-bold text-gray-900 dark:text-gray-100">{{
-                                        formatCurrency(item.amount) }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Compact Content Section -->
-                        <div class="p-4">
-                            <div class="grid grid-cols-1 lg:grid-cols-[2fr_0.5fr_auto] gap-4">
-                                <!-- Column 1: Academic, Cheque, and Remarks (Stacked) -->
-                                <div class="space-y-3">
-                                    <!-- Academic Information -->
-                                    <div>
-                                        <h4
-                                            class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-                                            <i class="pi pi-book text-gray-500 dark:text-gray-400 mr-2"></i>
-                                            Academic Information
-                                        </h4>
-                                        <div
-                                            class="flex flex-wrap items-center gap-3 text-xs bg-gray-50 dark:bg-gray-700/50 rounded px-3 py-2 border border-gray-200 dark:border-gray-600">
-                                            <div class="flex items-center">
-                                                <span class="text-gray-500 dark:text-gray-400 mr-1">Year:</span>
-                                                <span class="font-medium text-gray-900 dark:text-gray-100">{{
-                                                    item.year_level || '-'
-                                                }}</span>
-                                            </div>
-                                            <span class="text-gray-300 dark:text-gray-600">•</span>
-                                            <div class="flex items-center">
-                                                <span class="text-gray-500 dark:text-gray-400 mr-1">Term:</span>
-                                                <span class="font-medium text-gray-900 dark:text-gray-100">{{
-                                                    item.semester || '-'
-                                                }}</span>
-                                            </div>
-                                            <span class="text-gray-300 dark:text-gray-600">•</span>
-                                            <div class="flex items-center">
-                                                <span class="text-gray-500 dark:text-gray-400 mr-1">AY:</span>
-                                                <span class="font-medium text-gray-900 dark:text-gray-100">{{
-                                                    item.academic_year || '-'
-                                                }}</span>
-                                            </div>
-                                            <span class="text-gray-300 dark:text-gray-600">•</span>
-                                            <div class="flex items-center">
-                                                <span class="text-gray-500 dark:text-gray-400 mr-1">Course:</span>
-                                                <span class="font-medium text-gray-900 dark:text-gray-100">{{
-                                                    item.profile?.scholarship_grant?.[0]?.course?.shortname || '-'
-                                                    }}</span>
-                                            </div>
-                                            <span class="text-gray-300 dark:text-gray-600">•</span>
-                                            <div class="flex items-center">
-                                                <span class="text-gray-500 dark:text-gray-400 mr-1">School:</span>
-                                                <span class="font-medium text-gray-900 dark:text-gray-100">{{
-                                                    item.profile?.scholarship_grant?.[0]?.school?.shortname || '-'
-                                                }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Cheque Information -->
-                                    <div>
-                                        <h4
-                                            class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-                                            <i class="pi pi-check-circle text-green-600 mr-2"></i>
-                                            Cheque Information
-                                        </h4>
-                                        <div
-                                            class="flex flex-wrap items-center gap-3 text-xs bg-green-50 dark:bg-green-900/20 rounded px-3 py-2 border border-green-200 dark:border-green-800/40">
-                                            <div class="flex items-center">
-                                                <span class="text-gray-600 dark:text-gray-400 mr-1">Cheque:</span>
-                                                <span class="font-semibold text-gray-900 dark:text-gray-100">{{
-                                                    item.cheques &&
-                                                        item.cheques.length > 0 ? item.cheques[0].cheque_no : '-' }}</span>
-                                            </div>
-                                            <span class="text-gray-300 dark:text-gray-600">•</span>
-                                            <div class="flex items-center">
-                                                <span class="text-gray-600 dark:text-gray-400 mr-1">Released:</span>
-                                                <span class="font-medium text-gray-900 dark:text-gray-100">{{
-                                                    item.cheques &&
-                                                        item.cheques.length > 0 && item.cheques[0].date_released ?
-                                                        formatDate(item.cheques[0].date_released) : '-' }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Remarks -->
-                                    <div>
-                                        <h4
-                                            class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-                                            <i class="pi pi-comment text-yellow-600 mr-2"></i>
-                                            Remarks
-                                        </h4>
-                                        <div
-                                            class="text-xs bg-yellow-50 dark:bg-yellow-900/20 border-l-2 border-yellow-400 dark:border-yellow-600 px-3 py-2">
-                                            <span class="text-gray-700 dark:text-gray-300"
-                                                v-safe-html="item.remarks || '-'"></span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Column 2: Attachments (Compact) -->
-                                <div>
-                                    <h4
-                                        class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-                                        <i class="pi pi-paperclip text-blue-600 mr-2"></i>
-                                        Attachments ({{ item.attachments ? item.attachments.length : 0 }})
-                                    </h4>
-                                    <div v-if="item.attachments && item.attachments.length > 0"
-                                        class="flex flex-col gap-1 text-xs bg-blue-50 dark:bg-blue-900/20 rounded px-2 py-2 border border-blue-200 dark:border-blue-800/40">
-                                        <div v-for="attachment in item.attachments" :key="attachment.attachment_id"
-                                            class="flex items-center gap-1 bg-white dark:bg-gray-700 px-2 py-1 rounded border border-blue-200 dark:border-blue-800/40">
-                                            <i :class="getFileIcon(attachment.file_type)"
-                                                class="text-blue-600 text-sm"></i>
-                                            <span
-                                                class="font-medium text-gray-900 dark:text-gray-100 flex-1 truncate text-xs">{{
-                                                    attachment.attachment_type }}</span>
-                                            <div class="flex gap-1">
-                                                <Button icon="pi pi-eye" size="small" text rounded
-                                                    v-tooltip.top="'View'" @click="viewAttachment(attachment)"
-                                                    class="!w-6 !h-6" />
-                                                <Button icon="pi pi-download" size="small" text rounded
-                                                    v-tooltip.top="'Download'" @click="downloadAttachment(attachment)"
-                                                    class="!w-6 !h-6" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div v-else
-                                        class="text-xs bg-blue-50 dark:bg-blue-900/20 rounded px-3 py-2 border border-blue-200 dark:border-blue-800/40">
-                                        <span class="text-gray-600 dark:text-gray-400">-</span>
-                                    </div>
-                                </div>
-
-                                <!-- Column 3: Actions Section -->
-                                <div
-                                    class="flex lg:flex-col gap-2 lg:border-l lg:border-gray-200 lg:dark:border-gray-600 lg:pl-4">
-                                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-qrcode" size="small"
-                                        severity="info" outlined rounded v-tooltip.top="'Show QR Code'"
-                                        @click="showQrCode(item)" :disabled="showViewerModal" />
-                                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-paperclip" size="small"
-                                        severity="secondary" outlined rounded v-tooltip.top="'Manage Attachments'"
-                                        @click="manageAttachments(item)" :disabled="showViewerModal" />
-                                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-file" size="small"
-                                        severity="info" outlined rounded v-tooltip.top="'Manage Cheque'"
-                                        @click="manageCheque(item)"
-                                        style="pointer-events: auto; position: relative; z-index: 1200;" />
-                                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-pencil" size="small"
-                                        severity="warning" outlined rounded v-tooltip.top="'Edit'"
-                                        @click="editDisbursement(item)" :disabled="showViewerModal" />
-                                    <Button v-if="hasPermission('applicants.delete')" icon="pi pi-trash" size="small"
-                                        severity="danger" outlined rounded v-tooltip.top="'Delete'"
-                                        @click="confirmDelete(item)" :disabled="showViewerModal" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </DataView>
 
         <!-- Add/Edit Disbursement Modal -->
         <Dialog v-model:visible="showAddModal" modal :header="editMode ? 'Edit Disbursement' : 'Add Disbursement'"
@@ -645,6 +559,16 @@ const { hasPermission } = usePermission();
 // State
 const loading = ref(false);
 const saving = ref(false);
+
+// Expandable rows state
+const expandedRows = ref({});
+const toggleRow = (id) => {
+    if (expandedRows.value[id]) {
+        delete expandedRows.value[id];
+    } else {
+        expandedRows.value[id] = true;
+    }
+};
 const deleting = ref(false);
 const uploading = ref(false);
 const disbursements = ref([]);
@@ -1027,6 +951,19 @@ const getObrStatusClass = (status) => {
     return classes[status] || '';
 };
 
+const getObrStatusIosStyle = (status) => {
+    const styles = {
+        'CLAIMED': 'background: #d1f5e0; color: #187a3c;',
+        'PAID': 'background: #d1f5e0; color: #187a3c;',
+        'ON PROCESS': 'background: #fff3cd; color: #8a5700;',
+        'LOA': 'background: #ffe9d0; color: #a04000;',
+        'IRREGULAR': 'background: #fef9c3; color: #7a5c00;',
+        'TRANSFERRED': 'background: #dbeafe; color: #1d4ed8;',
+        'DENIED': 'background: #fee2e2; color: #991b1b;',
+    };
+    return styles[status] || 'background: #e5e5ea; color: #3a3a3c;';
+};
+
 const getStatusCardClass = (status) => {
     const classes = {
         'LOA': 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-900/30 border-orange-200 dark:border-orange-800/40',
@@ -1302,6 +1239,22 @@ const totalAmount = computed(() => {
     }, 0);
 });
 
+const pendingStatuses = ['ON PROCESS'];
+const settledStatuses = ['CLAIMED', 'PAID'];
+const pendingAmount = computed(() => {
+    return disbursements.value
+        .filter(item => !settledStatuses.includes(item.obr_status))
+        .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+});
+const pendingCount = computed(() => {
+    return disbursements.value.filter(item => !settledStatuses.includes(item.obr_status)).length;
+});
+const settledAmount = computed(() => {
+    return disbursements.value
+        .filter(item => settledStatuses.includes(item.obr_status))
+        .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+});
+
 const semesterSummary = computed(() => {
     const yearSummary = {};
 
@@ -1359,8 +1312,65 @@ const semesterSummary = computed(() => {
     );
 });
 
+const groupedDisbursements = computed(() => {
+    const groups = {};
+    disbursements.value.forEach(item => {
+        const year = item.academic_year || 'N/A';
+        if (!groups[year]) {
+            groups[year] = { year, items: [], total: 0 };
+        }
+        groups[year].items.push(item);
+        groups[year].total += parseFloat(item.amount) || 0;
+    });
+    return Object.values(groups).sort((a, b) => b.year.localeCompare(a.year));
+});
+
 // Load data on mount
 onMounted(() => {
     loadDisbursements();
 });
 </script>
+
+<style scoped>
+.tbl-col-header {
+    font-size: 11px;
+    font-weight: 600;
+    color: #8e8e93;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.tbl-section-header {
+    font-size: 10px;
+    font-weight: 600;
+    color: #8e8e93;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+}
+
+.tbl-detail-label {
+    font-size: 10px;
+    color: #8e8e93;
+}
+
+.tbl-detail-value {
+    font-size: 12px;
+    color: #1c1c1e;
+    font-weight: 500;
+    margin-top: 1px;
+}
+
+.tbl-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: none;
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+}
+</style>

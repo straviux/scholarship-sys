@@ -77,7 +77,7 @@
                                                 v-model:temporary_address="form.temporary_address"
                                                 :show-header="false" />
 
-                                            <!-- Validation Messages -->
+                                            <!-- Validation Warning -->
                                             <div v-if="validationError"
                                                 class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
                                                 <p class="text-sm text-red-800 dark:text-red-300 font-medium">
@@ -85,6 +85,73 @@
                                                     {{ validationError }}
                                                 </p>
                                             </div>
+
+                                            <!-- Duplicate Name Confirmation Dialog -->
+                                            <Dialog v-model:visible="showDuplicateDialog" modal
+                                                :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+                                                <template #container>
+                                                    <div class="ios-dup-modal">
+                                                        <div class="ios-dup-nav">
+                                                            <button class="ios-nav-btn ios-nav-cancel"
+                                                                @click="showDuplicateDialog = false"><i
+                                                                    class="pi pi-times"></i></button>
+                                                            <span class="ios-nav-title"
+                                                                style="font-size: 15px;">Possible Duplicate</span>
+                                                            <button class="ios-nav-btn ios-dup-proceed"
+                                                                @click="proceedDespiteDuplicate">Proceed</button>
+                                                        </div>
+                                                        <div class="ios-dup-body">
+                                                            <div class="ios-section" style="margin-top: 12px;">
+                                                                <div class="ios-section-footer" style="padding: 0;">
+                                                                    <i class="pi pi-exclamation-triangle"
+                                                                        style="color: #FF9500;"></i>
+                                                                    The following record(s) match
+                                                                    <strong>{{ form.first_name }} {{ form.last_name
+                                                                        }}</strong>:
+                                                                </div>
+                                                            </div>
+                                                            <div class="ios-section">
+                                                                <div class="ios-section-label">Matches Found</div>
+                                                                <div class="ios-card">
+                                                                    <div v-for="(match, idx) in duplicateMatches"
+                                                                        :key="match.profile_id" class="ios-row"
+                                                                        :class="{ 'ios-row-last': idx === duplicateMatches.length - 1 }">
+                                                                        <div
+                                                                            style="display: flex; align-items: center; gap: 10px;">
+                                                                            <i class="pi pi-user"
+                                                                                style="color: #8E8E93; font-size: 16px;"></i>
+                                                                            <div>
+                                                                                <div class="ios-row-label">
+                                                                                    {{ match.last_name }}, {{
+                                                                                        match.first_name }}
+                                                                                    {{ match.middle_name || '' }} {{
+                                                                                        match.extension_name || '' }}
+                                                                                </div>
+                                                                                <div
+                                                                                    style="font-size: 12px; color: #8E8E93;">
+                                                                                    {{ match.municipality || 'No
+                                                                                    address'
+                                                                                    }}{{ match.barangay ? `,
+                                                                                    ${match.barangay}` : '' }}
+                                                                                    <span v-if="match.contact_no"> · {{
+                                                                                        match.contact_no }}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="ios-section">
+                                                                <div class="ios-section-footer" style="padding: 0;">
+                                                                    Are you sure this is a different person? You may
+                                                                    proceed or close to review.
+                                                                </div>
+                                                            </div>
+                                                            <div style="height: 16px;"></div>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </Dialog>
                                         </div>
                                     </div>
                                 </StepPanel>
@@ -113,53 +180,48 @@
                                 <StepPanel value="3">
                                     <div class="flex flex-col h-full">
                                         <div class="flex-auto">
-                                            <div>
-                                                <div class="space-y-4">
-                                                    <AcademicInformationFields v-model:program="form.program"
-                                                        v-model:school="form.school" v-model:course="form.course"
-                                                        v-model:year_level="form.year_level" v-model:term="form.term"
-                                                        v-model:academic_year="form.academic_year"
-                                                        v-model:remarks="form.remarks" :show-header="false" />
+                                            <div class="space-y-4">
+                                                <AcademicInformationFields v-model:program="form.program"
+                                                    v-model:school="form.school" v-model:course="form.course"
+                                                    v-model:year_level="form.year_level" v-model:term="form.term"
+                                                    v-model:academic_year="form.academic_year"
+                                                    v-model:remarks="form.remarks" :show-header="false" />
 
-                                                    <!-- Date Fields (for backlog encoding) -->
-                                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-6">
-                                                        <FloatLabel>
-                                                            <DatePicker v-model="form.date_filed" type="date"
-                                                                inputId="date_filed" variant="filled"
-                                                                placeholder="mm/dd/yyyy" showIcon fluid
-                                                                iconDisplay="input" :manualInput="true"
-                                                                @input="formatDateInput" />
-                                                            <label class="text-sm" for="date_filed">Date Filed</label>
-                                                        </FloatLabel>
-                                                        <FloatLabel>
-                                                            <DatePicker v-model="form.date_approved" type="date"
-                                                                inputId="date_approved" variant="filled"
-                                                                placeholder="mm/dd/yyyy" showIcon fluid
-                                                                iconDisplay="input" :manualInput="true"
-                                                                @input="formatDateInput" />
-                                                            <label class="text-sm" for="date_approved">Date
-                                                                Approved</label>
-                                                        </FloatLabel>
-                                                    </div>
-
-                                                    <div
-                                                        class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
-                                                        <p class="text-sm text-blue-800 dark:text-blue-300">
-                                                            <i class="pi pi-info-circle mr-2"></i>
-                                                            <strong>Note:</strong> All academic fields are required for
-                                                            scholars.
-                                                        </p>
-                                                    </div>
+                                                <!-- Date Fields (for backlog encoding) -->
+                                                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-6">
+                                                    <FloatLabel>
+                                                        <DatePicker v-model="form.date_filed" type="date"
+                                                            inputId="date_filed" variant="filled"
+                                                            placeholder="mm/dd/yyyy" showIcon fluid iconDisplay="input"
+                                                            :manualInput="true" @input="formatDateInput" />
+                                                        <label class="text-sm" for="date_filed">Date Filed</label>
+                                                    </FloatLabel>
+                                                    <FloatLabel>
+                                                        <DatePicker v-model="form.date_approved" type="date"
+                                                            inputId="date_approved" variant="filled"
+                                                            placeholder="mm/dd/yyyy" showIcon fluid iconDisplay="input"
+                                                            :manualInput="true" @input="formatDateInput" />
+                                                        <label class="text-sm" for="date_approved">Date Approved</label>
+                                                    </FloatLabel>
                                                 </div>
-                                            </div>
 
-                                            <!-- Academic Validation Messages -->
-                                            <div v-if="academicValidationError"
-                                                class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
-                                                <p class="text-sm text-red-800 dark:text-red-300 font-medium">
-                                                    <i class="pi pi-exclamation-triangle mr-2"></i>
-                                                    {{ academicValidationError }}
-                                                </p>
+                                                <div
+                                                    class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
+                                                    <p class="text-sm text-blue-800 dark:text-blue-300">
+                                                        <i class="pi pi-info-circle mr-2"></i>
+                                                        <strong>Note:</strong> All academic fields are required for
+                                                        scholars.
+                                                    </p>
+                                                </div>
+
+                                                <!-- Academic Validation Messages -->
+                                                <div v-if="academicValidationError"
+                                                    class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
+                                                    <p class="text-sm text-red-800 dark:text-red-300 font-medium">
+                                                        <i class="pi pi-exclamation-triangle mr-2"></i>
+                                                        {{ academicValidationError }}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -177,8 +239,9 @@
                     </button>
                     <span v-else></span>
                     <button v-if="activeStep === '1'" class="ios-footer-btn ios-footer-next" @click="handleNextStep1"
-                        :disabled="!canProceedStep1" v-tooltip.top="step1TooltipMessage">
-                        Next <i class="pi pi-arrow-right" style="font-size: 12px;"></i>
+                        :disabled="!canProceedStep1 || isValidating" v-tooltip.top="step1TooltipMessage">
+                        {{ isValidating ? 'Checking...' : 'Next' }} <i class="pi pi-arrow-right"
+                            style="font-size: 12px;"></i>
                     </button>
                     <button v-else-if="activeStep === '2'" class="ios-footer-btn ios-footer-next"
                         @click="activeStep = '3'">
@@ -198,6 +261,7 @@
 <script setup>
 import { computed, ref, watch, onBeforeUnmount } from 'vue';
 import { useForm } from '@inertiajs/vue3';
+import axios from 'axios';
 import PersonalInformationFields from '@/Components/forms/fields/PersonalInformationFields.vue';
 import FamilyInformationFields from '@/Components/forms/fields/FamilyInformationFields.vue';
 import AcademicInformationFields from '@/Components/forms/fields/AcademicInformationFields.vue';
@@ -220,8 +284,11 @@ const props = defineProps({
 const emit = defineEmits(['update:visible', 'success']);
 
 const activeStep = ref('1');
+const isValidating = ref(false);
 const validationError = ref('');
 const academicValidationError = ref('');
+const showDuplicateDialog = ref(false);
+const duplicateMatches = ref([]);
 
 // Helper function to format date for DatePicker
 const formatDateForPicker = (dateString) => {
@@ -316,8 +383,8 @@ const step1TooltipMessage = computed(() => {
     return '';
 });
 
-// Handle next step 1
-const handleNextStep1 = () => {
+// Handle next step 1 with duplicate name check
+const handleNextStep1 = async () => {
     const missingFields = [];
     if (!form.first_name) missingFields.push('First Name');
     if (!form.last_name) missingFields.push('Last Name');
@@ -332,7 +399,38 @@ const handleNextStep1 = () => {
         return;
     }
 
+    if (props.mode === 'edit') {
+        validationError.value = '';
+        activeStep.value = '2';
+        return;
+    }
+
+    isValidating.value = true;
     validationError.value = '';
+
+    try {
+        const response = await axios.post(route('api.profiles.validate-name'), {
+            first_name: form.first_name,
+            middle_name: form.middle_name || '',
+            last_name: form.last_name
+        });
+
+        if (response.data.exists) {
+            duplicateMatches.value = response.data.matches || [];
+            showDuplicateDialog.value = true;
+        } else {
+            activeStep.value = '2';
+        }
+    } catch (error) {
+        console.error('Validation error:', error);
+        validationError.value = 'An error occurred while validating. Please try again.';
+    } finally {
+        isValidating.value = false;
+    }
+};
+
+const proceedDespiteDuplicate = () => {
+    showDuplicateDialog.value = false;
     activeStep.value = '2';
 };
 
@@ -368,11 +466,7 @@ const isMaximized = ref(false);
 
 const modalStyle = computed(() => {
     if (isMaximized.value) {
-        return {
-            width: '100vw',
-            height: '100vh',
-            transform: 'none',
-        };
+        return { width: '100vw', height: '100vh', transform: 'none' };
     }
     return {
         width: '900px',
@@ -457,17 +551,20 @@ watch(() => props.visible, async (newValue) => {
         activeStep.value = '1';
         validationError.value = '';
         academicValidationError.value = '';
+        isValidating.value = false;
+        showDuplicateDialog.value = false;
     } else if (newValue && props.mode === 'create') {
         // In create mode, reset to empty form
         form.reset();
-        form.date_filed = null; // Leave date_filed blank
-        form.date_approved = null; // Leave date_approved empty for backlog encoding
+        form.date_filed = null;
+        form.date_approved = null;
         form.clearErrors();
         activeStep.value = '1';
         validationError.value = '';
         academicValidationError.value = '';
+        isValidating.value = false;
+        showDuplicateDialog.value = false;
     }
-
     // Reset drag position when modal opens
     if (newValue) {
         dragOffset.value = { x: 0, y: 0 };
@@ -475,6 +572,7 @@ watch(() => props.visible, async (newValue) => {
 });
 
 const handleSubmit = () => {
+    academicValidationError.value = '';
     // Validate all required academic fields for scholars
     const missingAcademicFields = [];
     if (!form.program) missingAcademicFields.push('Program');
@@ -577,3 +675,266 @@ const handleSubmit = () => {
     }
 };
 </script>
+
+<style scoped>
+/* Override global max-height for this larger multi-step form */
+.ios-modal {
+    max-height: 90vh;
+}
+
+/* Nav right area (step counter + maximize button) */
+.ios-nav-right {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ios-nav-step-text {
+    font-size: 13px;
+    color: #8E8E93;
+    font-weight: 400;
+}
+
+.dark .ios-nav-step-text {
+    color: #6b7280;
+}
+
+.ios-nav-maximize {
+    background: none;
+    border: none;
+    color: #8E8E93;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    transition: opacity 0.15s;
+}
+
+.ios-nav-maximize:hover {
+    opacity: 0.6;
+}
+
+/* Maximized state */
+.ios-modal-maximized {
+    border-radius: 0;
+    max-height: 100vh;
+}
+
+.ios-modal-maximized .ios-nav-bar {
+    cursor: default;
+}
+
+/* Footer */
+.ios-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #FFFFFF;
+    border-top: 0.5px solid #E5E5EA;
+    flex-shrink: 0;
+}
+
+.dark .ios-footer {
+    background: #2a3040;
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.ios-footer-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 14px;
+    border-radius: 8px;
+    transition: opacity 0.15s, background 0.15s;
+}
+
+.ios-footer-btn:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.dark .ios-footer-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.ios-footer-btn:disabled {
+    color: #C7C7CC;
+    cursor: not-allowed;
+    background: none;
+}
+
+.ios-footer-back {
+    color: #6B7280;
+    font-weight: 400;
+}
+
+.dark .ios-footer-back {
+    color: #9ca3af;
+}
+
+.ios-footer-next {
+    color: #007AFF;
+}
+
+.ios-footer-submit {
+    color: #34C759;
+}
+
+/* Duplicate detection dialog */
+.ios-dup-modal {
+    width: 480px;
+    max-height: 85vh;
+    background: #F2F2F7;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.dark .ios-dup-modal {
+    background: #222831;
+}
+
+.ios-dup-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 12px 16px;
+    background: rgba(249, 249, 249, 0.94);
+    backdrop-filter: blur(20px);
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+    min-height: 44px;
+    cursor: grab;
+}
+
+.ios-dup-nav:active {
+    cursor: grabbing;
+}
+
+.dark .ios-dup-nav {
+    background: rgba(42, 48, 64, 0.94);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.ios-dup-nav .ios-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.ios-dup-nav .ios-nav-cancel {
+    left: 16px;
+}
+
+.ios-dup-nav .ios-dup-proceed {
+    right: 16px;
+}
+
+.ios-dup-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 16px;
+}
+
+.ios-dup-proceed {
+    font-size: 15px;
+    font-weight: 600;
+    color: #FF9500;
+}
+</style>
+
+<style>
+/* Make PrimeVue Stepper internals transparent inside the ios-modal */
+.ios-modal .p-stepper {
+    background: transparent !important;
+}
+
+.ios-modal .p-steppanels {
+    background: transparent !important;
+}
+
+.ios-modal .p-steppanel {
+    background: transparent !important;
+}
+
+.ios-modal .p-steppanel-content {
+    background: transparent !important;
+}
+
+/* Icon-based step buttons — non-scoped to override global ios-design-system.css */
+.ios-step-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 16px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    color: #8e8e93;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.ios-step-btn i {
+    font-size: 1.1rem;
+}
+
+.ios-step-btn:hover {
+    color: #636366;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.ios-step-btn.ios-step-active {
+    color: #555;
+}
+
+.ios-step-btn.ios-step-active i {
+    font-weight: 700;
+}
+
+.ios-step-btn.ios-step-disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.ios-step-separator {
+    flex: 1;
+    height: 2px;
+    background: #e5e7eb;
+    align-self: center;
+    border-radius: 1px;
+}
+
+.dark .ios-step-btn {
+    color: #6b7280;
+}
+
+.dark .ios-step-btn:hover {
+    color: #9ca3af;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.dark .ios-step-btn.ios-step-active {
+    color: #d1d5db;
+}
+
+.dark .ios-step-separator {
+    background: rgba(255, 255, 255, 0.1);
+}
+</style>

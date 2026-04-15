@@ -122,7 +122,7 @@
                                 <td :style="TD_AMT">{{ d.amount != null ? money(d.amount) : '—' }}</td>
                                 <!-- ROS: spans all OBR rows of this term (merged) -->
                                 <td v-if="ri === 0" :rowspan="term.rows.length" :style="TD_AMT">
-                                    {{ is4MonthScholar ? '4 MONTHS' : rosLabel(d.semester) }}
+                                    {{ resolvedRosLabel(d.year_level, d.semester, d.academic_year) }}
                                 </td>
                             </tr>
                         </template>
@@ -159,7 +159,7 @@
                             <!-- ROS per term (merged); last term also gets border-bottom:none -->
                             <td v-if="ri === 0" :rowspan="term.rows.length"
                                 :style="ti === reviewTerms.length - 1 ? TD_PRE_AMT : TD_AMT">
-                                {{ is4MonthScholar ? '4 MONTHS' : rosLabel(d.semester) }}
+                                {{ resolvedRosLabel(d.year_level, d.semester, d.academic_year) }}
                             </td>
                         </tr>
                     </template>
@@ -231,6 +231,7 @@ const props = defineProps({
     preparedBy: { type: String, default: '' },
     preparedByDesignation: { type: String, default: '' },
     today: { type: String, default: '' },
+    rosOverrides: { type: Object, default: () => ({}) }, // { 'yearLevel||academic_year||semester': '4'|'6'|'12' }
 });
 
 /* ── inline style constants (resolved by Vue before innerHTML capture) ── */
@@ -270,6 +271,16 @@ const is4MonthTerm = (semester) => {
 
 const rosLabel = (semester) =>
     is4MonthTerm(semester) ? '4 MONTHS' : '6 MONTHS';
+
+const resolvedRosLabel = (yearLevel, semester, academicYear) => {
+    const key = `${yearLevel ?? ''}||${academicYear ?? ''}||${semester ?? ''}`;
+    const override = props.rosOverrides?.[key];
+    if (override === '') return '';
+    if (override === '4') return '4 MONTHS';
+    if (override === '6') return '6 MONTHS';
+    if (override === '12') return '12 MONTHS';
+    return is4MonthScholar.value ? '4 MONTHS' : rosLabel(semester);
+};
 
 /* ── profile derived ─────────────────────────────────────── */
 
@@ -345,6 +356,8 @@ const sortedDisbursements = computed(() =>
         if ((a.academic_year ?? '') > (b.academic_year ?? '')) return 1;
         if ((a.semester ?? '') < (b.semester ?? '')) return -1;
         if ((a.semester ?? '') > (b.semester ?? '')) return 1;
+        if ((a.date_obligated ?? '') < (b.date_obligated ?? '')) return -1;
+        if ((a.date_obligated ?? '') > (b.date_obligated ?? '')) return 1;
         return 0;
     })
 );

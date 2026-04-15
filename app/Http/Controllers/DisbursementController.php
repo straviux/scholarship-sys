@@ -52,7 +52,9 @@ class DisbursementController extends Controller
         $normalized = $fundTransactions->map(fn($ft) => $this->normalizeFundTransaction($ft, $profileId));
 
         $legacyDisbursements = Disbursement::with([
-            'cheques', 'creator', 'attachments',
+            'cheques',
+            'creator',
+            'attachments',
             'profile.scholarshipGrant.course',
             'profile.scholarshipGrant.school',
         ])
@@ -362,7 +364,9 @@ class DisbursementController extends Controller
             }
             $content = Storage::disk('public')->get($path);
             $tempPath = storage_path('app/temp/' . $doc->filename);
-            if (!file_exists(dirname($tempPath))) { mkdir(dirname($tempPath), 0755, true); }
+            if (!file_exists(dirname($tempPath))) {
+                mkdir(dirname($tempPath), 0755, true);
+            }
             file_put_contents($tempPath, $content);
             return response()->download($tempPath, $doc->filename)->deleteFileAfterSend(true);
         }
@@ -373,7 +377,9 @@ class DisbursementController extends Controller
         }
         $content = Storage::disk('public')->get($attachment->file_path);
         $tempPath = storage_path('app/temp/' . $attachment->file_name);
-        if (!file_exists(dirname($tempPath))) { mkdir(dirname($tempPath), 0755, true); }
+        if (!file_exists(dirname($tempPath))) {
+            mkdir(dirname($tempPath), 0755, true);
+        }
         file_put_contents($tempPath, $content);
         return response()->download($tempPath, $attachment->file_name)->deleteFileAfterSend(true);
     }
@@ -584,7 +590,7 @@ class DisbursementController extends Controller
             'disbursement_type'   => $this->fromObrType($ft->obr_type ?? $ft->disbursement_type),
             'payee'               => $ft->payee_name,
             'obr_no'              => $ft->obr_no,
-            'obr_status'          => $ft->transaction_status,
+            'obr_status'          => $ft->transaction_status ? strtoupper($ft->transaction_status) : null,
             'date_obligated'      => $ft->date_obligated?->format('Y-m-d') ?? $ft->created_at?->format('Y-m-d'),
             'year_level'          => $ft->year_level,
             'semester'            => $ft->semester,
@@ -641,7 +647,7 @@ class DisbursementController extends Controller
 
     private function toObrType(?string $disbursementType): string
     {
-        return match($disbursementType) {
+        return match ($disbursementType) {
             'reimbursement'        => 'REIMBURSEMENT',
             'financial_assistance' => 'FINANCIAL ASSISTANCE',
             default                => 'REGULAR',
@@ -650,7 +656,7 @@ class DisbursementController extends Controller
 
     private function fromObrType(?string $obrType): string
     {
-        return match(strtoupper((string) $obrType)) {
+        return match (strtoupper((string) $obrType)) {
             'REIMBURSEMENT'        => 'reimbursement',
             'FINANCIAL ASSISTANCE' => 'financial_assistance',
             default                => 'regular',
