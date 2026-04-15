@@ -40,10 +40,15 @@ class DisbursementController extends Controller
 
     public function index(Request $request, $profileId)
     {
+        $profileIdInt = (int) $profileId;
+
         $fundTransactions = FundTransaction::with(['documents', 'cheques'])
-            ->where(function ($query) use ($profileId) {
-                $query->whereJsonContains('scholar_ids', $profileId)
-                    ->orWhereJsonContains('scholar_ids', ['profile_id' => $profileId]);
+            ->where(function ($query) use ($profileId, $profileIdInt) {
+                // Cover plain array (int), plain array (string), object with int, object with string
+                $query->whereJsonContains('scholar_ids', $profileIdInt)
+                    ->orWhereJsonContains('scholar_ids', (string) $profileId)
+                    ->orWhereJsonContains('scholar_ids', ['profile_id' => $profileIdInt])
+                    ->orWhereJsonContains('scholar_ids', ['profile_id' => (string) $profileId]);
             })
             ->orderBy('date_obligated', 'desc')
             ->orderBy('created_at', 'desc')
@@ -573,10 +578,11 @@ class DisbursementController extends Controller
 
     private function normalizeFundTransaction(FundTransaction $ft, $profileId): array
     {
+        $profileIdInt = (int) $profileId;
         $amount = $ft->amount;
         if ($ft->scholar_ids) {
             foreach ($ft->scholar_ids as $scholar) {
-                if (is_array($scholar) && ($scholar['profile_id'] ?? null) == $profileId) {
+                if (is_array($scholar) && ((int) ($scholar['profile_id'] ?? null)) === $profileIdInt) {
                     $amount = $scholar['amount'] ?? $ft->amount;
                     break;
                 }
