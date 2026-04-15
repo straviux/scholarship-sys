@@ -180,7 +180,7 @@
                             <i class="pi pi-times"></i>
                         </button>
                         <span class="ios-nav-title">{{ dialogMode === 'upload' ? 'Upload File' : 'Edit Document'
-                            }}</span>
+                        }}</span>
                         <button class="ios-nav-btn ios-nav-action" type="button" @click="submitForm"
                             :disabled="form.processing">
                             {{ form.processing ? 'Saving...' : (dialogMode === 'upload' ? 'Upload' : 'Save') }}
@@ -375,7 +375,7 @@
                                     <span><i class="pi pi-file mr-1"></i>{{ viewingDocument.file_name }}</span>
                                     <span><i class="pi pi-database mr-1"></i>{{
                                         formatFileSize(viewingDocument.file_size)
-                                        }}</span>
+                                    }}</span>
                                     <span v-if="viewingDocument.category">
                                         <i class="pi pi-tag mr-1"></i>{{ viewingDocument.category }}
                                     </span>
@@ -685,9 +685,11 @@ const getFileUrl = (document) => {
     overflow: hidden;
     border: 1px solid var(--p-content-border-color, #e5e7eb);
 }
+
 :deep(.p-tabview-tablist-container) {
     border-radius: 1.5rem 1.5rem 0 0;
 }
+
 :deep(.p-tabview-panels) {
     border-radius: 0 0 1.5rem 1.5rem;
     overflow: hidden;
