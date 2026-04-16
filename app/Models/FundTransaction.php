@@ -52,6 +52,7 @@ class FundTransaction extends Model
     protected $casts = [
         'scholar_ids' => 'array',
         'amount' => 'decimal:2',
+        'date_obligated' => 'date',
         'upload_token_expires_at' => 'datetime',
     ];
 
