@@ -77,7 +77,9 @@ onBeforeUnmount(() => {
             <div class="ios-modal" :style="modalStyle">
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Confirm Deletion</span>
                     <button class="ios-nav-btn ios-nav-action ios-nav-destructive" @click="deleteApplicant"
                         :disabled="deleting">
@@ -91,8 +93,8 @@ onBeforeUnmount(() => {
                     <div class="ios-section">
                         <div class="ios-card">
                             <div class="ios-row" style="padding: 12px 16px; gap: 12px;">
-                                <i class="pi pi-exclamation-triangle"
-                                    style="font-size: 24px; color: #FF3B30; flex-shrink: 0;"></i>
+                                <AppIcon name="exclamation-triangle" :size="24"
+                                    style="color: #FF3B30; flex-shrink: 0;" />
                                 <div>
                                     <div class="del-warn-title"
                                         style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">

@@ -8,16 +8,16 @@
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" @click="emit('update:show', false)">
-                        <i class="pi pi-times"></i>
+                        <AppIcon name="times" :size="14" />
                     </button>
                     <span class="ios-nav-title">{{ title }}</span>
                     <button v-if="onExcel" @click="onExcel" class="ios-nav-btn" style="right:58px;"
                         v-tooltip.bottom="'Export Excel'">
-                        <i class="pi pi-file-excel text-purple-400" style="font-size: 20px;"></i>
+                        <AppIcon name="file-excel" :size="20" class="text-purple-400" />
                     </button>
                     <button class="ios-nav-btn ios-nav-action" @click="doPrint"
                         v-tooltip.right="'Print or Save Document'">
-                        <i class="pi pi-print text-emerald-400" style="font-size: 20px;"></i>
+                        <AppIcon name="print" :size="20" class="text-emerald-400" />
                     </button>
                 </div>
 
@@ -31,7 +31,7 @@
                                    bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10
                                    text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e]
                                    transition-colors disabled:opacity-40" :disabled="zoomLevel <= 40">
-                            <i class="pi pi-minus" style="font-size: 10px;"></i>
+                            <AppIcon name="minus" :size="10" />
                         </button>
                         <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-center">
                             {{ zoomLevel }}%
@@ -41,14 +41,14 @@
                                    bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10
                                    text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e]
                                    transition-colors disabled:opacity-40" :disabled="zoomLevel >= 150">
-                            <i class="pi pi-plus" style="font-size: 10px;"></i>
+                            <AppIcon name="plus" :size="10" />
                         </button>
                         <!-- Fit to width -->
                         <button @click="fitToWidth" class="ml-1 px-2 h-7 rounded-full flex items-center justify-center gap-1
                                    bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10
                                    text-xs text-gray-600 dark:text-gray-300
                                    hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors">
-                            <i class="pi pi-expand" style="font-size: 10px;"></i>
+                            <AppIcon name="expand" :size="10" />
                             Fit
                         </button>
                     </div>

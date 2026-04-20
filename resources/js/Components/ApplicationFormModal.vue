@@ -4,8 +4,8 @@
         :maximizable="true">
         <template #header>
             <div class="flex items-center gap-2">
-                <i :class="mode === 'edit' ? 'pi pi-pencil text-lg text-orange-600' : 'pi pi-file-edit text-lg text-blue-600'"
-                    style="font-size: 1.2rem;"></i>
+                <AppIcon :name="mode === 'edit' ? 'pencil' : 'file-edit'" :size="19"
+                    :class="mode === 'edit' ? 'text-orange-600' : 'text-blue-600'" />
                 <span class="font-semibold text-xl">
                     {{ mode === 'edit' ? 'Edit Application' : 'Scholarship Application Form' }}
                 </span>
@@ -49,13 +49,13 @@
                                 <div v-if="validationError"
                                     class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
                                     <p class="text-sm text-red-800 dark:text-red-300 font-medium">
-                                        <i class="pi pi-exclamation-triangle mr-2"></i>
+                                        <AppIcon name="exclamation-triangle" class="mr-2" />
                                         {{ validationError }}
                                     </p>
                                 </div>
                             </div>
                             <div class="flex pt-6 justify-end">
-                                <Button label="Next" icon="pi pi-arrow-right" iconPos="right" @click="handleNextStep1"
+                                <AppButton label="Next" icon="arrow-right" iconPos="right" @click="handleNextStep1"
                                     :loading="isValidating" :disabled="!canProceedStep1"
                                     v-tooltip.top="step1TooltipMessage" />
                             </div>
@@ -78,10 +78,9 @@
                                     :show-header="false" />
                             </div>
                             <div class="flex pt-6 justify-between">
-                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                <AppButton label="Back" severity="secondary" icon="arrow-left"
                                     @click="activeStep = '1'" />
-                                <Button label="Next" icon="pi pi-arrow-right" iconPos="right"
-                                    @click="activeStep = '3'" />
+                                <AppButton label="Next" icon="arrow-right" iconPos="right" @click="activeStep = '3'" />
                             </div>
                         </div>
                     </StepPanel>
@@ -109,7 +108,7 @@
                                         <div
                                             class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
                                             <p class="text-sm text-blue-800 dark:text-blue-300">
-                                                <i class="pi pi-info-circle mr-2"></i>
+                                                <AppIcon name="info-circle" class="mr-2" />
                                                 Academic information is optional. You can complete it now or update it
                                                 later.
                                             </p>
@@ -118,11 +117,10 @@
                                 </div>
                             </div>
                             <div class="flex pt-6 justify-between">
-                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                <AppButton label="Back" severity="secondary" icon="arrow-left"
                                     @click="activeStep = '2'" />
-                                <Button :label="mode === 'edit' ? 'Update Application' : 'Submit Application'"
-                                    icon="pi pi-check" severity="success" @click="handleSubmit"
-                                    :loading="form.processing" />
+                                <AppButton :label="mode === 'edit' ? 'Update Application' : 'Submit Application'"
+                                    icon="check" severity="success" @click="handleSubmit" :loading="form.processing" />
                             </div>
                         </div>
                     </StepPanel>

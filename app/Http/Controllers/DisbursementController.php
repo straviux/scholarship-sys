@@ -42,7 +42,7 @@ class DisbursementController extends Controller
     {
         $profileIdInt = (int) $profileId;
 
-        $fundTransactions = FundTransaction::with(['documents', 'cheques'])
+        $fundTransactions = FundTransaction::with(['documents', 'cheques', 'creator'])
             ->where(function ($query) use ($profileId, $profileIdInt) {
                 // Cover plain array (int), plain array (string), object with int, object with string
                 $query->whereJsonContains('scholar_ids', $profileIdInt)
@@ -607,6 +607,8 @@ class DisbursementController extends Controller
             'attachments'         => $this->normalizeDocuments($ft->documents ?? collect(), $ft->id),
             'profile'             => null,
             'is_legacy'           => false,
+            'encoder'             => $ft->creator?->name,
+            'encoder_designation' => $ft->creator?->office_designation,
         ];
     }
 
@@ -630,6 +632,8 @@ class DisbursementController extends Controller
             'attachments'         => $d->attachments ?? [],
             'profile'             => $d->profile ? ['scholarship_grant' => $d->profile->scholarshipGrant ?? []] : null,
             'is_legacy'           => true,
+            'encoder'             => $d->creator?->name,
+            'encoder_designation' => $d->creator?->office_designation,
         ];
     }
 

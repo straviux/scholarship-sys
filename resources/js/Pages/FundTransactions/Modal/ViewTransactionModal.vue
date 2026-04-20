@@ -4,8 +4,9 @@
         <template #container>
             <div ref="elModal" class="ios-modal w-[700px] max-w-[90vw]" :style="modalStyle">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)"><i
-                            class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Fund Transaction Details</span>
                     <span class="ios-nav-btn invisible">_</span>
                 </div>

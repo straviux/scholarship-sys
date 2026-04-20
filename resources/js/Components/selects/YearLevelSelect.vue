@@ -6,6 +6,10 @@ const props = defineProps({
         type: [String, Number, Object, Array],
         default: null,
     },
+    multiple: {
+        type: Boolean,
+        default: false,
+    },
     label: {
         type: String,
         default: 'name'
@@ -29,78 +33,58 @@ const year_levels = [
     { label: "PGI", value: "PGI" },
     { label: "REVIEW", value: "REVIEW" },
 ];
-// Local value for v-model
-const localValue = ref(props.modelValue);
-
-// Sync localValue with parent prop
-watch(() => props.modelValue, (val) => {
-    localValue.value = val;
-});
-
-// Sync localValue with parent prop
-// watch(() => props.preselect, (val) => {
-//     localValue.value = val;
-// });
-// Emit changes to parent
-watch(localValue, (val) => {
-    if (localValue.value) {
-        if (props.multiple && Array.isArray(localValue.value)) {
-            localValue.value = localValue.value.map(val => {
-                if (typeof val === 'object' && val !== null && val.value) {
-                    return year_levels.find(m => m.value === val.value) || val;
-                }
-                return year_levels.find(m =>
-                    m.value?.toLowerCase() === String(val).toLowerCase() ||
-                    m.label?.toLowerCase() === String(val).toLowerCase()
-                ) || val;
-            });
-        } else {
-            let val = localValue.value;
-            if (typeof val === 'object' && val !== null && val.value) {
-                localValue.value = year_levels.find(m => m.value === val.value) || val;
-            } else {
-                const selected = year_levels.find(m =>
-                    m.value?.toLowerCase() === String(val).toLowerCase() ||
-                    m.label?.toLowerCase() === String(val).toLowerCase()
-                );
-                if (selected) localValue.value = selected;
-            }
-        }
+const normalizeYearLevelToken = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
     }
-    emit('update:modelValue', val);
-});
+
+    return String(value).trim().toLowerCase();
+};
+
+const resolveSingleYearLevel = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    if (typeof value === 'object' && value !== null) {
+        return year_levels.find((option) => option.value === value.value)
+            || year_levels.find((option) => normalizeYearLevelToken(option.label) === normalizeYearLevelToken(value.label))
+            || value;
+    }
+
+    const normalized = normalizeYearLevelToken(value);
+    if (!normalized) {
+        return null;
+    }
+
+    return year_levels.find((option) => {
+        return normalizeYearLevelToken(option.value) === normalized
+            || normalizeYearLevelToken(option.label) === normalized;
+    }) || value;
+};
+
+const resolveYearLevelValue = (value) => {
+    if (props.multiple && Array.isArray(value)) {
+        return value.map((entry) => resolveSingleYearLevel(entry)).filter(Boolean);
+    }
+
+    return resolveSingleYearLevel(value);
+};
+
+// Local value for v-model
+const localValue = ref(resolveYearLevelValue(props.modelValue));
+
 watch(
-    () => year_levels,
-    (newOptions) => {
-        if (localValue.value && newOptions.length) {
-            if (props.multiple && Array.isArray(localValue.value)) {
-                localValue.value = localValue.value.map(val => {
-                    if (typeof val === 'object' && val !== null && val.value) {
-                        return newOptions.find(m => m.value === val.value) || val;
-                    }
-                    return newOptions.find(m =>
-                        m.value?.toLowerCase() === String(val).toLowerCase() ||
-                        m.label?.toLowerCase() === String(val).toLowerCase()
-                    ) || val;
-                });
-            } else {
-                let val = localValue.value;
-                if (typeof val === 'object' && val !== null && val.value) {
-                    localValue.value = newOptions.find(m => m.value === val.value) || val;
-                } else {
-                    const selected = newOptions.find(m =>
-                        m.value?.toLowerCase() === String(val).toLowerCase() ||
-                        m.label?.toLowerCase() === String(val).toLowerCase()
-                    );
-                    if (selected) localValue.value = selected;
-                }
-            }
-        } else {
-            localValue.value = "";
-        }
+    () => props.modelValue,
+    () => {
+        localValue.value = resolveYearLevelValue(props.modelValue);
     },
-    { immediate: true }
+    { immediate: true, deep: true }
 );
+
+watch(localValue, (val) => {
+    emit('update:modelValue', val);
+}, { deep: true });
 
 </script>
 

@@ -382,10 +382,10 @@ const loadRecordsSummaryForMonth = async () => {
                             </div>
                             <button @click="openProfilePhotoModal"
                                 class="absolute -bottom-1 -right-1 w-6 h-6 bg-indigo-600 hover:bg-indigo-700 rounded-full flex items-center justify-center shadow-lg transition-colors cursor-pointer">
-                                <i class="pi pi-camera text-white" style="font-size: 0.75rem"></i>
+                                <AppIcon name="camera" :size="12" class="text-white" />
                             </button>
                             <!-- <div class="absolute -bottom-1 -right-1 w-6 h-6">
-                                <Button @click="openProfilePhotoModal" icon="pi pi-user" severity="info" rounded
+                                <AppButton @click="openProfilePhotoModal" icon="user" severity="info" rounded
                                     size="small" />
                             </div> -->
                         </div>
@@ -399,20 +399,20 @@ const loadRecordsSummaryForMonth = async () => {
                                 'username' }}
                             </p>
                             <div class="flex items-center text-sm text-gray-500">
-                                <i class="pi pi-clock w-4 h-4 mr-1"></i>
+                                <AppIcon name="clock" :size="16" class="mr-1" />
                                 Profile updated {{ formatDate(reportData?.generated_at) }}
                             </div>
                         </div>
 
                         <!-- Profile Action Buttons -->
                         <div class="flex items-center gap-2">
-                            <Button @click="openEncodingCalendarModal" icon="pi pi-calendar" size="small"
+                            <AppButton @click="openEncodingCalendarModal" icon="calendar" size="small"
                                 label="Encoding Records" class="w-full md:w-auto" severity="info" />
-                            <Button @click="openEditProfileModal" icon="pi pi-pen-to-square" size="small"
+                            <AppButton @click="openEditProfileModal" icon="pen-to-square" size="small"
                                 label="Update Name" class="w-full md:w-auto" variant="outlined" />
 
-                            <Button @click="openChangePasswordModal" icon="pi pi-key" size="small"
-                                label="Change Password" class="w-full md:w-auto" variant="outlined" />
+                            <AppButton @click="openChangePasswordModal" icon="key" size="small" label="Change Password"
+                                class="w-full md:w-auto" variant="outlined" />
 
 
                             <!-- <form method="POST" :action="route('logout')" class="inline">
@@ -446,7 +446,7 @@ const loadRecordsSummaryForMonth = async () => {
                             </div>
                             <div
                                 class="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
-                                <i class="pi pi-calendar text-white" style="font-size: 1.5rem"></i>
+                                <AppIcon name="calendar" :size="24" class="text-white" />
                             </div>
                         </div>
                     </div>
@@ -462,7 +462,7 @@ const loadRecordsSummaryForMonth = async () => {
                             </div>
                             <div
                                 class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                <i class="pi pi-file text-white" style="font-size: 1.5rem"></i>
+                                <AppIcon name="file" :size="24" class="text-white" />
                             </div>
                         </div>
                     </div>
@@ -478,7 +478,7 @@ const loadRecordsSummaryForMonth = async () => {
                             </div>
                             <div
                                 class="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
-                                <i class="pi pi-plus text-white" style="font-size: 1.5rem"></i>
+                                <AppIcon name="plus" :size="24" class="text-white" />
                             </div>
                         </div>
                     </div>
@@ -494,7 +494,7 @@ const loadRecordsSummaryForMonth = async () => {
                             </div>
                             <div
                                 class="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg flex items-center justify-center">
-                                <i class="pi pi-pencil text-white" style="font-size: 1.5rem"></i>
+                                <AppIcon name="pencil" :size="24" class="text-white" />
                             </div>
                         </div>
                     </div>
@@ -510,7 +510,7 @@ const loadRecordsSummaryForMonth = async () => {
                             </div>
                             <div
                                 class="w-12 h-12 bg-gradient-to-r from-rose-500 to-pink-600 rounded-lg flex items-center justify-center">
-                                <i class="pi pi-check-circle text-white" style="font-size: 1.5rem"></i>
+                                <AppIcon name="check-circle" :size="24" class="text-white" />
                             </div>
                         </div>
                     </div>
@@ -526,7 +526,7 @@ const loadRecordsSummaryForMonth = async () => {
                             </div>
                             <div
                                 class="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
-                                <i class="pi pi-clock text-white" style="font-size: 1.5rem"></i>
+                                <AppIcon name="clock" :size="24" class="text-white" />
                             </div>
                         </div>
                     </div>
@@ -683,7 +683,7 @@ const loadRecordsSummaryForMonth = async () => {
                     <div class="w-full">
                         <button @click="showQrCode" type="button"
                             class="w-full inline-flex justify-center items-center px-4 py-2 border border-blue-300 rounded-md shadow-sm bg-blue-50 text-sm font-medium text-blue-700 hover:bg-blue-100">
-                            <i class="pi pi-qrcode mr-2"></i>
+                            <AppIcon name="qrcode" :size="16" class="mr-2" />
                             Upload via Mobile (QR Code)
                         </button>
                     </div>
@@ -734,7 +734,7 @@ const loadRecordsSummaryForMonth = async () => {
                 <div class="text-left space-y-3">
                     <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
                         <p class="text-sm font-semibold text-gray-900 mb-2">
-                            <i class="pi pi-info-circle mr-2"></i>How to use:
+                            <AppIcon name="info-circle" :size="16" class="mr-2" />How to use:
                         </p>
                         <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
                             <li>Scan this QR code with your mobile device</li>
@@ -745,7 +745,7 @@ const loadRecordsSummaryForMonth = async () => {
 
                     <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
                         <p class="text-xs text-yellow-800">
-                            <i class="pi pi-exclamation-triangle mr-2"></i>
+                            <AppIcon name="exclamation-triangle" :size="16" class="mr-2" />
                             <strong>Expires in:</strong>
                             <span :class="{
                                 'text-yellow-600': qrCountdown.includes('min') && !qrCountdown.includes('0 min'),
@@ -762,7 +762,7 @@ const loadRecordsSummaryForMonth = async () => {
                         <label class="block text-xs font-medium text-gray-700 mb-1">Or copy this link:</label>
                         <div class="flex gap-2">
                             <InputText type="text" :value="qrCodeData.url" readonly class="flex-1 text-xs" />
-                            <Button icon="pi pi-copy" size="small" @click="copyToClipboard(qrCodeData.url)"
+                            <AppButton icon="copy" size="small" @click="copyToClipboard(qrCodeData.url)"
                                 v-tooltip.top="'Copy link'" />
                         </div>
                     </div>
@@ -816,7 +816,7 @@ const loadRecordsSummaryForMonth = async () => {
                 <div class="bg-white p-4 rounded-lg border border-gray-200">
                     <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                         <p class="text-sm text-blue-800">
-                            <i class="pi pi-info-circle mr-2"></i>
+                            <AppIcon name="info-circle" :size="16" class="mr-2" />
                             {{ Object.keys(recordsByDate).length > 0 ? `Found records on
                             ${Object.keys(recordsByDate).length}
                             dates this month. Click on a date to view records.` : 'Loading dates with records...' }}
@@ -858,7 +858,7 @@ const loadRecordsSummaryForMonth = async () => {
                     <div v-if="loadingRecords" class="flex items-center justify-center p-8">
                         <div class="text-center">
                             <div class="inline-flex items-center space-x-2">
-                                <i class="pi pi-spin pi-spinner text-2xl text-indigo-600"></i>
+                                <AppIcon name="spinner" :size="24" class="text-indigo-600" />
                                 <span class="text-gray-600">Loading records...</span>
                             </div>
                         </div>
@@ -886,7 +886,7 @@ const loadRecordsSummaryForMonth = async () => {
                         </Column>
                         <template #empty>
                             <div class="text-center py-8">
-                                <i class="pi pi-calendar text-4xl text-gray-300 mb-3"></i>
+                                <AppIcon name="calendar" :size="36" class="text-gray-300 mb-3" />
                                 <p class="text-gray-500">No records found for this date</p>
                             </div>
                         </template>

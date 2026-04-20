@@ -112,7 +112,7 @@ onBeforeUnmount(() => {
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" type="button" @click="close">
-                        <i class="pi pi-times"></i>
+                        <AppIcon name="times" :size="18" />
                     </button>
                     <span class="ios-nav-title">{{ isEdit ? 'Edit Program' : 'New Program' }}</span>
                     <button class="ios-nav-btn ios-nav-action" type="button" @click="submit" :disabled="processing">

@@ -188,8 +188,9 @@ onBeforeUnmount(() => {
             <div class="ios-modal" :style="modalStyle">
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal" :disabled="isSubmitting"><i
-                            class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal" :disabled="isSubmitting">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Priority Level</span>
                     <button class="ios-nav-btn ios-nav-action" @click="submit" :disabled="isSubmitting">
                         {{ isSubmitting ? 'Saving...' : 'Assign' }}
@@ -224,8 +225,8 @@ onBeforeUnmount(() => {
                                         <div style="font-size: 12px; color: #8E8E93;">{{ option.description }}</div>
                                     </div>
                                 </div>
-                                <i v-if="formData.priority_level === option.value" class="pi pi-check"
-                                    style="color: #007AFF; font-size: 14px;"></i>
+                                <AppIcon v-if="formData.priority_level === option.value" name="check" :size="14"
+                                    style="color: #007AFF;" />
                             </div>
                         </div>
                         <div v-if="errors.priority_level" class="ios-section-footer ios-error">

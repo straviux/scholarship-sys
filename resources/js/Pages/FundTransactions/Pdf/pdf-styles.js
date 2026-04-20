@@ -242,6 +242,19 @@ em     { font-style: italic; }
  */
 export const PAPER_SIZES = {
 	a4: { w: 794, h: 1123, cssSize: 'A4', label: 'A4 — 210 × 297 mm' },
+	'a4-landscape': {
+		w: 1123,
+		h: 794,
+		cssSize: 'A4 landscape',
+		label: 'A4 Landscape — 297 × 210 mm',
+	},
+	letter: { w: 816, h: 1056, cssSize: '8.5in 11in', label: 'Letter — 8.5 × 11 in' },
+	'letter-landscape': {
+		w: 1056,
+		h: 816,
+		cssSize: '11in 8.5in',
+		label: 'Letter Landscape — 11 × 8.5 in',
+	},
 	long: { w: 816, h: 1248, cssSize: '8.5in 13in', label: 'Long — 8.5 × 13 in' },
 	landscape: { w: 1248, h: 816, cssSize: '13in 8.5in', label: 'Long Landscape — 13 × 8.5 in' },
 };

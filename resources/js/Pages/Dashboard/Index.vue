@@ -220,7 +220,7 @@ onMounted(() => {
                                 </p>
                             </div>
                             <div class="bg-blue-100 p-3 rounded-full">
-                                <i class="pi pi-calendar text-blue-600 text-xl"></i>
+                                <AppIcon name="calendar" :size="20" class="text-blue-600" />
                             </div>
                         </div>
                     </template>
@@ -237,7 +237,7 @@ onMounted(() => {
                                 <p class="text-xs text-gray-500 mt-1">Applications filed</p>
                             </div>
                             <div class="bg-green-100 p-3 rounded-full">
-                                <i class="pi pi-chart-line text-green-600 text-xl"></i>
+                                <AppIcon name="chart-line" :size="20" class="text-green-600" />
                             </div>
                         </div>
                     </template>
@@ -254,7 +254,7 @@ onMounted(() => {
                                 <p class="text-xs text-gray-500 mt-1">Applications filed</p>
                             </div>
                             <div class="bg-purple-100 p-3 rounded-full">
-                                <i class="pi pi-calendar-plus text-purple-600 text-xl"></i>
+                                <AppIcon name="calendar-plus" :size="20" class="text-purple-600" />
                             </div>
                         </div>
                     </template>
@@ -270,7 +270,7 @@ onMounted(() => {
                                 <p class="text-xs text-gray-500 mt-1">All time</p>
                             </div>
                             <div class="bg-orange-100 p-3 rounded-full">
-                                <i class="pi pi-users text-orange-600 text-xl"></i>
+                                <AppIcon name="users" :size="20" class="text-orange-600" />
                             </div>
                         </div>
                     </template>
@@ -287,7 +287,7 @@ onMounted(() => {
                                 <p class="text-sm text-gray-600">Pending</p>
                                 <p class="text-xl font-bold text-yellow-600">{{ recentStats.pendingApplications }}</p>
                             </div>
-                            <i class="pi pi-clock text-yellow-600 text-2xl"></i>
+                            <AppIcon name="clock" :size="24" class="text-yellow-600" />
                         </div>
                     </template>
                 </Card>
@@ -300,7 +300,7 @@ onMounted(() => {
                                 <p class="text-sm text-gray-600">Active</p>
                                 <p class="text-xl font-bold text-green-600">{{ recentStats.approvedApplications }}</p>
                             </div>
-                            <i class="pi pi-check-circle text-green-600 text-2xl"></i>
+                            <AppIcon name="check-circle" :size="24" class="text-green-600" />
                         </div>
                     </template>
                 </Card>
@@ -313,7 +313,7 @@ onMounted(() => {
                                 <p class="text-sm text-gray-600">Completed</p>
                                 <p class="text-xl font-bold text-blue-600">{{ recentStats.completedApplications }}</p>
                             </div>
-                            <i class="pi pi-flag text-blue-600 text-2xl"></i>
+                            <AppIcon name="flag" :size="24" class="text-blue-600" />
                         </div>
                     </template>
                 </Card>
@@ -326,7 +326,7 @@ onMounted(() => {
                     <template #header>
                         <div class="flex justify-between items-center p-4 border-b">
                             <h3 class="text-lg font-semibold text-gray-800">Daily Applications (Current Month)</h3>
-                            <i class="pi pi-chart-line text-gray-400"></i>
+                            <AppIcon name="chart-line" :size="16" class="text-gray-400" />
                         </div>
                     </template>
                     <template #content>
@@ -341,7 +341,7 @@ onMounted(() => {
                     <template #header>
                         <div class="flex justify-between items-center p-4 border-b">
                             <h3 class="text-lg font-semibold text-gray-800">Monthly Trends (Current Year)</h3>
-                            <i class="pi pi-chart-bar text-gray-400"></i>
+                            <AppIcon name="chart-bar" :size="16" class="text-gray-400" />
                         </div>
                     </template>
                     <template #content>
@@ -356,7 +356,7 @@ onMounted(() => {
                     <template #header>
                         <div class="flex justify-between items-center p-4 border-b">
                             <h3 class="text-lg font-semibold text-gray-800">Yearly Trends</h3>
-                            <i class="pi pi-chart-line text-gray-400"></i>
+                            <AppIcon name="chart-line" :size="16" class="text-gray-400" />
                         </div>
                     </template>
                     <template #content>
@@ -374,7 +374,7 @@ onMounted(() => {
                     <template #header>
                         <div class="flex justify-between items-center p-4 border-b">
                             <h3 class="text-lg font-semibold text-gray-800">Program Distribution</h3>
-                            <i class="pi pi-chart-pie text-gray-400"></i>
+                            <AppIcon name="chart-pie" :size="16" class="text-gray-400" />
                         </div>
                     </template>
                     <template #content>
@@ -389,7 +389,7 @@ onMounted(() => {
                     <template #header>
                         <div class="flex justify-between items-center p-4 border-b">
                             <h3 class="text-lg font-semibold text-gray-800">Application Status</h3>
-                            <i class="pi pi-chart-pie text-gray-400"></i>
+                            <AppIcon name="chart-pie" :size="16" class="text-gray-400" />
                         </div>
                     </template>
                     <template #content>
@@ -409,7 +409,7 @@ onMounted(() => {
                 <template #header>
                     <div class="flex justify-between items-center p-4 border-b">
                         <h3 class="text-lg font-semibold text-gray-800">Geographic Distribution</h3>
-                        <i class="pi pi-map-marker text-gray-400"></i>
+                        <AppIcon name="map-pin" :size="16" class="text-gray-400" />
                     </div>
                 </template>
                 <template #content>
@@ -459,7 +459,7 @@ onMounted(() => {
                 <template #header>
                     <div class="flex justify-between items-center p-4 border-b">
                         <h3 class="text-lg font-semibold text-gray-800">Academic Analysis</h3>
-                        <i class="pi pi-book text-gray-400"></i>
+                        <AppIcon name="book" :size="16" class="text-gray-400" />
                     </div>
                 </template>
                 <template #content>

@@ -7,7 +7,7 @@
             <!-- Header with Back Button -->
             <div class="mb-6 flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <Button icon="pi pi-arrow-left" text rounded severity="secondary" @click="goBackToProfiles()"
+                    <AppButton icon="arrow-left" text rounded severity="secondary" @click="goBackToProfiles()"
                         v-tooltip.top="'Back to Profiles'" />
                     <div>
                         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
@@ -19,17 +19,17 @@
                 </div>
                 <div
                     class="flex items-center bg-white/80 dark:bg-[#1f2633]/90 backdrop-blur-sm border border-gray-200/80 dark:border-white/10 rounded-2xl shadow-sm p-1 gap-0.5">
-                    <Button icon="pi pi-book" label="Generate Ledger" size="small" rounded text
+                    <AppButton icon="book" label="Generate Ledger" size="small" rounded text
                         class="!font-medium text-gray-700 dark:text-gray-300" @click="showLedgerModal = true"
                         v-tooltip.top="'Generate Scholar Ledger'" />
-                    <Button icon="pi pi-file-word" label="Certification" size="small" rounded text
+                    <AppButton icon="file-word" label="Certification" size="small" rounded text
                         class="!font-medium text-gray-700 dark:text-gray-300" @click="showCertPicker = true"
                         v-tooltip.top="'Generate Certification'" />
                     <div class="w-px h-6 bg-gray-200 mx-0.5 self-center flex-shrink-0"></div>
-                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-user" label="Edit Personal" size="small"
+                    <AppButton v-if="hasPermission('applicants.edit')" icon="user" label="Edit Personal" size="small"
                         rounded text class="!font-medium text-gray-700 dark:text-gray-300"
                         @click="showPersonalInfoModal = true" v-tooltip.top="'Edit Personal Information'" />
-                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-home" label="Edit Family" size="small"
+                    <AppButton v-if="hasPermission('applicants.edit')" icon="home" label="Edit Family" size="small"
                         rounded text class="!font-medium text-gray-700 dark:text-gray-300"
                         @click="showFamilyInfoModal = true" v-tooltip.top="'Edit Family Information'" />
                 </div>
@@ -40,13 +40,13 @@
                 class="!rounded-4xl overflow-hidden bg-white dark:bg-[#1f2633] shadow-sm border border-gray-200 dark:border-white/10">
                 <Tabs v-model:value="activeTab">
                     <TabList>
-                        <Tab value="0"><i class="pi pi-user mr-2"></i>Personal Information</Tab>
-                        <Tab value="1"><i class="pi pi-users mr-2"></i>Family Information</Tab>
-                        <Tab value="2"><i class="pi pi-graduation-cap mr-2"></i>Academic Information</Tab>
-                        <Tab value="3"><i class="pi pi-wallet mr-2"></i>Obligations & Transactions</Tab>
-                        <Tab value="4"><i class="pi pi-paperclip mr-2"></i>Attachments</Tab>
-                        <Tab value="5"><i class="pi pi-check-circle mr-2"></i>Approval History</Tab>
-                        <Tab value="6"><i class="pi pi-list mr-2"></i>Activity Logs</Tab>
+                        <Tab value="0">Personal Information</Tab>
+                        <Tab value="1">Family Information</Tab>
+                        <Tab value="2">Academic Information</Tab>
+                        <Tab value="3">Obligations & Transactions</Tab>
+                        <Tab value="4">Attachments</Tab>
+                        <Tab value="5">Approval History</Tab>
+                        <Tab value="6">Activity Logs</Tab>
                     </TabList>
                     <TabPanels>
                         <!-- Personal Information Tab -->
@@ -68,7 +68,7 @@
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Date of
                                             Birth</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ formatDate(profile.date_of_birth)
-                                            }}</p>
+                                        }}</p>
                                     </div>
 
                                     <div>
@@ -100,14 +100,14 @@
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Place of
                                             Birth</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ profile.place_of_birth || 'N/A'
-                                            }}</p>
+                                        }}</p>
                                     </div>
 
                                     <div>
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Indigenous
                                             Group</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ profile.indigenous_group || 'N/A'
-                                            }}</p>
+                                        }}</p>
                                     </div>
                                 </div>
 
@@ -276,7 +276,7 @@
                                 <div class="flex justify-between items-center mb-4">
                                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Scholarship
                                         Records</h3>
-                                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-plus" label="Add Record"
+                                    <AppButton v-if="hasPermission('applicants.edit')" icon="plus" label="Add Record"
                                         @click="openAddRecordModal" severity="success" size="small" />
                                 </div>
                                 <div v-if="scholarshipRecords.length > 0">
@@ -346,13 +346,12 @@
                                             bodyClass="min-w-[150px]">
                                             <template #body="slotProps">
                                                 <div class="flex gap-2">
-                                                    <Button v-if="hasPermission('applicants.edit')" icon="pi pi-qrcode"
+                                                    <AppButton v-if="hasPermission('applicants.edit')" icon="qrcode"
                                                         size="small" outlined severity="info"
                                                         v-tooltip.top="'Show QR Code'"
                                                         @click="showQrCode(slotProps.data)" />
-                                                    <Button v-if="hasPermission('applicants.edit')"
-                                                        icon="pi pi-paperclip" size="small" outlined
-                                                        v-tooltip.top="'Manage Attachments'"
+                                                    <AppButton v-if="hasPermission('applicants.edit')" icon="paperclip"
+                                                        size="small" outlined v-tooltip.top="'Manage Attachments'"
                                                         @click="manageAttachments(slotProps.data)" />
                                                     <Chip
                                                         v-if="slotProps.data.attachments && slotProps.data.attachments.length > 0"
@@ -366,10 +365,10 @@
                                             v-if="hasPermission('applicants.edit')">
                                             <template #body="slotProps">
                                                 <div class="flex gap-1">
-                                                    <Button icon="pi pi-pencil" size="small" outlined severity="warning"
+                                                    <AppButton icon="pencil" size="small" outlined severity="warning"
                                                         v-tooltip.top="'Edit Record'"
                                                         @click="openEditRecordModal(slotProps.data)" />
-                                                    <Button icon="pi pi-trash" size="small" outlined severity="danger"
+                                                    <AppButton icon="trash" size="small" outlined severity="danger"
                                                         v-tooltip.top="'Delete Record'"
                                                         @click="confirmDeleteRecord(slotProps.data)" />
                                                 </div>
@@ -378,7 +377,7 @@
                                     </DataTable>
                                 </div>
                                 <div v-else class="text-center py-12">
-                                    <i class="pi pi-info-circle text-4xl text-gray-300 mb-4"></i>
+                                    <AppIcon name="info-circle" :size="48" class="text-gray-300 mb-4" />
                                     <p class="text-gray-500 dark:text-gray-400">No scholarship records available</p>
                                 </div>
                             </div>
@@ -412,7 +411,7 @@
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600 dark:text-blue-400"></i>
                                                     <span class="font-medium">{{ slotProps.data.attachment_name
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -451,10 +450,10 @@
                                         <Column header="Actions" headerClass="min-w-[200px]" bodyClass="min-w-[200px]">
                                             <template #body="slotProps">
                                                 <div class="flex gap-2">
-                                                    <Button icon="pi pi-eye" size="small" outlined label="View"
+                                                    <AppButton icon="eye" size="small" outlined label="View"
                                                         @click="viewAttachment(slotProps.data)"
                                                         v-tooltip.top="'Preview'" />
-                                                    <Button icon="pi pi-download" size="small" outlined
+                                                    <AppButton icon="download" size="small" outlined
                                                         @click="downloadAttachment(slotProps.data)"
                                                         v-tooltip.top="'Download'" />
                                                 </div>
@@ -463,7 +462,7 @@
                                     </DataTable>
                                 </div>
                                 <div v-else class="text-center py-12">
-                                    <i class="pi pi-paperclip text-4xl text-gray-300 mb-4"></i>
+                                    <AppIcon name="paperclip" :size="48" class="text-gray-300 mb-4" />
                                     <p class="text-gray-500 dark:text-gray-400 text-lg">No Attachments Available</p>
                                     <p class="text-gray-400 dark:text-gray-500 text-sm mt-2">Upload attachments from the
                                         Academic
@@ -490,7 +489,8 @@
                                         <div class="flex flex-col items-center">
                                             <div
                                                 class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 border-2 flex items-center justify-center border-blue-400">
-                                                <i class="pi pi-check text-xs text-blue-600 dark:text-blue-400"></i>
+                                                <AppIcon name="check" :size="12"
+                                                    class="text-blue-600 dark:text-blue-400" />
                                             </div>
                                             <div v-if="timelineIndex < (statusTimeline.length - 1)"
                                                 class="w-0.5 h-12 bg-gray-300 dark:bg-gray-600 mt-2"></div>
@@ -505,7 +505,7 @@
                                                         <h5 class="font-semibold text-gray-900 dark:text-gray-100">
                                                             Status: <span class="text-blue-600 dark:text-blue-400">{{
                                                                 timeline.new_status
-                                                                }}</span>
+                                                            }}</span>
                                                         </h5>
                                                         <p class="text-sm text-gray-600 dark:text-gray-400">{{
                                                             formatDateTime(timeline.performed_at) }}</p>
@@ -535,7 +535,7 @@
                                                     <p class="text-xs text-gray-600 dark:text-gray-400">Encoded by</p>
                                                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{
                                                         timeline.changed_by?.name || 'System'
-                                                        }}</p>
+                                                    }}</p>
                                                 </div>
 
                                                 <div v-if="timeline.remarks"
@@ -554,7 +554,7 @@
 
                                 <!-- Empty state for status timeline -->
                                 <div v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
-                                    <i class="pi pi-inbox text-4xl mb-4 opacity-50"></i>
+                                    <AppIcon name="inbox" :size="48" class="mb-4 opacity-50" />
                                     <p class="text-lg">No Status History</p>
                                     <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">No status changes have been
                                         recorded yet</p>
@@ -579,7 +579,7 @@
                                             <!-- Timeline dot -->
                                             <div class="absolute left-0 top-1 w-9 h-9 rounded-full flex items-center justify-center text-white font-bold shadow-lg ring-4 ring-white dark:ring-[#1f2633]"
                                                 :class="getActivityColor(activity.activity_type)">
-                                                <i :class="getActivityIcon(activity.activity_type)"></i>
+                                                <AppIcon :name="getActivityIcon(activity.activity_type)" />
                                             </div>
 
                                             <!-- Activity Card -->
@@ -647,7 +647,7 @@
                                     </div>
                                 </div>
                                 <div v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
-                                    <i class="pi pi-history text-4xl mb-4 opacity-50"></i>
+                                    <AppIcon name="history" :size="48" class="mb-4 opacity-50" />
                                     <p class="text-lg">No Activity Records</p>
                                     <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">No activities have been
                                         logged for this
@@ -695,7 +695,7 @@
                     <!-- Nav Bar -->
                     <div class="ios-nav-bar" @pointerdown="onLedgerDragStart">
                         <button class="ios-nav-btn ios-nav-cancel" @click="showLedgerModal = false">
-                            <i class="pi pi-times"></i>
+                            <AppIcon name="times" :size="14" />
                         </button>
                         <span class="ios-nav-title">Generate Scholar Ledger</span>
                         <button class="ios-nav-btn ios-nav-action" @click="generateLedger">
@@ -707,8 +707,7 @@
                     <div class="ios-body">
                         <div class="ios-section">
                             <div class="ios-section-label">
-                                <i class="pi pi-calendar"
-                                    style="color: #34C759; font-size: 11px; margin-right: 4px;"></i>
+                                <AppIcon name="calendar" :size="11" style="color: #34C759; margin-right: 4px;" />
                                 Equivalent No. of Years for ROS
                             </div>
                             <div v-if="ledgerTermGroups.length > 0" class="ios-card" style="overflow: hidden;">
@@ -744,8 +743,8 @@
                                                         :style="ledgerExcluded[term.key]
                                                             ? 'background: #ff3b30; color: #fff; border: none; border-radius: 5px; padding: 1px 5px; font-size: 10px; cursor: pointer; line-height: 1.6;'
                                                             : 'background: #34c759; color: #fff; border: none; border-radius: 5px; padding: 1px 5px; font-size: 10px; cursor: pointer; line-height: 1.6;'">
-                                                        <i :class="ledgerExcluded[term.key] ? 'pi pi-times' : 'pi pi-check'"
-                                                            style="font-size:8px; font-weight: 600;"></i>
+                                                        <AppIcon :name="ledgerExcluded[term.key] ? 'times' : 'check'"
+                                                            :size="8" />
                                                     </button>
                                                 </td>
                                                 <td style="padding: 6px 12px;"
@@ -808,7 +807,7 @@
                     <!-- Nav Bar -->
                     <div class="ios-nav-bar" @pointerdown="onCertDragStart">
                         <button class="ios-nav-btn ios-nav-cancel" @click="showCertPicker = false">
-                            <i class="pi pi-times"></i>
+                            <AppIcon name="times" :size="14" />
                         </button>
                         <span class="ios-nav-title">Generate Certification</span>
                         <div style="width: 60px;"></div>
@@ -835,21 +834,19 @@
                                 <div class="ios-row" style="cursor: pointer; border-bottom: 0.5px solid #e5e5ea;"
                                     @click="generateCertification('review')">
                                     <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
-                                        <i class="pi pi-file-word" style="color: #007AFF; font-size: 16px;"></i>
+                                        <AppIcon name="file-word" :size="16" style="color: #007AFF;" />
                                         <span style="font-size: 14px; color: #1c1c1e;">Certification for Review</span>
                                     </div>
-                                    <i class="pi pi-chevron-right"
-                                        style="color: #c7c7cc; font-size: 12px; flex-shrink: 0;"></i>
+                                    <AppIcon name="chevron-right" :size="12" style="color: #c7c7cc; flex-shrink: 0;" />
                                 </div>
                                 <div class="ios-row" style="cursor: pointer;"
                                     @click="generateCertification('postgrad')">
                                     <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
-                                        <i class="pi pi-file-word" style="color: #007AFF; font-size: 16px;"></i>
+                                        <AppIcon name="file-word" :size="16" style="color: #007AFF;" />
                                         <span style="font-size: 14px; color: #1c1c1e;">Certification for
                                             Post-Grad</span>
                                     </div>
-                                    <i class="pi pi-chevron-right"
-                                        style="color: #c7c7cc; font-size: 12px; flex-shrink: 0;"></i>
+                                    <AppIcon name="chevron-right" :size="12" style="color: #c7c7cc; flex-shrink: 0;" />
                                 </div>
                             </div>
                         </div>
@@ -1223,22 +1220,22 @@ const getHistoryActionLabel = (action) => {
 
 const getHistoryIcon = (action) => {
     const icons = {
-        'approved': 'pi pi-check',
-        'denied': 'pi pi-times',
-        'pending': 'pi pi-clock',
-        'active': 'pi pi-circle-fill',
-        'completed': 'pi pi-check-circle',
-        'withdrawn': 'pi pi-times-circle',
-        'loa': 'pi pi-pause',
-        'suspended': 'pi pi-ban',
-        'unknown': 'pi pi-question',
-        'declined': 'pi pi-times',
-        'conditional': 'pi pi-info-circle',
-        'resubmitted': 'pi pi-refresh',
-        'discontinued': 'pi pi-pause',
-        'renewal_application': 'pi pi-plus'
+        'approved': 'check',
+        'denied': 'times',
+        'pending': 'clock',
+        'active': 'circle-fill',
+        'completed': 'check-circle',
+        'withdrawn': 'times-circle',
+        'loa': 'pause',
+        'suspended': 'ban',
+        'unknown': 'question',
+        'declined': 'times',
+        'conditional': 'info-circle',
+        'resubmitted': 'refresh',
+        'discontinued': 'pause',
+        'renewal_application': 'plus'
     };
-    return icons[action] || 'pi pi-circle';
+    return icons[action] || 'circle';
 };
 
 const getHistoryStatusClass = (action) => {
@@ -1410,15 +1407,15 @@ const formatFileSize = (bytes) => {
 // Activity Logs Methods
 const getActivityIcon = (activityType) => {
     const icons = {
-        'profile_edited': 'pi pi-user',
-        'attachment_uploaded': 'pi pi-upload',
-        'record_created': 'pi pi-plus-circle',
-        'record_updated': 'pi pi-pencil',
-        'record_deleted': 'pi pi-trash',
-        'status_changed': 'pi pi-arrow-right-arrow-left',
-        'profile_created': 'pi pi-user-plus'
+        'profile_edited': 'user',
+        'attachment_uploaded': 'upload',
+        'record_created': 'plus-circle',
+        'record_updated': 'pencil',
+        'record_deleted': 'trash',
+        'status_changed': 'arrow-right-arrow-left',
+        'profile_created': 'user-plus'
     };
-    return icons[activityType] || 'pi pi-history';
+    return icons[activityType] || 'history';
 };
 
 const getActivityColor = (activityType) => {

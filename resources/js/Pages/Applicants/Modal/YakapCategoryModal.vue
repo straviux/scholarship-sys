@@ -16,9 +16,9 @@ const selectedCategory = ref('yakap-capitol');
 const selectedLocation = ref(null);
 
 const yakapCategoryOptions = [
-    { label: 'YAKAP Capitol', value: 'yakap-capitol', icon: 'pi pi-building' },
-    { label: 'YAKAP School', value: 'yakap-school', icon: 'pi pi-graduation-cap' },
-    { label: 'YAKAP Field', value: 'yakap-field', icon: 'pi pi-map-marker' }
+    { label: 'YAKAP Capitol', value: 'yakap-capitol', icon: 'building' },
+    { label: 'YAKAP School', value: 'yakap-school', icon: 'graduation-cap' },
+    { label: 'YAKAP Field', value: 'yakap-field', icon: 'map-pin' }
 ];
 
 // Clear location when category is yakap-capitol
@@ -102,11 +102,13 @@ watch(() => props.visible, (val) => {
             <div class="ios-modal" :style="modalStyle">
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="handleCancel"><i
-                            class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="handleCancel">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">YAKAP Category</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="handleConfirm" :disabled="!canConfirm"><i
-                            class="pi pi-arrow-right"></i></button>
+                    <button class="ios-nav-btn ios-nav-action" @click="handleConfirm" :disabled="!canConfirm">
+                        <AppIcon name="arrow-right" :size="14" />
+                    </button>
                 </div>
 
                 <!-- Body -->
@@ -126,11 +128,11 @@ watch(() => props.visible, (val) => {
                                 :class="{ 'ios-row-last': idx === yakapCategoryOptions.length - 1 }"
                                 style="cursor: pointer;" @click="selectedCategory = opt.value">
                                 <div style="display: flex; align-items: center; gap: 10px;">
-                                    <i :class="opt.icon" style="color: #007AFF; font-size: 16px;"></i>
+                                    <AppIcon :name="opt.icon" :size="16" style="color: #007AFF;" />
                                     <span class="ios-row-label">{{ opt.label }}</span>
                                 </div>
-                                <i v-if="selectedCategory === opt.value" class="pi pi-check"
-                                    style="color: #007AFF; font-size: 14px;"></i>
+                                <AppIcon v-if="selectedCategory === opt.value" name="check" :size="14"
+                                    style="color: #007AFF;" />
                             </div>
                         </div>
                     </div>

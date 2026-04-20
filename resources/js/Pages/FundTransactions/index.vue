@@ -819,37 +819,37 @@ const openContextMenu = (event, voucher) => {
     const items = [
         {
             label: 'View',
-            icon: 'pi pi-eye',
+            icon: 'eye',
             command: () => viewVoucher(voucher.id)
         },
         {
             label: 'Edit',
-            icon: 'pi pi-pencil',
+            icon: 'pencil',
             command: () => editVoucher(voucher.id)
         },
         {
             label: 'Upload Documents',
-            icon: 'pi pi-upload',
+            icon: 'upload',
             command: () => openFileUploadDialog(voucher)
         },
         {
             label: 'Add/Edit Remarks',
-            icon: 'pi pi-comment',
+            icon: 'comment',
             command: () => openRemarksModal(voucher)
         },
         {
             label: 'Change Status',
-            icon: 'pi pi-sync',
+            icon: 'sync',
             command: () => openStatusModal(voucher)
         },
         {
             label: 'Update OBR Info',
-            icon: 'pi pi-pencil',
+            icon: 'pencil',
             command: () => openOBRTrackingDialog(voucher)
         },
         {
             label: 'View Tracking History',
-            icon: 'pi pi-history',
+            icon: 'history',
             command: () => fetchTrackingHistory(voucher)
         }
     ];
@@ -860,7 +860,7 @@ const openContextMenu = (event, voucher) => {
         });
         items.push({
             label: 'Delete',
-            icon: 'pi pi-trash',
+            icon: 'trash',
             command: () => deleteVoucher(voucher.id),
             class: 'p-menuitem-danger'
         });
@@ -1397,7 +1397,7 @@ onMounted(() => {
             <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-credit-card text-indigo-900 text-[2rem]"></i>
+                        <AppIcon name="credit-card" :size="32" class="text-indigo-900" />
                         <div>
                             <h1 class="text-2xl font-bold text-gray-700 dark:text-gray-200">Fund Transactions Management
                             </h1>
@@ -1406,7 +1406,7 @@ onMounted(() => {
                     </div>
                 </template>
                 <template #end>
-                    <Button icon="pi pi-plus" @click="handleCreateVoucher" severity="success" rounded outlined
+                    <AppButton icon="plus" @click="handleCreateVoucher" severity="success" rounded outlined
                         v-tooltip.bottom="'Create Fund Transaction'" />
                 </template>
             </Toolbar>
@@ -1418,14 +1418,16 @@ onMounted(() => {
                     class="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
                     <div class="flex-1 max-w-md">
                         <IconField iconPosition="left">
-                            <InputIcon class="pi pi-search text-gray-400" />
+                            <InputIcon>
+                                <AppIcon name="search" :size="14" class="text-gray-400" />
+                            </InputIcon>
                             <InputText v-model="searchQuery" placeholder="Search obr no, payee, or scholar..."
                                 class="w-full" size="small" />
                         </IconField>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-sm opacity-60 hidden sm:block">Right click row for actions</span>
-                        <Button icon="pi pi-refresh" severity="secondary" size="small" rounded outlined
+                        <AppButton icon="refresh" severity="secondary" size="small" rounded outlined
                             @click="fetchVouchers" :disabled="loading" :loading="loading"
                             v-tooltip.bottom="'Refresh'" />
                     </div>
@@ -1454,21 +1456,29 @@ onMounted(() => {
                         optionLabel="label" optionValue="value" placeholder="DV Type" size="small" class="w-44"
                         showClear />
 
-                    <Button
+                    <AppButton
                         v-if="statusFilter || obrTypeFilter || disbursementTypeFilter || searchQuery || userFilter !== 'all'"
-                        icon="pi pi-history" severity="danger" size="small" text rounded
+                        icon="history" severity="danger" size="small" text rounded
                         @click="statusFilter = null; obrTypeFilter = null; disbursementTypeFilter = null; searchQuery = ''; userFilter = 'all'"
                         v-tooltip.bottom="'Clear all filters'" />
 
                     <div class="ml-auto flex items-center gap-2">
                         <RecordsSelect v-model="perPage" size="small" class="w-auto" />
                         <span class="text-sm text-gray-600 dark:text-gray-400">/ <strong>{{ filteredTotal
-                        }}</strong></span>
+                                }}</strong></span>
                     </div>
                 </div>
 
                 <!-- Context Menu -->
-                <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
+                <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body">
+                    <template #item="{ item, props }">
+                        <a v-ripple v-bind="props.action" class="flex items-center gap-2 w-full">
+                            <AppIcon v-if="item.icon" :name="item.icon" :size="14" />
+                            <span>{{ item.label }}</span>
+                            <AppIcon v-if="item.items" name="chevron-right" :size="14" class="ml-auto" />
+                        </a>
+                    </template>
+                </ContextMenu>
 
                 <!-- DataTable -->
                 <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="vouchers" stripedRows
@@ -1546,7 +1556,7 @@ onMounted(() => {
                         <template #body="slotProps">
                             <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">{{
                                 slotProps.data.creator?.name || '---'
-                            }}</span>
+                                }}</span>
                             <div class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{
                                 formatDate(slotProps.data.created_at) }}</div>
                         </template>
@@ -1565,8 +1575,8 @@ onMounted(() => {
 
                     <Column header="Actions" :headerStyle="{ width: '70px' }" :bodyStyle="{ width: '70px' }">
                         <template #body="slotProps">
-                            <Button icon="pi pi-ellipsis-v" @click="(e) => openContextMenu(e, slotProps.data)" text
-                                rounded size="small" v-tooltip="'Actions'" />
+                            <AppButton icon="ellipsis-v" @click="(e) => openContextMenu(e, slotProps.data)" text rounded
+                                size="small" v-tooltip="'Actions'" />
                         </template>
                     </Column>
                 </DataTable>
@@ -1631,7 +1641,7 @@ onMounted(() => {
                                         <div class="ios-row">
                                             <span class="ios-row-label">Amount</span>
                                             <span class="font-semibold">{{ formatAmount(selectedVoucher.amount)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="ios-row">
                                             <span class="ios-row-label">Created By</span>
@@ -1665,10 +1675,10 @@ onMounted(() => {
 
                                 <div class="ios-section">
                                     <p class="ios-section-label">Scholars ({{ selectedVoucher.scholar_ids?.length || 0
-                                    }})</p>
+                                        }})</p>
                                     <div class="ios-card px-4 py-3">
                                         <div v-if="loadingScholars" class="text-center py-2">
-                                            <i class="pi pi-spin pi-spinner mr-2 text-xs"></i> <span
+                                            <AppIcon name="spinner" :size="12" class="mr-2" /> <span
                                                 class="text-xs">Loading...</span>
                                         </div>
                                         <div v-else-if="scholarsDetails && scholarsDetails.length > 0"
@@ -1684,7 +1694,7 @@ onMounted(() => {
                                                             scholar.year_level + ` YEAR` : scholar.year_level }}</span>
                                                     <span v-if="scholar.academic_year" class="ml-1">| {{
                                                         scholar.academic_year
-                                                    }}</span>
+                                                        }}</span>
                                                     <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                                                 </span>
                                             </div>
@@ -1712,7 +1722,9 @@ onMounted(() => {
                                         <Button v-if="selectedVoucher?.fiscal_year && selectedVoucher?.obr_no"
                                             label="View Tracking History" @click="fetchTrackingHistory(selectedVoucher)"
                                             class="w-full" severity="info" :loading="loadingTrackingHistory">
-                                            <template #icon><i class="pi pi-history"></i></template>
+                                            <template #icon>
+                                                <AppIcon name="history" :size="14" />
+                                            </template>
                                         </Button>
                                         <p v-else class="text-xs text-gray-500 dark:text-gray-400">No OBR info available
                                         </p>
@@ -1755,21 +1767,29 @@ onMounted(() => {
                     <div class="flex w-full items-center gap-1.5 flex-nowrap overflow-x-auto px-3">
                         <Button label="OBR" @click="generateDocument('OBR')" severity="info" size="small"
                             class="flex-1 whitespace-nowrap !rounded-xl text-xs" v-tooltip.bottom="'Generate OBR'">
-                            <template #icon><i class="pi pi-file-pdf"></i></template>
+                            <template #icon>
+                                <AppIcon name="file-pdf" :size="14" />
+                            </template>
                         </Button>
                         <Button :label="getDocumentButtonLabel()" @click="generateDocument(getDocumentType())"
                             severity="success" size="small" class="flex-1 whitespace-nowrap !rounded-xl text-xs"
                             v-tooltip.bottom="'Generate DV/PR'">
-                            <template #icon><i class="pi pi-money-bill"></i></template>
+                            <template #icon>
+                                <AppIcon name="money-bill" :size="14" />
+                            </template>
                         </Button>
                         <Button label="LOS" @click="generateDocument('LOS')" severity="danger" size="small"
                             class="flex-1 whitespace-nowrap !rounded-xl text-xs" v-tooltip.bottom="'Generate LOS'">
-                            <template #icon><i class="pi pi-users"></i></template>
+                            <template #icon>
+                                <AppIcon name="users" :size="14" />
+                            </template>
                         </Button>
                         <Button label="Upload" @click="openFileUploadDialog(selectedVoucher)" severity="warning" outline
                             size="small" class="flex-1 whitespace-nowrap !rounded-xl text-xs"
                             v-tooltip.bottom="'Upload Documents'">
-                            <template #icon><i class="pi pi-upload"></i></template>
+                            <template #icon>
+                                <AppIcon name="upload" :size="14" />
+                            </template>
                         </Button>
                     </div>
                 </div>
@@ -1806,15 +1826,15 @@ onMounted(() => {
                     <div class="ios-card px-4 py-3.5">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
-                                <i class="pi pi-file-pdf text-red-600 text-lg"></i>
+                                <AppIcon name="file-pdf" :size="18" class="text-red-600" />
                                 <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">OBR</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input ref="fileInputs.obr" type="file" accept=".pdf,.doc,.docx"
                                     @change="(e) => handleFileSelect('obr', e)" class="hidden" />
-                                <Button icon="pi pi-folder-open" @click="$refs['fileInputs.obr'][0]?.click()"
+                                <AppButton icon="folder-open" @click="$refs['fileInputs.obr'][0]?.click()"
                                     severity="info" text size="small" v-tooltip="'Select File'" />
-                                <Button icon="pi pi-qrcode" @click="showQrCode(selectedVoucherForUpload, 'obr')"
+                                <AppButton icon="qrcode" @click="showQrCode(selectedVoucherForUpload, 'obr')"
                                     severity="info" text size="small" v-tooltip="'QR Code for OBR'" />
                                 <Badge
                                     v-if="uploadedFiles.obr || voucherDocuments.get(selectedVoucherForUpload.id)?.obr"
@@ -1828,16 +1848,17 @@ onMounted(() => {
                             </p>
                         </div>
                         <div class="flex gap-2">
-                            <Button v-if="uploadedFiles.obr || voucherDocuments.get(selectedVoucherForUpload.id)?.obr"
-                                @click="uploadFile('obr')" icon="pi pi-cloud-upload" severity="info" text
+                            <AppButton
+                                v-if="uploadedFiles.obr || voucherDocuments.get(selectedVoucherForUpload.id)?.obr"
+                                @click="uploadFile('obr')" icon="cloud-upload" severity="info" text
                                 :loading="uploadingFile === 'obr'" />
-                            <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.obr"
-                                @click="previewDocument('obr')" icon="pi pi-eye" severity="warning" text
+                            <AppButton v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.obr"
+                                @click="previewDocument('obr')" icon="eye" severity="warning" text
                                 v-tooltip="'Preview'" />
-                            <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.obr"
-                                @click="downloadDocument('obr')" icon="pi pi-download" severity="success" text />
-                            <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.obr"
-                                @click="removeDocument('obr')" icon="pi pi-trash" severity="danger" text />
+                            <AppButton v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.obr"
+                                @click="downloadDocument('obr')" icon="download" severity="success" text />
+                            <AppButton v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.obr"
+                                @click="removeDocument('obr')" icon="trash" severity="danger" text />
                         </div>
                     </div>
                 </div>
@@ -1848,15 +1869,15 @@ onMounted(() => {
                     <div class="ios-card px-4 py-3.5">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
-                                <i class="pi pi-file-pdf text-red-600 text-lg"></i>
+                                <AppIcon name="file-pdf" :size="18" class="text-red-600" />
                                 <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">DV/Payroll</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input ref="fileInputs.dv_payroll" type="file" accept=".pdf,.doc,.docx"
                                     @change="(e) => handleFileSelect('dv_payroll', e)" class="hidden" />
-                                <Button icon="pi pi-folder-open" @click="$refs['fileInputs.dv_payroll'][0]?.click()"
+                                <AppButton icon="folder-open" @click="$refs['fileInputs.dv_payroll'][0]?.click()"
                                     severity="info" text size="small" v-tooltip="'Select File'" />
-                                <Button icon="pi pi-qrcode" @click="showQrCode(selectedVoucherForUpload, 'dv_payroll')"
+                                <AppButton icon="qrcode" @click="showQrCode(selectedVoucherForUpload, 'dv_payroll')"
                                     severity="info" text size="small" v-tooltip="'QR Code for DV/Payroll'" />
                                 <Badge
                                     v-if="uploadedFiles.dv_payroll || voucherDocuments.get(selectedVoucherForUpload.id)?.dv_payroll"
@@ -1869,17 +1890,17 @@ onMounted(() => {
                                 uploadedFiles.dv_payroll.name }}</p>
                         </div>
                         <div class="flex gap-2">
-                            <Button
+                            <AppButton
                                 v-if="uploadedFiles.dv_payroll || voucherDocuments.get(selectedVoucherForUpload.id)?.dv_payroll"
-                                @click="uploadFile('dv_payroll')" icon="pi pi-cloud-upload" severity="info" text
+                                @click="uploadFile('dv_payroll')" icon="cloud-upload" severity="info" text
                                 :loading="uploadingFile === 'dv_payroll'" />
-                            <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.dv_payroll"
-                                @click="previewDocument('dv_payroll')" icon="pi pi-eye" severity="warning" text
+                            <AppButton v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.dv_payroll"
+                                @click="previewDocument('dv_payroll')" icon="eye" severity="warning" text
                                 v-tooltip="'Preview'" />
-                            <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.dv_payroll"
-                                @click="downloadDocument('dv_payroll')" icon="pi pi-download" severity="success" text />
-                            <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.dv_payroll"
-                                @click="removeDocument('dv_payroll')" icon="pi pi-trash" severity="danger" text />
+                            <AppButton v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.dv_payroll"
+                                @click="downloadDocument('dv_payroll')" icon="download" severity="success" text />
+                            <AppButton v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.dv_payroll"
+                                @click="removeDocument('dv_payroll')" icon="trash" severity="danger" text />
                         </div>
                     </div>
                 </div>
@@ -1890,16 +1911,16 @@ onMounted(() => {
                     <div class="ios-card px-4 py-3.5">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
-                                <i class="pi pi-file-pdf text-red-600 text-lg"></i>
+                                <AppIcon name="file-pdf" :size="18" class="text-red-600" />
                                 <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">List of
                                     Scholars</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input ref="fileInputs.los" type="file" accept=".pdf,.doc,.docx"
                                     @change="(e) => handleFileSelect('los', e)" class="hidden" />
-                                <Button icon="pi pi-folder-open" @click="$refs['fileInputs.los'][0]?.click()"
+                                <AppButton icon="folder-open" @click="$refs['fileInputs.los'][0]?.click()"
                                     severity="info" text size="small" v-tooltip="'Select File'" />
-                                <Button icon="pi pi-qrcode" @click="showQrCode(selectedVoucherForUpload, 'los')"
+                                <AppButton icon="qrcode" @click="showQrCode(selectedVoucherForUpload, 'los')"
                                     severity="info" text size="small" v-tooltip="'QR Code for LOS'" />
                                 <Badge
                                     v-if="uploadedFiles.los || voucherDocuments.get(selectedVoucherForUpload.id)?.los"
@@ -1913,16 +1934,17 @@ onMounted(() => {
                             </p>
                         </div>
                         <div class="flex gap-2">
-                            <Button v-if="uploadedFiles.los || voucherDocuments.get(selectedVoucherForUpload.id)?.los"
-                                @click="uploadFile('los')" icon="pi pi-cloud-upload" severity="info" text
+                            <AppButton
+                                v-if="uploadedFiles.los || voucherDocuments.get(selectedVoucherForUpload.id)?.los"
+                                @click="uploadFile('los')" icon="cloud-upload" severity="info" text
                                 :loading="uploadingFile === 'los'" />
-                            <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.los"
-                                @click="previewDocument('los')" icon="pi pi-eye" severity="warning" text
+                            <AppButton v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.los"
+                                @click="previewDocument('los')" icon="eye" severity="warning" text
                                 v-tooltip="'Preview'" />
-                            <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.los"
-                                @click="downloadDocument('los')" icon="pi pi-download" severity="success" text />
-                            <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.los"
-                                @click="removeDocument('los')" icon="pi pi-trash" severity="danger" text />
+                            <AppButton v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.los"
+                                @click="downloadDocument('los')" icon="download" severity="success" text />
+                            <AppButton v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.los"
+                                @click="removeDocument('los')" icon="trash" severity="danger" text />
                         </div>
                     </div>
                 </div>
@@ -1933,15 +1955,15 @@ onMounted(() => {
                     <div class="ios-card px-4 py-3.5">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
-                                <i class="pi pi-file-pdf text-red-600 text-lg"></i>
+                                <AppIcon name="file-pdf" :size="18" class="text-red-600" />
                                 <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">Cheques</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input ref="fileInputs.cheque" type="file" accept=".pdf,.doc,.docx"
                                     @change="(e) => handleFileSelect('cheque', e)" class="hidden" />
-                                <Button icon="pi pi-folder-open" @click="$refs['fileInputs.cheque'][0]?.click()"
+                                <AppButton icon="folder-open" @click="$refs['fileInputs.cheque'][0]?.click()"
                                     severity="info" text size="small" v-tooltip="'Select File'" />
-                                <Button icon="pi pi-qrcode" @click="showQrCode(selectedVoucherForUpload, 'cheque')"
+                                <AppButton icon="qrcode" @click="showQrCode(selectedVoucherForUpload, 'cheque')"
                                     severity="info" text size="small" v-tooltip="'QR Code for Cheque'" />
                                 <Badge
                                     v-if="uploadedFiles.cheque || voucherDocuments.get(selectedVoucherForUpload.id)?.cheque"
@@ -1955,17 +1977,17 @@ onMounted(() => {
                             </p>
                         </div>
                         <div class="flex gap-2">
-                            <Button
+                            <AppButton
                                 v-if="uploadedFiles.cheque || voucherDocuments.get(selectedVoucherForUpload.id)?.cheque"
-                                @click="uploadFile('cheque')" icon="pi pi-cloud-upload" severity="info" text
+                                @click="uploadFile('cheque')" icon="cloud-upload" severity="info" text
                                 :loading="uploadingFile === 'cheque'" />
-                            <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.cheque"
-                                @click="previewDocument('cheque')" icon="pi pi-eye" severity="warning" text
+                            <AppButton v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.cheque"
+                                @click="previewDocument('cheque')" icon="eye" severity="warning" text
                                 v-tooltip="'Preview'" />
-                            <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.cheque"
-                                @click="downloadDocument('cheque')" icon="pi pi-download" severity="success" text />
-                            <Button v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.cheque"
-                                @click="removeDocument('cheque')" icon="pi pi-trash" severity="danger" text />
+                            <AppButton v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.cheque"
+                                @click="downloadDocument('cheque')" icon="download" severity="success" text />
+                            <AppButton v-if="voucherDocuments.get(selectedVoucherForUpload.id)?.cheque"
+                                @click="removeDocument('cheque')" icon="trash" severity="danger" text />
                         </div>
                     </div>
                 </div>
@@ -2007,7 +2029,7 @@ onMounted(() => {
                     <span class="font-semibold text-gray-900 dark:text-gray-100 text-base">Document Preview</span>
                     <a v-if="previewData" :href="previewData.url" :download="previewData.filename"
                         class="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-medium no-underline">
-                        <i class="pi pi-download text-[13px]"></i>Download
+                        <AppIcon name="download" :size="13" />Download
                     </a>
                 </div>
             </template>
@@ -2033,13 +2055,13 @@ onMounted(() => {
                     <p class="ios-section-label">Zoom</p>
                     <div class="ios-card px-4 py-2.5">
                         <div class="flex items-center gap-2">
-                            <Button icon="pi pi-minus" @click="previewZoom -= 10" :disabled="previewZoom <= 50" text
+                            <AppButton icon="minus" @click="previewZoom -= 10" :disabled="previewZoom <= 50" text
                                 size="small" />
                             <span class="text-[13px] font-medium w-12 text-center">{{
                                 previewZoom }}%</span>
-                            <Button icon="pi pi-plus" @click="previewZoom += 10" :disabled="previewZoom >= 200" text
+                            <AppButton icon="plus" @click="previewZoom += 10" :disabled="previewZoom >= 200" text
                                 size="small" />
-                            <Button icon="pi pi-home" @click="previewZoom = 100" text size="small"
+                            <AppButton icon="home" @click="previewZoom = 100" text size="small"
                                 v-tooltip="'Reset Zoom'" />
                         </div>
                     </div>
@@ -2069,8 +2091,8 @@ onMounted(() => {
                     <div class="ios-card p-4">
                         <p class="text-[13px] text-[#8E8E93] mb-3">PDFs open in a new
                             window for best viewing experience</p>
-                        <Button label="Open PDF in Viewer" @click="() => window.open(previewData.url, '_blank')"
-                            icon="pi pi-external-link" class="w-full" severity="info" />
+                        <AppButton label="Open PDF in Viewer" @click="() => window.open(previewData.url, '_blank')"
+                            icon="external-link" class="w-full" severity="info" />
                         <p class="text-xs text-[#8E8E93] mt-2">Or use the Download
                             button above to save to your device</p>
                     </div>
@@ -2079,13 +2101,13 @@ onMounted(() => {
                 <!-- Other File Types -->
                 <div v-else class="ios-section mb-4">
                     <div class="ios-card px-4 py-8 text-center">
-                        <i class="pi pi-file text-[48px] text-[#8E8E93] block mb-3"></i>
+                        <AppIcon name="file" :size="48" class="text-[#8E8E93] block mb-3" />
                         <p class="text-sm text-[#3c3c43] dark:text-gray-300 mb-1.5">Preview not
                             available for this file type</p>
                         <p class="text-xs text-[#8E8E93] mb-4">{{
                             previewData.mimeType || 'File type unknown' }}</p>
-                        <Button label="Download File" @click="() => window.open(previewData.url, '_blank')"
-                            icon="pi pi-download" class="w-full" />
+                        <AppButton label="Download File" @click="() => window.open(previewData.url, '_blank')"
+                            icon="download" class="w-full" />
                     </div>
                 </div>
             </div>

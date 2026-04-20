@@ -4,7 +4,9 @@
         <template #container>
             <div class="ios-modal" :style="[{ width: '30vw', minWidth: '400px' }, dragStyle]">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
+                        <AppIcon name="times" />
+                    </button>
                     <span class="ios-nav-title">Mobile Upload</span>
                 </div>
                 <div class="ios-body" style="padding: 16px;">
@@ -19,7 +21,7 @@
                         <div class="text-left" style="display: flex; flex-direction: column; gap: 12px;">
                             <div class="ios-info-card" style="border-left: 4px solid #007AFF;">
                                 <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                                    <i class="pi pi-info-circle mr-2"></i>How to use:
+                                    <AppIcon name="info-circle" class="mr-2" />How to use:
                                 </p>
                                 <ol class="text-sm text-gray-700 dark:text-gray-300 list-decimal list-inside"
                                     style="display: flex; flex-direction: column; gap: 4px;">
@@ -32,7 +34,7 @@
                             <div class="ios-info-card bg-amber-50 dark:bg-amber-900/15"
                                 style="border-left: 4px solid #FF9500;">
                                 <p class="text-xs text-amber-800 dark:text-amber-300">
-                                    <i class="pi pi-exclamation-triangle mr-2"></i>
+                                    <AppIcon name="exclamation-triangle" class="mr-2" />
                                     <strong>Expires in:</strong>
                                     <span :class="{
                                         'text-yellow-600': countdown.includes('min') && !countdown.includes('0 min'),
@@ -51,7 +53,7 @@
                                     <InputText type="text" :value="qrData.url" readonly class="flex-1 text-xs" />
                                     <button class="ios-icon-btn" @click="copyToClipboard(qrData.url)"
                                         v-tooltip.top="'Copy link'">
-                                        <i class="pi pi-copy"></i>
+                                        <AppIcon name="copy" />
                                     </button>
                                 </div>
                             </div>

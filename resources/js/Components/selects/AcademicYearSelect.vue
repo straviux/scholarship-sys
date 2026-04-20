@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed, onMounted } from 'vue';
+import { ref, watch, computed } from 'vue';
 const props = defineProps({
 
     modelValue: {
@@ -36,52 +36,54 @@ const acad_year = computed(() => {
     return years;
 });
 // Local value for v-model
-const defaultYearValue = `${currentYear}-${currentYear + 1}`;
-const defaultYearObj = computed(() => acad_year.value.find(y => y.value === defaultYearValue));
+const normalizeAcademicYearToken = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
 
-// Helper function to find the year object from a value (string or object)
-const findYearObject = (val) => {
-    if (!val) return null;
-    // If val is already an object with a value property, find by that value
-    if (typeof val === 'object' && val.value) {
-        return acad_year.value.find(y => y.value === val.value);
-    }
-    // If val is a string, find by value
-    if (typeof val === 'string') {
-        return acad_year.value.find(y => y.value === val);
-    }
-    return null;
+    return String(value).trim();
 };
 
-const localValue = ref(
-    props.modelValue
-        ? findYearObject(props.modelValue) || defaultYearObj.value
-        : null
+const findYearObject = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    if (typeof value === 'object' && value.label && value.value) {
+        return value;
+    }
+
+    const rawValue = typeof value === 'object'
+        ? value.value ?? value.label ?? null
+        : value;
+
+    const normalized = normalizeAcademicYearToken(rawValue);
+    if (!normalized) {
+        return null;
+    }
+
+    return acad_year.value.find((year) => {
+        return normalizeAcademicYearToken(year.value) === normalized
+            || normalizeAcademicYearToken(year.label) === normalized;
+    }) || {
+        label: typeof rawValue === 'string' ? rawValue : String(rawValue),
+        value: rawValue,
+    };
+};
+
+const localValue = ref(findYearObject(props.modelValue));
+
+watch(
+    [() => props.modelValue, () => acad_year.value],
+    () => {
+        localValue.value = findYearObject(props.modelValue);
+    },
+    { immediate: true, deep: true }
 );
 
-// Sync localValue with parent prop
-watch(() => props.modelValue, (val) => {
-    // Always select the correct year object from acad_year
-    if (val) {
-        const selected = findYearObject(val);
-        localValue.value = selected || defaultYearObj.value;
-    } else {
-        // Keep as null when cleared
-        localValue.value = null;
-    }
-}, { immediate: true });
-
-// Emit changes to parent - emit only the value string
 watch(localValue, (val) => {
-    emit('update:modelValue', val?.value || val);
+    emit('update:modelValue', val?.value ?? val ?? null);
 }, { deep: true });
-
-// Emit initial value on mount to ensure parent gets the preselected value
-onMounted(() => {
-    if (localValue.value) {
-        emit('update:modelValue', localValue.value?.value || localValue.value);
-    }
-});
 
 </script>
 
@@ -91,7 +93,7 @@ onMounted(() => {
         :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
-                <div>{{ slotProps.value.label }}</div>
+                <div>{{ slotProps.value.label ?? slotProps.value }}</div>
             </div>
             <span v-else>
                 <div class="flex itesm-start">{{ slotProps.placeholder }}</div>

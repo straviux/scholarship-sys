@@ -13,7 +13,7 @@
                         <p class="text-sm text-gray-600 mt-1">Stay informed about important announcements and changes
                         </p>
                     </div>
-                    <Button v-if="unreadCount > 0" @click="markAllAsRead" label="Mark All as Read" icon="pi pi-check"
+                    <AppButton v-if="unreadCount > 0" @click="markAllAsRead" label="Mark All as Read" icon="check"
                         severity="secondary" outlined size="small" />
                 </div>
 
@@ -63,12 +63,12 @@
 
                 <!-- Updates List -->
                 <div v-if="loading" class="text-center py-8 short:py-4">
-                    <i class="pi pi-spinner pi-spin text-4xl short:text-2xl text-blue-500"></i>
+                    <AppIcon name="spinner" class="text-4xl short:text-2xl text-blue-500" />
                     <p class="mt-4 text-gray-600">Loading updates...</p>
                 </div>
 
                 <div v-else-if="filteredUpdates.length === 0" class="text-center py-12">
-                    <i class="pi pi-inbox text-6xl text-gray-300"></i>
+                    <AppIcon name="inbox" class="text-6xl text-gray-300" />
                     <h3 class="mt-4 text-lg font-medium text-gray-900">No updates found</h3>
                     <p class="mt-2 text-sm text-gray-600">
                         {{ currentFilter === 'unread' ? 'You\'re all caught up!' : 'There are no updates to display.' }}
@@ -94,14 +94,14 @@
                                                     <h3 class="text-lg font-semibold text-gray-900">{{ update.title }}
                                                     </h3>
                                                     <Tag v-if="!update.is_read" value="New" severity="info"
-                                                        icon="pi pi-circle-fill" class="text-xs" />
+                                                        icon="circle-fill" class="text-xs" />
                                                     <Tag :value="update.priority"
                                                         :severity="getPrioritySeverity(update.priority)"
                                                         class="text-xs" />
                                                     <Tag :value="update.type" :severity="getTypeSeverity(update.type)"
                                                         class="text-xs" />
                                                     <Tag v-if="update.is_markdown" value="Markdown" severity="secondary"
-                                                        icon="pi pi-file-edit" class="text-xs" />
+                                                        icon="file-edit" class="text-xs" />
                                                 </div>
                                             </div>
                                         </div>
@@ -124,11 +124,11 @@
                                         <div class="flex items-center justify-between text-sm text-gray-500">
                                             <div class="flex items-center gap-4">
                                                 <span class="flex items-center gap-1">
-                                                    <i class="pi pi-user text-xs"></i>
+                                                    <AppIcon name="user" :size="12" />
                                                     {{ update.created_by }}
                                                 </span>
                                                 <span class="flex items-center gap-1">
-                                                    <i class="pi pi-calendar text-xs"></i>
+                                                    <AppIcon name="calendar" :size="12" />
                                                     {{ update.created_at }}
                                                 </span>
                                             </div>
@@ -137,10 +137,11 @@
 
                                     <!-- Status Indicator -->
                                     <div class="flex-shrink-0" @click.stop>
-                                        <Button v-if="!update.is_read" @click="markAsRead(update)" label="Mark as Read"
-                                            icon="pi pi-check" severity="secondary" size="small" outlined />
+                                        <AppButton v-if="!update.is_read" @click="markAsRead(update)"
+                                            label="Mark as Read" icon="check" severity="secondary" size="small"
+                                            outlined />
                                         <div v-else class="flex items-center gap-2 text-green-600 text-sm font-medium">
-                                            <i class="pi pi-check-circle"></i>
+                                            <AppIcon name="check-circle" />
                                             <span>Read</span>
                                         </div>
                                     </div>
@@ -158,6 +159,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
+import AppIcon from '@/Components/ui/AppIcon.vue'
+import AppButton from '@/Components/ui/AppButton.vue'
 import axios from 'axios'
 
 

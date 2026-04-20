@@ -1,7 +1,7 @@
 <template>
     <div>
         <!-- Activity Logs Bell Button -->
-        <Button type="button" icon="pi pi-history" @click="togglePopover" :severity="'contrast'"
+        <AppButton type="button" icon="history" @click="togglePopover" :severity="'contrast'"
             :badge="(badgeCount > 99 ? '99+' : badgeCount).toString() || ''" size="small" text rounded
             v-tooltip.bottom="'Your Activity Logs'" />
 
@@ -12,7 +12,7 @@
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
-                            <i class="pi pi-history text-blue-600"></i>
+                            <AppIcon name="history" class="text-blue-600" />
                             <h3 class="text-base font-semibold">Your Activities</h3>
                         </div>
                     </div>
@@ -31,7 +31,7 @@
 
                     <!-- Empty State -->
                     <div v-else-if="activities.length === 0" class="px-4 py-8 text-center">
-                        <i class="pi pi-history opacity-30" style="font-size: 2rem"></i>
+                        <AppIcon name="history" class="opacity-30" :size="32" />
                         <h4 class="text-sm font-medium mb-1 mt-2">No activities yet</h4>
                         <p class="text-xs opacity-60">Your activities will appear here</p>
                     </div>
@@ -48,8 +48,7 @@
                                             <!-- Activity Icon -->
                                             <div
                                                 :class="['w-5 h-5 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0', getActivityColorClass(activity.activity_type)]">
-                                                <i :class="getActivityIcon(activity.activity_type)"
-                                                    style="font-size: 0.65rem"></i>
+                                                <AppIcon :name="getActivityIcon(activity.activity_type)" :size="10" />
                                             </div>
                                             <h4 class="text-xs font-medium line-clamp-1">
                                                 {{ activity.activity_type }}
@@ -57,7 +56,7 @@
                                         </div>
                                         <p v-if="activity.profile_name"
                                             class="text-xs text-blue-600 font-medium mt-1 ml-7">
-                                            <i class="pi pi-user text-xs mr-1"></i>{{ activity.profile_name }}
+                                            <AppIcon name="user" :size="12" class="mr-1" />{{ activity.profile_name }}
                                         </p>
                                         <p class="text-xs opacity-70 mt-1 ml-7 line-clamp-2">
                                             {{ activity.remarks || activity.description || 'No details' }}
@@ -131,15 +130,15 @@ defineExpose({
 
 function getActivityIcon(type) {
     const icons = {
-        'Profile Updated': 'pi pi-user',
-        'Attachment Uploaded': 'pi pi-upload',
-        'Record Created': 'pi pi-plus-circle',
-        'Record Updated': 'pi pi-pencil',
-        'Record Deleted': 'pi pi-trash',
-        'Status Changed': 'pi pi-arrow-right-arrow-left',
-        'Profile Created': 'pi pi-user-plus'
+        'Profile Updated': 'user',
+        'Attachment Uploaded': 'upload',
+        'Record Created': 'plus-circle',
+        'Record Updated': 'pencil',
+        'Record Deleted': 'trash',
+        'Status Changed': 'arrow-right-arrow-left',
+        'Profile Created': 'user-plus'
     };
-    return icons[type] || 'pi pi-history';
+    return icons[type] || 'history';
 }
 
 function getActivityColorClass(type) {

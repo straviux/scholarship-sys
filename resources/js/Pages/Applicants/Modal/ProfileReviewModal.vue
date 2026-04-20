@@ -167,12 +167,14 @@ onBeforeUnmount(() => {
             <div class="ios-modal" :style="modalStyle">
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Profile Review</span>
                     <button
                         v-if="hasRole('administrator') || hasRole('program_manager') || hasRole('screening-officer')"
                         class="ios-nav-btn ios-nav-action" @click="markAsInterviewed">
-                        <i class="pi pi-comments" style="font-size: 13px; margin-right: 4px;"></i>Interview
+                        <AppIcon name="comments" :size="13" style="margin-right: 4px;" />Interview
                     </button>
                     <span v-else class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
                 </div>
@@ -193,19 +195,23 @@ onBeforeUnmount(() => {
                                     </div>
                                     <div class="profile-meta"
                                         style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; font-size: 12px;">
-                                        <span><i class="pi pi-phone" style="font-size: 10px; margin-right: 3px;"></i>{{
-                                            currentApplicant.contact_no || 'N/A' }}</span>
-                                        <span><i class="pi pi-envelope"
-                                                style="font-size: 10px; margin-right: 3px;"></i>{{
-                                                    currentApplicant.email || 'N/A' }}</span>
-                                        <span><i class="pi pi-calendar"
-                                                style="font-size: 10px; margin-right: 3px;"></i>{{
-                                                    formatDate(currentApplicant.date_filed) }}</span>
+                                        <span>
+                                            <AppIcon name="phone" :size="10" style="margin-right: 3px;" />{{
+                                                currentApplicant.contact_no || 'N/A' }}
+                                        </span>
+                                        <span>
+                                            <AppIcon name="envelope" :size="10" style="margin-right: 3px;" />{{
+                                                currentApplicant.email || 'N/A' }}
+                                        </span>
+                                        <span>
+                                            <AppIcon name="calendar" :size="10" style="margin-right: 3px;" />{{
+                                                formatDate(currentApplicant.date_filed) }}
+                                        </span>
                                     </div>
                                     <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
                                         <Tag severity="info">
                                             <span style="font-size: 10px;">#{{ currentApplicant.sequence_number || '-'
-                                                }} {{ currentApplicant.scholarship_grant?.[0]?.program?.shortname
+                                            }} {{ currentApplicant.scholarship_grant?.[0]?.program?.shortname
                                                 }}</span>
                                         </Tag>
                                         <Tag severity="warn">
@@ -236,8 +242,7 @@ onBeforeUnmount(() => {
                                 <TabPanel value="requirements">
                                     <div v-if="reviewRequirements.length === 0" class="req-empty"
                                         style="padding: 32px 0; text-align: center;">
-                                        <i class="pi pi-inbox"
-                                            style="font-size: 28px; display: block; margin-bottom: 8px;"></i>
+                                        <AppIcon name="inbox" :size="28" style="display: block; margin-bottom: 8px;" />
                                         No requirements found
                                     </div>
                                     <div v-else class="ios-card" style="margin-top: 8px;">
@@ -248,12 +253,11 @@ onBeforeUnmount(() => {
                                                 style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
                                                 <span v-if="req.is_checked" class="req-check-dot"
                                                     style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;">
-                                                    <i class="pi pi-check" style="font-size: 11px; color: #34C759;"></i>
+                                                    <AppIcon name="check" :size="11" style="color: #34C759;" />
                                                 </span>
                                                 <span v-else class="req-uncheck-dot"
                                                     style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;">
-                                                    <i class="pi pi-circle"
-                                                        style="font-size: 11px; color: #C7C7CC;"></i>
+                                                    <AppIcon name="circle" :size="11" style="color: #C7C7CC;" />
                                                 </span>
                                                 <div style="flex: 1; min-width: 0;">
                                                     <div class="req-item-name"
@@ -270,12 +274,11 @@ onBeforeUnmount(() => {
                                             <div style="display: flex; gap: 4px; flex-shrink: 0; margin-left: 8px;">
                                                 <button v-if="req.file_path && req.is_checked" class="ios-icon-btn"
                                                     @click="previewRequirementFile(req)" title="Preview">
-                                                    <i class="pi pi-eye" style="font-size: 13px; color: #007AFF;"></i>
+                                                    <AppIcon name="eye" :size="13" style="color: #007AFF;" />
                                                 </button>
                                                 <button v-if="req.file_path && req.is_checked" class="ios-icon-btn"
                                                     @click="downloadRequirementFile(req)" title="Download">
-                                                    <i class="pi pi-download"
-                                                        style="font-size: 13px; color: #34C759;"></i>
+                                                    <AppIcon name="download" :size="13" style="color: #34C759;" />
                                                 </button>
                                             </div>
                                         </div>
@@ -291,7 +294,7 @@ onBeforeUnmount(() => {
                                         <div class="ios-card" style="padding: 12px 16px;">
                                             <div
                                                 style="font-size: 13px; font-weight: 600; color: #007AFF; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
-                                                <i class="pi pi-user" style="font-size: 12px;"></i> Personal
+                                                <AppIcon name="user" :size="12" /> Personal
                                             </div>
                                             <div class="ios-info-grid">
                                                 <div class="ios-info-item">
@@ -303,17 +306,17 @@ onBeforeUnmount(() => {
                                                     <span class="ios-info-label">Gender</span>
                                                     <span class="ios-info-value">{{ currentApplicant.gender === 'M' ?
                                                         'Male' : currentApplicant.gender === 'F' ? 'Female' : 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Contact</span>
                                                     <span class="ios-info-value">{{ currentApplicant.contact_no || 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Email</span>
                                                     <span class="ios-info-value">{{ currentApplicant.email || 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item" style="grid-column: 1 / -1;">
                                                     <span class="ios-info-label">Income</span>
@@ -332,7 +335,7 @@ onBeforeUnmount(() => {
                                         <div class="ios-card" style="padding: 12px 16px;">
                                             <div
                                                 style="font-size: 13px; font-weight: 600; color: #34C759; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
-                                                <i class="pi pi-graduation-cap" style="font-size: 12px;"></i> Academic
+                                                <AppIcon name="graduation-cap" :size="12" /> Academic
                                             </div>
                                             <div class="ios-info-grid">
                                                 <div class="ios-info-item">
@@ -357,13 +360,13 @@ onBeforeUnmount(() => {
                                                     <span class="ios-info-label">Year Level</span>
                                                     <span class="ios-info-value">{{
                                                         currentApplicant.scholarship_grant?.[0]?.year_level || 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Academic Year</span>
                                                     <span class="ios-info-value">{{
                                                         currentApplicant.scholarship_grant?.[0]?.academic_year || 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Term</span>
@@ -388,7 +391,7 @@ onBeforeUnmount(() => {
                                             <div class="ios-card" style="padding: 12px 16px;">
                                                 <div
                                                     style="font-size: 12px; font-weight: 600; color: #007AFF; margin-bottom: 6px;">
-                                                    <i class="pi pi-user" style="font-size: 11px;"></i> Father
+                                                    <AppIcon name="user" :size="11" /> Father
                                                 </div>
                                                 <div class="ios-family-info">
                                                     <div><span class="ios-info-label">Name</span><span
@@ -406,7 +409,7 @@ onBeforeUnmount(() => {
                                             <div class="ios-card" style="padding: 12px 16px;">
                                                 <div
                                                     style="font-size: 12px; font-weight: 600; color: #FF2D55; margin-bottom: 6px;">
-                                                    <i class="pi pi-user" style="font-size: 11px;"></i> Mother
+                                                    <AppIcon name="user" :size="11" /> Mother
                                                 </div>
                                                 <div class="ios-family-info">
                                                     <div><span class="ios-info-label">Name</span><span
@@ -424,7 +427,7 @@ onBeforeUnmount(() => {
                                             <div class="ios-card" style="padding: 12px 16px;">
                                                 <div
                                                     style="font-size: 12px; font-weight: 600; color: #AF52DE; margin-bottom: 6px;">
-                                                    <i class="pi pi-users" style="font-size: 11px;"></i> Guardian
+                                                    <AppIcon name="users" :size="11" /> Guardian
                                                 </div>
                                                 <div class="ios-family-info">
                                                     <div><span class="ios-info-label">Name</span><span
@@ -453,12 +456,13 @@ onBeforeUnmount(() => {
                 <!-- Footer Navigation -->
                 <div class="ios-footer" v-if="currentApplicant">
                     <button class="ios-footer-btn" @click="goToPreviousProfile" :disabled="!hasPreviousProfile">
-                        <i class="pi pi-chevron-left" style="font-size: 12px; margin-right: 4px;"></i>Previous
+                        <AppIcon name="chevron-left" :size="12" style="margin-right: 4px;" />Previous
                     </button>
                     <span class="ios-footer-counter">{{ currentProfileIndex + 1 }} / {{ applicants?.length || 0
-                        }}</span>
+                    }}</span>
                     <button class="ios-footer-btn" @click="goToNextProfile" :disabled="!hasNextProfile">
-                        Next<i class="pi pi-chevron-right" style="font-size: 12px; margin-left: 4px;"></i>
+                        Next
+                        <AppIcon name="chevron-right" :size="12" style="margin-left: 4px;" />
                     </button>
                 </div>
             </div>

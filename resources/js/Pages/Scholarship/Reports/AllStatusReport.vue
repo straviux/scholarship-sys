@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { formatName, formatDate, formatStatus, isJpm, groupRecords, getGroupValue } from './report-helpers';
+import { formatName, formatDate, formatGrantProvision, formatStatus, isJpm, groupRecords, getGroupValue } from './report-helpers';
 
 const props = defineProps({
     records: { type: Array, default: () => [] },
@@ -82,7 +82,7 @@ const showCol = (col) => {
                         <td v-if="showCol('school')">{{ rec.school_name || '—' }}</td>
                         <td v-if="showCol('course')">{{ rec.course_name || '—' }}</td>
                         <td v-if="showCol('year_level')">{{ rec.year_level || '—' }}</td>
-                        <td v-if="options.includeGrantProvision">{{ rec.grant_provision || '—' }}</td>
+                        <td v-if="options.includeGrantProvision">{{ formatGrantProvision(rec.grant_provision) }}</td>
                         <td class="nowrap">{{ formatDate(rec.date_filed) }}</td>
                         <td v-if="options.includeRemarks" v-safe-html="rec.remarks || ''"></td>
                     </tr>
@@ -129,7 +129,8 @@ const showCol = (col) => {
                                 <td v-if="showCol('school')">{{ rec.school_name || '—' }}</td>
                                 <td v-if="showCol('course')">{{ rec.course_name || '—' }}</td>
                                 <td v-if="showCol('year_level')">{{ rec.year_level || '—' }}</td>
-                                <td v-if="options.includeGrantProvision">{{ rec.grant_provision || '—' }}</td>
+                                <td v-if="options.includeGrantProvision">{{ formatGrantProvision(rec.grant_provision) }}
+                                </td>
                                 <td class="nowrap">{{ formatDate(rec.date_filed) }}</td>
                                 <td v-if="options.includeRemarks" v-safe-html="rec.remarks || ''"></td>
                             </tr>
@@ -174,7 +175,8 @@ const showCol = (col) => {
                                         <td v-if="showCol('school')">{{ rec.school_name || '—' }}</td>
                                         <td v-if="showCol('course')">{{ rec.course_name || '—' }}</td>
                                         <td v-if="showCol('year_level')">{{ rec.year_level || '—' }}</td>
-                                        <td v-if="options.includeGrantProvision">{{ rec.grant_provision || '—' }}</td>
+                                        <td v-if="options.includeGrantProvision">{{
+                                            formatGrantProvision(rec.grant_provision) }}</td>
                                         <td class="nowrap">{{ formatDate(rec.date_filed) }}</td>
                                         <td v-if="options.includeRemarks" v-safe-html="rec.remarks || ''"></td>
                                     </tr>

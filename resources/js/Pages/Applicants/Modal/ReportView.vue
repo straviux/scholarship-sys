@@ -4,8 +4,8 @@
         <div
             class="bg-white dark:bg-gray-800 px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-center gap-3">
-                <Button label="Back" icon="pi pi-arrow-left" @click="goBack" severity="secondary" text size="small" />
-                <Button label="Refresh" icon="pi pi-refresh" @click="regenerate" severity="secondary" text size="small"
+                <AppButton label="Back" icon="arrow-left" @click="goBack" severity="secondary" text size="small" />
+                <AppButton label="Refresh" icon="refresh" @click="regenerate" severity="secondary" text size="small"
                     :loading="loading" />
             </div>
 
@@ -24,9 +24,8 @@
 
                 <!-- Export Buttons -->
                 <div class="flex items-center gap-2">
-                    <Button label="PDF" icon="pi pi-file-pdf" @click="saveAsPdf" severity="danger" outlined
-                        size="small" />
-                    <Button label="Excel" icon="pi pi-file-excel" @click="saveAsExcel" severity="success" outlined
+                    <AppButton label="PDF" icon="file-pdf" @click="saveAsPdf" severity="danger" outlined size="small" />
+                    <AppButton label="Excel" icon="file-excel" @click="saveAsExcel" severity="success" outlined
                         size="small" />
                 </div>
             </div>
@@ -194,7 +193,7 @@
                             </div>
                             <div
                                 class="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                                <i class="pi pi-users text-2xl text-blue-600"></i>
+                                <AppIcon name="users" :size="24" class="text-blue-600" />
                             </div>
                         </div>
                     </div>
@@ -207,8 +206,8 @@
                                 <div
                                     class="mb-4 pb-3 border-b border-gray-300 dark:border-gray-600 flex items-center justify-between">
                                     <div class="flex items-center gap-3">
-                                        <i
-                                            :class="['text-xl text-gray-600 dark:text-gray-400', getSummaryIcon(group.key)]"></i>
+                                        <AppIcon :name="getSummaryIcon(group.key)" :size="20"
+                                            class="text-gray-600 dark:text-gray-400" />
                                         <h2 class="text-xl font-medium text-gray-900 dark:text-gray-100">
                                             {{ group.label }}
                                         </h2>
@@ -291,7 +290,7 @@
                 <div v-if="!loading && isReportEmpty" class="text-center py-20">
                     <div
                         class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                        <i class="pi pi-inbox text-3xl text-gray-400 dark:text-gray-500"></i>
+                        <AppIcon name="inbox" :size="30" class="text-gray-400 dark:text-gray-500" />
                     </div>
                     <p class="text-gray-600 dark:text-gray-400 text-lg mb-1">No data found</p>
                     <p class="text-gray-400 dark:text-gray-500 text-sm">Try adjusting your filters</p>
@@ -553,12 +552,12 @@ const calculatePercentage = (count) => {
 // Helper function to get icon for summary groups
 const getSummaryIcon = (key) => {
     const iconMap = {
-        'by_program': 'pi pi-book',
-        'by_school': 'pi pi-building',
-        'by_course': 'pi pi-graduation-cap',
-        'by_year_level': 'pi pi-chart-bar'
+        'by_program': 'book',
+        'by_school': 'building',
+        'by_course': 'graduation-cap',
+        'by_year_level': 'chart-bar'
     };
-    return iconMap[key] || 'pi pi-chart-bar';
+    return iconMap[key] || 'chart-bar';
 };
 
 function fetchReport() {

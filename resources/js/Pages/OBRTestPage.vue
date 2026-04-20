@@ -270,7 +270,7 @@ const displayLoading = computed(() => {
             <!-- Header -->
             <div class="mb-6 short:mb-3">
                 <h1 class="text-4xl short:text-2xl font-bold text-gray-900 flex items-center gap-3">
-                    <i class="pi pi-history text-blue-600"></i>
+                    <AppIcon name="history" :size="30" class="text-blue-600" />
                     OBR Tracking Timeline
                 </h1>
                 <p class="text-gray-600 mt-2">View the complete tracking history for an OBR and Disbursement Voucher</p>
@@ -280,7 +280,7 @@ const displayLoading = computed(() => {
                 <!-- Info Banner -->
                 <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4">
                     <h3 class="font-semibold text-yellow-900 mb-2">
-                        <i class="pi pi-exclamation-triangle mr-2"></i>
+                        <AppIcon name="exclamation-triangle" :size="16" class="mr-2 inline-flex" />
                         API Session Required
                     </h3>
                     <p class="text-sm text-yellow-800 mb-3">
@@ -288,11 +288,11 @@ const displayLoading = computed(() => {
                         Use the <strong>"Open in Tracking System"</strong> button to view OBR details directly.
                     </p>
                     <div class="flex gap-2">
-                        <Button label="Go to Tracking System" icon="pi pi-external-link" severity="warning"
-                            class="flex-1" @click="window.open('https://tracking.pgpict.com', '_blank')" />
+                        <AppButton label="Go to Tracking System" icon="external-link" severity="warning" class="flex-1"
+                            @click="window.open('https://tracking.pgpict.com', '_blank')" />
                         <a href="/documentation/OBR_SESSION_AUTHENTICATION.md" target="_blank"
                             class="flex-1 py-2 px-3 bg-yellow-100 text-yellow-900 rounded hover:bg-yellow-200 text-sm font-medium transition-colors text-center">
-                            <i class="pi pi-question-circle mr-2"></i>
+                            <AppIcon name="question-circle" :size="16" class="mr-2 inline-flex" />
                             Learn More
                         </a>
                     </div>
@@ -326,16 +326,16 @@ const displayLoading = computed(() => {
 
                     <!-- Action Buttons -->
                     <div class="grid grid-cols-2 gap-2">
-                        <Button label="Search" icon="pi pi-search" :loading="testState.searchLoading"
+                        <AppButton label="Search" icon="search" :loading="testState.searchLoading"
                             @click="handleSearchOBR" />
-                        <Button label="Open in System" icon="pi pi-external-link" severity="warning"
+                        <AppButton label="Open in System" icon="external-link" severity="warning"
                             @click="openInTrackingSystem" />
                     </div>
 
                     <!-- Error -->
                     <div v-if="testState.searchError"
                         class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                        <i class="pi pi-exclamation-circle mr-2"></i>
+                        <AppIcon name="exclamation-circle" :size="16" class="mr-2 inline-flex" />
                         {{ testState.searchError }}
                     </div>
                 </div>
@@ -396,16 +396,16 @@ const displayLoading = computed(() => {
 
                     <!-- Filter Buttons -->
                     <div class="grid grid-cols-2 gap-2">
-                        <Button label="Apply Filter" icon="pi pi-filter" :loading="testState.filterLoading"
+                        <AppButton label="Apply Filter" icon="filter" :loading="testState.filterLoading"
                             @click="handleFilterSearch" />
-                        <Button label="Open in System" icon="pi pi-external-link" severity="warning"
+                        <AppButton label="Open in System" icon="external-link" severity="warning"
                             @click="openInTrackingSystem" />
                     </div>
 
                     <!-- Error -->
                     <div v-if="testState.filterError"
                         class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                        <i class="pi pi-exclamation-circle mr-2"></i>
+                        <AppIcon name="exclamation-circle" :size="16" class="mr-2 inline-flex" />
                         {{ testState.filterError }}
                     </div>
                 </div>
@@ -444,24 +444,25 @@ const displayLoading = computed(() => {
 
                     <!-- Get Tracking Info Buttons -->
                     <div class="grid grid-cols-2 gap-2">
-                        <Button label="Get Info" icon="pi pi-info-circle" :loading="testState.trackingInfoLoading"
+                        <AppButton label="Get Info" icon="info-circle" :loading="testState.trackingInfoLoading"
                             @click="handleGetTrackingInfo" />
-                        <Button label="Open in System" icon="pi pi-external-link" severity="warning"
+                        <AppButton label="Open in System" icon="external-link" severity="warning"
                             @click="openInTrackingSystem" />
                     </div>
 
                     <!-- Error -->
                     <div v-if="testState.trackingInfoError"
                         class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                        <i class="pi pi-exclamation-circle mr-2"></i>
+                        <AppIcon name="exclamation-circle" :size="16" class="mr-2 inline-flex" />
                         {{ testState.trackingInfoError }}
                     </div>
 
                     <!-- Tracking Info Display -->
-                    <div v-if="testState.trackingInfoData" class="space-y-4" <!-- Tracking Timeline -->
+                    <div v-if="testState.trackingInfoData" class="space-y-4">
                         <div class="bg-white border-l-4 border-green-600 rounded-lg shadow-md p-4">
+                            <!-- Tracking Timeline -->
                             <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                <i class="pi pi-list text-green-600 mr-2"></i>
+                                <AppIcon name="list" :size="18" class="text-green-600 mr-2" />
                                 Tracking Timeline ({{ testState.trackingInfoData.tracking_information?.length }}
                                 entries)
                             </h3>
@@ -490,9 +491,9 @@ const displayLoading = computed(() => {
 
                         <!-- Copy & Download -->
                         <div class="flex gap-2">
-                            <Button label="Copy Data" icon="pi pi-copy" severity="info" outlined class="flex-1"
+                            <AppButton label="Copy Data" icon="copy" severity="info" outlined class="flex-1"
                                 @click="copyToClipboard(testState.trackingInfoData.tracking_information)" />
-                            <Button label="Export" icon="pi pi-download" severity="success" outlined class="flex-1"
+                            <AppButton label="Export" icon="download" severity="success" outlined class="flex-1"
                                 @click="exportResults" />
                         </div>
                     </div>
@@ -501,12 +502,11 @@ const displayLoading = computed(() => {
                 <!-- Action Buttons -->
                 <div class="bg-white rounded-lg shadow-md p-4 space-y-2">
                     <div class="flex gap-2">
-                        <Button label="Export" icon="pi pi-download" severity="success" class="flex-1"
+                        <AppButton label="Export" icon="download" severity="success" class="flex-1"
                             :disabled="displayResults.length === 0" @click="exportResults" />
-                        <Button label="Clear" icon="pi pi-times" severity="secondary" class="flex-1"
-                            @click="clearAll" />
+                        <AppButton label="Clear" icon="times" severity="secondary" class="flex-1" @click="clearAll" />
                     </div>
-                    <Button label="Open in Tracking System" icon="pi pi-external-link" class="w-full" severity="help"
+                    <AppButton label="Open in Tracking System" icon="external-link" class="w-full" severity="help"
                         @click="openInTrackingSystem" />
                 </div>
             </div>
@@ -523,7 +523,7 @@ const displayLoading = computed(() => {
                         <div>
                             <p class="text-gray-600 text-sm">Response Time</p>
                             <p class="text-3xl short:text-xl font-bold text-blue-600">{{ testState.responseTime || 0
-                                }}ms</p>
+                            }}ms</p>
                         </div>
                     </div>
                     <div v-if="testState.rawResponse && testState.rawResponse.recordsFiltered !== undefined"
@@ -538,12 +538,12 @@ const displayLoading = computed(() => {
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Results</h3>
 
                     <div v-if="displayLoading" class="text-center py-8">
-                        <i class="pi pi-spin pi-spinner text-3xl short:text-xl text-blue-600"></i>
+                        <AppIcon name="spinner" :size="40" class="text-blue-600" />
                         <p class="mt-2 text-gray-600">Loading...</p>
                     </div>
 
                     <div v-else-if="displayResults.length === 0" class="text-center py-8 text-gray-500">
-                        <i class="pi pi-inbox text-4xl short:text-2xl mb-2"></i>
+                        <AppIcon name="inbox" :size="48" class="mb-2" />
                         <p>No results yet. Start a search above.</p>
                     </div>
 
@@ -551,7 +551,7 @@ const displayLoading = computed(() => {
                         <div v-if="displayResults.length > 0">
                             <!-- Summary -->
                             <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900">
-                                <i class="pi pi-info-circle mr-2"></i>
+                                <AppIcon name="info-circle" :size="16" class="mr-2 inline-flex" />
                                 Showing {{ displayResults.slice(0, 5).length }} of {{ displayResults.length }} results
                             </div>
 
@@ -609,7 +609,7 @@ const displayLoading = computed(() => {
                             </div>
                         </div>
 
-                        <Button label="Copy to Clipboard" icon="pi pi-copy" severity="info" outlined class="w-full mt-4"
+                        <AppButton label="Copy to Clipboard" icon="copy" severity="info" outlined class="w-full mt-4"
                             @click="copyToClipboard(displayResults)" />
                     </div>
                 </div>
@@ -618,7 +618,7 @@ const displayLoading = computed(() => {
                 <div v-if="testState.rawResponse" class="bg-white rounded-lg shadow-md p-4 short:p-3">
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">Raw Response</h3>
                     <p class="text-xs text-gray-600 mb-3">
-                        <i class="pi pi-info-circle mr-1"></i>
+                        <AppIcon name="info-circle" :size="14" class="mr-1 inline-flex" />
                         Open browser console (F12) for full debugging details
                     </p>
                     <pre

@@ -1,7 +1,7 @@
 <template>
     <div>
         <!-- Notification Bell Button -->
-        <Button type="button" icon="pi pi-bell" @click="togglePopover" :severity="unreadCount > 0 ? 'info' : 'contrast'"
+        <AppButton type="button" icon="bell" @click="togglePopover" :severity="unreadCount > 0 ? 'info' : 'contrast'"
             :badge="(unreadCount > 99 ? '99+' : unreadCount).toString() || ''" size="small" text rounded
             v-tooltip.bottom="'System Updates Notifications'" />
 
@@ -12,7 +12,7 @@
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
-                            <i class="pi pi-bell text-blue-600"></i>
+                            <AppIcon name="bell" :size="14" class="text-blue-600" />
                             <h3 class="text-base font-semibold">System Updates</h3>
                         </div>
                         <Button v-if="unreadCount > 0" @click="markAllAsRead" :disabled="isMarkingAllAsRead"
@@ -34,7 +34,7 @@
 
                     <!-- Empty State -->
                     <div v-else-if="notifications.length === 0" class="px-4 py-8 text-center">
-                        <i class="pi pi-bell opacity-30" style="font-size: 2rem"></i>
+                        <AppIcon name="bell" :size="32" class="opacity-30" />
                         <h4 class="text-sm font-medium mb-1 mt-2">No notifications</h4>
                         <p class="text-xs opacity-60">You're all caught up!</p>
                     </div>
@@ -71,12 +71,13 @@
 
                                     <div class="flex items-center ml-2 flex-shrink-0">
                                         <!-- Mark as read button -->
-                                        <Button v-if="!notification.is_read" @click.stop="markAsRead(notification)"
-                                            icon="pi pi-check-circle" severity="info" variant="text" rounded
-                                            size="small" v-tooltip.top="'Mark as read'" />
+                                        <AppButton v-if="!notification.is_read" @click.stop="markAsRead(notification)"
+                                            icon="check-circle" severity="info" variant="text" rounded size="small"
+                                            v-tooltip.top="'Mark as read'" />
                                         <!-- Type Icon -->
-                                        <i :class="[getTypeIcon(notification.type), getTypeIconClass(notification.type)]"
-                                            style="font-size: 0.75rem; margin-left: 0.25rem"></i>
+                                        <AppIcon :name="getTypeIcon(notification.type)"
+                                            :class="getTypeIconClass(notification.type)" :size="12"
+                                            style="margin-left: 0.25rem" />
                                         <!-- Unread Indicator -->
                                         <div v-if="!notification.is_read"
                                             class="w-1.5 h-1.5 bg-blue-600 rounded-full ml-1">
@@ -111,8 +112,8 @@
 
             <template #header>
                 <div class="flex items-center space-x-3 w-full">
-                    <i :class="[getTypeIcon(selectedNotification?.type), getTypeIconClass(selectedNotification?.type)]"
-                        style="font-size: 1.5rem"></i>
+                    <AppIcon :name="getTypeIcon(selectedNotification?.type)"
+                        :class="getTypeIconClass(selectedNotification?.type)" :size="24" />
                     <div class="flex items-center space-x-2 flex-1">
                         <h3 class="text-lg font-medium">
                             {{ selectedNotification?.title }}
@@ -148,7 +149,7 @@
                         <div class="flex items-center space-x-4">
                             <!-- <span>Type: <span class="font-medium">{{ selectedNotification?.type }}</span></span> -->
                             <span>Priority: <span class="font-medium capitalize">{{ selectedNotification?.priority
-                                    }}</span></span>
+                            }}</span></span>
                         </div>
                         <div class="flex items-center space-x-4">
                             <span>@<span class="font-medium">{{ selectedNotification?.created_by }}</span></span>
@@ -160,8 +161,8 @@
 
             <template #footer>
                 <div class="flex justify-end space-x-2">
-                    <Button v-if="!selectedNotification?.is_read" @click="markAsReadAndClose(selectedNotification)"
-                        label="Mark as Read" severity="info" icon="pi pi-check" size="small" />
+                    <AppButton v-if="!selectedNotification?.is_read" @click="markAsReadAndClose(selectedNotification)"
+                        label="Mark as Read" severity="info" icon="check" size="small" />
                 </div>
             </template>
         </Dialog>
@@ -294,12 +295,12 @@ const markAllAsRead = async () => {
 
 const getTypeIcon = (type) => {
     const icons = {
-        info: 'pi pi-info-circle',
-        warning: 'pi pi-exclamation-triangle',
-        success: 'pi pi-check-circle',
-        error: 'pi pi-times-circle'
+        info: 'info-circle',
+        warning: 'exclamation-triangle',
+        success: 'check-circle',
+        error: 'times-circle'
     }
-    return icons[type] || 'pi pi-info-circle'
+    return icons[type] || 'info-circle'
 }
 
 const getTypeIconClass = (type) => {

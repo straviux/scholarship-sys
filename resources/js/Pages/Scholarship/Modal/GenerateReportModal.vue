@@ -5,11 +5,14 @@
             <div class="ios-modal" :style="modalStyle">
                 <!-- iOS Navigation Bar (drag handle) -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close" v-tooltip.bottom="'Close'"><i
-                            class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="close" v-tooltip.bottom="'Close'">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Generate Report</span>
                     <button class="ios-nav-btn ios-nav-action" @click="generateReport" :disabled="isDateToInvalid"
-                        v-tooltip.bottom="'Generate Report'"><i class="pi pi-check"></i></button>
+                        v-tooltip.bottom="'Generate Report'">
+                        <AppIcon name="check" :size="14" />
+                    </button>
                 </div>
 
                 <div class="ios-body">
@@ -19,12 +22,12 @@
                         <div class="ios-segmented-control">
                             <button :class="['ios-segment', reportType === 'list' && 'ios-segment-active']"
                                 @click="reportType = 'list'">
-                                <i class="pi pi-list" style="font-size: 13px;"></i>
+                                <AppIcon name="list" :size="13" />
                                 Detailed List
                             </button>
                             <button :class="['ios-segment', reportType === 'summary' && 'ios-segment-active']"
                                 @click="reportType = 'summary'">
-                                <i class="pi pi-chart-bar" style="font-size: 13px;"></i>
+                                <AppIcon name="chart-bar" :size="13" />
                                 Summary
                             </button>
                         </div>
@@ -37,7 +40,7 @@
                             <!-- Status -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-circle-fill" style="color: #FF9500; font-size: 13px;"></i>
+                                    <AppIcon name="circle-fill" :size="13" style="color: #FF9500;" />
                                     Status
                                 </div>
                                 <div class="ios-row-control">
@@ -50,7 +53,7 @@
                             <!-- Program -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-bookmark-fill" style="color: #007AFF; font-size: 13px;"></i>
+                                    <AppIcon name="bookmark-fill" :size="13" style="color: #007AFF;" />
                                     Program
                                 </div>
                                 <div class="ios-row-control">
@@ -62,7 +65,7 @@
                             <!-- School -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-building" style="color: #34C759; font-size: 13px;"></i>
+                                    <AppIcon name="building" :size="13" style="color: #34C759;" />
                                     School
                                 </div>
                                 <div class="ios-row-control">
@@ -74,7 +77,7 @@
                             <!-- Course -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-graduation-cap" style="color: #AF52DE; font-size: 13px;"></i>
+                                    <AppIcon name="graduation-cap" :size="13" style="color: #AF52DE;" />
                                     Course
                                 </div>
                                 <div class="ios-row-control">
@@ -87,7 +90,7 @@
                             <!-- Municipality -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-map-marker" style="color: #FF2D55; font-size: 13px;"></i>
+                                    <AppIcon name="map-pin" :size="13" style="color: #FF2D55;" />
                                     Municipality
                                 </div>
                                 <div class="ios-row-control">
@@ -99,7 +102,7 @@
                             <!-- Year Level -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-sort-numeric-up" style="color: #5856D6; font-size: 13px;"></i>
+                                    <AppIcon name="sort-numeric-up" :size="13" style="color: #5856D6;" />
                                     Year Level
                                 </div>
                                 <div class="ios-row-control">
@@ -111,7 +114,7 @@
                             <!-- Grant Provision -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-wallet" style="color: #FF9500; font-size: 13px;"></i>
+                                    <AppIcon name="wallet" :size="13" style="color: #FF9500;" />
                                     Grant Provision
                                 </div>
                                 <div class="ios-row-control">
@@ -129,7 +132,7 @@
                         <div class="ios-card">
                             <div class="ios-row ios-row-last ios-row-dates">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                    <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     From
                                 </div>
                                 <div class="ios-row-control">
@@ -138,7 +141,7 @@
                                 </div>
                                 <span class="ios-date-separator">—</span>
                                 <div class="ios-row-label">
-                                    <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                    <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     To
                                 </div>
                                 <div class="ios-row-control">
@@ -159,7 +162,7 @@
                             <!-- Group By -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-objects-column" style="color: #5856D6; font-size: 13px;"></i>
+                                    <AppIcon name="objects-column" :size="13" style="color: #5856D6;" />
                                     Group By
                                 </div>
                                 <div class="ios-row-control">
@@ -171,7 +174,7 @@
                             <!-- Sub-Group By -->
                             <div class="ios-row" v-if="groupBy && groupBy !== 'none'">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-objects-column" style="color: #8E8E93; font-size: 13px;"></i>
+                                    <AppIcon name="objects-column" :size="13" style="color: #8E8E93;" />
                                     Sub-Group
                                 </div>
                                 <div class="ios-row-control">
@@ -184,7 +187,7 @@
                             <!-- Tertiary Group By -->
                             <div class="ios-row" v-if="groupBySecondary && groupBySecondary !== 'none'">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-objects-column" style="color: #C7C7CC; font-size: 13px;"></i>
+                                    <AppIcon name="objects-column" :size="13" style="color: #C7C7CC;" />
                                     3rd Group
                                 </div>
                                 <div class="ios-row-control">
@@ -197,7 +200,7 @@
                             <!-- Paper Size -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-file" style="color: #8E8E93; font-size: 13px;"></i>
+                                    <AppIcon name="file" :size="13" style="color: #8E8E93;" />
                                     Paper Size
                                 </div>
                                 <div class="ios-row-control">
@@ -209,7 +212,7 @@
                             <!-- Orientation -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-desktop" style="color: #FF9500; font-size: 13px;"></i>
+                                    <AppIcon name="desktop" :size="13" style="color: #FF9500;" />
                                     Orientation
                                 </div>
                                 <div class="ios-row-control">
@@ -221,7 +224,7 @@
                             <!-- Sequence Numbers Toggle -->
                             <div class="ios-row" v-if="reportType === 'list'">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-hashtag" style="color: #007AFF; font-size: 13px;"></i>
+                                    <AppIcon name="hashtag" :size="13" style="color: #007AFF;" />
                                     Sequence Numbers
                                 </div>
                                 <div>
@@ -232,7 +235,7 @@
                             <!-- Include Remarks Toggle -->
                             <div class="ios-row" v-if="reportType === 'list'">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-comment" style="color: #FF9500; font-size: 13px;"></i>
+                                    <AppIcon name="comment" :size="13" style="color: #FF9500;" />
                                     Include Remarks
                                 </div>
                                 <div>
@@ -243,7 +246,7 @@
                             <!-- Include Grant Provision Toggle -->
                             <div class="ios-row" v-if="reportType === 'list'">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-wallet" style="color: #34C759; font-size: 13px;"></i>
+                                    <AppIcon name="wallet" :size="13" style="color: #34C759;" />
                                     Grant Provision
                                 </div>
                                 <div>
@@ -254,7 +257,7 @@
                             <!-- JPM Highlighting Toggle -->
                             <div class="ios-row" v-if="reportType === 'list' && canEnableJpmHighlighting">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-highlight" style="color: #34C759; font-size: 13px;"></i>
+                                    <AppIcon name="highlight" :size="13" style="color: #34C759;" />
                                     JPM Highlighting
                                 </div>
                                 <div>
@@ -265,7 +268,7 @@
                             <!-- JPM Filter -->
                             <div class="ios-row" v-if="canEnableJpmHighlighting && enableJpmHighlighting">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-filter" style="color: #8E8E93; font-size: 13px;"></i>
+                                    <AppIcon name="filter" :size="13" style="color: #8E8E93;" />
                                     JPM Filter
                                 </div>
                                 <div class="ios-row-control">
@@ -301,15 +304,15 @@
                 <!-- Preview Nav Bar (drag handle) -->
                 <div class="ios-nav-bar" @pointerdown="onPreviewDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" @click="showReportModal = false">
-                        <i class="pi pi-chevron-left" style="font-size: 13px;"></i> Back
+                        <AppIcon name="chevron-left" :size="13" /> Back
                     </button>
                     <span class="ios-nav-title">Report Preview</span>
                     <div class="ios-nav-actions">
                         <button class="ios-icon-btn ios-icon-btn-red" @click="downloadPdf" title="Download PDF">
-                            <i class="pi pi-file-pdf"></i>
+                            <AppIcon name="file-pdf" :size="16" />
                         </button>
                         <button class="ios-icon-btn ios-icon-btn-green" @click="downloadExcel" title="Download Excel">
-                            <i class="pi pi-file-excel"></i>
+                            <AppIcon name="file-excel" :size="16" />
                         </button>
                     </div>
                 </div>
@@ -329,6 +332,7 @@ import { defineAsyncComponent } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import moment from 'moment';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
+import { useSystemOptions } from '@/composables/useSystemOptions';
 
 // Custom Components
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
@@ -394,13 +398,11 @@ const unifiedStatusOptions = computed(() => [
 ]);
 
 // Grant Provision Options
-const grantProvisionOptions = [
+const _grantProvisionRaw = useSystemOptions('grant_provision');
+const grantProvisionOptions = computed(() => [
     { label: 'All Provisions', value: null },
-    { label: 'Full', value: 'full' },
-    { label: 'Partial', value: 'partial' },
-    { label: 'Tuition Only', value: 'tuition_only' },
-    { label: 'RLE and Tuition', value: 'rle_and_tuition' },
-];
+    ..._grantProvisionRaw.value,
+]);
 
 // Group By Options
 const groupByOptions = [

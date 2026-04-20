@@ -48,7 +48,9 @@ const submit = () => {
                 <form @submit.prevent="submit" class="w-full flex flex-col items-center gap-2.5">
                     <div class="w-full">
                         <IconField class="mac-iconfield">
-                            <InputIcon class="pi pi-user" />
+                            <InputIcon>
+                                <AppIcon name="user" :size="14" />
+                            </InputIcon>
                             <InputText v-model="form.name" placeholder="Full Name" required autofocus
                                 autocomplete="name" class="mac-input" />
                         </IconField>
@@ -57,7 +59,9 @@ const submit = () => {
 
                     <div class="w-full">
                         <IconField class="mac-iconfield">
-                            <InputIcon class="pi pi-at" />
+                            <InputIcon>
+                                <AppIcon name="at" :size="14" />
+                            </InputIcon>
                             <InputText v-model="form.username" placeholder="Username" required autocomplete="username"
                                 class="mac-input" />
                         </IconField>
@@ -66,7 +70,9 @@ const submit = () => {
 
                     <div class="w-full">
                         <IconField class="mac-iconfield">
-                            <InputIcon class="pi pi-lock" />
+                            <InputIcon>
+                                <AppIcon name="lock" :size="14" />
+                            </InputIcon>
                             <Password v-model="form.password" placeholder="Password" :feedback="false" toggleMask
                                 inputClass="mac-input" class="mac-password" required autocomplete="new-password" />
                         </IconField>
@@ -75,7 +81,9 @@ const submit = () => {
 
                     <div class="w-full">
                         <IconField class="mac-iconfield">
-                            <InputIcon class="pi pi-check-circle" />
+                            <InputIcon>
+                                <AppIcon name="check-circle" :size="14" />
+                            </InputIcon>
                             <Password v-model="form.password_confirmation" placeholder="Confirm Password"
                                 :feedback="false" toggleMask inputClass="mac-input" class="mac-password" required
                                 autocomplete="new-password" />
@@ -87,16 +95,16 @@ const submit = () => {
                     <div class="flex items-center justify-center w-full mt-0.5">
                         <Link :href="route('login')"
                             class="mac-link text-xs font-medium no-underline flex items-center gap-1">
-                            <i class="pi pi-sign-in" style="font-size: 11px"></i>
+                            <AppIcon name="sign-in" :size="11" />
                             Already have an account? Sign in
                         </Link>
                     </div>
 
                     <div class="flex w-full items-center justify-between mt-2">
-                        <Button :icon="isDark ? 'pi pi-sun' : 'pi pi-moon'" @click="toggleTheme"
+                        <AppButton :icon="isDark ? 'sun' : 'moon'" @click="toggleTheme"
                             :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'" text rounded
                             class="mac-theme-toggle" />
-                        <Button type="submit" icon="pi pi-arrow-right" :loading="form.processing"
+                        <AppButton type="submit" icon="arrow-right" :loading="form.processing"
                             :disabled="form.processing" rounded class="mac-submit" />
                     </div>
                 </form>

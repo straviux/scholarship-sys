@@ -5,7 +5,7 @@
     <AdminLayout>
         <template #header>
             <div class="flex items-center gap-3">
-                <Button icon="pi pi-arrow-left" @click="goBack" outlined rounded size="small" />
+                <AppButton icon="arrow-left" @click="goBack" outlined rounded size="small" />
                 <span>{{ getFullName(profile) }} - Scholarship History</span>
             </div>
         </template>
@@ -15,7 +15,7 @@
             <Panel>
                 <template #header>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-user text-xl text-blue-600"></i>
+                        <AppIcon name="user" :size="20" class="text-blue-600" />
                         <span class="font-semibold text-lg">Profile</span>
                     </div>
                 </template>
@@ -79,7 +79,7 @@
                                 <span class="text-sm text-gray-600">Approved:</span>
                                 <div class="font-medium text-green-600">{{ getStatusCount('approved') +
                                     getStatusCount('active')
-                                }}</div>
+                                    }}</div>
                             </div>
                             <div>
                                 <span class="text-sm text-gray-600">Pending:</span>
@@ -99,7 +99,7 @@
                 <template #header>
                     <div class="flex items-center justify-between w-full">
                         <div class="flex items-center gap-2">
-                            <i class="pi pi-clock text-lg text-blue-600"></i>
+                            <AppIcon name="clock" :size="18" class="text-blue-600" />
                             <span class="font-semibold">Scholarship History</span>
                         </div>
                         <Tag :value="`${scholarshipRecords.length} record(s)`" severity="info" />
@@ -118,14 +118,14 @@
                                 </div>
                                 <div>
                                     <h5 class="font-semibold text-gray-800">{{ record.program?.name || 'Unknown Program'
-                                    }}</h5>
+                                        }}</h5>
                                     <p class="text-sm text-gray-600">{{ record.program?.shortname || '' }}</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-3">
                                 <Chip :label="record.unified_status"
                                     :severity="getStatusSeverity(record.unified_status)" />
-                                <Button icon="pi pi-clipboard-check" severity="success" size="small" rounded outlined
+                                <AppButton icon="clipboard-check" severity="success" size="small" rounded outlined
                                     v-tooltip.top="'Review Application'" @click="reviewApplication(record)" />
                             </div>
                         </div>
@@ -178,7 +178,7 @@
 
                     <!-- Empty State -->
                     <div v-if="scholarshipRecords.length === 0" class="text-center py-8">
-                        <i class="pi pi-inbox text-4xl text-gray-400 mb-4"></i>
+                        <AppIcon name="inbox" :size="48" class="text-gray-400 mb-4" />
                         <h3 class="text-lg font-medium text-gray-600 mb-2">No Scholarship Records</h3>
                         <p class="text-gray-500">This profile has no scholarship application history.</p>
                     </div>
@@ -192,7 +192,7 @@
             <template #header>
                 <div class="flex items-center justify-between w-full">
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-clipboard-check text-lg text-blue-600"></i>
+                        <AppIcon name="clipboard-check" :size="18" class="text-blue-600" />
                         <span class="font-semibold">Application Review & Approval</span>
                     </div>
                     <div v-if="selectedApplication" class="text-sm text-gray-600">

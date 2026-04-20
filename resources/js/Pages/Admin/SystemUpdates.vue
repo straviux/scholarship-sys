@@ -10,7 +10,7 @@
                 <Panel class="mb-4 short:mb-2">
                     <template #header>
                         <div class="flex items-center gap-2">
-                            <i class="pi pi-megaphone text-xl"></i>
+                            <AppIcon name="megaphone" :size="20" />
                             <span class="font-semibold text-lg">System Updates Management</span>
                         </div>
                     </template>
@@ -19,8 +19,8 @@
                         <div class="text-gray-600">
                             Create and manage system-wide updates and announcements
                         </div>
-                        <Button v-if="hasRole('administrator')" @click="showCreateModal = true" label="Create Update"
-                            icon="pi pi-plus" severity="success" raised />
+                        <AppButton v-if="hasRole('administrator')" @click="showCreateModal = true" label="Create Update"
+                            icon="plus" severity="success" raised />
                     </div>
                 </Panel>
 
@@ -46,7 +46,7 @@
                                             <Tag :value="update.type" :severity="getTypeSeverity(update.type)"
                                                 class="text-xs" />
                                             <Tag v-if="update.is_markdown" value="Markdown" severity="info"
-                                                icon="pi pi-file-edit" class="text-xs" />
+                                                icon="file-edit" class="text-xs" />
                                         </div>
                                         <!-- Content Preview (truncated) -->
                                         <div v-if="update.is_markdown && update.markdown_content"
@@ -159,7 +159,7 @@
             :breakpoints="{ '960px': '90vw', '640px': '95vw' }" class="delete-confirmation-dialog">
 
             <div class="flex items-start space-x-3">
-                <i class="pi pi-exclamation-triangle text-red-500 text-2xl mt-1"></i>
+                <AppIcon name="exclamation-triangle" :size="28" class="text-red-500 mt-1 shrink-0" />
                 <div class="flex-1">
                     <p class="text-gray-700 mb-3">
                         Are you sure you want to permanently delete this system update?
@@ -177,8 +177,8 @@
             <template #footer>
                 <div class="flex justify-end space-x-2">
                     <Button @click="cancelDelete" label="Cancel" severity="secondary" outlined size="small" />
-                    <Button @click="confirmDelete" :label="isDeleting ? 'Deleting...' : 'Delete'" severity="danger"
-                        icon="pi pi-trash" :disabled="isDeleting" size="small" />
+                    <AppButton @click="confirmDelete" :label="isDeleting ? 'Deleting...' : 'Delete'" severity="danger"
+                        icon="trash" :disabled="isDeleting" size="small" />
                 </div>
             </template>
         </Dialog>
@@ -188,7 +188,7 @@
             :breakpoints="{ '960px': '90vw', '640px': '95vw' }" class="deactivate-confirmation-dialog">
 
             <div class="flex items-start space-x-3">
-                <i class="pi pi-exclamation-triangle text-orange-500 text-2xl mt-1"></i>
+                <AppIcon name="exclamation-triangle" :size="28" class="text-orange-500 mt-1 shrink-0" />
                 <div class="flex-1">
                     <p class="text-gray-700 mb-3">
                         Are you sure you want to deactivate this system update?
@@ -206,8 +206,8 @@
             <template #footer>
                 <div class="flex justify-end space-x-2">
                     <Button @click="cancelDeactivate" label="Cancel" severity="secondary" outlined size="small" />
-                    <Button @click="confirmDeactivate" :label="isDeactivating ? 'Deactivating...' : 'Deactivate'"
-                        severity="warning" icon="pi pi-eye-slash" :disabled="isDeactivating" size="small" />
+                    <AppButton @click="confirmDeactivate" :label="isDeactivating ? 'Deactivating...' : 'Deactivate'"
+                        severity="warning" icon="eye-slash" :disabled="isDeactivating" size="small" />
                 </div>
             </template>
         </Dialog>

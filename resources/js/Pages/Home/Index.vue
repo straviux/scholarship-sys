@@ -70,11 +70,11 @@ const serviceCards = computed(() => {
             id: 'apply',
             title: 'New Application',
             description: 'Submit a new scholarship application',
-            icon: 'pi pi-file-edit',
+            icon: 'file-edit',
             iconBg: 'bg-[#007AFF]',
             action: () => router.visit(route('applicants.index')),
             badge: props.pendingApplicants > 0 ? props.pendingApplicants : null,
-            badgeIcon: 'pi pi-clock',
+            badgeIcon: 'clock',
             badgeColor: 'text-orange-500'
         });
     }
@@ -84,11 +84,11 @@ const serviceCards = computed(() => {
             id: 'applications',
             title: 'Scholarship Profiles',
             description: 'View and manage scholarship profiles',
-            icon: 'pi pi-list',
+            icon: 'list',
             iconBg: 'bg-[#34C759]',
             action: () => router.visit(route('applicants.index')),
             badge: props.activeApplications > 0 ? props.activeApplications : null,
-            badgeIcon: 'pi pi-check-circle',
+            badgeIcon: 'check-circle',
             badgeColor: 'text-green-500'
         });
     }
@@ -98,7 +98,7 @@ const serviceCards = computed(() => {
             id: 'fund_transactions',
             title: 'Fund Transactions',
             description: 'View and generate fund transactions',
-            icon: 'pi pi-credit-card',
+            icon: 'credit-card',
             iconBg: 'bg-[#FF9500]',
             action: () => router.visit(route('fund_transactions.index'))
         });
@@ -109,7 +109,7 @@ const serviceCards = computed(() => {
             id: 'documents',
             title: 'Documents & Forms',
             description: 'Access downloadable documents and forms',
-            icon: 'pi pi-file-pdf',
+            icon: 'file-pdf',
             iconBg: 'bg-[#AF52DE]',
             action: () => router.visit(route('documents.index'))
         });
@@ -122,33 +122,47 @@ const serviceCards = computed(() => {
 const quickLinks = [
     {
         label: 'Help & Support',
-        icon: 'pi pi-question-circle',
+        icon: 'question-circle',
         iconColor: 'text-[#007AFF]',
         description: 'Get help with your applications',
         action: () => showHelpDialog.value = true
     },
     {
         label: 'Contact Us',
-        icon: 'pi pi-envelope',
+        icon: 'envelope',
         iconColor: 'text-[#34C759]',
         description: 'Reach out to our support team',
         href: 'mailto:scholarship@example.com'
     },
     {
         label: 'Scholarship Programs',
-        icon: 'pi pi-building',
+        icon: 'building',
         iconColor: 'text-[#FF9500]',
         description: 'Learn about available programs',
         action: () => router.visit(route('scholarshipprograms.index'))
     },
     {
         label: 'Guidelines',
-        icon: 'pi pi-book',
+        icon: 'book',
         iconColor: 'text-[#AF52DE]',
         description: 'Read application guidelines',
         href: '#'
     }
 ];
+
+const getSystemUpdateIcon = (type) => ({
+    info: 'info-circle',
+    warning: 'exclamation-triangle',
+    success: 'check-circle',
+    error: 'times-circle'
+}[type] || 'info-circle');
+
+const getSystemUpdateIconColor = (type) => ({
+    info: 'text-[#007AFF]',
+    warning: 'text-[#FF9500]',
+    success: 'text-[#34C759]',
+    error: 'text-[#FF3B30]'
+}[type] || 'text-[#8E8E93]');
 
 
 </script>
@@ -161,7 +175,7 @@ const quickLinks = [
         <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
-                    <i class="pi pi-graduation-cap text-indigo-900 text-[2rem] short:text-[1.5rem]"></i>
+                    <AppIcon name="graduation-cap" :size="32" class="text-indigo-900" />
                     <div>
                         <h1 class="text-2xl short:text-xl font-bold text-gray-700">PGP Scholarship Portal</h1>
                         <p class="text-sm text-gray-600">A centralized platform for managing scholarship applications,
@@ -182,13 +196,13 @@ const quickLinks = [
                         <div class="p-4 short:p-3 flex flex-col items-center text-center">
                             <div
                                 :class="[card.iconBg, 'w-12 h-12 rounded-[14px] flex items-center justify-center mb-3 shadow-sm transition-transform duration-200 group-hover:scale-110']">
-                                <i :class="card.icon" class="text-white" style="font-size: 1.25rem"></i>
+                                <AppIcon :name="card.icon" :size="20" class="text-white" />
                             </div>
                             <h3 class="text-sm font-semibold text-[#1d1d1f] mb-1">{{ card.title }}</h3>
                             <p class="text-xs text-[#6D6D72] leading-relaxed">{{ card.description }}</p>
                             <div v-if="card.badge" class="mt-3 flex items-center gap-1.5"
                                 v-tooltip.bottom="card.badge + ' item(s)'">
-                                <i :class="[card.badgeIcon, card.badgeColor]" style="font-size: 0.85rem"></i>
+                                <AppIcon :name="card.badgeIcon" :size="14" :class="card.badgeColor" />
                                 <Badge :value="card.badge" severity="danger" />
                             </div>
                         </div>
@@ -214,12 +228,9 @@ const quickLinks = [
                                         <p class="text-xs text-[#6D6D72] mt-0.5 line-clamp-2">{{ update.content }}</p>
                                         <span class="text-xs text-[#8E8E93] mt-1 block">{{ update.created_at }}</span>
                                     </div>
-                                    <i v-if="update.type" class="pi flex-shrink-0" :class="{
-                                        'pi-info-circle text-[#007AFF]': update.type === 'info',
-                                        'pi-exclamation-triangle text-[#FF9500]': update.type === 'warning',
-                                        'pi-check-circle text-[#34C759]': update.type === 'success',
-                                        'pi-times-circle text-[#FF3B30]': update.type === 'error'
-                                    }" style="font-size: 1rem" v-tooltip.left="update.type"></i>
+                                    <AppIcon v-if="update.type" :name="getSystemUpdateIcon(update.type)" :size="16"
+                                        :class="['flex-shrink-0', getSystemUpdateIconColor(update.type)]"
+                                        v-tooltip.left="update.type" />
                                 </div>
                             </div>
                             <div v-if="sortedSystemUpdates.length > 5"
@@ -232,7 +243,7 @@ const quickLinks = [
                             </div>
                         </div>
                         <div v-else class="py-10 text-center">
-                            <i class="pi pi-inbox text-3xl text-[#C7C7CC] mb-2"></i>
+                            <AppIcon name="inbox" :size="36" class="text-[#C7C7CC] mb-2" />
                             <p class="text-sm text-[#8E8E93]">No system updates at the moment</p>
                         </div>
                     </div>
@@ -246,12 +257,12 @@ const quickLinks = [
                             class="ios-row cursor-pointer hover:bg-[#F2F2F7] transition-colors"
                             @click="link.action ? link.action() : (link.href ? window.open(link.href) : null)">
                             <div class="flex items-center gap-3">
-                                <i :class="[link.icon, link.iconColor]" style="font-size: 1.1rem"></i>
+                                <AppIcon :name="link.icon" :size="18" :class="link.iconColor" />
                                 <div class="flex-1 min-w-0">
                                     <h4 class="text-sm font-medium text-[#1d1d1f]">{{ link.label }}</h4>
                                     <p class="text-xs text-[#8E8E93]">{{ link.description }}</p>
                                 </div>
-                                <i class="pi pi-chevron-right text-[#C7C7CC]" style="font-size: 0.75rem"></i>
+                                <AppIcon name="chevron-right" :size="12" class="text-[#C7C7CC]" />
                             </div>
                         </div>
                     </div>
@@ -268,7 +279,7 @@ const quickLinks = [
                     <!-- Nav bar -->
                     <div class="ios-help-nav">
                         <button class="text-[#8E8E93] text-xl leading-none" @click="showHelpDialog = false">
-                            <i class="pi pi-times"></i>
+                            <AppIcon name="times" :size="18" />
                         </button>
                         <span class="ios-help-title">Help & Support</span>
                         <div class="w-5"></div>
@@ -281,7 +292,7 @@ const quickLinks = [
                             <div class="ios-card">
                                 <div class="ios-row">
                                     <div class="flex items-center gap-3">
-                                        <i class="pi pi-users text-[#007AFF]"></i>
+                                        <AppIcon name="users" :size="18" class="text-[#007AFF]" />
                                         <div>
                                             <div class="text-sm font-semibold text-[#1d1d1f]">Scholarship Support Team
                                             </div>
@@ -290,13 +301,13 @@ const quickLinks = [
                                 </div>
                                 <div class="ios-row">
                                     <div class="flex items-center gap-3">
-                                        <i class="pi pi-envelope text-[#34C759]"></i>
+                                        <AppIcon name="envelope" :size="18" class="text-[#34C759]" />
                                         <span class="text-sm text-[#007AFF]">scholarship@example.com</span>
                                     </div>
                                 </div>
                                 <div class="ios-row !border-b-0">
                                     <div class="flex items-center gap-3">
-                                        <i class="pi pi-phone text-[#FF9500]"></i>
+                                        <AppIcon name="phone" :size="18" class="text-[#FF9500]" />
                                         <span class="text-sm text-[#1d1d1f]">+1 (555) XXX-XXXX</span>
                                     </div>
                                 </div>

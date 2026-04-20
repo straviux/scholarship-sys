@@ -181,7 +181,9 @@ onBeforeUnmount(() => {
             <div class="ios-modal" :style="modalStyle">
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal"><i class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">JPM Tagging</span>
                     <button class="ios-nav-btn ios-nav-action" @click="saveJpmData">Save</button>
                 </div>
@@ -196,7 +198,7 @@ onBeforeUnmount(() => {
                                 <span class="ios-row-label">{{ profile.last_name }}, {{ profile.first_name }}</span>
                                 <button class="ios-copy-btn"
                                     @click="copyToClipboard(`${profile.last_name}, ${profile.first_name}`, 'Applicant name')">
-                                    <i class="pi pi-copy"></i>
+                                    <AppIcon name="copy" :size="14" />
                                 </button>
                             </div>
                             <div v-if="hasFather" class="ios-row">
@@ -204,7 +206,7 @@ onBeforeUnmount(() => {
                                     profile.father_name }}</span>
                                 <button class="ios-copy-btn"
                                     @click="copyToClipboard(profile.father_name, 'Father name')">
-                                    <i class="pi pi-copy"></i>
+                                    <AppIcon name="copy" :size="14" />
                                 </button>
                             </div>
                             <div v-if="hasMother" class="ios-row">
@@ -212,7 +214,7 @@ onBeforeUnmount(() => {
                                     profile.mother_name }}</span>
                                 <button class="ios-copy-btn"
                                     @click="copyToClipboard(profile.mother_name, 'Mother name')">
-                                    <i class="pi pi-copy"></i>
+                                    <AppIcon name="copy" :size="14" />
                                 </button>
                             </div>
                             <div v-if="hasGuardian" class="ios-row ios-row-last">
@@ -220,7 +222,7 @@ onBeforeUnmount(() => {
                                     profile.guardian_name }}</span>
                                 <button class="ios-copy-btn"
                                     @click="copyToClipboard(profile.guardian_name, 'Guardian name')">
-                                    <i class="pi pi-copy"></i>
+                                    <AppIcon name="copy" :size="14" />
                                 </button>
                             </div>
                         </div>
@@ -234,7 +236,7 @@ onBeforeUnmount(() => {
                             <button class="ios-copy-btn" style="font-size: 12px;" @click="resetAllJpmStatus"
                                 :disabled="!hasAnyJpmMember && !jpmForm.is_not_jpm"
                                 :class="isResetting ? 'animate-spin' : ''">
-                                <i class="pi pi-refresh"></i>
+                                <AppIcon name="refresh" :size="14" />
                             </button>
                         </div>
                         <div class="ios-card">

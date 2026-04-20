@@ -1,5 +1,7 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
+import AppIcon from '@/Components/ui/AppIcon.vue';
+import AppButton from '@/Components/ui/AppButton.vue';
 import { Head, router } from "@inertiajs/vue3";
 import { ref, watch } from "vue";
 import moment from "moment";
@@ -99,7 +101,7 @@ const closeDeleteModal = () => {
         <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
-                    <i class="pi pi-graduation-cap text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
+                    <AppIcon name="graduation-cap" class="text-blue-600 text-[2rem] short:text-[1.5rem]" />
                     <div>
                         <h1 class="text-2xl short:text-xl font-bold text-gray-700">Scholarship Programs</h1>
                         <p class="text-sm text-gray-600">Manage scholarship programs and requirements</p>
@@ -107,7 +109,7 @@ const closeDeleteModal = () => {
                 </div>
             </template>
             <template #end>
-                <Button v-if="hasPermission('programs.manage')" icon="pi pi-plus" label="Add Program" severity="success"
+                <AppButton v-if="hasPermission('programs.manage')" icon="plus" label="Add Program" severity="success"
                     raised rounded size="small" @click="openCreate" />
             </template>
         </Toolbar>
@@ -117,7 +119,9 @@ const closeDeleteModal = () => {
             <!-- Search -->
             <div class="flex gap-3 items-center mb-4">
                 <IconField iconPosition="left" class="flex-1 max-w-sm">
-                    <InputIcon class="pi pi-search" />
+                    <InputIcon>
+                        <AppIcon name="search" :size="14" />
+                    </InputIcon>
                     <InputText v-model="globalFilter" placeholder="Search programs..." class="w-full" />
                 </IconField>
                 <Tag :value="`${programsList.length} program${programsList.length !== 1 ? 's' : ''}`"
@@ -177,12 +181,11 @@ const closeDeleteModal = () => {
                 <Column header="Actions" style="width: 120px">
                     <template #body="{ data }">
                         <div class="flex gap-1.5 justify-center">
-                            <Button v-if="hasPermission('programs.manage')" icon="pi pi-pencil" severity="info"
+                            <AppButton v-if="hasPermission('programs.manage')" icon="pencil" severity="info"
                                 size="small" rounded outlined v-tooltip.top="'Edit'" @click="openEdit(data)" />
-                            <Button v-if="hasPermission('programs.manage')" icon="pi pi-list" severity="warn"
-                                size="small" rounded outlined v-tooltip.top="'Requirements'"
-                                @click="openRequirements(data)" />
-                            <Button v-if="hasPermission('programs.delete')" icon="pi pi-trash" severity="danger"
+                            <AppButton v-if="hasPermission('programs.manage')" icon="list" severity="warn" size="small"
+                                rounded outlined v-tooltip.top="'Requirements'" @click="openRequirements(data)" />
+                            <AppButton v-if="hasPermission('programs.delete')" icon="trash" severity="danger"
                                 size="small" rounded outlined v-tooltip.top="'Delete'"
                                 @click="confirmDeleteProgram(data)" />
                         </div>
@@ -199,7 +202,7 @@ const closeDeleteModal = () => {
                     <!-- Nav Bar -->
                     <div class="ios-nav-bar">
                         <button class="ios-nav-btn ios-nav-cancel" @click="closeDeleteModal">
-                            <i class="pi pi-times"></i>
+                            <AppIcon name="times" />
                         </button>
                         <span class="ios-nav-title">Confirm Deletion</span>
                         <button class="ios-nav-btn ios-nav-action ios-nav-destructive" @click="deleteProgram">
@@ -213,8 +216,8 @@ const closeDeleteModal = () => {
                         <div class="ios-section">
                             <div class="ios-card">
                                 <div class="ios-row" style="padding: 12px 16px; gap: 12px;">
-                                    <i class="pi pi-exclamation-triangle"
-                                        style="font-size: 24px; color: #FF3B30; flex-shrink: 0;"></i>
+                                    <AppIcon name="exclamation-triangle"
+                                        style="font-size: 24px; color: #FF3B30; flex-shrink: 0;" />
                                     <div>
                                         <div
                                             style="font-size: 15px; font-weight: 600; color: #000; margin-bottom: 4px;">
@@ -242,7 +245,7 @@ const closeDeleteModal = () => {
                                 <div class="ios-row ios-row-last">
                                     <span class="ios-row-label">Shortname</span>
                                     <span style="font-size: 13px; color: #8E8E93;">{{ selectedProgram.shortname
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>

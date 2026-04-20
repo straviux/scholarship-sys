@@ -39,9 +39,9 @@ export function useTheme() {
 	}
 
 	function getThemeIcon() {
-		if (theme.value === 'dark') return 'pi pi-moon';
-		if (theme.value === 'light') return 'pi pi-sun';
-		return 'pi pi-desktop';
+		if (theme.value === 'dark') return 'moon';
+		if (theme.value === 'light') return 'sun';
+		return 'desktop';
 	}
 
 	function getThemeLabel() {

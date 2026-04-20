@@ -1,6 +1,6 @@
 <script setup>
-import { ref, watch, watchEffect, computed } from 'vue';
-import { useApi } from '@/composable/api';
+import { ref, watch, computed } from 'vue';
+import axios from 'axios';
 import { useGSAPAnimation } from '@/composables/useGSAPAnimation';
 import { selectAnimation } from '@/utils/animations';
 
@@ -37,6 +37,7 @@ const loading = ref(false);
 const multiSelect = ref(null);
 const select = ref(null);
 const { animate } = useGSAPAnimation();
+let latestCourseRequestId = 0;
 
 // Computed property to include null option when needed
 const courseOptions = computed(() => {
@@ -52,40 +53,97 @@ const courseOptions = computed(() => {
     return options;
 });
 
+const normalizeCourseToken = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    return String(value).trim().toLowerCase();
+};
+
+const resolveSingleCourse = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    if (typeof value === 'object' && value !== null) {
+        return courseOptions.value.find((course) => course.id == value.id)
+            || courseOptions.value.find((course) => normalizeCourseToken(course.shortname) === normalizeCourseToken(value.shortname))
+            || courseOptions.value.find((course) => normalizeCourseToken(course.name) === normalizeCourseToken(value.name))
+            || value;
+    }
+
+    const normalized = normalizeCourseToken(value);
+    if (!normalized) {
+        return null;
+    }
+
+    return courseOptions.value.find((course) => {
+        return normalizeCourseToken(course.shortname) === normalized
+            || normalizeCourseToken(course.name) === normalized
+            || String(course.id) === String(value);
+    }) || value;
+};
+
+const resolveCourseValue = (value) => {
+    if (props.multiple && Array.isArray(value)) {
+        return value.map((entry) => resolveSingleCourse(entry)).filter(Boolean);
+    }
+
+    return resolveSingleCourse(value);
+};
+
 // Local value for v-model
-const localValue = ref(props.multiple ? (props.modelValue || []) : props.modelValue);
+const localValue = ref(resolveCourseValue(props.modelValue));
 
-// Sync localValue with parent prop
-watch(() => props.modelValue, (val) => {
-    // console.log('CourseSelect modelValue changed:', val);
-    localValue.value = val;
-}, { deep: true });
+watch(
+    [() => props.modelValue, () => courseOptions.value],
+    () => {
+        localValue.value = resolveCourseValue(props.modelValue);
+    },
+    { immediate: true, deep: true }
+);
 
-// Sync localValue with parent prop
-// watch(() => props.preselect, (val) => {
-//     localValue.value = val;
-// });
-// Emit changes to parent
 watch(localValue, (val) => {
-    // console.log('CourseSelect localValue changed:', localValue.value);
     emit('update:modelValue', val);
-});
+}, { deep: true });
 
 // Watch for changes in data and update courses
 
 watch(
     () => props.scholarshipProgramId,
     (newProgramId, oldProgramId) => {
-        // console.log('scholarshipProgramId changed:', newProgramId);
+        const requestId = ++latestCourseRequestId;
+
+        if (newProgramId === '' || newProgramId === null || newProgramId === undefined) {
+            loading.value = false;
+            courses.value = [];
+            return;
+        }
+
+        loading.value = true;
+
         axios.get(route('courses-api.findbyprogram'), {
             params: { program_id: newProgramId }
         }).then(response => {
-            courses.value = response.data;
-            // console.log('Courses loaded:', courses.value.length, 'courses');
+            if (requestId !== latestCourseRequestId) {
+                return;
+            }
+
+            courses.value = Array.isArray(response.data) ? response.data : [];
         }).catch(error => {
+            if (requestId !== latestCourseRequestId) {
+                return;
+            }
+
             console.error('Error loading courses:', error);
             courses.value = [];
+        }).finally(() => {
+            if (requestId === latestCourseRequestId) {
+                loading.value = false;
+            }
         });
+
         // Only reset selection when:
         // 1. Program actually changes (not initial load)
         // 2. There's no existing valid selection (modelValue)
@@ -107,62 +165,6 @@ watch(
     { immediate: true }
 );
 
-watch(
-    () => courses.value,
-    (newCourses) => {
-        if (localValue.value && newCourses.length) {
-            if (props.multiple && Array.isArray(localValue.value)) {
-                localValue.value = localValue.value.map(val => {
-                    if (typeof val == 'object' && val != null) {
-                        // Try matching by ID first (most reliable)
-                        if (val.id) {
-                            return newCourses.find(course => course.id == val.id) || val;
-                        }
-                        // Fall back to shortname matching
-                        if (val.shortname) {
-                            return newCourses.find(course => course.shortname == val.shortname) || val;
-                        }
-                    }
-                    // Handle string values
-                    return newCourses.find(course =>
-                        course.shortname?.toLowerCase() == String(val).toLowerCase() ||
-                        course.name?.toLowerCase() == String(val).toLowerCase()
-                    ) || val;
-                });
-            } else {
-                let val = localValue.value;
-                if (typeof val == 'object' && val !== null) {
-                    // Try matching by ID first (most reliable)
-                    if (val.id) {
-                        const matchedCourse = newCourses.find(course => course.id == val.id);
-                        if (matchedCourse) {
-                            localValue.value = matchedCourse;
-                            return;
-                        }
-                    }
-                    // Fall back to shortname matching
-                    if (val.shortname) {
-                        const matchedCourse = newCourses.find(course => course.shortname == val.shortname);
-                        if (matchedCourse) {
-                            localValue.value = matchedCourse;
-                            return;
-                        }
-                    }
-                    // Keep the original value if no match found
-                    localValue.value = val;
-                } else {
-                    // Handle string values
-                    const selected = newCourses.find(course =>
-                        course.shortname?.toLowerCase() == String(val).toLowerCase() ||
-                        course.name?.toLowerCase() == String(val).toLowerCase()
-                    );
-                    if (selected) localValue.value = selected;
-                }
-            }
-        }
-    },
-    { immediate: true }
-);
 // onMounted(fetchData);
 
 const onSelectShow = () => {
@@ -185,7 +187,7 @@ const onSelectHide = () => {
     <MultiSelect ref="multiSelect" v-if="multiple" v-model="localValue" :options="courseOptions" filter
         @show="onSelectShow" @hide="onSelectHide" :filterFields="['name', 'shortname', 'field_of_study']"
         optionLabel="name" :placeholder="customPlaceholder" class="w-full" :maxSelectedLabels="3"
-        :selectedItemsLabel="'{0} courses selected'" showSelectAll showClear
+        :selectedItemsLabel="'{0} courses selected'" :loading="loading" showSelectAll showClear
         :pt="{ overlay: { style: 'max-width: 400px; border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #option="slotProps">
             <div class="uppercase"
@@ -211,7 +213,7 @@ const onSelectHide = () => {
     <!-- Use Select when multiple is false -->
     <Select ref="select" v-else v-model="localValue" :options="courseOptions" filter @show="onSelectShow"
         @hide="onSelectHide" :filterFields="['name', 'shortname', 'field_of_study']" autoFilterFocus showClear
-        optionLabel="name" :placeholder="customPlaceholder" class="w-full"
+        :loading="loading" optionLabel="name" :placeholder="customPlaceholder" class="w-full"
         :pt="{ overlay: { style: 'max-width: 400px; border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="uppercase truncate">

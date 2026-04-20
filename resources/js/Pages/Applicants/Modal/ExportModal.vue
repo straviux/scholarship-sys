@@ -44,7 +44,7 @@
                 <!-- Info Message -->
                 <div
                     class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3 text-sm text-blue-700 dark:text-blue-300">
-                    <i class="pi pi-info-circle mr-2"></i>
+                    <AppIcon name="info-circle" :size="14" class="mr-2" />
                     <span>Export will use the current filter settings and display {{ totalRecords }} record(s).</span>
                 </div>
             </div>
@@ -52,8 +52,7 @@
             <!-- Action Buttons -->
             <div class="flex justify-end gap-2 pt-4 border-t">
                 <Button type="button" label="Cancel" severity="secondary" @click="close" outlined />
-                <Button type="submit" label="Export Now" icon="pi pi-download" severity="success"
-                    :loading="isExporting" />
+                <AppButton type="submit" label="Export Now" icon="download" severity="success" :loading="isExporting" />
             </div>
         </form>
     </Dialog>

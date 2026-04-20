@@ -29,63 +29,66 @@ const { data, error, fetchData } = useApi(route('scholarshipprograms.getactiveli
 const programs = ref([]);
 const loading = ref(false);
 
-// Local value for v-modelroute('scholarshipprograms.getactivelist')
-const localValue = ref(props.modelValue);
-
-// Sync localValue with parent prop — resolve against loaded programs immediately if available
-watch(() => props.modelValue, (val) => {
-    if (val && programs.value.length && typeof val === 'object' && !props.multiple) {
-        const resolved = programs.value.find(p => p.id == val.id)
-            || programs.value.find(p => val.shortname && p.shortname === val.shortname)
-            || programs.value.find(p => val.name && p.name === val.name);
-        localValue.value = resolved || val;
-    } else {
-        localValue.value = val;
+const normalizeProgramToken = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
     }
-});
 
+    return String(value).trim().toLowerCase();
+};
+
+const resolveSingleProgram = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    if (typeof value === 'object' && value !== null) {
+        return programs.value.find((program) => program.id == value.id)
+            || programs.value.find((program) => normalizeProgramToken(program.shortname) === normalizeProgramToken(value.shortname))
+            || programs.value.find((program) => normalizeProgramToken(program.name) === normalizeProgramToken(value.name))
+            || value;
+    }
+
+    const normalized = normalizeProgramToken(value);
+    if (!normalized) {
+        return null;
+    }
+
+    return programs.value.find((program) => {
+        return normalizeProgramToken(program.shortname) === normalized
+            || normalizeProgramToken(program.name) === normalized
+            || String(program.id) === String(value);
+    }) || value;
+};
+
+const resolveProgramValue = (value) => {
+    if (props.multiple && Array.isArray(value)) {
+        return value.map((entry) => resolveSingleProgram(entry)).filter(Boolean);
+    }
+
+    return resolveSingleProgram(value);
+};
+
+// Local value for v-modelroute('scholarshipprograms.getactivelist')
+const localValue = ref(resolveProgramValue(props.modelValue));
+
+watch(
+    [() => props.modelValue, () => programs.value],
+    () => {
+        localValue.value = resolveProgramValue(props.modelValue);
+    },
+    { immediate: true, deep: true }
+);
 
 watch(localValue, (val) => {
     emit('update:modelValue', val);
-});
+}, { deep: true });
 
 // Watch for changes in data and update programs
 watch(
     () => data.value,
     (newData) => {
         programs.value = newData || [];
-        // If localValue is set, find and set the matching program object
-        if (localValue.value && programs.value.length) {
-            if (props.multiple && Array.isArray(localValue.value)) {
-                // Map each value in localValue to the corresponding school object
-                localValue.value = localValue.value.map(val => {
-                    if (typeof val == 'object' && val != null) {
-                        return programs.value.find(program => program.id == val.id)
-                            || programs.value.find(program => val.shortname && program.shortname == val.shortname)
-                            || val;
-                    }
-                    return programs.value.find(program =>
-                        program.shortname?.toLowerCase() == String(val).toLowerCase() ||
-                        program.name?.toLowerCase() == String(val).toLowerCase()
-                    ) || val;
-                });
-            } else {
-                // Single value: find the matching program object
-                let val = localValue.value;
-                if (typeof val == 'object' && val != null) {
-                    // Match by id first, then shortname, then name
-                    localValue.value = programs.value.find(program => program.id == val.id)
-                        || programs.value.find(program => val.shortname && program.shortname == val.shortname)
-                        || val;
-                } else {
-                    const selected = programs.value.find(program =>
-                        program.shortname?.toLowerCase() == String(val).toLowerCase() ||
-                        program.name?.toLowerCase() == String(val).toLowerCase()
-                    );
-                    if (selected) localValue.value = selected;
-                }
-            }
-        }
     },
     { immediate: true }
 );

@@ -11,7 +11,7 @@
         <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
-                    <i class="pi pi-file text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
+                    <AppIcon name="file" class="text-blue-600 w-8 h-8 short:w-6 short:h-6" />
                     <div>
                         <h1 class="text-2xl short:text-xl font-bold text-gray-700">Documents &amp; Forms</h1>
                         <p class="text-sm text-gray-600">Upload and manage downloadable documents and forms</p>
@@ -19,8 +19,8 @@
                 </div>
             </template>
             <template #end>
-                <Button v-if="hasPermission('documents.upload')" icon="pi pi-upload" label="Upload File"
-                    severity="success" raised rounded size="small" @click="openUploadDialog" />
+                <AppButton v-if="hasPermission('documents.upload')" icon="upload" label="Upload File" severity="success"
+                    raised rounded size="small" @click="openUploadDialog" />
             </template>
         </Toolbar>
 
@@ -28,7 +28,9 @@
             <!-- Search + count -->
             <div class="flex gap-3 items-center mb-4">
                 <IconField iconPosition="left" class="flex-1 max-w-sm">
-                    <InputIcon class="pi pi-search" />
+                    <InputIcon>
+                        <AppIcon name="search" :size="16" class="text-gray-400" />
+                    </InputIcon>
                     <InputText v-model="globalFilter" placeholder="Search documents..." class="w-full" />
                 </IconField>
                 <Tag :value="`${getAllDocuments().length} file${getAllDocuments().length !== 1 ? 's' : ''}`"
@@ -46,7 +48,7 @@
                         <Column field="title" header="Title" sortable style="min-width: 200px">
                             <template #body="slotProps">
                                 <div class="flex items-center gap-2">
-                                    <i :class="getFileIcon(slotProps.data.file_type)" class="text-xl"></i>
+                                    <AppIcon :name="getFileIcon(slotProps.data.file_type)" :size="20" />
                                     <span class="font-semibold">{{ slotProps.data.title }}</span>
                                 </div>
                             </template>
@@ -68,7 +70,7 @@
                         <Column field="download_count" header="Downloads" sortable style="width: 120px">
                             <template #body="slotProps">
                                 <div class="flex items-center gap-2">
-                                    <i class="pi pi-download text-sm text-gray-500"></i>
+                                    <AppIcon name="download" :size="14" class="text-gray-500" />
                                     <span>{{ slotProps.data.download_count }}</span>
                                 </div>
                             </template>
@@ -87,18 +89,18 @@
                         <Column header="Actions" style="width: 160px">
                             <template #body="slotProps">
                                 <div class="flex gap-1.5 justify-center">
-                                    <Button v-if="hasPermission('documents.view')" icon="pi pi-eye" severity="secondary"
+                                    <AppButton v-if="hasPermission('documents.view')" icon="eye" severity="secondary"
                                         size="small" rounded outlined @click="viewDocument(slotProps.data)"
                                         v-tooltip.top="'View'" />
-                                    <Button v-if="hasPermission('documents.download')" icon="pi pi-download"
+                                    <AppButton v-if="hasPermission('documents.download')" icon="download"
                                         severity="info" size="small" rounded outlined
                                         @click="downloadDocument(slotProps.data)" v-tooltip.top="'Download'" />
-                                    <Button v-if="hasPermission('documents.edit')" icon="pi pi-pencil" severity="warn"
+                                    <AppButton v-if="hasPermission('documents.edit')" icon="pencil" severity="warn"
                                         size="small" rounded outlined @click="openEditDialog(slotProps.data)"
                                         v-tooltip.top="'Edit'" />
-                                    <Button v-if="hasPermission('documents.delete')" icon="pi pi-trash"
-                                        severity="danger" size="small" rounded outlined
-                                        @click="confirmDelete(slotProps.data)" v-tooltip.top="'Delete'" />
+                                    <AppButton v-if="hasPermission('documents.delete')" icon="trash" severity="danger"
+                                        size="small" rounded outlined @click="confirmDelete(slotProps.data)"
+                                        v-tooltip.top="'Delete'" />
                                 </div>
                             </template>
                         </Column>
@@ -113,7 +115,7 @@
                         <Column field="title" header="Title" sortable style="min-width: 200px">
                             <template #body="slotProps">
                                 <div class="flex items-center gap-2">
-                                    <i :class="getFileIcon(slotProps.data.file_type)" class="text-xl"></i>
+                                    <AppIcon :name="getFileIcon(slotProps.data.file_type)" :size="20" />
                                     <span class="font-semibold">{{ slotProps.data.title }}</span>
                                 </div>
                             </template>
@@ -129,7 +131,7 @@
                         <Column field="download_count" header="Downloads" sortable style="width: 120px">
                             <template #body="slotProps">
                                 <div class="flex items-center gap-2">
-                                    <i class="pi pi-download text-sm text-gray-500"></i>
+                                    <AppIcon name="download" :size="14" class="text-gray-500" />
                                     <span>{{ slotProps.data.download_count }}</span>
                                 </div>
                             </template>
@@ -148,18 +150,18 @@
                         <Column header="Actions" style="width: 160px">
                             <template #body="slotProps">
                                 <div class="flex gap-1.5 justify-center">
-                                    <Button v-if="hasPermission('documents.view')" icon="pi pi-eye" severity="secondary"
+                                    <AppButton v-if="hasPermission('documents.view')" icon="eye" severity="secondary"
                                         size="small" rounded outlined @click="viewDocument(slotProps.data)"
                                         v-tooltip.top="'View'" />
-                                    <Button v-if="hasPermission('documents.download')" icon="pi pi-download"
+                                    <AppButton v-if="hasPermission('documents.download')" icon="download"
                                         severity="info" size="small" rounded outlined
                                         @click="downloadDocument(slotProps.data)" v-tooltip.top="'Download'" />
-                                    <Button v-if="hasPermission('documents.edit')" icon="pi pi-pencil" severity="warn"
+                                    <AppButton v-if="hasPermission('documents.edit')" icon="pencil" severity="warn"
                                         size="small" rounded outlined @click="openEditDialog(slotProps.data)"
                                         v-tooltip.top="'Edit'" />
-                                    <Button v-if="hasPermission('documents.delete')" icon="pi pi-trash"
-                                        severity="danger" size="small" rounded outlined
-                                        @click="confirmDelete(slotProps.data)" v-tooltip.top="'Delete'" />
+                                    <AppButton v-if="hasPermission('documents.delete')" icon="trash" severity="danger"
+                                        size="small" rounded outlined @click="confirmDelete(slotProps.data)"
+                                        v-tooltip.top="'Delete'" />
                                 </div>
                             </template>
                         </Column>
@@ -177,10 +179,10 @@
                     <!-- Nav Bar -->
                     <div class="ios-nav-bar" @pointerdown="onFormDragStart">
                         <button class="ios-nav-btn ios-nav-cancel" type="button" @click="showDialog = false">
-                            <i class="pi pi-times"></i>
+                            <AppIcon name="x" :size="16" />
                         </button>
                         <span class="ios-nav-title">{{ dialogMode === 'upload' ? 'Upload File' : 'Edit Document'
-                        }}</span>
+                            }}</span>
                         <button class="ios-nav-btn ios-nav-action" type="button" @click="submitForm"
                             :disabled="form.processing">
                             {{ form.processing ? 'Saving...' : (dialogMode === 'upload' ? 'Upload' : 'Save') }}
@@ -263,8 +265,8 @@
                             <div class="ios-section-label">Current File</div>
                             <div class="ios-card">
                                 <div class="ios-row ios-row-last" style="padding: 12px 16px; gap: 10px;">
-                                    <i :class="getFileIcon(editingDocument.file_type)"
-                                        style="font-size: 22px; color: #8E8E93; flex-shrink: 0;"></i>
+                                    <AppIcon :name="getFileIcon(editingDocument.file_type)" :size="22"
+                                        style="color: #8E8E93; flex-shrink: 0;" />
                                     <span style="font-size: 13px; color: #1c1c1e; font-family: monospace;">
                                         {{ editingDocument.file_name }}
                                     </span>
@@ -307,7 +309,7 @@
                 <div class="ios-modal" style="width: 460px;">
                     <div class="ios-nav-bar">
                         <button class="ios-nav-btn ios-nav-cancel" type="button" @click="showDeleteDialog = false">
-                            <i class="pi pi-times"></i>
+                            <AppIcon name="x" :size="16" />
                         </button>
                         <span class="ios-nav-title">Confirm Deletion</span>
                         <button class="ios-nav-btn ios-nav-action ios-nav-destructive" type="button"
@@ -319,8 +321,8 @@
                         <div class="ios-section">
                             <div class="ios-card">
                                 <div class="ios-row" style="padding: 12px 16px; gap: 12px;">
-                                    <i class="pi pi-exclamation-triangle"
-                                        style="font-size: 24px; color: #FF3B30; flex-shrink: 0;"></i>
+                                    <AppIcon name="exclamation-triangle" :size="24"
+                                        style="color: #FF3B30; flex-shrink: 0;" />
                                     <div>
                                         <div
                                             style="font-size: 15px; font-weight: 600; color: #000; margin-bottom: 4px;">
@@ -365,26 +367,35 @@
                 <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 flex-shrink-0">
                     <div class="flex items-start justify-between">
                         <div class="flex items-center gap-3">
-                            <i :class="getFileIcon(viewingDocument.file_type)" class="text-3xl"></i>
+                            <AppIcon :name="getFileIcon(viewingDocument.file_type)" :size="30" />
                             <div>
                                 <h3 class="font-semibold text-lg">{{ viewingDocument.title }}</h3>
                                 <p class="text-sm text-gray-600" v-if="viewingDocument.description">
                                     {{ viewingDocument.description }}
                                 </p>
                                 <div class="flex gap-4 mt-2 text-sm text-gray-500">
-                                    <span><i class="pi pi-file mr-1"></i>{{ viewingDocument.file_name }}</span>
-                                    <span><i class="pi pi-database mr-1"></i>{{
-                                        formatFileSize(viewingDocument.file_size)
-                                    }}</span>
-                                    <span v-if="viewingDocument.category">
-                                        <i class="pi pi-tag mr-1"></i>{{ viewingDocument.category }}
+                                    <span class="inline-flex items-center">
+                                        <AppIcon name="file" :size="14" class="mr-1" />{{ viewingDocument.file_name }}
                                     </span>
-                                    <span><i class="pi pi-download mr-1"></i>{{ viewingDocument.download_count }}
-                                        downloads</span>
+                                    <span class="inline-flex items-center">
+                                        <AppIcon name="database" :size="14" class="mr-1" />{{
+                                            formatFileSize(viewingDocument.file_size)
+                                        }}
+                                    </span>
+                                    <span v-if="viewingDocument.category">
+                                        <span class="inline-flex items-center">
+                                            <AppIcon name="tag" :size="14" class="mr-1" />{{ viewingDocument.category }}
+                                        </span>
+                                    </span>
+                                    <span class="inline-flex items-center">
+                                        <AppIcon name="download" :size="14" class="mr-1" />{{
+                                        viewingDocument.download_count }}
+                                        downloads
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                        <Button v-if="hasPermission('documents.download')" icon="pi pi-download" label="Download"
+                        <AppButton v-if="hasPermission('documents.download')" icon="download" label="Download"
                             severity="info" @click="downloadDocument(viewingDocument)" />
                     </div>
                 </div>
@@ -407,12 +418,12 @@
                                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                             }" />
                         <div class="absolute bottom-4 right-4 flex gap-2 bg-white rounded-lg shadow-lg p-2">
-                            <Button icon="pi pi-minus" @click="zoomOut" size="small" severity="secondary" rounded
+                            <AppButton icon="minus" @click="zoomOut" size="small" severity="secondary" rounded
                                 :disabled="imageZoom <= 0.5" />
                             <span class="px-3 py-2 text-sm font-semibold">{{ Math.round(imageZoom * 100) }}%</span>
-                            <Button icon="pi pi-plus" @click="zoomIn" size="small" severity="secondary" rounded
+                            <AppButton icon="plus" @click="zoomIn" size="small" severity="secondary" rounded
                                 :disabled="imageZoom >= 5" />
-                            <Button icon="pi pi-refresh" @click="resetZoom" size="small" severity="secondary" rounded
+                            <AppButton icon="refresh" @click="resetZoom" size="small" severity="secondary" rounded
                                 v-tooltip.top="'Reset Zoom'" />
                         </div>
                     </div>
@@ -421,9 +432,9 @@
                         class="w-full h-full rounded" style="min-height: 600px;" frameborder="0" />
 
                     <div v-else class="text-center p-8">
-                        <i class="pi pi-file text-6xl text-gray-400 mb-4"></i>
+                        <AppIcon name="file" class="text-gray-400 w-16 h-16 mx-auto mb-4" />
                         <p class="text-gray-600">Unable to preview this file type</p>
-                        <Button label="Download Instead" icon="pi pi-download" class="mt-4"
+                        <AppButton label="Download Instead" icon="download" class="mt-4"
                             @click="downloadDocument(viewingDocument)" />
                     </div>
                 </div>
@@ -439,6 +450,8 @@
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import AppIcon from '@/Components/ui/AppIcon.vue';
+import AppButton from '@/Components/ui/AppButton.vue';
 import { usePermission } from '@/composable/permissions';
 
 const props = defineProps({
@@ -647,15 +660,15 @@ const formatFileSize = (bytes) => {
 };
 
 const getFileIcon = (mimeType) => {
-    if (!mimeType) return 'pi pi-file';
+    if (!mimeType) return 'file';
 
-    if (mimeType.includes('pdf')) return 'pi pi-file-pdf';
-    if (mimeType.includes('word') || mimeType.includes('document')) return 'pi pi-file-word';
-    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'pi pi-file-excel';
-    if (mimeType.includes('image')) return 'pi pi-image';
-    if (mimeType.includes('zip') || mimeType.includes('compressed')) return 'pi pi-file-arrow-down';
+    if (mimeType.includes('pdf')) return 'file-type';
+    if (mimeType.includes('word') || mimeType.includes('document')) return 'file-text';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'file-spreadsheet';
+    if (mimeType.includes('image')) return 'image';
+    if (mimeType.includes('zip') || mimeType.includes('compressed')) return 'file-down';
 
-    return 'pi pi-file';
+    return 'file';
 };
 
 const canPreview = (mimeType) => {

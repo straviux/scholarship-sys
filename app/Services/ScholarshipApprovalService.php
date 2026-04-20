@@ -17,9 +17,17 @@ class ScholarshipApprovalService
         DB::transaction(function () use ($record, $approver, $data) {
             $oldStatus = $record->unified_status;
 
-            $record->update([
+            $updateData = [
                 'unified_status' => 'approved',
-            ]);
+            ];
+
+            foreach (['date_approved', 'program_id', 'course_id', 'school_id', 'year_level', 'term', 'grant_provision'] as $field) {
+                if (array_key_exists($field, $data)) {
+                    $updateData[$field] = $data[$field];
+                }
+            }
+
+            $record->update($updateData);
 
             $this->createStatusHistory($record, 'approved', $oldStatus, $approver, $data['remarks'] ?? null);
 

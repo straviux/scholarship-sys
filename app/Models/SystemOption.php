@@ -9,10 +9,19 @@ class SystemOption extends Model
 {
     use HasFactory;
 
+    public const GRANT_PROVISION_PROGRAMS = [
+        'EFA',
+        'MED',
+        'TECH-VOC',
+        'BAR EXAMINEES',
+    ];
+
     protected $fillable = [
         'category',
         'value',
         'label',
+        'program',
+        'amount',
         'color',
         'sort_order',
         'is_active',
@@ -22,6 +31,7 @@ class SystemOption extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'sort_order' => 'integer',
+        'amount' => 'decimal:2',
     ];
 
     /**
@@ -93,5 +103,55 @@ class SystemOption extends Model
             'form_category' => 'Form Categories',
             'religion' => 'Religion',
         ];
+    }
+
+    public static function getGrantProvisionPrograms(): array
+    {
+        return self::GRANT_PROVISION_PROGRAMS;
+    }
+
+    public static function getGrantProvisionLabelMap(bool $activeOnly = true): array
+    {
+        static $cache = [];
+
+        $cacheKey = $activeOnly ? 'active' : 'all';
+
+        if (isset($cache[$cacheKey])) {
+            return $cache[$cacheKey];
+        }
+
+        $query = static::query()->category('grant_provision')->ordered();
+
+        if ($activeOnly) {
+            $query->active();
+        }
+
+        $cache[$cacheKey] = $query->get()
+            ->mapWithKeys(fn(self $option) => [$option->value => self::formatGrantProvisionOptionLabel($option)])
+            ->all();
+
+        return $cache[$cacheKey];
+    }
+
+    public static function formatGrantProvisionLabel(?string $value, string $fallback = ''): string
+    {
+        if ($value === null || $value === '') {
+            return $fallback;
+        }
+
+        $labelMap = self::getGrantProvisionLabelMap(false);
+
+        return $labelMap[$value] ?? ucwords(str_replace('_', ' ', $value));
+    }
+
+    private static function formatGrantProvisionOptionLabel(self $option): string
+    {
+        $baseLabel = $option->label ?: ucwords(str_replace('_', ' ', $option->value));
+
+        if ($option->amount === null) {
+            return $baseLabel;
+        }
+
+        return sprintf('%s (PHP %s)', $baseLabel, number_format((float) $option->amount, 2));
     }
 }

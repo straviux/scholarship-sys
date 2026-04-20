@@ -25,6 +25,8 @@ import 'primeicons/primeicons.css';
 import Vue3Toastify from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 import permissionDirective from './directives/permission';
+import AppIcon from '@/Components/ui/AppIcon.vue';
+import AppButton from '@/Components/ui/AppButton.vue';
 import smoothScrollDirective from './directives/smoothScroll';
 import animateTableRowsDirective from './directives/animateTableRows';
 import safeHtmlDirective from './directives/safeHtml';
@@ -162,6 +164,10 @@ createInertiaApp({
 			.directive('smooth-scroll', smoothScrollDirective)
 			.directive('animate-table-rows', animateTableRowsDirective)
 			.directive('safe-html', safeHtmlDirective);
+
+		// Register global UI components
+		app.component('AppIcon', AppIcon);
+		app.component('AppButton', AppButton);
 
 		// Register PrimeVue components globally
 		app.component('Button', Button);

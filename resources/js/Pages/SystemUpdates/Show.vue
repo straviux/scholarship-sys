@@ -8,13 +8,13 @@
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <!-- Loading State -->
                 <div v-if="loading" class="text-center py-12">
-                    <i class="pi pi-spinner pi-spin text-4xl short:text-2xl text-blue-500"></i>
+                    <AppIcon name="spinner" class="text-4xl short:text-2xl text-blue-500" />
                     <p class="mt-4 text-gray-600">Loading update...</p>
                 </div>
 
                 <!-- Error State -->
                 <div v-else-if="error" class="text-center py-12">
-                    <i class="pi pi-exclamation-circle text-6xl text-red-500"></i>
+                    <AppIcon name="exclamation-circle" class="text-6xl text-red-500" />
                     <h3 class="mt-4 text-lg font-medium text-gray-900">Error Loading Update</h3>
                     <p class="mt-2 text-sm text-gray-600">{{ error }}</p>
                     <Button @click="$inertia.visit(route('system-updates.index'))" label="Back to Updates"
@@ -25,7 +25,7 @@
                 <div v-else-if="update" class="space-y-4 short:space-y-2">
                     <!-- Back Button -->
                     <div>
-                        <Button @click="goBack" label="Back" icon="pi pi-arrow-left" text size="small" />
+                        <AppButton @click="goBack" label="Back" icon="arrow-left" text size="small" />
                     </div>
 
                     <!-- Update Card -->
@@ -38,9 +38,8 @@
                                     <Tag :value="update.priority" :severity="getPrioritySeverity(update.priority)" />
                                     <Tag :value="update.type" :severity="getTypeSeverity(update.type)" />
                                     <Tag v-if="update.is_markdown" value="Markdown" severity="secondary"
-                                        icon="pi pi-file-edit" />
-                                    <Tag v-if="!update.is_read" value="Unread" severity="info"
-                                        icon="pi pi-circle-fill" />
+                                        icon="file-edit" />
+                                    <Tag v-if="!update.is_read" value="Unread" severity="info" icon="circle-fill" />
                                 </div>
 
                                 <!-- Title -->
@@ -49,15 +48,15 @@
                                 <!-- Meta Information -->
                                 <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                                     <div class="flex items-center gap-2">
-                                        <i class="pi pi-user"></i>
+                                        <AppIcon name="user" />
                                         <span>{{ update.created_by }}</span>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <i class="pi pi-calendar"></i>
+                                        <AppIcon name="calendar" />
                                         <span>{{ update.created_at }}</span>
                                     </div>
                                     <div v-if="update.is_read" class="flex items-center gap-2 text-green-600">
-                                        <i class="pi pi-check-circle"></i>
+                                        <AppIcon name="check-circle" />
                                         <span>Read</span>
                                     </div>
                                 </div>
@@ -78,10 +77,10 @@
                             <!-- Action Footer -->
                             <div class="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
                                 <div>
-                                    <Button v-if="!update.is_read" @click="markAsRead" label="Mark as Read"
-                                        icon="pi pi-check" severity="success" />
+                                    <AppButton v-if="!update.is_read" @click="markAsRead" label="Mark as Read"
+                                        icon="check" severity="success" />
                                     <div v-else class="flex items-center gap-2 text-green-600 font-medium">
-                                        <i class="pi pi-check-circle"></i>
+                                        <AppIcon name="check-circle" />
                                         <span>Already Read</span>
                                     </div>
                                 </div>
@@ -102,6 +101,8 @@
 import { ref, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
+import AppIcon from '@/Components/ui/AppIcon.vue'
+import AppButton from '@/Components/ui/AppButton.vue'
 import axios from 'axios'
 
 

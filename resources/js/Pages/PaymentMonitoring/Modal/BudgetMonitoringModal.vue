@@ -7,16 +7,16 @@
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" @click="close">
-                        <i class="pi pi-times"></i>
+                        <AppIcon name="times" />
                     </button>
                     <span class="ios-nav-title">Budget Monitoring</span>
                     <button class="ios-nav-btn" style="right:58px;color:#34C759" @click="exportExcel"
                         :disabled="summary.length === 0" v-tooltip.bottom="'Download Excel'">
-                        <i class="pi pi-file-excel"></i>
+                        <AppIcon name="file-excel" />
                     </button>
                     <button class="ios-nav-btn ios-nav-action" @click="generateReport" :disabled="summary.length === 0"
                         v-tooltip.bottom="'Print Report'">
-                        <i class="pi pi-print"></i>
+                        <AppIcon name="print" />
                     </button>
                 </div>
 
@@ -46,7 +46,7 @@
 
                     <!-- No data -->
                     <div v-if="summary.length === 0" class="py-12 text-center text-gray-400">
-                        <i class="pi pi-inbox text-4xl mb-3 block"></i>
+                        <AppIcon name="inbox" class="text-4xl mb-3 block" />
                         <p class="text-sm">No budget particulars found
                             <template v-if="activeFiscalYear || activeProgram">
                                 for
@@ -139,6 +139,7 @@
 </template>
 
 <script setup>
+import AppIcon from '@/Components/ui/AppIcon.vue';
 import { ref, computed } from 'vue';
 import { useDraggableModal } from '@/composables/useDraggableModal';
 import { usePdfPrint, renderVueTemplate } from '@/composables/usePdfPrint';

@@ -17,6 +17,32 @@ app/
 
 ---
 
+## Frontend UI Pattern
+
+```vue
+<!-- Icons: use AppIcon with Lucide kebab-case names -->
+<AppIcon name="search" />
+<AppIcon :name="item.icon" />   <!-- legacy pi pi-* values still render through AppIcon -->
+
+<!-- Icon buttons: use AppButton -->
+<AppButton label="Save" icon="save" />
+<AppButton icon="trash" severity="danger" />
+
+<!-- Text-only buttons: PrimeVue Button is fine -->
+<Button label="Cancel" severity="secondary" text />
+
+<!-- Search adorners -->
+<InputIcon>
+    <AppIcon name="search" :size="16" class="text-gray-400" />
+</InputIcon>
+```
+
+- New icon names: Lucide kebab-case (`save`, `trash`, `building-2`, `book-open`, `settings`)
+- Never add new `pi pi-*` icon strings in templates, button props, or config values
+- Raw `<button>` is only for established custom iOS modal nav controls
+
+---
+
 ## Model Pattern
 
 ```php

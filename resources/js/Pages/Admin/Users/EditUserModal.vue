@@ -28,7 +28,7 @@
                 <InputText id="office_designation" v-model="form.office_designation" class="w-full"
                     :class="{ 'p-invalid': form.errors.office_designation }" />
                 <small v-if="form.errors.office_designation" class="p-error">{{ form.errors.office_designation
-                }}</small>
+                    }}</small>
             </div>
 
             <!-- Role Selection -->
@@ -38,13 +38,13 @@
                     class="w-full" :class="{ 'p-invalid': form.errors.roles }">
                     <template #option="slotProps">
                         <div class="flex items-center gap-2">
-                            <i class="pi pi-shield text-gray-500"></i>
+                            <AppIcon name="shield" :size="14" class="text-gray-500" />
                             <span>{{ formatRoleName(slotProps.option.name) }}</span>
                         </div>
                     </template>
                     <template #value="slotProps">
                         <div v-if="slotProps.value" class="flex items-center gap-2">
-                            <i class="pi pi-shield text-gray-500"></i>
+                            <AppIcon name="shield" :size="14" class="text-gray-500" />
                             <span>{{ formatRoleName(slotProps.value.name) }}</span>
                         </div>
                         <span v-else class="text-gray-400">Select a role</span>
@@ -73,8 +73,8 @@
         <template #footer>
             <div class="flex justify-end gap-2">
                 <Button label="Cancel" severity="secondary" @click="closeModal" outlined />
-                <Button label="Update User" severity="info" @click="submit" :loading="form.processing"
-                    icon="pi pi-pen-to-square" />
+                <AppButton label="Update User" severity="info" @click="submit" :loading="form.processing"
+                    icon="pen-to-square" />
             </div>
         </template>
     </Dialog>

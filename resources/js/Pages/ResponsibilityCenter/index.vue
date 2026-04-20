@@ -4,6 +4,8 @@ import { usePage, Head } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import AppIcon from '@/Components/ui/AppIcon.vue';
+import AppButton from '@/Components/ui/AppButton.vue';
 import logger from '@/utils/logger';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 
@@ -111,7 +113,7 @@ const saveRC = async () => {
 const getRCMenuItems = (rc) => [
     {
         label: 'Edit',
-        icon: 'pi pi-pencil',
+        icon: 'pencil',
         command: () => {
             activeRCId.value = null;
             openRCModal(rc);
@@ -119,7 +121,7 @@ const getRCMenuItems = (rc) => [
     },
     {
         label: 'Delete',
-        icon: 'pi pi-trash',
+        icon: 'trash',
         command: () => {
             activeRCId.value = null;
             deleteRC(rc.id);
@@ -278,7 +280,7 @@ onMounted(() => {
         <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
-                    <i class="pi pi-building text-blue-500 text-[2rem]"></i>
+                    <AppIcon name="building-2" class="text-blue-500 w-8 h-8" />
                     <div>
                         <h1 class="text-2xl font-bold text-gray-700">Responsibility Centers</h1>
                         <p class="text-sm text-gray-600">Manage responsibility centers and their particulars</p>
@@ -286,22 +288,22 @@ onMounted(() => {
                 </div>
             </template>
             <template #end>
-                <Button icon="pi pi-plus" severity="success" rounded outlined @click="openRCModal()"
+                <AppButton icon="plus" severity="success" rounded outlined @click="openRCModal()"
                     v-tooltip.bottom="'Add Responsibility Center'" />
             </template>
         </Toolbar>
 
         <!-- Loading -->
         <div v-if="loading" class="flex items-center justify-center py-24">
-            <i class="pi pi-spin pi-spinner text-3xl text-blue-500"></i>
+            <AppIcon name="spinner" class="text-blue-500 w-8 h-8" />
         </div>
 
         <!-- Empty -->
         <Panel v-else-if="responsibilityCenters.length === 0" class="!rounded-4xl overflow-hidden mt-8">
             <div class="flex flex-col items-center justify-center py-16 text-gray-400">
-                <i class="pi pi-inbox text-5xl mb-4"></i>
+                <AppIcon name="inbox" class="w-12 h-12 mb-4" />
                 <p class="text-base">No responsibility centers yet</p>
-                <Button icon="pi pi-plus" label="Add Responsibility Center" severity="secondary" outlined rounded
+                <AppButton icon="plus" label="Add Responsibility Center" severity="secondary" outlined rounded
                     class="mt-4" @click="openRCModal()" />
             </div>
         </Panel>
@@ -314,24 +316,24 @@ onMounted(() => {
                 <div
                     class="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-building text-blue-500 text-xl"></i>
+                        <AppIcon name="building-2" :size="20" class="text-blue-500" />
                         <div>
                             <h3 class="font-bold text-gray-700 dark:text-gray-100">{{ rc.name }}</h3>
                             <div class="flex gap-3 text-xs text-gray-500 mt-0.5">
                                 <span>Code: <span class="font-mono font-semibold text-gray-700">{{ rc.code
-                                        }}</span></span>
+                                }}</span></span>
                                 <span v-if="rc.fiscal_year">FY: <span class="font-medium">{{ rc.fiscal_year
-                                        }}</span></span>
+                                }}</span></span>
                                 <span class="text-gray-400">{{ rc.particulars?.length ?? 0 }} particular(s)</span>
                             </div>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <Button icon="pi pi-plus" size="small" severity="success" rounded text
+                        <AppButton icon="plus" size="small" severity="success" rounded text
                             @click="openParticularsModal(rc)" />
-                        <Button icon="pi pi-pencil" severity="secondary" text rounded size="small"
-                            @click="openRCModal(rc)" v-tooltip.bottom="'Edit RC'" />
-                        <Button icon="pi pi-trash" severity="danger" text rounded size="small" @click="deleteRC(rc.id)"
+                        <AppButton icon="pencil" severity="secondary" text rounded size="small" @click="openRCModal(rc)"
+                            v-tooltip.bottom="'Edit RC'" />
+                        <AppButton icon="trash" severity="danger" text rounded size="small" @click="deleteRC(rc.id)"
                             v-tooltip.bottom="'Delete RC'" />
                     </div>
                 </div>
@@ -368,7 +370,7 @@ onMounted(() => {
                     <Column header="Date Approved" style="min-width: 130px">
                         <template #body="{ data }">
                             <span v-if="data.date_approved" class="text-xs text-gray-600">{{ data.date_approved
-                                }}</span>
+                            }}</span>
                             <span v-else class="text-xs text-gray-400">—</span>
                         </template>
                     </Column>
@@ -381,9 +383,9 @@ onMounted(() => {
                     <Column header="" style="width: 90px">
                         <template #body="{ data }">
                             <div class="flex items-center gap-1 justify-end">
-                                <Button icon="pi pi-pencil" severity="secondary" text rounded size="small"
+                                <AppButton icon="pencil" severity="secondary" text rounded size="small"
                                     @click="openParticularsModal(rc, data)" v-tooltip.top="'Edit'" />
-                                <Button icon="pi pi-trash" severity="danger" text rounded size="small"
+                                <AppButton icon="trash" severity="danger" text rounded size="small"
                                     @click="confirmDeleteParticular(rc.id, data.id)" v-tooltip.top="'Delete'" />
                             </div>
                         </template>
@@ -391,7 +393,7 @@ onMounted(() => {
                 </DataTable>
 
                 <div v-else class="flex flex-col items-center justify-center py-8 text-gray-400">
-                    <i class="pi pi-inbox text-3xl mb-2"></i>
+                    <AppIcon name="inbox" class="w-8 h-8 mb-2" />
                     <p class="text-sm">No particulars yet</p>
                 </div>
 
@@ -418,7 +420,7 @@ onMounted(() => {
             </div>
             <template #footer>
                 <Button label="Cancel" severity="secondary" @click="showModal = false" :disabled="processing" />
-                <Button :label="processing ? 'Saving...' : 'Save'" icon="pi pi-check" @click="saveRC"
+                <AppButton :label="processing ? 'Saving...' : 'Save'" icon="check" @click="saveRC"
                     :disabled="processing" />
             </template>
         </Dialog>
@@ -466,7 +468,7 @@ onMounted(() => {
             <template #footer>
                 <Button label="Cancel" severity="secondary" @click="showParticularsModal = false"
                     :disabled="processing" />
-                <Button :label="processing ? 'Saving...' : 'Save'" icon="pi pi-check" @click="saveParticular"
+                <AppButton :label="processing ? 'Saving...' : 'Save'" icon="check" @click="saveParticular"
                     :disabled="processing" />
             </template>
         </Dialog>
@@ -482,7 +484,7 @@ onMounted(() => {
             <template #footer>
                 <Button label="Cancel" severity="secondary" @click="showDeleteConfirmModal = false"
                     :disabled="processing" />
-                <Button :label="processing ? 'Deleting...' : 'Delete'" severity="danger" icon="pi pi-trash"
+                <AppButton :label="processing ? 'Deleting...' : 'Delete'" severity="danger" icon="trash"
                     @click="deleteConfirmType === 'rc' ? confirmDeleteRC() : executeDeleteParticular()"
                     :disabled="processing" />
             </template>

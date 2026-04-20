@@ -4,8 +4,9 @@
         <template #container>
             <div ref="elModal" class="ios-modal" style="width: 90vw; max-width: 450px;" :style="modalStyle">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)"><i
-                            class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Mobile Upload QR Code</span>
                     <span class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
                 </div>
@@ -18,7 +19,7 @@
                                     style="display: inline-block;">
                                 </div>
                                 <div v-else style="padding: 32px 0; color: #8E8E93;">
-                                    <i class="pi pi-exclamation-triangle text-2xl"></i>
+                                    <AppIcon name="exclamation-triangle" :size="24" />
                                     <p style="font-size: 13px; margin-top: 8px;">QR code could not be generated</p>
                                 </div>
                             </div>
@@ -42,7 +43,7 @@
                         <div class="ios-section">
                             <div class="ios-card" style="padding: 12px 16px; background: #fffbeb;">
                                 <p style="font-size: 13px; color: #92400e;">
-                                    <i class="pi pi-clock" style="margin-right: 6px;"></i>
+                                    <AppIcon name="clock" :size="14" style="margin-right: 6px;" />
                                     <strong>Expires in:</strong> {{ countdown }}
                                 </p>
                             </div>
@@ -54,7 +55,7 @@
                             <div class="ios-card" style="padding: 12px 16px;">
                                 <div class="flex gap-2">
                                     <InputText type="text" :value="modelValue.url" readonly class="flex-1" />
-                                    <Button icon="pi pi-copy" size="small" @click="copyToClipboard(modelValue.url)"
+                                    <AppButton icon="copy" size="small" @click="copyToClipboard(modelValue.url)"
                                         v-tooltip="'Copy upload link'" />
                                 </div>
                             </div>

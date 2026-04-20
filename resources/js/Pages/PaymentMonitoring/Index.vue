@@ -2,6 +2,8 @@
 import { ref, computed, watch } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import AppIcon from '@/Components/ui/AppIcon.vue';
+import AppButton from '@/Components/ui/AppButton.vue';
 import Toolbar from 'primevue/toolbar';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -296,7 +298,7 @@ const groupedData = computed(() => {
             <Toolbar class="mb-4 -mt-2 short:mb-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-dollar text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
+                        <AppIcon name="dollar" class="text-blue-600 text-[2rem] short:text-[1.5rem]" />
                         <div>
                             <h1 class="text-2xl font-bold text-gray-700 short:text-xl">Payment Monitoring</h1>
                             <p class="text-sm text-gray-600 short:text-xs">Track OBR status for active scholarship
@@ -306,10 +308,10 @@ const groupedData = computed(() => {
                 </template>
                 <template #end>
                     <div class="flex gap-3">
-                        <Button v-if="props.budgetParticulars.length" icon="pi pi-wallet" label="Budget Monitoring"
+                        <AppButton v-if="props.budgetParticulars.length" icon="wallet" label="Budget Monitoring"
                             severity="secondary" rounded outlined size="small" @click="showBudgetModal = true"
                             v-tooltip.bottom="'Budget Monitoring'" />
-                        <Button icon="pi pi-file-edit" label="Budget Allotment Report" severity="secondary" rounded
+                        <AppButton icon="file-edit" label="Budget Allotment Report" severity="secondary" rounded
                             outlined size="small" @click="showBudgetReportModal = true"
                             v-tooltip.bottom="'Budget Report'" />
                     </div>
@@ -323,7 +325,9 @@ const groupedData = computed(() => {
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Scholar Name</label>
                         <IconField iconPosition="left">
-                            <InputIcon class="pi pi-search text-gray-400" />
+                            <InputIcon>
+                                <AppIcon name="search" :size="14" class="text-gray-400" />
+                            </InputIcon>
                             <InputText v-model="searchInput" placeholder="Search by name..." size="small" />
                         </IconField>
                     </div>
@@ -360,8 +364,8 @@ const groupedData = computed(() => {
                     </div>
 
                     <!-- Clear -->
-                    <Button severity="secondary" outlined rounded size="small" icon="pi pi-history"
-                        @click="clearFilters" v-tooltip.bottom="`Clear Filters`" />
+                    <AppButton severity="secondary" outlined rounded size="small" icon="history" @click="clearFilters"
+                        v-tooltip.bottom="`Clear Filters`" />
                 </div>
 
                 <!-- Status filter row -->
@@ -424,7 +428,7 @@ const groupedData = computed(() => {
                             <a :href="route('scholarship.profile.show', data.profile_id)" target="_blank"
                                 class="text-blue-600 hover:text-blue-800 hover:underline font-medium flex items-center gap-1">
                                 {{ data.scholar_name }}
-                                <i class="pi pi-external-link" style="font-size: 9pt;"></i>
+                                <AppIcon name="external-link" style="font-size: 9pt;" />
                             </a>
                             <Badge v-if="data.transactions.length > 1" :value="`${data.transactions.length} records`"
                                 severity="secondary" size="small" class="mt-1" />
@@ -575,7 +579,7 @@ const groupedData = computed(() => {
                                 <Column header="OBR No." style="min-width: 130px">
                                     <template #body="{ data }">
                                         <span v-if="data.obr_no" class="font-mono text-blue-700">{{ data.obr_no
-                                            }}</span>
+                                        }}</span>
                                         <span v-else class="text-gray-400">—</span>
                                     </template>
                                 </Column>
@@ -608,7 +612,7 @@ const groupedData = computed(() => {
 
                     <template #empty>
                         <div class="py-12 text-center text-gray-500">
-                            <i class="pi pi-inbox text-3xl mb-2 block"></i>
+                            <AppIcon name="inbox" class="text-3xl mb-2 block" />
                             <p>No payment records found matching the current filters.</p>
                         </div>
                     </template>

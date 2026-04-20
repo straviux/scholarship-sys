@@ -2,33 +2,34 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import AppIcon from '@/Components/ui/AppIcon.vue';
 
 const activeAccordion = ref(0);
 
 const faqs = ref([
     {
         label: 'Getting Started with the System',
-        icon: 'pi pi-fw pi-book',
+        icon: 'book-open',
         content: 'Overview of the scholarship system and its main components.'
     },
     {
         label: 'Adding a New Applicant',
-        icon: 'pi pi-fw pi-user-plus',
+        icon: 'user-plus',
         content: 'Step-by-step guide for adding new scholarship applicants.'
     },
     {
         label: 'The Approval Workflow',
-        icon: 'pi pi-fw pi-check-circle',
+        icon: 'check-circle',
         content: 'Understanding the complete approval process from submission to final decision.'
     },
     {
         label: 'Understanding Unified Status',
-        icon: 'pi pi-fw pi-sync',
+        icon: 'refresh-cw',
         content: 'How the unified status system works and what each status means.'
     },
     {
         label: 'Common Tasks',
-        icon: 'pi pi-fw pi-list',
+        icon: 'list',
         content: 'Quick reference for frequently performed tasks in the system.'
     }
 ]);
@@ -45,7 +46,7 @@ const faqs = ref([
                 <template #start>
                     <div class="flex items-center gap-4">
                         <div class="flex items-center justify-center w-16 h-1">
-                            <i class="pi pi-book text-indigo-900 text-[2rem] short:text-[1.5rem]"></i>
+                            <AppIcon name="book-open" class="text-indigo-900 w-8 h-8 short:w-6 short:h-6" />
                         </div>
                         <div>
                             <h1 class="text-2xl short:text-xl font-bold text-gray-700">Help & Instructions</h1>
@@ -58,7 +59,7 @@ const faqs = ref([
             <!-- System Overview -->
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 short:p-3">
                 <div class="flex items-start gap-4">
-                    <i class="pi pi-info-circle text-blue-600 text-2xl flex-shrink-0 mt-1"></i>
+                    <AppIcon name="info" class="text-blue-600 w-6 h-6 flex-shrink-0 mt-1" />
                     <div>
                         <h2 class="text-lg font-semibold text-gray-800 mb-2">What is this System?</h2>
                         <p class="text-gray-700 leading-relaxed">
@@ -79,7 +80,7 @@ const faqs = ref([
                 <AccordionTab>
                     <template #header>
                         <div class="flex items-center gap-3 w-full">
-                            <i class="pi pi-fw pi-book text-blue-600"></i>
+                            <AppIcon name="book-open" :size="16" class="text-blue-600" />
                             <span class="font-semibold text-gray-800">Getting Started with the System</span>
                         </div>
                     </template>
@@ -98,7 +99,7 @@ const faqs = ref([
                         <div class="space-y-3">
                             <div class="bg-blue-50 p-4 rounded-lg">
                                 <h5 class="font-semibold text-blue-900 mb-2">
-                                    <i class="pi pi-fw pi-clipboard mr-2"></i>Applicants
+                                    <AppIcon name="clipboard" :size="16" class="mr-2 inline-block" />Applicants
                                 </h5>
                                 <p class="text-sm text-gray-700">
                                     The entry point for new scholarship applicants. All new applicants begin their
@@ -110,7 +111,8 @@ const faqs = ref([
 
                             <div class="bg-green-50 p-4 rounded-lg">
                                 <h5 class="font-semibold text-green-900 mb-2">
-                                    <i class="pi pi-fw pi-check-circle mr-2"></i>Interviewed Applicants
+                                    <AppIcon name="check-circle" :size="16" class="mr-2 inline-block" />Interviewed
+                                    Applicants
                                 </h5>
                                 <p class="text-sm text-gray-700">
                                     Applicants who have been reviewed by program managers and are ready for final
@@ -121,7 +123,7 @@ const faqs = ref([
 
                             <div class="bg-purple-50 p-4 rounded-lg">
                                 <h5 class="font-semibold text-purple-900 mb-2">
-                                    <i class="pi pi-fw pi-users mr-2"></i>Profiles
+                                    <AppIcon name="users" :size="16" class="mr-2 inline-block" />Profiles
                                 </h5>
                                 <p class="text-sm text-gray-700">
                                     Complete information and history of approved scholars. Track their progress,
@@ -132,7 +134,7 @@ const faqs = ref([
 
                             <div class="bg-orange-50 p-4 rounded-lg">
                                 <h5 class="font-semibold text-orange-900 mb-2">
-                                    <i class="pi pi-fw pi-book mr-2"></i>Documents and Forms
+                                    <AppIcon name="book-open" :size="16" class="mr-2 inline-block" />Documents and Forms
                                 </h5>
                                 <p class="text-sm text-gray-700">
                                     Manage scholarship program documents, forms, and official correspondence.
@@ -146,7 +148,7 @@ const faqs = ref([
                 <AccordionTab>
                     <template #header>
                         <div class="flex items-center gap-3 w-full">
-                            <i class="pi pi-fw pi-user-plus text-green-600"></i>
+                            <AppIcon name="user-plus" :size="16" class="text-green-600" />
                             <span class="font-semibold text-gray-800">Adding a New Applicant</span>
                         </div>
                     </template>
@@ -217,7 +219,7 @@ const faqs = ref([
 
                         <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
                             <p class="text-sm text-blue-800">
-                                <i class="pi pi-fw pi-info-circle mr-2"></i>
+                                <AppIcon name="info" :size="16" class="mr-2 inline-block" />
                                 <strong>Note:</strong> All required fields must be completed before submission. The
                                 system will
                                 validate
@@ -231,7 +233,7 @@ const faqs = ref([
                 <AccordionTab>
                     <template #header>
                         <div class="flex items-center gap-3 w-full">
-                            <i class="pi pi-fw pi-check-circle text-purple-600"></i>
+                            <AppIcon name="check-circle" :size="16" class="text-purple-600" />
                             <span class="font-semibold text-gray-800">The Approval Workflow</span>
                         </div>
                     </template>
@@ -293,7 +295,7 @@ const faqs = ref([
                                 </p>
                                 <div class="space-y-2">
                                     <div class="flex items-start gap-2">
-                                        <i class="pi pi-check text-green-600 mt-1"></i>
+                                        <AppIcon name="check" :size="16" class="text-green-600 mt-1 flex-shrink-0" />
                                         <div>
                                             <strong class="text-gray-900">Finalize Approval:</strong>
                                             <p class="text-sm text-gray-700">Applicant is confirmed as accepted and
@@ -302,7 +304,7 @@ const faqs = ref([
                                         </div>
                                     </div>
                                     <div class="flex items-start gap-2">
-                                        <i class="pi pi-times text-red-600 mt-1"></i>
+                                        <AppIcon name="x" :size="16" class="text-red-600 mt-1 flex-shrink-0" />
                                         <div>
                                             <strong class="text-gray-900">Finalize Denial:</strong>
                                             <p class="text-sm text-gray-700">Application rejection is confirmed and
@@ -329,7 +331,7 @@ const faqs = ref([
 
                         <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
                             <p class="text-sm text-blue-800">
-                                <i class="pi pi-fw pi-info-circle mr-2"></i>
+                                <AppIcon name="info" :size="16" class="mr-2 inline-block" />
                                 <strong>Tip:</strong> You can view the complete history of an applicant including all
                                 approval
                                 actions and status changes in their profile under the "Approval History" tab.
@@ -342,7 +344,7 @@ const faqs = ref([
                 <AccordionTab>
                     <template #header>
                         <div class="flex items-center gap-3 w-full">
-                            <i class="pi pi-fw pi-sync text-orange-600"></i>
+                            <AppIcon name="refresh-cw" :size="16" class="text-orange-600" />
                             <span class="font-semibold text-gray-800">Understanding Unified Status</span>
                         </div>
                     </template>
@@ -471,7 +473,7 @@ const faqs = ref([
                         <div class="space-y-3 mt-3">
                             <div class="flex gap-4">
                                 <div class="flex-shrink-0">
-                                    <i class="pi pi-check text-green-600 text-2xl"></i>
+                                    <AppIcon name="check" class="text-green-600 w-6 h-6" />
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-700">
@@ -485,7 +487,7 @@ const faqs = ref([
 
                             <div class="flex gap-4">
                                 <div class="flex-shrink-0">
-                                    <i class="pi pi-check text-green-600 text-2xl"></i>
+                                    <AppIcon name="check" class="text-green-600 w-6 h-6" />
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-700">
@@ -499,7 +501,7 @@ const faqs = ref([
 
                             <div class="flex gap-4">
                                 <div class="flex-shrink-0">
-                                    <i class="pi pi-check text-green-600 text-2xl"></i>
+                                    <AppIcon name="check" class="text-green-600 w-6 h-6" />
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-700">
@@ -513,7 +515,7 @@ const faqs = ref([
 
                             <div class="flex gap-4">
                                 <div class="flex-shrink-0">
-                                    <i class="pi pi-check text-green-600 text-2xl"></i>
+                                    <AppIcon name="check" class="text-green-600 w-6 h-6" />
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-700">
@@ -528,7 +530,7 @@ const faqs = ref([
 
                         <div class="bg-green-50 border-l-4 border-green-400 p-4 mt-4">
                             <p class="text-sm text-green-800">
-                                <i class="pi pi-fw pi-info-circle mr-2"></i>
+                                <AppIcon name="info" :size="16" class="mr-2 inline-block" />
                                 <strong>Pro Tip:</strong> Filter applicants by status in the various lists to focus on
                                 specific
                                 stages of the workflow.
@@ -541,7 +543,7 @@ const faqs = ref([
                 <AccordionTab>
                     <template #header>
                         <div class="flex items-center gap-3 w-full">
-                            <i class="pi pi-fw pi-list text-red-600"></i>
+                            <AppIcon name="list" :size="16" class="text-red-600" />
                             <span class="font-semibold text-gray-800">Common Tasks</span>
                         </div>
                     </template>
@@ -551,7 +553,7 @@ const faqs = ref([
                         <div class="space-y-3">
                             <div class="bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-lg">
                                 <h5 class="font-semibold text-red-900 mb-2">
-                                    <i class="pi pi-fw pi-plus mr-2"></i>Add a New Applicant
+                                    <AppIcon name="plus" :size="16" class="mr-2 inline-block" />Add a New Applicant
                                 </h5>
                                 <ol class="text-sm text-red-800 space-y-1 list-decimal list-inside">
                                     <li>Go to Scholarship ✏️ Applicants</li>
@@ -564,7 +566,8 @@ const faqs = ref([
 
                             <div class="bg-white border border-gray-200 p-4 rounded-lg">
                                 <h5 class="font-semibold text-gray-900 mb-2">
-                                    <i class="pi pi-fw pi-search mr-2"></i>Search for an Applicant
+                                    <AppIcon name="search" :size="16" class="mr-2 inline-block" />Search for an
+                                    Applicant
                                 </h5>
                                 <p class="text-sm text-gray-700">
                                     Use the search bar at the top of any list to quickly find an applicant by name, ID,
@@ -575,7 +578,8 @@ const faqs = ref([
 
                             <div class="bg-white border border-gray-200 p-4 rounded-lg">
                                 <h5 class="font-semibold text-gray-900 mb-2">
-                                    <i class="pi pi-fw pi-pencil mr-2"></i>Update Applicant Information
+                                    <AppIcon name="pencil" :size="16" class="mr-2 inline-block" />Update Applicant
+                                    Information
                                 </h5>
                                 <p class="text-sm text-gray-700 mb-2">
                                     Click on any applicant to open their profile and then:
@@ -589,7 +593,7 @@ const faqs = ref([
 
                             <div class="bg-white border border-gray-200 p-4 rounded-lg">
                                 <h5 class="font-semibold text-gray-900 mb-2">
-                                    <i class="pi pi-fw pi-check-circle mr-2"></i>Mark as Reviewed
+                                    <AppIcon name="check-circle" :size="16" class="mr-2 inline-block" />Mark as Reviewed
                                 </h5>
                                 <p class="text-sm text-gray-700 mb-2">
                                     To move an applicant from Applicants to Interviewed Applicants:
@@ -604,7 +608,8 @@ const faqs = ref([
 
                             <div class="bg-white border border-gray-200 p-4 rounded-lg">
                                 <h5 class="font-semibold text-gray-900 mb-2">
-                                    <i class="pi pi-fw pi-star mr-2"></i>Approve or Deny an Applicant
+                                    <AppIcon name="star" :size="16" class="mr-2 inline-block" />Approve or Deny an
+                                    Applicant
                                 </h5>
                                 <p class="text-sm text-gray-700 mb-2">
                                     In the Interviewed Applicants list:
@@ -620,7 +625,7 @@ const faqs = ref([
 
                             <div class="bg-white border border-gray-200 p-4 rounded-lg">
                                 <h5 class="font-semibold text-gray-900 mb-2">
-                                    <i class="pi pi-fw pi-download mr-2"></i>Generate Reports
+                                    <AppIcon name="download" :size="16" class="mr-2 inline-block" />Generate Reports
                                 </h5>
                                 <p class="text-sm text-gray-700">
                                     Navigate to Profiles to generate various reports on
@@ -630,7 +635,7 @@ const faqs = ref([
 
                             <div class="bg-white border border-gray-200 p-4 rounded-lg">
                                 <h5 class="font-semibold text-gray-900 mb-2">
-                                    <i class="pi pi-fw pi-book mr-2"></i>Upload Documents
+                                    <AppIcon name="book-open" :size="16" class="mr-2 inline-block" />Upload Documents
                                 </h5>
                                 <p class="text-sm text-gray-700 mb-2">
                                     In an applicant's profile:
@@ -650,7 +655,7 @@ const faqs = ref([
             <!-- Need More Help -->
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 short:p-3">
                 <div class="flex items-start gap-4">
-                    <i class="pi pi-question-circle text-blue-600 text-2xl flex-shrink-0 mt-1"></i>
+                    <AppIcon name="help-circle" class="text-blue-600 w-6 h-6 flex-shrink-0 mt-1" />
                     <div>
                         <h2 class="text-lg font-semibold text-gray-800 mb-3">Still Need Help?</h2>
                         <ul class="space-y-2 text-gray-700">

@@ -12,7 +12,7 @@
             <Panel class="mb-4 short:mb-2">
                 <template #header>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-chart-bar text-xl"></i>
+                        <AppIcon name="chart-bar" :size="20" />
                         <span class="font-semibold text-lg">System Statistics Report</span>
                     </div>
                 </template>
@@ -22,9 +22,9 @@
                         View comprehensive system statistics and performance metrics
                     </div>
                     <div class="flex gap-3">
-                        <Button @click="refreshReport" :loading="loading" icon="pi pi-refresh" label="Refresh"
+                        <AppButton @click="refreshReport" :loading="loading" icon="refresh" label="Refresh"
                             severity="secondary" raised />
-                        <Button @click="exportReport" icon="pi pi-download" label="Export JSON" severity="success"
+                        <AppButton @click="exportReport" icon="download" label="Export JSON" severity="success"
                             raised />
                     </div>
                 </div>
@@ -45,7 +45,7 @@
                                 <p class="text-2xl short:text-xl font-bold text-blue-600">{{
                                     report.executive_summary.total_scholarship_records }}</p>
                             </div>
-                            <i class="pi pi-file-text text-3xl short:text-xl text-blue-500"></i>
+                            <AppIcon name="file-text" class="text-3xl short:text-xl text-blue-500" />
                         </div>
                     </template>
                 </Card>
@@ -58,7 +58,7 @@
                                 <p class="text-2xl short:text-xl font-bold text-yellow-600">{{
                                     report.executive_summary.pending_applications }}</p>
                             </div>
-                            <i class="pi pi-clock text-3xl short:text-xl text-yellow-500"></i>
+                            <AppIcon name="clock" class="text-3xl short:text-xl text-yellow-500" />
                         </div>
                     </template>
                 </Card>
@@ -70,9 +70,9 @@
                                 <p class="text-sm font-medium text-gray-600">Approval Rate</p>
                                 <p class="text-2xl short:text-xl font-bold text-green-600">{{
                                     report.executive_summary.approval_rate
-                                    }}%</p>
+                                }}%</p>
                             </div>
-                            <i class="pi pi-check-circle text-3xl short:text-xl text-green-500"></i>
+                            <AppIcon name="check-circle" class="text-3xl short:text-xl text-green-500" />
                         </div>
                     </template>
                 </Card>
@@ -85,7 +85,7 @@
                                 <p class="text-2xl short:text-xl font-bold" :class="systemHealthColor">{{
                                     systemHealthStatus }}</p>
                             </div>
-                            <i class="pi pi-shield text-3xl short:text-xl" :class="systemHealthColor"></i>
+                            <AppIcon name="shield" class="text-3xl short:text-xl" :class="systemHealthColor" />
                         </div>
                     </template>
                 </Card>
@@ -95,7 +95,7 @@
             <Card>
                 <template #title>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-exclamation-triangle text-orange-500"></i>
+                        <AppIcon name="exclamation-triangle" class="text-orange-500" />
                         Data Integrity Report
                     </div>
                 </template>
@@ -104,7 +104,7 @@
                         <div class="p-4 bg-red-50 rounded-lg border border-red-200">
                             <p class="text-sm text-red-600">Records without Programs</p>
                             <p class="text-xl font-bold text-red-700">{{ report.data_integrity.records_without_programs
-                                }}</p>
+                            }}</p>
                         </div>
                         <div class="p-4 bg-orange-50 rounded-lg border border-orange-200">
                             <p class="text-sm text-orange-600">Records without Courses</p>
@@ -119,7 +119,7 @@
                         <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
                             <p class="text-sm text-purple-600">Orphaned Requirements</p>
                             <p class="text-xl font-bold text-purple-700">{{ report.data_integrity.orphaned_requirements
-                                }}</p>
+                            }}</p>
                         </div>
                     </div>
                 </template>
@@ -146,7 +146,7 @@
             <Card>
                 <template #title>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-chart-line text-blue-500"></i>
+                        <AppIcon name="chart-line" class="text-blue-500" />
                         Performance Metrics
                     </div>
                 </template>
@@ -175,7 +175,7 @@
             <Card>
                 <template #title>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-map-marker text-green-500"></i>
+                        <AppIcon name="map-marker" class="text-green-500" />
                         Geographic Distribution
                     </div>
                 </template>
@@ -212,7 +212,7 @@
             <Card>
                 <template #title>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-book text-purple-500"></i>
+                        <AppIcon name="book" class="text-purple-500" />
                         Academic Analysis
                     </div>
                 </template>
@@ -243,7 +243,7 @@
             <Card>
                 <template #title>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-cog text-gray-500"></i>
+                        <AppIcon name="cog" class="text-gray-500" />
                         System Health
                     </div>
                 </template>
@@ -281,7 +281,7 @@
             <Card>
                 <template #title>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-users text-indigo-500"></i>
+                        <AppIcon name="users" class="text-indigo-500" />
                         User Activity
                     </div>
                 </template>

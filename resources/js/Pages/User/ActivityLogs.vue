@@ -12,7 +12,7 @@
                         <p class="text-sm text-gray-600 mt-1">Complete history of your actions in the system</p>
                     </div>
                     <div class="flex gap-2">
-                        <Button icon="pi pi-refresh" text rounded @click="fetchActivities" v-tooltip.left="'Refresh'" />
+                        <AppButton icon="refresh" text rounded @click="fetchActivities" v-tooltip.left="'Refresh'" />
                     </div>
                 </div>
             </div>
@@ -36,8 +36,8 @@
                             @change="applyFilters" />
                     </div>
                     <div class="flex items-end">
-                        <Button icon="pi pi-times" rounded severity="secondary" @click="resetFilters"
-                            label="Clear Filters" v-tooltip.top="'Reset all filters'" />
+                        <AppButton icon="times" rounded severity="secondary" @click="resetFilters" label="Clear Filters"
+                            v-tooltip.top="'Reset all filters'" />
                     </div>
                 </div>
             </div>
@@ -54,7 +54,7 @@
                             <div class="flex items-center gap-2">
                                 <div
                                     :class="['w-8 h-8 rounded-full flex items-center justify-center text-white text-xs', getActivityColorClass(data.activity_type)]">
-                                    <i :class="getActivityIcon(data.activity_type)"></i>
+                                    <AppIcon :name="getActivityIcon(data.activity_type)" />
                                 </div>
                                 <span class="text-sm font-medium">{{ data.activity_type }}</span>
                             </div>
@@ -68,7 +68,7 @@
                                 <p class="text-gray-900 font-medium">{{ data.remarks || data.action || 'N/A' }}</p>
                                 <p v-if="data.profile_name || extractNameFromActivity(data)"
                                     class="text-blue-600 font-semibold text-xs mt-1">
-                                    <i class="pi pi-user text-xs mr-1"></i>{{ data.profile_name ||
+                                    <AppIcon name="user" :size="12" class="mr-1" />{{ data.profile_name ||
                                         extractNameFromActivity(data) }}
                                 </p>
                                 <p class="text-gray-600 text-xs mt-1">{{ data.description }}</p>
@@ -104,7 +104,7 @@
                     <!-- Actions Column -->
                     <Column field="id" header="Actions" class="w-32" :exportable="false">
                         <template #body="{ data }">
-                            <Button v-if="data.profile_id" icon="pi pi-external-link" text rounded
+                            <AppButton v-if="data.profile_id" icon="external-link" text rounded
                                 @click="viewProfile(data.profile_id)" v-tooltip.left="'View Related Profile'" />
                         </template>
                     </Column>
@@ -112,7 +112,7 @@
                     <!-- Empty State -->
                     <template #empty>
                         <div class="py-12 text-center">
-                            <i class="pi pi-inbox text-4xl text-gray-300 mb-4"></i>
+                            <AppIcon name="inbox" :size="36" class="text-gray-300 mb-4" />
                             <p class="text-lg font-medium text-gray-900">No activities found</p>
                             <p class="text-sm text-gray-600 mt-1">Try adjusting your filters</p>
                         </div>
@@ -161,15 +161,15 @@ function formatTime(dateString) {
 
 function getActivityIcon(type) {
     const icons = {
-        'Profile Updated': 'pi pi-user',
-        'Attachment Uploaded': 'pi pi-upload',
-        'Record Created': 'pi pi-plus-circle',
-        'Record Updated': 'pi pi-pencil',
-        'Record Deleted': 'pi pi-trash',
-        'Status Changed': 'pi pi-arrow-right-arrow-left',
-        'Profile Created': 'pi pi-user-plus'
+        'Profile Updated': 'user',
+        'Attachment Uploaded': 'upload',
+        'Record Created': 'plus-circle',
+        'Record Updated': 'pencil',
+        'Record Deleted': 'trash',
+        'Status Changed': 'arrow-right-arrow-left',
+        'Profile Created': 'user-plus'
     };
-    return icons[type] || 'pi pi-history';
+    return icons[type] || 'history';
 }
 
 function getActivityColorClass(type) {

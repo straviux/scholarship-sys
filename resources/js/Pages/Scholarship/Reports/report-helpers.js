@@ -2,6 +2,8 @@
  * Shared helpers for report templates
  */
 
+import { getSystemOptionLabel } from '@/composables/useSystemOptions';
+
 export function formatName(item) {
 	const parts = [item.last_name, item.first_name, item.middle_name].filter(Boolean);
 	if (item.extension_name) parts.push(item.extension_name);
@@ -20,7 +22,7 @@ export function formatDate(date) {
 }
 
 export function formatGrantProvision(v) {
-	return v || '—';
+	return getSystemOptionLabel('grant_provision', v, '—');
 }
 
 export function isJpm(item) {
@@ -35,7 +37,7 @@ export function getGroupValue(item, groupByField) {
 		course: () => item.course_name || '—',
 		year_level: () => item.year_level || '—',
 		municipality: () => item.municipality || '—',
-		grant_provision: () => item.grant_provision || '—',
+		grant_provision: () => formatGrantProvision(item.grant_provision),
 	};
 	return (map[groupByField] || (() => '—'))();
 }

@@ -10,6 +10,10 @@ const props = defineProps({
     label: {
         type: String,
         default: 'name'
+    },
+    multiple: {
+        type: Boolean,
+        default: false,
     }
 });
 
@@ -41,45 +45,73 @@ onMounted(() => {
     fetchTermOptions();
 });
 
-// Local value for v-model
-const localValue = ref(props.modelValue);
-
-// Sync localValue with parent prop
-watch(() => props.modelValue, (val) => {
-    localValue.value = val;
-});
-
-// Emit changes to parent - emit only the value string
-watch(localValue, (val) => {
-    if (localValue.value && terms.value.length) {
-        if (props.multiple && Array.isArray(localValue.value)) {
-            localValue.value = terms.value.filter(m =>
-                localValue.value.some(val => val === m.value || val === m)
-            );
-        } else {
-            const selected = terms.value.find(m => m.value === localValue.value);
-            if (selected) localValue.value = selected;
-        }
+const normalizeTermToken = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
     }
-    emit('update:modelValue', val?.value || val);
-});
+
+    return String(value).trim().toUpperCase();
+};
+
+const resolveSingleTerm = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    if (typeof value === 'object' && value.label && value.value) {
+        return value;
+    }
+
+    const rawValue = typeof value === 'object'
+        ? value.value ?? value.label ?? null
+        : value;
+
+    const normalized = normalizeTermToken(rawValue);
+    if (!normalized) {
+        return null;
+    }
+
+    return terms.value.find((option) => {
+        return normalizeTermToken(option.value) === normalized
+            || normalizeTermToken(option.label) === normalized;
+    }) || {
+        label: typeof rawValue === 'string' ? rawValue : String(rawValue),
+        value: rawValue,
+    };
+};
+
+const resolveTermValue = (value) => {
+    if (props.multiple && Array.isArray(value)) {
+        return value
+            .map((entry) => resolveSingleTerm(entry))
+            .filter(Boolean);
+    }
+
+    return resolveSingleTerm(value);
+};
+
+const emitTermValue = (value) => {
+    if (Array.isArray(value)) {
+        emit('update:modelValue', value.map((entry) => entry?.value ?? entry).filter(Boolean));
+        return;
+    }
+
+    emit('update:modelValue', value?.value ?? value ?? null);
+};
+
+const localValue = ref(resolveTermValue(props.modelValue));
 
 watch(
-    () => terms.value,
-    (newOptions) => {
-        if (localValue.value && newOptions.length) {
-            if (props.multiple && Array.isArray(localValue.value)) {
-                localValue.value = newOptions.filter(m =>
-                    localValue.value.some(val => val === m.value || val === m)
-                );
-            } else {
-                const selected = newOptions.find(m => m.value === localValue.value);
-                if (selected) localValue.value = selected;
-            }
-        }
+    [() => props.modelValue, () => terms.value],
+    () => {
+        localValue.value = resolveTermValue(props.modelValue);
     },
-    { immediate: true }
+    { immediate: true, deep: true }
 );
+
+watch(localValue, (value) => {
+    emitTermValue(value);
+}, { deep: true });
 
 </script>
 
@@ -89,7 +121,7 @@ watch(
         :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
-                <div>{{ slotProps.value.label }}</div>
+                <div>{{ slotProps.value.label ?? slotProps.value }}</div>
             </div>
             <span v-else>
                 <div class="flex itesm-start">{{ slotProps.placeholder }}</div>

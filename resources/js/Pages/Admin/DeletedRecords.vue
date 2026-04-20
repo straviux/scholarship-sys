@@ -13,9 +13,9 @@
             <!-- Search Filter -->
             <div class="mb-4 short:mb-2">
                 <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-3">
-                    <i class="pi pi-search text-gray-500"></i>
+                    <AppIcon name="search" class="text-gray-500" />
                     <InputText v-model="searchQuery" type="text" placeholder="Search by name..." class="flex-1" />
-                    <Button v-if="searchQuery" @click="searchQuery = ''" icon="pi pi-times" severity="secondary"
+                    <AppButton v-if="searchQuery" @click="searchQuery = ''" icon="times" severity="secondary"
                         variant="text" size="small" />
                 </div>
             </div>
@@ -29,7 +29,7 @@
                             ? 'border-blue-500 text-blue-600'
                             : 'border-transparent text-gray-600 hover:text-gray-900'
                     ]">
-                        <i class="pi pi-user mr-2"></i>Deleted Profiles ({{ filteredProfiles.length }})
+                        <AppIcon name="user" class="mr-2" />Deleted Profiles ({{ filteredProfiles.length }})
                     </button>
                     <button @click="activeTab = 'records'" :class="[
                         'px-4 py-2 font-medium text-sm border-b-2 transition-colors',
@@ -37,7 +37,7 @@
                             ? 'border-blue-500 text-blue-600'
                             : 'border-transparent text-gray-600 hover:text-gray-900'
                     ]">
-                        <i class="pi pi-award mr-2"></i>Deleted Scholarship Grants ({{ filteredRecords.length }})
+                        <AppIcon name="award" class="mr-2" />Deleted Scholarship Grants ({{ filteredRecords.length }})
                     </button>
                 </nav>
             </div>
@@ -58,7 +58,7 @@
             <div v-if="activeTab === 'profiles'" class="space-y-4">
                 <div v-if="filteredProfiles.length === 0"
                     class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <i class="pi pi-info-circle text-2xl text-blue-500 mb-2"></i>
+                    <AppIcon name="info-circle" class="text-2xl text-blue-500 mb-2" />
                     <p class="text-gray-700">No deleted profiles found</p>
                 </div>
 
@@ -91,17 +91,17 @@
                             </div>
                             <div class="mt-3">
                                 <p class="text-xs text-gray-500">
-                                    <i class="pi pi-trash text-red-500 mr-1"></i>
+                                    <AppIcon name="trash" class="text-red-500 mr-1" />
                                     Deleted {{ formatDate(profile.deleted_at) }}
                                 </p>
                             </div>
                         </div>
 
                         <div class="flex gap-2 ml-4">
-                            <Button icon="pi pi-undo" severity="success" rounded
+                            <AppButton icon="undo" severity="success" rounded
                                 @click="restoreProfile(profile.profile_id)"
                                 title="Restore this applicant and their records" />
-                            <Button icon="pi pi-trash" severity="danger" rounded
+                            <AppButton icon="trash" severity="danger" rounded
                                 @click="confirmPermanentlyDeleteProfile(profile)"
                                 title="Permanently delete (cannot be undone)" />
                         </div>
@@ -113,7 +113,7 @@
             <div v-if="activeTab === 'records'" class="space-y-4">
                 <div v-if="filteredRecords.length === 0"
                     class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <i class="pi pi-info-circle text-2xl text-blue-500 mb-2"></i>
+                    <AppIcon name="info-circle" class="text-2xl text-blue-500 mb-2" />
                     <p class="text-gray-700">No deleted scholarship grants found</p>
                 </div>
 
@@ -136,16 +136,16 @@
                             </div>
                             <div class="mt-3">
                                 <p class="text-xs text-gray-500">
-                                    <i class="pi pi-trash text-red-500 mr-1"></i>
+                                    <AppIcon name="trash" class="text-red-500 mr-1" />
                                     Deleted {{ formatDate(record.deleted_at) }}
                                 </p>
                             </div>
                         </div>
 
                         <div class="flex gap-2 ml-4">
-                            <Button icon="pi pi-undo" severity="success" rounded @click="restoreRecord(record.id)"
+                            <AppButton icon="undo" severity="success" rounded @click="restoreRecord(record.id)"
                                 title="Restore this record" />
-                            <Button icon="pi pi-trash" severity="danger" rounded
+                            <AppButton icon="trash" severity="danger" rounded
                                 @click="confirmPermanentlyDeleteRecord(record)"
                                 title="Permanently delete (cannot be undone)" />
                         </div>
@@ -159,7 +159,7 @@
             :style="{ width: '500px' }">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
-                    <i class="pi pi-exclamation-triangle text-2xl text-red-500"></i>
+                    <AppIcon name="exclamation-triangle" class="text-2xl text-red-500" />
                     <div>
                         <p class="font-semibold text-gray-900">Permanently Delete Profile</p>
                         <p class="text-sm text-gray-600">This action CANNOT be undone</p>
@@ -184,7 +184,7 @@
             :style="{ width: '500px' }">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
-                    <i class="pi pi-exclamation-triangle text-2xl text-red-500"></i>
+                    <AppIcon name="exclamation-triangle" class="text-2xl text-red-500" />
                     <div>
                         <p class="font-semibold text-gray-900">Permanently Delete Scholarship Record</p>
                         <p class="text-sm text-gray-600">This action CANNOT be undone</p>

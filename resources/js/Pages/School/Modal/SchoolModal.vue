@@ -3,6 +3,7 @@ import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
+import AppIcon from '@/Components/ui/AppIcon.vue';
 
 const props = defineProps({
     visible: Boolean,
@@ -96,12 +97,12 @@ onBeforeUnmount(() => {
                 <!-- iOS Navigation Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" @click="closeModal" v-tooltip.bottom="'Close'">
-                        <i class="pi pi-times"></i>
+                        <AppIcon name="x" :size="16" />
                     </button>
                     <span class="ios-nav-title">{{ modalTitle }}</span>
                     <button class="ios-nav-btn ios-nav-action" @click="submit" :disabled="form.processing"
                         v-tooltip.bottom="isEdit ? 'Save' : 'Add'">
-                        <i v-if="form.processing" class="pi pi-spin pi-spinner"></i>
+                        <AppIcon v-if="form.processing" name="spinner" :size="16" />
                         <template v-else>{{ isEdit ? 'Save' : 'Add' }}</template>
                     </button>
                 </div>
@@ -114,7 +115,7 @@ onBeforeUnmount(() => {
                         <div class="ios-card">
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-building" style="color: #007AFF; font-size: 13px;"></i>
+                                    <AppIcon name="building-2" :size="13" style="color: #007AFF;" />
                                     Name
                                 </div>
                                 <div class="ios-row-control">
@@ -123,7 +124,7 @@ onBeforeUnmount(() => {
                             </div>
                             <div class="ios-row ios-row-last">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-tag" style="color: #FF9500; font-size: 13px;"></i>
+                                    <AppIcon name="tag" :size="13" style="color: #FF9500;" />
                                     Shortname
                                 </div>
                                 <div class="ios-row-control">
@@ -133,7 +134,7 @@ onBeforeUnmount(() => {
                         </div>
                         <div v-if="form.errors.name" class="ios-section-footer ios-error">{{ form.errors.name }}</div>
                         <div v-if="form.errors.shortname" class="ios-section-footer ios-error">{{ form.errors.shortname
-                            }}</div>
+                        }}</div>
                     </div>
 
                     <!-- LOCATION SECTION -->
@@ -142,7 +143,7 @@ onBeforeUnmount(() => {
                         <div class="ios-card">
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-map-marker" style="color: #34C759; font-size: 13px;"></i>
+                                    <AppIcon name="map-pin" :size="13" style="color: #34C759;" />
                                     Campus
                                 </div>
                                 <div class="ios-row-control">
@@ -152,7 +153,7 @@ onBeforeUnmount(() => {
                             </div>
                             <div class="ios-row ios-row-last ios-row-textarea">
                                 <div class="ios-row-label" style="align-self: flex-start; padding-top: 8px;">
-                                    <i class="pi pi-home" style="color: #5856D6; font-size: 13px;"></i>
+                                    <AppIcon name="home" :size="13" style="color: #5856D6;" />
                                     Address
                                 </div>
                                 <Textarea v-model="form.address" placeholder="Full address" rows="2" autoResize
@@ -169,7 +170,7 @@ onBeforeUnmount(() => {
                         <div class="ios-card">
                             <div class="ios-row ios-row-dates">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                    <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     Start Date
                                 </div>
                                 <div class="ios-row-control">
@@ -178,7 +179,7 @@ onBeforeUnmount(() => {
                                 </div>
                                 <span class="ios-date-separator">—</span>
                                 <div class="ios-row-label">
-                                    <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                    <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     End Date
                                 </div>
                                 <div class="ios-row-control">
@@ -220,7 +221,7 @@ onBeforeUnmount(() => {
                         <div class="ios-card">
                             <label class="ios-row ios-row-last" style="cursor: pointer;">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-check-circle" style="color: #34C759; font-size: 13px;"></i>
+                                    <AppIcon name="check-circle" :size="13" style="color: #34C759;" />
                                     Active
                                 </div>
                                 <ToggleSwitch v-model="form.is_active" :trueValue="1" :falseValue="0" size="small" />

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SystemOption;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class SystemOptionController extends Controller
@@ -20,6 +21,7 @@ class SystemOptionController extends Controller
         return Inertia::render('SystemOptions/Index', [
             'options' => $options,
             'categories' => $categories,
+            'grantProvisionPrograms' => SystemOption::getGrantProvisionPrograms(),
         ]);
     }
 
@@ -28,15 +30,8 @@ class SystemOptionController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'category' => 'required|string|max:255',
-            'value' => 'required|string|max:255',
-            'label' => 'nullable|string|max:255',
-            'color' => 'nullable|string|max:50',
-            'sort_order' => 'nullable|integer',
-            'is_active' => 'boolean',
-            'description' => 'nullable|string',
-        ]);
+        $validated = $request->validate($this->rules($request->input('category'), true));
+        $validated = $this->normalizeMetadata($validated, $validated['category']);
 
         // Check for duplicate value in same category
         $exists = SystemOption::where('category', $validated['category'])
@@ -66,14 +61,8 @@ class SystemOptionController extends Controller
      */
     public function update(Request $request, SystemOption $systemOption)
     {
-        $validated = $request->validate([
-            'value' => 'required|string|max:255',
-            'label' => 'nullable|string|max:255',
-            'color' => 'nullable|string|max:50',
-            'sort_order' => 'nullable|integer',
-            'is_active' => 'boolean',
-            'description' => 'nullable|string',
-        ]);
+        $validated = $request->validate($this->rules($systemOption->category));
+        $validated = $this->normalizeMetadata($validated, $systemOption->category);
 
         // Check for duplicate value in same category (excluding current record)
         $exists = SystemOption::where('category', $systemOption->category)
@@ -159,5 +148,44 @@ class SystemOptionController extends Controller
         $options = SystemOption::getByCategory($category, $activeOnly);
 
         return response()->json($options);
+    }
+
+    private function rules(?string $category, bool $includeCategory = false): array
+    {
+        $rules = [
+            'value' => ['required', 'string', 'max:255'],
+            'label' => ['nullable', 'string', 'max:255'],
+            'program' => ['nullable', 'string', 'max:255'],
+            'amount' => ['nullable', 'numeric', 'min:0'],
+            'color' => ['nullable', 'string', 'max:50'],
+            'sort_order' => ['nullable', 'integer'],
+            'is_active' => ['boolean'],
+            'description' => ['nullable', 'string'],
+        ];
+
+        if ($includeCategory) {
+            $rules['category'] = ['required', 'string', 'max:255'];
+        }
+
+        if ($category === 'grant_provision') {
+            $rules['program'][] = Rule::in(SystemOption::getGrantProvisionPrograms());
+        }
+
+        return $rules;
+    }
+
+    private function normalizeMetadata(array $validated, string $category): array
+    {
+        if ($category !== 'grant_provision') {
+            $validated['program'] = null;
+            $validated['amount'] = null;
+
+            return $validated;
+        }
+
+        $validated['program'] = $validated['program'] ?: null;
+        $validated['amount'] = $validated['amount'] === '' ? null : ($validated['amount'] ?? null);
+
+        return $validated;
     }
 }

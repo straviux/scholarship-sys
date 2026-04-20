@@ -23,7 +23,7 @@ const props = defineProps({
     },
     emptyIcon: {
         type: String,
-        default: 'pi pi-inbox'
+        default: 'inbox'
     },
     // Pagination props
     totalRecords: {
@@ -74,7 +74,7 @@ const isLastPage = computed(() => props.first + props.rows >= props.totalRecords
     <div class="grid-view-container">
         <!-- Empty State -->
         <div v-if="!items || items.length === 0" class="text-center py-12 text-gray-500">
-            <i :class="emptyIcon" style="font-size: 3rem"></i>
+            <AppIcon :name="emptyIcon" :size="48" />
             <p class="mt-4">{{ emptyMessage }}</p>
         </div>
 
@@ -115,11 +115,11 @@ const isLastPage = computed(() => props.first + props.rows >= props.totalRecords
         <div v-if="showPagination && totalRecords > rows && items.length > 0" class="flex justify-center mt-6">
             <div class="flex items-center gap-2">
                 <!-- First Page -->
-                <Button icon="pi pi-angle-double-left" @click="handlePageChange(0, rows)" :disabled="isFirstPage"
+                <AppButton icon="angle-double-left" @click="handlePageChange(0, rows)" :disabled="isFirstPage"
                     size="small" outlined v-tooltip.top="'First Page'" />
 
                 <!-- Previous Page -->
-                <Button icon="pi pi-angle-left" @click="handlePageChange(Math.floor(first / rows) - 1, rows)"
+                <AppButton icon="angle-left" @click="handlePageChange(Math.floor(first / rows) - 1, rows)"
                     :disabled="isFirstPage" size="small" outlined v-tooltip.top="'Previous Page'" />
 
                 <!-- Page Info -->
@@ -133,11 +133,11 @@ const isLastPage = computed(() => props.first + props.rows >= props.totalRecords
                 </div>
 
                 <!-- Next Page -->
-                <Button icon="pi pi-angle-right" @click="handlePageChange(Math.floor(first / rows) + 1, rows)"
+                <AppButton icon="angle-right" @click="handlePageChange(Math.floor(first / rows) + 1, rows)"
                     :disabled="isLastPage" size="small" outlined v-tooltip.top="'Next Page'" />
 
                 <!-- Last Page -->
-                <Button icon="pi pi-angle-double-right" @click="handlePageChange(Math.floor(totalRecords / rows), rows)"
+                <AppButton icon="angle-double-right" @click="handlePageChange(Math.floor(totalRecords / rows), rows)"
                     :disabled="isLastPage" size="small" outlined v-tooltip.top="'Last Page'" />
             </div>
         </div>

@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Exports\ApplicantExport;
 use App\Exports\ScholarshipReportExport;
+use App\Services\ScholarshipExpenseProjectionService;
 use Illuminate\Http\Request;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipRecord;
+use App\Models\SystemOption;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Storage;
@@ -68,7 +70,9 @@ class ReportController extends Controller
             case 'unified_status':
                 return ($grant && $grant->unified_status) ? ucwords(str_replace('_', ' ', $grant->unified_status)) : 'No Status';
             case 'grant_provision':
-                return ($grant && $grant->grant_provision) ? ucwords(str_replace('_', ' ', $grant->grant_provision)) : 'No Provision';
+                return $grant
+                    ? SystemOption::formatGrantProvisionLabel($grant->grant_provision, 'No Provision')
+                    : 'No Provision';
             case 'school':
                 return ($grant && $grant->school) ? $grant->school->name : 'No School';
             case 'program':
@@ -717,7 +721,9 @@ class ReportController extends Controller
             if (!$request->filled('grant_provision')) {
                 $summary['by_grant_provision'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
-                    return ($grant && $grant->grant_provision) ? ucwords(str_replace('_', ' ', $grant->grant_provision)) : 'No Provision';
+                    return $grant
+                        ? SystemOption::formatGrantProvisionLabel($grant->grant_provision, 'No Provision')
+                        : 'No Provision';
                 })->map(function ($group) use ($groupBy, $groupBySecondary, $groupByTertiary) {
                     if ($groupBy === 'grant_provision' && $groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
                         $subgroups = $group->groupBy(function ($p) use ($groupBySecondary) {
@@ -1192,7 +1198,9 @@ class ReportController extends Controller
             if (!$request->filled('grant_provision')) {
                 $summary['by_grant_provision'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
-                    return ($grant && $grant->grant_provision) ? ucwords(str_replace('_', ' ', $grant->grant_provision)) : 'No Provision';
+                    return $grant
+                        ? SystemOption::formatGrantProvisionLabel($grant->grant_provision, 'No Provision')
+                        : 'No Provision';
                 })->map(fn($group) => $group->count());
             }
 
@@ -1506,16 +1514,11 @@ class ReportController extends Controller
             return response()->json(['error' => 'No records found'], 404);
         }
 
-        $includeAssessment = filter_var($request->input('include_assessment', true), FILTER_VALIDATE_BOOLEAN);
-
         $currentDateTime = \Carbon\Carbon::now()->format('Y-m-d_H-i-s');
         $filename = "interviewed-applicants_{$currentDateTime}.xlsx";
 
         // Build spreadsheet data
-        $headers = ['#', 'Last Name', 'First Name', 'Program', 'Course', 'Recommendation', 'Interview Date', 'Interviewer'];
-        if ($includeAssessment) {
-            array_splice($headers, 6, 0, ['Academic Potential', 'Financial Need', 'Communication Skills']);
-        }
+        $headers = ['#', 'Last Name', 'First Name', 'Program', 'Course', 'Projected Total Expense', 'Projected Terms', 'Completion Year', 'Year Level', 'Semester', 'Grant Provision', 'Interview Date', 'Interviewer'];
 
         $rows = [];
         foreach ($records as $idx => $record) {
@@ -1524,14 +1527,16 @@ class ReportController extends Controller
                 $record->profile->last_name ?? '',
                 $record->profile->first_name ?? '',
                 $record->program->shortname ?? 'N/A',
-                $record->course->shortname ?? 'N/A',
+                $record->course->name ?? $record->course->shortname ?? 'N/A',
+                $record->projected_total_expense !== null
+                    ? number_format((float) $record->projected_total_expense, 2)
+                    : 'Not configured',
+                $record->projected_term_count ?? 'Not configured',
+                $record->projected_completion_year ?? 'Not configured',
+                $record->year_level ?? 'N/A',
+                $record->term ?? 'N/A',
+                $record->grant_provision_label ?? SystemOption::formatGrantProvisionLabel($record->grant_provision, 'N/A'),
             ];
-            if ($includeAssessment) {
-                $row[] = ucfirst($record->academic_potential ?? 'N/A');
-                $row[] = ucfirst($record->financial_need_level ?? 'N/A');
-                $row[] = ucfirst($record->communication_skills ?? 'N/A');
-            }
-            $row[] = $this->formatRecommendationLabel($record->recommendation);
             $row[] = $record->interviewed_at ? \Carbon\Carbon::parse($record->interviewed_at)->format('M d, Y') : 'N/A';
             $row[] = $record->interviewer->name ?? 'N/A';
             $rows[] = $row;
@@ -1559,6 +1564,14 @@ class ReportController extends Controller
                 $sheet->setCellValue([$colIdx + 1, $rowIdx + 2], $value);
             }
         }
+
+        $projectionColumnIndex = array_search('Projected Total Expense', $headers, true) + 1;
+        $summaryRowIndex = count($rows) + 3;
+        $overallProjectedTotal = round($records->sum(fn($record) => (float) ($record->projected_total_expense ?? 0)), 2);
+
+        $sheet->setCellValue([1, $summaryRowIndex], 'Overall Projected Total');
+        $sheet->setCellValue([$projectionColumnIndex, $summaryRowIndex], number_format($overallProjectedTotal, 2));
+        $sheet->getStyle([1, $summaryRowIndex, $projectionColumnIndex, $summaryRowIndex])->getFont()->setBold(true);
 
         // Auto-size columns
         foreach (range(1, count($headers)) as $col) {
@@ -1609,7 +1622,26 @@ class ReportController extends Controller
             $query->where('unified_status', 'interviewed');
         }
 
-        return $query->orderBy('interviewed_at', 'desc')->get();
+        $expenseProjectionService = app(ScholarshipExpenseProjectionService::class);
+
+        return $query->orderBy('interviewed_at', 'desc')->get()
+            ->map(fn(ScholarshipRecord $record) => $this->attachExpenseProjection($record, $expenseProjectionService));
+    }
+
+    private function attachExpenseProjection(
+        ScholarshipRecord $record,
+        ScholarshipExpenseProjectionService $expenseProjectionService
+    ): ScholarshipRecord {
+        foreach ($expenseProjectionService->projectForRecord($record) as $key => $value) {
+            $record->setAttribute($key, $value);
+        }
+
+        $record->setAttribute(
+            'grant_provision_label',
+            SystemOption::formatGrantProvisionLabel($record->grant_provision, 'N/A')
+        );
+
+        return $record;
     }
 
     /**

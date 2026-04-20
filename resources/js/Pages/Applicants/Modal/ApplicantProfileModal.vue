@@ -108,9 +108,9 @@
                         <div class="flex pt-4 justify-between gap-8">
                             <Button label="Skip to Academic Info" severity="secondary" @click="activeStep = '3'"
                                 :disabled="hasPendingOrOngoing" />
-                            <Button label="Save and Close" icon="pi pi-save" iconPos="right" @click.prevent="submit"
+                            <AppButton label="Save and Close" icon="save" iconPos="right" @click.prevent="submit"
                                 severity="success" size="small" />
-                            <Button label="Next" severity="secondary" icon="pi pi-arrow-right" @click="activeStep = '2'"
+                            <AppButton label="Next" severity="secondary" icon="arrow-right" @click="activeStep = '2'"
                                 :disabled="hasPendingOrOngoing" />
 
                         </div>
@@ -218,11 +218,10 @@
                             </div>
                         </div>
                         <div class="flex pt-4 justify-between">
-                            <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                @click="activeStep = '1'" />
-                            <Button label="Save and Close" icon="pi pi-save" iconPos="right" @click.prevent="submit"
+                            <AppButton label="Back" severity="secondary" icon="arrow-left" @click="activeStep = '1'" />
+                            <AppButton label="Save and Close" icon="save" iconPos="right" @click.prevent="submit"
                                 severity="success" size="small" />
-                            <Button label="Next" severity="secondary" icon="pi pi-arrow-right" @click="activeStep = '3'"
+                            <AppButton label="Next" severity="secondary" icon="arrow-right" @click="activeStep = '3'"
                                 :disabled="hasPendingOrOngoing" />
 
                         </div>
@@ -236,9 +235,8 @@
                                 v-model:remarks="form.remarks" />
                         </div>
                         <div class="mt-12 flex justify-between">
-                            <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                @click="activeStep = '2'" />
-                            <Button label="Save and Close" icon="pi pi-save" iconPos="right" @click.prevent="submit"
+                            <AppButton label="Back" severity="secondary" icon="arrow-left" @click="activeStep = '2'" />
+                            <AppButton label="Save and Close" icon="save" iconPos="right" @click.prevent="submit"
                                 severity="success" size="small" />
                             <div class="hidden"></div>
                         </div>

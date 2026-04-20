@@ -142,7 +142,7 @@
 
                 <!-- No Records -->
                 <div v-if="records.length === 0" class="text-center py-8 text-gray-500">
-                    <i class="pi pi-inbox text-4xl mb-3"></i>
+                    <AppIcon name="inbox" :size="36" class="mb-3" />
                     <p class="text-sm">No records found matching the selected filters.</p>
                 </div>
 
@@ -157,6 +157,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import axios from 'axios';
 import moment from 'moment';
+import { getSystemOptionLabel } from '@/composables/useSystemOptions';
 
 const props = defineProps({
     params: {
@@ -440,13 +441,7 @@ function formatGrantProvision(item) {
 }
 
 function formatGrantProvisionText(provision) {
-    const provisionMap = {
-        'full': 'Full',
-        'partial': 'Partial',
-        'tuition_only': 'Tuition Only',
-        'rle_and_tuition': 'RLE and Tuition'
-    };
-    return provisionMap[provision] || provision || '-';
+    return getSystemOptionLabel('grant_provision', provision, '-');
 }
 
 function isJpm(item) {

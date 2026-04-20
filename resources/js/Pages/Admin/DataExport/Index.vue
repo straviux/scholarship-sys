@@ -14,7 +14,7 @@
                         <div class="mb-4 short:mb-2 p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-700">
                             <div class="flex">
                                 <div class="flex-shrink-0">
-                                    <i class="pi pi-info-circle text-blue-400"></i>
+                                    <AppIcon name="info-circle" class="text-blue-400" />
                                 </div>
                                 <div class="ml-3">
                                     <p class="text-sm">
@@ -82,7 +82,7 @@
 
                             <div class="mt-4 flex justify-end space-x-3">
                                 <Button label="Clear Filters" severity="secondary" outlined @click="clearFilters" />
-                                <Button label="Preview Export" icon="pi pi-search" :loading="loading"
+                                <AppButton label="Preview Export" icon="search" :loading="loading"
                                     @click="loadSummary" />
                             </div>
                         </div>
@@ -155,7 +155,7 @@
 
                         <!-- Export Button -->
                         <div v-if="summary" class="flex justify-end">
-                            <Button label="Download JSON Export" icon="pi pi-download" severity="success"
+                            <AppButton label="Download JSON Export" icon="download" severity="success"
                                 :loading="exporting" :disabled="summary.total_records === 0" @click="downloadExport" />
                         </div>
                     </div>

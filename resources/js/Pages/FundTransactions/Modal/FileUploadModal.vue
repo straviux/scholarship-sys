@@ -4,8 +4,9 @@
         <template #container>
             <div ref="elModal" class="ios-modal" style="width: 90vw; max-width: 700px;" :style="modalStyle">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)"><i
-                            class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Upload Documents</span>
                     <span class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
                 </div>

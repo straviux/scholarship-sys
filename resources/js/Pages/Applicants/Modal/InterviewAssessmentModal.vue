@@ -2,6 +2,7 @@
 import { ref, watch, computed, onBeforeUnmount } from 'vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
+import { useSystemOptions } from '@/composables/useSystemOptions';
 
 const props = defineProps({
     modelValue: Boolean,
@@ -29,8 +30,11 @@ const form = ref({
     financial_need_level: null,
     communication_skills: null,
     recommendation: null,
+    grant_provision: null,
     interview_remarks: '',
 });
+
+const grantProvisionRaw = useSystemOptions('grant_provision');
 
 const academicPotentialOptions = [
     { label: 'Excellent', value: 'excellent' },
@@ -71,6 +75,7 @@ const resetForm = () => {
         financial_need_level: props.initialValues?.financial_need_level || null,
         communication_skills: props.initialValues?.communication_skills || null,
         recommendation: props.initialValues?.recommendation || null,
+        grant_provision: props.initialValues?.grant_provision || null,
         interview_remarks: props.initialValues?.interview_remarks || '',
     };
     errors.value = {};
@@ -90,6 +95,72 @@ const validate = () => {
     errors.value = errs;
     return Object.keys(errs).length === 0;
 };
+
+const selectedProgramCode = computed(() => {
+    return props.applicant?.scholarship_grant?.[0]?.program?.shortname
+        || props.applicant?.program?.shortname
+        || null;
+});
+
+const grantProvisionOptions = computed(() => {
+    if (!selectedProgramCode.value) {
+        return [];
+    }
+
+    return grantProvisionRaw.value
+        .filter((option) => !option.program || option.program === selectedProgramCode.value)
+        .map((option) => ({
+            ...option,
+            label: option.label || option.value,
+        }));
+});
+
+const grantProvisionPlaceholder = computed(() => {
+    if (!selectedProgramCode.value) {
+        return 'Program not available';
+    }
+
+    if (!grantProvisionOptions.value.length) {
+        return 'No grant provision available';
+    }
+
+    return 'Select grant provision';
+});
+
+const grantProvisionHint = computed(() => {
+    if (!selectedProgramCode.value) {
+        return 'Grant provision options require a program on the scholarship record.';
+    }
+
+    if (!grantProvisionOptions.value.length) {
+        return `No grant provision options are configured for ${selectedProgramCode.value}.`;
+    }
+
+    return `Grant provision options are filtered for ${selectedProgramCode.value}.`;
+});
+
+watch(
+    () => [selectedProgramCode.value, grantProvisionOptions.value.map((option) => option.value).join('|')],
+    () => {
+        const currentGrantProvision = form.value.grant_provision;
+
+        if (!selectedProgramCode.value) {
+            form.value.grant_provision = null;
+            delete errors.value.grant_provision;
+            return;
+        }
+
+        if (currentGrantProvision && !grantProvisionOptions.value.some((option) => option.value === currentGrantProvision)) {
+            form.value.grant_provision = null;
+        }
+    }
+);
+
+watch(() => form.value.grant_provision, () => {
+    if (errors.value.grant_provision) {
+        delete errors.value.grant_provision;
+    }
+});
 
 const submitAssessment = async () => {
     if (!validate()) return;
@@ -158,10 +229,13 @@ onBeforeUnmount(() => {
             <div class="ios-modal" :style="modalStyle">
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
+                    <button type="button" class="ios-nav-btn ios-nav-cancel" @click="close">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Interview Assessment</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="submitAssessment" :disabled="submitting">
-                        <i class="pi pi-check" style="font-size: 18px; color: #34C759;"></i>
+                    <button type="button" class="ios-nav-btn ios-nav-action" @click="submitAssessment"
+                        :disabled="submitting">
+                        <AppIcon name="check" :size="18" style="color: #34C759;" />
                     </button>
                 </div>
 
@@ -170,7 +244,7 @@ onBeforeUnmount(() => {
                     <!-- Applicant Info -->
                     <div class="ios-section">
                         <div class="ios-section-label">
-                            <i class="pi pi-user" style="color: #007AFF; margin-right: 8px;"></i>
+                            <AppIcon name="user" :size="16" style="color: #007AFF; margin-right: 8px;" />
                             Applicant Information
                         </div>
                         <div class="ios-card">
@@ -190,18 +264,19 @@ onBeforeUnmount(() => {
                     <!-- Academic Potential -->
                     <div class="ios-section">
                         <div class="ios-section-label">
-                            <i class="pi pi-graduation-cap" style="color: #007AFF; margin-right: 8px;"></i>
+                            <AppIcon name="graduation-cap" :size="16" style="color: #007AFF; margin-right: 8px;" />
                             Academic Potential
                         </div>
                         <div class="ios-segmented-control">
-                            <button v-for="option in academicPotentialOptions" :key="option.value"
+                            <button v-for="option in academicPotentialOptions" :key="option.value" type="button"
                                 :class="['ios-segment', form.academic_potential === option.value && 'ios-segment-active']"
                                 @click="form.academic_potential = option.value">
                                 <span>{{ option.label }}</span>
                                 <span
                                     style="width: 16px; height: 13px; display: inline-flex; align-items: center; justify-content: center;">
                                     <transition name="fade-scale">
-                                        <i v-if="form.academic_potential === option.value" class="pi pi-check"></i>
+                                        <AppIcon v-if="form.academic_potential === option.value" name="check"
+                                            :size="14" />
                                     </transition>
                                 </span>
                             </button>
@@ -213,18 +288,19 @@ onBeforeUnmount(() => {
                     <!-- Financial Need -->
                     <div class="ios-section">
                         <div class="ios-section-label">
-                            <i class="pi pi-wallet" style="color: #34C759; margin-right: 8px;"></i>
+                            <AppIcon name="wallet" :size="16" style="color: #34C759; margin-right: 8px;" />
                             Financial Need
                         </div>
                         <div class="ios-segmented-control">
-                            <button v-for="option in financialNeedOptions" :key="option.value"
+                            <button v-for="option in financialNeedOptions" :key="option.value" type="button"
                                 :class="['ios-segment', form.financial_need_level === option.value && 'ios-segment-active']"
                                 @click="form.financial_need_level = option.value">
                                 <span>{{ option.label }}</span>
                                 <span
                                     style="width: 16px; height: 13px; display: inline-flex; align-items: center; justify-content: center;">
                                     <transition name="fade-scale">
-                                        <i v-if="form.financial_need_level === option.value" class="pi pi-check"></i>
+                                        <AppIcon v-if="form.financial_need_level === option.value" name="check"
+                                            :size="14" />
                                     </transition>
                                 </span>
                             </button>
@@ -236,18 +312,19 @@ onBeforeUnmount(() => {
                     <!-- Communication Skills -->
                     <div class="ios-section">
                         <div class="ios-section-label">
-                            <i class="pi pi-comments" style="color: #FF9500; margin-right: 8px;"></i>
+                            <AppIcon name="comments" :size="16" style="color: #FF9500; margin-right: 8px;" />
                             Communication Skills
                         </div>
                         <div class="ios-segmented-control">
-                            <button v-for="option in communicationSkillsOptions" :key="option.value"
+                            <button v-for="option in communicationSkillsOptions" :key="option.value" type="button"
                                 :class="['ios-segment', form.communication_skills === option.value && 'ios-segment-active']"
                                 @click="form.communication_skills = option.value">
                                 <span>{{ option.label }}</span>
                                 <span
                                     style="width: 16px; height: 13px; display: inline-flex; align-items: center; justify-content: center;">
                                     <transition name="fade-scale">
-                                        <i v-if="form.communication_skills === option.value" class="pi pi-check"></i>
+                                        <AppIcon v-if="form.communication_skills === option.value" name="check"
+                                            :size="14" />
                                     </transition>
                                 </span>
                             </button>
@@ -259,18 +336,18 @@ onBeforeUnmount(() => {
                     <!-- Recommendation -->
                     <div class="ios-section">
                         <div class="ios-section-label">
-                            <i class="pi pi-thumbs-up" style="color: #5856D6; margin-right: 8px;"></i>
+                            <AppIcon name="thumbs-up" :size="16" style="color: #5856D6; margin-right: 8px;" />
                             Recommendation
                         </div>
                         <div class="ios-segmented-control">
-                            <button v-for="option in recommendationOptions" :key="option.value"
+                            <button v-for="option in recommendationOptions" :key="option.value" type="button"
                                 :class="['ios-segment', form.recommendation === option.value && 'ios-segment-active']"
                                 @click="form.recommendation = option.value">
                                 <span>{{ option.label }}</span>
                                 <span
                                     style="width: 16px; height: 13px; display: inline-flex; align-items: center; justify-content: center;">
                                     <transition name="fade-scale">
-                                        <i v-if="form.recommendation === option.value" class="pi pi-check"></i>
+                                        <AppIcon v-if="form.recommendation === option.value" name="check" :size="14" />
                                     </transition>
                                 </span>
                             </button>
@@ -279,26 +356,45 @@ onBeforeUnmount(() => {
                             }}</div>
                     </div>
 
+                    <!-- Grant Provision -->
+                    <div class="ios-section">
+                        <div class="ios-section-label">
+                            <AppIcon name="wallet" :size="16" style="color: #007AFF; margin-right: 8px;" />
+                            Grant Provision
+                        </div>
+                        <div class="ios-card" style="padding: 10px 16px; overflow: visible;">
+                            <Select v-model="form.grant_provision" :options="grantProvisionOptions" optionLabel="label"
+                                optionValue="value" :placeholder="grantProvisionPlaceholder" class="w-full"
+                                :disabled="!selectedProgramCode || !grantProvisionOptions.length" showClear />
+                        </div>
+                        <div v-if="grantProvisionHint && !errors.grant_provision" class="ios-section-footer">
+                            {{ grantProvisionHint }}
+                        </div>
+                        <div v-if="errors.grant_provision" class="ios-section-footer ios-error">
+                            {{ errors.grant_provision }}
+                        </div>
+                    </div>
+
                     <!-- Remarks -->
                     <div class="ios-section">
                         <div class="ios-section-label">
-                            <i class="pi pi-pencil" style="color: #FF3B30; margin-right: 8px;"></i>
+                            <AppIcon name="pencil" :size="16" style="color: #FF3B30; margin-right: 8px;" />
                             Remarks
                         </div>
                         <div class="ios-card">
                             <Editor v-model="form.interview_remarks" editorStyle="height: 120px">
                                 <template #toolbar>
                                     <span class="ql-formats">
-                                        <button class="ql-bold"></button>
-                                        <button class="ql-italic"></button>
-                                        <button class="ql-underline"></button>
+                                        <button type="button" class="ql-bold"></button>
+                                        <button type="button" class="ql-italic"></button>
+                                        <button type="button" class="ql-underline"></button>
                                     </span>
                                     <span class="ql-formats">
-                                        <button class="ql-list" value="ordered"></button>
-                                        <button class="ql-list" value="bullet"></button>
+                                        <button type="button" class="ql-list" value="ordered"></button>
+                                        <button type="button" class="ql-list" value="bullet"></button>
                                     </span>
                                     <span class="ql-formats">
-                                        <button class="ql-clean"></button>
+                                        <button type="button" class="ql-clean"></button>
                                     </span>
                                 </template>
                             </Editor>

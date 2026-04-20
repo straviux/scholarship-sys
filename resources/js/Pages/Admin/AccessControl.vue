@@ -1,5 +1,7 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
+import AppIcon from "@/Components/ui/AppIcon.vue";
+import AppButton from "@/Components/ui/AppButton.vue";
 import { Head, useForm, router } from "@inertiajs/vue3";
 import { ref, watch, computed } from "vue";
 import axios from "axios";
@@ -439,7 +441,7 @@ const runCleanup = async () => {
             <Panel>
                 <template #header>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-lock text-xl"></i>
+                        <AppIcon name="lock" :size="20" />
                         <span class="font-semibold text-lg">Access Control Management</span>
                     </div>
                 </template>
@@ -455,21 +457,21 @@ const runCleanup = async () => {
                     <TabList>
                         <Tab value="0">
                             <div class="flex items-center gap-2">
-                                <i class="pi pi-users"></i>
+                                <AppIcon name="users" />
                                 <span>Users</span>
                                 <Tag :value="`${users.length}`" severity="info" rounded />
                             </div>
                         </Tab>
                         <Tab value="1">
                             <div class="flex items-center gap-2">
-                                <i class="pi pi-shield"></i>
+                                <AppIcon name="shield" />
                                 <span>Roles & Permissions</span>
                                 <Tag :value="`${roles.length} roles`" severity="success" rounded />
                             </div>
                         </Tab>
                         <Tab value="2">
                             <div class="flex items-center gap-2">
-                                <i class="pi pi-key"></i>
+                                <AppIcon name="key" />
                                 <span>Permissions</span>
                                 <Tag :value="`${permissions.length} perms`" severity="secondary" rounded />
                             </div>
@@ -484,12 +486,14 @@ const runCleanup = async () => {
                             <div class="flex justify-between items-center mb-4">
                                 <div class="flex-1 max-w-md">
                                     <IconField iconPosition="left">
-                                        <InputIcon class="pi pi-search" />
+                                        <InputIcon>
+                                            <AppIcon name="search" :size="14" />
+                                        </InputIcon>
                                         <InputText v-model="userGlobalFilter" placeholder="Search users..."
                                             class="w-full" />
                                     </IconField>
                                 </div>
-                                <Button label="New User" icon="pi pi-user-plus" severity="success" raised
+                                <AppButton label="New User" icon="user-plus" severity="success" raised
                                     @click="openCreateUserModal" />
                             </div>
 
@@ -540,13 +544,13 @@ const runCleanup = async () => {
                                 <Column header="Actions" style="width: 160px">
                                     <template #body="slotProps">
                                         <div class="flex gap-2 justify-center">
-                                            <Button icon="pi pi-pen-to-square" severity="info" size="small" rounded
+                                            <AppButton icon="pen-to-square" severity="info" size="small" rounded
                                                 outlined v-tooltip.top="'Edit User'"
                                                 @click="editUser(slotProps.data.id)" />
-                                            <Button icon="pi pi-shield" severity="warn" size="small" rounded outlined
+                                            <AppButton icon="shield" severity="warn" size="small" rounded outlined
                                                 v-tooltip.top="'Change Password'"
                                                 @click="openChangePasswordModal(slotProps.data)" />
-                                            <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
+                                            <AppButton icon="trash" severity="danger" size="small" rounded outlined
                                                 v-tooltip.top="'Delete User'"
                                                 @click="confirmDeleteUser(slotProps.data.id, slotProps.data.name, slotProps.data.username)" />
                                         </div>
@@ -561,13 +565,15 @@ const runCleanup = async () => {
                                 <!-- Left Sidebar: Roles List -->
                                 <div class="lg:col-span-1">
                                     <h3 class="font-semibold text-gray-700 mb-3">Available Roles</h3>
-                                    <Button label="New Role" icon="pi pi-plus" severity="success" raised
+                                    <AppButton label="New Role" icon="plus" severity="success" raised
                                         @click="openCreateRoleModal" class="w-full mb-4" />
 
                                     <!-- Role Search -->
                                     <div class="mb-4">
                                         <IconField iconPosition="left">
-                                            <InputIcon class="pi pi-search" />
+                                            <InputIcon>
+                                                <AppIcon name="search" :size="14" />
+                                            </InputIcon>
                                             <InputText v-model="roleSearchFilter" placeholder="Search roles..."
                                                 class="w-full text-sm" />
                                         </IconField>
@@ -576,7 +582,7 @@ const runCleanup = async () => {
                                     <!-- Roles List -->
                                     <div class="space-y-2 max-h-96 overflow-y-auto">
                                         <div v-if="filteredRoles.length === 0" class="text-center text-gray-400 py-8">
-                                            <i class="pi pi-inbox text-2xl mb-2"></i>
+                                            <AppIcon name="inbox" class="text-2xl mb-2" />
                                             <p class="text-sm">No roles found</p>
                                         </div>
 
@@ -589,7 +595,7 @@ const runCleanup = async () => {
                                             ]">
                                             <div class="flex items-center justify-between">
                                                 <span class="font-medium text-gray-700 capitalize">{{ role.name
-                                                    }}</span>
+                                                }}</span>
                                                 <Tag v-if="role.permissions" :value="`${role.permissions.length}`"
                                                     severity="info" size="small" />
                                             </div>
@@ -601,7 +607,7 @@ const runCleanup = async () => {
                                 <div class="lg:col-span-2">
                                     <div v-if="!selectedRole"
                                         class="flex flex-col items-center justify-center h-96 text-gray-400">
-                                        <i class="pi pi-sliders-h text-4xl short:text-2xl mb-2"></i>
+                                        <AppIcon name="sliders-h" class="text-4xl short:text-2xl mb-2" />
                                         <p class="text-lg font-medium">Select a role to manage permissions</p>
                                     </div>
 
@@ -613,9 +619,9 @@ const runCleanup = async () => {
                                                     {{ selectedRole.name }}
                                                 </h2>
                                                 <div class="flex gap-2">
-                                                    <Button v-if="selectedRole.name !== 'administrator'"
-                                                        icon="pi pi-trash" severity="danger" size="small" rounded
-                                                        outlined @click="confirmDeleteRole(selectedRole)"
+                                                    <AppButton v-if="selectedRole.name !== 'administrator'" icon="trash"
+                                                        severity="danger" size="small" rounded outlined
+                                                        @click="confirmDeleteRole(selectedRole)"
                                                         v-tooltip.top="'Delete role'" />
                                                 </div>
                                             </div>
@@ -631,7 +637,7 @@ const runCleanup = async () => {
                                                 class="space-y-4">
                                                 <div>
                                                     <h3 class="font-semibold text-gray-800 mb-3 text-sm text-gray-700">
-                                                        <i class="pi pi-shield-check mr-2"></i>Permissions
+                                                        <AppIcon name="shield-check" class="mr-2" />Permissions
                                                     </h3>
                                                 </div>
 
@@ -640,7 +646,7 @@ const runCleanup = async () => {
                                                     class="bg-gray-50 border border-gray-200 p-4 rounded-lg hover:shadow-sm transition-shadow">
                                                     <h4
                                                         class="font-semibold text-gray-700 capitalize mb-3 text-sm inline-flex items-center gap-2">
-                                                        <i class="pi pi-bookmark text-amber-500"></i>
+                                                        <AppIcon name="bookmark" class="text-amber-500" />
                                                         {{ group }}
                                                         <Tag :value="`${permissions.length}`" severity="secondary"
                                                             size="small" rounded />
@@ -658,8 +664,10 @@ const runCleanup = async () => {
                                                                 class="flex-1 cursor-pointer text-gray-700 text-sm font-mono">
                                                                 {{ permission.name }}
                                                             </label>
-                                                            <i v-if="savingPermissions === `${selectedRole.id}-${permission.id}`"
-                                                                class="pi pi-spin pi-spinner text-blue-500 text-xs flex-shrink-0"></i>
+                                                            <AppIcon
+                                                                v-if="savingPermissions === `${selectedRole.id}-${permission.id}`"
+                                                                name="spinner"
+                                                                class="text-blue-500 text-xs flex-shrink-0" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -668,13 +676,13 @@ const runCleanup = async () => {
                                             <!-- NO PERMISSIONS MESSAGE -->
                                             <div v-else
                                                 class="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                                                <i class="pi pi-inbox text-3xl text-gray-300 mb-3"></i>
+                                                <AppIcon name="inbox" class="text-3xl text-gray-300 mb-3" />
                                                 <p class="text-gray-500 font-medium mb-1">No permissions available</p>
                                             </div>
                                         </div>
 
                                         <div v-else class="text-center text-gray-400 py-12">
-                                            <i class="pi pi-circle text-2xl mb-2"></i>
+                                            <AppIcon name="circle" class="text-2xl mb-2" />
                                             <p class="text-sm">Loading permissions...</p>
                                         </div>
                                     </div>
@@ -688,16 +696,18 @@ const runCleanup = async () => {
                             <div class="flex justify-between items-center mb-4 gap-4">
                                 <div class="flex-1 max-w-md">
                                     <IconField iconPosition="left">
-                                        <InputIcon class="pi pi-search" />
+                                        <InputIcon>
+                                            <AppIcon name="search" :size="14" />
+                                        </InputIcon>
                                         <InputText v-model="permissionGlobalFilter" placeholder="Search permissions..."
                                             class="w-full" />
                                     </IconField>
                                 </div>
                                 <div class="flex gap-2">
-                                    <Button label="Cleanup Permissions" icon="pi pi-wrench" severity="warning" raised
+                                    <AppButton label="Cleanup Permissions" icon="wrench" severity="warning" raised
                                         @click="openConfirmCleanupModal"
                                         v-tooltip.top="'Fix orphaned and duplicate permission records'" />
-                                    <Button label="New Permission" icon="pi pi-plus" severity="success" raised
+                                    <AppButton label="New Permission" icon="plus" severity="success" raised
                                         @click="openCreatePermissionModal" />
                                 </div>
                             </div>
@@ -738,10 +748,10 @@ const runCleanup = async () => {
                                 <Column header="Actions" style="width: 100px">
                                     <template #body="slotProps">
                                         <div class="flex gap-2">
-                                            <Button icon="pi pi-pencil" severity="warning" size="small" rounded text
+                                            <AppButton icon="pencil" severity="warning" size="small" rounded text
                                                 @click="openEditPermissionModal(slotProps.data)"
                                                 v-tooltip.top="'Edit permission'" />
-                                            <Button icon="pi pi-trash" severity="danger" size="small" rounded text
+                                            <AppButton icon="trash" severity="danger" size="small" rounded text
                                                 @click="confirmDeletePermission(slotProps.data)"
                                                 v-tooltip.top="'Delete permission'" />
                                         </div>
@@ -762,7 +772,7 @@ const runCleanup = async () => {
         <Dialog v-model:visible="showConfirmDeleteUserModal" :style="{ width: '450px' }" header="Confirm Deletion"
             :modal="true" :closable="false">
             <div class="flex items-start gap-4">
-                <i class="pi pi-exclamation-triangle text-3xl text-red-500 mt-1"></i>
+                <AppIcon name="exclamation-triangle" class="text-3xl text-red-500 mt-1" />
                 <div class="flex-1">
                     <p class="text-lg font-semibold text-gray-800 mb-3">
                         Are you sure you want to delete this user?
@@ -779,7 +789,7 @@ const runCleanup = async () => {
                     </div>
                     <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
                         <div class="flex items-center gap-2">
-                            <i class="pi pi-exclamation-circle text-amber-600"></i>
+                            <AppIcon name="exclamation-circle" class="text-amber-600" />
                             <span class="text-sm text-amber-800 font-medium">Warning</span>
                         </div>
                         <p class="text-sm text-amber-700 mt-1">
@@ -794,8 +804,8 @@ const runCleanup = async () => {
                 <div class="flex justify-end gap-3">
                     <Button label="Cancel" severity="secondary" @click="closeUserModal" outlined
                         :disabled="userForm.processing" />
-                    <Button label="Delete User" severity="danger" @click="deleteUser(modalUserData.id)"
-                        :loading="userForm.processing" icon="pi pi-trash" />
+                    <AppButton label="Delete User" severity="danger" @click="deleteUser(modalUserData.id)"
+                        :loading="userForm.processing" icon="trash" />
                 </div>
             </template>
         </Dialog>
@@ -843,7 +853,7 @@ const runCleanup = async () => {
         <Dialog v-model:visible="showConfirmDeleteRoleModal" :style="{ width: '450px' }" header="Confirm Deletion"
             :modal="true">
             <div class="flex items-center gap-4">
-                <i class="pi pi-exclamation-triangle text-3xl text-red-500"></i>
+                <AppIcon name="exclamation-triangle" class="text-3xl text-red-500" />
                 <div>
                     <p class="text-lg font-semibold text-gray-800 mb-2">
                         Are you sure you want to delete this role?
@@ -897,7 +907,7 @@ const runCleanup = async () => {
             <div v-if="permissionToDelete" class="space-y-4">
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                     <h4 class="font-semibold text-red-900 mb-2">
-                        <i class="pi pi-exclamation-triangle mr-2"></i>Confirm Deletion
+                        <AppIcon name="exclamation-triangle" class="mr-2" />Confirm Deletion
                     </h4>
                     <p class="text-sm text-red-800">
                         Are you sure you want to delete permission <strong>{{ permissionToDelete.name }}</strong>?
@@ -910,7 +920,7 @@ const runCleanup = async () => {
 
             <template #footer>
                 <Button label="Cancel" severity="secondary" @click="closeDeletePermissionModal" outlined />
-                <Button label="Delete Permission" severity="danger" @click="deletePermission" icon="pi pi-trash" />
+                <AppButton label="Delete Permission" severity="danger" @click="deletePermission" icon="trash" />
             </template>
         </Dialog>
 
@@ -922,7 +932,7 @@ const runCleanup = async () => {
         <Dialog v-model:visible="showConfirmCleanupModal" :style="{ width: '500px' }"
             header="Confirm Permission Cleanup" :modal="true" :closable="false">
             <div class="flex items-start gap-4">
-                <i class="pi pi-wrench text-3xl text-amber-500 mt-1"></i>
+                <AppIcon name="wrench" class="text-3xl text-amber-500 mt-1" />
                 <div class="flex-1">
                     <p class="text-lg font-semibold text-gray-800 mb-3">
                         Run Permission System Cleanup?
@@ -932,25 +942,25 @@ const runCleanup = async () => {
                     </p>
                     <ul class="space-y-2 mb-4 text-sm text-gray-600">
                         <li class="flex items-center gap-2">
-                            <i class="pi pi-check text-green-500 text-xs"></i>
+                            <AppIcon name="check" class="text-green-500 text-xs" />
                             <span>Removing orphaned role-permission records</span>
                         </li>
                         <li class="flex items-center gap-2">
-                            <i class="pi pi-check text-green-500 text-xs"></i>
+                            <AppIcon name="check" class="text-green-500 text-xs" />
                             <span>Removing orphaned user-permission records</span>
                         </li>
                         <li class="flex items-center gap-2">
-                            <i class="pi pi-check text-green-500 text-xs"></i>
+                            <AppIcon name="check" class="text-green-500 text-xs" />
                             <span>Removing duplicate permission assignments</span>
                         </li>
                         <li class="flex items-center gap-2">
-                            <i class="pi pi-check text-green-500 text-xs"></i>
+                            <AppIcon name="check" class="text-green-500 text-xs" />
                             <span>Clearing permission cache</span>
                         </li>
                     </ul>
                     <div class="p-3 bg-amber-50 border border-amber-200 rounded-md">
                         <div class="flex items-center gap-2 mb-1">
-                            <i class="pi pi-info-circle text-amber-600 text-sm"></i>
+                            <AppIcon name="info-circle" class="text-amber-600 text-sm" />
                             <span class="font-medium text-sm text-amber-800">Safe Operation</span>
                         </div>
                         <p class="text-xs text-amber-700">
@@ -963,7 +973,7 @@ const runCleanup = async () => {
             <template #footer>
                 <Button label="Cancel" severity="secondary" @click="closeConfirmCleanupModal" outlined
                     :disabled="isCleaningUp" />
-                <Button label="Run Cleanup" severity="warning" icon="pi pi-wrench" @click="runCleanup"
+                <AppButton label="Run Cleanup" severity="warning" icon="wrench" @click="runCleanup"
                     :loading="isCleaningUp" />
             </template>
         </Dialog>
@@ -973,7 +983,7 @@ const runCleanup = async () => {
             :modal="true">
             <div v-if="cleanupResults" class="space-y-4">
                 <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <i class="pi pi-check-circle text-2xl text-green-600"></i>
+                    <AppIcon name="check-circle" class="text-2xl text-green-600" />
                     <div>
                         <p class="font-semibold text-green-800">Cleanup Completed</p>
                         <p class="text-sm text-green-700">Permission system maintenance finished successfully</p>
@@ -983,7 +993,7 @@ const runCleanup = async () => {
                 <div class="space-y-3">
                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
                         <div class="flex items-center gap-2">
-                            <i class="pi pi-trash text-sm text-red-600"></i>
+                            <AppIcon name="trash" class="text-sm text-red-600" />
                             <span class="text-sm text-gray-700">Orphaned role permissions removed:</span>
                         </div>
                         <span class="font-semibold text-lg text-gray-800 min-w-[50px] text-right">
@@ -993,7 +1003,7 @@ const runCleanup = async () => {
 
                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
                         <div class="flex items-center gap-2">
-                            <i class="pi pi-trash text-sm text-red-600"></i>
+                            <AppIcon name="trash" class="text-sm text-red-600" />
                             <span class="text-sm text-gray-700">Orphaned user permissions removed:</span>
                         </div>
                         <span class="font-semibold text-lg text-gray-800 min-w-[50px] text-right">
@@ -1003,7 +1013,7 @@ const runCleanup = async () => {
 
                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
                         <div class="flex items-center gap-2">
-                            <i class="pi pi-copy text-sm text-orange-600"></i>
+                            <AppIcon name="copy" class="text-sm text-orange-600" />
                             <span class="text-sm text-gray-700">Duplicate role assignments removed:</span>
                         </div>
                         <span class="font-semibold text-lg text-gray-800 min-w-[50px] text-right">
@@ -1013,7 +1023,7 @@ const runCleanup = async () => {
 
                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
                         <div class="flex items-center gap-2">
-                            <i class="pi pi-copy text-sm text-orange-600"></i>
+                            <AppIcon name="copy" class="text-sm text-orange-600" />
                             <span class="text-sm text-gray-700">Duplicate user assignments removed:</span>
                         </div>
                         <span class="font-semibold text-lg text-gray-800 min-w-[50px] text-right">
@@ -1023,7 +1033,7 @@ const runCleanup = async () => {
 
                     <div class="flex items-center justify-between p-3 bg-blue-50 rounded border border-blue-200">
                         <div class="flex items-center gap-2">
-                            <i class="pi pi-refresh text-sm text-blue-600"></i>
+                            <AppIcon name="refresh" class="text-sm text-blue-600" />
                             <span class="text-sm text-gray-700 font-medium">Total records cleaned:</span>
                         </div>
                         <span class="font-bold text-lg text-blue-800">
@@ -1037,7 +1047,7 @@ const runCleanup = async () => {
 
                 <div class="p-3 bg-blue-50 border border-blue-200 rounded-md">
                     <div class="flex items-center gap-2 mb-1">
-                        <i class="pi pi-info-circle text-blue-600 text-sm"></i>
+                        <AppIcon name="info-circle" class="text-blue-600 text-sm" />
                         <span class="font-medium text-sm text-blue-800">Permissions Refreshed</span>
                     </div>
                     <p class="text-xs text-blue-700">

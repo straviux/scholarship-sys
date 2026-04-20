@@ -4,19 +4,20 @@
         <template #container>
             <div ref="elModal" class="ios-modal w-[90vw] max-w-[420px]" :style="modalStyle">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)"><i
-                            class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Confirm Delete</span>
                     <button class="ios-nav-btn ios-nav-action text-red-500" @click="confirmDelete"
                         :disabled="isDeleting">
-                        <i v-if="isDeleting" class="pi pi-spin pi-spinner text-[12px] mr-[3px]"></i>Delete
+                        <AppIcon v-if="isDeleting" name="spinner" :size="12" class="mr-[3px]" />Delete
                     </button>
                 </div>
                 <div class="ios-body">
                     <div class="ios-section mt-4">
                         <div class="ios-card px-4 py-3.5">
                             <div class="flex items-center gap-3">
-                                <i class="pi pi-exclamation-triangle text-2xl text-red-500"></i>
+                                <AppIcon name="exclamation-triangle" :size="24" class="text-red-500" />
                                 <div>
                                     <p class="font-semibold text-gray-900 dark:text-gray-100">Delete Transaction</p>
                                     <p class="text-sm text-gray-600 dark:text-gray-400">This action cannot be undone</p>

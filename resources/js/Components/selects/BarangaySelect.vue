@@ -48,6 +48,22 @@ const findMatchingBarangay = (value, barangayList) => {
     return barangayList.find(b => b.name?.toLowerCase() === searchValue) || null;
 };
 
+const resolveSingleBarangay = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    return findMatchingBarangay(value, barangayOptions.value) || value;
+};
+
+const resolveBarangayValue = (value) => {
+    if (props.multiple && Array.isArray(value)) {
+        return value.map((entry) => resolveSingleBarangay(entry)).filter(Boolean);
+    }
+
+    return resolveSingleBarangay(value);
+};
+
 // Computed property to include null option when needed
 const barangayOptions = computed(() => {
     const options = [...(barangays.value || [])];
@@ -62,17 +78,19 @@ const barangayOptions = computed(() => {
 });
 
 // Local value for v-model
-const localValue = ref(props.multiple ? (props.modelValue || []) : props.modelValue);
+const localValue = ref(resolveBarangayValue(props.modelValue));
 
-// Sync localValue with parent prop
-watch(() => props.modelValue, (val) => {
-    localValue.value = val;
-}, { deep: true });
+watch(
+    [() => props.modelValue, () => barangayOptions.value],
+    () => {
+        localValue.value = resolveBarangayValue(props.modelValue);
+    },
+    { immediate: true, deep: true }
+);
 
-// Emit changes to parent
 watch(localValue, (val) => {
     emit('update:modelValue', val);
-});
+}, { deep: true });
 
 // Watch for changes in municipalityId and update barangays
 watch(
@@ -116,27 +134,6 @@ watch(
 
         if (newMunicipalityId !== '' && newMunicipalityId !== null && oldMunicipalityId !== undefined && !hasExistingSelection) {
             localValue.value = props.multiple ? [] : null;
-        }
-    },
-    { immediate: true }
-);
-// Watch for changes in barangays and match with current value
-watch(
-    () => barangays.value,
-    (newBarangays) => {
-        if (!localValue.value || !newBarangays.length) return;
-
-        if (props.multiple && Array.isArray(localValue.value)) {
-            // For multiple selection, map each value to its matching barangay
-            localValue.value = localValue.value
-                .map(val => findMatchingBarangay(val, newBarangays))
-                .filter(Boolean); // Remove null values
-        } else {
-            // For single selection, find the matching barangay
-            const matched = findMatchingBarangay(localValue.value, newBarangays);
-            if (matched) {
-                localValue.value = matched;
-            }
         }
     },
     { immediate: true }

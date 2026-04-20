@@ -10,7 +10,7 @@
                 <template #start>
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
-                            <i class="pi pi-mobile text-indigo-600 text-lg"></i>
+                            <AppIcon name="mobile" class="text-indigo-600" :size="18" />
                         </div>
                         <div>
                             <h1 class="text-xl font-bold text-gray-900">Mobile Upload Settings</h1>
@@ -20,7 +20,7 @@
                     </div>
                 </template>
                 <template #end>
-                    <Button label="Save Settings" icon="pi pi-save" class="rounded" :loading="saving"
+                    <AppButton label="Save Settings" icon="save" class="rounded" :loading="saving"
                         @click="saveSettings" />
                 </template>
             </Toolbar>
@@ -31,16 +31,16 @@
                     <Tabs v-model:value="activeTab">
                         <TabList>
                             <Tab value="general">
-                                <i class="pi pi-globe mr-2"></i>General
+                                <AppIcon name="globe" class="mr-2" />General
                             </Tab>
                             <Tab value="uploads">
-                                <i class="pi pi-upload mr-2"></i>File Uploads
+                                <AppIcon name="upload" class="mr-2" />File Uploads
                             </Tab>
                             <Tab value="tokens">
-                                <i class="pi pi-key mr-2"></i>Tokens
+                                <AppIcon name="key" class="mr-2" />Tokens
                             </Tab>
                             <Tab value="image">
-                                <i class="pi pi-image mr-2"></i>Image Optimization
+                                <AppIcon name="image" class="mr-2" />Image Optimization
                             </Tab>
                         </TabList>
 
@@ -49,7 +49,7 @@
                             <TabPanel value="general">
                                 <div class="space-y-6 py-2">
                                     <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex gap-3">
-                                        <i class="pi pi-info-circle text-blue-500 mt-0.5"></i>
+                                        <AppIcon name="info-circle" class="text-blue-500 mt-0.5" />
                                         <p class="text-sm text-blue-700">
                                             The Base URL is used to generate QR code links sent to mobile devices.
                                             For devices on the same LAN (local network), enable LAN IP detection so the
@@ -114,7 +114,7 @@
                             <TabPanel value="uploads">
                                 <div class="space-y-4 py-2">
                                     <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3">
-                                        <i class="pi pi-exclamation-triangle text-amber-500 mt-0.5"></i>
+                                        <AppIcon name="exclamation-triangle" class="text-amber-500 mt-0.5" />
                                         <p class="text-sm text-amber-700">
                                             Configure max file size and allowed file types for each upload entity.
                                             1 MB = 1024 KB.
@@ -126,7 +126,7 @@
                                         <!-- Entity header -->
                                         <div
                                             class="flex items-center gap-3 px-5 py-3 bg-gray-50 border-b border-gray-200">
-                                            <i :class="[entity.icon, 'text-indigo-500']"></i>
+                                            <AppIcon :name="entity.icon" class="text-indigo-500" />
                                             <span class="font-semibold text-gray-800">{{ entity.label }}</span>
                                         </div>
 
@@ -168,7 +168,7 @@
                             <TabPanel value="tokens">
                                 <div class="space-y-4 py-2">
                                     <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex gap-3">
-                                        <i class="pi pi-clock text-blue-500 mt-0.5"></i>
+                                        <AppIcon name="clock" class="text-blue-500 mt-0.5" />
                                         <p class="text-sm text-blue-700">
                                             Set how many <strong>minutes</strong> a mobile upload QR code / token
                                             remains valid for each entity type.
@@ -181,9 +181,9 @@
                                         <div v-for="entity in uploadEntities" :key="entity.key"
                                             class="border border-gray-200 rounded-2xl p-5">
                                             <div class="flex items-center gap-2 mb-4">
-                                                <i :class="[entity.icon, 'text-indigo-500']"></i>
+                                                <AppIcon :name="entity.icon" class="text-indigo-500" />
                                                 <span class="font-semibold text-gray-800 text-sm">{{ entity.label
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <InputNumber v-model="form.tokens[entity.key]" :min="1" :max="525600"
                                                 :step="60" showButtons buttonLayout="horizontal" class="w-full" fluid />
@@ -202,7 +202,7 @@
                             <TabPanel value="image">
                                 <div class="space-y-6 py-2">
                                     <div class="bg-purple-50 border border-purple-200 rounded-2xl p-4 flex gap-3">
-                                        <i class="pi pi-image text-purple-500 mt-0.5"></i>
+                                        <AppIcon name="image" class="text-purple-500 mt-0.5" />
                                         <p class="text-sm text-purple-700">
                                             Images are optimized on upload to reduce storage and bandwidth.
                                             Quality affects file size vs. visual clarity. Dimensions set the maximum
@@ -325,11 +325,11 @@ const form = ref(JSON.parse(JSON.stringify(props.settings)));
 const availableFileTypes = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'webp'];
 
 const uploadEntities = [
-    { key: 'disbursement', label: 'Disbursement', icon: 'pi pi-money-bill' },
-    { key: 'scholarship_record', label: 'Scholarship Record', icon: 'pi pi-graduation-cap' },
-    { key: 'profile', label: 'Profile Photo', icon: 'pi pi-user' },
-    { key: 'requirement', label: 'Requirement', icon: 'pi pi-file-check' },
-    { key: 'fund_transaction', label: 'Fund Transaction', icon: 'pi pi-wallet' },
+    { key: 'disbursement', label: 'Disbursement', icon: 'money-bill' },
+    { key: 'scholarship_record', label: 'Scholarship Record', icon: 'graduation-cap' },
+    { key: 'profile', label: 'Profile Photo', icon: 'user' },
+    { key: 'requirement', label: 'Requirement', icon: 'file-check' },
+    { key: 'fund_transaction', label: 'Fund Transaction', icon: 'wallet' },
 ];
 
 async function saveSettings() {

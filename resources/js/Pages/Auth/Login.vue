@@ -60,7 +60,9 @@ const submit = () => {
                 <form @submit.prevent="submit" class="w-full flex flex-col items-center gap-2.5">
                     <div class="w-full">
                         <IconField class="mac-iconfield">
-                            <InputIcon class="pi pi-user" />
+                            <InputIcon>
+                                <AppIcon name="user" :size="14" />
+                            </InputIcon>
                             <InputText id="username" v-model="form.username" placeholder="Username" required autofocus
                                 autocomplete="username" class="mac-input" />
                         </IconField>
@@ -69,7 +71,9 @@ const submit = () => {
 
                     <div class="w-full">
                         <IconField class="mac-iconfield">
-                            <InputIcon class="pi pi-lock" />
+                            <InputIcon>
+                                <AppIcon name="lock" :size="14" />
+                            </InputIcon>
                             <Password v-model="form.password" placeholder="Password" :feedback="false" toggleMask
                                 inputClass="mac-input" class="mac-password" required autocomplete="current-password" />
                         </IconField>
@@ -87,10 +91,10 @@ const submit = () => {
                     </div>
 
                     <div class="flex w-full items-center justify-between mt-2">
-                        <Button :icon="isDark ? 'pi pi-sun' : 'pi pi-moon'" @click="toggleTheme"
+                        <AppButton :icon="isDark ? 'sun' : 'moon'" @click="toggleTheme"
                             :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'" text rounded
                             class="mac-theme-toggle" />
-                        <Button type="submit" icon="pi pi-arrow-right" :loading="form.processing"
+                        <AppButton type="submit" icon="arrow-right" :loading="form.processing"
                             :disabled="form.processing" rounded class="mac-submit" />
                     </div>
                 </form>

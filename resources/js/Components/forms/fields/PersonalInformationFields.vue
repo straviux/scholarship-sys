@@ -2,7 +2,7 @@
     <div>
         <h4 v-if="showHeader"
             class="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-            <i class="pi pi-user text-gray-600 dark:text-gray-400"></i>
+            <AppIcon name="user" class="text-gray-600 dark:text-gray-400" />
             <slot name="header">Personal Information</slot>
         </h4>
         <div class="space-y-4">

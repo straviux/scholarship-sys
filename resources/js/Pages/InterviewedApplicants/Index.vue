@@ -8,7 +8,7 @@
             <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-comments text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
+                        <AppIcon name="message-square-more" class="text-blue-600 w-8 h-8 short:w-6 short:h-6" />
                         <div>
                             <h1 class="text-2xl short:text-xl font-bold text-gray-700">Interviewed Applicants</h1>
                             <p class="text-sm text-gray-600">Review interview assessments and manage approvals</p>
@@ -17,8 +17,8 @@
                 </template>
                 <template #end>
                     <div class="flex gap-2 items-center">
-                        <Button icon="pi pi-print" severity="secondary" outlined rounded size="large"
-                            @click="showReportModal = true" />
+                        <AppButton icon="printer" severity="info" text rounded size="large"
+                            @click="showReportModal = true" v-tooltip.bottom="'Print Report'" />
                     </div>
                 </template>
             </Toolbar>
@@ -35,7 +35,7 @@
                         <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
                         <ProgramSelect v-model="filters.program" size="small" class="w-full" />
                     </div>
-                    <Button severity="secondary" outlined rounded size="small" icon="pi pi-history"
+                    <AppButton severity="secondary" text rounded size="small" icon="history"
                         @click="filters.recommendation = null; filters.name = ''; filters.program = ''"
                         v-tooltip.bottom="'Clear Filters'" />
                 </div>
@@ -68,7 +68,9 @@
                     class="md:flex hidden items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
                     <div class="flex-1 max-w-md">
                         <IconField iconPosition="left">
-                            <InputIcon class="pi pi-search text-gray-400" />
+                            <InputIcon>
+                                <AppIcon name="search" :size="16" class="text-gray-400" />
+                            </InputIcon>
                             <InputText v-model="filters.name" placeholder="Search by name..." class="w-full"
                                 size="small" />
                         </IconField>
@@ -80,7 +82,7 @@
                 <div v-if="selectedRows.length > 0"
                     class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-2xl flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-check-circle text-yellow-600 text-lg"></i>
+                        <AppIcon name="check-circle" :size="18" class="text-yellow-600" />
                         <div>
                             <div class="font-semibold text-yellow-900 text-sm">{{ selectedRows.length }}
                                 applicant(s) selected</div>
@@ -88,9 +90,9 @@
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <Button icon="pi pi-file-pdf" label="Export PDF" severity="danger" outlined rounded size="small"
+                        <AppButton icon="file-type" label="Export PDF" severity="danger" outlined rounded size="small"
                             @click="exportSelected('pdf')" />
-                        <Button icon="pi pi-file-excel" label="Export Excel" severity="success" outlined rounded
+                        <AppButton icon="file-spreadsheet" label="Export Excel" severity="success" outlined rounded
                             size="small" @click="exportSelected('excel')" />
                     </div>
                 </div>
@@ -100,9 +102,11 @@
                 </div>
                 <DataTable v-else v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredList"
                     responsiveLayout="scroll" class="text-sm" dataKey="id" v-model:selection="selectedRows"
-                    showGridlines stripedRows scrollable
+                    v-model:expandedRows="expandedRows" showGridlines stripedRows scrollable
+                    :rowClass="(row) => Object.keys(expandedRows).length > 0 && !expandedRows[row.id] ? 'row-blurred' : ''"
                     @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu>
                     <Column selectionMode="multiple" :exportable="false" style="width: 3rem"></Column>
+                    <Column expander :exportable="false" headerClass="w-12" bodyClass="w-12" />
                     <Column field="profile.last_name" header="Name" sortable>
                         <template #body="slotProps">
                             <div class="font-medium">
@@ -116,9 +120,32 @@
                             {{ slotProps.data.program?.shortname || 'N/A' }}
                         </template>
                     </Column>
+                    <Column field="school.shortname" header="School" sortable>
+                        <template #body="slotProps">
+                            {{ slotProps.data.school?.shortname || slotProps.data.school?.name || 'N/A' }}
+                        </template>
+                    </Column>
                     <Column field="course.shortname" header="Course" sortable>
                         <template #body="slotProps">
                             {{ slotProps.data.course?.shortname || 'N/A' }}
+                        </template>
+                    </Column>
+                    <Column header="Year Level" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                        <template #body="slotProps">
+                            {{ getSystemOptionLabel('year_level', slotProps.data.year_level, 'N/A') }}
+                        </template>
+                    </Column>
+                    <Column header="Term" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                        <template #body="slotProps">
+                            {{ getSystemOptionLabel('term', slotProps.data.term, 'N/A') }}
+                        </template>
+                    </Column>
+                    <Column header="Grant Provision" headerClass="min-w-[200px]" bodyClass="min-w-[200px]">
+                        <template #body="slotProps">
+                            <div class="text-sm leading-snug">
+                                {{ slotProps.data.grant_provision_label || getSystemOptionLabel('grant_provision',
+                                    slotProps.data.grant_provision, 'N/A') }}
+                            </div>
                         </template>
                     </Column>
                     <Column header="Recommendation" sortable sortField="recommendation">
@@ -127,405 +154,131 @@
                                 :severity="getRecommendationSeverity(slotProps.data.recommendation)" />
                         </template>
                     </Column>
-                    <Column header="Interview Date" sortable sortField="interviewed_at">
-                        <template #body="slotProps">
-                            <div class="text-sm">{{ formatDate(slotProps.data.interviewed_at) }}</div>
-                        </template>
-                    </Column>
-                    <Column header="Interviewed By">
-                        <template #body="slotProps">
-                            <div class="text-sm">{{ slotProps.data.interviewer?.name || 'N/A' }}</div>
-                        </template>
-                    </Column>
                     <Column header="Actions" :style="{ width: '80px' }">
                         <template #body="slotProps">
-                            <Button icon="pi pi-ellipsis-v" @click="openContextMenu($event, slotProps.data)" text
+                            <AppButton icon="ellipsis-vertical" @click="openContextMenu($event, slotProps.data)" text
                                 rounded size="small" v-tooltip.top="'Actions'" />
                         </template>
                     </Column>
+
+                    <template #expansion="slotProps">
+                        <div class="px-4 pb-4">
+                            <div class="overflow-hidden rounded border border-slate-200 bg-slate-50">
+                                <table class="w-full table-fixed border-collapse text-sm">
+                                    <thead>
+                                        <tr class="bg-slate-100">
+                                            <th colspan="3"
+                                                class="border-b border-slate-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                                Projected Detail
+                                            </th>
+                                            <th colspan="2"
+                                                class="border-b border-l border-slate-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                                Interview Detail
+                                            </th>
+                                        </tr>
+                                        <tr class="bg-white">
+                                            <th
+                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                Terms</th>
+                                            <th
+                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                Expense</th>
+                                            <th
+                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                Completion</th>
+                                            <th
+                                                class="border-b border-l border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                Interview Date</th>
+                                            <th
+                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                Interviewed By</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="bg-white align-top">
+                                            <td class="px-3 py-3 text-sm font-semibold text-slate-700">
+                                                <span v-if="slotProps.data.projected_term_count !== null">
+                                                    {{ formatProjectedTerms(slotProps.data.projected_term_count) }}
+                                                </span>
+                                                <span v-else class="text-amber-700">Not configured</span>
+                                            </td>
+                                            <td class="px-3 py-3 text-sm font-semibold text-emerald-700">
+                                                <span v-if="slotProps.data.projected_total_expense !== null">
+                                                    {{ formatCurrency(slotProps.data.projected_total_expense) }}
+                                                </span>
+                                                <span v-else class="text-amber-700">Not configured</span>
+                                            </td>
+                                            <td class="px-3 py-3 text-sm text-slate-700">
+                                                <div v-if="slotProps.data.projected_completion_year !== null"
+                                                    class="font-semibold">
+                                                    {{ slotProps.data.projected_completion_year }}
+                                                </div>
+                                                <div v-if="slotProps.data.projected_completion_academic_year"
+                                                    class="text-xs text-gray-500">
+                                                    AY {{ slotProps.data.projected_completion_academic_year }}
+                                                </div>
+                                                <div v-else-if="slotProps.data.projected_completion_year === null"
+                                                    class="text-amber-700">
+                                                    Not configured
+                                                </div>
+                                            </td>
+                                            <td
+                                                class="border-l border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700">
+                                                {{ formatDate(slotProps.data.interviewed_at) }}
+                                            </td>
+                                            <td class="px-3 py-3 text-sm font-semibold text-slate-700">
+                                                {{ slotProps.data.interviewer?.name || 'N/A' }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
                 </DataTable>
             </Panel>
         </div>
 
         <!-- Context Menu -->
-        <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
+        <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body">
+            <template #item="{ item, props }">
+                <a v-ripple v-bind="props.action" class="flex items-center gap-2 w-full">
+                    <AppIcon v-if="item.icon" :name="item.icon" :size="14" />
+                    <span>{{ item.label }}</span>
+                    <AppIcon v-if="item.items" name="chevron-right" :size="14" class="ml-auto" />
+                </a>
+            </template>
+        </ContextMenu>
 
         <!-- Generate Report Modal -->
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event"
             :interviewed-applicants="filteredList" />
 
-        <!-- ══════════════════════════════════════════
-            INTERVIEW ASSESSMENT MODAL (iOS)
-        ══════════════════════════════════════════ -->
-        <Dialog :visible="showAssessmentDialog" @update:visible="v => { if (!v) showAssessmentDialog = false; }" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal assessment-modal"
-                    :style="[assessmentDrag.dragStyle.value, { width: 'min(480px, 96vw)' }]">
-                    <div class="ios-nav-bar" @pointerdown="assessmentDrag.onDragStart">
-                        <button class="ios-nav-btn ios-nav-cancel" @click="showAssessmentDialog = false"
-                            v-tooltip.bottom="`Close`">
-                            <i class="pi pi-times"></i>
-                        </button>
-                        <span class="ios-nav-title">Interview Assessment</span>
-                        <div style="width: 8px;"></div>
-                    </div>
-                    <div class="ios-body" v-if="selectedRecord">
-                        <!-- Two-column layout -->
-                        <div class="assessment-grid">
-                            <!-- LEFT: Applicant Info -->
-                            <div>
-                                <div class="ios-section">
-                                    <div class="ios-section-label">Applicant</div>
-                                    <div class="ios-card" style="background: #EFF6FF; border-color: #BFDBFE;">
-                                        <div class="ios-row">
-                                            <div class="ios-row-label"
-                                                style="font-size: 15px; font-weight: 600; color: #1D4ED8;">
-                                                {{ selectedRecord.profile.last_name }}, {{
-                                                    selectedRecord.profile.first_name }}
-                                            </div>
-                                        </div>
-                                        <div class="ios-row">
-                                            <div class="ios-row-label">
-                                                <i class="pi pi-book" style="color: #007AFF; font-size: 13px;"></i>
-                                                Program
-                                            </div>
-                                            <span class="text-sm text-gray-700">{{ selectedRecord.program?.shortname ||
-                                                'N/A' }}</span>
-                                        </div>
-                                        <div class="ios-row">
-                                            <div class="ios-row-label">
-                                                <i class="pi pi-graduation-cap"
-                                                    style="color: #34C759; font-size: 13px;"></i>
-                                                Course
-                                            </div>
-                                            <span class="text-sm text-gray-700">{{ selectedRecord.course?.shortname ||
-                                                'N/A' }}</span>
-                                        </div>
-                                        <div class="ios-row">
-                                            <div class="ios-row-label">
-                                                <i class="pi pi-calendar" style="color: #8E8E93; font-size: 13px;"></i>
-                                                Interview Date
-                                            </div>
-                                            <span class="text-sm text-gray-600">{{
-                                                formatDate(selectedRecord.interviewed_at) }}</span>
-                                        </div>
-                                        <div class="ios-row">
-                                            <div class="ios-row-label">
-                                                <i class="pi pi-user" style="color: #8E8E93; font-size: 13px;"></i>
-                                                Interviewed By
-                                            </div>
-                                            <span class="text-sm text-gray-600">{{ selectedRecord.interviewer?.name ||
-                                                'N/A' }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Recommendation -->
-                                <div class="ios-section">
-                                    <div class="ios-section-label">Recommendation</div>
-                                    <div class="ios-card">
-                                        <div class="ios-row" style="min-height: 52px;">
-                                            <div class="ios-row-label">
-                                                <i class="pi pi-check-circle"
-                                                    style="color: #34C759; font-size: 13px;"></i>
-                                                Decision
-                                            </div>
-                                            <Tag :value="formatRecommendation(selectedRecord.recommendation)"
-                                                :severity="getRecommendationSeverity(selectedRecord.recommendation)" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- RIGHT: Assessment Ratings + Remarks -->
-                            <div>
-                                <div class="ios-section">
-                                    <div class="ios-section-label">Interviewer's Assessment</div>
-                                    <div class="ios-card">
-                                        <div class="ios-row">
-                                            <div class="ios-row-label">
-                                                <i class="pi pi-star" style="color: #FF9500; font-size: 13px;"></i>
-                                                Academic Potential
-                                            </div>
-                                            <Tag :value="capitalize(selectedRecord.academic_potential)"
-                                                :severity="getRatingSeverity(selectedRecord.academic_potential)" />
-                                        </div>
-                                        <div class="ios-row">
-                                            <div class="ios-row-label">
-                                                <i class="pi pi-wallet" style="color: #FF3B30; font-size: 13px;"></i>
-                                                Financial Need
-                                            </div>
-                                            <Tag :value="capitalize(selectedRecord.financial_need_level)"
-                                                :severity="getNeedSeverity(selectedRecord.financial_need_level)" />
-                                        </div>
-                                        <div class="ios-row">
-                                            <div class="ios-row-label">
-                                                <i class="pi pi-comments" style="color: #5856D6; font-size: 13px;"></i>
-                                                Communication
-                                            </div>
-                                            <Tag :value="capitalize(selectedRecord.communication_skills)"
-                                                :severity="getRatingSeverity(selectedRecord.communication_skills)" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Remarks -->
-                                <div class="ios-section">
-                                    <div class="ios-section-label">Remarks</div>
-                                    <div class="ios-card" style="padding: 10px 16px; min-height: 64px;">
-                                        <p v-if="selectedRecord.interview_remarks" class="text-sm text-gray-700">{{
-                                            selectedRecord.interview_remarks }}</p>
-                                        <p v-else class="text-sm text-gray-400 italic">No remarks provided.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="height: 24px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
-
-        <!-- Edit Assessment Modal (reuses InterviewAssessmentModal) -->
-        <InterviewAssessmentModal v-model="showEditDialog" :applicant="editApplicant" :recordId="selectedRecord?.id"
-            :isEdit="true" successMessage="Assessment updated successfully." :initialValues="selectedRecord ? {
-                academic_potential: selectedRecord.academic_potential,
-                financial_need_level: selectedRecord.financial_need_level,
-                communication_skills: selectedRecord.communication_skills,
-                recommendation: selectedRecord.recommendation,
-                interview_remarks: selectedRecord.interview_remarks,
-            } : null" @submitted="onEditSubmitted" />
-
-        <!-- ══════════════════════════════════════════
-            APPROVE APPLICATION MODAL (iOS)
-        ══════════════════════════════════════════ -->
-        <Dialog :visible="showApprovalDialog" @update:visible="v => { if (!v) showApprovalDialog = false; }" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal" :style="approvalDrag.dragStyle.value">
-                    <div class="ios-nav-bar" @pointerdown="approvalDrag.onDragStart">
-                        <button class="ios-nav-btn ios-nav-cancel" @click="showApprovalDialog = false"
-                            v-tooltip.bottom="`Cancel`">
-                            <i class="pi pi-times"></i>
-                        </button>
-                        <span class="ios-nav-title">Approve Application</span>
-                        <button class="ios-nav-btn ios-nav-action" @click="confirmApprove"
-                            :disabled="approvalForm.processing" v-tooltip.bottom="`Approve`">
-                            <i class="pi pi-check"></i>
-                        </button>
-                    </div>
-                    <div class="ios-body" v-if="selectedRecord">
-                        <!-- Applicant Info -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Applicant</div>
-                            <div class="ios-card" style="background: #EFF6FF; border-color: #BFDBFE;">
-                                <div class="ios-row">
-                                    <div class="ios-row-label"
-                                        style="font-size: 15px; font-weight: 600; color: #1D4ED8;">
-                                        {{ selectedRecord.profile.last_name }}, {{ selectedRecord.profile.first_name }}
-                                    </div>
-                                </div>
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <i class="pi pi-phone" style="color: #34C759; font-size: 13px;"></i>
-                                        Contact
-                                    </div>
-                                    <span class="text-sm text-gray-700">{{ selectedRecord.profile.contact_no }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Academic Details -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Academic Details</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <i class="pi pi-book" style="color: #007AFF; font-size: 13px;"></i>
-                                        Program
-                                    </div>
-                                    <span class="text-sm font-medium text-gray-800">{{ selectedRecord.program?.shortname
-                                        || 'N/A' }}</span>
-                                </div>
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <i class="pi pi-graduation-cap" style="color: #34C759; font-size: 13px;"></i>
-                                        Course
-                                    </div>
-                                    <span class="text-sm font-medium text-gray-800">{{ selectedRecord.course?.shortname
-                                        || 'N/A' }}</span>
-                                </div>
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <i class="pi pi-list-check" style="color: #5856D6; font-size: 13px;"></i>
-                                        Year Level
-                                    </div>
-                                    <span class="text-sm font-medium text-gray-800">{{ selectedRecord.year_level ||
-                                        'N/A' }}</span>
-                                </div>
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <i class="pi pi-calendar" style="color: #8E8E93; font-size: 13px;"></i>
-                                        Date Filed
-                                    </div>
-                                    <span class="text-sm text-gray-700">{{ formatDate(selectedRecord.date_filed)
-                                        }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Approval Details -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Approval Details</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <i class="pi pi-calendar-plus" style="color: #34C759; font-size: 13px;"></i>
-                                        Approval Date <span style="color: #FF3B30; margin-left: 2px;">*</span>
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <Calendar v-model="approvalForm.date_approved" showIcon :maxDate="new Date()"
-                                            class="ios-datepicker" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Remarks -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Remarks (Optional)</div>
-                            <div class="ios-card" style="overflow: visible;">
-                                <div class="ios-row ios-row-stacked" style="gap: 0; padding: 0;">
-                                    <Editor v-model="approvalForm.remarks" editorStyle="height: 120px"
-                                        class="ios-full-input">
-                                        <template #toolbar>
-                                            <span class="ql-formats">
-                                                <button class="ql-bold"></button>
-                                                <button class="ql-italic"></button>
-                                                <button class="ql-underline"></button>
-                                            </span>
-                                            <span class="ql-formats">
-                                                <button class="ql-list" value="ordered"></button>
-                                                <button class="ql-list" value="bullet"></button>
-                                            </span>
-                                            <span class="ql-formats">
-                                                <button class="ql-clean"></button>
-                                            </span>
-                                        </template>
-                                    </Editor>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="height: 24px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
-
-        <!-- ══════════════════════════════════════════
-            DENY APPLICATION MODAL (iOS)
-        ══════════════════════════════════════════ -->
-        <Dialog :visible="showDenyDialog" @update:visible="v => { if (!v) showDenyDialog = false; }" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal" :style="denyDrag.dragStyle.value">
-                    <div class="ios-nav-bar" @pointerdown="denyDrag.onDragStart">
-                        <button class="ios-nav-btn ios-nav-cancel" @click="showDenyDialog = false"
-                            v-tooltip.bottom="`Cancel`">
-                            <i class="pi pi-times"></i>
-                        </button>
-                        <span class="ios-nav-title">Deny Application</span>
-                        <div style="width: 48px;"></div>
-                    </div>
-                    <div class="ios-body" v-if="selectedRecord">
-                        <!-- Warning Card -->
-                        <div class="ios-section">
-                            <div class="ios-card" style="background: #FFF5F5; border-color: #FECACA;">
-                                <div class="ios-row"
-                                    style="gap: 12px; padding: 14px 16px; min-height: 60px; align-items: flex-start;">
-                                    <div
-                                        class="flex-shrink-0 w-9 h-9 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
-                                        <i class="pi pi-exclamation-triangle text-red-500 text-sm"></i>
-                                    </div>
-                                    <div style="flex: 1; min-width: 0;">
-                                        <p class="text-sm font-semibold text-gray-800">
-                                            {{ selectedRecord.profile.last_name }}, {{ selectedRecord.profile.first_name
-                                            }}
-                                        </p>
-                                        <p class="text-xs text-gray-600 mt-0.5">
-                                            {{ selectedRecord.program?.shortname }} — {{
-                                                selectedRecord.course?.shortname }}
-                                        </p>
-                                        <p class="text-xs text-red-600 mt-1">
-                                            This action will permanently deny the application.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Denial Reason -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Denial Reason <span
-                                    style="color: #FF3B30; margin-left: 2px;">*</span></div>
-                            <div class="ios-card">
-                                <div class="ios-row ios-row-stacked" style="padding: 10px 16px;">
-                                    <Select v-model="denyForm.reason" :options="declineReasons" optionLabel="label"
-                                        optionValue="value" placeholder="Select a reason" class="ios-full-input" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Details -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Details <span
-                                    style="color: #FF3B30; margin-left: 2px;">*</span></div>
-                            <div class="ios-card">
-                                <div class="ios-row ios-row-stacked" style="padding: 10px 16px;">
-                                    <Textarea v-model="denyForm.details" rows="3"
-                                        placeholder="Provide specific details..." class="ios-full-input" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Destructive Action -->
-                        <div class="ios-section">
-                            <button class="ios-destructive-btn" @click="confirmDeny" :disabled="denyForm.processing">
-                                Confirm Deny Application
-                            </button>
-                        </div>
-
-                        <div style="height: 24px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
+        <AssessmentViewModal v-model:show="showAssessmentDialog" :record="selectedRecord"
+            :initial-mode="assessmentInitialMode" :can-manage="canManageActions" :can-revert="canManageActions"
+            :approval-form="approvalForm" :deny-form="denyForm" :decline-reasons="declineReasons"
+            @updated="onAssessmentUpdated" @confirm-approve="confirmApprove" @confirm-deny="confirmDeny"
+            @revert="confirmRevert" />
     </AdminLayout>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { router, useForm, Head } from '@inertiajs/vue3';
-import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import AppIcon from '@/Components/ui/AppIcon.vue';
+import AppButton from '@/Components/ui/AppButton.vue';
 import moment from 'moment';
 import { toast } from 'vue3-toastify';
 import { usePermission } from '@/composable/permissions';
-import { useDraggableModal } from '@/composables/useDraggableModal';
 
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import ContextMenu from 'primevue/contextmenu';
+import AssessmentViewModal from './Modal/AssessmentViewModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModalIOS.vue';
-import InterviewAssessmentModal from '@/Pages/Applicants/Modal/InterviewAssessmentModal.vue';
+import { getSystemOptionLabel } from '@/composables/useSystemOptions';
 
 const { hasRole } = usePermission();
-
-const assessmentDrag = useDraggableModal();
-const approvalDrag = useDraggableModal();
-const denyDrag = useDraggableModal();
 
 const props = defineProps({
     interviewed_applicants: Array,
@@ -541,10 +294,18 @@ const filters = ref({
 
 const contextMenu = ref();
 const showAssessmentDialog = ref(false);
+const assessmentInitialMode = ref('view');
 const showReportModal = ref(false);
 const selectedRows = ref([]);
+const expandedRows = ref({});
 
 const approvalForm = useForm({
+    program: null,
+    course: null,
+    school: null,
+    year_level: null,
+    term: null,
+    grant_provision: null,
     date_approved: new Date(),
     remarks: ''
 });
@@ -555,9 +316,7 @@ const denyForm = useForm({
 });
 
 const selectedRecord = ref(null);
-const showApprovalDialog = ref(false);
-const showDenyDialog = ref(false);
-const showEditDialog = ref(false);
+const canManageActions = computed(() => hasRole('administrator') || hasRole('program_manager'));
 
 // Options
 const recommendationOptions = [
@@ -566,17 +325,6 @@ const recommendationOptions = [
     { label: 'For Further Evaluation', value: 'further_evaluation' },
     { label: 'Not Recommended', value: 'not_recommended' }
 ];
-
-// Adapt selectedRecord shape to what InterviewAssessmentModal expects
-const editApplicant = computed(() => {
-    if (!selectedRecord.value) return null;
-    const r = selectedRecord.value;
-    return {
-        last_name: r.profile.last_name,
-        first_name: r.profile.first_name,
-        scholarship_grant: [{ program: r.program, course: r.course }],
-    };
-});
 
 const declineReasons = computed(() => {
     if (!props.decline_reasons) return [];
@@ -609,6 +357,139 @@ const filteredList = computed(() => {
     return list;
 });
 
+const extractOptionId = (option) => {
+    if (option && typeof option === 'object') {
+        return option.id ?? null;
+    }
+
+    return option || null;
+};
+
+const extractOptionValue = (option) => {
+    if (option && typeof option === 'object') {
+        return option.value ?? option.label ?? null;
+    }
+
+    return option || null;
+};
+
+const formatDateForPayload = (value) => {
+    if (!value) {
+        return null;
+    }
+
+    return moment(value).format('YYYY-MM-DD');
+};
+
+const approvalValidationFields = [
+    {
+        key: 'program_id',
+        label: 'Program',
+        hasValue: () => Boolean(extractOptionId(approvalForm.program)),
+    },
+    {
+        key: 'course_id',
+        label: 'Course',
+        hasValue: () => Boolean(extractOptionId(approvalForm.course)),
+    },
+    {
+        key: 'school_id',
+        label: 'School',
+        hasValue: () => Boolean(extractOptionId(approvalForm.school)),
+    },
+    {
+        key: 'year_level',
+        label: 'Year Level',
+        hasValue: () => Boolean(extractOptionValue(approvalForm.year_level)),
+    },
+    {
+        key: 'term',
+        label: 'Term',
+        hasValue: () => Boolean(extractOptionValue(approvalForm.term)),
+    },
+    {
+        key: 'date_approved',
+        label: 'Approval Date',
+        hasValue: () => Boolean(approvalForm.date_approved),
+    },
+];
+
+const validateApprovalForm = () => {
+    const clientErrors = {};
+    const missingFields = [];
+
+    approvalForm.clearErrors(...approvalValidationFields.map(field => field.key));
+
+    approvalValidationFields.forEach((field) => {
+        if (!field.hasValue()) {
+            clientErrors[field.key] = `${field.label} is required.`;
+            missingFields.push(field.label);
+        }
+    });
+
+    if (!missingFields.length) {
+        return true;
+    }
+
+    approvalForm.errors = {
+        ...approvalForm.errors,
+        ...clientErrors,
+    };
+
+    toast.warn('Complete the highlighted approval fields before submitting.');
+
+    return false;
+};
+
+const populateApprovalForm = (record) => {
+    approvalForm.program = record.program || null;
+    approvalForm.course = record.course || null;
+    approvalForm.school = record.school || null;
+    approvalForm.year_level = record.year_level || null;
+    approvalForm.term = record.term || null;
+    approvalForm.grant_provision = record.grant_provision || null;
+    approvalForm.date_approved = record.date_approved ? new Date(record.date_approved) : new Date();
+    approvalForm.remarks = '';
+};
+
+const resetApprovalForm = (record = null) => {
+    approvalForm.reset();
+    approvalForm.clearErrors();
+
+    if (record) {
+        populateApprovalForm(record);
+    }
+};
+
+const resetDenyForm = () => {
+    denyForm.reset();
+    denyForm.clearErrors();
+};
+
+const openAssessmentDialog = (record, mode = 'view') => {
+    selectedRecord.value = record;
+    assessmentInitialMode.value = mode;
+
+    if (mode === 'approve') {
+        resetApprovalForm(record);
+    }
+
+    if (mode === 'deny') {
+        resetDenyForm();
+    }
+
+    showAssessmentDialog.value = true;
+};
+
+watch(
+    () => extractOptionId(approvalForm.program),
+    (newProgramId, oldProgramId) => {
+        if (oldProgramId !== undefined && newProgramId !== oldProgramId) {
+            approvalForm.course = null;
+        }
+    }
+);
+
 const stats = computed(() => {
     const all = props.interviewed_applicants || [];
     return {
@@ -624,25 +505,25 @@ const contextMenuItems = computed(() => {
     const items = [
         {
             label: 'View Assessment',
-            icon: 'pi pi-file',
+            icon: 'file',
             command: () => {
                 if (selectedRecord.value) {
-                    showAssessmentDialog.value = true;
+                    openAssessmentDialog(selectedRecord.value, 'view');
                 }
             }
         },
         {
             label: 'Edit Assessment',
-            icon: 'pi pi-pencil',
+            icon: 'pencil',
             command: () => {
                 if (selectedRecord.value) {
-                    editAssessment(selectedRecord.value);
+                    openAssessmentDialog(selectedRecord.value, 'edit');
                 }
             }
         },
         {
             label: 'View Profile',
-            icon: 'pi pi-eye',
+            icon: 'eye',
             command: () => {
                 if (selectedRecord.value) {
                     viewProfile(selectedRecord.value);
@@ -651,40 +532,40 @@ const contextMenuItems = computed(() => {
         }
     ];
 
-    if (hasRole('administrator') || hasRole('program_manager')) {
+    if (canManageActions.value) {
         items.push({ separator: true });
         items.push({
             label: 'Approve',
-            icon: 'pi pi-check',
+            icon: 'check',
             class: 'p-menuitem-success',
             command: () => {
                 if (selectedRecord.value) {
-                    approveApplication(selectedRecord.value);
+                    openAssessmentDialog(selectedRecord.value, 'approve');
                 }
             }
         });
         items.push({
             label: 'Deny',
-            icon: 'pi pi-times',
+            icon: 'x',
             class: 'p-menuitem-danger',
             command: () => {
                 if (selectedRecord.value) {
-                    denyApplication(selectedRecord.value);
+                    openAssessmentDialog(selectedRecord.value, 'deny');
+                }
+            }
+        });
+
+        items.push({ separator: true });
+        items.push({
+            label: 'Revert to Pending',
+            icon: 'arrow-left',
+            command: () => {
+                if (selectedRecord.value) {
+                    revertStatus(selectedRecord.value);
                 }
             }
         });
     }
-
-    items.push({ separator: true });
-    items.push({
-        label: 'Revert to Pending',
-        icon: 'pi pi-arrow-left',
-        command: () => {
-            if (selectedRecord.value) {
-                revertStatus(selectedRecord.value);
-            }
-        }
-    });
 
     return items;
 });
@@ -695,12 +576,14 @@ const openContextMenu = (event, record) => {
 };
 
 // Methods
-const editAssessment = (record) => {
-    selectedRecord.value = record;
-    showEditDialog.value = true;
-};
+const onAssessmentUpdated = (changes) => {
+    if (selectedRecord.value) {
+        selectedRecord.value = {
+            ...selectedRecord.value,
+            ...changes,
+        };
+    }
 
-const onEditSubmitted = () => {
     router.reload({
         only: ['interviewed_applicants'],
         preserveState: true,
@@ -708,28 +591,30 @@ const onEditSubmitted = () => {
     });
 };
 
-const approveApplication = (record) => {
-    selectedRecord.value = record;
-    approvalForm.reset();
-    showApprovalDialog.value = true;
-};
-
-const denyApplication = (record) => {
-    selectedRecord.value = record;
-    denyForm.reset();
-    showDenyDialog.value = true;
-};
-
 const confirmApprove = () => {
     if (!selectedRecord.value) return;
 
-    approvalForm.post(route('scholarship.record.approve', selectedRecord.value.id), {
+    if (!validateApprovalForm()) {
+        return;
+    }
+
+    approvalForm.transform((data) => ({
+        date_approved: formatDateForPayload(data.date_approved),
+        remarks: data.remarks,
+        program_id: extractOptionId(data.program),
+        course_id: extractOptionId(data.course),
+        school_id: extractOptionId(data.school),
+        year_level: extractOptionValue(data.year_level),
+        term: extractOptionValue(data.term),
+        grant_provision: data.grant_provision || null,
+    })).post(route('scholarship.record.approve', selectedRecord.value.id), {
         onSuccess: () => {
-            showApprovalDialog.value = false;
+            showAssessmentDialog.value = false;
+            assessmentInitialMode.value = 'view';
             toast.success('Application approved successfully');
         },
         onError: (errors) => {
-            toast.error('Failed to approve application');
+            toast.error('Review the highlighted fields and try again.');
             console.error(errors);
         }
     });
@@ -743,7 +628,8 @@ const confirmDeny = () => {
 
     denyForm.post(route('scholarship.record.decline', selectedRecord.value.id), {
         onSuccess: () => {
-            showDenyDialog.value = false;
+            showAssessmentDialog.value = false;
+            assessmentInitialMode.value = 'view';
             toast.success('Application denied successfully');
         },
         onError: (errors) => {
@@ -758,12 +644,20 @@ const revertStatus = (record) => {
         unified_status: 'pending'
     }, {
         onSuccess: () => {
+            showAssessmentDialog.value = false;
+            assessmentInitialMode.value = 'view';
             toast.success('Status reverted to pending');
         },
         onError: () => {
             toast.error('Failed to revert status');
         }
     });
+};
+
+const confirmRevert = () => {
+    if (!selectedRecord.value) return;
+
+    revertStatus(selectedRecord.value);
 };
 
 const viewProfile = (record) => {
@@ -774,9 +668,30 @@ const formatDate = (date) => {
     return date ? moment(date).format('MMM DD, YYYY') : 'N/A';
 };
 
-const capitalize = (str) => {
-    if (!str) return 'N/A';
-    return str.charAt(0).toUpperCase() + str.slice(1);
+const formatCurrency = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return 'Not configured';
+    }
+
+    return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(Number(value) || 0);
+};
+
+const formatProjectedTerms = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return 'Not configured';
+    }
+
+    const terms = Number(value);
+    if (!Number.isFinite(terms)) {
+        return 'Not configured';
+    }
+
+    return `${terms} ${terms === 1 ? 'term' : 'terms'}`;
 };
 
 const formatRecommendation = (value) => {
@@ -794,16 +709,6 @@ const getRecommendationSeverity = (value) => {
         further_evaluation: 'warn',
         not_recommended: 'danger',
     };
-    return map[value] || 'secondary';
-};
-
-const getRatingSeverity = (value) => {
-    const map = { excellent: 'success', good: 'info', fair: 'warn' };
-    return map[value] || 'secondary';
-};
-
-const getNeedSeverity = (value) => {
-    const map = { high: 'danger', moderate: 'warn', low: 'info' };
     return map[value] || 'secondary';
 };
 
@@ -869,6 +774,13 @@ const refreshPage = () => {
     padding: 0.75rem;
 }
 
+:deep(.p-datatable-tbody > tr.row-blurred > td) {
+    opacity: 0.4;
+    filter: blur(1.5px);
+    transition: opacity 0.2s, filter 0.2s;
+    pointer-events: none;
+}
+
 /* Rounded DataTable */
 :deep(.p-datatable) {
     border-radius: 1.5rem;
@@ -906,17 +818,5 @@ const refreshPage = () => {
 
 :deep(.ios-datepicker) {
     width: 100%;
-}
-
-:deep(.assessment-modal .assessment-grid) {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 8px;
-    padding: 0 4px;
-}
-
-:deep(.assessment-modal .assessment-grid .ios-section) {
-    padding-left: 0;
-    padding-right: 0;
 }
 </style>

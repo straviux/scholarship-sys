@@ -43,56 +43,66 @@ const schoolOptions = computed(() => {
     return options;
 });
 
+const normalizeSchoolToken = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    return String(value).trim().toLowerCase();
+};
+
+const resolveSingleSchool = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    if (typeof value === 'object' && value.id !== undefined) {
+        return schoolOptions.value.find((school) => school.id == value.id)
+            || schoolOptions.value.find((school) => normalizeSchoolToken(school.shortname) === normalizeSchoolToken(value.shortname))
+            || schoolOptions.value.find((school) => normalizeSchoolToken(school.name) === normalizeSchoolToken(value.name))
+            || value;
+    }
+
+    const normalized = normalizeSchoolToken(value);
+    if (!normalized) {
+        return null;
+    }
+
+    return schoolOptions.value.find((school) => {
+        return normalizeSchoolToken(school.shortname) === normalized
+            || normalizeSchoolToken(school.name) === normalized
+            || String(school.id) === String(value);
+    }) || value;
+};
+
+const resolveSchoolValue = (value) => {
+    if (props.multiple && Array.isArray(value)) {
+        return value.map((entry) => resolveSingleSchool(entry)).filter(Boolean);
+    }
+
+    return resolveSingleSchool(value);
+};
+
 // Local value for v-modelroute('scholarshipschools.getactivelist')
-const localValue = ref(props.modelValue);
+const localValue = ref(resolveSchoolValue(props.modelValue));
 
-// Sync localValue with parent prop
-watch(() => props.modelValue, (val) => {
-    localValue.value = val;
+watch(
+    [() => props.modelValue, () => schoolOptions.value],
+    () => {
+        localValue.value = resolveSchoolValue(props.modelValue);
+    },
+    { immediate: true, deep: true }
+);
 
-});
-
-// Sync localValue with parent prop
-// watch(() => props.preselect, (val) => {
-//     localValue.value = val;
-// });
-// Emit changes to parent
 watch(localValue, (val) => {
     emit('update:modelValue', val);
-});
+}, { deep: true });
 
 // Watch for changes in data and update schools
 watch(
     () => data.value,
     (newData) => {
         schools.value = newData || [];
-        // If localValue is set, find and set the matching school object(s)
-        if (localValue.value && schools.value.length) {
-            if (props.multiple && Array.isArray(localValue.value)) {
-                // Map each value in localValue to the corresponding school object
-                localValue.value = localValue.value.map(val => {
-                    if (typeof val == 'object' && val != null && val.shortname) {
-                        return schools.value.find(school => school.shortname == val.shortname) || val;
-                    }
-                    return schools.value.find(school =>
-                        school.shortname?.toLowerCase() == String(val).toLowerCase() ||
-                        school.name?.toLowerCase() == String(val).toLowerCase()
-                    ) || val;
-                });
-            } else {
-                // Single value: find the matching school object
-                let val = localValue.value;
-                if (typeof val == 'object' && val != null && val.shortname) {
-                    localValue.value = schools.value.find(school => school.shortname == val.shortname) || val;
-                } else {
-                    const selected = schools.value.find(school =>
-                        school.shortname?.toLowerCase() == String(val).toLowerCase() ||
-                        school.name?.toLowerCase() == String(val).toLowerCase()
-                    );
-                    if (selected) localValue.value = selected;
-                }
-            }
-        }
     },
     { immediate: true }
 );

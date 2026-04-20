@@ -85,7 +85,7 @@ onBeforeUnmount(() => {
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" type="button" @click="close">
-                        <i class="pi pi-times"></i>
+                        <AppIcon name="times" :size="18" />
                     </button>
                     <span class="ios-nav-title">Program Requirements</span>
                     <button class="ios-nav-btn ios-nav-action" type="button" @click="submit" :disabled="processing">
@@ -103,7 +103,7 @@ onBeforeUnmount(() => {
                             <div class="ios-row">
                                 <span class="ios-row-label">Name</span>
                                 <span style="font-size: 14px; color: #1c1c1e; font-weight: 600;">{{ program?.name
-                                    }}</span>
+                                }}</span>
                             </div>
                             <div class="ios-row ios-row-last">
                                 <span class="ios-row-label">Shortname</span>
@@ -126,10 +126,9 @@ onBeforeUnmount(() => {
                                     :class="index === requirements.length - 1 ? 'ios-row-last' : ''"
                                     style="cursor: pointer;" @click="toggleRequirement(req.id)">
                                     <span style="font-size: 14px; color: #1c1c1e; flex: 1;">{{ req.name }}</span>
-                                    <i v-if="selectedIds.includes(req.id)" class="pi pi-check-circle"
-                                        style="color: #34C759; font-size: 20px; flex-shrink: 0;"></i>
-                                    <i v-else class="pi pi-circle"
-                                        style="color: #C7C7CC; font-size: 20px; flex-shrink: 0;"></i>
+                                    <AppIcon v-if="selectedIds.includes(req.id)" name="check-circle" :size="20"
+                                        class="text-[#34C759] flex-shrink-0" />
+                                    <AppIcon v-else name="circle" :size="20" class="text-[#C7C7CC] flex-shrink-0" />
                                 </div>
                             </template>
                             <div v-else class="ios-row ios-row-last"

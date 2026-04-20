@@ -3,7 +3,7 @@
         @update:visible="handleVisibilityChange" :maximizable="true">
         <template #header>
             <div class="flex items-center gap-2">
-                <i class="pi pi-user-edit text-blue-400" style="font-size: 1.2rem;"></i>
+                <AppIcon name="user-edit" :size="19" class="text-blue-400" />
                 <span class="font-semibold text-xl">Existing Scholar</span>
             </div>
         </template>
@@ -11,7 +11,7 @@
         <div class="space-y-4">
             <div class="bg-amber-50 border border-amber-200 rounded p-3">
                 <p class="text-sm text-amber-800 font-medium">
-                    <i class="pi pi-exclamation-triangle mr-2"></i>
+                    <AppIcon name="exclamation-triangle" class="mr-2" />
                     All academic information must be filled out to add an existing scholar.
                 </p>
             </div>
@@ -30,13 +30,13 @@
                                 <div v-if="validationError"
                                     class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
                                     <p class="text-sm text-red-800 dark:text-red-300 font-medium">
-                                        <i class="pi pi-exclamation-triangle mr-2"></i>
+                                        <AppIcon name="exclamation-triangle" class="mr-2" />
                                         {{ validationError }}
                                     </p>
                                 </div>
                             </div>
                             <div class="flex pt-6 justify-end">
-                                <Button label="Next" icon="pi pi-arrow-right" iconPos="right" @click="handleNextStep1"
+                                <AppButton label="Next" icon="arrow-right" iconPos="right" @click="handleNextStep1"
                                     :loading="isValidating" :disabled="!canProceedStep1" />
                             </div>
                         </div>
@@ -47,10 +47,9 @@
                                 <FamilyInformationFields v-model="familyInfo" />
                             </div>
                             <div class="flex pt-6 justify-between">
-                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                <AppButton label="Back" severity="secondary" icon="arrow-left"
                                     @click="activeStep = '1'" />
-                                <Button label="Next" icon="pi pi-arrow-right" iconPos="right"
-                                    @click="activeStep = '3'" />
+                                <AppButton label="Next" icon="arrow-right" iconPos="right" @click="activeStep = '3'" />
                             </div>
                         </div>
                     </StepPanel>
@@ -60,7 +59,7 @@
                                 <div>
                                     <h4
                                         class="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                                        <i class="pi pi-book text-blue-600"></i>
+                                        <AppIcon name="book" class="text-blue-600" />
                                         Academic Information (Required)
                                     </h4>
                                     <div class="space-y-4">
@@ -107,9 +106,9 @@
                                 </div>
                             </div>
                             <div class="flex pt-6 justify-between">
-                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                <AppButton label="Back" severity="secondary" icon="arrow-left"
                                     @click="activeStep = '2'" />
-                                <Button label="Add Existing Scholar" icon="pi pi-check" severity="info"
+                                <AppButton label="Add Existing Scholar" icon="check" severity="info"
                                     @click="handleSubmit" :loading="form.processing" :disabled="!isFormValid" />
                             </div>
                         </div>

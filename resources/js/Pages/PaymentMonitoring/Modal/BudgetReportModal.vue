@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
 import ProgressSpinner from 'primevue/progressspinner';
+import AppIcon from '@/Components/ui/AppIcon.vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import { useDraggableModal } from '@/composables/useDraggableModal';
 import { usePdfPrint, renderVueTemplate } from '@/composables/usePdfPrint';
@@ -182,12 +183,12 @@ function handleOpen() {
                 <!-- iOS Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" @click="close" v-tooltip.bottom="'Close'">
-                        <i class="pi pi-times"></i>
+                        <AppIcon name="times" />
                     </button>
                     <span class="ios-nav-title">Budget / Allotment Report</span>
                     <button class="ios-nav-btn ios-nav-action" :disabled="!canGenerate || loading || loadingExcel"
                         @click="generateReport" v-tooltip.bottom="'Generate & Preview PDF'">
-                        <i :class="loading ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>
+                        <AppIcon :name="loading ? 'spinner' : 'check'" />
                     </button>
                 </div>
 
@@ -209,7 +210,7 @@ function handleOpen() {
                                 <!-- Program -->
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-bookmark-fill" style="color:#007AFF;font-size:13px"></i>
+                                        <AppIcon name="bookmark-fill" style="color:#007AFF;font-size:13px" />
                                         Program
                                     </div>
                                     <div class="ios-row-control">
@@ -221,7 +222,7 @@ function handleOpen() {
                                 <!-- Fiscal Year -->
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-calendar" style="color:#FF9500;font-size:13px"></i>
+                                        <AppIcon name="calendar" style="color:#FF9500;font-size:13px" />
                                         Fiscal Year
                                     </div>
                                     <div class="ios-row-control">
@@ -234,7 +235,7 @@ function handleOpen() {
                                 <!-- Responsibility Center -->
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-building" style="color:#34C759;font-size:13px"></i>
+                                        <AppIcon name="building" style="color:#34C759;font-size:13px" />
                                         R. Center
                                     </div>
                                     <div class="ios-row-control">
@@ -245,7 +246,7 @@ function handleOpen() {
                                             class="ios-select" :pt="{ root: { style: 'border-radius:1rem' } }">
                                             <template #option="{ option }">
                                                 <span>{{ option.name }} <span style="opacity:.5">({{ option.code
-                                                        }})</span></span>
+                                                }})</span></span>
                                             </template>
                                         </Select>
                                     </div>
@@ -254,7 +255,7 @@ function handleOpen() {
                                 <!-- Account Code / Particular -->
                                 <div class="ios-row ios-row-last">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-list" style="color:#AF52DE;font-size:13px"></i>
+                                        <AppIcon name="list" style="color:#AF52DE;font-size:13px" />
                                         Account Code
                                     </div>
                                     <div class="ios-row-control">

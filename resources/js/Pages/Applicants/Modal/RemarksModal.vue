@@ -77,7 +77,9 @@ onBeforeUnmount(() => {
             <div class="ios-modal" :style="modalStyle">
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Remarks</span>
                     <button class="ios-nav-btn ios-nav-action" @click="submit" :disabled="remarksForm.processing">
                         {{ remarksForm.processing ? 'Saving...' : 'Save' }}

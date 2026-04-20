@@ -30,6 +30,44 @@ const emit = defineEmits(['update:modelValue']);
 const municipalities = ref([]);
 const loading = ref(false);
 
+const normalizeMunicipalityToken = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    return String(value).trim().toLowerCase();
+};
+
+const resolveSingleMunicipality = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    if (typeof value === 'object' && value !== null) {
+        return municipalities.value.find((municipality) => municipality.id == value.id)
+            || municipalities.value.find((municipality) => normalizeMunicipalityToken(municipality.name) === normalizeMunicipalityToken(value.name))
+            || value;
+    }
+
+    const normalized = normalizeMunicipalityToken(value);
+    if (!normalized) {
+        return null;
+    }
+
+    return municipalities.value.find((municipality) => {
+        return normalizeMunicipalityToken(municipality.name) === normalized
+            || String(municipality.id) === String(value);
+    }) || value;
+};
+
+const resolveMunicipalityValue = (value) => {
+    if (props.multiple && Array.isArray(value)) {
+        return value.map((entry) => resolveSingleMunicipality(entry)).filter(Boolean);
+    }
+
+    return resolveSingleMunicipality(value);
+};
+
 // Use cached data composable for municipalities
 const { data: cachedMunicipalities, loading: cacheLoading, fetchData: fetchMunicipalities } = useCachedData(
     'municipalities',
@@ -56,76 +94,20 @@ watch(
 );
 
 // Local value for v-model
-const localValue = ref(props.multiple ? (props.modelValue || []) : props.modelValue);
+const localValue = ref(resolveMunicipalityValue(props.modelValue));
 
-// Sync localValue with parent prop
-watch(() => props.modelValue, (val) => {
-    localValue.value = val;
-}, { deep: true });
+watch(
+    [() => props.modelValue, () => municipalities.value],
+    () => {
+        localValue.value = resolveMunicipalityValue(props.modelValue);
+    },
+    { immediate: true, deep: true }
+);
 
-// Emit changes to parent
 watch(localValue, (val) => {
     emit('update:modelValue', val);
-});
+}, { deep: true });
 
-
-// Watch for changes in municipalities data and update localValue
-watch(
-    () => municipalities.value,
-    (newMunicipalities) => {
-        if (localValue.value && newMunicipalities.length) {
-            if (props.multiple && Array.isArray(localValue.value)) {
-                localValue.value = localValue.value.map(val => {
-                    if (typeof val == 'object' && val != null) {
-                        // Try matching by ID first (most reliable)
-                        if (val.id) {
-                            return newMunicipalities.find(municipality => municipality.id == val.id) || val;
-                        }
-                        // Fall back to name matching
-                        if (val.name) {
-                            return newMunicipalities.find(municipality => municipality.name == val.name) || val;
-                        }
-                    }
-                    // Handle string/number values
-                    return newMunicipalities.find(municipality =>
-                        municipality.name?.toLowerCase() == String(val).toLowerCase() ||
-                        municipality.id == val
-                    ) || val;
-                });
-            } else {
-                let val = localValue.value;
-                if (typeof val == 'object' && val !== null) {
-                    // Try matching by ID first (most reliable)
-                    if (val.id) {
-                        const matchedMunicipality = newMunicipalities.find(municipality => municipality.id == val.id);
-                        if (matchedMunicipality) {
-                            localValue.value = matchedMunicipality;
-                            return;
-                        }
-                    }
-                    // Fall back to name matching
-                    if (val.name) {
-                        const matchedMunicipality = newMunicipalities.find(municipality => municipality.name == val.name);
-                        if (matchedMunicipality) {
-                            localValue.value = matchedMunicipality;
-                            return;
-                        }
-                    }
-                    // Keep the original value if no match found
-                    localValue.value = val;
-                } else {
-                    // Handle string/number values
-                    const selected = newMunicipalities.find(municipality =>
-                        municipality.name?.toLowerCase() == String(val).toLowerCase() ||
-                        municipality.id == val
-                    );
-                    if (selected) localValue.value = selected;
-                }
-            }
-        }
-    },
-    { immediate: true }
-);
 
 onMounted(fetchMunicipalities);</script>
 

@@ -89,7 +89,7 @@ const _transactionStatusRaw = useSystemOptions('obr_status');
 const transactionStatusOptions = computed(() => ['No OBR', ..._transactionStatusRaw.value.map(o => o.label)]);
 
 const _grantProvisionRaw = useSystemOptions('grant_provision');
-const grantProvisionOptions = computed(() => _grantProvisionRaw.value.map(o => o.value));
+const grantProvisionOptions = computed(() => _grantProvisionRaw.value);
 
 // Available schools for payee selection
 const schools = ref([
@@ -1199,20 +1199,20 @@ onBeforeUnmount(() => {
                 <!-- iOS Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button v-if="step === 1" class="ios-nav-btn ios-nav-cancel" @click="closeWizard">
-                        <i class="pi pi-times"></i>
+                        <AppIcon name="times" />
                     </button>
                     <button v-else class="ios-nav-btn ios-nav-cancel" @click="previousStep">
-                        <i class="pi pi-arrow-left" style="font-size: 13px;"></i>
+                        <AppIcon name="arrow-left" :size="13" />
                     </button>
                     <span class="ios-nav-title">{{ getStepTitle() }}</span>
                     <button v-if="step < 5" class="ios-nav-btn ios-nav-action" @click="nextStep"
                         :disabled="step === 1 && selectedCount === 0">
-                        <i class="pi pi-arrow-right" style="font-size: 13px;"></i>
+                        <AppIcon name="arrow-right" :size="13" />
                     </button>
                     <button v-else class="ios-nav-btn ios-nav-action" @click="handleSubmit" :disabled="loading">
-                        <i v-if="loading" class="pi pi-spin pi-spinner" style="font-size: 12px; margin-right: 3px;"></i>
-                        <i v-else-if="props.mode === 'edit'" class="pi pi-save" style="font-size: 13px;"></i>
-                        <i v-else class="pi pi-check" style="font-size: 13px;"></i>
+                        <AppIcon v-if="loading" name="spinner" :size="12" style="margin-right: 3px;" />
+                        <AppIcon v-else-if="props.mode === 'edit'" name="save" :size="13" />
+                        <AppIcon v-else name="check" :size="13" />
                     </button>
                 </div>
                 <div ref="wizardContentRef" class="ios-body">
@@ -1238,8 +1238,10 @@ onBeforeUnmount(() => {
 
                                 <!-- Info Banner -->
                                 <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl">
-                                    <p class="text-sm text-blue-900"><i class="pi pi-info-circle mr-2"></i>Select a
-                                        program to filter scholars, then search by name</p>
+                                    <p class="text-sm text-blue-900">
+                                        <AppIcon name="info-circle" class="mr-2" />Select a
+                                        program to filter scholars, then search by name
+                                    </p>
                                 </div>
 
                                 <!-- Program Filter -->
@@ -1250,13 +1252,13 @@ onBeforeUnmount(() => {
                                     <InputText v-model="searchQuery" type="text" placeholder="Search by name..."
                                         class="w-full" :disabled="!programFilter && scholars.length === 0" />
                                     <div v-if="searchLoading" class="absolute right-3 top-2.5">
-                                        <i class="pi pi-spin pi-spinner text-blue-600"></i>
+                                        <AppIcon name="spinner" class="text-blue-600" />
                                     </div>
                                 </div>
 
                                 <!-- Loading State -->
                                 <div v-if="loading" class="text-center py-8">
-                                    <i class="pi pi-spin pi-spinner text-3xl short:text-xl text-blue-600"></i>
+                                    <AppIcon name="spinner" class="text-blue-600" :size="30" />
                                     <p class="mt-2 text-gray-600">Loading scholars...</p>
                                 </div>
 
@@ -1312,7 +1314,7 @@ onBeforeUnmount(() => {
                                 <div v-if="selectedCount === 0"
                                     class="flex-1 flex items-center justify-center text-center py-8 text-gray-400">
                                     <div>
-                                        <i class="pi pi-users text-3xl short:text-xl mb-2 block text-gray-300"></i>
+                                        <AppIcon name="users" class="text-gray-300" :size="30" />
                                         <p class="text-sm">No scholars selected yet</p>
                                     </div>
                                 </div>
@@ -1333,7 +1335,7 @@ onBeforeUnmount(() => {
                                         <button
                                             @click="() => { const s = scholars.find(x => x.profile_id === scholar.profile_id); if (s) { s.selected = false; updateSelectedCount(); } }"
                                             class="ml-2 shrink-0 text-red-400 hover:text-red-600 text-xs p-1 rounded-lg hover:bg-red-50 transition-colors">
-                                            <i class="pi pi-times"></i>
+                                            <AppIcon name="times" />
                                         </button>
                                     </div>
                                 </div>
@@ -1481,7 +1483,7 @@ onBeforeUnmount(() => {
                                             <div v-for="scholar in voucherData.scholars" :key="scholar.profile_id"
                                                 class="flex items-center justify-between px-2.5 py-1 bg-white rounded-xl border border-[#e5e5ea]">
                                                 <div class="flex items-center flex-1">
-                                                    <i class="pi pi-check text-green-600 mr-3 text-xs"></i>
+                                                    <AppIcon name="check" class="text-green-600 mr-3" :size="12" />
                                                     <span class="font-medium text-sm">{{ formatScholarFullName(scholar)
                                                     }}</span>
                                                 </div>
@@ -1565,8 +1567,8 @@ onBeforeUnmount(() => {
                                 <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Grant Provision</label>
                                     <Select v-model="voucherData.disbursements.grant_provision"
-                                        :options="grantProvisionOptions" placeholder="Select grant provision"
-                                        class="w-full" showClear />
+                                        :options="grantProvisionOptions" optionLabel="label" optionValue="value"
+                                        placeholder="Select grant provision" class="w-full" showClear />
                                 </div>
                             </div>
                         </div>

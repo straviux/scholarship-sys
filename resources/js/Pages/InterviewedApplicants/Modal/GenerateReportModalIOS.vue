@@ -5,11 +5,14 @@
             <div class="ios-modal" :style="modalStyle">
                 <!-- iOS Navigation Bar (drag handle) -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close" v-tooltip.bottom="'Close'"><i
-                            class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="close" v-tooltip.bottom="'Close'">
+                        <AppIcon name="x" :size="16" />
+                    </button>
                     <span class="ios-nav-title">Generate Report</span>
                     <button class="ios-nav-btn ios-nav-action" @click="generateReport" :disabled="isDateToInvalid"
-                        v-tooltip.bottom="'Generate Report'"><i class="pi pi-check"></i></button>
+                        v-tooltip.bottom="'Generate Report'">
+                        <AppIcon name="check" :size="16" />
+                    </button>
                 </div>
 
                 <div class="ios-body">
@@ -19,12 +22,12 @@
                         <div class="ios-segmented-control">
                             <button :class="['ios-segment', reportType === 'list' && 'ios-segment-active']"
                                 @click="reportType = 'list'">
-                                <i class="pi pi-list" style="font-size: 13px;"></i>
+                                <AppIcon name="list" :size="13" />
                                 Detailed List
                             </button>
                             <button :class="['ios-segment', reportType === 'summary' && 'ios-segment-active']"
                                 @click="reportType = 'summary'">
-                                <i class="pi pi-chart-bar" style="font-size: 13px;"></i>
+                                <AppIcon name="bar-chart-3" :size="13" />
                                 Summary
                             </button>
                         </div>
@@ -37,7 +40,7 @@
                             <!-- Recommendation -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-star-fill" style="color: #FF9500; font-size: 13px;"></i>
+                                    <AppIcon name="star-fill" :size="13" style="color: #FF9500;" />
                                     Recommendation
                                 </div>
                                 <div class="ios-row-control">
@@ -50,7 +53,7 @@
                             <!-- Program -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-bookmark-fill" style="color: #007AFF; font-size: 13px;"></i>
+                                    <AppIcon name="bookmark-fill" :size="13" style="color: #007AFF;" />
                                     Program
                                 </div>
                                 <div class="ios-row-control">
@@ -62,7 +65,7 @@
                             <!-- School -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-building" style="color: #34C759; font-size: 13px;"></i>
+                                    <AppIcon name="building-2" :size="13" style="color: #34C759;" />
                                     School
                                 </div>
                                 <div class="ios-row-control">
@@ -74,7 +77,7 @@
                             <!-- Course -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-graduation-cap" style="color: #AF52DE; font-size: 13px;"></i>
+                                    <AppIcon name="graduation-cap" :size="13" style="color: #AF52DE;" />
                                     Course
                                 </div>
                                 <div class="ios-row-control">
@@ -91,7 +94,7 @@
                         <div class="ios-card">
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                    <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     From
                                 </div>
                                 <div class="ios-row-control">
@@ -101,7 +104,7 @@
                             </div>
                             <div class="ios-row ios-row-last">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                    <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     To
                                 </div>
                                 <div class="ios-row-control">
@@ -122,7 +125,7 @@
                             <!-- Group By -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-objects-column" style="color: #5856D6; font-size: 13px;"></i>
+                                    <AppIcon name="objects-column" :size="13" style="color: #5856D6;" />
                                     Group By
                                 </div>
                                 <div class="ios-row-control">
@@ -134,7 +137,7 @@
                             <!-- Paper Size -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-file" style="color: #8E8E93; font-size: 13px;"></i>
+                                    <AppIcon name="file" :size="13" style="color: #8E8E93;" />
                                     Paper Size
                                 </div>
                                 <div class="ios-row-control">
@@ -146,7 +149,7 @@
                             <!-- Orientation -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-desktop" style="color: #FF9500; font-size: 13px;"></i>
+                                    <AppIcon name="desktop" :size="13" style="color: #FF9500;" />
                                     Orientation
                                 </div>
                                 <div class="ios-row-control">
@@ -155,19 +158,15 @@
                                 </div>
                             </div>
 
-                            <!-- Assessment Toggle -->
                             <div class="ios-row ios-row-last">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-clipboard" style="color: #007AFF; font-size: 13px;"></i>
-                                    Assessment Details
+                                    <AppIcon name="panel-right-open" :size="13" style="color: #34C759;" />
+                                    Layout
                                 </div>
-                                <div>
-                                    <ToggleSwitch v-model="includeAssessment" />
+                                <div class="text-xs text-gray-500">
+                                    Use landscape so all report columns stay on one row.
                                 </div>
                             </div>
-                        </div>
-                        <div class="ios-section-footer">
-                            Include academic potential, financial need, and communication skills columns.
                         </div>
                     </div>
 
@@ -195,6 +194,7 @@
 import { ref, computed, onBeforeUnmount } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import moment from 'moment';
+import AppIcon from '@/Components/ui/AppIcon.vue';
 
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
@@ -226,7 +226,6 @@ const reportType = ref('list');
 const groupBy = ref('none');
 const paperSize = ref('A4');
 const orientation = ref('landscape');
-const includeAssessment = ref(true);
 
 // PDF Preview
 const showPdfPreview = ref(false);
@@ -313,14 +312,27 @@ function generateReport() {
         recommendation: selectedRecommendation.value ? recommendationOptions.find(o => o.value === selectedRecommendation.value)?.label : '',
         program: selectedProgram.value?.shortname || '',
         school: selectedSchool.value?.shortname || '',
-        course: selectedCourse.value?.shortname || '',
+        course: selectedCourse.value?.name || selectedCourse.value?.shortname || '',
         date_from: dateFrom.value ? moment(dateFrom.value).format('MMM DD, YYYY') : '',
         date_to: dateTo.value ? moment(dateTo.value).format('MMM DD, YYYY') : '',
     };
     lastParams.value = fl;
 
-    const sizeMap = { 'A4': 'a4', 'Letter': 'letter', 'Legal': 'long' };
-    const ps = sizeMap[paperSize.value] || 'a4';
+    const previewPaperSizeMap = {
+        A4: {
+            portrait: 'a4',
+            landscape: 'a4-landscape',
+        },
+        Letter: {
+            portrait: 'letter',
+            landscape: 'letter-landscape',
+        },
+        Legal: {
+            portrait: 'long',
+            landscape: 'landscape',
+        },
+    };
+    const ps = previewPaperSizeMap[paperSize.value]?.[orientation.value] || 'a4-landscape';
     pdfPaperSize.value = ps;
 
     const authUser = usePage().props.auth?.user;
@@ -328,7 +340,6 @@ function generateReport() {
         records: filtered,
         reportType: reportType.value,
         groupBy: groupBy.value,
-        includeAssessment: includeAssessment.value,
         filterLabels: fl,
         today: moment().format('MMMM D, YYYY'),
         preparedBy: authUser?.name ?? '',

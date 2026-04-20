@@ -3,6 +3,8 @@ import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { Head, router } from "@inertiajs/vue3";
 import { ref, watch } from "vue";
 import SchoolModal from "@/Pages/School/Modal/SchoolModal.vue";
+import AppIcon from '@/Components/ui/AppIcon.vue';
+import AppButton from '@/Components/ui/AppButton.vue';
 import { usePermission } from '@/composable/permissions';
 
 const props = defineProps({
@@ -73,7 +75,7 @@ const deleteSchool = () => {
         <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
-                    <i class="pi pi-building text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
+                    <AppIcon name="building-2" class="text-blue-600 w-8 h-8 short:w-6 short:h-6" />
                     <div>
                         <h1 class="text-2xl short:text-xl font-bold text-gray-700">Schools</h1>
                         <p class="text-sm text-gray-600">Manage educational institutions</p>
@@ -81,7 +83,7 @@ const deleteSchool = () => {
                 </div>
             </template>
             <template #end>
-                <Button v-if="hasPermission('schools.manage')" icon="pi pi-plus" label="Add School" severity="success"
+                <AppButton v-if="hasPermission('schools.manage')" icon="plus" label="Add School" severity="success"
                     raised rounded size="small" @click="openCreate" />
             </template>
         </Toolbar>
@@ -91,7 +93,9 @@ const deleteSchool = () => {
             <!-- Search -->
             <div class="flex gap-3 items-center mb-4">
                 <IconField iconPosition="left" class="flex-1 max-w-sm">
-                    <InputIcon class="pi pi-search" />
+                    <InputIcon>
+                        <AppIcon name="search" :size="16" class="text-gray-400" />
+                    </InputIcon>
                     <InputText v-model="globalFilter" placeholder="Search schools..." class="w-full" />
                 </IconField>
                 <Tag :value="`${props.schools.length} school${props.schools.length !== 1 ? 's' : ''}`"
@@ -141,9 +145,9 @@ const deleteSchool = () => {
                 <Column header="Actions" style="width: 100px">
                     <template #body="{ data }">
                         <div class="flex gap-1.5 justify-center">
-                            <Button v-if="hasPermission('schools.manage')" icon="pi pi-pencil" severity="info"
-                                size="small" rounded outlined v-tooltip.top="'Edit'" @click="openEdit(data)" />
-                            <Button v-if="hasPermission('schools.delete')" icon="pi pi-trash" severity="danger"
+                            <AppButton v-if="hasPermission('schools.manage')" icon="pencil" severity="info" size="small"
+                                rounded outlined v-tooltip.top="'Edit'" @click="openEdit(data)" />
+                            <AppButton v-if="hasPermission('schools.delete')" icon="trash" severity="danger"
                                 size="small" rounded outlined v-tooltip.top="'Delete'" @click="confirmDelete(data)" />
                         </div>
                     </template>
@@ -156,7 +160,7 @@ const deleteSchool = () => {
         <Dialog v-model:visible="showDeleteModal" modal header="Delete School" :style="{ width: '420px' }">
             <div class="flex items-start gap-4 py-2">
                 <div class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                    <i class="pi pi-trash text-red-600 text-sm"></i>
+                    <AppIcon name="trash" :size="14" class="text-red-600" />
                 </div>
                 <div class="flex-1">
                     <p class="text-sm text-gray-700 mb-3">
@@ -166,7 +170,7 @@ const deleteSchool = () => {
                         <div class="font-semibold text-gray-800 text-sm">{{ selectedSchool.name }}</div>
                         <div class="text-xs text-[#8e8e93] mt-0.5">
                             {{ selectedSchool.shortname }}{{ selectedSchool.campus ? ` \u00b7 ${selectedSchool.campus}`
-                            : '' }}
+                                : '' }}
                         </div>
                     </div>
                 </div>

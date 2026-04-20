@@ -97,7 +97,9 @@ onBeforeUnmount(() => {
             <div class="ios-modal" :style="modalStyle">
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Export Selected</span>
                     <span class="ios-nav-btn" style="right: 16px; visibility: hidden;">.</span>
                 </div>
@@ -111,7 +113,7 @@ onBeforeUnmount(() => {
                             <div class="ios-row ios-row-last">
                                 <span class="ios-row-label">Selected Applicants</span>
                                 <span style="font-size: 15px; font-weight: 600; color: #007AFF;">{{ selectedRows.length
-                                    }}</span>
+                                }}</span>
                             </div>
                         </div>
                     </div>
@@ -122,13 +124,12 @@ onBeforeUnmount(() => {
                         <div class="ios-card">
                             <div class="ios-row" style="cursor: pointer;" @click="reportType = 'list'">
                                 <span class="ios-row-label">Detailed List</span>
-                                <i v-if="reportType === 'list'" class="pi pi-check"
-                                    style="color: #007AFF; font-size: 14px;"></i>
+                                <AppIcon v-if="reportType === 'list'" name="check" :size="14" style="color: #007AFF;" />
                             </div>
                             <div class="ios-row ios-row-last" style="cursor: pointer;" @click="reportType = 'summary'">
                                 <span class="ios-row-label">Summary</span>
-                                <i v-if="reportType === 'summary'" class="pi pi-check"
-                                    style="color: #007AFF; font-size: 14px;"></i>
+                                <AppIcon v-if="reportType === 'summary'" name="check" :size="14"
+                                    style="color: #007AFF;" />
                             </div>
                         </div>
                     </div>
@@ -176,7 +177,7 @@ onBeforeUnmount(() => {
                             <div v-for="(row, idx) in selectedRows.slice(0, 10)" :key="idx" class="ios-row"
                                 :class="{ 'ios-row-last': idx === Math.min(selectedRows.length, 10) - 1 }">
                                 <span style="font-size: 13px; color: #000;">{{ row.last_name }}, {{ row.first_name
-                                    }}</span>
+                                }}</span>
                             </div>
                             <div v-if="selectedRows.length > 10" class="ios-row ios-row-last"
                                 style="justify-content: center;">
@@ -190,10 +191,10 @@ onBeforeUnmount(() => {
                     <div class="ios-section">
                         <div class="ios-export-buttons">
                             <button class="ios-export-btn ios-export-pdf" @click="exportAs('pdf')">
-                                <i class="pi pi-file-pdf"></i> Export as PDF
+                                <AppIcon name="file-pdf" :size="16" /> Export as PDF
                             </button>
                             <button class="ios-export-btn ios-export-excel" @click="exportAs('excel')">
-                                <i class="pi pi-file-excel"></i> Export as Excel
+                                <AppIcon name="file-excel" :size="16" /> Export as Excel
                             </button>
                         </div>
                     </div>

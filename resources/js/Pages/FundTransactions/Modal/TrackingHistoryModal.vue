@@ -4,8 +4,9 @@
         <template #container>
             <div ref="elModal" class="ios-modal w-[90vw] max-w-[500px]" :style="modalStyle">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)"><i
-                            class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Tracking Timeline</span>
                     <span class="ios-nav-btn invisible">_</span>
                 </div>
@@ -20,14 +21,14 @@
                                     :class="index < trackingData.tracking_information.length - 1 ? '[border-bottom:0.5px_solid_#e5e5ea]' : ''">
                                     <div
                                         class="w-7 h-7 bg-[#007AFF] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <i class="pi pi-check text-white text-[11px]"></i>
+                                        <AppIcon name="check" :size="11" class="text-white" />
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <p class="text-[13px] text-[#1c1c1e] dark:text-gray-200">{{ entry.trn_remarks ||
                                             entry.transaction_description || entry.description }}</p>
                                         <p class="text-[12px] text-[#8E8E93] mt-[3px]">{{
                                             formatDate(entry.trn_date || entry.transaction_date || entry.date)
-                                            }}</p>
+                                        }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -38,7 +39,7 @@
                         </div>
 
                         <div v-else class="p-12 text-center text-[#8E8E93]">
-                            <i class="pi pi-spin pi-spinner text-2xl mb-2 block"></i>
+                            <AppIcon name="spinner" :size="24" class="mb-2 block" />
                             <p class="text-[13px]">Loading...</p>
                         </div>
                     </div>

@@ -1,6 +1,6 @@
 # Comprehensive Coding Standards - Laravel 11 Scholarship System
 
-**Version 1.0** | Last Updated: 2024 | Status: Active
+**Version 1.1** | Last Updated: 2026 | Status: Active
 
 ---
 
@@ -1516,8 +1516,8 @@ Use this checklist when writing code:
 - [ ] **Closures:** Capture outer variables with `use ($var)` when needed inside closures
 - [ ] **Testing:** Correct PHPUnit methods, factories, RefreshDatabase
 - [ ] **Documentation:** PHPDoc on public methods, comments for complex logic
-- [ ] **Icons:** Only PrimeIcons (`pi pi-*`) — no Heroicons, no inline SVG
-- [ ] **Buttons:** PrimeVue `<Button>` — never raw `<button>` for user actions
+- [ ] **Icons:** Use `AppIcon` (Lucide-backed) with Lucide kebab-case names; legacy stored `pi pi-*` values may still exist but must render through `AppIcon`
+- [ ] **Buttons:** Use `AppButton` for icon-bearing actions; PrimeVue `<Button>` is fine for text-only actions, and raw `<button>` is allowed only for established custom iOS modal nav controls
 - [ ] **Forms:** PrimeVue InputText, Select, Textarea, DatePicker
 - [ ] **Modals:** PrimeVue `<Dialog>` — no new Headless UI dialogs
 - [ ] **Tables:** PrimeVue DataTable (interactive) or DaisyUI `table-zebra` (simple)
@@ -1548,56 +1548,87 @@ Each CSS/UI technology has a **specific role**. Do not mix their responsibilitie
 2. Need layout, spacing, colors, or responsive design? → **Tailwind utilities**
 3. Need a simple semantic pattern PrimeVue doesn't cover (e.g., zebra-striped HTML table)? → **DaisyUI**
 
-### 15.2 Icons — PrimeIcons Only
+### 15.2 Icons — `AppIcon` + Lucide
 
-**PrimeIcons is the single icon library for this project.** No other icon library should be used.
+**Use the shared `AppIcon` wrapper for application icons.** `AppIcon` is backed by `lucide-vue-next`, centralizes sizing/class behavior, and preserves compatibility with legacy stored PrimeIcon-style values.
+
+**Rules:**
+- New code must use Lucide kebab-case names such as `save`, `trash`, `search`, `building-2`, `book-open`, `message-square-more`, and `settings`
+- Do not render raw `<i class="pi pi-*">` icons in page or component templates
+- Do not put `pi pi-*` strings in new button props or new config values
+- If old menu/config/database values still contain `pi pi-*`, pass them through `AppIcon` instead of rendering raw classes
+- Do not import Heroicons, Font Awesome, Material Icons, or inline SVG icon sets for normal app UI
 
 ```vue
-<!-- ✅ Correct — PrimeIcons via class string -->
+<!-- ✅ Correct — AppIcon with Lucide names -->
+<AppIcon name="check" />
+<AppIcon name="x" />
+<AppIcon name="spinner" />
+<AppIcon name="building-2" :size="20" class="text-blue-600" />
+<InputIcon>
+    <AppIcon name="search" :size="16" class="text-gray-400" />
+</InputIcon>
+
+<!-- ✅ Correct — legacy stored values rendered through AppIcon -->
+<AppIcon :name="item.icon" />
+
+<!-- ❌ Wrong — raw PrimeIcon classes in templates -->
 <i class="pi pi-check"></i>
-<i class="pi pi-times"></i>
 <i class="pi pi-spinner pi-spin"></i>
+
+<!-- ❌ Wrong — PrimeIcon button props in new code -->
 <Button icon="pi pi-plus" label="Add" />
 <Button icon="pi pi-trash" severity="danger" />
 
-<!-- ❌ Wrong — @heroicons/vue (DO NOT USE) -->
+<!-- ❌ Wrong — bypassing the shared wrapper -->
 <script setup>
-import { XMarkIcon } from '@heroicons/vue/20/solid'  // BANNED
+import { Search } from 'lucide-vue-next'
 </script>
-<XMarkIcon class="h-5 w-5" />
-
-<!-- ❌ Wrong — inline SVG icons -->
-<svg xmlns="..." viewBox="...">...</svg>
+<Search class="h-5 w-5" />
 
 <!-- ❌ Wrong — any other icon library -->
 <i class="fa fa-check"></i>           <!-- Font Awesome -->
 <span class="material-icons">check</span>  <!-- Material -->
 ```
 
-**Common PrimeIcons reference:**
+**Preferred icon names:**
 
 | Category | Icons |
 | --- | --- |
-| **Navigation** | `pi-chevron-left`, `pi-chevron-right`, `pi-chevron-up`, `pi-chevron-down`, `pi-angle-left`, `pi-angle-right`, `pi-bars`, `pi-arrow-left`, `pi-arrow-right` |
-| **Actions** | `pi-plus`, `pi-pencil`, `pi-trash`, `pi-eye`, `pi-download`, `pi-upload`, `pi-refresh`, `pi-save`, `pi-copy`, `pi-print` |
-| **Status** | `pi-check`, `pi-check-circle`, `pi-times`, `pi-times-circle`, `pi-exclamation-triangle`, `pi-info-circle`, `pi-ban` |
-| **Loading** | `pi-spinner` (add `pi-spin` class to animate) |
-| **Objects** | `pi-file`, `pi-file-pdf`, `pi-folder`, `pi-folder-open`, `pi-image`, `pi-calendar`, `pi-clock`, `pi-user`, `pi-users`, `pi-cog`, `pi-search` |
-| **Finance** | `pi-credit-card`, `pi-money-bill`, `pi-wallet`, `pi-chart-bar`, `pi-chart-line` |
-| **Communication** | `pi-bell`, `pi-envelope`, `pi-comment`, `pi-comments`, `pi-phone`, `pi-qrcode` |
+| **Navigation** | `chevron-left`, `chevron-right`, `chevron-up`, `chevron-down`, `menu`, `arrow-left`, `arrow-right` |
+| **Actions** | `plus`, `pencil`, `trash`, `eye`, `download`, `upload`, `refresh-cw`, `save`, `copy`, `printer` |
+| **Status** | `check`, `check-circle`, `x`, `circle-x`, `exclamation-triangle`, `info`, `ban` |
+| **Loading** | `spinner` |
+| **Objects** | `file`, `file-type`, `folder`, `folder-open`, `image`, `calendar`, `clock`, `user`, `users`, `settings`, `search` |
+| **Finance** | `credit-card`, `banknote`, `wallet`, `bar-chart-3`, `line-chart` |
+| **Communication** | `bell`, `mail`, `message-square`, `message-square-more`, `phone`, `qr-code` |
 
-Full catalog: https://primevue.org/icons/#list
+When you need a new icon, prefer a Lucide name first and let `AppIcon` resolve it. Only add aliases to `AppIcon` when a legacy stored value must remain compatible.
 
 ### 15.3 Buttons — PrimeVue `<Button>` Component
 
-Always use the PrimeVue `<Button>` component. Never use raw `<button>` elements for user-facing actions.
+Use `AppButton` when a button includes an icon so icon rendering stays consistent with `AppIcon`. Use PrimeVue `<Button>` for text-only actions or when you need a base button without an icon. Raw `<button>` elements are allowed only in existing custom iOS modal nav bars and similarly specialized interaction shells.
 
 ```vue
-<!-- ✅ Correct — PrimeVue Button -->
+<!-- ✅ Correct — icon-bearing buttons use AppButton -->
+<AppButton label="Save" icon="save" />
+<AppButton label="Delete" icon="trash" severity="danger" />
+<AppButton icon="ellipsis-vertical" text rounded />
+
+<!-- ✅ Correct — text-only buttons may use PrimeVue Button -->
+<Button label="Cancel" severity="secondary" text />
+
+<!-- ✅ Allowed exception — established iOS modal nav controls -->
+<button class="ios-nav-btn ios-nav-cancel" type="button">
+    <AppIcon name="x" :size="16" />
+</button>
+
+<!-- ❌ Wrong — PrimeIcon button props in new code -->
 <Button label="Save" icon="pi pi-save" />
 <Button label="Delete" icon="pi pi-trash" severity="danger" />
-<Button label="Cancel" severity="secondary" text />
-<Button icon="pi pi-ellipsis-v" text rounded />
+
+<!-- ❌ Wrong — raw button for standard page actions -->
+<button class="btn">Save</button>
 
 <!-- ✅ Correct — severity levels for consistent color meaning -->
 <Button severity="primary" />    <!-- Default action (zinc/dark) -->

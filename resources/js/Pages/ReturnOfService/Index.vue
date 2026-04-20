@@ -9,7 +9,7 @@
             <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-graduation-cap text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
+                        <AppIcon name="graduation-cap" class="text-blue-600 text-[2rem] short:text-[1.5rem]" />
                         <div>
                             <h1 class="text-2xl short:text-xl font-bold text-gray-700">Return of Service</h1>
                             <p class="text-sm text-gray-600">Manage ROS batches and track scholar service obligations
@@ -19,9 +19,9 @@
                 </template>
                 <template #end>
                     <div class="flex gap-2">
-                        <Button v-if="hasPermission('return-of-service.export')" icon="pi pi-download" label="Export"
+                        <AppButton v-if="hasPermission('return-of-service.export')" icon="download" label="Export"
                             severity="secondary" outlined rounded size="small" @click="exportRecords" />
-                        <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus" outlined
+                        <AppButton v-if="hasPermission('return-of-service.create')" icon="plus" outlined
                             severity="success" rounded size="large" @click="openNewBatchDialog" />
                     </div>
                 </template>
@@ -33,7 +33,9 @@
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Batch Name</label>
                         <IconField iconPosition="left">
-                            <InputIcon class="pi pi-search text-gray-400" />
+                            <InputIcon>
+                                <AppIcon name="search" :size="14" class="text-gray-400" />
+                            </InputIcon>
                             <InputText v-model="batchSearch" placeholder="Search batch name..." size="small" />
                         </IconField>
                     </div>
@@ -50,7 +52,7 @@
                         <label class="text-xs font-medium text-gray-600 mb-1">Description</label>
                         <InputText v-model="batchDescriptionFilter" placeholder="Search description..." size="small" />
                     </div>
-                    <Button severity="secondary" outlined rounded size="small" icon="pi pi-history"
+                    <AppButton severity="secondary" outlined rounded size="small" icon="history"
                         @click="clearBatchFilters" v-tooltip.bottom="`Clear Filters`" />
                 </div>
             </Panel>
@@ -92,12 +94,12 @@
                                 <div class="flex items-start gap-3">
                                     <div
                                         class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <i class="pi pi-folder text-blue-600 text-sm"></i>
+                                        <AppIcon name="folder" class="text-blue-600 text-sm" />
                                     </div>
                                     <div>
                                         <h4 class="font-semibold text-gray-900 text-base leading-tight">{{
                                             batch.batch_name
-                                        }}</h4>
+                                            }}</h4>
                                         <div class="text-xs text-gray-500 space-y-0.5 mt-1">
                                             <p v-if="batch.exam_date_from || batch.exam_date_to">
                                                 <span class="font-medium">Exam:</span>
@@ -114,7 +116,7 @@
                                 <div class="text-right flex-shrink-0">
                                     <span
                                         class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
-                                        <i class="pi pi-users text-xs"></i>
+                                        <AppIcon name="users" :size="12" />
                                         {{ batch.total_scholars }}
                                     </span>
                                     <p class="text-xs text-gray-400 mt-1.5">by {{ batch.created_by }}</p>
@@ -126,16 +128,16 @@
                             </div>
 
                             <div class="flex gap-1.5 flex-wrap border-t border-gray-100 pt-3">
-                                <Button icon="pi pi-eye" label="View Batch" severity="secondary" text size="small"
-                                    rounded @click="openViewBatchDialog(batch)" />
-                                <Button v-if="hasPermission('return-of-service.edit')" icon="pi pi-pencil" label="Edit"
+                                <AppButton icon="eye" label="View Batch" severity="secondary" text size="small" rounded
+                                    @click="openViewBatchDialog(batch)" />
+                                <AppButton v-if="hasPermission('return-of-service.edit')" icon="pencil" label="Edit"
                                     severity="warning" text size="small" rounded @click="openEditBatchDialog(batch)" />
-                                <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus"
+                                <AppButton v-if="hasPermission('return-of-service.create')" icon="plus"
                                     label="Add Scholar" severity="success" text size="small" rounded
                                     @click="openAddScholarDialog(batch)" />
-                                <Button icon="pi pi-download" label="Export" severity="info" text size="small" rounded
+                                <AppButton icon="download" label="Export" severity="info" text size="small" rounded
                                     @click="exportBatch(batch)" />
-                                <Button v-if="hasPermission('return-of-service.delete')" icon="pi pi-trash"
+                                <AppButton v-if="hasPermission('return-of-service.delete')" icon="trash"
                                     severity="danger" text size="small" rounded @click="confirmDeleteBatch(batch)"
                                     v-tooltip.top="`Delete`" />
                             </div>
@@ -146,20 +148,20 @@
                 <!-- Empty State -->
                 <div v-if="batches.length === 0" class="text-center py-16">
                     <div class="w-16 h-16 rounded-3xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                        <i class="pi pi-inbox text-2xl text-gray-400"></i>
+                        <AppIcon name="inbox" class="text-2xl text-gray-400" />
                     </div>
                     <p class="text-gray-500 mb-4">No ROS batches created yet.</p>
-                    <Button v-if="hasPermission('return-of-service.create')" icon="pi pi-plus"
-                        label="Create First Batch" severity="success" rounded @click="openNewBatchDialog" />
+                    <AppButton v-if="hasPermission('return-of-service.create')" icon="plus" label="Create First Batch"
+                        severity="success" rounded @click="openNewBatchDialog" />
                 </div>
 
                 <!-- No Results State -->
                 <div v-else-if="filteredBatches.length === 0" class="text-center py-16">
                     <div class="w-16 h-16 rounded-3xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                        <i class="pi pi-search text-2xl text-gray-400"></i>
+                        <AppIcon name="search" class="text-2xl text-gray-400" />
                     </div>
                     <p class="text-gray-500 mb-4">No batches match your filters.</p>
-                    <Button icon="pi pi-times" label="Clear Filters" severity="secondary" outlined rounded
+                    <AppButton icon="x" label="Clear Filters" severity="secondary" outlined rounded
                         @click="clearBatchFilters" />
                 </div>
 
@@ -178,12 +180,12 @@
                     <div class="ios-nav-bar" @pointerdown="batchDrag.onDragStart">
                         <button class="ios-nav-btn ios-nav-cancel" @click="showBatchDialog = false; resetBatchForm();"
                             v-tooltip.bottom="`Cancel`">
-                            <i class="pi pi-times"></i>
+                            <AppIcon name="x" :size="16" />
                         </button>
                         <span class="ios-nav-title">{{ batchMode === 'add' ? 'New Batch' : 'Edit Batch' }}</span>
                         <button class="ios-nav-btn ios-nav-action" @click="submitBatchForm"
                             :disabled="batchForm.processing" v-tooltip.bottom="`Save`">
-                            <i class="pi pi-check"></i>
+                            <AppIcon name="check" :size="16" />
                         </button>
                     </div>
                     <div class="ios-body">
@@ -193,7 +195,7 @@
                             <div class="ios-card">
                                 <div class="ios-row ios-row-stacked">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-tag" style="color: #007AFF; font-size: 13px;"></i>
+                                        <AppIcon name="tag" :size="13" style="color: #007AFF;" />
                                         Batch Name <span style="color: #FF3B30; margin-left: 2px;">*</span>
                                     </div>
                                     <InputText v-model="batchForm.batch_name" placeholder="e.g., Batch 2025-A"
@@ -201,7 +203,7 @@
                                 </div>
                                 <div class="ios-row ios-row-stacked">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-align-left" style="color: #8E8E93; font-size: 13px;"></i>
+                                        <AppIcon name="align-left" :size="13" style="color: #8E8E93;" />
                                         Description
                                     </div>
                                     <Textarea v-model="batchForm.description" rows="2"
@@ -219,7 +221,7 @@
                             <div class="ios-card">
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                        <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                         Date From
                                     </div>
                                     <div class="ios-row-control">
@@ -229,7 +231,7 @@
                                 </div>
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                        <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                         Date To
                                     </div>
                                     <div class="ios-row-control">
@@ -246,7 +248,7 @@
                             <div class="ios-card">
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-calendar-times" style="color: #AF52DE; font-size: 13px;"></i>
+                                        <AppIcon name="calendar-x" :size="13" style="color: #AF52DE;" />
                                         Result Date
                                     </div>
                                     <div class="ios-row-control">
@@ -256,7 +258,7 @@
                                 </div>
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-graduation-cap" style="color: #34C759; font-size: 13px;"></i>
+                                        <AppIcon name="graduation-cap" :size="13" style="color: #34C759;" />
                                         Course <span style="color: #FF3B30; margin-left: 2px;">*</span>
                                     </div>
                                     <div class="ios-row-control">
@@ -287,12 +289,12 @@
                     <div class="ios-nav-bar" @pointerdown="scholarDrag.onDragStart">
                         <button class="ios-nav-btn ios-nav-cancel"
                             @click="showScholarDialog = false; resetScholarForm();" v-tooltip.bottom="`Cancel`">
-                            <i class="pi pi-times"></i>
+                            <AppIcon name="x" :size="16" />
                         </button>
                         <span class="ios-nav-title">{{ scholarMode === 'add' ? 'Add Scholar' : 'Edit Scholar' }}</span>
                         <button class="ios-nav-btn ios-nav-action" @click="submitScholarForm"
                             :disabled="scholarForm.processing || isEndDateInvalid" v-tooltip.bottom="`Save`">
-                            <i class="pi pi-check"></i>
+                            <AppIcon name="check" :size="16" />
                         </button>
                     </div>
                     <div class="ios-body">
@@ -302,7 +304,7 @@
                             <div class="ios-card">
                                 <div v-if="scholarMode === 'edit'" class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-user" style="color: #007AFF; font-size: 13px;"></i>
+                                        <AppIcon name="user" :size="13" style="color: #007AFF;" />
                                         Name
                                     </div>
                                     <span class="text-sm text-gray-700 font-medium"
@@ -312,7 +314,7 @@
                                 </div>
                                 <div v-else class="ios-row ios-row-stacked">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-users" style="color: #007AFF; font-size: 13px;"></i>
+                                        <AppIcon name="users" :size="13" style="color: #007AFF;" />
                                         Select Scholars <span style="color: #FF3B30; margin-left: 2px;">*</span>
                                     </div>
                                     <MultiSelect v-model="scholarForm.selectedProfile" :options="scholarshipRecords"
@@ -333,7 +335,7 @@
                             <div class="ios-card">
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-calendar" style="color: #34C759; font-size: 13px;"></i>
+                                        <AppIcon name="calendar" :size="13" style="color: #34C759;" />
                                         Start Date
                                     </div>
                                     <div class="ios-row-control">
@@ -343,7 +345,7 @@
                                 </div>
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                        <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                         End Date
                                     </div>
                                     <div class="ios-row-control">
@@ -354,7 +356,7 @@
                                 </div>
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-clock" style="color: #5856D6; font-size: 13px;"></i>
+                                        <AppIcon name="clock" :size="13" style="color: #5856D6;" />
                                         Years of Service
                                     </div>
                                     <div class="ios-row-control">
@@ -430,7 +432,7 @@
                     <div class="ios-nav-bar" @pointerdown="viewScholarDrag.onDragStart">
                         <button class="ios-nav-btn ios-nav-cancel" @click="showViewScholarDialog = false"
                             v-tooltip.bottom="`Close`">
-                            <i class="pi pi-times"></i>
+                            <AppIcon name="x" :size="16" />
                         </button>
                         <span class="ios-nav-title">Scholar Details</span>
                         <div style="width: 48px;"></div>
@@ -454,7 +456,7 @@
                             <div class="ios-card">
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-clock" style="color: #5856D6; font-size: 13px;"></i>
+                                        <AppIcon name="clock" :size="13" style="color: #5856D6;" />
                                         Years of Service
                                     </div>
                                     <span class="font-bold text-blue-600" style="font-size: 16px;">
@@ -463,7 +465,7 @@
                                 </div>
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-check-circle" style="color: #34C759; font-size: 13px;"></i>
+                                        <AppIcon name="check-circle" :size="13" style="color: #34C759;" />
                                         Status
                                     </div>
                                     <Tag :value="viewingScholar.completion_status"
@@ -471,7 +473,7 @@
                                 </div>
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-calendar" style="color: #34C759; font-size: 13px;"></i>
+                                        <AppIcon name="calendar" :size="13" style="color: #34C759;" />
                                         Service Start
                                     </div>
                                     <span class="text-sm text-gray-700">
@@ -480,7 +482,7 @@
                                 </div>
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                        <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                         Service End
                                     </div>
                                     <span class="text-sm text-gray-700">
@@ -516,7 +518,7 @@
                         <button class="ios-nav-btn ios-nav-cancel"
                             @click="showViewBatchDialog = false; viewingBatch = null; scholarSearch = '';"
                             v-tooltip.bottom="`Close`">
-                            <i class="pi pi-times"></i>
+                            <AppIcon name="x" :size="16" />
                         </button>
                         <span class="ios-nav-title"
                             style="max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
@@ -524,7 +526,7 @@
                         </span>
                         <button v-if="hasPermission('return-of-service.create')" class="ios-nav-btn ios-nav-action"
                             @click="openAddScholarDialog(viewingBatch)" v-tooltip.bottom="`Add Scholar`">
-                            <i class="pi pi-plus"></i>
+                            <AppIcon name="plus" :size="16" />
                         </button>
                         <div v-else style="width: 48px;"></div>
                     </div>
@@ -535,15 +537,15 @@
                             <div class="ios-card">
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-graduation-cap" style="color: #34C759; font-size: 13px;"></i>
+                                        <AppIcon name="graduation-cap" :size="13" style="color: #34C759;" />
                                         Course
                                     </div>
                                     <span class="text-sm font-medium text-gray-800">{{ viewingBatch.course_name
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div v-if="viewingBatch.exam_date_from || viewingBatch.exam_date_to" class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                        <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                         Exam Dates
                                     </div>
                                     <span class="text-sm text-gray-700">
@@ -553,15 +555,15 @@
                                 </div>
                                 <div v-if="viewingBatch.result_date" class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-calendar-times" style="color: #AF52DE; font-size: 13px;"></i>
+                                        <AppIcon name="calendar-x" :size="13" style="color: #AF52DE;" />
                                         Result Date
                                     </div>
                                     <span class="text-sm text-gray-700">{{ formatDateLong(viewingBatch.result_date)
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <i class="pi pi-user" style="color: #8E8E93; font-size: 13px;"></i>
+                                        <AppIcon name="user" :size="13" style="color: #8E8E93;" />
                                         Created By
                                     </div>
                                     <span class="text-sm text-gray-600">{{ viewingBatch.created_by }}</span>
@@ -627,13 +629,13 @@
                                 <Column header="Actions" style="width: 120px">
                                     <template #body="slotProps">
                                         <div class="flex gap-1">
-                                            <Button icon="pi pi-eye" severity="secondary" text rounded size="small"
+                                            <AppButton icon="eye" severity="secondary" text rounded size="small"
                                                 @click="viewScholar(slotProps.data)" v-tooltip.top="`View`" />
-                                            <Button v-if="hasPermission('return-of-service.edit')" icon="pi pi-pencil"
+                                            <AppButton v-if="hasPermission('return-of-service.edit')" icon="pencil"
                                                 severity="warning" text rounded size="small"
                                                 @click="openEditScholarDialog(viewingBatch, slotProps.data)"
                                                 v-tooltip.top="`Edit`" />
-                                            <Button v-if="hasPermission('return-of-service.delete')" icon="pi pi-trash"
+                                            <AppButton v-if="hasPermission('return-of-service.delete')" icon="trash"
                                                 severity="danger" text rounded size="small"
                                                 @click="confirmDeleteScholar(slotProps.data)"
                                                 v-tooltip.top="`Delete`" />
@@ -664,7 +666,7 @@
                     <div class="ios-nav-bar" @pointerdown="deleteBatchDrag.onDragStart">
                         <button class="ios-nav-btn ios-nav-cancel" @click="showDeleteBatchDialog = false"
                             v-tooltip.bottom="`Cancel`">
-                            <i class="pi pi-times"></i>
+                            <AppIcon name="x" :size="16" />
                         </button>
                         <span class="ios-nav-title">Delete Batch</span>
                         <div style="width: 48px;"></div>
@@ -676,7 +678,7 @@
                                     style="gap: 12px; padding: 14px 16px; min-height: 60px; align-items: flex-start;">
                                     <div
                                         class="flex-shrink-0 w-9 h-9 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
-                                        <i class="pi pi-exclamation-triangle text-red-500 text-sm"></i>
+                                        <AppIcon name="exclamation-triangle" class="text-red-500" :size="16" />
                                     </div>
                                     <div style="flex: 1; min-width: 0;">
                                         <p class="text-sm font-semibold text-gray-800">{{ batchToDelete?.batch_name }}
@@ -708,7 +710,7 @@
                     <div class="ios-nav-bar" @pointerdown="deleteScholarDrag.onDragStart">
                         <button class="ios-nav-btn ios-nav-cancel" @click="showDeleteScholarDialog = false"
                             v-tooltip.bottom="`Cancel`">
-                            <i class="pi pi-times"></i>
+                            <AppIcon name="x" :size="16" />
                         </button>
                         <span class="ios-nav-title">Remove Scholar</span>
                         <div style="width: 48px;"></div>
@@ -720,11 +722,11 @@
                                     style="gap: 12px; padding: 14px 16px; min-height: 60px; align-items: flex-start;">
                                     <div
                                         class="flex-shrink-0 w-9 h-9 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
-                                        <i class="pi pi-exclamation-triangle text-red-500 text-sm"></i>
+                                        <AppIcon name="exclamation-triangle" class="text-red-500" :size="16" />
                                     </div>
                                     <div style="flex: 1; min-width: 0;">
                                         <p class="text-sm font-semibold text-gray-700">{{ scholarToDelete?.scholar_name
-                                            }}</p>
+                                        }}</p>
                                         <p class="text-xs text-red-600 mt-1">This action cannot be undone.</p>
                                     </div>
                                 </div>
@@ -747,7 +749,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="font-semibold text-gray-900 text-sm">Selected Scholars</h3>
                     <button @click="showPreviewScholarDialog = false" class="text-gray-400 hover:text-gray-600">
-                        <i class="pi pi-times text-sm"></i>
+                        <AppIcon name="x" :size="14" />
                     </button>
                 </div>
                 <div class="space-y-2">
@@ -770,6 +772,8 @@ import { Head, useForm, router } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import AppIcon from '@/Components/ui/AppIcon.vue';
+import AppButton from '@/Components/ui/AppButton.vue';
 import Toolbar from 'primevue/toolbar';
 import Panel from 'primevue/panel';
 import IconField from 'primevue/iconfield';

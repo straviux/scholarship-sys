@@ -1,10 +1,13 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
+import * as LucideIcons from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 import draggable from 'vuedraggable';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import AppIcon from '@/Components/ui/AppIcon.vue';
+import AppButton from '@/Components/ui/AppButton.vue';
 import PrimaryButton from '@/Components/ui/buttons/PrimaryButton.vue';
 import SecondaryButton from '@/Components/ui/buttons/SecondaryButton.vue';
 import DangerButton from '@/Components/ui/buttons/DangerButton.vue';
@@ -152,7 +155,7 @@ const dialogHeader = computed(() => {
 
 const form = useForm({
     name: '',
-    icon: 'pi pi-home',
+    icon: 'home',
     route: '',
     permission: '',
     order: 0,
@@ -163,46 +166,101 @@ const form = useForm({
     description: '',
 });
 
-const iconOptions = [
-    'pi pi-home',
-    'pi pi-chart-bar',
-    'pi pi-file',
-    'pi pi-graduation-cap',
-    'pi pi-clipboard',
-    'pi pi-check-circle',
-    'pi pi-users',
-    'pi pi-credit-card',
-    'pi pi-bell',
-    'pi pi-question-circle',
-    'pi pi-table',
-    'pi pi-book',
-    'pi pi-list',
-    'pi pi-building',
-    'pi pi-code',
-    'pi pi-sliders-h',
-    'pi pi-shield',
-    'pi pi-lock',
-    'pi pi-trash',
-    'pi pi-download',
-    'pi pi-megaphone',
-    'pi pi-cog',
-    'pi pi-folder',
-    'pi pi-inbox',
-    'pi pi-search',
-    'pi pi-filter',
-    'pi pi-star',
-    'pi pi-heart',
-    'pi pi-thumbs-up',
-    'pi pi-comments',
-    'pi pi-share-alt',
-    'pi pi-upload',
-];
+const toKebabCase = (iconName) => {
+    return iconName
+        .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+        .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+        .toLowerCase();
+};
+
+const normalizeIconName = (iconName) => {
+    if (typeof iconName !== 'string') {
+        return 'home';
+    }
+
+    const tokens = iconName
+        .trim()
+        .split(/\s+/)
+        .map((token) => token.replace(/^pi-/, ''))
+        .filter((token) => token && token !== 'pi' && token !== 'fw');
+
+    const cleanedIconName = tokens[tokens.length - 1] || iconName;
+
+    const iconAliases = {
+        'chart-bar': 'bar-chart-3',
+        'chart-line': 'line-chart',
+        'chart-pie': 'pie-chart',
+        'question-circle': 'help-circle',
+        'book': 'book-open',
+        'building': 'building-2',
+        'sliders-h': 'sliders-horizontal',
+        'cog': 'settings',
+        'comments': 'message-square-more',
+        'share': 'share-2',
+        'times': 'x',
+        'times-circle': 'circle-x',
+        'map-marker': 'map-pin',
+        'objects-column': 'columns',
+    };
+
+    return iconAliases[cleanedIconName] || cleanedIconName;
+};
+
+const lucideIconExclusions = new Set([
+    'Icon',
+    'IconNode',
+    'LucideIcon',
+    'createLucideIcon',
+    'icons',
+]);
+
+const isLucideIconAlias = (iconName) => {
+    return iconName.startsWith('Lucide') || iconName.endsWith('Icon');
+};
+
+const compareIconOptionNames = (leftIconName, rightIconName) => {
+    const leftIsAlias = isLucideIconAlias(leftIconName);
+    const rightIsAlias = isLucideIconAlias(rightIconName);
+
+    if (leftIsAlias !== rightIsAlias) {
+        return leftIsAlias ? 1 : -1;
+    }
+
+    const leftSegments = toKebabCase(leftIconName).split('-').length;
+    const rightSegments = toKebabCase(rightIconName).split('-').length;
+
+    if (leftSegments !== rightSegments) {
+        return leftSegments - rightSegments;
+    }
+
+    return toKebabCase(leftIconName).localeCompare(toKebabCase(rightIconName));
+};
+
+const iconOptions = [...Object.entries(LucideIcons)
+    .filter(([iconName]) => /^[A-Z]/.test(iconName) && !lucideIconExclusions.has(iconName))
+    .reduce((iconsByComponent, [iconName, iconComponent]) => {
+        if (!iconsByComponent.has(iconComponent)) {
+            iconsByComponent.set(iconComponent, []);
+        }
+
+        iconsByComponent.get(iconComponent).push(iconName);
+
+        return iconsByComponent;
+    }, new Map())
+    .values()]
+    .map((iconNames) => {
+        const [preferredIconName] = [...iconNames].sort(compareIconOptionNames);
+
+        return toKebabCase(preferredIconName);
+    })
+    .filter((iconName, index, iconNames) => iconNames.indexOf(iconName) === index)
+    .sort((leftIcon, rightIcon) => leftIcon.localeCompare(rightIcon));
 
 const openGroupDialog = () => {
     editingMenu.value = null;
     dialogMode.value = 'group';
     form.reset();
-    form.icon = 'pi pi-folder'; // Default icon for groups
+    form.icon = 'folder'; // Default icon for groups
     form.is_active = true;
     form.parent_id = null; // Groups never have parents
     form.route = ''; // Groups don't need routes
@@ -214,7 +272,7 @@ const openItemDialog = (parentId = null) => {
     editingMenu.value = null;
     dialogMode.value = 'item';
     form.reset();
-    form.icon = 'pi pi-file'; // Default icon for items
+    form.icon = 'file'; // Default icon for items
     form.is_active = true;
     form.parent_id = parentId; // Set parent if creating under a group
     form.is_group = false; // Regular items are not groups
@@ -225,7 +283,7 @@ const openLinkDialog = () => {
     editingMenu.value = null;
     dialogMode.value = 'item';
     form.reset();
-    form.icon = 'pi pi-link'; // Default icon for links
+    form.icon = 'link'; // Default icon for links
     form.is_active = true;
     form.parent_id = null; // Top-level link
     form.is_group = false; // Regular items are not groups
@@ -237,7 +295,7 @@ const openDialog = (menu = null) => {
         editingMenu.value = menu;
         dialogMode.value = menu.is_group ? 'group' : 'item';
         form.name = menu.name;
-        form.icon = menu.icon;
+        form.icon = normalizeIconName(menu.icon);
         form.route = menu.route || '';
         form.permission = menu.permission || '';
         form.order = menu.order;
@@ -592,11 +650,11 @@ const debouncedSaveOrder = () => {
                     Are you sure you want to delete <strong>"{{ menuToDelete?.name }}"</strong>?
                 </p>
                 <p v-if="menuToDelete?.is_group" class="text-sm text-gray-600">
-                    <i class="pi pi-exclamation-triangle text-red-500 mr-2"></i>
+                    <AppIcon name="exclamation-triangle" class="text-red-500 mr-2" />
                     This will also delete all items under it. This action cannot be undone.
                 </p>
                 <p v-else class="text-sm text-gray-600">
-                    <i class="pi pi-info-circle text-blue-500 mr-2"></i>
+                    <AppIcon name="info-circle" class="text-blue-500 mr-2" />
                     This will permanently delete this menu item. This action cannot be undone.
                 </p>
             </div>
@@ -619,17 +677,17 @@ const debouncedSaveOrder = () => {
                 </div>
                 <div class="flex gap-2">
                     <PrimaryButton @click="openGroupDialog" class="flex items-center gap-2">
-                        <i class="pi pi-plus"></i>
+                        <AppIcon name="plus" />
                         Create Group
                     </PrimaryButton>
                     <PrimaryButton @click="openLinkDialog()" class="flex items-center gap-2">
-                        <i class="pi pi-plus"></i>
+                        <AppIcon name="plus" />
                         Add Link
                     </PrimaryButton>
                     <PrimaryButton @click="openItemDialog()" class="flex items-center gap-2"
                         :disabled="groupOptions.length === 0"
                         v-tooltip.bottom="groupOptions.length === 0 ? 'Create a group first' : ''">
-                        <i class="pi pi-plus"></i>
+                        <AppIcon name="plus" />
                         Add Item to Group
                     </PrimaryButton>
                 </div>
@@ -643,7 +701,7 @@ const debouncedSaveOrder = () => {
                             <div>
                                 <h3 class="text-xl font-semibold text-gray-900">Menu Items</h3>
                                 <p class="text-sm text-gray-600 mt-1 flex items-center gap-2">
-                                    <i class="pi pi-info-circle"></i>
+                                    <AppIcon name="info-circle" />
                                     Click on groups to expand/collapse.
                                 </p>
                             </div>
@@ -651,7 +709,7 @@ const debouncedSaveOrder = () => {
 
                         <!-- Tree View with Expandable Groups - Draggable -->
                         <draggable v-model="allTreeNodes" tag="div"
-                            :options="{ animation: 150, handle: '.pi-grip-vertical' }" class="space-y-2" item-key="key"
+                            :options="{ animation: 150, handle: '.drag-handle' }" class="space-y-2" item-key="key"
                             @change="debouncedSaveOrder()">
                             <template #item="{ element: node }">
                                 <div class="space-y-1">
@@ -660,30 +718,30 @@ const debouncedSaveOrder = () => {
                                         :class="['bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition']"
                                         @click="expandedGroups[node.data.id] = !expandedGroups[node.data.id]">
                                         <div class="flex items-center gap-3 flex-1">
-                                            <i :class="[
-                                                'transition-transform',
-                                                expandedGroups[node.data.id] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'
-                                            ]"></i>
-                                            <i class="pi pi-grip-vertical text-blue-400 cursor-grab hover:text-blue-600 text-lg"
-                                                @click.stop v-tooltip.bottom="'Drag to reorder'"></i>
-                                            <i
-                                                :class="[node.data.icon || 'pi pi-folder', 'text-lg text-blue-400 font-bold']"></i>
+                                            <AppIcon
+                                                :name="expandedGroups[node.data.id] ? 'chevron-down' : 'chevron-right'"
+                                                class="transition-transform" />
+                                            <AppIcon name="grip-vertical"
+                                                class="drag-handle text-blue-400 cursor-grab hover:text-blue-600"
+                                                @click.stop v-tooltip.bottom="'Drag to reorder'" />
+                                            <AppIcon :name="node.data.icon || 'folder'"
+                                                class="text-lg text-blue-400 font-bold" />
                                             <div>
                                                 <div class="font-bold text-blue-700">{{ node.data.name }}</div>
                                                 <span
                                                     class="inline-flex items-center gap-1 px-2 py-1 mt-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
-                                                    <i class="pi pi-folder text-xs"></i>
+                                                    <AppIcon name="folder" :size="12" />
                                                     {{ node.children?.length || 0 }} item(s)
                                                 </span>
                                             </div>
                                         </div>
                                         <div class="flex gap-1" @click.stop>
-                                            <Button icon="pi pi-plus" rounded text severity="success" size="small"
+                                            <AppButton icon="plus" rounded text severity="success" size="small"
                                                 @click="openAssignDialog(node)"
                                                 v-tooltip.bottom="'Add items to this group'" />
-                                            <Button icon="pi pi-pencil" rounded text severity="info" size="small"
+                                            <AppButton icon="pencil" rounded text severity="info" size="small"
                                                 @click="editMenuItem(node)" />
-                                            <Button icon="pi pi-trash" rounded text severity="danger" size="small"
+                                            <AppButton icon="trash" rounded text severity="danger" size="small"
                                                 @click="deleteMenuItem(node)" />
                                         </div>
                                     </div>
@@ -691,17 +749,18 @@ const debouncedSaveOrder = () => {
                                     <!-- Group Children (items in group) - Draggable -->
                                     <draggable v-if="node.data.is_group && expandedGroups[node.data.id]"
                                         v-model="node.children" tag="div"
-                                        :options="{ animation: 150, handle: '.pi-grip-vertical' }"
+                                        :options="{ animation: 150, handle: '.drag-handle' }"
                                         class="ml-4 space-y-1 cursor-pointer" item-key="key"
                                         @change="debouncedSaveOrder()">
                                         <template #item="{ element: child }">
                                             <div
                                                 class="bg-blue-50 border-l-4 border-blue-300 rounded p-3 flex items-center justify-between hover:bg-blue-100 transition">
                                                 <div class="flex items-center gap-3 flex-1">
-                                                    <i class="pi pi-grip-vertical text-blue-400 cursor-grab hover:text-blue-600 text-lg"
-                                                        v-tooltip.bottom="'Drag to reorder'"></i>
-                                                    <i
-                                                        :class="[child.data.icon || 'pi pi-link', 'text-lg text-gray-600']"></i>
+                                                    <AppIcon name="grip-vertical"
+                                                        class="drag-handle text-blue-400 cursor-grab hover:text-blue-600"
+                                                        v-tooltip.bottom="'Drag to reorder'" />
+                                                    <AppIcon :name="child.data.icon || 'link'"
+                                                        class="text-lg text-gray-600" />
                                                     <div>
                                                         <div class="text-gray-800 font-medium">{{ child.data.name }}
                                                         </div>
@@ -711,13 +770,13 @@ const debouncedSaveOrder = () => {
                                                     </div>
                                                 </div>
                                                 <div class="flex gap-1" @click.stop>
-                                                    <Button icon="pi pi-unlink" rounded text severity="warning"
+                                                    <AppButton icon="unlink" rounded text severity="warning"
                                                         size="small" @click="removeFromGroup(child)"
                                                         v-tooltip.bottom="'Remove from this group'" />
-                                                    <Button icon="pi pi-pencil" rounded text severity="info"
-                                                        size="small" @click="editMenuItem(child)" />
-                                                    <Button icon="pi pi-trash" rounded text severity="danger"
-                                                        size="small" @click="deleteMenuItem(child)" />
+                                                    <AppButton icon="pencil" rounded text severity="info" size="small"
+                                                        @click="editMenuItem(child)" />
+                                                    <AppButton icon="trash" rounded text severity="danger" size="small"
+                                                        @click="deleteMenuItem(child)" />
                                                 </div>
                                             </div>
                                         </template>
@@ -733,9 +792,10 @@ const debouncedSaveOrder = () => {
                                     <div v-if="!node.data.is_group"
                                         class="bg-gray-50 border-l-4 border-blue-200 p-3 rounded flex items-center justify-between hover:bg-gray-100 transition cursor-pointer">
                                         <div class="flex items-center gap-3 flex-1">
-                                            <i class="pi pi-grip-vertical text-blue-400 cursor-grab hover:text-blue-600 text-lg"
-                                                v-tooltip.bottom="'Drag to reorder'"></i>
-                                            <i :class="[node.data.icon || 'pi pi-file', 'text-lg text-gray-600']"></i>
+                                            <AppIcon name="grip-vertical"
+                                                class="drag-handle text-blue-400 cursor-grab hover:text-blue-600"
+                                                v-tooltip.bottom="'Drag to reorder'" />
+                                            <AppIcon :name="node.data.icon || 'file'" class="text-lg text-gray-600" />
                                             <div>
                                                 <div class="text-gray-800 font-medium">{{ node.data.name }}</div>
                                                 <span
@@ -748,9 +808,9 @@ const debouncedSaveOrder = () => {
                                             </div>
                                         </div>
                                         <div class="flex gap-1" @click.stop>
-                                            <Button icon="pi pi-pencil" rounded text severity="info" size="small"
+                                            <AppButton icon="pencil" rounded text severity="info" size="small"
                                                 @click="editMenuItem(node)" />
-                                            <Button icon="pi pi-trash" rounded text severity="danger" size="small"
+                                            <AppButton icon="trash" rounded text severity="danger" size="small"
                                                 @click="deleteMenuItem(node)" />
                                         </div>
                                     </div>
@@ -758,7 +818,7 @@ const debouncedSaveOrder = () => {
                             </template>
                             <template #header v-if="allTreeNodes.length === 0">
                                 <div class="text-center py-12">
-                                    <i class="pi pi-inbox text-4xl short:text-2xl text-gray-300 mb-4"></i>
+                                    <AppIcon name="inbox" class="text-4xl short:text-2xl text-gray-300 mb-4" />
                                     <p class="text-gray-500">No menu items yet. Create a group to get started!</p>
                                 </div>
                             </template>
@@ -782,19 +842,21 @@ const debouncedSaveOrder = () => {
                 <!-- Icon -->
                 <div>
                     <InputLabel for="icon" value="Icon *" />
-                    <Select id="icon" v-model="form.icon" :options="iconOptions" class="w-full" :showClear="true">
+                    <Select id="icon" v-model="form.icon" :options="iconOptions" class="w-full" :showClear="true" filter
+                        :virtualScrollerOptions="{ itemSize: 38 }">
                         <template #value="{ value }">
                             <div v-if="value" class="flex items-center gap-2">
-                                <i :class="[value, 'text-lg']"></i>
+                                <AppIcon :name="value" :size="18" />
+                                <span>{{ value }}</span>
                             </div>
                             <div v-else class="flex items-center gap-2 text-gray-500">
-                                <i class="pi pi-circle-fill text-xs"></i>
+                                <AppIcon name="circle-fill" :size="12" />
                                 <span>Select an icon</span>
                             </div>
                         </template>
                         <template #option="{ option }">
                             <div class="flex items-center gap-2">
-                                <i :class="[option, 'text-lg']"></i>
+                                <AppIcon :name="option" :size="18" />
                                 <span>{{ option }}</span>
                             </div>
                         </template>
@@ -861,7 +923,7 @@ const debouncedSaveOrder = () => {
                     <InputLabel value="Select Items to Add *" class="mb-3 block" />
                     <div class="space-y-2 max-h-96 overflow-y-auto border border-gray-300 rounded-lg p-4">
                         <div v-if="assignableItems.length === 0" class="text-center py-8 text-gray-500">
-                            <i class="pi pi-inbox text-2xl mb-2"></i>
+                            <AppIcon name="inbox" class="text-2xl mb-2" />
                             <p>No items available to add</p>
                         </div>
                         <div v-for="item in assignableItems" :key="item.value" class="flex items-center">

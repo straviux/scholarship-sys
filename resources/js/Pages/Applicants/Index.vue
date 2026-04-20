@@ -114,7 +114,7 @@ const {
         { key: 'jpm_filter', type: 'text', default: getInitialJpmFilter() },
     ],
     beforeSearch(params, filterValues) {
-        // JPM filter → convert to special backend params
+        // JPM filter -> convert to special backend params
         const jpm = filterValues.jpm_filter;
         delete params.jpm_filter;
         if (jpm === 'jpm_only') params.show_jpm_only = 1;
@@ -608,12 +608,12 @@ const buildContextMenu = (rowData) => {
     if (hasPermission('applicants.view')) {
         items.push({
             label: 'Review Application',
-            icon: 'pi pi-id-card',
+            icon: 'id-card',
             command: () => openProfileReviewModal(rowData)
         });
         items.push({
             label: 'View Requirements',
-            icon: 'pi pi-check-circle',
+            icon: 'check-circle',
             command: () => openRequirementsModal(rowData)
         });
     }
@@ -622,12 +622,12 @@ const buildContextMenu = (rowData) => {
         items.push(
             {
                 label: 'Edit Applicant',
-                icon: 'pi pi-user-edit',
+                icon: 'user-edit',
                 command: () => editApplicant(rowData)
             },
             {
                 label: 'Update YAKAP Category',
-                icon: 'pi pi-heart',
+                icon: 'heart',
                 command: () => openUpdateYakapModal(rowData)
             }
         );
@@ -639,13 +639,13 @@ const buildContextMenu = (rowData) => {
         });
         items.push({
             label: 'Assign Priority',
-            icon: 'pi pi-star',
+            icon: 'star',
             command: () => openPriorityModal(rowData)
         });
         if (rowData.priority_level && rowData.priority_level !== 'normal') {
             items.push({
                 label: 'Remove Priority',
-                icon: 'pi pi-star-fill',
+                icon: 'star-fill',
                 command: () => removePriority(rowData)
             });
         }
@@ -657,7 +657,7 @@ const buildContextMenu = (rowData) => {
         });
         items.push({
             label: 'Edit JPM Tagging',
-            icon: 'pi pi-tags',
+            icon: 'tags',
             command: () => openJpmModal(rowData),
             disabled: !hasPermission('jpm.manage')
         });
@@ -669,7 +669,7 @@ const buildContextMenu = (rowData) => {
         });
         items.push({
             label: 'Add/Edit Remarks',
-            icon: 'pi pi-comment',
+            icon: 'comment',
             command: () => openRemarksModal(rowData)
         });
     }
@@ -681,7 +681,7 @@ const buildContextMenu = (rowData) => {
             },
             {
                 label: 'Delete Applicant',
-                icon: 'pi pi-trash',
+                icon: 'trash',
                 command: () => confirmDeleteApplicant(rowData)
             }
         );
@@ -738,12 +738,12 @@ const interviewRecordId = ref(null);
 const profileMenuItems = ref([
     {
         label: 'Mark as Approved for Review',
-        icon: 'pi pi-check',
+        icon: 'check',
         command: () => markAsApproved()
     },
     {
         label: 'Mark as Denied',
-        icon: 'pi pi-times',
+        icon: 'x',
         command: () => markAsDenied()
     }
 ]);
@@ -1104,7 +1104,7 @@ const truncateText = (text, maxLength = 80) => {
                             <div class="flex items-center justify-between gap-4 flex-1">
                                 <label class="text-sm text-gray-600">JPM Tagging</label>
                                 <ToggleSwitch v-model="showJpmColumns"
-                                    style="transform: scale(0.75); origin: right center;" />
+                                    style="transform: scale(0.75); transform-origin: right center;" />
                             </div>
 
                             <div class="flex items-center gap-2">
@@ -1118,11 +1118,13 @@ const truncateText = (text, maxLength = 80) => {
 
                         <Button @click="openYakapCategoryModal" v-if="hasPermission('applicants.create')"
                             severity="success" text rounded v-tooltip.bottom="'Add New Applicant'">
-                            <i class="pi pi-user-plus !text-2xl"></i>
+                            <template #icon>
+                                <AppIcon name="user-plus" :size="24" />
+                            </template>
                         </Button>
 
 
-                        <!-- <Button as="a" label="Existing" icon="pi pi-user"
+                        <!-- <Button as="a" label="Existing" icon="user"
                             v-if="hasPermission('applicants.create') && !hasRole('user')"
                             :href="route('applicants.index', { action: 'add-existing' })" severity="secondary"
                             size="small" /> -->
@@ -1220,10 +1222,9 @@ const truncateText = (text, maxLength = 80) => {
                     </div>
                 </div>
                 <div class="flex gap-2 justify-end mt-6 pt-4 border-t">
-                    <Button severity="secondary" outlined size="small" icon="pi pi-history" label="Clear"
+                    <AppButton severity="secondary" outlined size="small" icon="history" label="Clear"
                         @click="clearDrawerFilters" />
-                    <Button label="Apply" icon="pi pi-filter-fill" severity="info" size="small"
-                        @click="applyDrawerFilters" />
+                    <AppButton label="Apply" icon="filter" severity="info" size="small" @click="applyDrawerFilters" />
                 </div>
             </FloatingDrawer>
 
@@ -1235,11 +1236,13 @@ const truncateText = (text, maxLength = 80) => {
                     class="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
                     <div class="flex gap-4 max-w-md">
                         <InputGroup>
-                            <InputGroupAddon><i class="pi pi-search text-gray-400" /></InputGroupAddon>
+                            <InputGroupAddon>
+                                <AppIcon name="search" :size="16" class="text-gray-400" />
+                            </InputGroupAddon>
                             <InputText v-model="globalFilter" placeholder="Type name, remarks etc.." size="small"
                                 @keyup.enter="triggerSearch()" />
                         </InputGroup>
-                        <Button icon="pi pi-filter" severity="warn" text rounded @click="openDrawer()"
+                        <AppButton icon="filter" severity="warn" text rounded @click="openDrawer()"
                             v-tooltip.bottom="'More Filters'" />
                     </div>
                     <div class="flex items-center gap-4">
@@ -1247,7 +1250,7 @@ const truncateText = (text, maxLength = 80) => {
                             <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
                             <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
                         </div>
-                        <Button :icon="simpleView ? 'pi pi-table' : 'pi pi-list'" severity="secondary" rounded outlined
+                        <AppButton :icon="simpleView ? 'table' : 'list'" severity="secondary" rounded outlined
                             size="small"
                             v-tooltip.bottom="simpleView ? 'Switch to Detailed View' : 'Switch to Simple View'"
                             @click="simpleView = !simpleView" />
@@ -1286,8 +1289,8 @@ const truncateText = (text, maxLength = 80) => {
                                 showIcon iconDisplay="input" />
                         </InputGroup>
                     </div>
-                    <Button v-if="activeFilterTags.length" icon="pi pi-times" severity="danger" text rounded
-                        size="small" @click="clearFilter" v-tooltip.bottom="'Clear Filters'" />
+                    <AppButton v-if="activeFilterTags.length" icon="times" severity="danger" text rounded size="small"
+                        @click="clearFilter" v-tooltip.bottom="'Clear Filters'" />
                 </div>
 
                 <!-- Active Filter Tags -->
@@ -1302,7 +1305,7 @@ const truncateText = (text, maxLength = 80) => {
                 <div v-if="selectedRows.length > 0"
                     class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-4xl flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-exclamation-circle text-yellow-600 text-xl"></i>
+                        <AppIcon name="exclamation-circle" :size="20" class="text-yellow-600" />
                         <div>
                             <div class="font-semibold text-yellow-900">{{ selectedRows.length }} applicant(s)
                                 selected
@@ -1313,15 +1316,23 @@ const truncateText = (text, maxLength = 80) => {
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <Button v-if="hasPermission('applicants.export')" icon="pi pi-download" @click="openExportModal"
+                        <AppButton v-if="hasPermission('applicants.export')" icon="download" @click="openExportModal"
                             severity="info" label="Export Selected" outlined rounded />
-                        <Button v-if="hasPermission('applicants.edit')" icon="pi pi-pencil" @click="openBatchYakapModal"
+                        <AppButton v-if="hasPermission('applicants.edit')" icon="pencil" @click="openBatchYakapModal"
                             severity="warning" label="Batch Update YAKAP" rounded />
                     </div>
                 </div>
 
                 <!-- Context Menu -->
-                <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
+                <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body">
+                    <template #item="{ item, props }">
+                        <a v-ripple v-bind="props.action" class="flex items-center gap-2 w-full">
+                            <AppIcon v-if="item.icon" :name="item.icon" :size="14" />
+                            <span>{{ item.label }}</span>
+                            <AppIcon v-if="item.items" name="chevron-right" :size="14" class="ml-auto" />
+                        </a>
+                    </template>
+                </ContextMenu>
 
                 <!-- Table View -->
                 <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="applicants" stripedRows
@@ -1378,11 +1389,12 @@ const truncateText = (text, maxLength = 80) => {
                                                 class="flex-shrink-0 ml-2 flex items-center justify-center"
                                                 v-tooltip.top="formatPriorityName(slotProps.data.priority_level) + (slotProps.data.priority_reason ? ': ' + slotProps.data.priority_reason : '')">
                                                 <!-- Star for High and Urgent -->
-                                                <i v-if="slotProps.data.priority_level === 'urgent' || slotProps.data.priority_level === 'high'"
-                                                    class="pi pi-star-fill" :class="{
+                                                <AppIcon
+                                                    v-if="slotProps.data.priority_level === 'urgent' || slotProps.data.priority_level === 'high'"
+                                                    name="star-fill" :class="{
                                                         'text-red-500': slotProps.data.priority_level === 'urgent',
                                                         'text-orange-500': slotProps.data.priority_level === 'high'
-                                                    }" style="font-size: 0.85rem;"></i>
+                                                    }" :size="14" />
                                                 <!-- Circle for Normal -->
                                                 <div v-else-if="slotProps.data.priority_level === 'normal'"
                                                     class="w-3 h-3 rounded-full bg-blue-500"></div>
@@ -1394,25 +1406,25 @@ const truncateText = (text, maxLength = 80) => {
                                 <div class="flex gap-2">
                                     <div class="flex items-center gap-1"
                                         v-tooltip.bottom="'Program #' + (slotProps.data.sequence_number || '-')">
-                                        <i class="pi pi-bookmark text-indigo-500" style="font-size: 0.7rem;"></i>
+                                        <AppIcon name="bookmark" :size="11" class="text-indigo-500" />
                                         <span class="text-xs font-bold text-gray-600">#{{
                                             slotProps.data.sequence_number || '-' }}</span>
                                     </div>
                                     <div class="flex items-center gap-1"
                                         v-tooltip.bottom="'Course #' + (slotProps.data.sequence_number_by_course || '-')">
-                                        <i class="pi pi-book text-teal-500" style="font-size: 0.7rem;"></i>
+                                        <AppIcon name="book-open" :size="11" class="text-teal-500" />
                                         <span class="text-xs font-bold text-gray-600">#{{
                                             slotProps.data.sequence_number_by_course || '-' }}</span>
                                     </div>
                                     <div class="flex items-center gap-1"
                                         v-tooltip.bottom="'School #' + (slotProps.data.sequence_number_by_school_course || '-')">
-                                        <i class="pi pi-building text-amber-500" style="font-size: 0.7rem;"></i>
+                                        <AppIcon name="building-2" :size="11" class="text-amber-500" />
                                         <span class="text-xs font-bold text-gray-600">#{{
                                             slotProps.data.sequence_number_by_school_course || '-' }}</span>
                                     </div>
                                     <div class="flex items-center gap-1"
                                         v-tooltip.bottom="'Daily #' + (slotProps.data.daily_sequence_number || '-')">
-                                        <i class="pi pi-calendar text-gray-400" style="font-size: 0.7rem;"></i>
+                                        <AppIcon name="calendar" :size="11" class="text-gray-400" />
                                         <span class="text-xs font-bold text-gray-600">#{{
                                             slotProps.data.daily_sequence_number || '-' }}</span>
                                     </div>
@@ -1445,13 +1457,13 @@ const truncateText = (text, maxLength = 80) => {
 
                             <div class="ml-1 text-xs  mt-0.5 flex items-center gap-3 "
                                 v-if="slotProps.data.municipality">
-                                <i class="pi pi-map text-gray-500" style="font-size: 0.75rem;"></i>
+                                <AppIcon name="map" :size="12" class="text-gray-500" />
                                 <span>{{ slotProps.data.municipality }}{{ slotProps.data.barangay ? `,
                                     ${slotProps.data.barangay}` : '' }}</span>
                             </div>
                             <span v-else class="text-gray-400">-</span>
                             <div class="ml-1 text-xs  mt-0.5 flex items-center gap-3 ">
-                                <i class="pi pi-phone text-gray-500" style="font-size: 0.75rem;"></i>
+                                <AppIcon name="phone" :size="12" class="text-gray-500" />
                                 <span>{{ slotProps.data.contact_no || 'No contact no.' }}</span>
                             </div>
                         </template>
@@ -1487,11 +1499,11 @@ const truncateText = (text, maxLength = 80) => {
                             <div class="flex items-center justify-center">
                                 <div v-if="getJpmStatus(slotProps.data)?.status === 'member'"
                                     v-tooltip.top="'JPM Member: ' + getJpmMemberDetails(getJpmStatus(slotProps.data))">
-                                    <i class="pi pi-check-circle text-green-500" style="font-size: 1.1rem;"></i>
+                                    <AppIcon name="check-circle" :size="18" class="text-green-500" />
                                 </div>
                                 <div v-else-if="getJpmStatus(slotProps.data)?.status === 'not_member'"
                                     v-tooltip.top="'Not a JPM Member'">
-                                    <i class="pi pi-times-circle text-orange-400" style="font-size: 1.1rem;"></i>
+                                    <AppIcon name="times-circle" :size="18" class="text-orange-400" />
                                 </div>
                                 <span v-else class="text-gray-300">-</span>
                             </div>
@@ -1529,7 +1541,7 @@ const truncateText = (text, maxLength = 80) => {
                         style="min-width: 150px">
                         <template #body="slotProps">
                             <div class="flex flex-col gap-2 items-center">
-                                <Button @click="openJpmModal(slotProps.data)" rounded icon="pi pi-tags" severity="info"
+                                <AppButton @click="openJpmModal(slotProps.data)" rounded icon="tags" severity="info"
                                     size="small" outlined :disabled="!hasPermission('jpm.manage')"
                                     v-tooltip.top="'Edit JPM tagging and remarks'" />
 
@@ -1548,14 +1560,14 @@ const truncateText = (text, maxLength = 80) => {
                             <div class="flex items-center justify-center">
                                 <div v-if="slotProps.data.priority_level === 'urgent'"
                                     v-tooltip.top="'Urgent' + (slotProps.data.priority_reason ? ': ' + slotProps.data.priority_reason : '')">
-                                    <i class="pi pi-exclamation-triangle text-red-500" style="font-size: 1.1rem;"></i>
+                                    <AppIcon name="exclamation-triangle" :size="18" class="text-red-500" />
                                 </div>
                                 <div v-else-if="slotProps.data.priority_level === 'high'"
                                     v-tooltip.top="'High' + (slotProps.data.priority_reason ? ': ' + slotProps.data.priority_reason : '')">
-                                    <i class="pi pi-star-fill text-orange-500" style="font-size: 1.1rem;"></i>
+                                    <AppIcon name="star-fill" :size="18" class="text-orange-500" />
                                 </div>
                                 <div v-else v-tooltip.top="'Normal'">
-                                    <i class="pi pi-minus text-gray-300" style="font-size: 0.9rem;"></i>
+                                    <AppIcon name="minus" :size="14" class="text-gray-300" />
                                 </div>
                             </div>
                         </template>
@@ -1565,7 +1577,7 @@ const truncateText = (text, maxLength = 80) => {
                     <Column header="Actions" style="width: 60px" v-if="!simpleView">
                         <template #body="slotProps">
                             <div class="flex justify-center">
-                                <Button icon="pi pi-ellipsis-v" rounded outlined severity="secondary" size="small"
+                                <AppButton icon="ellipsis-vertical" rounded outlined severity="secondary" size="small"
                                     @click="(event) => showRowContextMenu(event, slotProps.data)"
                                     v-tooltip.top="'More actions'" />
                             </div>

@@ -10,15 +10,19 @@ use App\Models\EducationalBackground;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipProgram;
 use App\Models\ScholarshipRecord;
+use App\Models\SystemOption;
 use App\Models\Course;
 use App\Models\School;
 use App\Services\ScholarshipApprovalService;
 use Illuminate\Support\Facades\Auth;
 use App\Services\ScholarshipCompletionService;
 use App\Services\ActivityLogService;
+use App\Services\ScholarshipExpenseProjectionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Exists;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Gate;
@@ -1019,9 +1023,52 @@ class ScholarshipProfileController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $selectedProgramCode = $request->filled('program_id')
+            ? ScholarshipProgram::whereKey($request->input('program_id'))->value('shortname')
+            : null;
+
         $request->validate([
-            'date_approved' => 'nullable|date',
-            'remarks' => 'nullable|string|max:500'
+            'date_approved' => 'required|date|before_or_equal:today',
+            'remarks' => 'nullable|string|max:500',
+            'program_id' => 'required|integer|exists:scholarship_programs,id',
+            'course_id' => [
+                'required',
+                'integer',
+                Rule::exists('courses', 'id')->where(function ($query) use ($request) {
+                    $query->where('scholarship_program_id', $request->program_id);
+                }),
+            ],
+            'school_id' => 'required|integer|exists:schools,id',
+            'year_level' => 'required|string|max:50',
+            'term' => 'required|string|max:50',
+            'grant_provision' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::exists('system_options', 'value')->where(function ($query) use ($selectedProgramCode) {
+                    $query->where('category', 'grant_provision')
+                        ->where('is_active', true);
+
+                    if ($selectedProgramCode) {
+                        $query->where(function ($subQuery) use ($selectedProgramCode) {
+                            $subQuery->whereNull('program')
+                                ->orWhere('program', $selectedProgramCode);
+                        });
+                    }
+                }),
+            ],
+        ], [
+            'date_approved.required' => 'Approval Date is required.',
+            'date_approved.before_or_equal' => 'Approval Date cannot be in the future.',
+            'program_id.required' => 'Program is required.',
+            'program_id.exists' => 'The selected program is invalid.',
+            'course_id.required' => 'Course is required.',
+            'course_id.exists' => 'The selected course is invalid for the chosen program.',
+            'school_id.required' => 'School is required.',
+            'school_id.exists' => 'The selected school is invalid.',
+            'year_level.required' => 'Year Level is required.',
+            'term.required' => 'Term is required.',
+            'grant_provision.exists' => 'The selected grant provision is invalid for the chosen program.',
         ]);
 
         try {
@@ -1029,7 +1076,13 @@ class ScholarshipProfileController extends Controller
 
             $approvalService->approve($record, Auth::user(), [
                 'date_approved' => $request->date_approved,
-                'remarks' => $request->remarks
+                'remarks' => $request->remarks,
+                'program_id' => $request->program_id,
+                'course_id' => $request->course_id,
+                'school_id' => $request->school_id,
+                'year_level' => $request->year_level,
+                'term' => $request->term,
+                'grant_provision' => $request->grant_provision,
             ]);
 
             return back()->with('success', 'Application approved successfully.');
@@ -1118,7 +1171,15 @@ class ScholarshipProfileController extends Controller
             'financial_need_level' => 'required|string|in:high,moderate,low',
             'communication_skills' => 'required|string|in:excellent,good,fair',
             'recommendation' => 'required|string|in:recommended,further_evaluation,not_recommended',
+            'grant_provision' => [
+                'nullable',
+                'string',
+                'max:255',
+                $this->grantProvisionValidationRule(ScholarshipProgram::whereKey($record->program_id)->value('shortname')),
+            ],
             'interview_remarks' => 'nullable|string|max:2000',
+        ], [
+            'grant_provision.exists' => 'The selected grant provision is invalid for this program.',
         ]);
 
         try {
@@ -1149,7 +1210,15 @@ class ScholarshipProfileController extends Controller
             'financial_need_level' => 'required|string|in:high,moderate,low',
             'communication_skills' => 'required|string|in:excellent,good,fair',
             'recommendation' => 'required|string|in:recommended,further_evaluation,not_recommended',
+            'grant_provision' => [
+                'nullable',
+                'string',
+                'max:255',
+                $this->grantProvisionValidationRule(ScholarshipProgram::whereKey($record->program_id)->value('shortname')),
+            ],
             'interview_remarks' => 'nullable|string|max:2000',
+        ], [
+            'grant_provision.exists' => 'The selected grant provision is invalid for this program.',
         ]);
 
         try {
@@ -1174,7 +1243,7 @@ class ScholarshipProfileController extends Controller
     /**
      * Display interviewed applicants for approval management
      */
-    public function showInterviewedApplicants(Request $request)
+    public function showInterviewedApplicants(Request $request, ScholarshipExpenseProjectionService $expenseProjectionService)
     {
         if (!Gate::allows('applicants.approve')) {
             abort(403, 'You do not have permission to view interviewed applicants.');
@@ -1220,12 +1289,29 @@ class ScholarshipProfileController extends Controller
         }
 
         // Sort by interview date (newest first)
-        $reviewed = $query->orderBy('interviewed_at', 'desc')->get();
+        $reviewed = $query->orderBy('interviewed_at', 'desc')->get()
+            ->map(fn(ScholarshipRecord $record) => $this->attachExpenseProjection($record, $expenseProjectionService));
 
         return Inertia::render('InterviewedApplicants/Index', [
             'interviewed_applicants' => $reviewed,
             'decline_reasons' => config('scholarship.decline_reasons'),
         ]);
+    }
+
+    private function attachExpenseProjection(
+        ScholarshipRecord $record,
+        ScholarshipExpenseProjectionService $expenseProjectionService
+    ): ScholarshipRecord {
+        foreach ($expenseProjectionService->projectForRecord($record) as $key => $value) {
+            $record->setAttribute($key, $value);
+        }
+
+        $record->setAttribute(
+            'grant_provision_label',
+            SystemOption::formatGrantProvisionLabel($record->grant_provision, 'N/A')
+        );
+
+        return $record;
     }
 
     /**
@@ -1564,6 +1650,7 @@ class ScholarshipProfileController extends Controller
                 ->select('profile_id', 'first_name', 'middle_name', 'last_name', 'extension_name')
                 ->with(['scholarshipRecords' => function ($query) use ($programId, $profileIds) {
                     $query->where('unified_status', 'active');
+
                     if ($programId) {
                         $query->where(function ($q) use ($programId) {
                             $q->where('program_id', $programId)
@@ -1619,5 +1706,20 @@ class ScholarshipProfileController extends Controller
             Log::error('Error fetching scholars for voucher: ' . $e->getMessage() . ' | ' . $e->getFile() . ':' . $e->getLine());
             return response()->json(['error' => 'Failed to fetch scholars', 'message' => $e->getMessage()], 500);
         }
+    }
+
+    private function grantProvisionValidationRule(?string $programCode): Exists
+    {
+        return Rule::exists('system_options', 'value')->where(function ($query) use ($programCode) {
+            $query->where('category', 'grant_provision')
+                ->where('is_active', true);
+
+            if ($programCode) {
+                $query->where(function ($subQuery) use ($programCode) {
+                    $subQuery->whereNull('program')
+                        ->orWhere('program', $programCode);
+                });
+            }
+        });
     }
 }

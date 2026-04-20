@@ -4,11 +4,13 @@
         <template #container>
             <div class="ios-modal" :style="[{ width: '60vw', minWidth: '500px' }, dragStyle]">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
+                        <AppIcon name="times" />
+                    </button>
                     <span class="ios-nav-title">Manage Attachments</span>
                     <button v-if="hasEditPermission" class="ios-nav-btn ios-nav-action" @click="uploadAttachment"
                         :disabled="uploading || !attachmentForm.file || !attachmentForm.attachment_name || (attachmentForm.attachment_name === 'others' && !attachmentForm.custom_attachment_name)">
-                        <i class="pi pi-check"></i>
+                        <AppIcon name="check" />
                     </button>
                 </div>
                 <div class="ios-body" style="padding: 16px;">
@@ -17,7 +19,7 @@
                         <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ record.program?.name ||
                             'N/A' }}</p>
                         <p class="text-xs text-gray-600 dark:text-gray-400">{{ record.academic_year }} - {{ record.term
-                        }}</p>
+                            }}</p>
                     </div>
 
                     <!-- Existing Attachments -->
@@ -27,8 +29,8 @@
                             <div v-for="attachment in record.attachments" :key="attachment.attachment_id"
                                 class="ios-list-item">
                                 <div class="flex items-center gap-3">
-                                    <i :class="getFileIcon(attachment.file_type)" class="text-2xl"
-                                        style="color: #007AFF;"></i>
+                                    <AppIcon :name="getFileIcon(attachment.file_type)" :size="24"
+                                        style="color: #007AFF;" />
                                     <div>
                                         <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{
                                             attachment.attachment_name }}
@@ -41,15 +43,15 @@
                                 <div class="flex gap-1">
                                     <button class="ios-icon-btn" @click="viewAttachment(attachment)"
                                         v-tooltip.top="'View'">
-                                        <i class="pi pi-eye"></i>
+                                        <AppIcon name="eye" />
                                     </button>
                                     <button class="ios-icon-btn" @click="downloadAttachment(attachment)"
                                         v-tooltip.top="'Download'">
-                                        <i class="pi pi-download"></i>
+                                        <AppIcon name="download" />
                                     </button>
                                     <button v-if="hasEditPermission" class="ios-icon-btn ios-icon-btn-danger"
                                         @click="deleteAttachment(attachment)" v-tooltip.top="'Delete'">
-                                        <i class="pi pi-trash"></i>
+                                        <AppIcon name="trash" />
                                     </button>
                                 </div>
                             </div>
@@ -210,9 +212,9 @@ const deleteAttachment = async (attachment) => {
 };
 
 const getFileIcon = (fileType) => {
-    if (fileType?.includes('pdf')) return 'pi-file-pdf';
-    if (fileType?.includes('image')) return 'pi-image';
-    return 'pi-file';
+    if (fileType?.includes('pdf')) return 'file-pdf';
+    if (fileType?.includes('image')) return 'image';
+    return 'file';
 };
 
 const formatFileSize = (bytes) => {

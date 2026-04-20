@@ -352,7 +352,21 @@ class ApplicantController extends Controller
         $profiles->load([
             'scholarshipGrant' => function ($q) {
                 $q->with(['program', 'school', 'course'])
-                    ->select('id', 'profile_id', 'program_id', 'school_id', 'course_id', 'unified_status', 'year_level', 'yakap_category', 'date_filed')
+                    ->select(
+                        'id',
+                        'profile_id',
+                        'program_id',
+                        'school_id',
+                        'course_id',
+                        'unified_status',
+                        'year_level',
+                        'term',
+                        'academic_year',
+                        'remarks',
+                        'yakap_category',
+                        'yakap_location',
+                        'date_filed'
+                    )
                     ->orderBy('created_at', 'desc');
             }
         ]);

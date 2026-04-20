@@ -44,7 +44,7 @@ const submit = () => {
                 </h1>
                 <Link :href="route('users.index')"
                     class="text-slate-500 underline font-bold px-3 py-2 bg-none rounded-sm flex items-center justify-center gap-1">
-                    <i class="pi pi-arrow-left" />
+                    <AppIcon name="arrow-left" :size="14" />
                     <span>Back</span>
                 </Link>
             </div>
@@ -102,7 +102,7 @@ const submit = () => {
                     </div>
 
                     <div class="flex items-center justify-end mt-4">
-                        <Button type="submit" label="Create User" icon="pi pi-check" :loading="form.processing" />
+                        <AppButton type="submit" label="Create User" icon="check" :loading="form.processing" />
                     </div>
                 </form>
             </div>

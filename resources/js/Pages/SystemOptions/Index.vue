@@ -12,7 +12,7 @@
             <Panel class="mb-4">
                 <template #header>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-sliders-h text-xl"></i>
+                        <AppIcon name="sliders-h" :size="20" />
                         <span class="font-semibold text-lg">Option Values Management</span>
                     </div>
                 </template>
@@ -21,7 +21,7 @@
                     <div class="text-gray-600">
                         Configure and manage system-wide option values
                     </div>
-                    <Button icon="pi pi-plus" label="Add Option" severity="success" raised @click="openAddDialog" />
+                    <AppButton icon="plus" label="Add Option" severity="success" raised @click="openAddDialog" />
                 </div>
             </Panel>
 
@@ -42,7 +42,7 @@
                                     <!-- Category Description -->
                                     <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
                                         <div class="flex items-start gap-3">
-                                            <i class="pi pi-info-circle text-blue-600 mt-1"></i>
+                                            <AppIcon name="info-circle" class="text-blue-600 mt-1" />
                                             <div>
                                                 <h3 class="font-semibold text-blue-900">{{ label }}</h3>
                                                 <p class="text-sm text-blue-700 mt-1">
@@ -59,10 +59,10 @@
                                         <Column header="Order" style="width: 80px">
                                             <template #body="slotProps">
                                                 <div class="flex items-center gap-2">
-                                                    <Button icon="pi pi-chevron-up" severity="secondary" text
-                                                        size="small" @click="moveUp(slotProps.data, category)"
+                                                    <AppButton icon="chevron-up" severity="secondary" text size="small"
+                                                        @click="moveUp(slotProps.data, category)"
                                                         :disabled="slotProps.index === 0" />
-                                                    <Button icon="pi pi-chevron-down" severity="secondary" text
+                                                    <AppButton icon="chevron-down" severity="secondary" text
                                                         size="small" @click="moveDown(slotProps.data, category)"
                                                         :disabled="slotProps.index === getOptionsForCategory(category).length - 1" />
                                                 </div>
@@ -78,6 +78,20 @@
                                         <Column field="label" header="Label" style="min-width: 200px">
                                             <template #body="slotProps">
                                                 {{ slotProps.data.label || '-' }}
+                                            </template>
+                                        </Column>
+
+                                        <Column v-if="category === 'grant_provision'" field="program" header="Program"
+                                            style="min-width: 140px">
+                                            <template #body="slotProps">
+                                                {{ slotProps.data.program || '-' }}
+                                            </template>
+                                        </Column>
+
+                                        <Column v-if="category === 'grant_provision'" field="amount" header="Amount"
+                                            style="min-width: 140px">
+                                            <template #body="slotProps">
+                                                {{ formatAmount(slotProps.data.amount) }}
                                             </template>
                                         </Column>
 
@@ -110,15 +124,14 @@
                                         <Column header="Actions" style="width: 180px">
                                             <template #body="slotProps">
                                                 <div class="flex gap-2">
-                                                    <Button icon="pi pi-pencil" severity="info" text size="small"
+                                                    <AppButton icon="pencil" severity="info" text size="small"
                                                         @click="openEditDialog(slotProps.data)"
                                                         v-tooltip.top="'Edit'" />
-                                                    <Button
-                                                        :icon="slotProps.data.is_active ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                                                    <AppButton :icon="slotProps.data.is_active ? 'eye-slash' : 'eye'"
                                                         :severity="slotProps.data.is_active ? 'warning' : 'success'"
                                                         text size="small" @click="toggleActive(slotProps.data)"
                                                         v-tooltip.top="slotProps.data.is_active ? 'Deactivate' : 'Activate'" />
-                                                    <Button icon="pi pi-trash" severity="danger" text size="small"
+                                                    <AppButton icon="trash" severity="danger" text size="small"
                                                         @click="confirmDelete(slotProps.data)"
                                                         v-tooltip.top="'Delete'" />
                                                 </div>
@@ -127,9 +140,9 @@
 
                                         <template #empty>
                                             <div class="text-center py-8 text-gray-500">
-                                                <i class="pi pi-inbox text-4xl mb-3"></i>
+                                                <AppIcon name="inbox" class="text-4xl mb-3" />
                                                 <p>No options found for this category.</p>
-                                                <Button label="Add First Option" icon="pi pi-plus" severity="secondary"
+                                                <AppButton label="Add First Option" icon="plus" severity="secondary"
                                                     outlined class="mt-3" @click="openAddDialog(category)" />
                                             </div>
                                         </template>
@@ -163,6 +176,27 @@
                 <div class="flex flex-col">
                     <label class="text-sm font-medium text-gray-700 mb-2">Label</label>
                     <InputText v-model="form.label" placeholder="Display label (optional)" class="w-full" />
+                </div>
+
+                <div v-if="isGrantProvisionForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex flex-col">
+                        <label class="text-sm font-medium text-gray-700 mb-2">Program</label>
+                        <Select v-model="form.program" :options="grantProvisionProgramOptions" optionLabel="label"
+                            optionValue="value" placeholder="Select program" class="w-full" showClear />
+                        <small v-if="form.errors.program" class="text-red-500 mt-1">{{ form.errors.program }}</small>
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-sm font-medium text-gray-700 mb-2">Amount</label>
+                        <InputNumber v-model="form.amount" placeholder="0.00" class="w-full" :min="0"
+                            :minFractionDigits="2" :maxFractionDigits="2" />
+                        <small v-if="form.errors.amount" class="text-red-500 mt-1">{{ form.errors.amount }}</small>
+                    </div>
+                </div>
+
+                <div v-if="isGrantProvisionForm" class="text-xs text-gray-500 bg-gray-50 border rounded-lg p-3">
+                    Grant provision program and amount are stored as metadata for future development. Current modules
+                    still use the grant provision option value as-is.
                 </div>
 
                 <div class="flex flex-col">
@@ -199,7 +233,7 @@
         <!-- Delete Confirmation Dialog -->
         <Dialog v-model:visible="showDeleteDialog" header="Confirm Delete" :modal="true" :style="{ width: '450px' }">
             <div class="flex items-start gap-3">
-                <i class="pi pi-exclamation-triangle text-orange-500 text-2xl"></i>
+                <AppIcon name="exclamation-triangle" class="text-orange-500 text-2xl" />
                 <div>
                     <p class="mb-2">Are you sure you want to delete this option?</p>
                     <div class="bg-gray-50 p-3 rounded border">
@@ -207,7 +241,7 @@
                         <p class="text-sm text-gray-600">{{ optionToDelete?.label }}</p>
                     </div>
                     <p class="text-sm text-orange-600 mt-3">
-                        <i class="pi pi-info-circle mr-1"></i>
+                        <AppIcon name="info-circle" class="mr-1" />
                         This action cannot be undone.
                     </p>
                 </div>
@@ -221,13 +255,16 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import AppIcon from '@/Components/ui/AppIcon.vue';
+import AppButton from '@/Components/ui/AppButton.vue';
 
 const props = defineProps({
     options: Object,
     categories: Object,
+    grantProvisionPrograms: Array,
 });
 
 // Initialize activeTab with the first category key
@@ -238,9 +275,12 @@ const dialogMode = ref('add');
 const optionToDelete = ref(null);
 
 const form = useForm({
+    id: null,
     category: '',
     value: '',
     label: '',
+    program: null,
+    amount: null,
     color: '',
     sort_order: 0,
     is_active: true,
@@ -248,11 +288,15 @@ const form = useForm({
 });
 
 const deleteForm = useForm({});
+const isGrantProvisionForm = computed(() => form.category === 'grant_provision');
+const grantProvisionProgramOptions = computed(() =>
+    (props.grantProvisionPrograms || []).map((program) => ({ label: program, value: program }))
+);
 
 const getCategoryDescription = (category) => {
     const descriptions = {
         attachment_type: 'Types of attachments that can be uploaded for disbursements (e.g., voucher, cheque, receipt)',
-        grant_provision: 'Types of grants that can be provided to scholars (e.g., Matriculation, RLE, Tuition)',
+        grant_provision: 'Types of grants that can be provided to scholars, with optional program and amount metadata for future use.',
         obr_status: 'Status options for OBR (Obligation Request) processing',
         disbursement_type: 'Categories of disbursements (e.g., regular, reimbursement, financial assistance)',
         priority_level: 'Priority levels for scholarship applications (e.g., low, normal, high, urgent)',
@@ -269,6 +313,17 @@ const getOptionsForCategory = (category) => {
     return props.options[category] || [];
 };
 
+const formatAmount = (amount) => {
+    if (amount === null || amount === undefined || amount === '') {
+        return '-';
+    }
+
+    return Number(amount).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+};
+
 const openAddDialog = (category = null) => {
     dialogMode.value = 'add';
     form.reset();
@@ -278,9 +333,7 @@ const openAddDialog = (category = null) => {
     if (category) {
         form.category = category;
     } else {
-        // Get current category from active tab
-        const categoryKeys = Object.keys(props.categories);
-        form.category = categoryKeys[activeTabIndex.value];
+        form.category = activeTab.value || Object.keys(props.categories)[0] || '';
     }
 
     showDialog.value = true;
@@ -292,6 +345,8 @@ const openEditDialog = (option) => {
     form.category = option.category;
     form.value = option.value;
     form.label = option.label;
+    form.program = option.program || null;
+    form.amount = option.amount ?? null;
     form.color = option.color;
     form.sort_order = option.sort_order;
     form.is_active = option.is_active;
@@ -365,4 +420,11 @@ const moveDown = (option, category) => {
         router.post(route('system-options.reorder'), { options });
     }
 };
+
+watch(() => form.category, (category) => {
+    if (category !== 'grant_provision') {
+        form.program = null;
+        form.amount = null;
+    }
+});
 </script>

@@ -164,7 +164,9 @@ onBeforeUnmount(() => {
             <div class="ios-modal" :style="modalStyle">
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Generate Report</span>
                     <button class="ios-nav-btn ios-nav-action" @click="generateReport" :disabled="isDateToInvalid">
                         Generate
@@ -259,14 +261,14 @@ onBeforeUnmount(() => {
                                 <div class="ios-card">
                                     <div class="ios-row" style="cursor: pointer;" @click="reportType = 'list'">
                                         <span class="ios-row-label">Detailed List</span>
-                                        <i v-if="reportType === 'list'" class="pi pi-check"
-                                            style="color: #007AFF; font-size: 14px;"></i>
+                                        <AppIcon v-if="reportType === 'list'" name="check" :size="14"
+                                            style="color: #007AFF;" />
                                     </div>
                                     <div class="ios-row ios-row-last" style="cursor: pointer;"
                                         @click="reportType = 'summary'">
                                         <span class="ios-row-label">Summary</span>
-                                        <i v-if="reportType === 'summary'" class="pi pi-check"
-                                            style="color: #007AFF; font-size: 14px;"></i>
+                                        <AppIcon v-if="reportType === 'summary'" name="check" :size="14"
+                                            style="color: #007AFF;" />
                                     </div>
                                 </div>
                             </div>
@@ -309,22 +311,22 @@ onBeforeUnmount(() => {
                                         :style="{ opacity: enableJpmHighlighting ? 1 : 0.5 }"
                                         @click="enableJpmHighlighting && (jpmFilter = 'all')">
                                         <span class="ios-row-label">Show All</span>
-                                        <i v-if="jpmFilter === 'all'" class="pi pi-check"
-                                            style="color: #007AFF; font-size: 14px;"></i>
+                                        <AppIcon v-if="jpmFilter === 'all'" name="check" :size="14"
+                                            style="color: #007AFF;" />
                                     </div>
                                     <div class="ios-row" style="cursor: pointer;"
                                         :style="{ opacity: enableJpmHighlighting ? 1 : 0.5 }"
                                         @click="enableJpmHighlighting && (jpmFilter = 'jpm_only')">
                                         <span class="ios-row-label">JPM Only</span>
-                                        <i v-if="jpmFilter === 'jpm_only'" class="pi pi-check"
-                                            style="color: #007AFF; font-size: 14px;"></i>
+                                        <AppIcon v-if="jpmFilter === 'jpm_only'" name="check" :size="14"
+                                            style="color: #007AFF;" />
                                     </div>
                                     <div class="ios-row ios-row-last" style="cursor: pointer;"
                                         :style="{ opacity: enableJpmHighlighting ? 1 : 0.5 }"
                                         @click="enableJpmHighlighting && (jpmFilter = 'hide_jpm')">
                                         <span class="ios-row-label">Hide JPM</span>
-                                        <i v-if="jpmFilter === 'hide_jpm'" class="pi pi-check"
-                                            style="color: #007AFF; font-size: 14px;"></i>
+                                        <AppIcon v-if="jpmFilter === 'hide_jpm'" name="check" :size="14"
+                                            style="color: #007AFF;" />
                                     </div>
                                 </div>
                             </div>

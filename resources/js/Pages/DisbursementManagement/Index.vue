@@ -114,7 +114,7 @@
                         <Column field="academic_year" header="Year/Sem" style="min-width: 95px">
                             <template #body="{ data }">
                                 <div class="text-slate-600">{{ data.academic_year }}/{{ data.semester?.substring(0, 1)
-                                    }}</div>
+                                }}</div>
                             </template>
                         </Column>
 
@@ -130,10 +130,10 @@
                         <Column header="Actions" style="min-width: 140px">
                             <template #body="{ data }">
                                 <div class="flex gap-2 flex-wrap">
-                                    <Button icon="pi pi-plus" :label="data.is_mapped ? 'Edit' : 'Map'" :as="Link"
+                                    <AppButton icon="plus" :label="data.is_mapped ? 'Edit' : 'Map'" :as="Link"
                                         :href="route('disbursement-management.show', data.obr_no)" severity="info"
                                         size="small" text class="text-xs" />
-                                    <Button icon="pi pi-list" label="View" @click="showDetailsModal(data)"
+                                    <AppButton icon="list" label="View" @click="showDetailsModal(data)"
                                         severity="secondary" size="small" text class="text-xs" />
                                 </div>
                             </template>

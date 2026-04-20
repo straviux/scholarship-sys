@@ -4,12 +4,12 @@
         <template #container>
             <div ref="elModal" class="ios-modal" style="width: 90vw; max-width: 500px;" :style="modalStyle">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)"><i
-                            class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Add/Edit Remarks</span>
                     <button class="ios-nav-btn ios-nav-action" @click="saveRemarks" :disabled="isSaving">
-                        <i v-if="isSaving" class="pi pi-spin pi-spinner"
-                            style="font-size: 12px; margin-right: 3px;"></i>Save
+                        <AppIcon v-if="isSaving" name="spinner" :size="12" style="margin-right: 3px;" />Save
                     </button>
                 </div>
                 <div class="ios-body">

@@ -28,7 +28,7 @@
                 <InputText id="office_designation" v-model="form.office_designation" class="w-full"
                     :class="{ 'p-invalid': form.errors.office_designation }" />
                 <small v-if="form.errors.office_designation" class="p-error">{{ form.errors.office_designation
-                }}</small>
+                    }}</small>
             </div>
 
             <!-- Role Selection -->
@@ -38,13 +38,13 @@
                     class="w-full" :class="{ 'p-invalid': form.errors.roles }">
                     <template #option="slotProps">
                         <div class="flex items-center gap-2">
-                            <i class="pi pi-shield text-gray-500"></i>
+                            <AppIcon name="shield" :size="14" class="text-gray-500" />
                             <span>{{ formatRoleName(slotProps.option.name) }}</span>
                         </div>
                     </template>
                     <template #value="slotProps">
                         <div v-if="slotProps.value" class="flex items-center gap-2">
-                            <i class="pi pi-shield text-gray-500"></i>
+                            <AppIcon name="shield" :size="14" class="text-gray-500" />
                             <span>{{ formatRoleName(slotProps.value.name) }}</span>
                         </div>
                         <span v-else class="text-gray-400">Select a role</span>
@@ -74,15 +74,15 @@
                 <Password v-model="form.password_confirmation" placeholder="Confirm password" toggleMask class="w-full"
                     :class="{ 'p-invalid': form.errors.password_confirmation }" :feedback="false" />
                 <small v-if="form.errors.password_confirmation" class="p-error">{{ form.errors.password_confirmation
-                    }}</small>
+                }}</small>
             </div>
         </form>
 
         <template #footer>
             <div class="flex justify-end gap-3">
                 <Button label="Cancel" severity="secondary" @click="closeModal" outlined :disabled="form.processing" />
-                <Button label="Create User" severity="success" @click="submit" :loading="form.processing"
-                    icon="pi pi-user-plus" :disabled="!form.name || !form.username || !form.password || !form.roles" />
+                <AppButton label="Create User" severity="success" @click="submit" :loading="form.processing"
+                    icon="user-plus" :disabled="!form.name || !form.username || !form.password || !form.roles" />
             </div>
         </template>
     </Dialog>

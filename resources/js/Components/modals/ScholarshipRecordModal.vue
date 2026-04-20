@@ -4,11 +4,13 @@
         <template #container>
             <div class="ios-modal" :style="[{ width: '700px' }, dragStyle]">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">{{ mode === 'add' ? 'Add Scholarship Record' : 'Edit Scholarship Record'
-                        }}</span>
+                    }}</span>
                     <button class="ios-nav-btn ios-nav-action" @click.stop="submitRecord" :disabled="processing">
-                        <i class="pi pi-check"></i>
+                        <AppIcon name="check" :size="14" />
                     </button>
                 </div>
                 <div class="ios-body">

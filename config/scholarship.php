@@ -99,6 +99,77 @@ return [
         'notification_delay_minutes' => 5, // Delay before sending approval notifications
     ],
 
+    // Temporary projection rules for interviewed-applicant expense forecasting.
+    // This stays in config until course duration metadata is modeled explicitly.
+    'expense_projection' => [
+        'rates' => [
+            'default' => [
+                'mode' => 'per_term',
+                'term_amount' => 10000,
+            ],
+            'med' => [
+                'mode' => 'annual_cap',
+                'annual_amount' => 140000,
+            ],
+        ],
+
+        'term_systems' => [
+            'semester' => [
+                'terms_per_year' => 2,
+                'term_ordinals' => [
+                    '1ST SEMESTER' => 1,
+                    'FIRST SEMESTER' => 1,
+                    '2ND SEMESTER' => 2,
+                    'SECOND SEMESTER' => 2,
+                ],
+            ],
+            'trimester' => [
+                'terms_per_year' => 3,
+                'term_ordinals' => [
+                    '1ST TRIMESTER' => 1,
+                    'FIRST TRIMESTER' => 1,
+                    '2ND TRIMESTER' => 2,
+                    'SECOND TRIMESTER' => 2,
+                    '3RD TRIMESTER' => 3,
+                    'THIRD TRIMESTER' => 3,
+                    '3RD SEMESTER' => 3,
+                    'THIRD SEMESTER' => 3,
+                ],
+            ],
+        ],
+
+        'program_rules' => [
+            'MED' => [
+                'label' => 'Medicine and Medical Allied Courses',
+                'default_total_years' => 4,
+                'term_system' => 'semester',
+                'allowed_term_systems' => ['semester', 'trimester'],
+                'rate_key' => 'med',
+            ],
+            'EFA' => [
+                'label' => 'Educational Financial Assistance',
+                'default_total_years' => 4,
+                'term_system' => 'semester',
+                'rate_key' => 'default',
+            ],
+            '*' => [
+                'label' => 'Default projected scholarship rule',
+                'default_total_years' => 4,
+                'term_system' => 'semester',
+                'rate_key' => 'default',
+            ],
+        ],
+
+        'course_overrides' => [
+            // Add course shortname or uppercase course name overrides here when needed.
+            // Example:
+            // 'BS ARCHITECTURE' => [
+            //     'total_years' => 5,
+            //     'term_system' => 'semester',
+            // ],
+        ],
+    ],
+
     // Browsershot / PDF Generation settings
     'browsershot' => [
         // Chrome executable path - can be overridden via CHROME_PATH env variable

@@ -94,13 +94,13 @@ const shouldShowAction = (action) => {
                     <!-- JPM Badge -->
                     <Tag v-if="showJpmBadge" severity="success" class="absolute top-2 right-2"
                         v-tooltip.left="jpmDetails">
-                        <i class="pi pi-star-fill mr-1"></i> JPM
+                        <AppIcon name="star-fill" class="mr-1" /> JPM
                     </Tag>
 
                     <!-- Priority Badge -->
                     <Tag v-if="applicant.priority_level && applicant.priority_level !== 'normal'"
                         :severity="getPrioritySeverity(applicant.priority_level)" class="absolute top-2 left-2">
-                        <i class="pi pi-flag-fill mr-1"></i>
+                        <AppIcon name="flag-fill" class="mr-1" />
                         {{ formatPriorityName(applicant.priority_level) }}
                     </Tag>
                 </div>
@@ -129,21 +129,21 @@ const shouldShowAction = (action) => {
                             <div class="text-xs font-semibold text-gray-500">
                                 Prog. <span class="font-bold text-gray-600">#{{
                                     applicant.sequence_number || '-'
-                                    }}</span>
+                                }}</span>
                             </div>
                         </div>
                         <div class="px-1">
                             <div class="text-xs font-semibold text-gray-500">
                                 Cour. <span class="font-bold text-gray-600">#{{
                                     applicant.sequence_number_by_course || '-'
-                                    }}</span>
+                                }}</span>
                             </div>
                         </div>
                         <div class="px-1">
                             <div class="text-xs font-semibold text-gray-500">
                                 Sch. <span class="font-bold text-gray-600">#{{
                                     applicant.sequence_number_by_school_course || '-'
-                                    }}</span>
+                                }}</span>
 
                             </div>
                         </div>
@@ -162,31 +162,31 @@ const shouldShowAction = (action) => {
                     <slot name="info">
                         <div class="space-y-2">
                             <div class="flex items-start gap-2">
-                                <i class="pi pi-phone text-gray-400 mt-1"></i>
+                                <AppIcon name="phone" class="text-gray-400 mt-1" />
                                 <span class="text-gray-600">{{ applicant.contact_no || 'N/A' }}</span>
                             </div>
 
                             <div class="flex items-start gap-2">
-                                <i class="pi pi-map-marker text-gray-400 mt-1"></i>
+                                <AppIcon name="map-marker" class="text-gray-400 mt-1" />
                                 <span class="text-gray-600">{{ applicant.municipality || 'N/A' }}</span>
                             </div>
 
                             <div class="flex items-start gap-2">
-                                <i class="pi pi-building text-gray-400 mt-1"></i>
+                                <AppIcon name="building" class="text-gray-400 mt-1" />
                                 <span class="text-gray-600">
                                     {{ applicant.scholarship_grant?.[0]?.school?.shortname || 'N/A' }}
                                 </span>
                             </div>
 
                             <div class="flex items-start gap-2">
-                                <i class="pi pi-book text-gray-400 mt-1"></i>
+                                <AppIcon name="book" class="text-gray-400 mt-1" />
                                 <span class="text-gray-600">
                                     {{ applicant.scholarship_grant?.[0]?.course?.name || 'N/A' }}
                                 </span>
                             </div>
 
                             <div class="flex items-start gap-2">
-                                <i class="pi pi-calendar text-gray-400 mt-1"></i>
+                                <AppIcon name="calendar" class="text-gray-400 mt-1" />
                                 <span class="text-gray-600">
                                     {{ formatDate(applicant.scholarship_grant?.[0]?.date_filed || applicant.date_filed)
                                     }}
@@ -194,7 +194,7 @@ const shouldShowAction = (action) => {
                             </div>
 
                             <div class="flex items-start gap-2">
-                                <i class="pi pi-comment text-gray-400 mt-1"></i>
+                                <AppIcon name="comment" class="text-gray-400 mt-1" />
                                 <span v-if="applicant.remarks" class="text-gray-600 text-xs italic"
                                     v-safe-html="applicant.remarks"></span>
                                 <span v-else class="text-gray-600 text-xs italic">-</span>

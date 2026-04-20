@@ -8,13 +8,13 @@
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <!-- Loading State -->
                 <div v-if="loading" class="text-center py-12">
-                    <i class="pi pi-spinner pi-spin text-4xl short:text-2xl text-blue-500"></i>
+                    <AppIcon name="spinner" :size="40" class="text-blue-500" />
                     <p class="mt-4 text-gray-600">Loading update...</p>
                 </div>
 
                 <!-- Error State -->
                 <div v-else-if="error" class="text-center py-12">
-                    <i class="pi pi-exclamation-circle text-6xl text-red-500"></i>
+                    <AppIcon name="exclamation-circle" :size="64" class="text-red-500" />
                     <h3 class="mt-4 text-lg font-medium text-gray-900">Error Loading Update</h3>
                     <p class="mt-2 text-sm text-gray-600">{{ error }}</p>
                     <Button @click="$inertia.visit(route('admin.system-updates'))" label="Back to Management"
@@ -25,7 +25,7 @@
                 <div v-else-if="update" class="space-y-4 short:space-y-2">
                     <!-- Back Button -->
                     <div>
-                        <Button @click="goBack" label="Back to Management" icon="pi pi-arrow-left" text size="small" />
+                        <AppButton @click="goBack" label="Back to Management" icon="arrow-left" text size="small" />
                     </div>
 
                     <!-- Update Card -->
@@ -34,7 +34,7 @@
                             <!-- Admin Info Banner -->
                             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 short:mb-2">
                                 <div class="flex items-start gap-3">
-                                    <i class="pi pi-info-circle text-blue-600 text-xl mt-0.5"></i>
+                                    <AppIcon name="info-circle" :size="20" class="text-blue-600 mt-0.5" />
                                     <div class="flex-1">
                                         <h4 class="font-semibold text-blue-900 mb-1">Administrator View</h4>
                                         <div class="text-sm text-blue-800 space-y-1">
@@ -45,7 +45,7 @@
                                             </p>
                                             <p><strong>Global:</strong> {{ update.is_global ? 'Yes' : 'No' }}</p>
                                             <p v-if="update.expires_at"><strong>Expires:</strong> {{ update.expires_at
-                                            }}
+                                                }}
                                             </p>
                                         </div>
                                     </div>
@@ -59,7 +59,7 @@
                                     <Tag :value="update.priority" :severity="getPrioritySeverity(update.priority)" />
                                     <Tag :value="update.type" :severity="getTypeSeverity(update.type)" />
                                     <Tag v-if="update.is_markdown" value="Markdown" severity="secondary"
-                                        icon="pi pi-file-edit" />
+                                        icon="file-edit" />
                                 </div>
 
                                 <!-- Title -->
@@ -68,11 +68,11 @@
                                 <!-- Meta Information -->
                                 <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                                     <div class="flex items-center gap-2">
-                                        <i class="pi pi-user"></i>
+                                        <AppIcon name="user" :size="14" />
                                         <span>{{ update.created_by_name }}</span>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <i class="pi pi-calendar"></i>
+                                        <AppIcon name="calendar" :size="14" />
                                         <span>{{ update.created_at }}</span>
                                     </div>
                                 </div>
@@ -110,11 +110,11 @@
                             <div
                                 class="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center flex-wrap gap-4">
                                 <div class="flex gap-2 flex-wrap">
-                                    <Button v-if="update.is_active" @click="deactivateUpdate" label="Deactivate"
-                                        severity="warning" icon="pi pi-eye-slash" outlined size="small" />
-                                    <Button v-else @click="reactivateUpdate" label="Reactivate" severity="success"
-                                        icon="pi pi-eye" outlined size="small" />
-                                    <Button @click="deleteUpdate" label="Delete" severity="danger" icon="pi pi-trash"
+                                    <AppButton v-if="update.is_active" @click="deactivateUpdate" label="Deactivate"
+                                        severity="warning" icon="eye-slash" outlined size="small" />
+                                    <AppButton v-else @click="reactivateUpdate" label="Reactivate" severity="success"
+                                        icon="eye" outlined size="small" />
+                                    <AppButton @click="deleteUpdate" label="Delete" severity="danger" icon="trash"
                                         outlined size="small" />
                                 </div>
 
@@ -129,7 +129,7 @@
         <!-- Delete Confirmation Dialog -->
         <Dialog v-model:visible="showDeleteDialog" modal header="Confirm Deletion" :style="{ width: '28rem' }">
             <div class="flex items-start gap-3">
-                <i class="pi pi-exclamation-triangle text-red-500 text-2xl mt-1"></i>
+                <AppIcon name="exclamation-triangle" :size="28" class="text-red-500 mt-1 shrink-0" />
                 <div>
                     <p class="text-gray-700 mb-2">Are you sure you want to delete this system update?</p>
                     <p class="text-sm text-red-600 font-medium">This action cannot be undone.</p>
@@ -140,8 +140,8 @@
                 <div class="flex justify-end gap-2">
                     <Button @click="showDeleteDialog = false" label="Cancel" severity="secondary" outlined
                         size="small" />
-                    <Button @click="confirmDelete" :label="isDeleting ? 'Deleting...' : 'Delete'" severity="danger"
-                        icon="pi pi-trash" :disabled="isDeleting" size="small" />
+                    <AppButton @click="confirmDelete" :label="isDeleting ? 'Deleting...' : 'Delete'" severity="danger"
+                        icon="trash" :disabled="isDeleting" size="small" />
                 </div>
             </template>
         </Dialog>

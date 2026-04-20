@@ -1,5 +1,7 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
+import AppIcon from '@/Components/ui/AppIcon.vue';
+import AppButton from '@/Components/ui/AppButton.vue';
 import { Head, router } from "@inertiajs/vue3";
 import { ref, watch } from "vue";
 import RequirementModal from "./Modal/RequirementModal.vue";
@@ -69,7 +71,7 @@ const deleteRequirement = () => {
         <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
-                    <i class="pi pi-file-check text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
+                    <AppIcon name="file-check" class="text-blue-600 text-[2rem] short:text-[1.5rem]" />
                     <div>
                         <h1 class="text-2xl short:text-xl font-bold text-gray-700">Requirements</h1>
                         <p class="text-sm text-gray-600">Manage program requirements and documentation</p>
@@ -77,7 +79,7 @@ const deleteRequirement = () => {
                 </div>
             </template>
             <template #end>
-                <Button icon="pi pi-plus" label="Add Requirement" severity="success" raised rounded size="small"
+                <AppButton icon="plus" label="Add Requirement" severity="success" raised rounded size="small"
                     @click="openCreate" />
             </template>
         </Toolbar>
@@ -87,7 +89,9 @@ const deleteRequirement = () => {
             <!-- Search -->
             <div class="flex gap-3 items-center mb-4">
                 <IconField iconPosition="left" class="flex-1 max-w-sm">
-                    <InputIcon class="pi pi-search" />
+                    <InputIcon>
+                        <AppIcon name="search" :size="14" />
+                    </InputIcon>
                     <InputText v-model="globalFilter" placeholder="Search requirements..." class="w-full" />
                 </IconField>
                 <Tag :value="`${props.requirements?.length ?? 0} requirement${(props.requirements?.length ?? 0) !== 1 ? 's' : ''}`"
@@ -128,9 +132,9 @@ const deleteRequirement = () => {
                 <Column header="Actions" style="width: 100px">
                     <template #body="{ data }">
                         <div class="flex gap-1.5 justify-center">
-                            <Button icon="pi pi-pencil" severity="info" size="small" rounded outlined
+                            <AppButton icon="pencil" severity="info" size="small" rounded outlined
                                 v-tooltip.top="'Edit'" @click="openEdit(data)" />
-                            <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
+                            <AppButton icon="trash" severity="danger" size="small" rounded outlined
                                 v-tooltip.top="'Delete'" @click="confirmDelete(data)" />
                         </div>
                     </template>
@@ -143,7 +147,7 @@ const deleteRequirement = () => {
         <Dialog v-model:visible="showDeleteModal" modal header="Delete Requirement" :style="{ width: '420px' }">
             <div class="flex items-start gap-4 py-2">
                 <div class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                    <i class="pi pi-trash text-red-600 text-sm"></i>
+                    <AppIcon name="trash" class="text-red-600 text-sm" />
                 </div>
                 <div class="flex-1">
                     <p class="text-sm text-gray-700 mb-3">

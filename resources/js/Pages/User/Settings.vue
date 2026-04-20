@@ -18,14 +18,14 @@
                             class="w-10 h-10 rounded-full overflow-hidden border-2 border-purple-300 flex items-center justify-center bg-purple-100">
                             <img v-if="props.user?.profile_photo_url" :src="props.user.profile_photo_url" alt="Profile"
                                 class="w-full h-full object-cover" />
-                            <i v-else class="pi pi-user text-purple-600 text-lg"></i>
+                            <AppIcon v-else name="user" :size="18" class="text-purple-600" />
                         </div>
                         <div class="text-left">
                             <h3 class="font-semibold text-gray-900">Profile Photo</h3>
                             <p class="text-sm text-gray-500">Update your avatar</p>
                         </div>
                     </div>
-                    <i class="pi pi-chevron-right text-gray-400"></i>
+                    <AppIcon name="chevron-right" :size="14" class="text-gray-400" />
                 </button>
 
                 <!-- Password Item -->
@@ -33,14 +33,14 @@
                     class="w-full bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4 flex items-center justify-between cursor-pointer">
                     <div class="flex items-center space-x-4">
                         <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <i class="pi pi-lock text-blue-600"></i>
+                            <AppIcon name="lock" :size="16" class="text-blue-600" />
                         </div>
                         <div class="text-left">
                             <h3 class="font-semibold text-gray-900">Change Password</h3>
                             <p class="text-sm text-gray-500">Update your password</p>
                         </div>
                     </div>
-                    <i class="pi pi-chevron-right text-gray-400"></i>
+                    <AppIcon name="chevron-right" :size="14" class="text-gray-400" />
                 </button>
 
                 <!-- Profile Item -->
@@ -48,14 +48,14 @@
                     class="w-full bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4 flex items-center justify-between cursor-pointer">
                     <div class="flex items-center space-x-4">
                         <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                            <i class="pi pi-user text-green-600"></i>
+                            <AppIcon name="user" :size="16" class="text-green-600" />
                         </div>
                         <div class="text-left">
                             <h3 class="font-semibold text-gray-900">Profile Information</h3>
                             <p class="text-sm text-gray-500">{{ profileForm.name || 'Update your details' }}</p>
                         </div>
                     </div>
-                    <i class="pi pi-chevron-right text-gray-400"></i>
+                    <AppIcon name="chevron-right" :size="14" class="text-gray-400" />
                 </button>
 
                 <!-- Theme Item -->
@@ -63,14 +63,14 @@
                     class="w-full bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4 flex items-center justify-between cursor-pointer">
                     <div class="flex items-center space-x-4">
                         <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <i class="pi pi-palette text-purple-600"></i>
+                            <AppIcon name="palette" :size="16" class="text-purple-600" />
                         </div>
                         <div class="text-left">
                             <h3 class="font-semibold text-gray-900">Theme</h3>
                             <p class="text-sm text-gray-500 capitalize">{{ theme }}</p>
                         </div>
                     </div>
-                    <i class="pi pi-chevron-right text-gray-400"></i>
+                    <AppIcon name="chevron-right" :size="14" class="text-gray-400" />
                 </button>
             </div>
 
@@ -114,14 +114,14 @@
                             </div>
                         </div>
 
-                        <Button type="button" label="Upload via QR Code" icon="pi pi-qrcode" outlined class="w-full"
+                        <AppButton type="button" label="Upload via QR Code" icon="qrcode" outlined class="w-full"
                             @click="showQrCode" />
                     </div>
 
                     <!-- GIF selected: no canvas editor, file will be uploaded as-is -->
                     <div v-if="selectedImageFile?.type === 'image/gif'"
                         class="mt-3 flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
-                        <i class="pi pi-image text-purple-500"></i>
+                        <AppIcon name="image" :size="16" class="text-purple-500" />
                         <span class="truncate flex-1">{{ selectedImageFile.name }}</span>
                         <span class="text-xs text-gray-400 shrink-0">GIF will be preserved</span>
                     </div>
@@ -138,14 +138,14 @@
 
                         <!-- Image Editor Controls -->
                         <div class="flex gap-2 justify-center">
-                            <Button type="button" label="Zoom Out" icon="pi pi-minus" severity="secondary" size="small"
+                            <AppButton type="button" label="Zoom Out" icon="minus" severity="secondary" size="small"
                                 @click="handleZoomOut" />
                             <span class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold">
                                 {{ Math.round((imageScale.value || 1) * 100) }}%
                             </span>
-                            <Button type="button" label="Zoom In" icon="pi pi-plus" severity="secondary" size="small"
+                            <AppButton type="button" label="Zoom In" icon="plus" severity="secondary" size="small"
                                 @click="handleZoomIn" />
-                            <Button type="button" label="Reset" icon="pi pi-refresh" severity="secondary" size="small"
+                            <AppButton type="button" label="Reset" icon="refresh" severity="secondary" size="small"
                                 @click="resetImage" />
                         </div>
                     </div>
@@ -159,7 +159,7 @@
                             @click="showPhotoDialog = false" />
                         <Button v-if="showImageEditor" type="button" label="Back" severity="secondary" class="flex-1"
                             @click="cancelEditor" />
-                        <Button type="button" :label="photoProcessing ? 'Uploading...' : 'Upload'" icon="pi pi-upload"
+                        <AppButton type="button" :label="photoProcessing ? 'Uploading...' : 'Upload'" icon="upload"
                             :disabled="!selectedImageFile || photoProcessing" :loading="photoProcessing" class="flex-1"
                             @click="submitPhotoForm" />
                     </div>
@@ -212,7 +212,7 @@
                     <div class="flex gap-3 pt-4">
                         <Button type="button" label="Cancel" severity="secondary" outlined class="flex-1"
                             @click="showPasswordDialog = false" />
-                        <Button type="submit" label="Update" icon="pi pi-check" :loading="passwordForm.processing"
+                        <AppButton type="submit" label="Update" icon="check" :loading="passwordForm.processing"
                             class="flex-1" />
                     </div>
                 </form>
@@ -263,7 +263,7 @@
                     <div class="flex gap-3 pt-4">
                         <Button type="button" label="Cancel" severity="secondary" outlined class="flex-1"
                             @click="showProfileDialog = false" />
-                        <Button type="submit" label="Save" icon="pi pi-check" severity="success"
+                        <AppButton type="submit" label="Save" icon="check" severity="success"
                             :loading="profileForm.processing" class="flex-1" />
                     </div>
                 </form>
@@ -284,7 +284,7 @@
                                     <span class="font-semibold text-gray-900">Light</span>
                                     <p class="text-sm text-gray-500">Bright and clean interface</p>
                                 </div>
-                                <i class="pi pi-sun ml-auto text-yellow-500"></i>
+                                <AppIcon name="sun" :size="16" class="ml-auto text-yellow-500" />
                             </div>
                         </label>
 
@@ -296,7 +296,7 @@
                                     <span class="font-semibold text-gray-900">Dark</span>
                                     <p class="text-sm text-gray-500">Easy on the eyes</p>
                                 </div>
-                                <i class="pi pi-moon ml-auto text-indigo-500"></i>
+                                <AppIcon name="moon" :size="16" class="ml-auto text-indigo-500" />
                             </div>
                         </label>
 
@@ -309,7 +309,7 @@
                                     <span class="font-semibold text-gray-900">System</span>
                                     <p class="text-sm text-gray-500">Follow device preference</p>
                                 </div>
-                                <i class="pi pi-desktop ml-auto text-gray-500"></i>
+                                <AppIcon name="desktop" :size="16" class="ml-auto text-gray-500" />
                             </div>
                         </label>
                     </div>

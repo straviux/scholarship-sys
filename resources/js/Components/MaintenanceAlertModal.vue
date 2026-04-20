@@ -5,7 +5,8 @@
                 class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in">
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-orange-500 to-red-600 px-4 short:px-3 py-4 short:py-3 text-center">
-                    <i class="pi pi-exclamation-circle text-white text-[3rem] short:text-[2rem] mb-3"></i>
+                    <AppIcon name="exclamation-circle" class="text-white text-[3rem] short:text-[2rem] mb-3"
+                        :size="48" />
                     <h2 class="text-xl font-bold text-white">Scheduled Maintenance</h2>
                 </div>
 

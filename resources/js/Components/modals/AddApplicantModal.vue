@@ -3,7 +3,7 @@
         @update:visible="handleVisibilityChange" :maximizable="true">
         <template #header>
             <div class="flex items-center gap-2">
-                <i class="pi pi-user-plus text-lg text-green-600" style="font-size: 1.2rem;"></i>
+                <AppIcon name="user-plus" :size="19" class="text-green-600" />
                 <span class="font-semibold text-xl">New Applicant</span>
             </div>
         </template>
@@ -30,13 +30,13 @@
                                 <div v-if="validationError"
                                     class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
                                     <p class="text-sm text-red-800 dark:text-red-300 font-medium">
-                                        <i class="pi pi-exclamation-triangle mr-2"></i>
+                                        <AppIcon name="exclamation-triangle" class="mr-2" />
                                         {{ validationError }}
                                     </p>
                                 </div>
                             </div>
                             <div class="flex pt-6 justify-end">
-                                <Button label="Next" icon="pi pi-arrow-right" iconPos="right" @click="handleNextStep1"
+                                <AppButton label="Next" icon="arrow-right" iconPos="right" @click="handleNextStep1"
                                     :loading="isValidating" :disabled="!canProceedStep1" />
                             </div>
                         </div>
@@ -47,10 +47,9 @@
                                 <FamilyInformationFields v-model="familyInfo" />
                             </div>
                             <div class="flex pt-6 justify-between">
-                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                <AppButton label="Back" severity="secondary" icon="arrow-left"
                                     @click="activeStep = '1'" />
-                                <Button label="Next" icon="pi pi-arrow-right" iconPos="right"
-                                    @click="activeStep = '3'" />
+                                <AppButton label="Next" icon="arrow-right" iconPos="right" @click="activeStep = '3'" />
                             </div>
                         </div>
                     </StepPanel>
@@ -60,7 +59,7 @@
                                 <div>
                                     <h4
                                         class="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                                        <i class="pi pi-book text-blue-600"></i>
+                                        <AppIcon name="book" class="text-blue-600" />
                                         Academic Information (Optional)
                                     </h4>
                                     <div class="space-y-4">
@@ -79,7 +78,7 @@
                                         <div
                                             class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
                                             <p class="text-sm text-blue-800 dark:text-blue-300">
-                                                <i class="pi pi-info-circle mr-2"></i>
+                                                <AppIcon name="info-circle" class="mr-2" />
                                                 Academic information is optional. You can complete it now or update it
                                                 later.
                                             </p>
@@ -88,10 +87,10 @@
                                 </div>
                             </div>
                             <div class="flex pt-6 justify-between">
-                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                <AppButton label="Back" severity="secondary" icon="arrow-left"
                                     @click="activeStep = '2'" />
-                                <Button label="Add Applicant" icon="pi pi-check" severity="success"
-                                    @click="handleSubmit" :loading="form.processing" />
+                                <AppButton label="Add Applicant" icon="check" severity="success" @click="handleSubmit"
+                                    :loading="form.processing" />
                             </div>
                         </div>
                     </StepPanel>

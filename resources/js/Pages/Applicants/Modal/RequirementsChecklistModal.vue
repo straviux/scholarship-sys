@@ -112,7 +112,7 @@ const toggleRequirementClick = async (requirement, event) => {
         confirm.require({
             message: `Are you sure you want to uncheck "${requirement.name}"? This will delete the uploaded file.`,
             header: 'Confirm Uncheck',
-            icon: 'pi pi-exclamation-triangle',
+            icon: 'exclamation-triangle',
             accept: () => confirmUncheck(requirement),
             reject: () => { }
         });
@@ -389,7 +389,9 @@ function onQrDragEnd() {
             <div class="ios-modal" :style="modalStyle">
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onModalDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeMain"><i class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="closeMain">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">Requirements</span>
                     <span class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
                 </div>
@@ -423,7 +425,7 @@ function onQrDragEnd() {
                                     <div style="flex: 1; min-width: 0; margin-left: 10px;">
                                         <div class="req-name" style="font-size: 14px; font-weight: 500;">{{
                                             requirement.name
-                                            }}</div>
+                                        }}</div>
                                         <!-- File status -->
                                         <div v-if="requirement.is_submitted && requirement.file_name"
                                             style="font-size: 11px; color: #34C759; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
@@ -436,12 +438,12 @@ function onQrDragEnd() {
                                         <!-- View/Download for submitted files -->
                                         <button v-if="requirement.is_submitted && requirement.file_name"
                                             class="ios-icon-btn" @click.stop="viewAttachment(requirement)" title="View">
-                                            <i class="pi pi-eye" style="font-size: 13px; color: #007AFF;"></i>
+                                            <AppIcon name="eye" :size="13" style="color: #007AFF;" />
                                         </button>
                                         <button v-if="requirement.is_submitted && requirement.file_name"
                                             class="ios-icon-btn" @click.stop="downloadFile(requirement)"
                                             title="Download">
-                                            <i class="pi pi-download" style="font-size: 13px; color: #34C759;"></i>
+                                            <AppIcon name="download" :size="13" style="color: #34C759;" />
                                         </button>
 
                                         <!-- Upload buttons for checked items -->
@@ -451,13 +453,13 @@ function onQrDragEnd() {
                                             <label :for="`file-${requirement.id}`"
                                                 style="cursor: pointer; display: flex;" @click.stop>
                                                 <span class="ios-icon-btn">
-                                                    <i class="pi pi-upload" style="font-size: 13px; color: #007AFF;"
-                                                        :style="{ opacity: uploadingRequirementId === requirement.requirement_id ? 0.4 : 1 }"></i>
+                                                    <AppIcon name="upload" :size="13" style="color: #007AFF;"
+                                                        :style="{ opacity: uploadingRequirementId === requirement.requirement_id ? 0.4 : 1 }" />
                                                 </span>
                                             </label>
                                             <button class="ios-icon-btn" @click.stop="showQrUpload(requirement)"
                                                 title="QR Upload">
-                                                <i class="pi pi-qrcode" style="font-size: 13px; color: #8E8E93;"></i>
+                                                <AppIcon name="qrcode" :size="13" style="color: #8E8E93;" />
                                             </button>
                                         </template>
                                     </div>
@@ -467,7 +469,7 @@ function onQrDragEnd() {
 
                         <!-- Empty state -->
                         <div v-else style="text-align: center; padding: 40px 0; color: #8E8E93;">
-                            <i class="pi pi-inbox" style="font-size: 28px; display: block; margin-bottom: 8px;"></i>
+                            <AppIcon name="inbox" :size="28" style="display: block; margin-bottom: 8px;" />
                             No requirements
                         </div>
                     </template>
@@ -490,11 +492,12 @@ function onQrDragEnd() {
         <template #container>
             <div class="ios-modal" :style="qrModalStyle">
                 <div class="ios-nav-bar" @pointerdown="onQrDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="showQrModal = false"><i
-                            class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="showQrModal = false">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">QR Upload</span>
                     <button class="ios-nav-btn ios-nav-action" @click="loadRequirements()">
-                        <i class="pi pi-refresh" style="font-size: 13px;"></i>
+                        <AppIcon name="refresh" :size="13" />
                     </button>
                 </div>
 
@@ -512,11 +515,11 @@ function onQrDragEnd() {
                     <div class="ios-section">
                         <div class="ios-card" style="padding: 12px 16px;">
                             <div style="font-size: 13px; color: #007AFF; font-weight: 500;">
-                                <i class="pi pi-info-circle" style="margin-right: 4px;"></i> Mobile Upload
+                                <AppIcon name="info-circle" :size="14" style="margin-right: 4px;" /> Mobile Upload
                             </div>
                             <div style="font-size: 12px; color: #6D6D72; margin-top: 4px;">
                                 Scan this QR code on your mobile device to upload <strong>{{ qrModalRequirement?.name
-                                }}</strong>.
+                                    }}</strong>.
                             </div>
                         </div>
                     </div>
@@ -530,7 +533,7 @@ function onQrDragEnd() {
                                     style="flex: 1; font-size: 11px; border: none; background: transparent; box-shadow: none; padding: 0;"
                                     @click="$event.target.select()" />
                                 <button class="ios-icon-btn" @click="copyToClipboard(qrCodeData.url)" title="Copy">
-                                    <i class="pi pi-copy" style="font-size: 14px; color: #007AFF;"></i>
+                                    <AppIcon name="copy" :size="14" style="color: #007AFF;" />
                                 </button>
                             </div>
                         </div>

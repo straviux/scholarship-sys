@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, provide, watch } from "vue";
+import { ref, onMounted, onUnmounted, provide, watch, nextTick } from "vue";
 import SidebarLink from "@/Components/ui/navigation/SidebarLink.vue";
 import NotificationDropdown from "@/Components/ui/navigation/NotificationDropdown.vue";
 import ActivityLogsDropdown from "@/Components/ui/navigation/ActivityLogsDropdown.vue";
@@ -18,6 +18,8 @@ const $page = usePage();
 const toggleMenu = ref(false);
 const sidebarMinimized = ref(localStorage.getItem('sidebarMinimized') === 'true');
 const userMenuRef = ref(null);
+const minimizedMenuRef = ref(null);
+const activeMinimizedParent = ref(null);
 const unreadUpdatesCount = ref(0);
 const activityLogsDropdownRef = ref(null);
 const currentDateTime = ref(new Date());
@@ -57,6 +59,37 @@ function toggleSidebarMinimized() {
 
 function toggleUserMenu(event) {
     userMenuRef.value.toggle(event);
+}
+
+function toggleMinimizedParentMenu(event, menuItem) {
+    const isSameMenu = activeMinimizedParent.value?.id === menuItem.id;
+
+    if (isSameMenu) {
+        minimizedMenuRef.value?.toggle(event);
+
+        if (minimizedMenuRef.value?.visible === false) {
+            activeMinimizedParent.value = null;
+        }
+
+        return;
+    }
+
+    activeMinimizedParent.value = menuItem;
+    minimizedMenuRef.value?.hide?.();
+
+    nextTick(() => {
+        if (typeof minimizedMenuRef.value?.show === 'function') {
+            minimizedMenuRef.value.show(event);
+            return;
+        }
+
+        minimizedMenuRef.value?.toggle(event);
+    });
+}
+
+function closeMinimizedParentMenu() {
+    minimizedMenuRef.value?.hide?.();
+    activeMinimizedParent.value = null;
 }
 
 function getRoleDisplay() {
@@ -519,6 +552,12 @@ onUnmounted(() => {
     }
     if (scrollTimer) clearTimeout(scrollTimer);
 });
+
+watch(sidebarMinimized, (isMinimized) => {
+    if (!isMinimized) {
+        closeMinimizedParentMenu();
+    }
+});
 </script>
 
 <template>
@@ -532,7 +571,7 @@ onUnmounted(() => {
         <div class="max-w-md w-full mx-4 text-center flex flex-col items-center justify-center">
             <!-- Icon -->
             <div class="mb-6 short:mb-3">
-                <i class="pi pi-exclamation-triangle text-yellow-500 animate-pulse text-[5rem] short:text-[3rem]"></i>
+                <AppIcon name="exclamation-triangle" :size="80" class="text-yellow-500 animate-pulse" />
             </div>
 
             <!-- Title -->
@@ -570,7 +609,7 @@ onUnmounted(() => {
             <!-- Support Message -->
             <div class="bg-blue-500 bg-opacity-20 border border-blue-400 rounded-lg p-4 w-full max-w-sm mx-auto">
                 <p class="text-blue-200 text-sm">
-                    <i class="pi pi-info-circle mr-2"></i>
+                    <AppIcon name="info-circle" :size="14" class="mr-2 inline" />
                     Please check back shortly. We appreciate your patience!
                 </p>
             </div>
@@ -599,15 +638,10 @@ onUnmounted(() => {
                 <Button v-slot="slotProps" asChild>
                     <button v-bind="slotProps.a11yAttrs" @click="toggleSidebarMinimized"
                         class="flex w-full dark:bg-transparent pt-4 px-4 text-gray-400 dark:text-gray-500 cursor-pointer justify-end">
-                        <i :class="{ 'pi pi-window-maximize': sidebarMinimized, 'pi pi-window-minimize': !sidebarMinimized }"
-                            style="font-size: 0.7rem;margin-right: 8px;"></i>
+                        <AppIcon :name="sidebarMinimized ? 'window-maximize' : 'window-minimize'" :size="11"
+                            class="mr-2" />
                     </button>
                 </Button>
-                <!-- <Button class="flex bg-[#222831]" @click="toggleSidebarMinimized"
-                    :aria-label="sidebarMinimized ? 'Expand sidebar' : 'Minimize sidebar'" size="small">
-                    <i
-                        :class="{ 'pi pi-chevron-right': sidebarMinimized, 'pi pi-chevron-left': !sidebarMinimized }"></i>
-                </Button> -->
                 <!-- User Profile Section -->
                 <div v-if="!sidebarMinimized" class="px-4 py-2 dark:border-b dark:border-gray-700">
 
@@ -643,7 +677,7 @@ onUnmounted(() => {
                         <!-- Menu item without children -->
                         <li v-if="!item.children || item.children.length === 0">
                             <SidebarLink :href="getMenuItemRoute(item)" :active="item.route && isMenuItemActive(item)">
-                                <i :class="[item.icon, 'mr-2 text-sm']"></i>
+                                <AppIcon :name="item.icon" :size="14" class="mr-2" />
                                 <span class="font-medium">{{ item.name }}</span>
                                 <Badge v-if="item.name === 'System Updates' && unreadUpdatesCount > 0"
                                     :value="unreadUpdatesCount" severity="danger" class="ml-auto" />
@@ -656,18 +690,19 @@ onUnmounted(() => {
                                 class="cursor-pointer flex items-center justify-between py-1 px-2 rounded transition-colors"
                                 :class="isParentMenuItemActive(item) ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'">
                                 <span class="flex items-center flex-1">
-                                    <i :class="[item.icon, 'mr-2 text-sm']"></i>
+                                    <AppIcon :name="item.icon" :size="14" class="mr-2" />
                                     <span class="-mr-1 font-medium">{{ item.name }}</span>
                                 </span>
-                                <i :class="expandedMenus.has(item.id) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-                                    style="font-size: 0.65rem" class="transition-transform duration-200"></i>
+                                <AppIcon :name="expandedMenus.has(item.id) ? 'chevron-down' : 'chevron-right'"
+                                    :size="10" class="transition-transform duration-200" />
                             </div>
                             <!-- Children list - show/hide based on expanded state -->
-                            <ul v-if="expandedMenus.has(item.id)" class="space-y-1 mt-1 ml-2">
+                            <ul v-if="expandedMenus.has(item.id)"
+                                class="space-y-1 mt-3 ml-2 border-l border-gray-300 dark:border-gray-600 pl-2">
                                 <li v-for="child in item.children" :key="child.id">
                                     <SidebarLink :href="getMenuItemRoute(child)"
                                         :active="child.route && isMenuItemActive(child)">
-                                        <i :class="[child.icon, 'mr-2 text-sm']"></i>
+                                        <AppIcon :name="child.icon" :size="14" class="mr-2" />
                                         <span class="-mr-1 font-medium">{{ child.name }}</span>
                                     </SidebarLink>
                                 </li>
@@ -678,13 +713,13 @@ onUnmounted(() => {
 
                 <!-- Loading state - only show as full spinner if no menu items exist yet -->
                 <div v-if="menuLoading && menuItems.length === 0" class="flex items-center justify-center py-8 flex-1">
-                    <i class="pi pi-spin pi-spinner text-gray-400" style="font-size: 1.5rem"></i>
+                    <AppIcon name="spinner" :size="24" class="text-gray-400" />
                 </div>
 
                 <!-- Overlay loading indicator when menu is reloading (not initial load) -->
                 <div v-if="menuLoading && menuItems.length > 0"
                     class="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                    <i class="pi pi-spin pi-spinner text-gray-200" style="font-size: 1.2rem"></i>
+                    <AppIcon name="spinner" :size="20" class="text-gray-200" />
                 </div>
                 <!-- Dynamic Menu from API (Minimized Width) -->
                 <ul v-if="sidebarMinimized && (menuItems.length > 0 || !menuLoading)"
@@ -693,46 +728,75 @@ onUnmounted(() => {
                     <template v-for="item in menuItems" :key="item.id">
                         <!-- Single menu item (minimized) -->
                         <li v-if="!item.children || item.children.length === 0">
-                            <SidebarLink :href="item.route ? route(item.route) : '#'"
-                                :active="item.route && route().current(item.route)"
-                                class="flex flex-col justify-center text-center">
-                                <i :class="[item.icon, 'text-xl']"></i>
+                            <SidebarLink :href="getMenuItemRoute(item)" :active="item.route && isMenuItemActive(item)"
+                                class="flex flex-col justify-center items-center text-center">
+                                <AppIcon :name="item.icon" :size="20" />
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
                                 }}</span>
                             </SidebarLink>
                         </li>
 
                         <!-- Parent menu item with children (minimized) -->
-                        <li v-else class="relative group">
-                            <div class="flex flex-col justify-center text-center cursor-pointer">
-                                <i :class="[item.icon, 'text-xl']"></i>
+                        <li v-else>
+                            <button type="button" @click="toggleMinimizedParentMenu($event, item)"
+                                class="w-full flex flex-col justify-center items-center text-center cursor-pointer rounded-2xl px-2 py-3 transition-colors"
+                                :class="isParentMenuItemActive(item)
+                                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
+                                    : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'">
+                                <AppIcon :name="item.icon" :size="20" />
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
                                 }}</span>
-                            </div>
+                            </button>
                         </li>
                     </template>
                 </ul>
+
+                <Popover ref="minimizedMenuRef" class="w-64 !rounded-2xl">
+                    <div v-if="activeMinimizedParent" class="min-w-0">
+                        <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <AppIcon :name="activeMinimizedParent.icon" :size="16"
+                                    class="text-blue-600 flex-shrink-0" />
+                                <div class="min-w-0">
+                                    <h3 class="text-sm font-semibold truncate">{{ activeMinimizedParent.name }}</h3>
+                                    <p class="text-xs opacity-60">Select a child menu item</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="py-2">
+                            <Link v-for="child in activeMinimizedParent.children" :key="child.id"
+                                :href="getMenuItemRoute(child)" @click="closeMinimizedParentMenu"
+                                class="flex items-center gap-3 px-4 py-3 transition-colors duration-200" :class="child.route && isMenuItemActive(child)
+                                    ? 'bg-gray-100 dark:bg-gray-700/60 text-gray-900 dark:text-white'
+                                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'">
+                                <AppIcon :name="child.icon" :size="16" class="opacity-70 flex-shrink-0" />
+                                <span class="text-sm font-medium truncate">{{ child.name }}</span>
+                            </Link>
+                        </div>
+                    </div>
+                </Popover>
 
                 <!-- Mobile-only: Quick Actions at bottom of sidebar -->
                 <div class="md:hidden dark:border-t dark:border-gray-700 p-3 space-y-1">
                     <Link :href="route('help.index')" @click="toggleMenu = false"
                         class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm">
-                        <i class="pi pi-question-circle"></i>
+                        <AppIcon name="question-circle" :size="16" />
                         <span>Help</span>
                     </Link>
                     <Link :href="route('user.settings')" @click="toggleMenu = false"
                         class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm">
-                        <i class="pi pi-cog"></i>
+                        <AppIcon name="cog" :size="16" />
                         <span>Settings</span>
                     </Link>
                     <Link :href="route('user-activity-logs.index')" @click="toggleMenu = false"
                         class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm">
-                        <i class="pi pi-chart-line"></i>
+                        <AppIcon name="chart-line" :size="16" />
                         <span>Activity</span>
                     </Link>
                     <button @click="handleLogout"
                         class="flex items-center gap-3 px-3 py-2 rounded-md text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm w-full">
-                        <i class="pi pi-sign-out"></i>
+                        <AppIcon name="sign-out" :size="16" />
                         <span>Sign Out</span>
                     </button>
                 </div>
@@ -746,7 +810,7 @@ onUnmounted(() => {
                     <!-- Mobile hamburger -->
                     <button @click="toggleMenu = !toggleMenu"
                         class="md:hidden flex-shrink-0 p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white cursor-pointer">
-                        <i class="pi text-lg" :class="toggleMenu ? 'pi-times' : 'pi-bars'"></i>
+                        <AppIcon :name="toggleMenu ? 'times' : 'bars'" :size="18" />
                     </button>
                     <!-- Logo and App Name -->
                     <div class="flex items-center space-x-3 flex-1 min-w-0">
@@ -782,7 +846,7 @@ onUnmounted(() => {
                         <Link :href="route('help.index')"
                             class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
                             :class="{ 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': route().current('help.index') }">
-                            <i class="pi pi-question-circle"></i>
+                            <AppIcon name="question-circle" :size="16" />
                             <span class="hidden lg:inline">Help</span>
                         </Link>
 
@@ -795,25 +859,21 @@ onUnmounted(() => {
                         <ActivityLogsDropdown ref="activityLogsDropdownRef" />
 
                         <!-- Theme Toggle -->
-                        <Button :icon="getThemeIcon()" severity="secondary" variant="text" size="large" rounded
+                        <AppButton :icon="getThemeIcon()" severity="secondary" variant="text" size="large" rounded
                             :aria-label="'Theme: ' + getThemeLabel()" :title="'Theme: ' + getThemeLabel()"
                             @click="cycleTheme" v-tooltip.bottom="'Switch Theme'" />
 
                         <!-- User Settings Menu -->
                         <div class="relative">
-                            <!-- <Button @click="toggleUserMenu" text rounded
-                                class="text-gray-300 hover:text-white cursor-pointer transition-colors duration-200">
-                                <i class="pi pi-cog" style="font-size: 1.2rem"></i>
-                            </Button> -->
-                            <Button icon="pi pi-cog" severity="secondary" variant="text" size="large" rounded
-                                aria-label="Bookmark" @click="toggleUserMenu" v-tooltip.bottom="'User Menu'" />
+                            <AppButton icon="cog" severity="secondary" variant="text" size="large" rounded
+                                aria-label="User Menu" @click="toggleUserMenu" v-tooltip.bottom="'User Menu'" />
 
                             <Popover ref="userMenuRef" class="w-56 !rounded-2xl">
                                 <!-- Header -->
                                 <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-2">
-                                            <i class="pi pi-user text-blue-600"></i>
+                                            <AppIcon name="user" :size="16" class="text-blue-600" />
                                             <h3 class="text-base font-semibold">User Menu</h3>
                                         </div>
                                     </div>
@@ -826,7 +886,7 @@ onUnmounted(() => {
                                 <div class="py-2">
                                     <Link :href="route('user.reports')"
                                         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
-                                        <i class="pi pi-file-pdf opacity-70"></i>
+                                        <AppIcon name="file-pdf" :size="16" class="opacity-70" />
                                         <div class="flex-1">
                                             <span class="text-sm font-medium">My Reports</span>
                                             <p class="text-xs opacity-60">View your generated reports</p>
@@ -835,7 +895,7 @@ onUnmounted(() => {
 
                                     <Link :href="route('user.settings')"
                                         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
-                                        <i class="pi pi-cog opacity-70"></i>
+                                        <AppIcon name="cog" :size="16" class="opacity-70" />
                                         <div class="flex-1">
                                             <span class="text-sm font-medium">Settings</span>
                                             <p class="text-xs opacity-60">Account preferences</p>
@@ -844,7 +904,7 @@ onUnmounted(() => {
 
                                     <Link :href="route('user-activity-logs.index')"
                                         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
-                                        <i class="pi pi-chart-line opacity-70"></i>
+                                        <AppIcon name="chart-line" :size="16" class="opacity-70" />
                                         <div class="flex-1">
                                             <span class="text-sm font-medium">Activity</span>
                                             <p class="text-xs opacity-60">View your recent activity</p>
@@ -855,8 +915,8 @@ onUnmounted(() => {
                                 <!-- Footer -->
                                 <div
                                     class="px-4 py-2 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                                    <Button @click="handleLogout" label="Sign Out" icon="pi pi-sign-out"
-                                        severity="danger" variant="text" class="w-full" />
+                                    <AppButton @click="handleLogout" label="Sign Out" icon="sign-out" severity="danger"
+                                        variant="text" class="w-full" />
                                 </div>
                             </Popover>
                         </div>

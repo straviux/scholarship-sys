@@ -5,10 +5,12 @@
         <template #container>
             <div class="ios-modal" :style="dragStyle">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal"><i class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal">
+                        <AppIcon name="times" />
+                    </button>
                     <span class="ios-nav-title">Edit Personal Information</span>
                     <button class="ios-nav-btn ios-nav-action" @click="submitForm" :disabled="saving">
-                        <i class="pi pi-check"></i>
+                        <AppIcon name="check" />
                     </button>
                 </div>
                 <div class="ios-body" style="padding: 16px;">
@@ -28,7 +30,7 @@
                     <div v-if="validationError"
                         style="margin-top: 12px; background: #FFF2F2; border: 1px solid #FFD2D2; border-radius: 10px; padding: 12px;">
                         <p style="font-size: 13px; color: #FF3B30; font-weight: 500;">
-                            <i class="pi pi-exclamation-triangle" style="margin-right: 8px;"></i>
+                            <AppIcon name="exclamation-triangle" style="margin-right: 8px;" />
                             {{ validationError }}
                         </p>
                     </div>

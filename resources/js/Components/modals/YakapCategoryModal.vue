@@ -85,8 +85,8 @@ const resetForm = () => {
         </div>
 
         <template #footer>
-            <Button label="Cancel" icon="pi pi-times" @click="handleCancel" class="p-button-text" />
-            <Button label="Continue" icon="pi pi-check" @click="handleConfirm" severity="success" />
+            <AppButton label="Cancel" icon="times" @click="handleCancel" class="p-button-text" />
+            <AppButton label="Continue" icon="check" @click="handleConfirm" severity="success" />
         </template>
     </Dialog>
 </template>

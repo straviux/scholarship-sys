@@ -9,7 +9,7 @@
                 <div class="mb-6 short:mb-3">
                     <Link :href="route('disbursement-management.index')"
                         class="text-blue-600 hover:text-blue-800 text-sm mb-4 flex items-center gap-1">
-                        <i class="pi pi-arrow-left text-xs"></i> Back
+                        <AppIcon name="arrow-left" :size="12" /> Back
                     </Link>
                     <h1 class="text-2xl sm:text-3xl short:text-xl font-bold text-slate-900 mb-2">{{ obrNo }}</h1>
                     <p class="text-sm sm:text-base text-slate-600">
@@ -113,7 +113,7 @@
                                 option-value="value" placeholder="Select Payee Type" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_type }" />
                             <div v-if="errors.payee_type" class="text-red-600 text-xs mt-1">{{ errors.payee_type[0]
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <!-- Payee Name -->
@@ -122,7 +122,7 @@
                             <InputText v-model="form.payee_name" placeholder="Name of payee" class="w-full text-sm"
                                 :class="{ 'border-red-500': errors.payee_name }" />
                             <div v-if="errors.payee_name" class="text-red-600 text-xs mt-1">{{ errors.payee_name[0]
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <!-- Payee Address -->
@@ -140,7 +140,7 @@
                                 class="w-full text-sm" :class="{ 'border-red-500': errors.disbursement_type }" />
                             <div v-if="errors.disbursement_type" class="text-red-600 text-xs mt-1">{{
                                 errors.disbursement_type[0]
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <!-- Explanation -->
@@ -179,7 +179,7 @@
                                 <div v-for="attachment in attachments" :key="attachment.id"
                                     class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition">
                                     <div class="flex items-center gap-3 min-w-0 flex-1">
-                                        <i class="pi pi-file text-slate-600 flex-shrink-0 text-lg"></i>
+                                        <AppIcon name="file" :size="18" class="text-slate-600 flex-shrink-0" />
                                         <div class="min-w-0 flex-1">
                                             <p class="text-sm font-medium text-slate-900 truncate">{{ attachment.name }}
                                             </p>
@@ -194,7 +194,7 @@
                                     </div>
                                     <button type="button" @click="openAttachmentModal(attachment)"
                                         class="ml-3 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded transition flex-shrink-0">
-                                        <i class="pi pi-eye text-xs mr-1"></i> View Details
+                                        <AppIcon name="eye" :size="12" class="mr-1 inline-flex" /> View Details
                                     </button>
                                 </div>
                             </div>
@@ -203,7 +203,7 @@
                         <!-- Note About OBR Status -->
                         <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <div class="flex gap-3">
-                                <i class="pi pi-info-circle text-blue-600 flex-shrink-0"></i>
+                                <AppIcon name="info-circle" :size="16" class="text-blue-600 flex-shrink-0" />
                                 <div class="text-xs sm:text-sm text-blue-700">
                                     <strong>Transaction Status:</strong> {{ disbursements[0].obr_status }} (synced from
                                     disbursement)
@@ -233,22 +233,22 @@
                         rel="noopener noreferrer"
                         class="flex items-center gap-2 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
                         v-tooltip.bottom="'Download'">
-                        <i class="pi pi-download text-sm"></i>
+                        <AppIcon name="download" :size="14" />
                     </a>
                 </div>
             </template>
             <div v-if="selectedAttachment" class="flex flex-col">
                 <!-- Zoom Controls -->
                 <div class="flex justify-center gap-2 mb-4 pb-4 border-b border-slate-200">
-                    <Button icon="pi pi-minus" @click="zoomOut" severity="secondary" size="small" rounded text
+                    <AppButton icon="minus" @click="zoomOut" severity="secondary" size="small" rounded text
                         v-tooltip.bottom="'Zoom Out'" />
                     <span
                         class="px-3 py-2 text-sm font-medium text-slate-900 bg-slate-100 rounded min-w-16 text-center">
                         {{ Math.round(attachmentZoom * 100) }}%
                     </span>
-                    <Button icon="pi pi-plus" @click="zoomIn" severity="secondary" size="small" rounded text
+                    <AppButton icon="plus" @click="zoomIn" severity="secondary" size="small" rounded text
                         v-tooltip.bottom="'Zoom In'" />
-                    <Button icon="pi pi-refresh" @click="resetZoom" severity="secondary" size="small" rounded text
+                    <AppButton icon="refresh" @click="resetZoom" severity="secondary" size="small" rounded text
                         v-tooltip.bottom="'Reset Zoom'" />
                 </div>
 
@@ -269,7 +269,7 @@
 
                     <!-- File Not Available -->
                     <div v-else class="flex flex-col items-center justify-center gap-4 p-12 text-center">
-                        <i class="pi pi-exclamation-circle text-5xl text-amber-500"></i>
+                        <AppIcon name="exclamation-circle" :size="56" class="text-amber-500" />
                         <div>
                             <p class="font-semibold text-slate-900">File Not Available</p>
                             <p class="text-sm text-slate-600 mt-1">This file is not available in the current

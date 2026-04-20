@@ -38,229 +38,265 @@
 
             <!-- Right: Actions -->
             <div class="flex-shrink-0">
-                <Button v-if="hasPermission('applicants.edit')" icon="pi pi-plus" label="Add Disbursement"
+                <AppButton v-if="hasPermission('applicants.edit')" icon="plus" label="Add Disbursement"
                     @click="showAddModal = true" severity="success" size="small" raised disabled />
             </div>
         </div>
 
         <!-- Loading state -->
         <div v-if="loading" class="text-center py-12">
-            <i class="pi pi-spin pi-spinner text-3xl text-gray-300"></i>
+            <AppIcon name="spinner" :size="30" class="text-gray-300" />
         </div>
 
         <!-- Empty state -->
         <div v-else-if="disbursements.length === 0" class="text-center py-12">
-            <i class="pi pi-inbox text-4xl text-gray-300 mb-4 block"></i>
+            <AppIcon name="inbox" :size="36" class="text-gray-300 mb-4 block" />
             <p class="text-gray-500 dark:text-gray-400">No disbursements found</p>
         </div>
 
-        <!-- iOS Expandable Table -->
-        <div v-else class="rounded-2xl overflow-hidden border-[0.5px] border-[#e5e5ea] bg-white">
-
-            <!-- Column Headers -->
-            <div class="grid bg-[#f9f9fb] border-b-[0.5px] border-[#e5e5ea] py-[7px] px-4 gap-2 items-center"
-                style="grid-template-columns: 36px 130px 170px 1fr 110px 120px;">
-                <div></div>
-                <div class="tbl-col-header">Date / OBR</div>
-                <div class="tbl-col-header">Year / Term</div>
-                <div class="tbl-col-header">Payee</div>
-                <div class="tbl-col-header">Status</div>
-                <div class="tbl-col-header text-right pr-1">Amount</div>
-            </div>
-
-            <template v-for="(group, gi) in groupedDisbursements" :key="group.year">
-                <!-- Academic Year Group Header -->
-                <div
-                    class="bg-[#f2f2f7] py-[5px] px-4 border-t-[0.5px] border-b-[0.5px] border-[#e5e5ea] flex items-center justify-between">
-                    <span class="text-xs font-semibold text-[#8e8e93] uppercase tracking-[0.4px]">AY {{ group.year
-                    }}</span>
-                    <span class="text-[11px] text-[#8e8e93]">{{ group.items.length }} record{{ group.items.length !== 1
-                        ? 's' : '' }} · {{ formatCurrency(group.total) }}</span>
-                </div>
-
-                <template v-for="(item, rowIdx) in group.items" :key="item.disbursement_id">
-                    <!-- Main Row -->
-                    <div @click="toggleRow(item.disbursement_id)"
-                        class="grid py-[11px] px-4 gap-2 items-center cursor-pointer border-b-[0.5px] border-[#e5e5ea] transition-[background] duration-150"
-                        style="grid-template-columns: 36px 130px 170px 1fr 110px 120px;"
-                        :style="{ background: expandedRows[item.disbursement_id] ? '#eef4ff' : '#ffffff' }">
-
-                        <!-- Toggle Chevron -->
-                        <div class="flex items-center justify-center">
-                            <i class="pi pi-chevron-right text-[11px] text-[#c7c7cc] transition-transform duration-200"
-                                :style="{ transform: expandedRows[item.disbursement_id] ? 'rotate(90deg)' : 'rotate(0deg)' }"></i>
-                        </div>
-
-                        <!-- Date / OBR No. -->
-                        <div>
-                            <div class="text-[13px] text-[#1c1c1e] font-medium">
-                                {{ item.date_obligated ? formatDate(item.date_obligated) : '—' }}
-                            </div>
-                            <div v-if="item.obr_no" class="mt-[3px]">
-                                <span
-                                    class="text-[10px] font-semibold text-[#1d4ed8] bg-[#dbeafe] rounded-[6px] px-[6px] py-[2px] tracking-[0.2px]">{{
-                                    item.obr_no }}</span>
-                            </div>
-                            <span v-if="item.is_legacy"
-                                class="text-[10px] bg-[#e5e5ea] text-[#636366] rounded px-[5px] py-px inline-block mt-0.5">Legacy</span>
-                        </div>
-
-                        <!-- Year Level / Semester -->
-                        <div>
-                            <div class="text-[13px] text-[#1c1c1e]">{{ item.year_level || '—' }}</div>
-                            <div class="text-[11px] text-[#8e8e93] mt-px">{{ item.semester || '—' }}</div>
-                        </div>
-
-                        <!-- Payee / Type -->
-                        <div class="overflow-hidden">
-                            <div class="text-[13px] text-[#1c1c1e] overflow-hidden text-ellipsis whitespace-nowrap">
-                                {{ item.payee || '—' }}</div>
-                            <div v-if="item.disbursement_type" class="text-[11px] text-[#8e8e93] mt-px">{{
-                                formatDisbursementType(item.disbursement_type) }}</div>
-                        </div>
-
-                        <!-- Status -->
-                        <div>
-                            <span v-if="item.obr_status"
-                                class="text-[11px] font-semibold py-[3px] px-[9px] rounded-[20px] inline-block whitespace-nowrap"
-                                :style="getObrStatusIosStyle(item.obr_status)">
-                                {{ item.obr_status }}
-                            </span>
-                            <span v-else class="text-[#8e8e93] text-xs">—</span>
-                        </div>
-
-                        <!-- Amount -->
-                        <div
-                            class="text-right text-sm font-semibold text-[#1c1c1e] tabular-nums whitespace-nowrap pr-1">
-                            {{ item.amount ? formatCurrency(item.amount) : '—' }}
-                        </div>
-                    </div>
-
-                    <!-- Expanded Detail Panel -->
-                    <div v-if="expandedRows[item.disbursement_id]"
-                        class="bg-[#f5f7ff] border-b-[0.5px] border-[#d0d5e8] pt-4 pr-6 pb-4 pl-[52px]">
-                        <div class="grid grid-cols-2 gap-5 mb-[14px]">
-
-                            <!-- Left: Academic + Cheque -->
-                            <div>
-                                <!-- Academic subsection -->
-                                <div class="mb-[14px]">
-                                    <div class="tbl-section-header mb-[7px]">
-                                        <i class="pi pi-book mr-1 text-[#007AFF]"></i>Academic
-                                    </div>
-                                    <div class="flex flex-wrap gap-4">
-                                        <div v-if="item.academic_year">
-                                            <div class="tbl-detail-label">Academic Year</div>
-                                            <div class="tbl-detail-value">{{ item.academic_year }}</div>
-                                        </div>
-                                        <div v-if="item.year_level">
-                                            <div class="tbl-detail-label">Year Level</div>
-                                            <div class="tbl-detail-value">{{ item.year_level }}</div>
-                                        </div>
-                                        <div v-if="item.semester">
-                                            <div class="tbl-detail-label">Semester</div>
-                                            <div class="tbl-detail-value">{{ item.semester }}</div>
-                                        </div>
-                                        <div v-if="item.profile?.scholarship_grant?.[0]?.course?.shortname">
-                                            <div class="tbl-detail-label">Course</div>
-                                            <div class="tbl-detail-value">{{
-                                                item.profile.scholarship_grant[0].course.shortname }}</div>
-                                        </div>
-                                        <div v-if="item.profile?.scholarship_grant?.[0]?.school?.shortname">
-                                            <div class="tbl-detail-label">School</div>
-                                            <div class="tbl-detail-value">{{
-                                                item.profile.scholarship_grant[0].school.shortname }}</div>
-                                        </div>
-                                    </div>
+        <!-- Table -->
+        <div v-else class="rounded-2xl overflow-hidden border-[0.5px] border-[#e5e5ea] bg-white overflow-x-auto">
+            <table class="w-full border-collapse text-sm table-fixed min-w-[960px]">
+                <thead>
+                    <tr class="bg-[#f9f9fb] border-b-[0.5px] border-[#e5e5ea]">
+                        <th class="w-9 py-[7px] px-3"></th>
+                        <th class="tbl-col-header py-[7px] px-3 text-left w-[130px]">Date / OBR</th>
+                        <th class="tbl-col-header py-[7px] px-3 text-left w-[160px]">Year / Term</th>
+                        <th class="tbl-col-header py-[7px] px-3 text-left w-[220px]">Payee</th>
+                        <th class="tbl-col-header py-[7px] px-3 text-left w-[185px]">Encoder</th>
+                        <th class="tbl-col-header py-[7px] pl-6 pr-3 text-left w-[110px]">Status</th>
+                        <th class="tbl-col-header py-[7px] px-3 text-right w-[120px]">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template v-for="(group, gi) in groupedDisbursements" :key="group.year">
+                        <!-- Academic Year Group Header -->
+                        <tr class="bg-[#f2f2f7] border-t-[0.5px] border-b-[0.5px] border-[#e5e5ea]">
+                            <td colspan="7" class="py-[5px] px-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-[#8e8e93] uppercase tracking-[0.4px]">AY {{
+                                        group.year }}</span>
+                                    <span class="text-xs text-gray-600">{{ group.items.length }} record{{
+                                        group.items.length !== 1 ? 's' : '' }} · <span
+                                            class="text-[12px] text-gray-700 font-bold">{{
+                                                formatCurrency(group.total)
+                                            }}</span></span>
                                 </div>
+                            </td>
+                        </tr>
 
-                                <!-- Cheque subsection -->
-                                <div>
-                                    <div class="tbl-section-header mb-[7px]">
-                                        <i class="pi pi-check-circle mr-1 text-[#34C759]"></i>Cheque
+                        <template v-for="(item, rowIdx) in group.items" :key="item.disbursement_id">
+                            <!-- Main Row -->
+                            <tr @click="toggleRow(item.disbursement_id)"
+                                class="cursor-pointer border-b-[0.5px] border-[#e5e5ea] transition-[background] duration-150"
+                                :style="{ background: expandedRows[item.disbursement_id] ? '#eef4ff' : '#ffffff' }">
+
+                                <!-- Toggle Chevron -->
+                                <td class="py-[11px] px-3 text-center w-9">
+                                    <AppIcon name="chevron-right" :size="11"
+                                        class="text-[#c7c7cc] transition-transform duration-200"
+                                        :style="{ transform: expandedRows[item.disbursement_id] ? 'rotate(90deg)' : 'rotate(0deg)' }" />
+                                </td>
+
+                                <!-- Date / OBR No. -->
+                                <td class="py-[11px] px-3 w-[130px]">
+                                    <div class="text-[13px] text-[#1c1c1e] font-medium">
+                                        {{ item.date_obligated ? formatDate(item.date_obligated) : '—' }}
                                     </div>
-                                    <div class="flex gap-5">
-                                        <div>
-                                            <div class="tbl-detail-label">Cheque No.</div>
-                                            <div class="tbl-detail-value">{{ item.cheques?.[0]?.cheque_no || '—' }}
+                                    <div v-if="item.obr_no" class="mt-[3px]">
+                                        <span
+                                            class="text-[10px] font-semibold text-[#1d4ed8] bg-[#dbeafe] rounded-[6px] px-[6px] py-[2px] tracking-[0.2px]">{{
+                                                item.obr_no }}</span>
+                                    </div>
+                                    <span v-if="item.is_legacy"
+                                        class="text-[10px] bg-[#e5e5ea] text-[#636366] rounded px-[5px] py-px inline-block mt-0.5">Legacy</span>
+                                </td>
+
+                                <!-- Year Level / Semester -->
+                                <td class="py-[11px] px-3 w-[160px]">
+                                    <div class="text-[13px] text-[#1c1c1e]">{{ item.year_level || '—' }}</div>
+                                    <div class="text-[11px] text-[#8e8e93] mt-px">{{ item.semester || '—' }}</div>
+                                </td>
+
+                                <!-- Payee / Type -->
+                                <td class="py-[11px] px-3 w-[220px]">
+                                    <div class="text-[13px] text-[#1c1c1e] truncate">{{ item.payee || '—' }}</div>
+                                    <div v-if="item.disbursement_type" class="text-[11px] text-[#8e8e93] mt-px">{{
+                                        formatDisbursementType(item.disbursement_type) }}</div>
+                                </td>
+
+                                <!-- Encoder -->
+                                <td class="py-[11px] px-3 w-[185px]">
+                                    <div class="text-[10px] text-[#3a3a3c] truncate">{{ item.encoder || '—' }}</div>
+                                    <div v-if="item.encoder_designation"
+                                        class="text-[10px] text-[#8e8e93] truncate mt-px">
+                                        {{ item.encoder_designation }}
+                                    </div>
+                                </td>
+
+                                <!-- Status -->
+                                <td class="py-[11px] pl-6 pr-3 w-[110px]">
+                                    <span v-if="item.obr_status"
+                                        class="text-[11px] font-semibold py-[3px] px-[9px] rounded-[20px] inline-block whitespace-nowrap"
+                                        :style="getObrStatusIosStyle(item.obr_status)">
+                                        {{ item.obr_status }}
+                                    </span>
+                                    <span v-else class="text-[#8e8e93] text-xs">—</span>
+                                </td>
+
+                                <!-- Amount -->
+                                <td class="py-[11px] px-3 text-right w-[120px]">
+                                    <span class="text-sm font-semibold text-[#1c1c1e] tabular-nums whitespace-nowrap">{{
+                                        item.amount ? formatCurrency(item.amount) : '—' }}</span>
+                                </td>
+                            </tr>
+
+                            <!-- Expanded Detail Panel -->
+                            <tr v-if="expandedRows[item.disbursement_id]">
+                                <td colspan="7" class="p-0">
+                                    <div
+                                        class="bg-[#f5f7ff] border-b-[0.5px] border-[#d0d5e8] pt-4 pr-6 pb-4 pl-[52px]">
+                                        <div class="grid grid-cols-2 gap-5 mb-[14px]">
+
+                                            <!-- Left: Academic + Cheque -->
+                                            <div>
+                                                <!-- Academic subsection -->
+                                                <div class="mb-[14px]">
+                                                    <div class="tbl-section-header mb-[7px]">
+                                                        <AppIcon name="book" :size="12" class="mr-1 text-[#007AFF]" />
+                                                        Academic
+                                                    </div>
+                                                    <div class="flex flex-wrap gap-4">
+                                                        <div v-if="item.academic_year">
+                                                            <div class="tbl-detail-label">Academic Year</div>
+                                                            <div class="tbl-detail-value">{{ item.academic_year }}</div>
+                                                        </div>
+                                                        <div v-if="item.year_level">
+                                                            <div class="tbl-detail-label">Year Level</div>
+                                                            <div class="tbl-detail-value">{{ item.year_level }}</div>
+                                                        </div>
+                                                        <div v-if="item.semester">
+                                                            <div class="tbl-detail-label">Semester</div>
+                                                            <div class="tbl-detail-value">{{ item.semester }}</div>
+                                                        </div>
+                                                        <div
+                                                            v-if="item.profile?.scholarship_grant?.[0]?.course?.shortname">
+                                                            <div class="tbl-detail-label">Course</div>
+                                                            <div class="tbl-detail-value">{{
+                                                                item.profile.scholarship_grant[0].course.shortname }}
+                                                            </div>
+                                                        </div>
+                                                        <div
+                                                            v-if="item.profile?.scholarship_grant?.[0]?.school?.shortname">
+                                                            <div class="tbl-detail-label">School</div>
+                                                            <div class="tbl-detail-value">{{
+                                                                item.profile.scholarship_grant[0].school.shortname }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Cheque subsection -->
+                                                <div>
+                                                    <div class="tbl-section-header mb-[7px]">
+                                                        <AppIcon name="check-circle" :size="12"
+                                                            class="mr-1 text-[#34C759]" />Cheque
+                                                    </div>
+                                                    <div class="flex gap-5">
+                                                        <div>
+                                                            <div class="tbl-detail-label">Cheque No.</div>
+                                                            <div class="tbl-detail-value">{{
+                                                                item.cheques?.[0]?.cheque_no || '—' }}</div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="tbl-detail-label">Date Released</div>
+                                                            <div class="tbl-detail-value">{{
+                                                                item.cheques?.[0]?.date_released ?
+                                                                    formatDate(item.cheques[0].date_released) : '—' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Right: Remarks + Attachments -->
+                                            <div>
+                                                <!-- Remarks subsection -->
+                                                <div v-if="item.remarks" class="mb-[14px]">
+                                                    <div class="tbl-section-header mb-[7px]">
+                                                        <AppIcon name="comment" :size="12"
+                                                            class="mr-1 text-[#FF9500]" />Remarks
+                                                    </div>
+                                                    <div class="text-xs text-[#3a3a3c] border-l-2 border-[#d0d5e8] pl-2 leading-[1.5]"
+                                                        v-safe-html="item.remarks"></div>
+                                                </div>
+
+                                                <!-- Attachments subsection -->
+                                                <div>
+                                                    <div class="tbl-section-header mb-[7px]">
+                                                        <AppIcon name="upload" :size="12" class="mr-1 text-[#007AFF]" />
+                                                        Attachments
+                                                        ({{ item.attachments?.length || 0 }})
+                                                    </div>
+                                                    <div v-if="item.attachments?.length > 0"
+                                                        class="flex flex-wrap gap-1.5">
+                                                        <div v-for="att in item.attachments" :key="att.attachment_id"
+                                                            class="flex items-center gap-[5px] bg-white border-[0.5px] border-[#d0d5e8] rounded-lg py-1 px-[9px] text-[11px]">
+                                                            <AppIcon :name="getFileIcon(att.file_type)" :size="12"
+                                                                class="text-[#007AFF]" />
+                                                            <span class="text-[#1c1c1e] max-w-[100px] truncate">{{
+                                                                att.attachment_type }}</span>
+                                                            <button @click.stop="viewAttachment(att)"
+                                                                class="bg-transparent border-0 cursor-pointer p-0 leading-none">
+                                                                <AppIcon name="eye" :size="11" class="text-[#007AFF]" />
+                                                            </button>
+                                                            <button @click.stop="downloadAttachment(att)"
+                                                                class="bg-transparent border-0 cursor-pointer p-0 leading-none">
+                                                                <AppIcon name="download" :size="11"
+                                                                    class="text-[#007AFF]" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div v-else class="text-xs text-[#8e8e93]">No attachments</div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div>
-                                            <div class="tbl-detail-label">Date Released</div>
-                                            <div class="tbl-detail-value">
-                                                {{ item.cheques?.[0]?.date_released ?
-                                                    formatDate(item.cheques[0].date_released) : '—' }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <!-- Right: Remarks + Attachments -->
-                            <div>
-                                <!-- Remarks subsection -->
-                                <div v-if="item.remarks" class="mb-[14px]">
-                                    <div class="tbl-section-header mb-[7px]">
-                                        <i class="pi pi-comment mr-1 text-[#FF9500]"></i>Remarks
-                                    </div>
-                                    <div class="text-xs text-[#3a3a3c] border-l-2 border-[#d0d5e8] pl-2 leading-[1.5]"
-                                        v-safe-html="item.remarks"></div>
-                                </div>
-
-                                <!-- Attachments subsection -->
-                                <div>
-                                    <div class="tbl-section-header mb-[7px]">
-                                        <i class="pi pi-paperclip mr-1 text-[#007AFF]"></i>Attachments ({{
-                                            item.attachments?.length || 0 }})
-                                    </div>
-                                    <div v-if="item.attachments?.length > 0" class="flex flex-wrap gap-1.5">
-                                        <div v-for="att in item.attachments" :key="att.attachment_id"
-                                            class="flex items-center gap-[5px] bg-white border-[0.5px] border-[#d0d5e8] rounded-lg py-1 px-[9px] text-[11px]">
-                                            <i :class="getFileIcon(att.file_type)" class="text-[#007AFF] text-xs"></i>
-                                            <span
-                                                class="text-[#1c1c1e] max-w-[100px] overflow-hidden text-ellipsis whitespace-nowrap">{{
-                                                    att.attachment_type }}</span>
-                                            <button @click.stop="viewAttachment(att)"
-                                                class="bg-transparent border-0 cursor-pointer p-0 leading-none">
-                                                <i class="pi pi-eye text-[#007AFF] text-[11px]"></i>
+                                        <!-- Action Buttons -->
+                                        <div
+                                            class="flex flex-wrap gap-2 pt-3 border-t-[0.5px] border-[#d0d5e8] justify-end">
+                                            <button v-if="hasPermission('applicants.edit')"
+                                                @click.stop="showQrCode(item)"
+                                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5]">
+                                                <AppIcon name="qrcode" :size="12" /> QR Upload
                                             </button>
-                                            <button @click.stop="downloadAttachment(att)"
-                                                class="bg-transparent border-0 cursor-pointer p-0 leading-none">
-                                                <i class="pi pi-download text-[#007AFF] text-[11px]"></i>
+                                            <button v-if="hasPermission('applicants.edit')"
+                                                @click.stop="manageAttachments(item)"
+                                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5]">
+                                                <AppIcon name="upload" :size="12" /> Attachments
+                                            </button>
+                                            <button v-if="hasPermission('applicants.edit')"
+                                                @click.stop="manageCheque(item)"
+                                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5]">
+                                                <AppIcon name="file" :size="12" /> Cheque
+                                            </button>
+                                            <button v-if="hasPermission('applicants.edit')"
+                                                @click.stop="editDisbursement(item)"
+                                                class="tbl-action-btn text-[#FF9500] bg-[#fff8ec]">
+                                                <AppIcon name="pencil" :size="12" /> Edit
+                                            </button>
+                                            <button v-if="hasPermission('applicants.delete')"
+                                                @click.stop="confirmDelete(item)"
+                                                class="tbl-action-btn text-[#FF3B30] bg-[#fff0f0]">
+                                                <AppIcon name="trash" :size="12" /> Delete
                                             </button>
                                         </div>
                                     </div>
-                                    <div v-else class="text-xs text-[#8e8e93]">No attachments</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex flex-wrap gap-2 pt-3 border-t-[0.5px] border-[#d0d5e8] justify-end">
-                            <button v-if="hasPermission('applicants.edit')" @click.stop="showQrCode(item)"
-                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5]">
-                                <i class="pi pi-qrcode text-xs"></i> QR Upload
-                            </button>
-                            <button v-if="hasPermission('applicants.edit')" @click.stop="manageAttachments(item)"
-                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5]">
-                                <i class="pi pi-paperclip text-xs"></i> Attachments
-                            </button>
-                            <button v-if="hasPermission('applicants.edit')" @click.stop="manageCheque(item)"
-                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5]">
-                                <i class="pi pi-file text-xs"></i> Cheque
-                            </button>
-                            <button v-if="hasPermission('applicants.edit')" @click.stop="editDisbursement(item)"
-                                class="tbl-action-btn text-[#FF9500] bg-[#fff8ec]">
-                                <i class="pi pi-pencil text-xs"></i> Edit
-                            </button>
-                            <button v-if="hasPermission('applicants.delete')" @click.stop="confirmDelete(item)"
-                                class="tbl-action-btn text-[#FF3B30] bg-[#fff0f0]">
-                                <i class="pi pi-trash text-xs"></i> Delete
-                            </button>
-                        </div>
-                    </div>
-                </template>
-            </template>
+                                </td>
+                            </tr>
+                        </template>
+                    </template>
+                </tbody>
+            </table>
         </div>
 
 
@@ -352,8 +388,8 @@
             </div>
 
             <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeModal" outlined size="small" />
-                <Button :label="editMode ? 'Update' : 'Create'" @click="saveDisbursement" :loading="saving"
+                <AppButton label="Cancel" severity="secondary" @click="closeModal" outlined size="small" />
+                <AppButton :label="editMode ? 'Update' : 'Create'" @click="saveDisbursement" :loading="saving"
                     size="small" />
             </template>
         </Dialog>
@@ -396,8 +432,8 @@
             </div>
 
             <template #footer>
-                <Button label="Cancel" severity="secondary" @click="showChequeModal = false" outlined size="small" />
-                <Button :label="chequeEditMode ? 'Update' : 'Add Cheque'" @click="saveCheque" :loading="saving"
+                <AppButton label="Cancel" severity="secondary" @click="showChequeModal = false" outlined size="small" />
+                <AppButton :label="chequeEditMode ? 'Update' : 'Add Cheque'" @click="saveCheque" :loading="saving"
                     size="small" />
             </template>
         </Dialog>
@@ -406,8 +442,10 @@
         <Dialog v-model:visible="showDeleteDialog" modal header="Confirm Delete" :style="{ width: '30vw' }">
             <p>Are you sure you want to delete this disbursement?</p>
             <template #footer>
-                <Button label="Cancel" severity="secondary" @click="showDeleteDialog = false" outlined size="small" />
-                <Button label="Delete" severity="danger" @click="deleteDisbursement" :loading="deleting" size="small" />
+                <AppButton label="Cancel" severity="secondary" @click="showDeleteDialog = false" outlined
+                    size="small" />
+                <AppButton label="Delete" severity="danger" @click="deleteDisbursement" :loading="deleting"
+                    size="small" />
             </template>
         </Dialog>
 
@@ -422,7 +460,7 @@
                         <div v-for="attachment in selectedDisbursement.attachments" :key="attachment.attachment_id"
                             class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">
                             <div class="flex items-center gap-3">
-                                <i :class="getFileIcon(attachment.file_type)" class="text-2xl text-blue-600"></i>
+                                <AppIcon :name="getFileIcon(attachment.file_type)" :size="24" class="text-blue-600" />
                                 <div>
                                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{
                                         attachment.file_name }}
@@ -433,11 +471,11 @@
                                 </div>
                             </div>
                             <div class="flex gap-2">
-                                <Button icon="pi pi-eye" size="small" outlined label="View"
+                                <AppButton icon="eye" size="small" outlined label="View"
                                     @click="viewAttachment(attachment)" />
-                                <Button icon="pi pi-download" size="small" outlined
+                                <AppButton icon="download" size="small" outlined
                                     @click="downloadAttachment(attachment)" />
-                                <Button v-if="hasPermission('applicants.edit')" icon="pi pi-trash" size="small"
+                                <AppButton v-if="hasPermission('applicants.edit')" icon="trash" size="small"
                                     severity="danger" outlined @click="deleteAttachment(attachment)" />
                             </div>
                         </div>
@@ -475,8 +513,8 @@
             </div>
 
             <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeAttachmentsModal" outlined size="small" />
-                <Button v-if="hasPermission('applicants.edit')" label="Upload" @click="uploadAttachment"
+                <AppButton label="Cancel" severity="secondary" @click="closeAttachmentsModal" outlined size="small" />
+                <AppButton v-if="hasPermission('applicants.edit')" label="Upload" @click="uploadAttachment"
                     :loading="uploading" :disabled="!attachmentForm.file || !attachmentForm.attachment_type"
                     size="small" />
             </template>
@@ -499,7 +537,7 @@
                 <div class="text-left space-y-3">
                     <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded">
                         <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                            <i class="pi pi-info-circle mr-2"></i>How to use:
+                            <AppIcon name="info-circle" :size="14" class="mr-2 inline" />How to use:
                         </p>
                         <ol class="text-sm text-gray-700 dark:text-gray-300 space-y-1 list-decimal list-inside">
                             <li>Scan this QR code with your mobile device</li>
@@ -510,7 +548,7 @@
 
                     <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded">
                         <p class="text-xs text-yellow-800 dark:text-yellow-300">
-                            <i class="pi pi-exclamation-triangle mr-2"></i>
+                            <AppIcon name="exclamation-triangle" :size="12" class="mr-2 inline" />
                             <strong>Expires in:</strong>
                             <span :class="{
                                 'text-yellow-600': qrCountdown.includes('min') && !qrCountdown.includes('0 min'),
@@ -528,7 +566,7 @@
                             link:</label>
                         <div class="flex gap-2">
                             <InputText type="text" :value="qrCodeData.url" readonly class="flex-1 text-xs" />
-                            <Button icon="pi pi-copy" size="small" @click="copyToClipboard(qrCodeData.url)"
+                            <AppButton icon="copy" size="small" @click="copyToClipboard(qrCodeData.url)"
                                 v-tooltip.top="'Copy link'" />
                         </div>
                     </div>
@@ -536,7 +574,7 @@
             </div>
 
             <template #footer>
-                <Button label="Close" severity="secondary" @click="showQrModal = false" />
+                <AppButton label="Close" severity="secondary" @click="showQrModal = false" />
             </template>
         </Dialog>
     </div>
@@ -544,7 +582,6 @@
 
 <script setup>
 import { ref, onMounted, watch, onUnmounted, computed } from 'vue';
-import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
 import { usePermission } from '@/composable/permissions';
@@ -577,8 +614,6 @@ const toggleRow = (id) => {
 const deleting = ref(false);
 const uploading = ref(false);
 const disbursements = ref([]);
-const showSummary = ref(false);
-const expandedYears = ref({});
 const showAddModal = ref(false);
 const showChequeModal = ref(false);
 const showDeleteDialog = ref(false);
@@ -905,39 +940,6 @@ const formatDisbursementType = (type) => {
     return types[type] || type;
 };
 
-const getDisbursementTypeClass = (type) => {
-    const classes = {
-        'regular': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-        'reimbursement': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-        'financial_assistance': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-    };
-    return classes[type] || '';
-};
-
-const getChequeStatusClass = (status) => {
-    const classes = {
-        'pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-        'released': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-        'cleared': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-        'cancelled': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-        'bounced': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-    };
-    return classes[status] || '';
-};
-
-const getObrStatusClass = (status) => {
-    const classes = {
-        'LOA': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-        'IRREGULAR': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-        'TRANSFERRED': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-        'CLAIMED': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-        'PAID': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-        'ON PROCESS': 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
-        'DENIED': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-    };
-    return classes[status] || '';
-};
-
 const getObrStatusIosStyle = (status) => {
     const styles = {
         'CLAIMED': 'background: #d1f5e0; color: #187a3c;',
@@ -951,49 +953,10 @@ const getObrStatusIosStyle = (status) => {
     return styles[status] || 'background: #e5e5ea; color: #3a3a3c;';
 };
 
-const getStatusCardClass = (status) => {
-    const classes = {
-        'LOA': 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-900/30 border-orange-200 dark:border-orange-800/40',
-        'IRREGULAR': 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-900/30 border-yellow-200 dark:border-yellow-800/40',
-        'TRANSFERRED': 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 border-blue-200 dark:border-blue-800/40',
-        'CLAIMED': 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-900/30 border-purple-200 dark:border-purple-800/40',
-        'PAID': 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/30 border-green-200 dark:border-green-800/40',
-        'ON PROCESS': 'bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-900/30 border-cyan-200 dark:border-cyan-800/40',
-        'DENIED': 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/30 border-red-200 dark:border-red-800/40',
-    };
-    return classes[status] || 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-gray-200 dark:border-gray-600';
-};
-
-const getStatusBgClass = (status) => {
-    const classes = {
-        'LOA': 'bg-orange-50 dark:bg-orange-900/20',
-        'IRREGULAR': 'bg-yellow-50 dark:bg-yellow-900/20',
-        'TRANSFERRED': 'bg-blue-50 dark:bg-blue-900/20',
-        'CLAIMED': 'bg-purple-50 dark:bg-purple-900/20',
-        'PAID': 'bg-green-50 dark:bg-green-900/20',
-        'ON PROCESS': 'bg-cyan-50 dark:bg-cyan-900/20',
-        'DENIED': 'bg-red-50 dark:bg-red-900/20',
-    };
-    return classes[status] || 'bg-gray-50 dark:bg-gray-700';
-};
-
-const getStatusTextClass = (status) => {
-    const classes = {
-        'LOA': 'text-orange-700 dark:text-orange-400',
-        'IRREGULAR': 'text-yellow-700 dark:text-yellow-400',
-        'TRANSFERRED': 'text-blue-700 dark:text-blue-400',
-        'CLAIMED': 'text-purple-700 dark:text-purple-400',
-        'PAID': 'text-green-700 dark:text-green-400',
-        'ON PROCESS': 'text-cyan-700 dark:text-cyan-400',
-        'DENIED': 'text-red-700 dark:text-red-400',
-    };
-    return classes[status] || 'text-gray-700 dark:text-gray-300';
-};
-
 const getFileIcon = (fileType) => {
-    if (fileType?.includes('pdf')) return 'pi pi-file-pdf';
-    if (fileType?.includes('image')) return 'pi pi-image';
-    return 'pi pi-file';
+    if (fileType?.includes('pdf')) return 'file-pdf';
+    if (fileType?.includes('image')) return 'image';
+    return 'file';
 };
 
 const formatFileSize = (bytes) => {
@@ -1226,7 +1189,6 @@ const totalAmount = computed(() => {
     }, 0);
 });
 
-const pendingStatuses = ['ON PROCESS'];
 const settledStatuses = ['CLAIMED', 'PAID'];
 const pendingAmount = computed(() => {
     return disbursements.value
@@ -1240,63 +1202,6 @@ const settledAmount = computed(() => {
     return disbursements.value
         .filter(item => settledStatuses.includes(item.obr_status))
         .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-});
-
-const semesterSummary = computed(() => {
-    const yearSummary = {};
-
-    disbursements.value.forEach(item => {
-        const year = item.academic_year || 'N/A';
-        const semester = item.semester || 'N/A';
-
-        // Initialize year if not exists
-        if (!yearSummary[year]) {
-            yearSummary[year] = {
-                academicYear: year,
-                total: 0,
-                count: 0,
-                semesters: {}
-            };
-        }
-
-        // Initialize semester within year if not exists
-        if (!yearSummary[year].semesters[semester]) {
-            yearSummary[year].semesters[semester] = {
-                semester: semester,
-                total: 0,
-                count: 0,
-                byStatus: {}
-            };
-        }
-
-        const status = item.obr_status || 'ON PROCESS';
-        const amount = parseFloat(item.amount) || 0;
-
-        // Update year totals
-        yearSummary[year].total += amount;
-        yearSummary[year].count++;
-
-        // Update semester totals
-        yearSummary[year].semesters[semester].total += amount;
-        yearSummary[year].semesters[semester].count++;
-
-        // Update status breakdown for semester
-        if (!yearSummary[year].semesters[semester].byStatus[status]) {
-            yearSummary[year].semesters[semester].byStatus[status] = {
-                count: 0,
-                amount: 0
-            };
-        }
-        yearSummary[year].semesters[semester].byStatus[status].count++;
-        yearSummary[year].semesters[semester].byStatus[status].amount += amount;
-    });
-
-    // Sort by year descending
-    return Object.fromEntries(
-        Object.entries(yearSummary).sort(([yearA], [yearB]) => {
-            return yearB.localeCompare(yearA);
-        })
-    );
 });
 
 const groupedDisbursements = computed(() => {

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onBeforeUnmount } from 'vue';
 import axios from 'axios';
+import AppIcon from '@/Components/ui/AppIcon.vue';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
@@ -131,12 +132,12 @@ onBeforeUnmount(() => {
                 <!-- iOS Navigation Bar (drag handle) -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" @click="closeModal" v-tooltip.bottom="'Close'">
-                        <i class="pi pi-times"></i>
+                        <AppIcon name="times" />
                     </button>
                     <span class="ios-nav-title">{{ modalTitle }}</span>
                     <button class="ios-nav-btn ios-nav-action" @click="submit" :disabled="processing"
                         v-tooltip.bottom="isEdit ? 'Save' : 'Add'">
-                        <i v-if="processing" class="pi pi-spin pi-spinner"></i>
+                        <AppIcon v-if="processing" name="spinner" />
                         <template v-else>{{ isEdit ? 'Save' : 'Add' }}</template>
                     </button>
                 </div>
@@ -148,7 +149,7 @@ onBeforeUnmount(() => {
                         <div class="ios-card">
                             <div class="ios-row ios-row-last">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-bookmark-fill" style="color: #007AFF; font-size: 13px;"></i>
+                                    <AppIcon name="bookmark-fill" style="color: #007AFF; font-size: 13px;" />
                                     Program
                                 </div>
                                 <div class="ios-row-control">
@@ -170,7 +171,7 @@ onBeforeUnmount(() => {
                             <!-- Name -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-graduation-cap" style="color: #AF52DE; font-size: 13px;"></i>
+                                    <AppIcon name="graduation-cap" style="color: #AF52DE; font-size: 13px;" />
                                     Name
                                 </div>
                                 <div class="ios-row-control">
@@ -180,7 +181,7 @@ onBeforeUnmount(() => {
                             <!-- Shortname -->
                             <div class="ios-row">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-tag" style="color: #FF9500; font-size: 13px;"></i>
+                                    <AppIcon name="tag" style="color: #FF9500; font-size: 13px;" />
                                     Shortname
                                 </div>
                                 <div class="ios-row-control">
@@ -190,7 +191,7 @@ onBeforeUnmount(() => {
                             <!-- Field of Study -->
                             <div class="ios-row ios-row-last">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-book" style="color: #5856D6; font-size: 13px;"></i>
+                                    <AppIcon name="book" style="color: #5856D6; font-size: 13px;" />
                                     Field of Study
                                 </div>
                                 <div class="ios-row-control">
@@ -232,7 +233,7 @@ onBeforeUnmount(() => {
                         <div class="ios-card">
                             <div class="ios-row ios-row-dates">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                    <AppIcon name="calendar" style="color: #FF3B30; font-size: 13px;" />
                                     Start Date
                                 </div>
                                 <div class="ios-row-control">
@@ -241,7 +242,7 @@ onBeforeUnmount(() => {
                                 </div>
                                 <span class="ios-date-separator">—</span>
                                 <div class="ios-row-label">
-                                    <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                    <AppIcon name="calendar" style="color: #FF3B30; font-size: 13px;" />
                                     End Date
                                 </div>
                                 <div class="ios-row-control">
@@ -251,7 +252,7 @@ onBeforeUnmount(() => {
                             </div>
                             <!-- <div class="ios-row ios-row-last">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-calendar" style="color: #FF3B30; font-size: 13px;"></i>
+                                    <AppIcon name="calendar" style="color: #FF3B30; font-size: 13px;" />
                                     End Date
                                 </div>
                                 <div class="ios-row-control">
@@ -300,7 +301,7 @@ onBeforeUnmount(() => {
                         <div class="ios-card">
                             <label class="ios-row ios-row-last" style="cursor: pointer;">
                                 <div class="ios-row-label">
-                                    <i class="pi pi-check-circle" style="color: #34C759; font-size: 13px;"></i>
+                                    <AppIcon name="check-circle" style="color: #34C759; font-size: 13px;" />
                                     Active
                                 </div>
                                 <ToggleSwitch v-model="form.is_active" :trueValue="1" :falseValue="0" />

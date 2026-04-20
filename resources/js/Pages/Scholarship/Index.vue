@@ -8,7 +8,7 @@
             <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
-                        <i class="pi pi-users text-indigo-500 text-[2rem]"></i>
+                        <AppIcon name="users" :size="32" class="text-indigo-500" />
                         <div>
                             <h1 class="text-2xl font-bold text-gray-700">Scholarship Profiles</h1>
                             <p class="text-sm text-gray-600">Browse and manage scholarship applicant profiles</p>
@@ -20,20 +20,20 @@
                 </template>
                 <template #end>
                     <div class="flex gap-3 items-center">
-                        <Button icon="pi pi-plus" @click="addRecordPopover.toggle($event)" severity="success"
+                        <AppButton icon="plus" @click="addRecordPopover.toggle($event)" severity="success"
                             v-tooltip.bottom="'Add New Record'" v-if="hasPermission('applicants.create')" rounded
                             outlined />
                         <Popover ref="addRecordPopover">
                             <div class="flex flex-col gap-2 w-48">
-                                <!-- <Button @click="openAddApplicantModal" label="Add Applicant" icon="pi pi-user-plus"
+                                <!-- <Button @click="openAddApplicantModal" label="Add Applicant" icon="user-plus"
                                     severity="success" outlined class="justify-start" /> -->
-                                <Button @click="openAddActiveModal" label="Add Active" icon="pi pi-user-edit"
+                                <AppButton @click="openAddActiveModal" label="Add Active" icon="user-edit"
                                     severity="info" outlined class="justify-start" />
                             </div>
                         </Popover>
-                        <!-- <Button icon="pi pi-refresh" @click="refreshData" severity="secondary" outlined
+                        <!-- <Button icon="refresh" @click="refreshData" severity="secondary" outlined
                             v-tooltip.bottom="'Refresh'" /> -->
-                        <Button icon="pi pi-print" @click="showReportWizard = true" severity="secondary"
+                        <AppButton icon="print" @click="showReportWizard = true" severity="secondary"
                             v-tooltip.bottom="'Generate Report'" v-if="hasPermission('reports.view')" rounded
                             outlined />
                     </div>
@@ -85,7 +85,8 @@
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Grant Provision</label>
                         <Select v-model="drawerFilter.grant_provision" :options="grantProvisionOptions"
-                            placeholder="All Provisions" size="small" class="w-full" showClear />
+                            optionLabel="label" optionValue="value" placeholder="All Provisions" size="small"
+                            class="w-full" showClear />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Status</label>
@@ -96,7 +97,7 @@
                                 <InputGroup>
                                     <InputText :value="value" @input="updateModel($event.target.value)"
                                         placeholder="Search status..." class="w-full" />
-                                    <Button v-if="value" icon="pi pi-times" severity="secondary" text size="small"
+                                    <AppButton v-if="value" icon="times" severity="secondary" text size="small"
                                         @click="updateModel('')" />
                                 </InputGroup>
                             </template>
@@ -116,9 +117,9 @@
                     </div>
                 </div>
                 <div class="flex gap-2 justify-end mt-6 pt-4 border-t">
-                    <Button severity="secondary" outlined size="small" icon="pi pi-history" label="Clear"
+                    <AppButton severity="secondary" outlined size="small" icon="history" label="Clear"
                         @click="clearDrawerFilters" />
-                    <Button label="Apply" icon="pi pi-filter-fill" severity="info" size="small"
+                    <AppButton label="Apply" icon="filter-fill" severity="info" size="small"
                         @click="applyDrawerFilters" />
                 </div>
             </FloatingDrawer>
@@ -130,11 +131,13 @@
                     class="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
                     <div class="flex gap-4 max-w-md">
                         <InputGroup>
-                            <InputGroupAddon><i class="pi pi-search text-gray-400" /></InputGroupAddon>
+                            <InputGroupAddon>
+                                <AppIcon name="search" :size="14" class="text-gray-400" />
+                            </InputGroupAddon>
                             <InputText v-model="globalFilter" placeholder="Search..." size="small"
                                 @keyup.enter="triggerSearch()" />
                         </InputGroup>
-                        <Button icon="pi pi-filter" severity="warn" text rounded @click="openDrawer()"
+                        <AppButton icon="filter" severity="warn" text rounded @click="openDrawer()"
                             v-tooltip.bottom="'More Filters'" />
                     </div>
                     <div class="flex items-center gap-4">
@@ -142,7 +145,7 @@
                             <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
                             <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
                         </div>
-                        <Button :icon="simpleView ? 'pi pi-table' : 'pi pi-list'" severity="secondary" rounded outlined
+                        <AppButton :icon="simpleView ? 'table' : 'list'" severity="secondary" rounded outlined
                             size="small"
                             v-tooltip.bottom="simpleView ? 'Switch to Detailed View' : 'Switch to Simple View'"
                             @click="simpleView = !simpleView" />
@@ -169,14 +172,14 @@
                                 <InputGroup>
                                     <InputText :value="value" @input="updateModel($event.target.value)"
                                         placeholder="Search status..." class="w-full" />
-                                    <Button v-if="value" icon="pi pi-times" severity="secondary" text size="small"
+                                    <AppButton v-if="value" icon="times" severity="secondary" text size="small"
                                         @click="updateModel('')" />
                                 </InputGroup>
                             </template>
                         </Select>
                     </div>
-                    <Button v-if="activeFilterTags.length" icon="pi pi-times" severity="danger" text rounded
-                        size="small" @click="clearFilters" v-tooltip.bottom="'Clear Filters'" />
+                    <AppButton v-if="activeFilterTags.length" icon="times" severity="danger" text rounded size="small"
+                        @click="clearFilters" v-tooltip.bottom="'Clear Filters'" />
                 </div>
 
                 <!-- Active Filter Tags -->
@@ -307,15 +310,15 @@
                         <template #body="slotProps">
                             <div v-if="slotProps.data.latest_scholarship_record" class="flex items-center gap-2">
                                 <Chip v-if="slotProps.data.latest_scholarship_record.grant_provision"
-                                    :label="slotProps.data.latest_scholarship_record.grant_provision" size="small"
-                                    class="font-medium cursor-pointer"
+                                    :label="getSystemOptionLabel('grant_provision', slotProps.data.latest_scholarship_record.grant_provision)"
+                                    size="small" class="font-medium cursor-pointer"
                                     @click="hasPermission('applicants.edit') && openGrantProvisionDialog(slotProps.data)" />
-                                <Button v-else-if="hasPermission('applicants.edit')" icon="pi pi-plus" label="Set"
+                                <AppButton v-else-if="hasPermission('applicants.edit')" icon="plus" label="Set"
                                     size="small" severity="secondary" text
                                     @click="openGrantProvisionDialog(slotProps.data)" />
-                                <Button
+                                <AppButton
                                     v-if="slotProps.data.latest_scholarship_record.grant_provision && hasPermission('applicants.edit')"
-                                    icon="pi pi-pencil" size="small" severity="secondary" text rounded
+                                    icon="pencil" size="small" severity="secondary" text rounded
                                     @click="openGrantProvisionDialog(slotProps.data)" v-tooltip.top="'Edit'" />
                             </div>
                             <span v-else class="text-sm text-gray-400">N/A</span>
@@ -325,9 +328,9 @@
                     <Column header="Actions" headerClass="min-w-[120px]" bodyClass="min-w-[120px]" v-if="!simpleView">
                         <template #body="slotProps">
                             <div class="flex gap-2">
-                                <Button icon="pi pi-eye" size="small" severity="info" outlined rounded
+                                <AppButton icon="eye" size="small" severity="info" outlined rounded
                                     v-tooltip.top="'View'" @click="viewFullProfile(slotProps.data)" />
-                                <Button icon="pi pi-trash" size="small" severity="danger" outlined rounded
+                                <AppButton icon="trash" size="small" severity="danger" outlined rounded
                                     v-tooltip.top="'Soft Delete (Admin Only)'"
                                     @click="confirmDeleteProfile(slotProps.data)" :disabled="!hasRole('administrator')"
                                     :class="{ 'opacity-50': !hasRole('administrator') }" />
@@ -338,7 +341,7 @@
                     <template #expansion="slotProps">
                         <div class="px-4 py-3">
                             <div class="flex items-center gap-2 mb-3">
-                                <i class="pi pi-history text-indigo-500"></i>
+                                <AppIcon name="history" :size="16" class="text-indigo-500" />
                                 <span class="text-sm font-semibold text-gray-700">Scholarship Records</span>
                                 <Badge :value="slotProps.data.scholarship_grant?.length ?? 0" severity="secondary"
                                     size="small" />
@@ -359,8 +362,8 @@
                                                 class="px-2 py-0.5 rounded-full text-xs font-semibold border inline-block">
                                                 {{ getScholarshipStatusLabel(r.data.unified_status) }}
                                             </div>
-                                            <i v-if="r.data.id === slotProps.data.latest_scholarship_record?.id"
-                                                class="pi pi-star-fill text-blue-400 text-xs"
+                                            <AppIcon v-if="r.data.id === slotProps.data.latest_scholarship_record?.id"
+                                                name="star-fill" :size="12" class="text-blue-400"
                                                 v-tooltip.top="'Latest record'" />
                                         </div>
                                     </template>
@@ -398,7 +401,8 @@
                                 </Column>
                                 <Column header="Grant Provision" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">
                                     <template #body="r">
-                                        <span class="text-xs">{{ r.data.grant_provision || '—' }}</span>
+                                        <span class="text-xs">{{ getSystemOptionLabel('grant_provision',
+                                            r.data.grant_provision, '—') }}</span>
                                     </template>
                                 </Column>
                                 <Column header="Date Filed" headerClass="min-w-[100px]" bodyClass="min-w-[100px]">
@@ -420,7 +424,7 @@
 
                     <template #empty>
                         <div class="text-center py-12">
-                            <i class="pi pi-users text-6xl text-gray-300 mb-4"></i>
+                            <AppIcon name="users" :size="64" class="text-gray-300 mb-4" />
                             <p class="text-gray-500 text-lg">No profiles found</p>
                             <p class="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
                         </div>
@@ -434,7 +438,7 @@
             :closable="true">
             <template #header>
                 <div class="flex items-center gap-2">
-                    <i class="pi pi-user text-lg text-blue-600"></i>
+                    <AppIcon name="user" :size="18" class="text-blue-600" />
                     <span class="font-semibold">Profile Details</span>
                 </div>
             </template>
@@ -443,7 +447,7 @@
                 <!-- Personal Information -->
                 <div>
                     <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
-                        <i class="pi pi-user text-blue-600"></i>
+                        <AppIcon name="user" :size="16" class="text-blue-600" />
                         Personal Information
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -479,7 +483,7 @@
                 <!-- Latest Scholarship Information -->
                 <div v-if="selectedProfile.latest_scholarship_record">
                     <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
-                        <i class="pi pi-bookmark text-blue-600"></i>
+                        <AppIcon name="bookmark" :size="16" class="text-blue-600" />
                         Latest Scholarship Information
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -583,7 +587,7 @@
                 <!-- Summary -->
                 <div>
                     <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
-                        <i class="pi pi-chart-bar text-blue-600"></i>
+                        <AppIcon name="chart-bar" :size="16" class="text-blue-600" />
                         Summary
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -599,14 +603,14 @@
 
             <template #footer>
                 <div class="flex justify-end gap-2">
-                    <Button label="Close" icon="pi pi-times" severity="secondary" @click="showProfileDialog = false" />
+                    <AppButton label="Close" icon="times" severity="secondary" @click="showProfileDialog = false" />
                 </div>
             </template>
         </Dialog>
 
         <!-- Generate Report Modal -->
         <!-- <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" /> -->
-        <ReportWizardModal :show="showReportWizard" @update:show="showReportWizard = $event" /> -->
+        <ReportWizardModal :show="showReportWizard" @update:show="showReportWizard = $event" />
 
         <!-- Grant Provision Update Dialog -->
         <Dialog v-model:visible="showGrantProvisionDialog" modal header="Update Grant Provision" class="w-[500px]">
@@ -626,7 +630,8 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Grant
                         Provision</label>
                     <Select v-model="grantProvisionForm.grant_provision" :options="grantProvisionOptions"
-                        placeholder="Select provision type" class="w-full" showClear />
+                        optionLabel="label" optionValue="value" placeholder="Select provision type" class="w-full"
+                        showClear />
                 </div>
             </div>
             <template #footer>
@@ -640,7 +645,7 @@
         <Dialog v-model:visible="showDeleteConfirmDialog" modal header="Confirm Soft Delete" class="w-[500px]">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
-                    <i class="pi pi-exclamation-triangle text-2xl text-orange-500"></i>
+                    <AppIcon name="exclamation-triangle" :size="24" class="text-orange-500" />
                     <div>
                         <p class="font-semibold text-gray-900 dark:text-gray-100">Soft Delete Profile</p>
                         <p class="text-sm text-gray-600 dark:text-gray-400">This action can be undone from the Deleted
@@ -664,7 +669,15 @@
         <ScholarFormModal v-model:visible="showAddActiveModal" mode="create" @success="refreshData" />
 
         <!-- Context Menu -->
-        <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body" />
+        <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body">
+            <template #item="{ item, props }">
+                <a v-ripple v-bind="props.action" class="flex items-center gap-2 w-full">
+                    <AppIcon v-if="item.icon" :name="item.icon" :size="14" />
+                    <span>{{ item.label }}</span>
+                    <AppIcon v-if="item.items" name="chevron-right" :size="14" class="ml-auto" />
+                </a>
+            </template>
+        </ContextMenu>
     </AdminLayout>
 </template>
 
@@ -680,7 +693,7 @@ import FloatingDrawer from '@/Components/FloatingDrawer.vue';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 import axios from 'axios';
-import { useSystemOptions } from '@/composables/useSystemOptions';
+import { getSystemOptionLabel, useSystemOptions } from '@/composables/useSystemOptions';
 import moment from 'moment';
 // Custom Select Components
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
@@ -880,7 +893,7 @@ const hasRole = (role) => {
 
 // Grant Provision Options
 const _grantProvisionRaw = useSystemOptions('grant_provision');
-const grantProvisionOptions = computed(() => _grantProvisionRaw.value.map(o => o.value));
+const grantProvisionOptions = computed(() => _grantProvisionRaw.value);
 
 // Academic Year Options - generate current year and previous years with all ranges first, then single years
 const academicYearOptions = computed(() => {
@@ -963,7 +976,7 @@ const dataViewRows = computed(() => {
 const contextMenuItems = computed(() => [
     {
         label: 'View Profile',
-        icon: 'pi pi-eye',
+        icon: 'eye',
         command: () => {
             if (selectedProfileForContext.value) {
                 viewFullProfile(selectedProfileForContext.value);
@@ -976,7 +989,7 @@ const contextMenuItems = computed(() => [
     },
     {
         label: 'Grant Provision',
-        icon: 'pi pi-bookmark',
+        icon: 'bookmark',
         command: () => {
             if (selectedProfileForContext.value && hasPermission('applicants.edit')) {
                 openGrantProvisionDialog(selectedProfileForContext.value);
@@ -990,7 +1003,7 @@ const contextMenuItems = computed(() => [
     },
     {
         label: 'Soft Delete',
-        icon: 'pi pi-trash',
+        icon: 'trash',
         command: () => {
             if (selectedProfileForContext.value && hasRole('administrator')) {
                 confirmDeleteProfile(selectedProfileForContext.value);
@@ -1157,7 +1170,7 @@ const openGrantProvisionDialog = (profile) => {
             const records = response.data;
             scholarshipRecordOptions.value = records.map(record => ({
                 value: record.id,
-                label: `${record.program?.shortname || 'N/A'} - ${record.course?.shortname || 'N/A'} - ${record.year_level ? record.year_level + ' Year' : 'N/A'} (${getScholarshipStatusLabel(record.unified_status)})${record.grant_provision ? ' - ' + record.grant_provision : ''}`,
+                label: `${record.program?.shortname || 'N/A'} - ${record.course?.shortname || 'N/A'} - ${record.year_level ? record.year_level + ' Year' : 'N/A'} (${getScholarshipStatusLabel(record.unified_status)})${record.grant_provision ? ' - ' + getSystemOptionLabel('grant_provision', record.grant_provision) : ''}`,
                 grant_provision: record.grant_provision
             }));
 

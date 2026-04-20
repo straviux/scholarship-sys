@@ -4,17 +4,19 @@
         <template #container>
             <div class="ios-modal" :class="{ 'ios-modal-maximized': isMaximized }" :style="dragStyle">
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close"><i class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">{{ attachment?.file_name }}</span>
                     <div
                         style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); display: flex; gap: 4px;">
                         <button class="ios-nav-btn ios-nav-action" style="position: static; transform: none;"
                             @click="isMaximized = !isMaximized" v-tooltip.bottom="isMaximized ? 'Restore' : 'Maximize'">
-                            <i :class="isMaximized ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"></i>
+                            <AppIcon :name="isMaximized ? 'window-minimize' : 'window-maximize'" :size="14" />
                         </button>
                         <button class="ios-nav-btn ios-nav-action" style="position: static; transform: none;"
                             @click="downloadAttachment(attachment)">
-                            <i class="pi pi-download"></i>
+                            <AppIcon name="download" :size="14" />
                         </button>
                     </div>
                 </div>
@@ -44,26 +46,26 @@
                             <div
                                 class="absolute bottom-4 right-4 flex gap-1 bg-white dark:bg-gray-800 rounded-[10px] shadow-lg p-1">
                                 <button class="ios-icon-btn" @click="zoomOut" :disabled="imageZoom <= 0.5">
-                                    <i class="pi pi-minus"></i>
+                                    <AppIcon name="minus" :size="13" />
                                 </button>
                                 <span class="px-2.5 py-1.5 text-[13px] font-semibold text-black dark:text-gray-200">{{
                                     Math.round(imageZoom * 100) }}%</span>
                                 <button class="ios-icon-btn" @click="zoomIn" :disabled="imageZoom >= 5">
-                                    <i class="pi pi-plus"></i>
+                                    <AppIcon name="plus" :size="13" />
                                 </button>
                                 <button class="ios-icon-btn" @click="resetZoom" v-tooltip.top="'Reset Zoom'">
-                                    <i class="pi pi-refresh"></i>
+                                    <AppIcon name="refresh" :size="13" />
                                 </button>
                             </div>
                         </div>
 
                         <!-- Fallback -->
                         <div v-else class="text-center p-6 short:p-4">
-                            <i class="pi pi-file text-6xl text-gray-400 dark:text-gray-500 mb-4"></i>
+                            <AppIcon name="file" :size="64" class="text-gray-400 dark:text-gray-500 mb-4" />
                             <p class="text-gray-600 dark:text-gray-400">Unable to preview this file type</p>
                             <button class="ios-icon-btn" style="margin-top: 12px;"
                                 @click="downloadAttachment(attachment)">
-                                <i class="pi pi-download"></i> Download Instead
+                                <AppIcon name="download" :size="13" /> Download Instead
                             </button>
                         </div>
                     </div>

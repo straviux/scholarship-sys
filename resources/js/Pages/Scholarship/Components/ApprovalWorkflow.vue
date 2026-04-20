@@ -22,7 +22,7 @@
         <!-- Academic & Program Details -->
         <div class="border rounded p-3">
             <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                <i class="pi pi-graduation-cap text-green-600 text-sm"></i>
+                <AppIcon name="graduation-cap" :size="14" class="text-green-600" />
                 Academic
             </h4>
 
@@ -67,15 +67,15 @@
         <!-- Requirements Status -->
         <div v-if="application.requirements && application.requirements.length > 0" class="border rounded p-3">
             <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                <i class="pi pi-verified text-blue-600 text-sm"></i>
+                <AppIcon name="verified" :size="14" class="text-blue-600" />
                 Requirements Status
             </h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div v-for="requirement in application.requirements" :key="requirement.id"
                     class="flex items-center justify-between p-2 border rounded">
                     <div class="flex items-center gap-2 text-xs">
-                        <i
-                            :class="requirement.file_path ? 'pi pi-check-circle text-green-500' : 'pi pi-times-circle text-red-500'"></i>
+                        <AppIcon :name="requirement.file_path ? 'check-circle' : 'times-circle'"
+                            :class="requirement.file_path ? 'text-green-500' : 'text-red-500'" :size="14" />
                         <span class="font-medium">{{ requirement.requirement?.name || 'Requirement' }}</span>
                     </div>
                     <Chip :label="requirement.file_path ? 'Submitted' : 'Missing'"
@@ -87,7 +87,7 @@
         <!-- Approval History -->
         <div v-if="application.approvalHistory && application.approvalHistory.length > 0" class="border rounded p-3">
             <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                <i class="pi pi-clock text-purple-600 text-sm"></i>
+                <AppIcon name="clock" :size="14" class="text-purple-600" />
                 Approval History
             </h4>
             <Timeline :value="application.approvalHistory" class="w-full">

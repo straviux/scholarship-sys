@@ -1,5 +1,7 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
+import AppIcon from '@/Components/ui/AppIcon.vue';
+import AppButton from '@/Components/ui/AppButton.vue';
 import { Head } from "@inertiajs/vue3";
 import { onMounted, ref, watch, computed, onBeforeUnmount } from "vue";
 import CourseModal from "@/Pages/Course/Modal/CourseModal.vue";
@@ -152,7 +154,7 @@ onBeforeUnmount(() => {
         <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
-                    <i class="pi pi-book text-blue-600 text-[2rem] short:text-[1.5rem]"></i>
+                    <AppIcon name="book" class="text-blue-600 text-[2rem] short:text-[1.5rem]" />
                     <div>
                         <h1 class="text-2xl short:text-xl font-bold text-gray-700">Courses</h1>
                         <p class="text-sm text-gray-600">Manage courses and scholarship programs</p>
@@ -160,7 +162,7 @@ onBeforeUnmount(() => {
                 </div>
             </template>
             <template #end>
-                <Button v-if="hasPermission('courses.manage')" icon="pi pi-plus" label="Add Course" severity="success"
+                <AppButton v-if="hasPermission('courses.manage')" icon="plus" label="Add Course" severity="success"
                     raised rounded size="small" @click="openCreate" />
             </template>
         </Toolbar>
@@ -170,7 +172,9 @@ onBeforeUnmount(() => {
             <!-- Search & Filters -->
             <div class="flex gap-3 items-center mb-4">
                 <IconField iconPosition="left" class="flex-1 max-w-sm">
-                    <InputIcon class="pi pi-search" />
+                    <InputIcon>
+                        <AppIcon name="search" :size="14" />
+                    </InputIcon>
                     <InputText v-model="globalFilter" placeholder="Search courses..." class="w-full" />
                 </IconField>
                 <Select v-model="programFilter" :options="programOptions" optionLabel="label" optionValue="value"
@@ -230,9 +234,9 @@ onBeforeUnmount(() => {
                 <Column header="Actions" style="width: 100px">
                     <template #body="{ data }">
                         <div class="flex gap-1.5 justify-center" v-if="hasPermission('courses.manage')">
-                            <Button icon="pi pi-pencil" severity="info" size="small" rounded outlined
+                            <AppButton icon="pencil" severity="info" size="small" rounded outlined
                                 v-tooltip.top="'Edit'" @click="openEdit(data)" />
-                            <Button v-if="hasPermission('courses.delete')" icon="pi pi-trash" severity="danger"
+                            <AppButton v-if="hasPermission('courses.delete')" icon="trash" severity="danger"
                                 size="small" rounded outlined v-tooltip.top="'Delete'"
                                 @click="confirmDeleteCourse(data)" />
                         </div>
@@ -249,7 +253,7 @@ onBeforeUnmount(() => {
                     <!-- Nav Bar -->
                     <div class="ios-nav-bar" @pointerdown="onDeleteDragStart">
                         <button class="ios-nav-btn ios-nav-cancel" @click="closeDeleteModal">
-                            <i class="pi pi-times"></i>
+                            <AppIcon name="times" />
                         </button>
                         <span class="ios-nav-title">Confirm Deletion</span>
                         <button class="ios-nav-btn ios-nav-action ios-nav-destructive" @click="deleteCourse"
@@ -264,8 +268,8 @@ onBeforeUnmount(() => {
                         <div class="ios-section">
                             <div class="ios-card">
                                 <div class="ios-row" style="padding: 12px 16px; gap: 12px;">
-                                    <i class="pi pi-exclamation-triangle"
-                                        style="font-size: 24px; color: #FF3B30; flex-shrink: 0;"></i>
+                                    <AppIcon name="exclamation-triangle"
+                                        style="font-size: 24px; color: #FF3B30; flex-shrink: 0;" />
                                     <div>
                                         <div
                                             style="font-size: 15px; font-weight: 600; color: #000; margin-bottom: 4px;">

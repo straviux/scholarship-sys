@@ -1,5 +1,7 @@
 <script setup>
 import { Head, Link } from "@inertiajs/vue3";
+import AppIcon from "@/Components/ui/AppIcon.vue";
+import AppButton from "@/Components/ui/AppButton.vue";
 
 defineProps({
     status: {
@@ -21,7 +23,8 @@ defineProps({
             <div class="text-center mb-6 short:mb-3">
                 <div
                     class="inline-flex items-center justify-center w-24 short:w-16 h-24 short:h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full mb-4 short:mb-2">
-                    <i class="pi pi-face-smile text-yellow-600 dark:text-yellow-400 text-[3rem] short:text-[2rem]"></i>
+                    <AppIcon name="face-smile"
+                        class="text-yellow-600 dark:text-yellow-400 text-[3rem] short:text-[2rem]" />
                 </div>
 
                 <!-- Status Code -->
@@ -49,7 +52,7 @@ defineProps({
                 class="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4 short:p-3 mb-6 short:mb-3 shadow-sm">
                 <div class="flex items-start">
                     <div class="flex-shrink-0">
-                        <i class="pi pi-exclamation-triangle h-5 w-5 text-amber-500"></i>
+                        <AppIcon name="exclamation-triangle" class="h-5 w-5 text-amber-500" />
                     </div>
                     <div class="ml-3">
                         <h3 class="text-sm font-medium text-gray-900 dark:text-white">
@@ -71,11 +74,11 @@ defineProps({
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link :href="route('home')"
                     class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
-                    <i class="pi pi-home w-5 h-5 mr-2"></i>
+                    <AppIcon name="home" class="w-5 h-5 mr-2" />
                     Go to Home
                 </Link>
 
-                <Button @click="window.history.back()" label="Go Back" icon="pi pi-arrow-left" severity="secondary" />
+                <AppButton @click="window.history.back()" label="Go Back" icon="arrow-left" severity="secondary" />
             </div>
 
             <!-- Support Text -->

@@ -135,7 +135,7 @@ const formatRoleName = (roleName) => {
             <Panel>
                 <template #header>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-users text-xl"></i>
+                        <AppIcon name="users" :size="20" />
                         <span class="font-semibold text-lg">User Management</span>
                     </div>
                 </template>
@@ -144,7 +144,7 @@ const formatRoleName = (roleName) => {
                     <div class="text-gray-600">
                         Manage system users and their access levels
                     </div>
-                    <Button label="New User" icon="pi pi-user-plus" severity="success" raised
+                    <AppButton label="New User" icon="user-plus" severity="success" raised
                         @click="openCreateUserModal" />
                 </div>
             </Panel>
@@ -154,7 +154,9 @@ const formatRoleName = (roleName) => {
                 <div class="flex gap-4 items-center mb-4">
                     <div class="flex-1 max-w-md">
                         <IconField iconPosition="left">
-                            <InputIcon class="pi pi-search" />
+                            <InputIcon>
+                                <AppIcon name="search" :size="14" />
+                            </InputIcon>
                             <InputText v-model="globalFilter" placeholder="Search users..." class="w-full" />
                         </IconField>
                     </div>
@@ -216,14 +218,14 @@ const formatRoleName = (roleName) => {
                     <Column header="Actions" style="width: 160px">
                         <template #body="slotProps">
                             <div class="flex gap-2 justify-center">
-                                <Button icon="pi pi-pen-to-square" severity="info" size="small" rounded outlined
+                                <AppButton icon="pen-to-square" severity="info" size="small" rounded outlined
                                     v-tooltip.top="'Edit User'" @click="editUser(slotProps.data.id)" />
 
-                                <Button icon="pi pi-shield" severity="warn" size="small" rounded outlined
+                                <AppButton icon="shield" severity="warn" size="small" rounded outlined
                                     v-tooltip.top="'Change Password'"
                                     @click="openChangePasswordModal(slotProps.data)" />
 
-                                <Button icon="pi pi-trash" severity="danger" size="small" rounded outlined
+                                <AppButton icon="trash" severity="danger" size="small" rounded outlined
                                     v-tooltip.top="'Delete User'"
                                     @click="confirmDeleteUser(slotProps.data.id, slotProps.data.name, slotProps.data.username)" />
                             </div>
@@ -237,7 +239,7 @@ const formatRoleName = (roleName) => {
         <Dialog v-model:visible="showConfirmDeleteUserModal" :style="{ width: '450px' }" header="Confirm Deletion"
             :modal="true" :closable="false">
             <div class="flex items-start gap-4">
-                <i class="pi pi-exclamation-triangle text-3xl text-red-500 mt-1"></i>
+                <AppIcon name="exclamation-triangle" :size="30" class="text-red-500 mt-1" />
                 <div class="flex-1">
                     <p class="text-lg font-semibold text-gray-800 mb-3">
                         Are you sure you want to delete this user?
@@ -254,7 +256,7 @@ const formatRoleName = (roleName) => {
                     </div>
                     <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
                         <div class="flex items-center gap-2">
-                            <i class="pi pi-exclamation-circle text-amber-600"></i>
+                            <AppIcon name="exclamation-circle" :size="16" class="text-amber-600" />
                             <span class="text-sm text-amber-800 font-medium">Warning</span>
                         </div>
                         <p class="text-sm text-amber-700 mt-1">
@@ -269,8 +271,8 @@ const formatRoleName = (roleName) => {
                 <div class="flex justify-end gap-3">
                     <Button label="Cancel" severity="secondary" @click="closeModal" outlined
                         :disabled="form.processing" />
-                    <Button label="Delete User" severity="danger" @click="deleteUser(modalUserData.id)"
-                        :loading="form.processing" icon="pi pi-trash" />
+                    <AppButton label="Delete User" severity="danger" @click="deleteUser(modalUserData.id)"
+                        :loading="form.processing" icon="trash" />
                 </div>
             </template>
         </Dialog>

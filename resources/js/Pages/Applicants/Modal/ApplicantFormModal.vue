@@ -5,14 +5,15 @@
             <div class="ios-modal" :class="{ 'ios-modal-maximized': isMaximized }" :style="modalStyle">
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal"><i class="pi pi-times"></i></button>
+                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal">
+                        <AppIcon name="times" :size="14" />
+                    </button>
                     <span class="ios-nav-title">{{ mode === 'edit' ? 'Edit Application' : 'Application Form' }}</span>
                     <div class="ios-nav-right">
                         <span class="ios-nav-step-text">{{ activeStep }} of 3</span>
                         <button class="ios-nav-maximize" @click="isMaximized = !isMaximized"
                             v-tooltip.bottom="isMaximized ? 'Restore' : 'Maximize'">
-                            <i :class="isMaximized ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"
-                                style="font-size: 14px;"></i>
+                            <AppIcon :name="isMaximized ? 'window-minimize' : 'window-maximize'" :size="14" />
                         </button>
                     </div>
                 </div>
@@ -28,7 +29,7 @@
                                     <template #default="{ activateCallback, active }">
                                         <button class="ios-step-btn" :class="{ 'ios-step-active': active }"
                                             @click="activateCallback">
-                                            <i class="pi pi-user"></i>
+                                            <AppIcon name="user" :size="16" />
                                             <span>Personal</span>
                                         </button>
                                     </template>
@@ -39,7 +40,7 @@
                                         <button class="ios-step-btn"
                                             :class="{ 'ios-step-active': active, 'ios-step-disabled': !canProceedStep1 && mode !== 'edit' }"
                                             :disabled="!canProceedStep1 && mode !== 'edit'" @click="activateCallback">
-                                            <i class="pi pi-users"></i>
+                                            <AppIcon name="users" :size="16" />
                                             <span>Family</span>
                                         </button>
                                     </template>
@@ -50,7 +51,7 @@
                                         <button class="ios-step-btn"
                                             :class="{ 'ios-step-active': active, 'ios-step-disabled': !canProceedStep1 && mode !== 'edit' }"
                                             :disabled="!canProceedStep1 && mode !== 'edit'" @click="activateCallback">
-                                            <i class="pi pi-graduation-cap"></i>
+                                            <AppIcon name="graduation-cap" :size="16" />
                                             <span>Academic</span>
                                         </button>
                                     </template>
@@ -82,7 +83,7 @@
                                             <div v-if="validationError"
                                                 class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
                                                 <p class="text-sm text-red-800 dark:text-red-300 font-medium">
-                                                    <i class="pi pi-exclamation-triangle mr-2"></i>
+                                                    <AppIcon name="exclamation-triangle" :size="14" class="mr-2" />
                                                     {{ validationError }}
                                                 </p>
                                             </div>
@@ -94,8 +95,9 @@
                                                     <div class="ios-dup-modal" :style="dupModalStyle">
                                                         <div class="ios-dup-nav" @pointerdown="onDupDragStart">
                                                             <button class="ios-nav-btn ios-nav-cancel"
-                                                                @click="showDuplicateDialog = false"><i
-                                                                    class="pi pi-times"></i></button>
+                                                                @click="showDuplicateDialog = false">
+                                                                <AppIcon name="times" :size="14" />
+                                                            </button>
                                                             <span class="ios-nav-title"
                                                                 style="font-size: 15px;">Possible Duplicate</span>
                                                             <button class="ios-nav-btn ios-dup-proceed"
@@ -104,8 +106,8 @@
                                                         <div class="ios-dup-body">
                                                             <div class="ios-section" style="margin-top: 12px;">
                                                                 <div class="ios-section-footer" style="padding: 0;">
-                                                                    <i class="pi pi-exclamation-triangle"
-                                                                        style="color: #FF9500;"></i>
+                                                                    <AppIcon name="exclamation-triangle" :size="16"
+                                                                        style="color: #FF9500;" />
                                                                     The following record(s) match
                                                                     <strong>{{ form.first_name }} {{ form.last_name
                                                                     }}</strong>:
@@ -119,8 +121,8 @@
                                                                         :class="{ 'ios-row-last': idx === duplicateMatches.length - 1 }">
                                                                         <div
                                                                             style="display: flex; align-items: center; gap: 10px;">
-                                                                            <i class="pi pi-user"
-                                                                                style="color: #8E8E93; font-size: 16px;"></i>
+                                                                            <AppIcon name="user" :size="16"
+                                                                                style="color: #8E8E93;" />
                                                                             <div>
                                                                                 <div class="ios-row-label">
                                                                                     {{ match.last_name }}, {{
@@ -202,7 +204,7 @@
                                                     <div
                                                         class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
                                                         <p class="text-sm text-blue-800 dark:text-blue-300">
-                                                            <i class="pi pi-info-circle mr-2"></i>
+                                                            <AppIcon name="info-circle" :size="14" class="mr-2" />
                                                             Academic information is optional. You can complete it now or
                                                             update it later.
                                                         </p>
@@ -221,21 +223,22 @@
                 <div class="ios-footer">
                     <button v-if="activeStep !== '1'" class="ios-footer-btn ios-footer-back"
                         @click="activeStep = String(Number(activeStep) - 1)">
-                        <i class="pi pi-arrow-left" style="font-size: 12px;"></i> Back
+                        <AppIcon name="arrow-left" :size="12" /> Back
                     </button>
                     <span v-else></span>
                     <button v-if="activeStep === '1'" class="ios-footer-btn ios-footer-next" @click="handleNextStep1"
                         :disabled="!canProceedStep1 || isValidating" v-tooltip.top="step1TooltipMessage">
-                        {{ isValidating ? 'Checking...' : 'Next' }} <i class="pi pi-arrow-right"
-                            style="font-size: 12px;"></i>
+                        {{ isValidating ? 'Checking...' : 'Next' }}
+                        <AppIcon name="arrow-right" :size="12" />
                     </button>
                     <button v-else-if="activeStep === '2'" class="ios-footer-btn ios-footer-next"
                         @click="activeStep = '3'">
-                        Next <i class="pi pi-arrow-right" style="font-size: 12px;"></i>
+                        Next
+                        <AppIcon name="arrow-right" :size="12" />
                     </button>
                     <button v-else class="ios-footer-btn ios-footer-submit" @click="handleSubmit"
                         :disabled="form.processing">
-                        <i class="pi pi-check" style="font-size: 12px;"></i>
+                        <AppIcon name="check" :size="12" />
                         {{ form.processing ? 'Saving...' : (mode === 'edit' ? 'Update' : 'Submit') }}
                     </button>
                 </div>
@@ -324,6 +327,64 @@ const formatDateInput = (event) => {
     input.value = value;
 };
 
+const normalizeAcademicYearValue = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    if (typeof value === 'object') {
+        return value.value ?? null;
+    }
+
+    return String(value).trim() || null;
+};
+
+const normalizeTermValue = (value) => {
+    const normalized = normalizeAcademicYearValue(value);
+
+    return typeof normalized === 'string' ? normalized.toUpperCase() : normalized;
+};
+
+const toTitleCase = (value) => {
+    if (!value) return '';
+
+    return String(value)
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const toAcademicYearOption = (value) => {
+    const normalized = normalizeAcademicYearValue(value);
+    if (!normalized) {
+        return null;
+    }
+
+    const label = typeof value === 'object'
+        ? normalizeAcademicYearValue(value.label ?? value.value)
+        : normalized;
+
+    return {
+        label: label || normalized,
+        value: normalized,
+    };
+};
+
+const toTermOption = (value) => {
+    const normalized = normalizeTermValue(value);
+    if (!normalized) {
+        return null;
+    }
+
+    const labelSource = typeof value === 'object'
+        ? value.label ?? value.value ?? normalized
+        : normalized;
+
+    return {
+        label: toTitleCase(labelSource),
+        value: normalized,
+    };
+};
+
 // Get profile data if in edit mode
 const p = props.profile;
 const grant = p?.scholarship_grant?.[0];
@@ -363,13 +424,13 @@ const form = useForm({
     parents_guardian_gross_monthly_income: p?.parents_guardian_gross_monthly_income || '',
 
     // Academic Information
-    scholarship_grant_id: grant?.scholarship_grant_id || null,
+    scholarship_grant_id: grant?.id || grant?.scholarship_grant_id || null,
     program: grant?.program || null,
     school: grant?.school || null,
     course: grant?.course || null,
     year_level: grant?.year_level || null,
-    term: grant?.term || null,
-    academic_year: grant?.academic_year || null,
+    term: toTermOption(grant?.term),
+    academic_year: toAcademicYearOption(grant?.academic_year),
     date_filed: formatDateForPicker(grant?.date_filed),
     remarks: grant?.remarks || p?.remarks || '',
     yakap_category: props.mode === 'create' ? (props.yakapCategory || null) : (grant?.yakap_category || null),
@@ -492,9 +553,10 @@ watch(() => props.visible, async (newValue) => {
         form.program = grant?.program || null;
         form.school = grant?.school || null;
         form.course = grant?.course || null;
+        form.scholarship_grant_id = grant?.id || grant?.scholarship_grant_id || null;
         form.year_level = grant?.year_level || null;
-        form.term = grant?.term || null;
-        form.academic_year = grant?.academic_year || null;
+        form.term = toTermOption(grant?.term);
+        form.academic_year = toAcademicYearOption(grant?.academic_year);
         form.date_filed = formatDateForPicker(grant?.date_filed);
         form.remarks = grant?.remarks || p?.remarks || '';
 
@@ -546,7 +608,7 @@ const handleSubmit = () => {
         remarks: toUpperCase(form.remarks),
         date_of_birth: formatDateForBackend(form.date_of_birth),
         date_filed: formatDateForBackend(form.date_filed),
-        academic_year: form.academic_year?.value || form.academic_year || null,
+        academic_year: normalizeAcademicYearValue(form.academic_year?.value || form.academic_year),
         course_id: form.course?.id || null,
         school_id: form.school?.id || null,
         program_id: form.program?.id || null,
@@ -554,7 +616,7 @@ const handleSubmit = () => {
         school: form.school?.shortname || form.school?.name || form.school || null,
         program: form.program?.name || form.program || null,
         year_level: form.year_level?.value || form.year_level || null,
-        term: form.term?.value || form.term || null,
+        term: normalizeTermValue(form.term?.value || form.term),
         yakap_category: form.yakap_category || null,
         yakap_location: form.yakap_location || null,
     };
