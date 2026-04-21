@@ -77,6 +77,14 @@ class FundTransactionController extends Controller
                 $query->where('transaction_status', $status);
             }
 
+            if ($obrNoMode = $request->get('obr_no_mode')) {
+                if ($obrNoMode === 'with') {
+                    $query->whereRaw("TRIM(COALESCE(obr_no, '')) <> ''");
+                } elseif ($obrNoMode === 'without') {
+                    $query->whereRaw("TRIM(COALESCE(obr_no, '')) = ''");
+                }
+            }
+
             if ($type = $request->get('obr_type')) {
                 $query->where('obr_type', $type);
             }
