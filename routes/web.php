@@ -304,6 +304,10 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('check.permission:scholarships.view')
         ->name('scholarship.profile.show');
 
+    Route::put('/scholarship/profile/{profile}/ledger', [ScholarshipProfileController::class, 'updateLedger'])
+        ->middleware('check.permission:scholarships.edit')
+        ->name('scholarship.profile.ledger.update');
+
     Route::put('/scholarship-profiles/{profile}', [ScholarshipProfileController::class, 'update'])
         ->name('scholarship-profiles.update');
 

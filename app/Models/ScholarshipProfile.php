@@ -169,6 +169,11 @@ class ScholarshipProfile extends Model
         return $this->hasMany(ScholarshipRecord::class, 'profile_id', 'profile_id');
     }
 
+    public function scholarLedger()
+    {
+        return $this->hasOne(ScholarLedger::class, 'profile_id', 'profile_id');
+    }
+
     public function profileRequirements()
     {
         return $this->hasMany(ScholarshipProfileRequirement::class, 'profile_id', 'profile_id');

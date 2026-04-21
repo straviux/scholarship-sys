@@ -1,8 +1,7 @@
 <template>
     <Select :modelValue="modelValue" @update:modelValue="handleUpdate" :options="religionOptions" optionLabel="label"
         optionValue="value" :inputId="inputId" :placeholder="placeholder" class="w-full" showClear filter
-        autoFilterFocus :loading="loading"
-        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
+        autoFilterFocus :loading="loading" :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start">
                 <div>{{religionOptions.find(o => o.value === slotProps.value)?.label || slotProps.value}}</div>
@@ -17,8 +16,18 @@
     </Select>
 </template>
 
+<style>
+.religion-select-overlay {
+    border-radius: 12px;
+}
+
+.religion-select-root--compact {
+    border-radius: 0.875rem;
+}
+</style>
+
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import axios from 'axios';
 import { useCachedData } from '@/composable/useCachedData';
 
@@ -34,6 +43,10 @@ const props = defineProps({
     placeholder: {
         type: String,
         default: 'Select Religion'
+    },
+    iosCompact: {
+        type: Boolean,
+        default: false,
     }
 });
 
@@ -113,6 +126,24 @@ watch(
         loading.value = isLoading;
     }
 );
+
+const selectPt = computed(() => {
+    const basePt = {
+        overlay: { class: 'religion-select-overlay overflow-hidden' },
+        pcFilter: { root: { class: '!rounded-lg !border-gray-300' } },
+    };
+
+    if (!props.iosCompact) {
+        return basePt;
+    }
+
+    return {
+        ...basePt,
+        root: { class: 'religion-select-root--compact', style: 'min-height: 2.25rem;' },
+        label: { style: 'padding: 0.4375rem 0.75rem; font-size: 0.8125rem; line-height: 1.2;' },
+        dropdown: { style: 'width: 2.25rem;' },
+    };
+});
 
 onMounted(() => {
     fetchReligionOptions();

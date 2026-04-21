@@ -9,12 +9,16 @@ const props = defineProps({
     label: {
         type: String,
         default: 'name'
+    },
+    iosCompact: {
+        type: Boolean,
+        default: false,
     }
 });
 
 const emit = defineEmits(['update:modelValue']);
 const currentYear = new Date().getFullYear();
-const startYear = 2018; // Define your desired starting year
+const startYear = 2016;
 
 
 const acad_year = computed(() => {
@@ -71,26 +75,55 @@ const findYearObject = (value) => {
     };
 };
 
+const isSameAcademicYearSelection = (left, right) => left === right;
+
+const toAcademicYearModelValue = (value) => value?.value ?? value ?? null;
+
 const localValue = ref(findYearObject(props.modelValue));
 
 watch(
     [() => props.modelValue, () => acad_year.value],
     () => {
-        localValue.value = findYearObject(props.modelValue);
+        const resolvedValue = findYearObject(props.modelValue);
+
+        if (!isSameAcademicYearSelection(localValue.value, resolvedValue)) {
+            localValue.value = resolvedValue;
+        }
     },
     { immediate: true, deep: true }
 );
 
 watch(localValue, (val) => {
-    emit('update:modelValue', val?.value ?? val ?? null);
+    const emittedValue = toAcademicYearModelValue(val);
+
+    if (emittedValue !== props.modelValue) {
+        emit('update:modelValue', emittedValue);
+    }
 }, { deep: true });
+
+const selectPt = computed(() => {
+    const basePt = {
+        overlay: { class: 'academic-year-select-overlay overflow-hidden' },
+        pcFilter: { root: { class: '!rounded-lg !border-gray-300' } },
+    };
+
+    if (!props.iosCompact) {
+        return basePt;
+    }
+
+    return {
+        ...basePt,
+        root: { class: 'academic-year-select-root--compact', style: 'min-height: 2.25rem;' },
+        label: { style: 'padding: 0.4375rem 0.75rem; font-size: 0.8125rem; line-height: 1.2;' },
+        dropdown: { style: 'width: 2.25rem;' },
+    };
+});
 
 </script>
 
 <template>
     <Select v-model="localValue" :options="acad_year" filter autoFilterFocus showClear optionLabel="label"
-        placeholder="Select Academic Year" class="w-full"
-        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
+        placeholder="Select Academic Year" class="w-full" :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.label ?? slotProps.value }}</div>
@@ -106,3 +139,13 @@ watch(localValue, (val) => {
         </template>
     </Select>
 </template>
+
+<style>
+.academic-year-select-overlay {
+    border-radius: 12px;
+}
+
+.academic-year-select-root--compact {
+    border-radius: 0.875rem;
+}
+</style>

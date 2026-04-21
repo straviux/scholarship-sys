@@ -163,7 +163,7 @@ const statusCounts = computed(() => {
 
 // Computed property for filtered data
 const filteredData = computed(() => {
-    let data = props.paymentData;
+    let data = [...props.paymentData];
 
     if (searchInput.value) {
         data = data.filter((item) =>
@@ -205,7 +205,7 @@ const filteredData = computed(() => {
     }
 
     // Sort alphabetically by scholar name
-    data = data.sort((a, b) => a.scholar_name.localeCompare(b.scholar_name));
+    data.sort((a, b) => a.scholar_name.localeCompare(b.scholar_name));
 
     return data;
 });
@@ -253,8 +253,18 @@ const formatDate = (date) => {
 // Expanded rows for accordion (blur effect on other rows)
 // PrimeVue 4 uses object format { [dataKey]: true } when dataKey is set
 const expandedRows = ref({});
+const activeExpandedProfileId = ref(null);
 const collapseExpandedRows = () => {
     expandedRows.value = {};
+    activeExpandedProfileId.value = null;
+};
+
+const handleRowExpand = ({ data }) => {
+    activeExpandedProfileId.value = data?.profile_id ?? null;
+};
+
+const handleRowCollapse = () => {
+    activeExpandedProfileId.value = null;
 };
 
 // Group filteredData by scholar — latest transaction shown as preview row
@@ -419,7 +429,8 @@ const groupedData = computed(() => {
                 <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="groupedData"
                     :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]" class="text-sm" showGridlines
                     stripedRows scrollable dataKey="profile_id" v-model:expandedRows="expandedRows"
-                    :rowClass="(row) => Object.keys(expandedRows).length > 0 && !expandedRows[row.profile_id] ? 'row-blurred' : ''">
+                    :rowClass="(row) => activeExpandedProfileId && activeExpandedProfileId !== row.profile_id ? 'row-blurred' : ''"
+                    @rowExpand="handleRowExpand" @rowCollapse="handleRowCollapse">
 
                     <Column expander headerClass="w-12" bodyClass="w-12" />
 
@@ -579,7 +590,7 @@ const groupedData = computed(() => {
                                 <Column header="OBR No." style="min-width: 130px">
                                     <template #body="{ data }">
                                         <span v-if="data.obr_no" class="font-mono text-blue-700">{{ data.obr_no
-                                        }}</span>
+                                            }}</span>
                                         <span v-else class="text-gray-400">—</span>
                                     </template>
                                 </Column>
@@ -621,17 +632,17 @@ const groupedData = computed(() => {
         </div>
 
         <!-- Budget Monitoring Modal -->
-        <BudgetMonitoringModal v-model:visible="showBudgetModal" :budgetParticulars="props.budgetParticulars"
-            :disbursedByProgramYear="props.disbursedByProgramYear" :fiscalYears="props.fiscalYears"
-            @preview="onBudgetReportPreview" />
+        <BudgetMonitoringModal v-if="showBudgetModal" v-model:visible="showBudgetModal"
+            :budgetParticulars="props.budgetParticulars" :disbursedByProgramYear="props.disbursedByProgramYear"
+            :fiscalYears="props.fiscalYears" @preview="onBudgetReportPreview" />
 
         <!-- OBR Allotment Report Modal -->
-        <BudgetReportModal v-model:visible="showBudgetReportModal" :fiscalYears="props.fiscalYears"
-            @preview="onBudgetReportPreview" />
+        <BudgetReportModal v-if="showBudgetReportModal" v-model:visible="showBudgetReportModal"
+            :fiscalYears="props.fiscalYears" @preview="onBudgetReportPreview" />
 
         <!-- PDF Preview -->
-        <PdfPreviewModal :show="showPdfPreview" @update:show="showPdfPreview = $event" :htmlDoc="pdfPreviewHtml"
-            :title="pdfPreviewTitle" :paperSize="pdfPreviewSize" :onExcel="pdfExcelFn" />
+        <PdfPreviewModal v-if="showPdfPreview" :show="showPdfPreview" @update:show="showPdfPreview = $event"
+            :htmlDoc="pdfPreviewHtml" :title="pdfPreviewTitle" :paperSize="pdfPreviewSize" :onExcel="pdfExcelFn" />
 
     </AdminLayout>
 </template>

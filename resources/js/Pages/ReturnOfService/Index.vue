@@ -19,8 +19,8 @@
                 </template>
                 <template #end>
                     <div class="flex gap-2">
-                        <AppButton v-if="hasPermission('return-of-service.export')" icon="download" label="Export"
-                            severity="secondary" outlined rounded size="small" @click="exportRecords" />
+                        <AppButton v-if="hasPermission('return-of-service.export')" icon="file-text" label="Report"
+                            severity="secondary" outlined rounded size="small" @click="openReportDialog()" />
                         <AppButton v-if="hasPermission('return-of-service.create')" icon="plus" outlined
                             severity="success" rounded size="large" @click="openNewBatchDialog" />
                     </div>
@@ -99,7 +99,7 @@
                                     <div>
                                         <h4 class="font-semibold text-gray-900 text-base leading-tight">{{
                                             batch.batch_name
-                                            }}</h4>
+                                        }}</h4>
                                         <div class="text-xs text-gray-500 space-y-0.5 mt-1">
                                             <p v-if="batch.exam_date_from || batch.exam_date_to">
                                                 <span class="font-medium">Exam:</span>
@@ -135,8 +135,9 @@
                                 <AppButton v-if="hasPermission('return-of-service.create')" icon="plus"
                                     label="Add Scholar" severity="success" text size="small" rounded
                                     @click="openAddScholarDialog(batch)" />
-                                <AppButton icon="download" label="Export" severity="info" text size="small" rounded
-                                    @click="exportBatch(batch)" />
+                                <AppButton v-if="hasPermission('return-of-service.export')" icon="file-text"
+                                    label="Report" severity="info" text size="small" rounded
+                                    @click="openReportDialog(batch)" />
                                 <AppButton v-if="hasPermission('return-of-service.delete')" icon="trash"
                                     severity="danger" text size="small" rounded @click="confirmDeleteBatch(batch)"
                                     v-tooltip.top="`Delete`" />
@@ -169,597 +170,29 @@
         </div>
 
 
-        <!-- ══════════════════════════════════════════
-            BATCH FORM MODAL (iOS)
-        ══════════════════════════════════════════ -->
-        <Dialog :visible="showBatchDialog"
-            @update:visible="v => { if (!v) { showBatchDialog = false; resetBatchForm(); } }" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal" :style="batchDrag.modalStyle.value">
-                    <div class="ios-nav-bar" @pointerdown="batchDrag.onDragStart">
-                        <button class="ios-nav-btn ios-nav-cancel" @click="showBatchDialog = false; resetBatchForm();"
-                            v-tooltip.bottom="`Cancel`">
-                            <AppIcon name="x" :size="16" />
-                        </button>
-                        <span class="ios-nav-title">{{ batchMode === 'add' ? 'New Batch' : 'Edit Batch' }}</span>
-                        <button class="ios-nav-btn ios-nav-action" @click="submitBatchForm"
-                            :disabled="batchForm.processing" v-tooltip.bottom="`Save`">
-                            <AppIcon name="check" :size="16" />
-                        </button>
-                    </div>
-                    <div class="ios-body">
-                        <!-- Basic Info -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Basic Info</div>
-                            <div class="ios-card">
-                                <div class="ios-row ios-row-stacked">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="tag" :size="13" style="color: #007AFF;" />
-                                        Batch Name <span style="color: #FF3B30; margin-left: 2px;">*</span>
-                                    </div>
-                                    <InputText v-model="batchForm.batch_name" placeholder="e.g., Batch 2025-A"
-                                        class="ios-full-input" :class="{ 'p-invalid': batchForm.errors.batch_name }" />
-                                </div>
-                                <div class="ios-row ios-row-stacked">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="align-left" :size="13" style="color: #8E8E93;" />
-                                        Description
-                                    </div>
-                                    <Textarea v-model="batchForm.description" rows="2"
-                                        placeholder="Notes about this batch" class="ios-full-input" />
-                                </div>
-                            </div>
-                            <div v-if="batchForm.errors.batch_name" class="ios-section-footer ios-error">
-                                {{ batchForm.errors.batch_name }}
-                            </div>
-                        </div>
-
-                        <!-- Exam Period -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Exam Period</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
-                                        Date From
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <DatePicker v-model="batchForm.exam_date_from" placeholder="Any" showIcon
-                                            iconDisplay="input" class="ios-datepicker" />
-                                    </div>
-                                </div>
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
-                                        Date To
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <DatePicker v-model="batchForm.exam_date_to" placeholder="Any" showIcon
-                                            iconDisplay="input" class="ios-datepicker" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Details -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Details</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="calendar-x" :size="13" style="color: #AF52DE;" />
-                                        Result Date
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <DatePicker v-model="batchForm.result_date" placeholder="Any" showIcon
-                                            iconDisplay="input" class="ios-datepicker" />
-                                    </div>
-                                </div>
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="graduation-cap" :size="13" style="color: #34C759;" />
-                                        Course <span style="color: #FF3B30; margin-left: 2px;">*</span>
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <CourseSelect v-model="batchForm.course_id" customPlaceholder="Select"
-                                            class="ios-select" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div v-if="batchForm.errors.course_id" class="ios-section-footer ios-error">
-                                {{ batchForm.errors.course_id }}
-                            </div>
-                        </div>
-
-                        <div style="height: 24px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
-
-        <!-- ══════════════════════════════════════════
-            SCHOLAR FORM MODAL (iOS)
-        ══════════════════════════════════════════ -->
-        <Dialog :visible="showScholarDialog"
-            @update:visible="v => { if (!v) { showScholarDialog = false; resetScholarForm(); } }" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal" :style="scholarDrag.modalStyle.value">
-                    <div class="ios-nav-bar" @pointerdown="scholarDrag.onDragStart">
-                        <button class="ios-nav-btn ios-nav-cancel"
-                            @click="showScholarDialog = false; resetScholarForm();" v-tooltip.bottom="`Cancel`">
-                            <AppIcon name="x" :size="16" />
-                        </button>
-                        <span class="ios-nav-title">{{ scholarMode === 'add' ? 'Add Scholar' : 'Edit Scholar' }}</span>
-                        <button class="ios-nav-btn ios-nav-action" @click="submitScholarForm"
-                            :disabled="scholarForm.processing || isEndDateInvalid" v-tooltip.bottom="`Save`">
-                            <AppIcon name="check" :size="16" />
-                        </button>
-                    </div>
-                    <div class="ios-body">
-                        <!-- Scholar Identity -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Scholar</div>
-                            <div class="ios-card">
-                                <div v-if="scholarMode === 'edit'" class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="user" :size="13" style="color: #007AFF;" />
-                                        Name
-                                    </div>
-                                    <span class="text-sm text-gray-700 font-medium"
-                                        style="max-width: 220px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                        {{ scholarForm.record_label }}
-                                    </span>
-                                </div>
-                                <div v-else class="ios-row ios-row-stacked">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="users" :size="13" style="color: #007AFF;" />
-                                        Select Scholars <span style="color: #FF3B30; margin-left: 2px;">*</span>
-                                    </div>
-                                    <MultiSelect v-model="scholarForm.selectedProfile" :options="scholarshipRecords"
-                                        optionLabel="label" placeholder="Search completed scholars..." :filter="true"
-                                        class="ios-full-input" @filter="onProfileFilter" />
-                                    <small class="text-gray-500 text-xs">Only completed records from Medicine and
-                                        Medical Allied Courses program</small>
-                                </div>
-                            </div>
-                            <div v-if="scholarForm.errors.profile_id" class="ios-section-footer ios-error">
-                                {{ scholarForm.errors.profile_id }}
-                            </div>
-                        </div>
-
-                        <!-- Service Dates -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Return of Service</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="calendar" :size="13" style="color: #34C759;" />
-                                        Start Date
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <DatePicker v-model="scholarForm.service_start_date" placeholder="Select"
-                                            showIcon iconDisplay="input" class="ios-datepicker" />
-                                    </div>
-                                </div>
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
-                                        End Date
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <DatePicker v-model="scholarForm.service_end_date" placeholder="Select" showIcon
-                                            iconDisplay="input" class="ios-datepicker"
-                                            :class="{ 'p-invalid': isEndDateInvalid }" />
-                                    </div>
-                                </div>
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="clock" :size="13" style="color: #5856D6;" />
-                                        Years of Service
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <InputNumber v-model="scholarForm.years_of_service" :min="0" placeholder="Auto"
-                                            class="ios-inputnumber" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div v-if="isEndDateInvalid" class="ios-section-footer ios-error">
-                                End date cannot be earlier than start date
-                            </div>
-                            <div v-else class="ios-section-footer">
-                                Auto-calculated from service dates (editable)
-                            </div>
-                        </div>
-
-                        <!-- Completion Status -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">
-                                Completion Status <span style="color: #FF3B30; margin-left: 2px;">*</span>
-                            </div>
-                            <div class="ios-card">
-                                <div v-for="option in completionOptions" :key="option.value" class="ios-row">
-                                    <div class="ios-row-label">{{ option.label }}</div>
-                                    <RadioButton v-model="scholarForm.completion_status" :value="option.value"
-                                        :inputId="`status_${option.value}`" />
-                                </div>
-                            </div>
-                            <div v-if="scholarForm.errors.completion_status" class="ios-section-footer ios-error">
-                                {{ scholarForm.errors.completion_status }}
-                            </div>
-                        </div>
-
-                        <!-- Remarks -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Remarks</div>
-                            <div class="ios-card" style="overflow: visible;">
-                                <div class="ios-row ios-row-stacked" style="gap: 0; padding: 0;">
-                                    <Editor v-model="scholarForm.remarks" editorStyle="height: 120px"
-                                        class="ios-full-input">
-                                        <template #toolbar>
-                                            <span class="ql-formats">
-                                                <button class="ql-bold"></button>
-                                                <button class="ql-italic"></button>
-                                                <button class="ql-underline"></button>
-                                            </span>
-                                            <span class="ql-formats">
-                                                <button class="ql-list" value="ordered"></button>
-                                                <button class="ql-list" value="bullet"></button>
-                                            </span>
-                                            <span class="ql-formats">
-                                                <button class="ql-clean"></button>
-                                            </span>
-                                        </template>
-                                    </Editor>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="height: 24px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
-
-        <!-- ══════════════════════════════════════════
-            VIEW SCHOLAR MODAL (iOS)
-        ══════════════════════════════════════════ -->
-        <Dialog :visible="showViewScholarDialog" @update:visible="v => { if (!v) showViewScholarDialog = false; }" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal" :style="viewScholarDrag.modalStyle.value">
-                    <div class="ios-nav-bar" @pointerdown="viewScholarDrag.onDragStart">
-                        <button class="ios-nav-btn ios-nav-cancel" @click="showViewScholarDialog = false"
-                            v-tooltip.bottom="`Close`">
-                            <AppIcon name="x" :size="16" />
-                        </button>
-                        <span class="ios-nav-title">Scholar Details</span>
-                        <div style="width: 48px;"></div>
-                    </div>
-                    <div class="ios-body" v-if="viewingScholar">
-                        <!-- Scholar Name Banner -->
-                        <div class="ios-section">
-                            <div class="ios-card" style="background: #EFF6FF; border-color: #BFDBFE;">
-                                <div class="ios-row" style="min-height: 48px;">
-                                    <div class="ios-row-label"
-                                        style="font-size: 15px; font-weight: 600; color: #1D4ED8;">
-                                        {{ viewingScholar.scholar_name }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Service Details -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Return of Service</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="clock" :size="13" style="color: #5856D6;" />
-                                        Years of Service
-                                    </div>
-                                    <span class="font-bold text-blue-600" style="font-size: 16px;">
-                                        {{ viewingScholar.years_of_service || 0 }}
-                                    </span>
-                                </div>
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="check-circle" :size="13" style="color: #34C759;" />
-                                        Status
-                                    </div>
-                                    <Tag :value="viewingScholar.completion_status"
-                                        :severity="getCompletionSeverity(viewingScholar.completion_status)" />
-                                </div>
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="calendar" :size="13" style="color: #34C759;" />
-                                        Service Start
-                                    </div>
-                                    <span class="text-sm text-gray-700">
-                                        {{ formatDateLong(viewingScholar.service_start_date) }}
-                                    </span>
-                                </div>
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
-                                        Service End
-                                    </div>
-                                    <span class="text-sm text-gray-700">
-                                        {{ formatDateLong(viewingScholar.service_end_date) }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Remarks -->
-                        <div v-if="viewingScholar.remarks" class="ios-section">
-                            <div class="ios-section-label">Remarks</div>
-                            <div class="ios-card" style="padding: 10px 16px;">
-                                <p class="text-sm text-gray-700" v-safe-html="viewingScholar.remarks"></p>
-                            </div>
-                        </div>
-
-                        <div style="height: 24px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
-
-        <!-- ══════════════════════════════════════════
-            VIEW BATCH MODAL (iOS – wide)
-        ══════════════════════════════════════════ -->
-        <Dialog :visible="showViewBatchDialog"
-            @update:visible="v => { if (!v) { showViewBatchDialog = false; viewingBatch = null; scholarSearch = ''; } }"
-            modal :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal ios-modal-wide" :style="viewBatchDrag.modalStyle.value" v-if="viewingBatch">
-                    <div class="ios-nav-bar" @pointerdown="viewBatchDrag.onDragStart">
-                        <button class="ios-nav-btn ios-nav-cancel"
-                            @click="showViewBatchDialog = false; viewingBatch = null; scholarSearch = '';"
-                            v-tooltip.bottom="`Close`">
-                            <AppIcon name="x" :size="16" />
-                        </button>
-                        <span class="ios-nav-title"
-                            style="max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            {{ viewingBatch.batch_name }}
-                        </span>
-                        <button v-if="hasPermission('return-of-service.create')" class="ios-nav-btn ios-nav-action"
-                            @click="openAddScholarDialog(viewingBatch)" v-tooltip.bottom="`Add Scholar`">
-                            <AppIcon name="plus" :size="16" />
-                        </button>
-                        <div v-else style="width: 48px;"></div>
-                    </div>
-                    <div class="ios-body">
-                        <!-- Batch Info -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Batch Info</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="graduation-cap" :size="13" style="color: #34C759;" />
-                                        Course
-                                    </div>
-                                    <span class="text-sm font-medium text-gray-800">{{ viewingBatch.course_name
-                                    }}</span>
-                                </div>
-                                <div v-if="viewingBatch.exam_date_from || viewingBatch.exam_date_to" class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
-                                        Exam Dates
-                                    </div>
-                                    <span class="text-sm text-gray-700">
-                                        {{ formatDateLong(viewingBatch.exam_date_from) }} –
-                                        {{ formatDateLong(viewingBatch.exam_date_to) }}
-                                    </span>
-                                </div>
-                                <div v-if="viewingBatch.result_date" class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="calendar-x" :size="13" style="color: #AF52DE;" />
-                                        Result Date
-                                    </div>
-                                    <span class="text-sm text-gray-700">{{ formatDateLong(viewingBatch.result_date)
-                                    }}</span>
-                                </div>
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="user" :size="13" style="color: #8E8E93;" />
-                                        Created By
-                                    </div>
-                                    <span class="text-sm text-gray-600">{{ viewingBatch.created_by }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Description -->
-                        <div v-if="viewingBatch.description" class="ios-section">
-                            <div class="ios-section-label">Description</div>
-                            <div class="ios-card" style="padding: 10px 16px;">
-                                <p class="text-sm text-gray-600">{{ viewingBatch.description }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Scholars Table -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Scholars</div>
-                            <div class="mb-2">
-                                <InputText v-model="scholarSearch" placeholder="Search scholar name or status..."
-                                    class="w-full" size="small" />
-                            </div>
-                            <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredScholars"
-                                :rows="10" paginator :rowHover="true" stripedRows showGridlines
-                                responsiveLayout="scroll">
-                                <Column field="scholar_name" header="Scholar Name" sortable style="min-width: 200px">
-                                    <template #body="slotProps">
-                                        <span class="font-semibold">{{ slotProps.data.scholar_name }}</span>
-                                    </template>
-                                </Column>
-                                <Column field="years_of_service" header="Years ROS" sortable style="width: 120px">
-                                    <template #body="slotProps">
-                                        <span class="font-semibold text-blue-600">{{ slotProps.data.years_of_service ||
-                                            0 }}</span>
-                                    </template>
-                                </Column>
-                                <Column field="completion_status" header="Status" sortable style="width: 130px">
-                                    <template #body="slotProps">
-                                        <Tag :value="slotProps.data.completion_status"
-                                            :severity="getCompletionSeverity(slotProps.data.completion_status)" />
-                                    </template>
-                                </Column>
-                                <Column field="service_start_date" header="Service Start" sortable
-                                    style="min-width: 140px">
-                                    <template #body="slotProps">
-                                        <span class="font-mono text-sm">{{
-                                            formatDateLong(slotProps.data.service_start_date) }}</span>
-                                    </template>
-                                </Column>
-                                <Column field="service_end_date" header="Service End" sortable style="min-width: 140px">
-                                    <template #body="slotProps">
-                                        <span class="font-mono text-sm">{{
-                                            formatDateLong(slotProps.data.service_end_date) }}</span>
-                                    </template>
-                                </Column>
-                                <Column field="remarks" header="Remarks" style="min-width: 200px">
-                                    <template #body="slotProps">
-                                        <span v-if="slotProps.data.remarks" class="text-sm text-gray-700"
-                                            v-safe-html="slotProps.data.remarks"></span>
-                                        <span v-else class="text-sm text-gray-400">-</span>
-                                    </template>
-                                </Column>
-                                <Column header="Actions" style="width: 120px">
-                                    <template #body="slotProps">
-                                        <div class="flex gap-1">
-                                            <AppButton icon="eye" severity="secondary" text rounded size="small"
-                                                @click="viewScholar(slotProps.data)" v-tooltip.top="`View`" />
-                                            <AppButton v-if="hasPermission('return-of-service.edit')" icon="pencil"
-                                                severity="warning" text rounded size="small"
-                                                @click="openEditScholarDialog(viewingBatch, slotProps.data)"
-                                                v-tooltip.top="`Edit`" />
-                                            <AppButton v-if="hasPermission('return-of-service.delete')" icon="trash"
-                                                severity="danger" text rounded size="small"
-                                                @click="confirmDeleteScholar(slotProps.data)"
-                                                v-tooltip.top="`Delete`" />
-                                        </div>
-                                    </template>
-                                </Column>
-                                <template #empty>
-                                    <div class="text-center py-8">
-                                        <p class="text-gray-500">No scholars in this batch yet.</p>
-                                    </div>
-                                </template>
-                            </DataTable>
-                        </div>
-
-                        <div style="height: 24px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
-
-        <!-- ══════════════════════════════════════════
-            DELETE BATCH CONFIRM (iOS)
-        ══════════════════════════════════════════ -->
-        <Dialog :visible="showDeleteBatchDialog" @update:visible="v => { if (!v) showDeleteBatchDialog = false; }" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal" :style="deleteBatchDrag.modalStyle.value">
-                    <div class="ios-nav-bar" @pointerdown="deleteBatchDrag.onDragStart">
-                        <button class="ios-nav-btn ios-nav-cancel" @click="showDeleteBatchDialog = false"
-                            v-tooltip.bottom="`Cancel`">
-                            <AppIcon name="x" :size="16" />
-                        </button>
-                        <span class="ios-nav-title">Delete Batch</span>
-                        <div style="width: 48px;"></div>
-                    </div>
-                    <div class="ios-body">
-                        <div class="ios-section">
-                            <div class="ios-card" style="background: #FFF5F5; border-color: #FECACA;">
-                                <div class="ios-row"
-                                    style="gap: 12px; padding: 14px 16px; min-height: 60px; align-items: flex-start;">
-                                    <div
-                                        class="flex-shrink-0 w-9 h-9 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
-                                        <AppIcon name="exclamation-triangle" class="text-red-500" :size="16" />
-                                    </div>
-                                    <div style="flex: 1; min-width: 0;">
-                                        <p class="text-sm font-semibold text-gray-800">{{ batchToDelete?.batch_name }}
-                                        </p>
-                                        <p class="text-xs text-red-600 mt-1">
-                                            This will delete all {{ batchToDelete?.total_scholars }} scholars in this
-                                            batch. This action cannot be undone.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="ios-section">
-                            <button class="ios-destructive-btn" @click="deleteBatch">Delete Batch</button>
-                        </div>
-                        <div style="height: 24px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
-
-        <!-- ══════════════════════════════════════════
-            DELETE SCHOLAR CONFIRM (iOS)
-        ══════════════════════════════════════════ -->
-        <Dialog :visible="showDeleteScholarDialog" @update:visible="v => { if (!v) showDeleteScholarDialog = false; }"
-            modal :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal" :style="deleteScholarDrag.modalStyle.value">
-                    <div class="ios-nav-bar" @pointerdown="deleteScholarDrag.onDragStart">
-                        <button class="ios-nav-btn ios-nav-cancel" @click="showDeleteScholarDialog = false"
-                            v-tooltip.bottom="`Cancel`">
-                            <AppIcon name="x" :size="16" />
-                        </button>
-                        <span class="ios-nav-title">Remove Scholar</span>
-                        <div style="width: 48px;"></div>
-                    </div>
-                    <div class="ios-body">
-                        <div class="ios-section">
-                            <div class="ios-card" style="background: #FFF5F5; border-color: #FECACA;">
-                                <div class="ios-row"
-                                    style="gap: 12px; padding: 14px 16px; min-height: 60px; align-items: flex-start;">
-                                    <div
-                                        class="flex-shrink-0 w-9 h-9 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
-                                        <AppIcon name="exclamation-triangle" class="text-red-500" :size="16" />
-                                    </div>
-                                    <div style="flex: 1; min-width: 0;">
-                                        <p class="text-sm font-semibold text-gray-700">{{ scholarToDelete?.scholar_name
-                                        }}</p>
-                                        <p class="text-xs text-red-600 mt-1">This action cannot be undone.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="ios-section">
-                            <button class="ios-destructive-btn" @click="deleteScholar">Remove from Batch</button>
-                        </div>
-                        <div style="height: 24px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
-
-        <!-- Preview Scholar Drawer -->
-        <div v-if="showPreviewScholarDialog && Array.isArray(scholarForm.selectedProfile) && scholarForm.selectedProfile.length > 0"
-            class="fixed right-0 top-0 h-screen w-80 bg-white border-l border-gray-200 shadow-2xl overflow-y-auto rounded-l-2xl"
-            style="z-index: 9999;">
-            <div class="p-4">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-semibold text-gray-900 text-sm">Selected Scholars</h3>
-                    <button @click="showPreviewScholarDialog = false" class="text-gray-400 hover:text-gray-600">
-                        <AppIcon name="x" :size="14" />
-                    </button>
-                </div>
-                <div class="space-y-2">
-                    <div v-for="(scholar, index) in scholarForm.selectedProfile" :key="scholar.id"
-                        class="bg-blue-50 p-3 rounded-2xl border border-blue-100">
-                        <p class="font-semibold text-gray-800 text-sm">{{ index + 1 }}. {{ scholar.label }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <ReturnOfServiceDialogs :show-batch-dialog="showBatchDialog" :show-scholar-dialog="showScholarDialog"
+            :show-view-scholar-dialog="showViewScholarDialog" :show-view-batch-dialog="showViewBatchDialog"
+            :show-delete-batch-dialog="showDeleteBatchDialog" :show-delete-scholar-dialog="showDeleteScholarDialog"
+            :show-preview-scholar-dialog="showPreviewScholarDialog" :show-report-dialog="showReportDialog"
+            :batch-mode="batchMode" :scholar-mode="scholarMode" :batch-form="batchForm" :scholar-form="scholarForm"
+            :completion-options="props.completionOptions" :scholarship-records="scholarshipRecords"
+            :is-end-date-invalid="isEndDateInvalid" :viewing-scholar="viewingScholar" :viewing-batch="viewingBatch"
+            :filtered-scholars="filteredScholars" :scholar-search="scholarSearch" :batch-to-delete="batchToDelete"
+            :scholar-to-delete="scholarToDelete" :can-create="hasPermission('return-of-service.create')"
+            :can-edit="hasPermission('return-of-service.edit')" :can-delete="hasPermission('return-of-service.delete')"
+            :can-export="hasPermission('return-of-service.export')" :report-batch-options="reportBatchOptions"
+            :report-context-batch="reportContextBatch" :filtered-batch-count="filteredBatches.length"
+            :total-batch-count="batches.length" :format-date-long="formatDateLong"
+            :get-completion-severity="getCompletionSeverity" @close-batch="closeBatchDialog"
+            @submit-batch="submitBatchForm" @close-scholar="closeScholarDialog" @submit-scholar="submitScholarForm"
+            @close-view-scholar="closeViewScholarDialog" @close-view-batch="closeViewBatchDialog"
+            @close-delete-batch="closeDeleteBatchDialog" @delete-batch="deleteBatch"
+            @close-delete-scholar="closeDeleteScholarDialog" @delete-scholar="deleteScholar"
+            @close-preview-scholar="showPreviewScholarDialog = false" @update:scholarSearch="scholarSearch = $event"
+            @profile-filter="onProfileFilter" @open-add-scholar="openAddScholarDialog(viewingBatch)"
+            @open-edit-scholar="openEditScholarDialog(viewingBatch, $event)" @view-scholar="viewScholar"
+            @confirm-delete-scholar="confirmDeleteScholar" @open-report="openReportDialog($event)"
+            @close-report="closeReportDialog" @generate-report="generateReport" />
 
         <!-- Toast Notifications with higher z-index than drawer -->
         <Toast position="top-right" :life="3500" :baseZIndex="20000" />
@@ -767,63 +200,25 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, reactive, onBeforeUnmount } from 'vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { ref, watch, computed, reactive } from 'vue';
+import { Head, useForm } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
+import ReturnOfServiceDialogs from '@/Pages/ReturnOfService/Components/ReturnOfServiceDialogs.vue';
+import ReturnOfServiceReportTemplate from '@/Pages/ReturnOfService/Pdf/ReturnOfServiceReportTemplate.vue';
+import { returnOfServiceReportCss } from '@/Pages/ReturnOfService/Pdf/report-styles.js';
 import Toolbar from 'primevue/toolbar';
 import Panel from 'primevue/panel';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import MultiSelect from 'primevue/multiselect';
 import InputText from 'primevue/inputtext';
-import Select from 'primevue/select';
-import RadioButton from 'primevue/radiobutton';
-import DatePicker from 'primevue/datepicker';
 import Toast from 'primevue/toast';
-import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import { usePermission } from '@/composable/permissions';
+import { renderVueTemplate, usePdfPrint } from '@/composables/usePdfPrint';
 import * as XLSX from 'xlsx';
-
-// ─── Draggable Modal Factory ───
-function useDraggable(width) {
-    const dragOffset = ref({ x: 0, y: 0 });
-    const dragStart = ref(null);
-    const modalStyle = computed(() => ({
-        width,
-        transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-    }));
-    function onDragStart(e) {
-        if (e.target.closest('button, .p-editor')) return;
-        dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-        document.addEventListener('pointermove', onDragMove);
-        document.addEventListener('pointerup', onDragEnd);
-    }
-    function onDragMove(e) {
-        if (!dragStart.value) return;
-        dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-    }
-    function onDragEnd() {
-        dragStart.value = null;
-        document.removeEventListener('pointermove', onDragMove);
-        document.removeEventListener('pointerup', onDragEnd);
-    }
-    function cleanup() {
-        document.removeEventListener('pointermove', onDragMove);
-        document.removeEventListener('pointerup', onDragEnd);
-    }
-    return { modalStyle, onDragStart, cleanup };
-}
-
-const batchDrag = useDraggable('520px');
-const scholarDrag = useDraggable('600px');
-const viewScholarDrag = useDraggable('480px');
-const viewBatchDrag = useDraggable('90vw');
-const deleteBatchDrag = useDraggable('420px');
-const deleteScholarDrag = useDraggable('420px');
 
 const props = defineProps({
     batches: Array,
@@ -833,6 +228,7 @@ const props = defineProps({
 
 const { hasPermission } = usePermission();
 const toast = useToast();
+const { printHtml } = usePdfPrint();
 
 // Dialog states
 const showBatchDialog = ref(false);
@@ -842,6 +238,7 @@ const showViewBatchDialog = ref(false);
 const showDeleteBatchDialog = ref(false);
 const showDeleteScholarDialog = ref(false);
 const showPreviewScholarDialog = ref(false);
+const showReportDialog = ref(false);
 
 // Modes
 const batchMode = ref('add');
@@ -856,6 +253,7 @@ const batchToDelete = ref(null);
 const scholarToDelete = ref(null);
 const currentBatch = ref(null);
 const currentScholar = ref(null);
+const reportContextBatch = ref(null);
 const scholarSearch = ref('');
 const batchSearch = ref('');
 const batchCreatedByFilter = ref('');
@@ -1054,11 +452,27 @@ const openViewBatchDialog = (batch) => {
     showViewBatchDialog.value = true;
 };
 
+const closeViewBatchDialog = () => {
+    showViewBatchDialog.value = false;
+    viewingBatch.value = null;
+    scholarSearch.value = '';
+};
+
+const closeViewScholarDialog = () => {
+    showViewScholarDialog.value = false;
+    viewingScholar.value = null;
+};
+
 const openNewBatchDialog = () => {
     batchMode.value = 'add';
     batchForm.reset();
     batchForm.clearErrors();
     showBatchDialog.value = true;
+};
+
+const closeBatchDialog = () => {
+    showBatchDialog.value = false;
+    resetBatchForm();
 };
 
 const openEditBatchDialog = (batch) => {
@@ -1175,6 +589,10 @@ const confirmDeleteBatch = (batch) => {
     showDeleteBatchDialog.value = true;
 };
 
+const closeDeleteBatchDialog = () => {
+    showDeleteBatchDialog.value = false;
+};
+
 const deleteBatch = async () => {
     try {
         const deletedBatchId = batchToDelete.value.id; // Store ID before clearing
@@ -1231,6 +649,11 @@ const openAddScholarDialog = (batch) => {
     currentScholar.value = null;
     scholarshipRecords.value = [];
     showScholarDialog.value = true;
+};
+
+const closeScholarDialog = () => {
+    showScholarDialog.value = false;
+    resetScholarForm();
 };
 
 const openEditScholarDialog = (batch, scholar) => {
@@ -1498,6 +921,10 @@ const confirmDeleteScholar = (scholar) => {
     showDeleteScholarDialog.value = true;
 };
 
+const closeDeleteScholarDialog = () => {
+    showDeleteScholarDialog.value = false;
+};
+
 const deleteScholar = async () => {
     const scholarId = scholarToDelete.value.id;
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -1551,6 +978,20 @@ const viewScholar = (scholar) => {
     showViewScholarDialog.value = true;
 };
 
+const findBatchById = (batchId) => {
+    return batches.value.find((batch) => String(batch.id) === String(batchId)) || null;
+};
+
+const openReportDialog = (batch = null) => {
+    reportContextBatch.value = batch?.id ? (findBatchById(batch.id) || batch) : null;
+    showReportDialog.value = true;
+};
+
+const closeReportDialog = () => {
+    showReportDialog.value = false;
+    reportContextBatch.value = null;
+};
+
 const searchProfiles = async (query) => {
     if (!query || query.length < 1) {
         scholarshipRecords.value = [];
@@ -1592,6 +1033,218 @@ const stripHtml = (html) => {
     return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
 };
 
+const formatCompletionStatus = (status) => {
+    if (!status) {
+        return '-';
+    }
+
+    return String(status)
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const reportBatchOptions = computed(() => {
+    return batches.value.map((batch) => ({
+        label: `${batch.batch_name} (${batch.total_scholars || 0} scholars)`,
+        value: batch.id,
+    }));
+});
+
+const exportBatchCollection = (sourceBatches, filenamePrefix = 'ROS_Report') => {
+    const wb = XLSX.utils.book_new();
+
+    const headers = ['Batch Name', 'Course', 'Exam Date From', 'Exam Date To', 'Result Date',
+        'Scholar Name', 'Years of Service', 'Service Start', 'Service End', 'Status', 'Remarks'];
+    const rows = [];
+
+    for (const batch of sourceBatches) {
+        const scholars = batch.scholars || [];
+
+        if (scholars.length === 0) {
+            rows.push([
+                batch.batch_name,
+                batch.course_name || '',
+                formatDateLong(batch.exam_date_from),
+                formatDateLong(batch.exam_date_to),
+                formatDateLong(batch.result_date),
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+            ]);
+            continue;
+        }
+
+        for (const scholar of scholars) {
+            rows.push([
+                batch.batch_name,
+                batch.course_name || '',
+                formatDateLong(batch.exam_date_from),
+                formatDateLong(batch.exam_date_to),
+                formatDateLong(batch.result_date),
+                scholar.scholar_name || '',
+                scholar.years_of_service ?? '',
+                formatDateLong(scholar.service_start_date),
+                formatDateLong(scholar.service_end_date),
+                scholar.completion_status || '',
+                stripHtml(scholar.remarks),
+            ]);
+        }
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    XLSX.utils.book_append_sheet(wb, ws, 'ROS Report');
+
+    const safeFilenamePrefix = filenamePrefix.replace(/[^a-zA-Z0-9]+/g, '_');
+    const filename = `${safeFilenamePrefix}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, filename);
+};
+
+const buildExamDateRange = (batch) => {
+    const fromLabel = formatDateLong(batch.exam_date_from);
+    const toLabel = formatDateLong(batch.exam_date_to);
+
+    if (fromLabel === '-' && toLabel === '-') {
+        return '-';
+    }
+
+    if (fromLabel === '-') {
+        return toLabel;
+    }
+
+    if (toLabel === '-') {
+        return fromLabel;
+    }
+
+    return `${fromLabel} - ${toLabel}`;
+};
+
+const buildRosReportPayload = (sourceBatches, scopeLabel) => {
+    const normalizedBatches = sourceBatches.map((batch) => ({
+        id: batch.id,
+        batch_name: batch.batch_name,
+        course_name: batch.course_name || 'N/A',
+        description: batch.description || '',
+        exam_date_range: buildExamDateRange(batch),
+        result_date_label: formatDateLong(batch.result_date),
+        created_by: batch.created_by || 'System',
+        total_scholars: (batch.scholars || []).length,
+        scholars: (batch.scholars || []).map((scholar, index) => ({
+            index: index + 1,
+            scholar_name: scholar.scholar_name || '',
+            years_of_service: scholar.years_of_service ?? '',
+            service_start_date_label: formatDateLong(scholar.service_start_date),
+            service_end_date_label: formatDateLong(scholar.service_end_date),
+            completion_status_label: formatCompletionStatus(scholar.completion_status),
+            completion_status_key: scholar.completion_status || '',
+            remarks: stripHtml(scholar.remarks),
+        })),
+    }));
+
+    const summary = normalizedBatches.reduce((totals, batch) => {
+        totals.totalBatches += 1;
+        totals.totalScholars += batch.scholars.length;
+
+        for (const scholar of batch.scholars) {
+            if (scholar.completion_status_key in totals) {
+                totals[scholar.completion_status_key] += 1;
+            }
+        }
+
+        return totals;
+    }, {
+        totalBatches: 0,
+        totalScholars: 0,
+        pending: 0,
+        ongoing: 0,
+        suspended: 0,
+        completed: 0,
+    });
+
+    return {
+        title: 'Return of Service Report',
+        scopeLabel,
+        generatedAt: new Intl.DateTimeFormat('en-US', {
+            dateStyle: 'long',
+            timeStyle: 'short',
+        }).format(new Date()),
+        summary,
+        batches: normalizedBatches,
+    };
+};
+
+const resolveReportBatches = ({ scope, batchId }) => {
+    if (reportContextBatch.value?.id) {
+        const batch = findBatchById(reportContextBatch.value.id) || reportContextBatch.value;
+        return batch ? [batch] : [];
+    }
+
+    if (scope === 'filtered') {
+        return [...filteredBatches.value];
+    }
+
+    if (scope === 'batch' && batchId) {
+        const batch = findBatchById(batchId);
+        return batch ? [batch] : [];
+    }
+
+    return [...batches.value];
+};
+
+const buildReportScopeLabel = (scope, selectedBatches) => {
+    if (reportContextBatch.value || scope === 'batch') {
+        return `Batch: ${selectedBatches[0]?.batch_name || 'Selected Batch'}`;
+    }
+
+    if (scope === 'filtered') {
+        return `Filtered Results (${selectedBatches.length} batch${selectedBatches.length === 1 ? '' : 'es'})`;
+    }
+
+    return `All Batches (${selectedBatches.length})`;
+};
+
+const generateReport = ({ format, scope, batchId }) => {
+    const selectedBatches = resolveReportBatches({ scope, batchId });
+
+    if (!selectedBatches.length) {
+        toast.add({
+            severity: 'warn',
+            summary: 'No Data',
+            detail: 'No batches are available for the selected report scope.',
+            life: 3000,
+        });
+        return;
+    }
+
+    const scopeLabel = buildReportScopeLabel(scope, selectedBatches);
+
+    if (format === 'excel') {
+        if (selectedBatches.length === 1 && (scope === 'batch' || reportContextBatch.value)) {
+            exportBatch(selectedBatches[0]);
+        } else {
+            exportBatchCollection(
+                selectedBatches,
+                scope === 'filtered' ? 'ROS_Filtered_Report' : 'ROS_All_Batches_Report'
+            );
+        }
+
+        closeReportDialog();
+        return;
+    }
+
+    const reportPayload = buildRosReportPayload(selectedBatches, scopeLabel);
+    const reportHtml = renderVueTemplate(ReturnOfServiceReportTemplate, reportPayload);
+    const reportName = (selectedBatches.length === 1
+        ? `ROS_${selectedBatches[0].batch_name}`
+        : (scope === 'filtered' ? 'ROS_Filtered_Report' : 'ROS_All_Batches_Report'))
+        .replace(/[^a-zA-Z0-9]+/g, '_');
+
+    printHtml(reportHtml, reportName, 'a4', returnOfServiceReportCss);
+    closeReportDialog();
+};
+
 const exportBatch = (batch) => {
     const wb = XLSX.utils.book_new();
 
@@ -1626,39 +1279,7 @@ const exportBatch = (batch) => {
 };
 
 const exportRecords = () => {
-    const wb = XLSX.utils.book_new();
-
-    const headers = ['Batch Name', 'Course', 'Exam Date From', 'Exam Date To', 'Result Date',
-        'Scholar Name', 'Years of Service', 'Service Start', 'Service End', 'Status', 'Remarks'];
-    const rows = [];
-
-    for (const batch of batches.value) {
-        const scholars = batch.scholars || [];
-        if (scholars.length === 0) {
-            rows.push([
-                batch.batch_name, batch.course_name || '',
-                formatDateLong(batch.exam_date_from), formatDateLong(batch.exam_date_to),
-                formatDateLong(batch.result_date), '', '', '', '', '', '',
-            ]);
-        } else {
-            for (const s of scholars) {
-                rows.push([
-                    batch.batch_name, batch.course_name || '',
-                    formatDateLong(batch.exam_date_from), formatDateLong(batch.exam_date_to),
-                    formatDateLong(batch.result_date),
-                    s.scholar_name || '', s.years_of_service ?? '',
-                    formatDateLong(s.service_start_date), formatDateLong(s.service_end_date),
-                    s.completion_status || '', stripHtml(s.remarks),
-                ]);
-            }
-        }
-    }
-
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    XLSX.utils.book_append_sheet(wb, ws, 'All Records');
-
-    const filename = `ROS_All_Records_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    XLSX.writeFile(wb, filename);
+    exportBatchCollection(batches.value, 'ROS_All_Records');
 };
 
 const getCompletionSeverity = (status) => {
@@ -1706,154 +1327,4 @@ const filteredScholars = computed(() => {
         scholar.completion_status?.toLowerCase().includes(query)
     );
 });
-
-onBeforeUnmount(() => {
-    batchDrag.cleanup();
-    scholarDrag.cleanup();
-    viewScholarDrag.cleanup();
-    viewBatchDrag.cleanup();
-    deleteBatchDrag.cleanup();
-    deleteScholarDrag.cleanup();
-});
 </script>
-
-<style scoped>
-/* ── iOS Row Layout ── */
-.ios-row-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-    color: #8E8E93;
-}
-
-.ios-row-control {
-    flex: 0 0 200px;
-    width: 200px;
-    min-width: 0;
-}
-
-.ios-row-control> :deep(*) {
-    width: 100%;
-    min-width: 0;
-}
-
-.ios-row-stacked {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 10px 16px;
-    min-height: auto;
-    gap: 6px;
-}
-
-.ios-full-input {
-    width: 100%;
-}
-
-/* Wide batch view modal */
-.ios-modal-wide {
-    height: 85vh;
-}
-
-/* Page-level input rounding */
-:deep(.p-inputtext),
-:deep(.p-select),
-:deep(.p-inputnumber-input) {
-    border-radius: 1rem;
-}
-
-/* Destructive Button */
-.ios-destructive-btn {
-    display: block;
-    width: 100%;
-    background: #FFFFFF;
-    border: 0.5px solid #E5E5EA;
-    border-radius: 10px;
-    padding: 12px;
-    text-align: center;
-    font-size: 15px;
-    color: #FF3B30;
-    cursor: pointer;
-    letter-spacing: -0.4px;
-    transition: background 0.15s;
-}
-
-.ios-destructive-btn:hover {
-    background: #F2F2F7;
-}
-
-/* ── PrimeVue Select override (ios-select class) ── */
-:deep(.ios-select .p-select) {
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    font-size: 13px;
-    width: 100%;
-    min-height: unset;
-}
-
-:deep(.ios-select .p-select-label) {
-    color: #8E8E93 !important;
-    text-align: right;
-    padding: 4px 2px 4px 8px;
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-:deep(.ios-select .p-select-dropdown) {
-    color: #C7C7CC !important;
-}
-
-/* ── PrimeVue DatePicker override (ios-datepicker class) ── */
-:deep(.ios-datepicker .p-datepicker) {
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-}
-
-:deep(.ios-datepicker .p-inputtext) {
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    text-align: right;
-    color: #8E8E93;
-    font-size: 13px;
-    padding: 4px 40px 4px 8px;
-}
-
-/* ── InputNumber override (ios-inputnumber class) ── */
-:deep(.ios-inputnumber .p-inputnumber-input) {
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    text-align: right;
-    color: #8E8E93;
-    font-size: 13px;
-    padding: 4px 8px;
-}
-
-/* ── Full-width text inputs ── */
-:deep(.ios-full-input.p-inputtext),
-:deep(.ios-full-input .p-inputtext) {
-    font-size: 13px;
-    border-radius: 6px;
-    width: 100%;
-}
-
-:deep(.ios-full-input.p-textarea),
-:deep(.ios-full-input .p-textarea) {
-    font-size: 13px;
-    border-radius: 6px;
-    resize: none;
-    width: 100%;
-}
-
-:deep(.ios-full-input .p-multiselect),
-:deep(.ios-full-input.p-multiselect) {
-    font-size: 13px;
-    border-radius: 8px;
-    width: 100%;
-}
-</style>

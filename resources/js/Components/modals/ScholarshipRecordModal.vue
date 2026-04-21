@@ -8,7 +8,7 @@
                         <AppIcon name="times" :size="14" />
                     </button>
                     <span class="ios-nav-title">{{ mode === 'add' ? 'Add Scholarship Record' : 'Edit Scholarship Record'
-                    }}</span>
+                        }}</span>
                     <button class="ios-nav-btn ios-nav-action" @click.stop="submitRecord" :disabled="processing">
                         <AppIcon name="check" :size="14" />
                     </button>

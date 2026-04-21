@@ -1,4 +1,4 @@
-﻿import XLSXStyle from 'xlsx-js-style';
+﻿import * as XLSXStyle from 'xlsx';
 
 const NC = 9; // #, Date Obligated, Account Code, Prepared By, Payee, Particulars, Credit, Debit, Remarks
 const thin = { style: 'thin' };

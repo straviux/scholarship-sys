@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateScholarshipProfileRequest;
 use App\Http\Requests\CreateEducationalBackgroundRequest;
+use App\Http\Requests\UpsertScholarLedgerRequest;
 use App\Http\Requests\UpdateScholarshipProfileRequest;
 use App\Http\Resources\ScholarshipProfileResource;
 use App\Models\EducationalBackground;
+use App\Models\ScholarLedger;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipProgram;
 use App\Models\ScholarshipRecord;
@@ -18,6 +20,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\ScholarshipCompletionService;
 use App\Services\ActivityLogService;
 use App\Services\ScholarshipExpenseProjectionService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -932,6 +935,7 @@ class ScholarshipProfileController extends Controller
                 $q->with(['program', 'course', 'school', 'attachments', 'approvalHistory.performedBy'])
                     ->orderBy('created_at', 'desc');
             },
+            'scholarLedger',
             'disbursements.attachments',
             'activityLogs' => function ($q) {
                 $q->with(['user' => function ($u) {
@@ -943,6 +947,66 @@ class ScholarshipProfileController extends Controller
 
         return Inertia::render('Scholarship/Show', [
             'profile' => $profile,
+        ]);
+    }
+
+    public function updateLedger(UpsertScholarLedgerRequest $request, ScholarshipProfile $profile): JsonResponse
+    {
+        if (!Gate::allows('scholarships.edit')) {
+            abort(403, 'You do not have permission to update scholar ledgers.');
+        }
+
+        $validated = $request->validated();
+
+        $entries = collect($validated['entries'] ?? [])
+            ->map(function ($entry) {
+                return [
+                    'year_level' => strtoupper(trim((string) ($entry['year_level'] ?? ''))),
+                    'academic_year' => trim((string) ($entry['academic_year'] ?? '')),
+                    'semester' => strtoupper(trim((string) ($entry['semester'] ?? ''))),
+                    'date_obligated' => !empty($entry['date_obligated']) ? $entry['date_obligated'] : null,
+                    'obr_no' => trim((string) ($entry['obr_no'] ?? '')),
+                    'disbursement_type' => trim((string) ($entry['disbursement_type'] ?? '')),
+                    'amount' => array_key_exists('amount', $entry) && $entry['amount'] !== null && $entry['amount'] !== ''
+                        ? (float) $entry['amount']
+                        : null,
+                    'ros_months' => array_key_exists('ros_months', $entry) && $entry['ros_months'] !== null && $entry['ros_months'] !== ''
+                        ? (int) $entry['ros_months']
+                        : null,
+                ];
+            })
+            ->filter(function ($entry) {
+                return collect([
+                    $entry['year_level'],
+                    $entry['academic_year'],
+                    $entry['semester'],
+                    $entry['date_obligated'],
+                    $entry['obr_no'],
+                    $entry['disbursement_type'],
+                ])->contains(function ($value) {
+                    return $value !== null && $value !== '';
+                }) || $entry['amount'] !== null || $entry['ros_months'] !== null;
+            })
+            ->values()
+            ->all();
+
+        $ledger = ScholarLedger::updateOrCreate(
+            ['profile_id' => $profile->profile_id],
+            [
+                'other_assistance' => filled($validated['other_assistance'] ?? null)
+                    ? trim((string) $validated['other_assistance'])
+                    : null,
+                'licensure_examination_result' => filled($validated['licensure_examination_result'] ?? null)
+                    ? trim((string) $validated['licensure_examination_result'])
+                    : null,
+                'entries' => $entries,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Scholar ledger saved successfully.',
+            'data' => $ledger->fresh(),
         ]);
     }
 

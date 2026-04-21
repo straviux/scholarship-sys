@@ -55,11 +55,11 @@
                         </tr>
                         <tr>
                             <td :style="LBL">OTHER ASSISTANCE</td>
-                            <td :style="VAL">N/A</td>
+                            <td :style="VAL">{{ upper(otherAssistance) || 'N/A' }}</td>
                         </tr>
                         <tr>
                             <td :style="LBL">LICENSURE EXAMINATION RESULT</td>
-                            <td :style="VAL">N/A</td>
+                            <td :style="VAL">{{ upper(licensureExaminationResult) || 'N/A' }}</td>
                         </tr>
                         <tr>
                             <td :style="LBL">SCHOOL ATTENDED</td>
@@ -104,26 +104,21 @@
                 </tr>
             </thead>
             <tbody>
-
-                <!-- Regular year-level groups -->
                 <template v-if="yearGroupedRows.length > 0">
                     <template v-for="yg in yearGroupedRows" :key="yg.yearLevel">
                         <template v-for="(term, ti) in yg.termList" :key="term.termKey">
-                            <tr v-for="(d, ri) in term.rows" :key="d.id ?? (ti + '-' + ri)">
-                                <!-- Year level: spans ALL rows in this year level, shown once -->
+                            <tr v-for="(d, ri) in term.rows" :key="d.id ?? `${yg.yearLevel}-${ti}-${ri}`">
                                 <td v-if="ti === 0 && ri === 0" :rowspan="yg.totalRows" :style="TD_COV">
                                     {{ upper(yg.yearLevel) }}
                                 </td>
                                 <td :style="TD">{{ d.academic_year || '—' }}</td>
-                                <td :style="TD">{{ resolvedSemesterLabel(d.year_level, d.semester, d.academic_year) }}
-                                </td>
+                                <td :style="TD">{{ d.semester || '—' }}</td>
                                 <td :style="TD">{{ formatDate(d.date_obligated) }}</td>
                                 <td :style="TD">{{ d.obr_no || '—' }}</td>
                                 <td :style="TD">{{ upper(d.disbursement_type) || '—' }}</td>
                                 <td :style="TD_AMT">{{ d.amount != null ? money(d.amount) : '—' }}</td>
-                                <!-- ROS: spans all OBR rows of this term (merged) -->
                                 <td v-if="ri === 0" :rowspan="term.rows.length" :style="TD_AMT">
-                                    {{ resolvedRosLabel(d.year_level, d.semester, d.academic_year) }}
+                                    {{ resolvedRosLabel(term.rows[0]) }}
                                 </td>
                             </tr>
                         </template>
@@ -136,46 +131,6 @@
                         </td>
                     </tr>
                 </template>
-
-                <!-- REVIEW rows (always last before totals) -->
-                <template v-if="reviewTerms.length > 0">
-                    <template v-for="(term, ti) in reviewTerms" :key="'rt-' + term.termKey">
-                        <tr v-for="(d, ri) in term.rows" :key="'r-' + ti + '-' + ri">
-                            <!-- REVIEW label: spans entire review section, shown once -->
-                            <td v-if="ti === 0 && ri === 0" :rowspan="totalReviewRows" :style="TD_COV">REVIEW</td>
-                            <!-- Last row of the whole review section gets border-bottom:none -->
-                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{
-                                d.academic_year || '—' }}</td>
-                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{
-                                d.semester || '—' }}</td>
-                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{
-                                formatDate(d.date_obligated) }}</td>
-                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{
-                                d.obr_no || '—' }}</td>
-                            <td :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE : TD">{{
-                                upper(d.disbursement_type) || '—' }}</td>
-                            <td
-                                :style="(ti === reviewTerms.length - 1 && ri === term.rows.length - 1) ? TD_PRE_AMT : TD_AMT">
-                                {{ d.amount != null ? money(d.amount) : '—' }}</td>
-                            <!-- ROS per term (merged); last term also gets border-bottom:none -->
-                            <td v-if="ri === 0" :rowspan="term.rows.length"
-                                :style="ti === reviewTerms.length - 1 ? TD_PRE_AMT : TD_AMT">
-                                {{ resolvedRosLabel(d.year_level, d.semester, d.academic_year) }}
-                            </td>
-                        </tr>
-                    </template>
-                </template>
-                <template v-else>
-                    <tr>
-                        <td :style="TD_COV + 'border-bottom:none;'">REVIEW</td>
-                        <td colspan="7"
-                            style="border:1px solid #000;border-bottom:none;padding:4px 5px;vertical-align:middle;text-align:center;">
-                            N/A
-                        </td>
-                    </tr>
-                </template>
-
-                <!-- Total row -->
                 <tr>
                     <td colspan="6" :style="TD_TOT + 'text-align:right;'">TOTAL</td>
                     <td :style="TD_TOT">{{ money(grandTotal) }}</td>
@@ -232,9 +187,9 @@ const props = defineProps({
     preparedBy: { type: String, default: '' },
     preparedByDesignation: { type: String, default: '' },
     today: { type: String, default: '' },
-    rosOverrides: { type: Object, default: () => ({}) },      // { 'yl||ay||sem': '4'|'6'|'12' }
-    termSemesterLabels: { type: Object, default: () => ({}) }, // { 'yl||ay||sem': 'custom label' }
-    excludedTerms: { type: Object, default: () => ({}) },      // { 'yl||ay||sem': true }
+    otherAssistance: { type: String, default: '' },
+    licensureExaminationResult: { type: String, default: '' },
+    ledgerEntries: { type: Array, default: () => [] },
 });
 
 /* ── inline style constants (resolved by Vue before innerHTML capture) ── */
@@ -244,8 +199,6 @@ const TH = 'color:#333;font-weight:700;font-size:9px;text-transform:uppercase;le
 const TD = 'border:1px solid #000;padding:4px 5px;vertical-align:middle;text-align:center;';
 const TD_AMT = 'border:1px solid #000;padding:4px 5px;vertical-align:middle;text-align:center;font-weight:600;color:#333;';
 const TD_COV = 'border:1px solid #000;padding:4px 5px;vertical-align:middle;text-align:center;font-weight:700;text-transform:uppercase;';
-const TD_PRE = 'border:1px solid #000;border-bottom:none;padding:4px 5px;vertical-align:middle;text-align:center;';
-const TD_PRE_AMT = 'border:1px solid #000;border-bottom:none;padding:4px 5px;vertical-align:middle;text-align:center;font-weight:600;color:#333;';
 const TD_TOT = 'border:1px solid #000;border-top:2px solid #000;padding:4px 5px;vertical-align:middle;text-align:center;font-weight:700;';
 
 /* ── helpers ─────────────────────────────────────────────── */
@@ -272,30 +225,40 @@ const is4MonthTerm = (semester) => {
     return s.includes('trimester') || s.includes('3rd semester') || s.includes('3rd sem');
 };
 
-const rosLabel = (semester) =>
-    is4MonthTerm(semester) ? '4 MONTHS' : '6 MONTHS';
+const normalizeYearLevel = (value) => {
+    const normalized = upper(value).replace(/\s+/g, ' ').trim();
 
-const resolvedRosLabel = (yearLevel, semester, academicYear) => {
-    const key = `${yearLevel ?? ''}||${academicYear ?? ''}||${semester ?? ''}`;
-    const override = props.rosOverrides?.[key];
-    if (override === '') return '';
-    if (override === '4') return '4 MONTHS';
-    if (override === '6') return '6 MONTHS';
-    if (override === '12') return '12 MONTHS';
-    const months = parseInt(override);
-    if (!isNaN(months) && months > 0) return `${months} MONTHS`;
-    return is4MonthScholar.value ? '4 MONTHS' : rosLabel(semester);
+    if (/^(1ST|2ND|3RD|4TH|5TH|6TH|7TH|8TH)$/i.test(normalized)) {
+        return `${normalized} YEAR`;
+    }
+
+    return normalized || '—';
 };
 
-// Returns editable semester label if set, otherwise falls back to original value
-const resolvedSemesterLabel = (yearLevel, semester, academicYear) => {
-    const key = `${yearLevel ?? ''}||${academicYear ?? ''}||${semester ?? ''}`;
-    return props.termSemesterLabels?.[key] || semester || '—';
+const rosMonthsForEntry = (entry) => {
+    const explicitMonths = parseInt(entry?.ros_months);
+
+    if (!isNaN(explicitMonths) && explicitMonths > 0) {
+        return explicitMonths;
+    }
+
+    if (entry?.ros_months === '') {
+        return 0;
+    }
+
+    return is4MonthTerm(entry?.semester) ? 4 : 6;
 };
-const isExcluded = (yearLevel, semester, academicYear) => {
-    const key = `${yearLevel ?? ''}||${academicYear ?? ''}||${semester ?? ''}`;
-    return !!props.excludedTerms?.[key];
+
+const resolvedRosLabel = (entry) => {
+    const months = rosMonthsForEntry(entry);
+
+    if (months <= 0) {
+        return '—';
+    }
+
+    return `${months} MONTHS`;
 };
+
 /* ── profile derived ─────────────────────────────────────── */
 
 const upperName = computed(() => {
@@ -346,106 +309,99 @@ const latestSchoolName = computed(() =>
     latestRecord.value?.school_name ?? latestRecord.value?.school?.name ?? '—'
 );
 
-/* ── disbursements ───────────────────────────────────────── */
-
-const disbursements = computed(() =>
-    (props.profile.disbursements || []).filter(d => !d.deleted_at)
+const otherAssistance = computed(() =>
+    props.otherAssistance ?? ''
 );
 
-// Sort: year level order first, then academic_year, then semester
-const YEAR_ORDER = ['1ST YEAR', '2ND YEAR', '3RD YEAR', '4TH YEAR', '5TH YEAR'];
-const sortedDisbursements = computed(() =>
-    [...disbursements.value].sort((a, b) => {
-        const ya = upper(a.year_level ?? '');
-        const yb = upper(b.year_level ?? '');
-        const ia = YEAR_ORDER.indexOf(ya);
-        const ib = YEAR_ORDER.indexOf(yb);
-        const isReviewA = ya === 'REVIEW' ? 1 : 0;
-        const isReviewB = yb === 'REVIEW' ? 1 : 0;
-        if (isReviewA !== isReviewB) return isReviewA - isReviewB;
-        const orderA = ia === -1 ? 999 : ia;
-        const orderB = ib === -1 ? 999 : ib;
-        if (orderA !== orderB) return orderA - orderB;
-        if ((a.academic_year ?? '') < (b.academic_year ?? '')) return -1;
-        if ((a.academic_year ?? '') > (b.academic_year ?? '')) return 1;
-        if ((a.semester ?? '') < (b.semester ?? '')) return -1;
-        if ((a.semester ?? '') > (b.semester ?? '')) return 1;
-        if ((a.date_obligated ?? '') < (b.date_obligated ?? '')) return -1;
-        if ((a.date_obligated ?? '') > (b.date_obligated ?? '')) return 1;
-        return 0;
-    })
+const licensureExaminationResult = computed(() =>
+    props.licensureExaminationResult ?? ''
 );
 
-// If ANY disbursement is a 3rd-semester / trimester term, the scholar is on a trimester
-// system → ALL terms count as 4 months for ROS.
-const is4MonthScholar = computed(() =>
-    disbursements.value.some(d => is4MonthTerm(d.semester))
-);
+const YEAR_ORDER = ['1ST YEAR', '2ND YEAR', '3RD YEAR', '4TH YEAR', '5TH YEAR', 'PGI', 'REVIEW'];
 
-// yearGroupedRows: [ { yearLevel, termList: [ { termKey, rows } ], totalRows } ]
-// Preserves sort order from sortedDisbursements.
-const yearGroupedRows = computed(() => {
-    const yearMap = {};
-    sortedDisbursements.value
-        .filter(d => upper(d.year_level ?? '') !== 'REVIEW')
-        .filter(d => !isExcluded(d.year_level, d.semester, d.academic_year))
-        .forEach(d => {
-            const yl = d.year_level ?? '—';
-            if (!yearMap[yl]) yearMap[yl] = {};
-            const tk = `${d.academic_year ?? ''}|${d.semester ?? ''}`;
-            if (!yearMap[yl][tk]) yearMap[yl][tk] = [];
-            yearMap[yl][tk].push(d);
+const normalizedLedgerEntries = computed(() => {
+    return (props.ledgerEntries || [])
+        .map((entry, index) => {
+            const amount = entry?.amount === '' || entry?.amount === null || entry?.amount === undefined
+                ? null
+                : parseFloat(entry.amount);
+
+            return {
+                id: entry?.id ?? `ledger-${index}`,
+                sortIndex: index,
+                year_level: normalizeYearLevel(entry?.year_level),
+                academic_year: entry?.academic_year ?? '',
+                semester: entry?.semester ?? '',
+                date_obligated: entry?.date_obligated ?? '',
+                obr_no: entry?.obr_no ?? '',
+                disbursement_type: entry?.disbursement_type ?? '',
+                amount: Number.isFinite(amount) ? amount : null,
+                ros_months: entry?.ros_months,
+            };
+        })
+        .filter((entry) => {
+            return [entry.academic_year, entry.semester, entry.date_obligated, entry.obr_no, entry.disbursement_type]
+                .some((value) => String(value ?? '').trim() !== '') || entry.amount !== null;
         });
-    return Object.entries(yearMap).map(([yearLevel, terms]) => {
-        const termList = Object.entries(terms).map(([termKey, rows]) => ({ termKey, rows }));
-        return { yearLevel, termList, totalRows: termList.reduce((s, t) => s + t.rows.length, 0) };
+});
+
+const sortedLedgerEntries = computed(() => {
+    return [...normalizedLedgerEntries.value].sort((a, b) => {
+        const yearA = YEAR_ORDER.indexOf(a.year_level);
+        const yearB = YEAR_ORDER.indexOf(b.year_level);
+        const orderA = yearA === -1 ? 999 : yearA;
+        const orderB = yearB === -1 ? 999 : yearB;
+
+        if (orderA !== orderB) {
+            return orderA - orderB;
+        }
+
+        return a.sortIndex - b.sortIndex;
     });
 });
 
-// reviewTerms: [ { termKey, rows } ]
-const reviewTerms = computed(() => {
-    const termMap = {};
-    sortedDisbursements.value
-        .filter(d => upper(d.year_level ?? '') === 'REVIEW')
-        .filter(d => !isExcluded(d.year_level, d.semester, d.academic_year))
-        .forEach(d => {
-            const tk = `${d.academic_year ?? ''}|${d.semester ?? ''}`;
-            if (!termMap[tk]) termMap[tk] = [];
-            termMap[tk].push(d);
-        });
-    return Object.entries(termMap).map(([termKey, rows]) => ({ termKey, rows }));
+const yearGroupedRows = computed(() => {
+    const yearMap = {};
+    const yearSequence = [];
+
+    sortedLedgerEntries.value.forEach((entry) => {
+        const yearLevel = entry.year_level ?? '—';
+        if (!yearMap[yearLevel]) {
+            yearMap[yearLevel] = {};
+            yearSequence.push(yearLevel);
+        }
+
+        const termKey = `${entry.academic_year ?? ''}|${entry.semester ?? ''}`;
+        if (!yearMap[yearLevel][termKey]) {
+            yearMap[yearLevel][termKey] = [];
+        }
+
+        yearMap[yearLevel][termKey].push(entry);
+    });
+
+    return yearSequence.map((yearLevel) => {
+        const termList = Object.entries(yearMap[yearLevel]).map(([termKey, rows]) => ({ termKey, rows }));
+        return {
+            yearLevel,
+            termList,
+            totalRows: termList.reduce((sum, term) => sum + term.rows.length, 0),
+        };
+    });
 });
 
-const totalReviewRows = computed(() =>
-    reviewTerms.value.reduce((s, t) => s + t.rows.length, 0)
-);
-
 const grandTotal = computed(() =>
-    disbursements.value
-        .filter(d => !isExcluded(d.year_level, d.semester, d.academic_year))
-        .reduce((s, d) => s + parseFloat(d.amount || 0), 0)
+    normalizedLedgerEntries.value.reduce((sum, entry) => sum + parseFloat(entry.amount || 0), 0)
 );
 
 /* ── ROS total ───────────────────────────────────────────── */
 const totalRosYrs = computed(() => {
     const seen = new Set();
     let totalMonths = 0;
-    disbursements.value.forEach(d => {
-        if (isExcluded(d.year_level, d.semester, d.academic_year)) return;
-        // Deduplicate: multiple OBRs in the same term count as one term
-        const termKey = `${d.year_level ?? ''}||${d.academic_year ?? ''}||${d.semester ?? ''}`;
-        const dedupeKey = `${d.year_level ?? ''}|${d.semester ?? ''}|${d.academic_year ?? ''}`;
+    normalizedLedgerEntries.value.forEach((entry) => {
+        const dedupeKey = `${entry.year_level ?? ''}|${entry.semester ?? ''}|${entry.academic_year ?? ''}`;
         if (!seen.has(dedupeKey)) {
             seen.add(dedupeKey);
-            const override = props.rosOverrides?.[termKey];
-            const overrideMonths = parseInt(override);
-            if (!isNaN(overrideMonths) && overrideMonths > 0) {
-                totalMonths += overrideMonths;
-            } else if (override === '') {
-                // blank = excluded
-            } else {
-                totalMonths += (is4MonthScholar.value || is4MonthTerm(d.semester)) ? 4 : 6;
-            }
+            totalMonths += rosMonthsForEntry(entry);
         }
     });
     const yrs = totalMonths / 12;
@@ -456,34 +412,26 @@ const totalRosYrs = computed(() => {
 
 /* ── coverage string ─────────────────────────────────────── */
 const coverageStr = computed(() => {
-    const disb = disbursements.value;
-    if (!disb.length) return 'N/A';
+    const entries = sortedLedgerEntries.value;
+    if (!entries.length) return 'N/A';
+
     const seen = new Set();
     let totalMonths = 0;
-    disb.forEach(d => {
-        if (isExcluded(d.year_level, d.semester, d.academic_year)) return;
-        const termKey = `${d.year_level ?? ''}||${d.academic_year ?? ''}||${d.semester ?? ''}`;
-        const dedupeKey = `${d.year_level ?? ''}|${d.semester ?? ''}|${d.academic_year ?? ''}`;
+    entries.forEach((entry) => {
+        const dedupeKey = `${entry.year_level ?? ''}|${entry.semester ?? ''}|${entry.academic_year ?? ''}`;
         if (!seen.has(dedupeKey)) {
             seen.add(dedupeKey);
-            const override = props.rosOverrides?.[termKey];
-            const overrideMonths = parseInt(override);
-            if (!isNaN(overrideMonths) && overrideMonths > 0) {
-                totalMonths += overrideMonths;
-            } else if (override === '') {
-                // blank = excluded
-            } else {
-                totalMonths += (is4MonthScholar.value || is4MonthTerm(d.semester)) ? 4 : 6;
-            }
+            totalMonths += rosMonthsForEntry(entry);
         }
     });
+
     const yrs = totalMonths / 12;
     const yrsStr = yrs <= 0 ? '' : yrs === Math.floor(yrs)
         ? ` (${Math.floor(yrs)} YRS)` : ` (${yrs.toFixed(1)} YRS)`;
-    // Use the first entry from the already-sorted list (oldest year level / academic year)
-    const first = sortedDisbursements.value[0];
+
+    const first = entries[0];
     return [
-        upper(first?.year_level ?? ''),
+        first?.year_level ?? '',
         upper(first?.semester ?? ''),
         first?.academic_year ?? '',
     ].filter(Boolean).join(', ') + yrsStr;

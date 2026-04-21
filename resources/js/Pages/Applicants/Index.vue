@@ -611,9 +611,16 @@ const buildContextMenu = (rowData) => {
             icon: 'id-card',
             command: () => openProfileReviewModal(rowData)
         });
+        if (hasRole('administrator') || hasRole('program_manager') || hasRole('screening-officer')) {
+            items.push({
+                label: 'Interview',
+                icon: 'comments',
+                command: () => handleProfileReviewInterview(rowData)
+            });
+        }
         items.push({
-            label: 'View Requirements',
-            icon: 'check-circle',
+            label: 'Edit Requirements',
+            icon: 'book-check',
             command: () => openRequirementsModal(rowData)
         });
     }
@@ -733,6 +740,15 @@ const selectedApplicantForReview = ref(null);
 // Interview assessment modal state
 const showInterviewModal = ref(false);
 const interviewRecordId = ref(null);
+const showAcademicInfoIncompleteDialog = ref(false);
+const missingAcademicInfoFields = ref([]);
+const academicInfoDialogOffset = ref({ x: 0, y: 0 });
+const academicInfoDialogDragStart = ref(null);
+
+const academicInfoDialogStyle = computed(() => ({
+    width: '460px',
+    transform: `translate(${academicInfoDialogOffset.value.x}px, ${academicInfoDialogOffset.value.y}px)`,
+}));
 
 // Profile menu items for dropdown
 const profileMenuItems = ref([
@@ -795,9 +811,107 @@ const closeProfileReviewModal = () => {
     selectedApplicantForReview.value = null;
 };
 
+const hasAcademicFieldValue = (value) => {
+    if (value === null || value === undefined) {
+        return false;
+    }
+
+    if (typeof value === 'string') {
+        return value.trim().length > 0;
+    }
+
+    return true;
+};
+
+const getMissingAcademicInfoFields = (applicant) => {
+    const scholarshipGrant = applicant?.scholarship_grant?.[0] ?? null;
+
+    return [
+        {
+            label: 'Program',
+            value: scholarshipGrant?.program_id ?? scholarshipGrant?.program?.id ?? scholarshipGrant?.program?.shortname ?? scholarshipGrant?.program?.name,
+        },
+        {
+            label: 'School',
+            value: scholarshipGrant?.school_id ?? scholarshipGrant?.school?.id ?? scholarshipGrant?.school?.shortname ?? scholarshipGrant?.school?.name,
+        },
+        {
+            label: 'Course',
+            value: scholarshipGrant?.course_id ?? scholarshipGrant?.course?.id ?? scholarshipGrant?.course?.shortname ?? scholarshipGrant?.course?.name,
+        },
+        {
+            label: 'Year Level',
+            value: scholarshipGrant?.year_level,
+        },
+        {
+            label: 'Term',
+            value: scholarshipGrant?.term,
+        },
+        {
+            label: 'Academic Year',
+            value: scholarshipGrant?.academic_year,
+        },
+    ]
+        .filter(({ value }) => !hasAcademicFieldValue(value))
+        .map(({ label }) => label);
+};
+
+const closeAcademicInfoIncompleteDialog = () => {
+    showAcademicInfoIncompleteDialog.value = false;
+    missingAcademicInfoFields.value = [];
+};
+
+const onAcademicInfoDialogDragStart = (event) => {
+    if (event.target.closest('button, a')) {
+        return;
+    }
+
+    academicInfoDialogDragStart.value = {
+        x: event.clientX - academicInfoDialogOffset.value.x,
+        y: event.clientY - academicInfoDialogOffset.value.y,
+    };
+
+    document.addEventListener('pointermove', onAcademicInfoDialogDragMove);
+    document.addEventListener('pointerup', onAcademicInfoDialogDragEnd);
+};
+
+const onAcademicInfoDialogDragMove = (event) => {
+    if (!academicInfoDialogDragStart.value) {
+        return;
+    }
+
+    academicInfoDialogOffset.value = {
+        x: event.clientX - academicInfoDialogDragStart.value.x,
+        y: event.clientY - academicInfoDialogDragStart.value.y,
+    };
+};
+
+const onAcademicInfoDialogDragEnd = () => {
+    academicInfoDialogDragStart.value = null;
+    document.removeEventListener('pointermove', onAcademicInfoDialogDragMove);
+    document.removeEventListener('pointerup', onAcademicInfoDialogDragEnd);
+};
+
+onBeforeUnmount(() => {
+    document.removeEventListener('pointermove', onAcademicInfoDialogDragMove);
+    document.removeEventListener('pointerup', onAcademicInfoDialogDragEnd);
+});
+
 const handleProfileReviewInterview = (applicant) => {
+    const missingFields = getMissingAcademicInfoFields(applicant);
+
+    if (missingFields.length > 0) {
+        missingAcademicInfoFields.value = missingFields;
+        showAcademicInfoIncompleteDialog.value = true;
+        return;
+    }
+
     interviewRecordId.value = applicant.scholarship_grant?.[0]?.id;
     showInterviewModal.value = true;
+};
+
+const handleProfileReviewEdit = (applicant) => {
+    editApplicant(applicant);
 };
 
 const onInterviewSubmitted = () => {
@@ -1604,7 +1718,59 @@ const truncateText = (text, maxLength = 80) => {
         <!-- Modals -->
         <!-- Integrated Profile & Review Modal -->
         <ProfileReviewModal v-model:visible="showProfileReviewModal" :applicant="selectedApplicantForReview"
-            :applicants="applicants" @interview="handleProfileReviewInterview" @closed="closeProfileReviewModal" />
+            :applicants="applicants" @interview="handleProfileReviewInterview" @edit-profile="handleProfileReviewEdit"
+            @closed="closeProfileReviewModal" />
+
+        <Dialog :visible="showAcademicInfoIncompleteDialog" modal
+            @update:visible="val => !val && closeAcademicInfoIncompleteDialog()"
+            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
+            <template #container>
+                <div class="ios-modal academic-info-ios-modal" :style="academicInfoDialogStyle">
+                    <div class="ios-nav-bar" @pointerdown="onAcademicInfoDialogDragStart">
+                        <button class="ios-nav-btn ios-nav-cancel" @click="closeAcademicInfoIncompleteDialog">
+                            <AppIcon name="times" :size="14" />
+                        </button>
+                        <span class="ios-nav-title">Academic Information</span>
+
+                    </div>
+
+                    <div class="ios-body">
+                        <div class="ios-section" style="margin-top: 16px;">
+                            <div class="ios-card">
+                                <div class="ios-row academic-info-warning-row"
+                                    style="align-items: flex-start; gap: 12px;">
+                                    <div class="academic-info-warning-icon">
+                                        <AppIcon name="exclamation-triangle" :size="20" />
+                                    </div>
+                                    <div class="academic-info-warning-copy">
+                                        <div class="academic-info-warning-title">Interview cannot start yet</div>
+                                        <div class="academic-info-warning-text">
+                                            Complete the applicant's academic information first, then try the interview
+                                            action again.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ios-section">
+                            <div class="ios-section-label">Missing fields</div>
+                            <div class="ios-card">
+                                <div v-for="(field, index) in missingAcademicInfoFields" :key="field" class="ios-row">
+                                    <span class="text-red-500 mono">{{ field }}</span>
+                                </div>
+                            </div>
+                            <div class="ios-section-footer">
+                                Update the academic record with all required details before opening the interview
+                                assessment.
+                            </div>
+                        </div>
+
+                        <div style="height: 20px;"></div>
+                    </div>
+                </div>
+            </template>
+        </Dialog>
 
         <!-- YAKAP Category Modal - for selecting category when creating new applicant -->
         <YakapCategoryModal v-model:visible="showYakapCategoryModal" @selected="handleYakapCategorySelected" />
@@ -1756,5 +1922,239 @@ const truncateText = (text, maxLength = 80) => {
 
 :deep(.p-datatable .p-datatable-thead > tr > th) {
     padding: 0.85rem 1rem;
+}
+
+.ios-modal {
+    background: #F2F2F7;
+    border-radius: 14px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.ios-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 14px 16px;
+    background: #FFFFFF;
+    border-bottom: 0.5px solid #E5E5EA;
+    flex-shrink: 0;
+    cursor: grab;
+    user-select: none;
+}
+
+.ios-nav-bar:active {
+    cursor: grabbing;
+}
+
+.ios-nav-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #000;
+    letter-spacing: -0.4px;
+}
+
+.ios-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 17px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: opacity 0.15s;
+}
+
+.ios-nav-btn:hover {
+    opacity: 0.6;
+}
+
+.ios-nav-cancel {
+    left: 16px;
+    color: #8E8E93;
+    font-size: 20px;
+}
+
+.ios-nav-action {
+    right: 16px;
+    color: #374151;
+    font-weight: 600;
+}
+
+.ios-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 16px;
+}
+
+.ios-section {
+    margin-top: 22px;
+}
+
+.ios-section:first-child {
+    margin-top: 16px;
+}
+
+.ios-section-label {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6D6D72;
+    text-transform: uppercase;
+    letter-spacing: -0.08px;
+    padding: 0 16px 6px;
+}
+
+.ios-section-footer {
+    font-size: 13px;
+    color: #6D6D72;
+    padding: 6px 16px 0;
+    line-height: 1.3;
+}
+
+.ios-card {
+    background: #FFFFFF;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 0.5px solid #E5E5EA;
+}
+
+.ios-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 16px;
+    min-height: 36px;
+    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
+}
+
+.ios-row-last {
+    border-bottom: none;
+}
+
+.ios-row:last-child {
+    border-bottom: none;
+}
+
+.ios-row-label {
+    font-size: 14px;
+    color: #8E8E93;
+    letter-spacing: -0.4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.academic-info-ios-modal {
+    max-width: calc(100vw - 24px);
+}
+
+.academic-info-warning-row {
+    padding: 12px 16px;
+}
+
+.academic-info-warning-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.academic-info-warning-copy {
+    min-width: 0;
+}
+
+.academic-info-warning-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.academic-info-warning-text {
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.45;
+}
+
+.academic-info-missing-field {
+    font-size: 14px;
+    color: #111827;
+    font-weight: 600;
+    text-align: right;
+}
+
+.dark .ios-modal {
+    background: #111827 !important;
+}
+
+.dark .ios-nav-bar {
+    background: #111827 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .ios-nav-title {
+    color: #d1d5db !important;
+}
+
+.dark .ios-nav-cancel {
+    color: #9ca3af !important;
+}
+
+.dark .ios-nav-action {
+    color: #d1d5db !important;
+}
+
+.dark .ios-section-label,
+.dark .ios-section-footer,
+.dark .ios-row-label,
+.dark .academic-info-warning-text {
+    color: #9ca3af !important;
+}
+
+.dark .ios-card {
+    background: #1f2937 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .ios-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .academic-info-warning-title,
+.dark .academic-info-missing-field {
+    color: #f3f4f6 !important;
+}
+
+.dark .academic-info-warning-icon {
+    background: rgba(220, 38, 38, 0.18) !important;
+    color: #fca5a5 !important;
+}
+</style>
+
+<style>
+.ios-dialog-root.p-dialog {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: auto !important;
+}
+
+.ios-dialog-mask {
+    background: rgba(0, 0, 0, 0.4);
 }
 </style>

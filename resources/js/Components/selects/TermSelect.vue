@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import axios from 'axios';
 
 const props = defineProps({
@@ -10,6 +10,10 @@ const props = defineProps({
     label: {
         type: String,
         default: 'name'
+    },
+    iosCompact: {
+        type: Boolean,
+        default: false,
     },
     multiple: {
         type: Boolean,
@@ -90,6 +94,30 @@ const resolveTermValue = (value) => {
     return resolveSingleTerm(value);
 };
 
+const isSameTermSelection = (left, right) => {
+    if (Array.isArray(left) || Array.isArray(right)) {
+        if (!Array.isArray(left) || !Array.isArray(right)) {
+            return false;
+        }
+
+        if (left.length !== right.length) {
+            return false;
+        }
+
+        return left.every((entry, index) => entry === right[index]);
+    }
+
+    return left === right;
+};
+
+const toTermModelValue = (value) => {
+    if (Array.isArray(value)) {
+        return value.map((entry) => entry?.value ?? entry).filter(Boolean);
+    }
+
+    return value?.value ?? value ?? null;
+};
+
 const emitTermValue = (value) => {
     if (Array.isArray(value)) {
         emit('update:modelValue', value.map((entry) => entry?.value ?? entry).filter(Boolean));
@@ -104,21 +132,47 @@ const localValue = ref(resolveTermValue(props.modelValue));
 watch(
     [() => props.modelValue, () => terms.value],
     () => {
-        localValue.value = resolveTermValue(props.modelValue);
+        const resolvedValue = resolveTermValue(props.modelValue);
+
+        if (!isSameTermSelection(localValue.value, resolvedValue)) {
+            localValue.value = resolvedValue;
+        }
     },
     { immediate: true, deep: true }
 );
 
 watch(localValue, (value) => {
-    emitTermValue(value);
+    const emittedValue = toTermModelValue(value);
+
+    if (!isSameTermSelection(emittedValue, props.modelValue)) {
+        emitTermValue(value);
+    }
 }, { deep: true });
+
+const selectPt = computed(() => {
+    const basePt = {
+        overlay: { class: 'term-select-overlay overflow-hidden' },
+        pcFilter: { root: { class: '!rounded-lg !border-gray-300' } },
+    };
+
+    if (!props.iosCompact) {
+        return basePt;
+    }
+
+    return {
+        ...basePt,
+        root: { class: 'term-select-root--compact', style: 'min-height: 2.25rem;' },
+        label: { style: 'padding: 0.4375rem 0.75rem; font-size: 0.8125rem; line-height: 1.2;' },
+        dropdown: { style: 'width: 2.25rem;' },
+    };
+});
 
 </script>
 
 <template>
     <Select v-model="localValue" :options="terms" filter :filterFields="['label', 'value']" autoFilterFocus showClear
         optionLabel="label" placeholder="Select Term" class="w-full" :loading="loading"
-        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
+        :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.label ?? slotProps.value }}</div>
@@ -134,3 +188,13 @@ watch(localValue, (value) => {
         </template>
     </Select>
 </template>
+
+<style>
+.term-select-overlay {
+    border-radius: 12px;
+}
+
+.term-select-root--compact {
+    border-radius: 0.875rem;
+}
+</style>

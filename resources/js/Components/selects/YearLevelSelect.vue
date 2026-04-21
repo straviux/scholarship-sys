@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 const props = defineProps({
 
     modelValue: {
@@ -17,6 +17,10 @@ const props = defineProps({
     customPlaceholder: {
         type: String,
         default: 'Select Year Level'
+    },
+    iosCompact: {
+        type: Boolean,
+        default: false,
     },
 });
 
@@ -86,12 +90,29 @@ watch(localValue, (val) => {
     emit('update:modelValue', val);
 }, { deep: true });
 
+const selectPt = computed(() => {
+    const basePt = {
+        overlay: { class: 'year-level-select-overlay overflow-hidden' },
+        pcFilter: { root: { class: '!rounded-lg !border-gray-300' } },
+    };
+
+    if (!props.iosCompact) {
+        return basePt;
+    }
+
+    return {
+        ...basePt,
+        root: { class: 'year-level-select-root--compact', style: 'min-height: 2.25rem;' },
+        label: { style: 'padding: 0.4375rem 0.75rem; font-size: 0.8125rem; line-height: 1.2;' },
+        dropdown: { style: 'width: 2.25rem;' },
+    };
+});
+
 </script>
 
 <template>
     <Select v-model="localValue" :options="year_levels" filter autoFilterFocus showClear optionLabel="label"
-        :placeholder="customPlaceholder" class="w-full"
-        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
+        :placeholder="customPlaceholder" class="w-full" :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.label }}</div>
@@ -107,3 +128,13 @@ watch(localValue, (val) => {
         </template>
     </Select>
 </template>
+
+<style>
+.year-level-select-overlay {
+    border-radius: 12px;
+}
+
+.year-level-select-root--compact {
+    border-radius: 0.875rem;
+}
+</style>

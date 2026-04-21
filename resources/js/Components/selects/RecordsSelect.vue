@@ -17,6 +17,10 @@ const props = defineProps({
     class: {
         type: String,
         default: ''
+    },
+    iosCompact: {
+        type: Boolean,
+        default: false,
     }
 });
 
@@ -51,9 +55,44 @@ onMounted(() => {
     // Ensure localValue is initialized correctly
     localValue.value = props.modelValue ? parseInt(props.modelValue) : null;
 });
+
+const resolvedSize = computed(() => {
+    if (props.iosCompact && props.size === 'normal') {
+        return 'small';
+    }
+
+    return props.size;
+});
+
+const selectPt = computed(() => {
+    const basePt = {
+        overlay: { class: 'records-select-overlay overflow-hidden' },
+    };
+
+    if (!props.iosCompact) {
+        return basePt;
+    }
+
+    return {
+        ...basePt,
+        root: { class: 'records-select-root--compact', style: 'min-height: 2.25rem;' },
+        label: { style: 'padding: 0.4375rem 0.75rem; font-size: 0.8125rem; line-height: 1.2;' },
+        dropdown: { style: 'width: 2.25rem;' },
+    };
+});
 </script>
 
 <template>
     <Select v-model="localValue" :options="recordsOptions" optionLabel="label" optionValue="value"
-        :placeholder="customPlaceholder" :size="size" :class="class" showClear />
+        :placeholder="customPlaceholder" :size="resolvedSize" :class="class" showClear :pt="selectPt" />
 </template>
+
+<style>
+.records-select-overlay {
+    border-radius: 12px;
+}
+
+.records-select-root--compact {
+    border-radius: 0.875rem;
+}
+</style>

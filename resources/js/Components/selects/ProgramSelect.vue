@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useApi } from '@/composable/api';
 const props = defineProps({
     modelValue: {
@@ -21,6 +21,10 @@ const props = defineProps({
     customPlaceholderClass: {
         type: String,
         default: ''
+    },
+    iosCompact: {
+        type: Boolean,
+        default: false,
     },
 });
 
@@ -69,20 +73,60 @@ const resolveProgramValue = (value) => {
     return resolveSingleProgram(value);
 };
 
+const isSameProgramSelection = (left, right) => {
+    if (Array.isArray(left) || Array.isArray(right)) {
+        if (!Array.isArray(left) || !Array.isArray(right)) {
+            return false;
+        }
+
+        if (left.length !== right.length) {
+            return false;
+        }
+
+        return left.every((entry, index) => entry === right[index]);
+    }
+
+    return left === right;
+};
+
 // Local value for v-modelroute('scholarshipprograms.getactivelist')
 const localValue = ref(resolveProgramValue(props.modelValue));
 
 watch(
     [() => props.modelValue, () => programs.value],
     () => {
-        localValue.value = resolveProgramValue(props.modelValue);
+        const resolvedValue = resolveProgramValue(props.modelValue);
+
+        if (!isSameProgramSelection(localValue.value, resolvedValue)) {
+            localValue.value = resolvedValue;
+        }
     },
     { immediate: true, deep: true }
 );
 
 watch(localValue, (val) => {
-    emit('update:modelValue', val);
+    if (!isSameProgramSelection(val, props.modelValue)) {
+        emit('update:modelValue', val);
+    }
 }, { deep: true });
+
+const selectPt = computed(() => {
+    const basePt = {
+        overlay: { class: 'program-select-overlay overflow-hidden' },
+        pcFilter: { root: { class: '!rounded-lg !border-gray-300' } },
+    };
+
+    if (!props.iosCompact) {
+        return basePt;
+    }
+
+    return {
+        ...basePt,
+        root: { class: 'program-select-root--compact', style: 'min-height: 2.25rem;' },
+        label: { style: 'padding: 0.4375rem 0.75rem; font-size: 0.8125rem; line-height: 1.2;' },
+        dropdown: { style: 'width: 2.25rem;' },
+    };
+});
 
 // Watch for changes in data and update programs
 watch(
@@ -107,7 +151,7 @@ onMounted(fetchData);
 <template>
     <Select v-model="localValue" :options="programs" filter :filterFields="['name', 'shortname']" autoFilterFocus
         showClear optionLabel="name" :placeholder="customPlaceholder" class="w-full"
-        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
+        :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.shortname }}</div>
@@ -124,3 +168,13 @@ onMounted(fetchData);
         </template>
     </Select>
 </template>
+
+<style>
+.program-select-overlay {
+    border-radius: 12px;
+}
+
+.program-select-root--compact {
+    border-radius: 0.875rem;
+}
+</style>

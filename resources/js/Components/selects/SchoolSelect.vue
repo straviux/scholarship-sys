@@ -22,6 +22,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    iosCompact: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -83,20 +87,61 @@ const resolveSchoolValue = (value) => {
     return resolveSingleSchool(value);
 };
 
+const isSameSchoolSelection = (left, right) => {
+    if (Array.isArray(left) || Array.isArray(right)) {
+        if (!Array.isArray(left) || !Array.isArray(right)) {
+            return false;
+        }
+
+        if (left.length !== right.length) {
+            return false;
+        }
+
+        return left.every((entry, index) => entry === right[index]);
+    }
+
+    return left === right;
+};
+
 // Local value for v-modelroute('scholarshipschools.getactivelist')
 const localValue = ref(resolveSchoolValue(props.modelValue));
 
 watch(
     [() => props.modelValue, () => schoolOptions.value],
     () => {
-        localValue.value = resolveSchoolValue(props.modelValue);
+        const resolvedValue = resolveSchoolValue(props.modelValue);
+
+        if (!isSameSchoolSelection(localValue.value, resolvedValue)) {
+            localValue.value = resolvedValue;
+        }
     },
     { immediate: true, deep: true }
 );
 
 watch(localValue, (val) => {
-    emit('update:modelValue', val);
+    if (!isSameSchoolSelection(val, props.modelValue)) {
+        emit('update:modelValue', val);
+    }
 }, { deep: true });
+
+const selectPt = computed(() => {
+    const basePt = {
+        overlay: { class: 'school-select-overlay overflow-hidden' },
+        pcFilter: { root: { class: '!rounded-lg !border-gray-300' } },
+    };
+
+    if (!props.iosCompact) {
+        return basePt;
+    }
+
+    return {
+        ...basePt,
+        root: { class: 'school-select-root--compact', style: 'min-height: 2.25rem;' },
+        labelContainer: { style: 'padding: 0.4375rem 0.75rem;' },
+        label: { style: 'padding: 0.4375rem 0.75rem; font-size: 0.8125rem; line-height: 1.2;' },
+        dropdown: { style: 'width: 2.25rem;' },
+    };
+});
 
 // Watch for changes in data and update schools
 watch(
@@ -117,7 +162,7 @@ onMounted(fetchData);
     <MultiSelect v-if="multiple" v-model="localValue" :options="schoolOptions" filter autoFilterFocus showClear
         optionLabel="name" :placeholder="customPlaceholder" class="w-full" :filterFields="['name', 'shortname']"
         :maxSelectedLabels="3" :selectedItemsLabel="'{0} schools selected'" showSelectAll
-        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
+        :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #chip="slotProps">
             <div class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded uppercase mr-1">
                 {{ slotProps.value.shortname }}
@@ -139,7 +184,7 @@ onMounted(fetchData);
     <!-- Select for single selection -->
     <Select v-else v-model="localValue" :options="schoolOptions" filter autoFilterFocus showClear optionLabel="name"
         :placeholder="customPlaceholder" class="w-full" :filterFields="['name', 'shortname']"
-        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
+        :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 {{ slotProps.value.shortname }}
@@ -161,3 +206,13 @@ onMounted(fetchData);
         </template>
     </Select>
 </template>
+
+<style>
+.school-select-overlay {
+    border-radius: 12px;
+}
+
+.school-select-root--compact {
+    border-radius: 0.875rem;
+}
+</style>

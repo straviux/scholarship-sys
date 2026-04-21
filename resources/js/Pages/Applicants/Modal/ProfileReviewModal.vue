@@ -7,7 +7,7 @@ import { usePermission } from '@/composable/permissions';
 import { Tag } from 'primevue';
 import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
 
-const { hasRole } = usePermission();
+const { hasRole, hasPermission } = usePermission();
 
 const props = defineProps({
     visible: Boolean,
@@ -15,16 +15,24 @@ const props = defineProps({
     applicants: Array,
 });
 
-const emit = defineEmits(['update:visible', 'interview', 'closed']);
+const emit = defineEmits(['update:visible', 'interview', 'edit-profile', 'closed']);
 
 const reviewRequirements = ref([]);
 const currentProfileIndex = ref(-1);
 const currentApplicant = ref(null);
 const showPreviewModal = ref(false);
 const previewFile = ref(null);
+const actionPopover = ref(null);
 
 const hasPreviousProfile = computed(() => currentProfileIndex.value > 0);
 const hasNextProfile = computed(() => currentProfileIndex.value < (props.applicants?.length || 0) - 1);
+const canInterview = computed(() => hasRole('administrator') || hasRole('program_manager') || hasRole('screening-officer'));
+const canEditProfile = computed(() => hasPermission('applicants.edit'));
+const hasActionMenu = computed(() => canInterview.value || canEditProfile.value);
+
+function hideActionPopover() {
+    actionPopover.value?.hide();
+}
 
 watch(() => props.applicant, (newApplicant) => {
     if (newApplicant && props.visible) {
@@ -36,6 +44,7 @@ watch(() => props.applicant, (newApplicant) => {
 
 watch(() => props.visible, (val) => {
     if (!val) {
+        hideActionPopover();
         currentApplicant.value = null;
         reviewRequirements.value = [];
         currentProfileIndex.value = -1;
@@ -44,6 +53,7 @@ watch(() => props.visible, (val) => {
 });
 
 function close() {
+    hideActionPopover();
     emit('update:visible', false);
 }
 
@@ -113,6 +123,7 @@ const downloadRequirementFile = (requirement) => {
 
 const navigateTo = (index) => {
     if (index < 0 || index >= (props.applicants?.length || 0)) return;
+    hideActionPopover();
     currentProfileIndex.value = index;
     currentApplicant.value = props.applicants[index];
     loadRequirements(currentApplicant.value.profile_id);
@@ -121,9 +132,20 @@ const navigateTo = (index) => {
 const goToPreviousProfile = () => navigateTo(currentProfileIndex.value - 1);
 const goToNextProfile = () => navigateTo(currentProfileIndex.value + 1);
 
+const toggleActionPopover = (event) => {
+    actionPopover.value?.toggle(event);
+};
+
 const markAsInterviewed = () => {
     if (!currentApplicant.value) return;
+    hideActionPopover();
     emit('interview', currentApplicant.value);
+};
+
+const editProfile = () => {
+    if (!currentApplicant.value) return;
+    hideActionPopover();
+    emit('edit-profile', currentApplicant.value);
 };
 
 const visitProfile = () => {
@@ -171,11 +193,26 @@ onBeforeUnmount(() => {
                         <AppIcon name="times" :size="14" />
                     </button>
                     <span class="ios-nav-title">Profile Review</span>
-                    <button
-                        v-if="hasRole('administrator') || hasRole('program_manager') || hasRole('screening-officer')"
-                        class="ios-nav-btn ios-nav-action" @click="markAsInterviewed">
-                        <AppIcon name="comments" :size="13" style="margin-right: 4px;" />Interview
-                    </button>
+                    <template v-if="hasActionMenu">
+                        <button class="ios-nav-btn ios-nav-action ios-nav-dropdown"
+                            @click="toggleActionPopover($event)">
+                            Actions
+                            <AppIcon name="chevron-down" :size="11" />
+                        </button>
+                        <Popover ref="actionPopover">
+                            <div class="profile-review-action-menu">
+                                <button v-if="canInterview" class="profile-review-action-item"
+                                    @click="markAsInterviewed">
+                                    <AppIcon name="comments" :size="14" class="profile-review-action-icon" />
+                                    <span>Interview</span>
+                                </button>
+                                <button v-if="canEditProfile" class="profile-review-action-item" @click="editProfile">
+                                    <AppIcon name="pencil" :size="14" class="profile-review-action-icon" />
+                                    <span>Edit Profile</span>
+                                </button>
+                            </div>
+                        </Popover>
+                    </template>
                     <span v-else class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
                 </div>
 
@@ -211,7 +248,7 @@ onBeforeUnmount(() => {
                                     <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
                                         <Tag severity="info">
                                             <span style="font-size: 10px;">#{{ currentApplicant.sequence_number || '-'
-                                            }} {{ currentApplicant.scholarship_grant?.[0]?.program?.shortname
+                                                }} {{ currentApplicant.scholarship_grant?.[0]?.program?.shortname
                                                 }}</span>
                                         </Tag>
                                         <Tag severity="warn">
@@ -306,17 +343,17 @@ onBeforeUnmount(() => {
                                                     <span class="ios-info-label">Gender</span>
                                                     <span class="ios-info-value">{{ currentApplicant.gender === 'M' ?
                                                         'Male' : currentApplicant.gender === 'F' ? 'Female' : 'N/A'
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Contact</span>
                                                     <span class="ios-info-value">{{ currentApplicant.contact_no || 'N/A'
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Email</span>
                                                     <span class="ios-info-value">{{ currentApplicant.email || 'N/A'
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div class="ios-info-item" style="grid-column: 1 / -1;">
                                                     <span class="ios-info-label">Income</span>
@@ -360,13 +397,13 @@ onBeforeUnmount(() => {
                                                     <span class="ios-info-label">Year Level</span>
                                                     <span class="ios-info-value">{{
                                                         currentApplicant.scholarship_grant?.[0]?.year_level || 'N/A'
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Academic Year</span>
                                                     <span class="ios-info-value">{{
                                                         currentApplicant.scholarship_grant?.[0]?.academic_year || 'N/A'
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Term</span>
@@ -395,14 +432,17 @@ onBeforeUnmount(() => {
                                                 </div>
                                                 <div class="ios-family-info">
                                                     <div><span class="ios-info-label">Name</span><span
-                                                            class="ios-info-value">{{ currentApplicant.father_name ||
-                                                                'N/A' }}</span></div>
+                                                            class="ios-info-value">{{
+                                                                currentApplicant.father_name ||
+                                                            'N/A' }}</span></div>
                                                     <div><span class="ios-info-label">Occupation</span><span
-                                                            class="ios-info-value">{{ currentApplicant.father_occupation
-                                                                || 'N/A' }}</span></div>
+                                                            class="ios-info-value">{{
+                                                                currentApplicant.father_occupation
+                                                            || 'N/A' }}</span></div>
                                                     <div><span class="ios-info-label">Contact</span><span
-                                                            class="ios-info-value">{{ currentApplicant.father_contact_no
-                                                                || 'N/A' }}</span></div>
+                                                            class="ios-info-value">{{
+                                                                currentApplicant.father_contact_no
+                                                            || 'N/A' }}</span></div>
                                                 </div>
                                             </div>
                                             <!-- Mother -->
@@ -413,14 +453,17 @@ onBeforeUnmount(() => {
                                                 </div>
                                                 <div class="ios-family-info">
                                                     <div><span class="ios-info-label">Name</span><span
-                                                            class="ios-info-value">{{ currentApplicant.mother_name ||
-                                                                'N/A' }}</span></div>
+                                                            class="ios-info-value">{{
+                                                                currentApplicant.mother_name ||
+                                                            'N/A' }}</span></div>
                                                     <div><span class="ios-info-label">Occupation</span><span
-                                                            class="ios-info-value">{{ currentApplicant.mother_occupation
-                                                                || 'N/A' }}</span></div>
+                                                            class="ios-info-value">{{
+                                                                currentApplicant.mother_occupation
+                                                            || 'N/A' }}</span></div>
                                                     <div><span class="ios-info-label">Contact</span><span
-                                                            class="ios-info-value">{{ currentApplicant.mother_contact_no
-                                                                || 'N/A' }}</span></div>
+                                                            class="ios-info-value">{{
+                                                                currentApplicant.mother_contact_no
+                                                            || 'N/A' }}</span></div>
                                                 </div>
                                             </div>
                                             <!-- Guardian -->
@@ -431,8 +474,9 @@ onBeforeUnmount(() => {
                                                 </div>
                                                 <div class="ios-family-info">
                                                     <div><span class="ios-info-label">Name</span><span
-                                                            class="ios-info-value">{{ currentApplicant.guardian_name ||
-                                                                'N/A' }}</span></div>
+                                                            class="ios-info-value">{{
+                                                                currentApplicant.guardian_name ||
+                                                            'N/A' }}</span></div>
                                                     <div><span class="ios-info-label">Occupation</span><span
                                                             class="ios-info-value">{{
                                                                 currentApplicant.guardian_occupation || 'N/A' }}</span>
@@ -459,7 +503,7 @@ onBeforeUnmount(() => {
                         <AppIcon name="chevron-left" :size="12" style="margin-right: 4px;" />Previous
                     </button>
                     <span class="ios-footer-counter">{{ currentProfileIndex + 1 }} / {{ applicants?.length || 0
-                    }}</span>
+                        }}</span>
                     <button class="ios-footer-btn" @click="goToNextProfile" :disabled="!hasNextProfile">
                         Next
                         <AppIcon name="chevron-right" :size="12" style="margin-left: 4px;" />
@@ -486,6 +530,10 @@ onBeforeUnmount(() => {
     font-size: 14px;
     display: flex;
     align-items: center;
+}
+
+.ios-nav-dropdown {
+    gap: 4px;
 }
 
 /* Override: rows have larger padding than global 4px 16px */
@@ -576,6 +624,39 @@ onBeforeUnmount(() => {
     color: #8E8E93;
     font-weight: 500;
 }
+
+.profile-review-action-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 168px;
+}
+
+.profile-review-action-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 10px 12px;
+    border-radius: 10px;
+    color: #1f2937;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    transition: background 0.15s ease;
+}
+
+.profile-review-action-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.profile-review-action-icon {
+    color: #007AFF;
+    flex-shrink: 0;
+}
 </style>
 
 <style>
@@ -616,6 +697,18 @@ onBeforeUnmount(() => {
 }
 
 .dark .ios-footer-btn {
+    color: #60a5fa !important;
+}
+
+.dark .profile-review-action-item {
+    color: #d1d5db !important;
+}
+
+.dark .profile-review-action-item:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .profile-review-action-icon {
     color: #60a5fa !important;
 }
 

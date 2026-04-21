@@ -1,4 +1,4 @@
-﻿import XLSXStyle from 'xlsx-js-style';
+﻿import * as XLSXStyle from 'xlsx';
 
 // Columns: # | Program | Fiscal Year | Allotment | Disbursed | Remaining | Usage %
 const NC = 7;

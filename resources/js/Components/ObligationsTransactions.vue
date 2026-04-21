@@ -37,9 +37,12 @@
             </div>
 
             <!-- Right: Actions -->
-            <div class="flex-shrink-0">
+            <div class="flex-shrink-0 gap-2">
                 <AppButton v-if="hasPermission('applicants.edit')" icon="plus" label="Add Disbursement"
                     @click="showAddModal = true" severity="success" size="small" raised disabled />
+                <p class="text-xs text-gray-400 dark:text-gray-300 p-2">Adding disbursement is temporarily disabled. Use
+                    Fund
+                    Transaction instead.</p>
             </div>
         </div>
 
@@ -93,8 +96,8 @@
 
                                 <!-- Toggle Chevron -->
                                 <td class="py-[11px] px-3 text-center w-9">
-                                    <AppIcon name="chevron-right" :size="11"
-                                        class="text-[#c7c7cc] transition-transform duration-200"
+                                    <AppIcon name="chevron-right" :size="18"
+                                        class="text-gray-600 transition-transform duration-200"
                                         :style="{ transform: expandedRows[item.disbursement_id] ? 'rotate(90deg)' : 'rotate(0deg)' }" />
                                 </td>
 

@@ -9,6 +9,10 @@ const props = defineProps({
         type: [String, Number],
         default: null,
     },
+    loadAllWhenNoProgram: {
+        type: Boolean,
+        default: false,
+    },
     modelValue: {
         type: [String, Number, Object, Array],
         default: null,
@@ -26,6 +30,10 @@ const props = defineProps({
         default: 'Select Course'
     },
     showNullOption: {
+        type: Boolean,
+        default: false,
+    },
+    iosCompact: {
         type: Boolean,
         default: false,
     },
@@ -93,20 +101,100 @@ const resolveCourseValue = (value) => {
     return resolveSingleCourse(value);
 };
 
+const isSameCourseSelection = (left, right) => {
+    if (Array.isArray(left) || Array.isArray(right)) {
+        if (!Array.isArray(left) || !Array.isArray(right)) {
+            return false;
+        }
+
+        if (left.length !== right.length) {
+            return false;
+        }
+
+        return left.every((entry, index) => entry === right[index]);
+    }
+
+    return left === right;
+};
+
+const getCoursePrimaryLabel = (course) => {
+    if (!course) {
+        return '';
+    }
+
+    if (typeof course === 'string' || typeof course === 'number') {
+        return String(course);
+    }
+
+    return course.shortname || course.name || course.field_of_study || '';
+};
+
+const getCourseSecondaryLabel = (course) => {
+    if (!course || typeof course !== 'object') {
+        return '';
+    }
+
+    if (!course.shortname) {
+        return course.field_of_study || '';
+    }
+
+    if (course.field_of_study) {
+        return course.field_of_study;
+    }
+
+    return course.name && course.name !== course.shortname ? course.name : '';
+};
+
+const getCourseOptionTitle = (course) => {
+    if (!course || course.isNullOption) {
+        return '';
+    }
+
+    return [course.shortname, course.name, course.field_of_study ? `(${course.field_of_study})` : null]
+        .filter(Boolean)
+        .join(' — ')
+        .replace(' — (', ' (');
+};
+
 // Local value for v-model
 const localValue = ref(resolveCourseValue(props.modelValue));
 
 watch(
     [() => props.modelValue, () => courseOptions.value],
     () => {
-        localValue.value = resolveCourseValue(props.modelValue);
+        const resolvedValue = resolveCourseValue(props.modelValue);
+
+        if (!isSameCourseSelection(localValue.value, resolvedValue)) {
+            localValue.value = resolvedValue;
+        }
     },
     { immediate: true, deep: true }
 );
 
 watch(localValue, (val) => {
-    emit('update:modelValue', val);
+    if (!isSameCourseSelection(val, props.modelValue)) {
+        emit('update:modelValue', val);
+    }
 }, { deep: true });
+
+const selectPt = computed(() => {
+    const basePt = {
+        overlay: { class: 'course-select-overlay overflow-hidden' },
+        pcFilter: { root: { class: '!rounded-lg !border-gray-300' } },
+    };
+
+    if (!props.iosCompact) {
+        return basePt;
+    }
+
+    return {
+        ...basePt,
+        root: { class: 'course-select-root--compact', style: 'min-height: 2.25rem;' },
+        labelContainer: { style: 'padding: 0.4375rem 0.75rem;' },
+        label: { style: 'padding: 0.4375rem 0.75rem; font-size: 0.8125rem; line-height: 1.2;' },
+        dropdown: { style: 'width: 2.25rem;' },
+    };
+});
 
 // Watch for changes in data and update courses
 
@@ -115,7 +203,10 @@ watch(
     (newProgramId, oldProgramId) => {
         const requestId = ++latestCourseRequestId;
 
-        if (newProgramId === '' || newProgramId === null || newProgramId === undefined) {
+        const shouldLoadAllCourses = props.loadAllWhenNoProgram
+            && (newProgramId === '' || newProgramId === null || newProgramId === undefined);
+
+        if (!shouldLoadAllCourses && (newProgramId === '' || newProgramId === null || newProgramId === undefined)) {
             loading.value = false;
             courses.value = [];
             return;
@@ -123,9 +214,16 @@ watch(
 
         loading.value = true;
 
-        axios.get(route('courses-api.findbyprogram'), {
-            params: { program_id: newProgramId }
-        }).then(response => {
+        axios.get(
+            shouldLoadAllCourses
+                ? route('courses-api.list')
+                : route('courses-api.findbyprogram'),
+            shouldLoadAllCourses
+                ? undefined
+                : {
+                    params: { program_id: newProgramId }
+                }
+        ).then(response => {
             if (requestId !== latestCourseRequestId) {
                 return;
             }
@@ -154,7 +252,7 @@ watch(
                 : props.modelValue
         );
 
-        if (newProgramId !== '' && newProgramId !== null && oldProgramId !== undefined && !hasExistingSelection) {
+        if (!shouldLoadAllCourses && newProgramId !== '' && newProgramId !== null && oldProgramId !== undefined && !hasExistingSelection) {
             if (props.multiple) {
                 localValue.value = [];
             } else {
@@ -188,16 +286,17 @@ const onSelectHide = () => {
         @show="onSelectShow" @hide="onSelectHide" :filterFields="['name', 'shortname', 'field_of_study']"
         optionLabel="name" :placeholder="customPlaceholder" class="w-full" :maxSelectedLabels="3"
         :selectedItemsLabel="'{0} courses selected'" :loading="loading" showSelectAll showClear
-        :pt="{ overlay: { style: 'max-width: 400px; border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
+        :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #option="slotProps">
-            <div class="uppercase"
-                :title="slotProps.option.isNullOption ? '' : `${slotProps.option.shortname} — ${slotProps.option.name}${slotProps.option.field_of_study ? ' (' + slotProps.option.field_of_study + ')' : ''}`">
+            <div class="uppercase" :title="getCourseOptionTitle(slotProps.option)">
                 <div v-if="slotProps.option.isNullOption">
                     <span class="text-[12px]">{{ slotProps.option.name }}</span>
                 </div>
                 <div v-else>
-                    <div class="text-[12px] font-bold leading-snug">{{ slotProps.option.shortname }}</div>
-                    <div class="text-[10px] text-gray-600 leading-snug">{{ slotProps.option.name }}</div>
+                    <div class="text-[12px] font-bold leading-snug">{{ getCoursePrimaryLabel(slotProps.option) }}</div>
+                    <div class="text-[10px] text-gray-600 leading-snug"
+                        v-if="slotProps.option.name && slotProps.option.name !== getCoursePrimaryLabel(slotProps.option)">
+                        {{ slotProps.option.name }}</div>
                     <div v-if="slotProps.option.field_of_study" class="text-[10px] text-gray-400 leading-snug">{{
                         slotProps.option.field_of_study }}</div>
                 </div>
@@ -205,7 +304,7 @@ const onSelectHide = () => {
         </template>
         <template #chip="slotProps">
             <div class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded uppercase mr-1">
-                {{ slotProps.value.shortname }}
+                {{ getCoursePrimaryLabel(slotProps.value) }}
             </div>
         </template>
     </MultiSelect>
@@ -214,23 +313,25 @@ const onSelectHide = () => {
     <Select ref="select" v-else v-model="localValue" :options="courseOptions" filter @show="onSelectShow"
         @hide="onSelectHide" :filterFields="['name', 'shortname', 'field_of_study']" autoFilterFocus showClear
         :loading="loading" optionLabel="name" :placeholder="customPlaceholder" class="w-full"
-        :pt="{ overlay: { style: 'max-width: 400px; border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
+        :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="uppercase truncate">
-                {{ slotProps.value.shortname }}<span v-if="slotProps.value.field_of_study"
-                    class="text-gray-500 font-normal text-[11px]"> — {{ slotProps.value.field_of_study }}</span>
+                {{ getCoursePrimaryLabel(slotProps.value) }}<span v-if="getCourseSecondaryLabel(slotProps.value)"
+                    class="text-gray-500 font-normal text-[11px]"> — {{ getCourseSecondaryLabel(slotProps.value)
+                    }}</span>
             </div>
             <span v-else>{{ slotProps.placeholder }}</span>
         </template>
         <template #option="slotProps">
-            <div class="uppercase"
-                :title="slotProps.option.isNullOption ? '' : `${slotProps.option.shortname} — ${slotProps.option.name}${slotProps.option.field_of_study ? ' (' + slotProps.option.field_of_study + ')' : ''}`">
+            <div class="uppercase" :title="getCourseOptionTitle(slotProps.option)">
                 <div v-if="slotProps.option.isNullOption">
                     <span class="text-[12px]">{{ slotProps.option.name }}</span>
                 </div>
                 <div v-else>
-                    <div class="text-[12px] font-bold leading-snug">{{ slotProps.option.shortname }}</div>
-                    <div class="text-[10px] text-gray-600 leading-snug">{{ slotProps.option.name }}</div>
+                    <div class="text-[12px] font-bold leading-snug">{{ getCoursePrimaryLabel(slotProps.option) }}</div>
+                    <div class="text-[10px] text-gray-600 leading-snug"
+                        v-if="slotProps.option.name && slotProps.option.name !== getCoursePrimaryLabel(slotProps.option)">
+                        {{ slotProps.option.name }}</div>
                     <div v-if="slotProps.option.field_of_study" class="text-[10px] text-gray-400 leading-snug">{{
                         slotProps.option.field_of_study }}</div>
                 </div>
@@ -238,5 +339,16 @@ const onSelectHide = () => {
         </template>
     </Select>
 </template>
+
+<style>
+.course-select-overlay {
+    max-width: 400px;
+    border-radius: 12px;
+}
+
+.course-select-root--compact {
+    border-radius: 0.875rem;
+}
+</style>
 
 <style src="vue-multiselect/dist/vue-multiselect.css"></style>

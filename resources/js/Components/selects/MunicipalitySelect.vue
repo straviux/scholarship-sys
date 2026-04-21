@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useCachedData } from '@/composable/useCachedData';
 import axios from 'axios';
 
@@ -23,6 +23,10 @@ const props = defineProps({
     customPlaceholderClass: {
         type: String,
         default: ''
+    },
+    iosCompact: {
+        type: Boolean,
+        default: false,
     },
 });
 
@@ -108,6 +112,25 @@ watch(localValue, (val) => {
     emit('update:modelValue', val);
 }, { deep: true });
 
+const selectPt = computed(() => {
+    const basePt = {
+        overlay: { class: 'municipality-select-overlay overflow-hidden' },
+        pcFilter: { root: { class: '!rounded-lg !border-gray-300' } },
+    };
+
+    if (!props.iosCompact) {
+        return basePt;
+    }
+
+    return {
+        ...basePt,
+        root: { class: 'municipality-select-root--compact', style: 'min-height: 2.25rem;' },
+        labelContainer: { style: 'padding: 0.4375rem 0.75rem;' },
+        label: { style: 'padding: 0.4375rem 0.75rem; font-size: 0.8125rem; line-height: 1.2;' },
+        dropdown: { style: 'width: 2.25rem;' },
+    };
+});
+
 
 onMounted(fetchMunicipalities);</script>
 
@@ -116,7 +139,7 @@ onMounted(fetchMunicipalities);</script>
     <MultiSelect v-if="multiple" v-model="localValue" :options="municipalities" filter :filterFields="['name']"
         optionLabel="name" :placeholder="customPlaceholder" :loading="loading" class="w-full" :maxSelectedLabels="3"
         :selectedItemsLabel="'{0} municipalities selected'" showSelectAll showClear
-        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
+        :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #option="slotProps">
             <div class="flex items-start uppercase">
                 <div>{{ slotProps.option.name }}</div>
@@ -132,7 +155,7 @@ onMounted(fetchMunicipalities);</script>
     <!-- Use Select when multiple is false -->
     <Select v-else v-model="localValue" :options="municipalities" filter :filterFields="['name']" autoFilterFocus
         showClear optionLabel="name" :placeholder="customPlaceholder" :loading="loading" class="w-full"
-        :pt="{ overlay: { style: 'border-radius: 12px; overflow: hidden' }, pcFilter: { root: { class: '!rounded-lg !border-gray-300' } } }">
+        :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
                 <div>{{ slotProps.value.name }}</div>
@@ -149,3 +172,13 @@ onMounted(fetchMunicipalities);</script>
         </template>
     </Select>
 </template>
+
+<style>
+.municipality-select-overlay {
+    border-radius: 12px;
+}
+
+.municipality-select-root--compact {
+    border-radius: 0.875rem;
+}
+</style>

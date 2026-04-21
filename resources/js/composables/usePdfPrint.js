@@ -42,15 +42,22 @@ export function usePdfPrint() {
 	 * @param {string} bodyHtml  – inner body HTML from a template generator
 	 * @param {string} [title]   – <title> / suggested filename
 	 * @param {'a4'|'long'} [paperSize] – paper size (default: 'a4')
+	 * @param {string} [extraCss] – additional CSS appended to the print document
 	 * @returns {string}
 	 */
-	const buildHtmlDoc = (bodyHtml, title = 'Document', paperSize = 'a4') => `<!DOCTYPE html>
+	const buildHtmlDoc = (
+		bodyHtml,
+		title = 'Document',
+		paperSize = 'a4',
+		extraCss = '',
+	) => `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
-  <style>${getPdfCss(paperSize)}</style>
+  <style>${getPdfCss(paperSize)}
+${extraCss}</style>
 </head>
 <body>${bodyHtml}</body>
 </html>`;
@@ -60,14 +67,15 @@ export function usePdfPrint() {
 	 * @param {string} bodyHtml
 	 * @param {string} [title]
 	 * @param {'a4'|'long'} [paperSize]
+	 * @param {string} [extraCss]
 	 */
-	const printHtml = (bodyHtml, title = 'Document', paperSize = 'a4') => {
+	const printHtml = (bodyHtml, title = 'Document', paperSize = 'a4', extraCss = '') => {
 		const win = window.open('', '_blank');
 		if (!win) {
 			alert('Pop-up blocked. Please allow pop-ups for this site and try again.');
 			return;
 		}
-		win.document.write(buildHtmlDoc(bodyHtml, title, paperSize));
+		win.document.write(buildHtmlDoc(bodyHtml, title, paperSize, extraCss));
 		win.document.close();
 		win.onload = () => {
 			win.focus();
