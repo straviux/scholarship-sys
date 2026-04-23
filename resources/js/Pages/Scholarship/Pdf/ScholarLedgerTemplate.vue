@@ -55,7 +55,11 @@
                         </tr>
                         <tr>
                             <td :style="LBL">OTHER ASSISTANCE</td>
-                            <td :style="VAL">{{ upper(otherAssistance) || 'N/A' }}</td>
+                            <td :style="VAL_HTML">
+                                <div v-if="otherAssistanceHtml" v-html="otherAssistanceHtml" style="line-height: 1.4;">
+                                </div>
+                                <span v-else>N/A</span>
+                            </td>
                         </tr>
                         <tr>
                             <td :style="LBL">LICENSURE EXAMINATION RESULT</td>
@@ -111,15 +115,18 @@
                                 <td v-if="ti === 0 && ri === 0" :rowspan="yg.totalRows" :style="TD_COV">
                                     {{ upper(yg.yearLevel) }}
                                 </td>
-                                <td :style="TD">{{ d.academic_year || '—' }}</td>
-                                <td :style="TD">{{ d.semester || '—' }}</td>
-                                <td :style="TD">{{ formatDate(d.date_obligated) }}</td>
-                                <td :style="TD">{{ d.obr_no || '—' }}</td>
-                                <td :style="TD">{{ upper(d.disbursement_type) || '—' }}</td>
-                                <td :style="TD_AMT">{{ d.amount != null ? money(d.amount) : '—' }}</td>
-                                <td v-if="ri === 0" :rowspan="term.rows.length" :style="TD_AMT">
-                                    {{ resolvedRosLabel(term.rows[0]) }}
-                                </td>
+                                <td v-if="isReviewPlaceholderRow(d)" colspan="7" :style="TD">N/A</td>
+                                <template v-else>
+                                    <td :style="TD">{{ d.academic_year || '—' }}</td>
+                                    <td :style="TD">{{ d.semester || '—' }}</td>
+                                    <td :style="TD">{{ formatDate(d.date_obligated) }}</td>
+                                    <td :style="TD">{{ d.obr_no || '—' }}</td>
+                                    <td :style="TD">{{ upper(d.disbursement_type) || '—' }}</td>
+                                    <td :style="TD_AMT">{{ d.amount != null ? money(d.amount) : '—' }}</td>
+                                    <td v-if="ri === 0" :rowspan="term.rows.length" :style="TD_AMT">
+                                        {{ resolvedRosLabel(term.rows[0]) }}
+                                    </td>
+                                </template>
                             </tr>
                         </template>
                     </template>
@@ -195,6 +202,7 @@ const props = defineProps({
 /* ── inline style constants (resolved by Vue before innerHTML capture) ── */
 const LBL = 'padding:2px 4px 2px 0;vertical-align:top;font-weight:600;font-size:9px;text-transform:uppercase;white-space:nowrap;';
 const VAL = 'padding:2px 0 2px 12px;vertical-align:top;font-weight:600;font-size:9px;text-transform:uppercase;';
+const VAL_HTML = 'padding:2px 0 2px 12px;vertical-align:top;font-weight:600;font-size:9px;';
 const TH = 'color:#333;font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:0.4px;text-align:center;padding:5px 4px;border:1px solid #000;';
 const TD = 'border:1px solid #000;padding:4px 5px;vertical-align:middle;text-align:center;';
 const TD_AMT = 'border:1px solid #000;padding:4px 5px;vertical-align:middle;text-align:center;font-weight:600;color:#333;';
@@ -205,8 +213,25 @@ const TD_TOT = 'border:1px solid #000;border-top:2px solid #000;padding:4px 5px;
 
 const upper = (v) => (v ? String(v).toUpperCase() : '');
 
+const getRichTextTextContent = (value) => {
+    const html = String(value ?? '').trim();
+    if (!html) return '';
+
+    if (typeof DOMParser !== 'undefined') {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return (doc.body.textContent || '')
+            .replace(/\u00a0/g, ' ')
+            .trim();
+    }
+
+    return html
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .trim();
+};
+
 const money = (val) =>
-    parseFloat(val || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    `₱${parseFloat(val || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const formatDate = (d) => {
     if (!d) return '—';
@@ -259,6 +284,8 @@ const resolvedRosLabel = (entry) => {
     return `${months} MONTHS`;
 };
 
+const isReviewPlaceholderRow = (entry) => entry?.id === 'ledger-review-placeholder';
+
 /* ── profile derived ─────────────────────────────────────── */
 
 const upperName = computed(() => {
@@ -309,8 +336,8 @@ const latestSchoolName = computed(() =>
     latestRecord.value?.school_name ?? latestRecord.value?.school?.name ?? '—'
 );
 
-const otherAssistance = computed(() =>
-    props.otherAssistance ?? ''
+const otherAssistanceHtml = computed(() =>
+    getRichTextTextContent(props.otherAssistance) ? props.otherAssistance : ''
 );
 
 const licensureExaminationResult = computed(() =>
@@ -378,6 +405,24 @@ const yearGroupedRows = computed(() => {
 
         yearMap[yearLevel][termKey].push(entry);
     });
+
+    if (!yearMap.REVIEW) {
+        yearMap.REVIEW = {
+            '__review__': [{
+                id: 'ledger-review-placeholder',
+                sortIndex: Number.MAX_SAFE_INTEGER,
+                year_level: 'REVIEW',
+                academic_year: '',
+                semester: 'REVIEW',
+                date_obligated: '',
+                obr_no: '',
+                disbursement_type: '',
+                amount: null,
+                ros_months: '',
+            }],
+        };
+        yearSequence.push('REVIEW');
+    }
 
     return yearSequence.map((yearLevel) => {
         const termList = Object.entries(yearMap[yearLevel]).map(([termKey, rows]) => ({ termKey, rows }));

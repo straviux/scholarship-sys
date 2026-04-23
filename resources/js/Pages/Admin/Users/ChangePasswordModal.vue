@@ -1,6 +1,7 @@
 <template>
 
-    <Dialog :visible="show" modal :closable="false" header="Change Password" :style="{ width: '400px' }">
+    <Dialog :visible="show" modal :closable="false" header="Change Password"
+        :style="{ width: 'calc(100vw - 2rem)', maxWidth: '400px' }">
         <div class="mb-4">
             <label class="block mb-1 font-semibold">User</label>
             <InputText :value="user.username" type="text" class="w-full border rounded p-2" disabled />

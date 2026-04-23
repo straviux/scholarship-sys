@@ -169,6 +169,16 @@ class ScholarshipProfile extends Model
         return $this->hasMany(ScholarshipRecord::class, 'profile_id', 'profile_id');
     }
 
+    public function academicEnrollments()
+    {
+        return $this->hasMany(AcademicEnrollment::class, 'profile_id', 'profile_id');
+    }
+
+    public function returnOfServiceRecords()
+    {
+        return $this->hasMany(ReturnOfService::class, 'profile_id', 'profile_id');
+    }
+
     public function scholarLedger()
     {
         return $this->hasOne(ScholarLedger::class, 'profile_id', 'profile_id');

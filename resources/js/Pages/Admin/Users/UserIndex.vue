@@ -236,8 +236,8 @@ const formatRoleName = (roleName) => {
         </div>
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showConfirmDeleteUserModal" :style="{ width: '450px' }" header="Confirm Deletion"
-            :modal="true" :closable="false">
+        <Dialog v-model:visible="showConfirmDeleteUserModal" :style="{ width: 'calc(100vw - 2rem)', maxWidth: '450px' }"
+            header="Confirm Deletion" :modal="true" :closable="false">
             <div class="flex items-start gap-4">
                 <AppIcon name="exclamation-triangle" :size="30" class="text-red-500 mt-1" />
                 <div class="flex-1">

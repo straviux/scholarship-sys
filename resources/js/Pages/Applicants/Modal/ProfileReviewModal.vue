@@ -15,7 +15,7 @@ const props = defineProps({
     applicants: Array,
 });
 
-const emit = defineEmits(['update:visible', 'interview', 'edit-profile', 'closed']);
+const emit = defineEmits(['update:visible', 'interview', 'edit-profile', 'edit-requirements', 'closed']);
 
 const reviewRequirements = ref([]);
 const currentProfileIndex = ref(-1);
@@ -26,9 +26,11 @@ const actionPopover = ref(null);
 
 const hasPreviousProfile = computed(() => currentProfileIndex.value > 0);
 const hasNextProfile = computed(() => currentProfileIndex.value < (props.applicants?.length || 0) - 1);
+const canViewFullProfile = computed(() => hasPermission('scholarships.view'));
+const canEditRequirements = computed(() => hasPermission('applicants.view'));
 const canInterview = computed(() => hasRole('administrator') || hasRole('program_manager') || hasRole('screening-officer'));
 const canEditProfile = computed(() => hasPermission('applicants.edit'));
-const hasActionMenu = computed(() => canInterview.value || canEditProfile.value);
+const hasActionMenu = computed(() => canViewFullProfile.value || canEditRequirements.value || canInterview.value || canEditProfile.value);
 
 function hideActionPopover() {
     actionPopover.value?.hide();
@@ -148,6 +150,12 @@ const editProfile = () => {
     emit('edit-profile', currentApplicant.value);
 };
 
+const editRequirements = () => {
+    if (!currentApplicant.value) return;
+    hideActionPopover();
+    emit('edit-requirements', currentApplicant.value);
+};
+
 const visitProfile = () => {
     if (!currentApplicant.value) return;
     router.visit(route('scholarship.profile.show', currentApplicant.value.profile_id));
@@ -201,6 +209,16 @@ onBeforeUnmount(() => {
                         </button>
                         <Popover ref="actionPopover">
                             <div class="profile-review-action-menu">
+                                <button v-if="canViewFullProfile" class="profile-review-action-item"
+                                    @click="visitProfile">
+                                    <AppIcon name="eye" :size="14" class="profile-review-action-icon" />
+                                    <span>View Full Profile</span>
+                                </button>
+                                <button v-if="canEditRequirements" class="profile-review-action-item"
+                                    @click="editRequirements">
+                                    <AppIcon name="book-check" :size="14" class="profile-review-action-icon" />
+                                    <span>Edit Requirements</span>
+                                </button>
                                 <button v-if="canInterview" class="profile-review-action-item"
                                     @click="markAsInterviewed">
                                     <AppIcon name="comments" :size="14" class="profile-review-action-icon" />

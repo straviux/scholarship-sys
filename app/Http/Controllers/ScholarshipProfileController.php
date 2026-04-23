@@ -15,15 +15,17 @@ use App\Models\ScholarshipRecord;
 use App\Models\SystemOption;
 use App\Models\Course;
 use App\Models\School;
+use App\Models\User;
 use App\Services\ScholarshipApprovalService;
+use App\Services\LegacyAcademicTermReviewService;
 use Illuminate\Support\Facades\Auth;
-use App\Services\ScholarshipCompletionService;
 use App\Services\ActivityLogService;
 use App\Services\ScholarshipExpenseProjectionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Exists;
 use Inertia\Inertia;
@@ -34,6 +36,8 @@ use Spatie\Browsershot\Browsershot;
 
 class ScholarshipProfileController extends Controller
 {
+    private const CURRENT_SCHOLARSHIP_RECORD_STATUSES = ['pending', 'approved', 'active'];
+
     use ManagesChromeForPdf;
 
     /**
@@ -64,9 +68,7 @@ class ScholarshipProfileController extends Controller
 
         if ($new_profile && $hasAcademicInfo) {
             // Check for ongoing or pending scholarship record
-            $hasActive = ScholarshipRecord::where('profile_id', $new_profile->profile_id)
-                ->whereIn('unified_status', ['pending', 'approved', 'active'])
-                ->exists();
+            $hasActive = $this->hasCurrentScholarshipRecord($new_profile->profile_id);
             if (!$hasActive) {
                 // Get course - prefer ID, fallback to name lookup
                 $course = null;
@@ -161,9 +163,7 @@ class ScholarshipProfileController extends Controller
             $program_id = $request->program_id ?? ($course ? $course->scholarship_program_id : null);
 
             // Check for ongoing or pending scholarship record
-            $hasActive = ScholarshipRecord::where('profile_id', $profile->profile_id)
-                ->whereIn('unified_status', ['pending', 'approved', 'active'])
-                ->exists();
+            $hasActive = $this->hasCurrentScholarshipRecord($profile->profile_id);
             if (!$hasActive) {
                 // Create new scholarship record
 
@@ -191,9 +191,7 @@ class ScholarshipProfileController extends Controller
 
                 // If not found by ID, try to find the active/pending record
                 if (!$record) {
-                    $record = ScholarshipRecord::where('profile_id', $profile->profile_id)
-                        ->whereIn('unified_status', ['pending', 'approved', 'active'])
-                        ->first();
+                    $record = $this->findLatestCurrentScholarshipRecord($profile->profile_id);
                 }
 
                 if ($record) {
@@ -426,9 +424,7 @@ class ScholarshipProfileController extends Controller
         $course = $request->input('course');
 
         // Check for ongoing or pending records
-        $hasActive = ScholarshipRecord::where('profile_id', $profile_id)
-            ->whereIn('unified_status', ['pending', 'approved', 'active'])
-            ->exists();
+        $hasActive = $this->hasCurrentScholarshipRecord($profile_id);
 
         if ($hasActive) {
             return response()->json(['error' => true, 'message' => 'Profile has ongoing or pending scholarship record.'], 422);
@@ -479,8 +475,9 @@ class ScholarshipProfileController extends Controller
      */
     public function restore($id)
     {
-        // Check if user is administrator
-        if (!Auth::user()?->hasRole('administrator')) {
+        $user = Auth::user();
+
+        if (!$user instanceof User || !$user->hasRole('administrator')) {
             abort(403, 'Only administrators can restore deleted profiles.');
         }
 
@@ -711,9 +708,15 @@ class ScholarshipProfileController extends Controller
     public function profiles(Request $request)
     {
         // Get all scholarship profiles with their latest scholarship record and all records
-        $query = ScholarshipProfile::with([
+        $with = [
             'latestScholarshipRecord' => function ($q) {
                 $q->with(['program', 'course', 'school', 'attachments']);
+            },
+            'academicEnrollments' => function ($q) {
+                $q->select(['id', 'profile_id', 'graduation_date'])
+                    ->whereNotNull('graduation_date')
+                    ->orderByDesc('graduation_date')
+                    ->orderByDesc('updated_at');
             },
             'scholarshipGrant' => function ($q) {
                 $q->with([
@@ -727,7 +730,20 @@ class ScholarshipProfileController extends Controller
             'disbursements' => function ($q) {
                 $q->with('attachments');
             }
-        ]);
+        ];
+
+        if (Schema::hasTable('return_of_service')) {
+            $with['returnOfServiceRecords'] = function ($q) {
+                $q->select(['id', 'profile_id', 'completion_status', 'service_start_date'])
+                    ->where('completion_status', 'ongoing')
+                    ->orderByDesc('service_start_date')
+                    ->orderByDesc('updated_at');
+            };
+        }
+
+        $legacyAcademicTermReviewService = app(LegacyAcademicTermReviewService::class);
+
+        $query = ScholarshipProfile::with($with);
 
         // Handle unified_status filter
         if ($request->filled('unified_status')) {
@@ -815,6 +831,10 @@ class ScholarshipProfileController extends Controller
             }
         }
 
+        if ($request->input('needs_term_review') === 'needs_review') {
+            $query->whereIn('profile_id', $legacyAcademicTermReviewService->profileIdsNeedingReviewQuery());
+        }
+
         // Global search across multiple fields
         if ($request->filled('global_search')) {
             $searchTerm = $request->global_search;
@@ -851,10 +871,24 @@ class ScholarshipProfileController extends Controller
             ->withQueryString();
 
         // Transform data to include latest scholarship record info
-        $profiles->getCollection()->transform(function ($profile) {
+        $profiles->getCollection()->transform(function ($profile) use ($legacyAcademicTermReviewService) {
             $latestRecord = $profile->latestScholarshipRecord;
+            $graduatedEnrollment = $profile->academicEnrollments->first();
+            $ongoingRosRecord = $profile->relationLoaded('returnOfServiceRecords')
+                ? $profile->returnOfServiceRecords->first()
+                : null;
+            $legacyTermReview = $legacyAcademicTermReviewService->summarizeProfileRecords($profile->scholarshipGrant);
+
             $profile->latest_scholarship_record = $latestRecord;
             $profile->total_scholarships = $profile->scholarshipGrant->count();
+            $profile->is_graduated = (bool) $graduatedEnrollment;
+            $profile->graduation_date = $graduatedEnrollment?->graduation_date;
+            $profile->has_ongoing_ros = (bool) $ongoingRosRecord;
+            $profile->ros_start_date = $ongoingRosRecord?->service_start_date;
+            $profile->needs_legacy_term_review = $legacyTermReview['needs_review'];
+            $profile->legacy_term_review_group_count = $legacyTermReview['conflicting_group_count'];
+            $profile->legacy_term_review_open_term_total = $legacyTermReview['conflicting_open_term_total'];
+            $profile->legacy_term_review_highest_open_term_count = $legacyTermReview['highest_open_term_count'];
 
             // Build previous records: all records except the latest, grouped by status with counts
             $latestId = $latestRecord?->id;
@@ -898,6 +932,7 @@ class ScholarshipProfileController extends Controller
                 'course',
                 'municipality',
                 'year_level',
+                'needs_term_review',
                 'global_search',
                 'records',
                 'page'
@@ -930,7 +965,7 @@ class ScholarshipProfileController extends Controller
      */
     public function show($profileId)
     {
-        $profile = ScholarshipProfile::with([
+        $with = [
             'scholarshipGrant' => function ($q) {
                 $q->with(['program', 'course', 'school', 'attachments', 'approvalHistory.performedBy'])
                     ->orderBy('created_at', 'desc');
@@ -943,7 +978,29 @@ class ScholarshipProfileController extends Controller
                 }])
                     ->orderBy('performed_at', 'desc');
             }
-        ])->findOrFail($profileId);
+        ];
+
+        if (Schema::hasTable('academic_enrollments') && Schema::hasTable('academic_enrollment_terms')) {
+            $with['academicEnrollments'] = function ($query) {
+                $query->with([
+                    'program',
+                    'course',
+                    'school',
+                    'terms' => function ($termQuery) {
+                        $termQuery->with([
+                            'recordMaps.scholarshipRecord' => function ($recordQuery) {
+                                $recordQuery->with(['program', 'course', 'school', 'attachments', 'approvalHistory.performedBy']);
+                            },
+                            'primaryRecordMap.scholarshipRecord' => function ($recordQuery) {
+                                $recordQuery->with(['program', 'course', 'school', 'attachments', 'approvalHistory.performedBy']);
+                            },
+                        ]);
+                    },
+                ])->orderByDesc('id');
+            };
+        }
+
+        $profile = ScholarshipProfile::with($with)->findOrFail($profileId);
 
         return Inertia::render('Scholarship/Show', [
             'profile' => $profile,
@@ -1378,134 +1435,27 @@ class ScholarshipProfileController extends Controller
         return $record;
     }
 
-    /**
-     * Update completion status for a scholarship record
-     */
-    public function updateCompletionStatus(Request $request, ScholarshipRecord $record)
+    private function hasCurrentScholarshipRecord(string $profileId): bool
     {
-        $completionConfig = config('scholarship.completion_statuses', []);
-        $allowedStatuses = array_keys($completionConfig);
-
-        // Ensure we have valid statuses
-        if (empty($allowedStatuses)) {
-            $allowedStatuses = ['pending', 'active', 'completed', 'declined', 'suspended', 'discontinued', 'transferred'];
-        }
-
-        // Log the incoming data for debugging
-        Log::info('Completion status update request', [
-            'record_id' => $record->id,
-            'requested_status' => $request->completion_status,
-            'allowed_statuses' => $allowedStatuses,
-            'config_loaded' => !empty($completionConfig),
-            'user_id' => Auth::id(),
-            'request_data' => $request->all()
-        ]);
-
-        // Trim and lowercase the completion status for comparison
-        $completionStatus = trim(strtolower($request->completion_status ?? ''));
-
-        $request->merge(['completion_status' => $completionStatus]);
-
-        $request->validate([
-            'completion_status' => [
-                'required',
-                'string',
-                'in:' . implode(',', $allowedStatuses)
-            ],
-            'remarks' => 'nullable|string|max:1000'
-        ], [
-            'completion_status.required' => 'Completion status is required.',
-            'completion_status.string' => 'Completion status must be a string.',
-            'completion_status.in' => 'The selected completion status is invalid. Allowed values are: ' . implode(', ', $allowedStatuses) . '. Received: ' . $request->completion_status
-        ]);
-
-        try {
-            $oldStatus = $record->completion_status;
-            $record->update([
-                'completion_status' => $request->completion_status,
-                'completion_remarks' => $request->remarks,
-                'completion_updated_at' => now(),
-                'completion_updated_by' => Auth::id()
-            ]);
-
-            // Log completion status update
-            ActivityLogService::logStatusChange(
-                profileId: $record->profile_id,
-                oldStatus: $oldStatus,
-                newStatus: $request->completion_status,
-                remarks: "Updated completion status to: {$request->completion_status}"
-            );
-
-            Log::info('Completion status updated', [
-                'record_id' => $record->id,
-                'old_status' => $oldStatus,
-                'new_status' => $request->completion_status,
-                'updated_by' => Auth::id()
-            ]);
-
-            return back()->with('success', 'Completion status updated successfully.');
-        } catch (\Exception $e) {
-            Log::error('Completion status update failed', [
-                'record_id' => $record->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return back()->with('error', 'Failed to update completion status: ' . $e->getMessage());
-        }
+        return $this->currentScholarshipRecordsQuery($profileId)->exists();
     }
 
-    /**
-     * Debug method to check completion statuses
-     */
-    public function debugCompletionStatuses()
+    private function findLatestCurrentScholarshipRecord(string $profileId): ?ScholarshipRecord
     {
-        $completionConfig = config('scholarship.completion_statuses', []);
-        $allowedStatuses = array_keys($completionConfig);
-
-        return response()->json([
-            'config_loaded' => !empty($completionConfig),
-            'completion_statuses' => $completionConfig,
-            'allowed_values' => $allowedStatuses,
-            'config_path_exists' => file_exists(config_path('scholarship.php'))
-        ]);
+        return $this->currentScholarshipRecordsQuery($profileId)
+            ->orderByRaw('CASE 
+                WHEN date_approved IS NOT NULL THEN date_approved
+                WHEN date_filed IS NOT NULL THEN date_filed
+                ELSE created_at
+            END DESC')
+            ->first();
     }
 
-    /**
-     * Mark scholarship as completed
-     */
-    public function markCompleted(Request $request, ScholarshipRecord $record)
+    private function currentScholarshipRecordsQuery(string $profileId)
     {
-        $request->validate([
-            'completion_date' => 'required|date|before_or_equal:today',
-            'graduation_date' => 'nullable|date',
-            'final_grade' => 'nullable|numeric|min:1|max:5',
-            'honors' => 'nullable|string|max:100',
-            'completion_certificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png,exe|max:5120',
-            'completion_remarks' => 'nullable|string|max:1000',
-        ]);
-
-        $completionService = app(\App\Services\ScholarshipCompletionService::class);
-
-        $data = $request->only([
-            'completion_date',
-            'graduation_date',
-            'final_grade',
-            'honors',
-            'completion_remarks'
-        ]);
-
-        // Handle certificate upload
-        if ($request->hasFile('completion_certificate')) {
-            $data['certificate_path'] = $request->file('completion_certificate')
-                ->store('completion-certificates', 'public');
-        }
-
-        try {
-            $completionService->markAsCompleted($record, $data, Auth::user());
-            return response()->json(['message' => 'Scholarship marked as completed successfully']);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
-        }
+        return ScholarshipRecord::query()
+            ->where('profile_id', $profileId)
+            ->whereIn('unified_status', self::CURRENT_SCHOLARSHIP_RECORD_STATUSES);
     }
 
     /**

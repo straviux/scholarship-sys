@@ -595,7 +595,7 @@ const runCleanup = async () => {
                                             ]">
                                             <div class="flex items-center justify-between">
                                                 <span class="font-medium text-gray-700 capitalize">{{ role.name
-                                                }}</span>
+                                                    }}</span>
                                                 <Tag v-if="role.permissions" :value="`${role.permissions.length}`"
                                                     severity="info" size="small" />
                                             </div>
@@ -636,7 +636,7 @@ const runCleanup = async () => {
                                             <div v-if="Object.keys(rolePermissionsByGroup[selectedRole.id] || {}).length > 0"
                                                 class="space-y-4">
                                                 <div>
-                                                    <h3 class="font-semibold text-gray-800 mb-3 text-sm text-gray-700">
+                                                    <h3 class="mb-3 text-sm font-semibold text-gray-700">
                                                         <AppIcon name="shield-check" class="mr-2" />Permissions
                                                     </h3>
                                                 </div>
@@ -769,8 +769,8 @@ const runCleanup = async () => {
         <!-- ============================================ -->
 
         <!-- Delete User Confirmation Dialog -->
-        <Dialog v-model:visible="showConfirmDeleteUserModal" :style="{ width: '450px' }" header="Confirm Deletion"
-            :modal="true" :closable="false">
+        <Dialog v-model:visible="showConfirmDeleteUserModal" :style="{ width: 'calc(100vw - 2rem)', maxWidth: '450px' }"
+            header="Confirm Deletion" :modal="true" :closable="false">
             <div class="flex items-start gap-4">
                 <AppIcon name="exclamation-triangle" class="text-3xl text-red-500 mt-1" />
                 <div class="flex-1">
@@ -827,8 +827,8 @@ const runCleanup = async () => {
         <!-- ============================================ -->
 
         <!-- Create Role Modal -->
-        <Dialog v-model:visible="showCreateRoleModal" modal header="Create New Role" :style="{ width: '450px' }"
-            :closable="false">
+        <Dialog v-model:visible="showCreateRoleModal" modal header="Create New Role"
+            :style="{ width: 'calc(100vw - 2rem)', maxWidth: '450px' }" :closable="false">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -850,8 +850,8 @@ const runCleanup = async () => {
         </Dialog>
 
         <!-- Delete Role Confirmation Dialog -->
-        <Dialog v-model:visible="showConfirmDeleteRoleModal" :style="{ width: '450px' }" header="Confirm Deletion"
-            :modal="true">
+        <Dialog v-model:visible="showConfirmDeleteRoleModal" :style="{ width: 'calc(100vw - 2rem)', maxWidth: '450px' }"
+            header="Confirm Deletion" :modal="true">
             <div class="flex items-center gap-4">
                 <AppIcon name="exclamation-triangle" class="text-3xl text-red-500" />
                 <div>
@@ -929,7 +929,7 @@ const runCleanup = async () => {
         <!-- ============================================ -->
 
         <!-- Confirm Cleanup Dialog -->
-        <Dialog v-model:visible="showConfirmCleanupModal" :style="{ width: '500px' }"
+        <Dialog v-model:visible="showConfirmCleanupModal" :style="{ width: 'calc(100vw - 2rem)', maxWidth: '500px' }"
             header="Confirm Permission Cleanup" :modal="true" :closable="false">
             <div class="flex items-start gap-4">
                 <AppIcon name="wrench" class="text-3xl text-amber-500 mt-1" />
@@ -979,8 +979,8 @@ const runCleanup = async () => {
         </Dialog>
 
         <!-- Cleanup Results Dialog -->
-        <Dialog v-model:visible="showCleanupResults" :style="{ width: '500px' }" header="Permission Cleanup Results"
-            :modal="true">
+        <Dialog v-model:visible="showCleanupResults" :style="{ width: 'calc(100vw - 2rem)', maxWidth: '500px' }"
+            header="Permission Cleanup Results" :modal="true">
             <div v-if="cleanupResults" class="space-y-4">
                 <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                     <AppIcon name="check-circle" class="text-2xl text-green-600" />

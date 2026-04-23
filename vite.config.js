@@ -42,18 +42,21 @@ export default defineConfig({
 					if (id.includes('node_modules/xlsx')) {
 						return 'vendor-xlsx';
 					}
-					// Everything else from node_modules goes into one vendor chunk.
-					// Keeping Vue, PrimeVue, Inertia, and misc deps together avoids
-					// "Cannot access before initialization" circular-dependency errors
-					// that occur when Rollup splits packages that reference each other
-					// at module init time across separate chunks.
-					if (id.includes('node_modules/')) {
-						return 'vendor';
+					// Rich text / markdown tooling is only used by a subset of pages.
+					if (
+						id.includes('node_modules/quill') ||
+						id.includes('node_modules/@vueup/vue-quill') ||
+						id.includes('node_modules/md-editor-v3') ||
+						id.includes('node_modules/marked') ||
+						id.includes('node_modules/markdown-it') ||
+						id.includes('node_modules/dompurify')
+					) {
+						return 'vendor-editor';
 					}
 				},
 			},
 		},
-		chunkSizeWarningLimit: 1000,
+		chunkSizeWarningLimit: 2500,
 		minify: 'terser',
 		terserOptions: {
 			compress: {

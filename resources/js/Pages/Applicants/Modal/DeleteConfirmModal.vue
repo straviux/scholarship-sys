@@ -45,7 +45,8 @@ const deleteApplicant = () => {
 const dragOffset = ref({ x: 0, y: 0 });
 const dragStart = ref(null);
 const modalStyle = computed(() => ({
-    width: '460px',
+    width: 'calc(100vw - 24px)',
+    maxWidth: '460px',
     transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
 }));
 

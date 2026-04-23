@@ -1,6 +1,6 @@
 <template>
     <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal header="Create New User"
-        :style="{ width: '500px' }" :closable="true">
+        :style="{ width: 'calc(100vw - 2rem)', maxWidth: '500px' }" :closable="true">
         <form @submit.prevent="submit" class="space-y-6">
             <!-- Name Field -->
             <div class="field">
@@ -28,7 +28,7 @@
                 <InputText id="office_designation" v-model="form.office_designation" class="w-full"
                     :class="{ 'p-invalid': form.errors.office_designation }" />
                 <small v-if="form.errors.office_designation" class="p-error">{{ form.errors.office_designation
-                    }}</small>
+                }}</small>
             </div>
 
             <!-- Role Selection -->
@@ -74,7 +74,7 @@
                 <Password v-model="form.password_confirmation" placeholder="Confirm password" toggleMask class="w-full"
                     :class="{ 'p-invalid': form.errors.password_confirmation }" :feedback="false" />
                 <small v-if="form.errors.password_confirmation" class="p-error">{{ form.errors.password_confirmation
-                }}</small>
+                    }}</small>
             </div>
         </form>
 

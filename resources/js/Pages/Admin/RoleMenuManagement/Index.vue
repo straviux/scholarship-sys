@@ -6,9 +6,9 @@
                 <h1 class="text-2xl short:text-xl font-bold text-gray-900">Role Menu Management</h1>
             </div>
 
-            <div class="grid grid-cols-12 gap-4 short:gap-2">
+            <div class="grid grid-cols-1 gap-4 short:gap-2 xl:grid-cols-12">
                 <!-- Roles List -->
-                <div class="col-span-3">
+                <div class="col-span-1 xl:col-span-3">
                     <Card>
                         <template #title>
                             Roles
@@ -33,7 +33,7 @@
                 </div>
 
                 <!-- Available Menus -->
-                <div class="col-span-4">
+                <div class="col-span-1 xl:col-span-4">
                     <Card>
                         <template #title>
                             Available Menu Items
@@ -52,7 +52,7 @@
                                     </InputText>
                                 </div>
 
-                                <div class="border rounded max-h-[500px] overflow-y-auto">
+                                <div class="max-h-[60vh] overflow-y-auto rounded border xl:max-h-[500px]">
                                     <div v-for="menu in filteredAvailableMenus" :key="menu.id"
                                         class="p-3 border-b hover:bg-gray-50 cursor-pointer"
                                         @click="toggleMenuSelection(menu)">
@@ -105,7 +105,7 @@
                 </div>
 
                 <!-- Assigned Menus with Drag & Drop -->
-                <div class="col-span-5">
+                <div class="col-span-1 xl:col-span-5">
                     <Card>
                         <template #title>
                             <div class="flex items-center justify-between">

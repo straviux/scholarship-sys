@@ -15,6 +15,7 @@ use App\Models\ScholarshipProgram;
 use App\Models\Course;
 use App\Models\School;
 use App\Models\User;
+use App\Services\LegacyAcademicTermReviewService;
 
 class SystemReportController extends Controller
 {
@@ -80,6 +81,8 @@ class SystemReportController extends Controller
      */
     private function getDataIntegrityReport(): array
     {
+        $legacyAcademicTermReviewService = app(LegacyAcademicTermReviewService::class);
+
         return [
             'records_without_programs' => ScholarshipRecord::whereNull('program_id')->count(),
             'records_without_courses' => ScholarshipRecord::whereNull('course_id')->count(),
@@ -88,7 +91,8 @@ class SystemReportController extends Controller
             'records_without_profiles' => ScholarshipRecord::whereDoesntHave('profile')->count(),
             'invalid_date_ranges' => $this->getInvalidDateRanges(),
             'duplicate_applications' => $this->findDuplicateApplications(),
-            'orphaned_requirements' => $this->getOrphanedRequirements()
+            'orphaned_requirements' => $this->getOrphanedRequirements(),
+            'legacy_term_cleanup' => $legacyAcademicTermReviewService->getCleanupReport(),
         ];
     }
 

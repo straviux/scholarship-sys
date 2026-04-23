@@ -8,6 +8,7 @@ use Inertia\Response;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipRecord;
 use App\Models\EducationalBackground;
+use App\Models\User;
 use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -26,10 +27,7 @@ class AdminController extends Controller
      */
     public function deletedRecords(): Response
     {
-        // Check if user is administrator
-        if (!Auth::user()?->hasRole('administrator')) {
-            abort(403, 'Only administrators can access deleted records.');
-        }
+        $this->authorizeAdministrator('Only administrators can access deleted records.');
 
         // Fetch soft-deleted profiles with their count
         $deletedProfiles = ScholarshipProfile::onlyTrashed()
@@ -89,10 +87,7 @@ class AdminController extends Controller
      */
     public function restoreProfile($id): JsonResponse
     {
-        // Check if user is administrator
-        if (!Auth::user()?->hasRole('administrator')) {
-            abort(403, 'Only administrators can restore deleted records.');
-        }
+        $this->authorizeAdministrator('Only administrators can restore deleted records.');
 
         $profile = ScholarshipProfile::onlyTrashed()->findOrFail($id);
         $profile->restore();
@@ -113,10 +108,7 @@ class AdminController extends Controller
      */
     public function permanentlyDeleteProfile($id): JsonResponse
     {
-        // Check if user is administrator
-        if (!Auth::user()?->hasRole('administrator')) {
-            abort(403, 'Only administrators can permanently delete records.');
-        }
+        $this->authorizeAdministrator('Only administrators can permanently delete records.');
 
         DB::transaction(function () use ($id) {
             $profile = ScholarshipProfile::onlyTrashed()->findOrFail($id);
@@ -140,10 +132,7 @@ class AdminController extends Controller
      */
     public function restoreRecord($id): JsonResponse
     {
-        // Check if user is administrator
-        if (!Auth::user()?->hasRole('administrator')) {
-            abort(403, 'Only administrators can restore deleted records.');
-        }
+        $this->authorizeAdministrator('Only administrators can restore deleted records.');
 
         $record = ScholarshipRecord::onlyTrashed()->findOrFail($id);
         $profileRestored = false;
@@ -184,14 +173,20 @@ class AdminController extends Controller
      */
     public function permanentlyDeleteRecord($id): JsonResponse
     {
-        // Check if user is administrator
-        if (!Auth::user()?->hasRole('administrator')) {
-            abort(403, 'Only administrators can permanently delete records.');
-        }
+        $this->authorizeAdministrator('Only administrators can permanently delete records.');
 
         $record = ScholarshipRecord::onlyTrashed()->findOrFail($id);
         $record->forceDelete();
 
         return response()->json(['message' => 'Record permanently deleted.']);
+    }
+
+    private function authorizeAdministrator(string $message): void
+    {
+        $user = Auth::user();
+
+        if (!$user instanceof User || !$user->hasRole('administrator')) {
+            abort(403, $message);
+        }
     }
 }

@@ -399,6 +399,14 @@ const editApplicant = (profile) => {
     showApplicationFormModal.value = true;
 }
 
+const viewFullProfile = (profile) => {
+    if (!profile?.profile_id) {
+        return;
+    }
+
+    router.visit(route('scholarship.profile.show', profile.profile_id));
+}
+
 const closeModal = () => {
     showApplicationFormModal.value = false;
     modalProfile.value = null;
@@ -611,6 +619,13 @@ const buildContextMenu = (rowData) => {
             icon: 'id-card',
             command: () => openProfileReviewModal(rowData)
         });
+        if (hasPermission('scholarships.view')) {
+            items.push({
+                label: 'View Full Profile',
+                icon: 'eye',
+                command: () => viewFullProfile(rowData)
+            });
+        }
         if (hasRole('administrator') || hasRole('program_manager') || hasRole('screening-officer')) {
             items.push({
                 label: 'Interview',
@@ -746,7 +761,8 @@ const academicInfoDialogOffset = ref({ x: 0, y: 0 });
 const academicInfoDialogDragStart = ref(null);
 
 const academicInfoDialogStyle = computed(() => ({
-    width: '460px',
+    width: 'calc(100vw - 24px)',
+    maxWidth: '460px',
     transform: `translate(${academicInfoDialogOffset.value.x}px, ${academicInfoDialogOffset.value.y}px)`,
 }));
 
@@ -897,6 +913,18 @@ onBeforeUnmount(() => {
     document.removeEventListener('pointerup', onAcademicInfoDialogDragEnd);
 });
 
+const resolveInterviewRecordId = (applicant) => {
+    if (!applicant) {
+        return null;
+    }
+
+    if (Array.isArray(applicant.scholarship_grant) && applicant.scholarship_grant.length > 0) {
+        return applicant.scholarship_grant[0]?.id || null;
+    }
+
+    return applicant.scholarship_grant_id || applicant.record_id || null;
+};
+
 const handleProfileReviewInterview = (applicant) => {
     const missingFields = getMissingAcademicInfoFields(applicant);
 
@@ -906,7 +934,14 @@ const handleProfileReviewInterview = (applicant) => {
         return;
     }
 
-    interviewRecordId.value = applicant.scholarship_grant?.[0]?.id;
+    selectedApplicantForReview.value = applicant;
+    interviewRecordId.value = resolveInterviewRecordId(applicant);
+
+    if (!interviewRecordId.value) {
+        toast.error('No scholarship record selected for interview.');
+        return;
+    }
+
     showInterviewModal.value = true;
 };
 
@@ -1250,7 +1285,8 @@ const truncateText = (text, maxLength = 80) => {
 
 
             <!-- Filter Drawer -->
-            <FloatingDrawer v-model:visible="showFilterDrawer" header="All Filters" position="right" class="!w-[600px]">
+            <FloatingDrawer v-model:visible="showFilterDrawer" header="All Filters" position="right"
+                class="!w-[calc(100vw-1rem)] sm:!w-[min(600px,calc(100vw-1rem))] !max-w-[calc(100vw-1rem)]">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
@@ -1633,18 +1669,31 @@ const truncateText = (text, maxLength = 80) => {
                         </template>
                     </Column>
 
-                    <!-- Encoded By Column (only visible for admins) -->
-                    <!-- <Column header="Encoded" v-if="hasRole('administrator')" style="min-width: 180px"> -->
-                    <Column header="Encoder" style="min-width: 180px">
+                    <Column header="Created" style="min-width: 160px">
                         <template #body="slotProps">
-                            <div class="flex flex-col gap-1 text-xs">
-                                <div v-if="slotProps.data.created_by" class="font-medium">
+                            <div class="flex flex-col gap-1 text-[11px]">
+                                <div v-if="slotProps.data.created_by" class="text-slate-700">
                                     {{ slotProps.data.created_by.name }}
                                 </div>
-                                <div v-if="slotProps.data.created_at" class="text-gray-500">
+                                <div v-if="slotProps.data.created_at" class="text-slate-400">
                                     {{ formatDateFiled(slotProps.data.created_at) }}
                                 </div>
                                 <span v-if="!slotProps.data.created_by && !slotProps.data.created_at"
+                                    class="text-gray-400">-</span>
+                            </div>
+                        </template>
+                    </Column>
+
+                    <Column header="Updated" style="min-width: 160px">
+                        <template #body="slotProps">
+                            <div class="flex flex-col gap-1 text-[11px]">
+                                <div v-if="slotProps.data.updated_by" class="text-slate-700">
+                                    {{ slotProps.data.updated_by.name }}
+                                </div>
+                                <div v-if="slotProps.data.updated_at" class="text-slate-400">
+                                    {{ formatDateFiled(slotProps.data.updated_at) }}
+                                </div>
+                                <span v-if="!slotProps.data.updated_by && !slotProps.data.updated_at"
                                     class="text-gray-400">-</span>
                             </div>
                         </template>
@@ -1688,10 +1737,13 @@ const truncateText = (text, maxLength = 80) => {
                     </Column>
 
                     <!-- Actions Column -->
-                    <Column header="Actions" style="width: 60px" v-if="!simpleView">
+                    <Column header="Actions" style="width: 96px" v-if="!simpleView">
                         <template #body="slotProps">
-                            <div class="flex justify-center">
-                                <AppButton icon="ellipsis-vertical" rounded outlined severity="secondary" size="small"
+                            <div class="flex items-center justify-center gap-1">
+                                <AppButton v-if="hasPermission('scholarships.view')" icon="eye" text severity="info"
+                                    @click="viewFullProfile(slotProps.data)"
+                                    v-tooltip.top="'View full profile'" />
+                                <AppButton icon="ellipsis-vertical" text severity="secondary"
                                     @click="(event) => showRowContextMenu(event, slotProps.data)"
                                     v-tooltip.top="'More actions'" />
                             </div>
@@ -1719,6 +1771,7 @@ const truncateText = (text, maxLength = 80) => {
         <!-- Integrated Profile & Review Modal -->
         <ProfileReviewModal v-model:visible="showProfileReviewModal" :applicant="selectedApplicantForReview"
             :applicants="applicants" @interview="handleProfileReviewInterview" @edit-profile="handleProfileReviewEdit"
+            @edit-requirements="openRequirementsModal"
             @closed="closeProfileReviewModal" />
 
         <Dialog :visible="showAcademicInfoIncompleteDialog" modal

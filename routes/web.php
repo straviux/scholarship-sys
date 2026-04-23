@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AccessControlController;
+use App\Http\Controllers\AcademicEnrollmentController;
+use App\Http\Controllers\AcademicEnrollmentTermController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ErrorController;
 use App\Http\Controllers\HomeController;
@@ -267,14 +269,6 @@ Route::middleware(['auth'])->get('/api/existing', [ScholarshipProfileController:
 Route::middleware(['auth'])->post('/api/validate-name', [ScholarshipProfileController::class, 'validateName'])->name('api.profiles.validate-name');
 
 Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->group(function () {
-    // Route::get('/scholarship_records/{id?}', 'getScholarshipRecordsApi')->name('scholarship_records_api.getlist');
-    Route::get('/scholarship_records/{action?}/{id?}', 'index')->name('scholarship_records.index');
-    // Route::get('/scholarship_records/{scholarship_program}/{action?}/{id?}', 'showByProgram')->name('scholarship_records.showbyprogram');
-    Route::post('/scholarship_records', 'store')->middleware('check.permission:scholarships.create')->name('scholarship_records.store');
-    Route::put('/scholarship_records/{id}', 'update')->middleware('check.permission:scholarships.edit')->name('scholarship_records.update');
-    Route::delete('/scholarship_records/{scholarship_record}', 'destroy')->middleware('check.permission:scholarships.delete')->name('scholarship_records.destroy');
-    Route::post('/scholarship_records/{id}/restore', 'restore')->middleware('check.permission:scholarships.restore')->name('scholarship_records.restore');
-
     // API's
     Route::post('/scholarship-records/{id}/approve', 'approveScholarshipRecord')->middleware('check.permission:scholarships.approve')->name('scholarship-record.approve');
     Route::post('/scholarship-records/{id}/decline', 'declineScholarshipRecord')->middleware('check.permission:scholarships.approve')->name('scholarship-record.decline');
@@ -282,9 +276,6 @@ Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->gro
     Route::put('/scholarship-records/{id}/yakap', 'updateYakapCategory')->middleware('check.permission:scholarships.edit')->name('scholarship-record.update-yakap');
     Route::get('/scholarship-records/profile/{profile_id}/get-or-create', 'getOrCreateForProfile')->name('scholarship-record.get-or-create');
     Route::post('/scholarship-records/batch/yakap', 'batchUpdateYakapCategory')->middleware('check.permission:scholarships.edit')->name('scholarship-record.batch-update-yakap');
-    Route::put('/scholarship_records.update-status/{scholarship_records}', 'updateScholarshipStatusApi')->middleware('check.permission:scholarships.edit')->name('scholarship_records-api.updatestatus');
-    Route::put('/scholarship_records.update-remarks/{scholarship_records}', 'updateRemarks')->middleware('check.permission:scholarships.edit')->name('scholarship_records-api.updateremarks');
-    Route::post('/scholarship_records/{record}/requirements/upload', 'uploadRequirement')->middleware('check.permission:scholarships.edit')->name('scholarship.requirements.upload');
 
     // Requirements Checklist Routes (Profile-based) - under ApplicantController
     Route::get('/scholarship-profiles/{profile}/requirements-checklist', [ApplicantController::class, 'getProfileRequirementsChecklist'])->middleware('check.permission:applicants.view')->name('scholarship.profile.requirements-checklist');
@@ -307,6 +298,38 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/scholarship/profile/{profile}/ledger', [ScholarshipProfileController::class, 'updateLedger'])
         ->middleware('check.permission:scholarships.edit')
         ->name('scholarship.profile.ledger.update');
+
+    Route::get('/academic-enrollments/{academicEnrollment}', [AcademicEnrollmentController::class, 'show'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('academic-enrollments.show');
+    Route::post('/scholarship/profile/{profile}/academic-enrollments', [AcademicEnrollmentController::class, 'store'])
+        ->middleware('check.permission:scholarships.create')
+        ->name('academic-enrollments.store');
+    Route::put('/academic-enrollments/{academicEnrollment}', [AcademicEnrollmentController::class, 'update'])
+        ->middleware('check.permission:scholarships.edit')
+        ->name('academic-enrollments.update');
+    Route::delete('/academic-enrollments/{academicEnrollment}', [AcademicEnrollmentController::class, 'destroy'])
+        ->middleware('check.permission:scholarships.delete')
+        ->name('academic-enrollments.destroy');
+    Route::put('/academic-enrollments/{academicEnrollment}/graduation', [AcademicEnrollmentController::class, 'graduate'])
+        ->middleware('check.permission:scholarships.edit')
+        ->name('academic-enrollments.graduate');
+
+    Route::get('/academic-enrollment-terms/{academicEnrollmentTerm}', [AcademicEnrollmentTermController::class, 'show'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('academic-enrollment-terms.show');
+    Route::post('/academic-enrollments/{academicEnrollment}/terms', [AcademicEnrollmentTermController::class, 'store'])
+        ->middleware('check.permission:scholarships.create')
+        ->name('academic-enrollment-terms.store');
+    Route::put('/academic-enrollment-terms/{academicEnrollmentTerm}', [AcademicEnrollmentTermController::class, 'update'])
+        ->middleware('check.permission:scholarships.edit')
+        ->name('academic-enrollment-terms.update');
+    Route::delete('/academic-enrollment-terms/{academicEnrollmentTerm}', [AcademicEnrollmentTermController::class, 'destroy'])
+        ->middleware('check.permission:scholarships.delete')
+        ->name('academic-enrollment-terms.destroy');
+    Route::put('/academic-enrollment-terms/{academicEnrollmentTerm}/complete', [AcademicEnrollmentTermController::class, 'complete'])
+        ->middleware('check.permission:scholarships.edit')
+        ->name('academic-enrollment-terms.complete');
 
     Route::put('/scholarship-profiles/{profile}', [ScholarshipProfileController::class, 'update'])
         ->name('scholarship-profiles.update');
@@ -412,14 +435,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/interviewed-applicants', [ScholarshipProfileController::class, 'showInterviewedApplicants'])
         ->middleware('check.permission:scholarships.view')
         ->name('scholarship.interviewed-applicants');
-
-    // Completion status update route
-    Route::post('/scholarship/{record}/completion-status', [ScholarshipProfileController::class, 'updateCompletionStatus'])
-        ->name('scholarship.record.update-completion-status');
-
-    // Debug route for completion statuses
-    Route::get('/debug/completion-statuses', [ScholarshipProfileController::class, 'debugCompletionStatuses'])
-        ->name('debug.completion-statuses');
 
     // Approval history and statistics
     Route::get('/scholarship/{record}/history', [ScholarshipProfileController::class, 'getApprovalHistory'])

@@ -1,6 +1,6 @@
 <template>
     <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal header="Edit User"
-        :style="{ width: '500px' }" :closable="true">
+        :style="{ width: 'calc(100vw - 2rem)', maxWidth: '500px' }" :closable="true">
         <form @submit.prevent="submit" class="space-y-6" v-if="user">
             <!-- Name Field -->
             <div class="field">
@@ -28,7 +28,7 @@
                 <InputText id="office_designation" v-model="form.office_designation" class="w-full"
                     :class="{ 'p-invalid': form.errors.office_designation }" />
                 <small v-if="form.errors.office_designation" class="p-error">{{ form.errors.office_designation
-                    }}</small>
+                }}</small>
             </div>
 
             <!-- Role Selection -->

@@ -49,7 +49,7 @@ class ApplicantController extends Controller
             // Join with scholarship_records to access date_filed and filtering
             ->join('scholarship_records', 'scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
             // Eager load relationships - only load PENDING scholarship records to match the filter
-            ->with(['createdBy', 'scholarshipGrant' => function ($q) {
+            ->with(['createdBy', 'updatedBy', 'scholarshipGrant' => function ($q) {
                 $q->where('unified_status', 'pending')
                     ->with(['program', 'course', 'requirements', 'school']);
             }])
@@ -68,8 +68,10 @@ class ApplicantController extends Controller
                 'scholarship_profiles.contact_no_2',
                 'scholarship_profiles.email',
                 'scholarship_profiles.created_at',
+                'scholarship_profiles.updated_at',
                 'scholarship_profiles.priority_level',
                 'scholarship_profiles.created_by',
+                'scholarship_profiles.updated_by',
                 'scholarship_profiles.priority_assigned_by',
                 'scholarship_profiles.remarks',
                 // Family information fields
@@ -350,6 +352,8 @@ class ApplicantController extends Controller
 
         // Eager load relationships for paginated results
         $profiles->load([
+            'createdBy',
+            'updatedBy',
             'scholarshipGrant' => function ($q) {
                 $q->with(['program', 'school', 'course'])
                     ->select(

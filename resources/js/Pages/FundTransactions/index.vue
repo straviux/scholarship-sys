@@ -79,6 +79,7 @@ const obrStatuses = computed(() => ['No OBR', ..._obrStatusRaw.value.map(o => o.
 const showOBRTrackingDialog = ref(false);
 const selectedVoucherForOBRTracking = ref(null);
 const statusFilter = ref(_url.get('status') || '');
+const obrNoFilter = ref(_url.get('obr_no_mode') || '');
 const obrTypeFilter = ref(_url.get('type') || '');
 const disbursementTypeFilter = ref(_url.get('dv_type') || '');
 const userFilter = ref(_url.get('user') || 'all');
@@ -140,6 +141,11 @@ const statusFilterOptions = computed(() => [
     { label: 'No OBR', value: 'No OBR' },
     ..._obrStatusRaw.value.map(o => ({ label: o.label, value: o.label })),
 ]);
+
+const obrNoFilterOptions = [
+    { label: 'With OBR No.', value: 'with' },
+    { label: 'Without OBR No.', value: 'without' },
+];
 
 const _obrTypeRaw = useSystemOptions('disbursement_type');
 const obrTypeFilterOptions = computed(() => _obrTypeRaw.value.map(o => ({
@@ -463,6 +469,7 @@ const fetchVouchers = async () => {
         const params = {};
         if (searchQuery.value.trim()) params.search = searchQuery.value.trim();
         if (statusFilter.value) params.obr_status = statusFilter.value;
+        if (obrNoFilter.value) params.obr_no_mode = obrNoFilter.value;
         if (obrTypeFilter.value) params.obr_type = obrTypeFilter.value;
         if (disbursementTypeFilter.value) params.disbursement_type = disbursementTypeFilter.value;
         if (userFilter.value === 'my-records') {
@@ -1304,6 +1311,7 @@ const syncFiltersToUrl = () => {
     const params = new URLSearchParams();
     if (searchQuery.value?.trim()) params.set('search', searchQuery.value.trim());
     if (statusFilter.value) params.set('status', statusFilter.value);
+    if (obrNoFilter.value) params.set('obr_no_mode', obrNoFilter.value);
     if (obrTypeFilter.value) params.set('type', obrTypeFilter.value);
     if (disbursementTypeFilter.value) params.set('dv_type', disbursementTypeFilter.value);
     if (userFilter.value && userFilter.value !== 'all') params.set('user', userFilter.value);
@@ -1322,7 +1330,7 @@ const onPageChange = (e) => {
 };
 
 // Re-fetch when dropdown filters or user filter changes (reset to page 1)
-watch([statusFilter, obrTypeFilter, disbursementTypeFilter, userFilter], () => {
+watch([statusFilter, obrNoFilter, obrTypeFilter, disbursementTypeFilter, userFilter], () => {
     currentPage.value = 1;
     syncFiltersToUrl();
     fetchVouchers();
@@ -1450,6 +1458,8 @@ onMounted(() => {
 
                     <Select v-model="statusFilter" :options="statusFilterOptions" optionLabel="label"
                         optionValue="value" placeholder="OBR Status" size="small" class="w-40" showClear />
+                    <Select v-model="obrNoFilter" :options="obrNoFilterOptions" optionLabel="label" optionValue="value"
+                        placeholder="OBR No." size="small" class="w-44" showClear />
                     <Select v-model="obrTypeFilter" :options="obrTypeFilterOptions" optionLabel="label"
                         optionValue="value" placeholder="OBR Type" size="small" class="w-44" showClear />
                     <Select v-model="disbursementTypeFilter" :options="disbursementTypeFilterOptions"
@@ -1457,15 +1467,15 @@ onMounted(() => {
                         showClear />
 
                     <AppButton
-                        v-if="statusFilter || obrTypeFilter || disbursementTypeFilter || searchQuery || userFilter !== 'all'"
-                        icon="history" severity="danger" size="small" text rounded
-                        @click="statusFilter = null; obrTypeFilter = null; disbursementTypeFilter = null; searchQuery = ''; userFilter = 'all'"
+                        v-if="statusFilter || obrNoFilter || obrTypeFilter || disbursementTypeFilter || searchQuery || userFilter !== 'all'"
+                        icon="funnel-x" severity="danger" text rounded
+                        @click="statusFilter = null; obrNoFilter = null; obrTypeFilter = null; disbursementTypeFilter = null; searchQuery = ''; userFilter = 'all'"
                         v-tooltip.bottom="'Clear all filters'" />
 
                     <div class="ml-auto flex items-center gap-2">
                         <RecordsSelect v-model="perPage" size="small" class="w-auto" />
                         <span class="text-sm text-gray-600 dark:text-gray-400">/ <strong>{{ filteredTotal
-                                }}</strong></span>
+                        }}</strong></span>
                     </div>
                 </div>
 
@@ -1556,7 +1566,7 @@ onMounted(() => {
                         <template #body="slotProps">
                             <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">{{
                                 slotProps.data.creator?.name || '---'
-                                }}</span>
+                            }}</span>
                             <div class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{
                                 formatDate(slotProps.data.created_at) }}</div>
                         </template>
@@ -1641,7 +1651,7 @@ onMounted(() => {
                                         <div class="ios-row">
                                             <span class="ios-row-label">Amount</span>
                                             <span class="font-semibold">{{ formatAmount(selectedVoucher.amount)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="ios-row">
                                             <span class="ios-row-label">Created By</span>
@@ -1675,7 +1685,7 @@ onMounted(() => {
 
                                 <div class="ios-section">
                                     <p class="ios-section-label">Scholars ({{ selectedVoucher.scholar_ids?.length || 0
-                                        }})</p>
+                                    }})</p>
                                     <div class="ios-card px-4 py-3">
                                         <div v-if="loadingScholars" class="text-center py-2">
                                             <AppIcon name="spinner" :size="12" class="mr-2" /> <span
@@ -1694,7 +1704,7 @@ onMounted(() => {
                                                             scholar.year_level + ` YEAR` : scholar.year_level }}</span>
                                                     <span v-if="scholar.academic_year" class="ml-1">| {{
                                                         scholar.academic_year
-                                                        }}</span>
+                                                    }}</span>
                                                     <span v-if="scholar.term" class="ml-1">| {{ scholar.term }}</span>
                                                 </span>
                                             </div>

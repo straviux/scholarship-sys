@@ -14,14 +14,19 @@ use App\Models\ScholarshipRecord;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipRecordRequirement;
 use App\Models\ScholarshipProgram;
+use App\Services\AcademicRecordSyncService;
 use App\Services\ActivityLogService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Collection;
 
 class ScholarshipRecordController extends Controller
 {
+    public function __construct(private readonly AcademicRecordSyncService $academicRecordSyncService)
+    {
+    }
 
     /**
      * Display a listing of the resource.
@@ -162,19 +167,20 @@ class ScholarshipRecordController extends Controller
      */
     public function store(CreateScholarshipRecordRequest $request): RedirectResponse
     {
-        // Validate and create the scholar profile
         $validatedData = $request->validated();
-        // $validatedData['date_approved'] = $request->date_approved ?? null;
         $validatedData['created_by'] = $request->user() ? $request->user()->id : null;
         $validatedData['unified_status'] = $validatedData['unified_status'] ?? 'pending';
 
-        $newScholar = ScholarshipRecord::create($validatedData);
-        if ($newScholar) {
-            $scholarshipProfile = ScholarshipProfile::find($newScholar->profile_id);
-            $scholarshipProfile->save();
-        }
+        DB::transaction(function () use ($validatedData, &$newScholar) {
+            $newScholar = ScholarshipRecord::create($validatedData);
 
-        // Redirect back with a success message
+            if ($newScholar) {
+                $scholarshipProfile = ScholarshipProfile::find($newScholar->profile_id);
+                $scholarshipProfile?->save();
+                $this->academicRecordSyncService->syncScholarshipRecord($newScholar);
+            }
+        });
+
         return back()->with('message', 'Scholar profile created successfully.');
     }
 
@@ -189,7 +195,10 @@ class ScholarshipRecordController extends Controller
         $validated = $request->validated();
         $validated['date_approved'] = $request->date_approved ?? $record->date_approved;
 
-        $record->update($validated);
+        DB::transaction(function () use ($record, $validated) {
+            $record->update($validated);
+            $this->academicRecordSyncService->syncScholarshipRecord($record->fresh());
+        });
 
         // Log the update activity with scholar profile snapshot
         ActivityLogService::logRecordUpdated(
@@ -207,8 +216,11 @@ class ScholarshipRecordController extends Controller
     {
         $scholarship = ScholarshipRecord::find($id);
         $oldStatus = $scholarship->unified_status;
-        // $neweducbackground = ApplicantEducationalBackground::create($request->validated());
-        $scholarship->updateScholarshipStatus($request->status_id);
+
+        DB::transaction(function () use ($scholarship, $request) {
+            $scholarship->updateScholarshipStatus($request->status_id);
+            $this->academicRecordSyncService->syncScholarshipRecord($scholarship->fresh());
+        });
 
         // Log the status change
         ActivityLogService::logStatusChange(
@@ -225,8 +237,11 @@ class ScholarshipRecordController extends Controller
     {
         $scholarship = ScholarshipRecord::find($id);
         $oldRemarks = $scholarship->remarks;
-        // $neweducbackground = ApplicantEducationalBackground::create($request->validated());
-        $scholarship->updateRemarks($request->remarks);
+
+        DB::transaction(function () use ($scholarship, $request) {
+            $scholarship->updateRemarks($request->remarks);
+            $this->academicRecordSyncService->syncScholarshipRecord($scholarship->fresh());
+        });
 
         // Log the remarks update
         ActivityLogService::logRecordUpdated(
@@ -295,9 +310,14 @@ class ScholarshipRecordController extends Controller
         }
 
         $record = ScholarshipRecord::findOrFail($id);
-        $record->unified_status = 'approved';
-        $record->date_approved = $request->date_approved ?? null;
-        $record->save();
+
+        DB::transaction(function () use ($record, $request) {
+            $record->unified_status = 'approved';
+            $record->date_approved = $request->date_approved ?? null;
+            $record->save();
+            $this->academicRecordSyncService->syncScholarshipRecord($record->fresh());
+        });
+
         return redirect()->back()->with('success', 'Scholarship record approved.');
     }
 
@@ -311,9 +331,14 @@ class ScholarshipRecordController extends Controller
         }
 
         $record = ScholarshipRecord::findOrFail($id);
-        $record->unified_status = 'denied';
-        $record->remarks = $request->remarks ?? $record->remarks;
-        $record->save();
+
+        DB::transaction(function () use ($record, $request) {
+            $record->unified_status = 'denied';
+            $record->remarks = $request->remarks ?? $record->remarks;
+            $record->save();
+            $this->academicRecordSyncService->syncScholarshipRecord($record->fresh());
+        });
+
         return redirect()->back()->with('success', 'Scholarship record declined.');
     }
 
@@ -334,8 +359,12 @@ class ScholarshipRecordController extends Controller
 
         $record = ScholarshipRecord::findOrFail($id);
         $oldGrantProvision = $record->grant_provision;
-        $record->grant_provision = $grantProvision;
-        $record->save();
+
+        DB::transaction(function () use ($record, $grantProvision) {
+            $record->grant_provision = $grantProvision;
+            $record->save();
+            $this->academicRecordSyncService->syncScholarshipRecord($record->fresh());
+        });
 
         // Log activity directly to database
         try {
@@ -379,16 +408,14 @@ class ScholarshipRecordController extends Controller
             $oldCategory = $record->yakap_category;
             $oldLocation = $record->yakap_location;
 
-            $record->yakap_category = $request->yakap_category;
-
-            // Only update location if not capitol
-            if ($request->yakap_category !== 'yakap-capitol') {
-                $record->yakap_location = $request->yakap_location;
-            } else {
-                $record->yakap_location = null;
-            }
-
-            $record->save();
+            DB::transaction(function () use ($record, $request) {
+                $record->yakap_category = $request->yakap_category;
+                $record->yakap_location = $request->yakap_category !== 'yakap-capitol'
+                    ? $request->yakap_location
+                    : null;
+                $record->save();
+                $this->academicRecordSyncService->syncScholarshipRecord($record->fresh());
+            });
 
             // Log activity directly to database
             try {
@@ -455,8 +482,10 @@ class ScholarshipRecordController extends Controller
             remarks: "Soft deleted scholarship record for {$profileId}"
         );
 
-        // Soft deletion for all users (recovery available from Deleted Records)
-        $record->delete();
+        DB::transaction(function () use ($record) {
+            $record->delete();
+            $this->academicRecordSyncService->syncScholarshipRecord($record->fresh());
+        });
 
         if (request()->wantsJson()) {
             return response()->json(['message' => 'Scholarship record deleted successfully.']);
@@ -469,13 +498,25 @@ class ScholarshipRecordController extends Controller
      */
     public function restore($id)
     {
-        // Check if user is administrator
-        if (!auth()->user()?->hasRole('administrator')) {
+        $user = Auth::user();
+
+        $isAdministrator = $user && DB::table('model_has_roles')
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('model_has_roles.model_type', $user::class)
+            ->where('model_has_roles.model_id', $user->id)
+            ->where('roles.name', 'administrator')
+            ->exists();
+
+        if (!$isAdministrator) {
             abort(403, 'Only administrators can restore deleted records.');
         }
 
         $record = ScholarshipRecord::onlyTrashed()->findOrFail($id);
-        $record->restore();
+
+        DB::transaction(function () use ($record) {
+            $record->restore();
+            $this->academicRecordSyncService->syncScholarshipRecord($record->fresh());
+        });
 
         // Log restoration
         ActivityLogService::logRecordUpdated(
@@ -506,13 +547,18 @@ class ScholarshipRecordController extends Controller
 
         if (!$record) {
             // Create a new record with defaults for pending/waiting applicants
-            $record = ScholarshipRecord::create([
-                'profile_id' => $profile_id,
-                'unified_status' => 'pending',
-                'yakap_category' => 'yakap-capitol',
-                'yakap_location' => null,
-                'date_filed' => now()
-            ]);
+            DB::transaction(function () use ($profile_id, &$record) {
+                $record = ScholarshipRecord::create([
+                    'profile_id' => $profile_id,
+                    'unified_status' => 'pending',
+                    'yakap_category' => 'yakap-capitol',
+                    'yakap_location' => null,
+                    'date_filed' => now()
+                ]);
+
+                $this->academicRecordSyncService->syncScholarshipRecord($record);
+            });
+
             $record->load(['program', 'course', 'school']);
         }
 

@@ -110,7 +110,7 @@
                                                                         style="color: #FF9500;" />
                                                                     The following record(s) match
                                                                     <strong>{{ form.first_name }} {{ form.last_name
-                                                                    }}</strong>:
+                                                                        }}</strong>:
                                                                 </div>
                                                             </div>
                                                             <div class="ios-section">
@@ -765,7 +765,8 @@ const modalStyle = computed(() => {
         };
     }
     return {
-        width: '900px',
+        width: 'calc(100vw - 24px)',
+        maxWidth: '900px',
         transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
     };
 });
@@ -908,7 +909,8 @@ onBeforeUnmount(() => {
 
 /* Duplicate detection dialog */
 .ios-dup-modal {
-    width: 480px;
+    width: calc(100vw - 24px);
+    max-width: 480px;
     max-height: 85vh;
     background: #F2F2F7;
     border-radius: 14px;

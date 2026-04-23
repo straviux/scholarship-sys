@@ -5,12 +5,12 @@
     <AdminLayout>
         <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <!-- Header with Back Button -->
-            <div class="mb-6 flex items-center justify-between">
-                <div class="flex items-center gap-4">
+            <div class="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div class="flex min-w-0 items-start gap-4 sm:items-center">
                     <AppButton icon="arrow-left" text rounded severity="secondary" @click="goBackToProfiles()"
                         v-tooltip.top="'Back to Profiles'" />
-                    <div>
-                        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                    <div class="min-w-0">
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">
                             {{ profile.first_name }} {{ profile.middle_name }} {{ profile.last_name }}
                             {{ profile.extension_name }}
                         </h1>
@@ -18,7 +18,7 @@
                     </div>
                 </div>
                 <div
-                    class="flex items-center bg-white/80 dark:bg-[#1f2633]/90 backdrop-blur-sm border border-gray-200/80 dark:border-white/10 rounded-2xl shadow-sm p-1 gap-0.5">
+                    class="flex flex-wrap items-center justify-start gap-0.5 rounded-2xl border border-gray-200/80 bg-white/80 p-1 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-[#1f2633]/90 xl:justify-end">
                     <AppButton icon="book" label="Generate Ledger" size="small" rounded text
                         class="!font-medium text-gray-700 dark:text-gray-300" @click="openLedgerModal"
                         v-tooltip.top="'Generate Scholar Ledger'" />
@@ -38,7 +38,7 @@
             <!-- Tab Navigation -->
             <div
                 class="!rounded-4xl overflow-hidden bg-white dark:bg-[#1f2633] shadow-sm border border-gray-200 dark:border-white/10">
-                <Tabs v-model:value="activeTab">
+                <Tabs v-model:value="activeTab" scrollable>
                     <TabList>
                         <Tab value="0">Personal Information</Tab>
                         <Tab value="1">Family Information</Tab>
@@ -201,21 +201,24 @@
 
                                     <div>
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Name</label>
-                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.mother_name || 'N/A' }}
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.mother_name
+                                            || 'N/A' }}
                                         </p>
                                     </div>
 
                                     <div>
                                         <label
                                             class="text-sm font-medium text-gray-600 dark:text-gray-400">Occupation</label>
-                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.mother_occupation ||
+                                        <p class="text-gray-900 dark:text-gray-100">{{
+                                            profile.mother_occupation ||
                                             'N/A' }}</p>
                                     </div>
 
                                     <div>
                                         <label
                                             class="text-sm font-medium text-gray-600 dark:text-gray-400">Contact</label>
-                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.mother_contact_no ||
+                                        <p class="text-gray-900 dark:text-gray-100">{{
+                                            profile.mother_contact_no ||
                                             'N/A' }}</p>
                                     </div>
                                 </div>
@@ -229,28 +232,32 @@
 
                                     <div>
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Name</label>
-                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.guardian_name || 'N/A' }}
+                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.guardian_name
+                                            || 'N/A' }}
                                         </p>
                                     </div>
 
                                     <div>
                                         <label
                                             class="text-sm font-medium text-gray-600 dark:text-gray-400">Relationship</label>
-                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.guardian_relationship ||
+                                        <p class="text-gray-900 dark:text-gray-100">{{
+                                            profile.guardian_relationship ||
                                             'N/A' }}</p>
                                     </div>
 
                                     <div>
                                         <label
                                             class="text-sm font-medium text-gray-600 dark:text-gray-400">Occupation</label>
-                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.guardian_occupation ||
+                                        <p class="text-gray-900 dark:text-gray-100">{{
+                                            profile.guardian_occupation ||
                                             'N/A' }}</p>
                                     </div>
 
                                     <div>
                                         <label
                                             class="text-sm font-medium text-gray-600 dark:text-gray-400">Contact</label>
-                                        <p class="text-gray-900 dark:text-gray-100">{{ profile.guardian_contact_no ||
+                                        <p class="text-gray-900 dark:text-gray-100">{{
+                                            profile.guardian_contact_no ||
                                             'N/A' }}</p>
                                     </div>
                                 </div>
@@ -263,7 +270,8 @@
                                             Gross Monthly
                                             Income</label>
                                         <p class="text-gray-900 dark:text-gray-100 text-lg font-semibold">
-                                            {{ formatCurrency(profile.parents_guardian_gross_monthly_income) }}
+                                            {{ formatCurrency(profile.parents_guardian_gross_monthly_income)
+                                            }}
                                         </p>
                                     </div>
                                 </div>
@@ -274,106 +282,229 @@
                         <TabPanel value="2">
                             <div class="p-6">
                                 <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Scholarship
-                                        Records</h3>
-                                    <AppButton v-if="hasPermission('applicants.edit')" icon="plus" label="Add Record"
-                                        @click="openAddRecordModal" severity="success" size="small" />
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                        Academic
+                                        Enrollments</h3>
+                                    <AppButton v-if="canCreateAcademicEnrollment" icon="plus" label="Add Enrollment"
+                                        @click="openAddEnrollmentModal" severity="success" size="small" />
                                 </div>
-                                <div v-if="scholarshipRecords.length > 0">
-                                    <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
-                                        :value="scholarshipRecords" stripedRows showGridlines contextMenu
-                                        @rowContextmenu="(event) => openAcademicRecordContextMenu(event.originalEvent, event.data)">
-                                        <Column header="Program & School" headerClass="min-w-[250px]"
-                                            bodyClass="min-w-[250px]">
-                                            <template #body="slotProps">
-                                                <div class="space-y-1">
-                                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{
-                                                        slotProps.data.program?.name || 'N/A' }}</p>
-                                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{
-                                                        slotProps.data.school?.name ||
-                                                        'N/A' }}</p>
+                                <div v-if="academicTermsNeedReview"
+                                    class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-400/30 dark:bg-amber-900/20 dark:text-amber-100">
+                                    <div class="flex items-start gap-3">
+                                        <AppIcon name="exclamation-triangle" :size="18"
+                                            class="mt-0.5 text-amber-600 dark:text-amber-300" />
+                                        <div class="space-y-1">
+                                            <p class="text-sm font-semibold">
+                                                Legacy academic records need review.
+                                            </p>
+                                            <p class="text-sm leading-6">
+                                                {{ academicTermsNeedingReviewCount }} enrollment{{
+                                                academicTermsNeedingReviewCount === 1 ? '' : 's' }} still {{
+                                                academicTermsNeedingReviewCount === 1 ? 'has' : 'have' }} multiple
+                                                pending or active terms. New records now allow only one open term per
+                                                enrollment. Existing records were left unchanged and should be cleaned
+                                                up manually.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-if="academicEnrollmentGroups.length > 0" class="space-y-5">
+                                    <div v-for="enrollment in academicEnrollmentGroups" :key="enrollment.id"
+                                        class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-[#1f2633]">
+                                        <div
+                                            class="flex flex-col gap-4 border-b border-gray-200 px-5 py-4 dark:border-white/10 md:flex-row md:items-center md:justify-between">
+                                            <div class="space-y-1">
+                                                <p class="text-normal font-semibold text-gray-900 dark:text-gray-100">
+                                                    {{ enrollment.program?.name || 'N/A' }}
+                                                </p>
+                                                <p class="text-lg font-medium text-gray-700 dark:text-gray-300">
+                                                    {{ enrollment.course?.name || 'N/A' }}
+                                                </p>
+                                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                                    {{ enrollment.school?.name || 'N/A' }}
+                                                </p>
+                                                <p v-if="enrollment.graduation_remarks"
+                                                    class="text-xs text-gray-500 dark:text-gray-400">
+                                                    {{ enrollment.graduation_remarks }}
+                                                </p>
+                                            </div>
+                                            <div
+                                                class="flex flex-col items-center justify-center gap-3 md:ml-auto md:max-w-[520px] md:items-center">
+                                                <div v-if="enrollment.is_graduated"
+                                                    class="flex items-center justify-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-emerald-900 shadow-sm dark:border-emerald-400/30 dark:bg-emerald-900/20 dark:text-emerald-200">
+                                                    <div
+                                                        class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white dark:bg-emerald-500">
+                                                        <AppIcon name="graduation-cap" :size="18" />
+                                                    </div>
+                                                    <div class="min-w-0 text-center">
+                                                        <p
+                                                            class="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
+                                                            Graduated
+                                                        </p>
+                                                        <p class="text-sm font-semibold">
+                                                            {{ enrollment.graduation_date ?
+                                                                formatDateShort(enrollment.graduation_date) :
+                                                                'Recorded' }}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </template>
-                                        </Column>
-
-                                        <Column header="Course" headerClass="min-w-[200px]" bodyClass="min-w-[200px]">
-                                            <template #body="slotProps">
-                                                {{ slotProps.data.course?.name || 'N/A' }}
-                                            </template>
-                                        </Column>
-
-                                        <Column header="Academic Details" headerClass="min-w-[180px]"
-                                            bodyClass="min-w-[180px]">
-                                            <template #body="slotProps">
-                                                <div class="space-y-1">
-                                                    <p class="text-sm"><span class="font-medium">Year:</span> {{
-                                                        slotProps.data.year_level || 'N/A' }}</p>
-                                                    <p class="text-sm"><span class="font-medium">Term:</span> {{
-                                                        slotProps.data.term || 'N/A' }}</p>
-                                                    <p class="text-sm"><span class="font-medium">AY:</span> {{
-                                                        slotProps.data.academic_year || 'N/A' }}</p>
+                                                <div v-if="enrollment.needsTermReview"
+                                                    class="flex items-center justify-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-amber-900 shadow-sm dark:border-amber-400/30 dark:bg-amber-900/20 dark:text-amber-100">
+                                                    <div
+                                                        class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-white dark:bg-amber-400 dark:text-amber-950">
+                                                        <AppIcon name="exclamation-triangle" :size="18" />
+                                                    </div>
+                                                    <div class="min-w-0 text-center">
+                                                        <p
+                                                            class="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">
+                                                            Needs Review
+                                                        </p>
+                                                        <p class="text-sm font-semibold">
+                                                            {{ enrollment.openTermCount }} open term{{
+                                                            enrollment.openTermCount === 1 ? '' : 's' }} found
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </template>
-                                        </Column>
-
-                                        <Column header="Dates" headerClass="min-w-[160px]" bodyClass="min-w-[160px]">
-                                            <template #body="slotProps">
-                                                <div class="space-y-1">
-                                                    <p class="text-sm"><span class="font-medium">Filed:</span> {{
-                                                        formatDateShort(slotProps.data.date_filed) }}</p>
-                                                    <p class="text-sm"><span class="font-medium">Approved:</span> {{
-                                                        formatDateShort(slotProps.data.date_approved) }}</p>
+                                                <div v-if="canManageAcademicEnrollmentActions(enrollment)"
+                                                    class="flex flex-wrap items-center justify-center gap-2 md:justify-end">
+                                                    <AppButton v-if="canCreateAcademicTerm" icon="plus" outlined
+                                                        severity="success" @click="openAddTermModal(enrollment)"
+                                                        v-tooltip.top="'Add academic term'" />
+                                                    <AppButton v-if="canEditAcademicEnrollmentDetails" icon="pencil"
+                                                        outlined severity="secondary"
+                                                        @click="openEditEnrollmentModal(enrollment)"
+                                                        v-tooltip.top="'Edit enrollment'" />
+                                                    <AppButton v-if="canEditAcademicEnrollmentDetails"
+                                                        icon="graduation-cap" outlined severity="info"
+                                                        @click="openGraduationModal(enrollment)"
+                                                        v-tooltip.top="enrollment.is_graduated ? 'Update graduation' : 'Record graduation'" />
+                                                    <AppButton v-if="canDeleteAcademicEnrollmentDetails" icon="trash"
+                                                        outlined severity="danger"
+                                                        @click="confirmDeleteEnrollment(enrollment)"
+                                                        v-tooltip.top="'Delete enrollment'" />
                                                 </div>
-                                            </template>
-                                        </Column>
+                                            </div>
+                                        </div>
+                                        <div class="p-4">
+                                            <DataTable class="academic-terms-table show-profile-table"
+                                                v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
+                                                :value="enrollment.displayTerms || enrollment.terms" showGridlines
+                                                contextMenu scrollable tableStyle="min-width: 74rem"
+                                                rowGroupMode="rowspan" :groupRowsBy="['academic_year', 'year_level']"
+                                                @rowContextmenu="(event) => openAcademicTermContextMenu(event.originalEvent, event.data)">
+                                                <Column field="academic_year" header="Academic Year"
+                                                    headerClass="min-w-[150px] text-center"
+                                                    bodyClass="min-w-[150px] align-middle text-center">
+                                                    <template #body="slotProps">
+                                                        <span
+                                                            class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                            {{ slotProps.data.academic_year || 'N/A' }}
+                                                        </span>
+                                                    </template>
+                                                </Column>
 
-                                        <Column header="Status" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
-                                            <template #body="slotProps">
-                                                <Chip v-if="slotProps.data.unified_status"
-                                                    :label="slotProps.data.unified_status"
-                                                    :class="getStatusClass(slotProps.data.unified_status)" />
-                                            </template>
-                                        </Column>
+                                                <Column field="year_level" header="Year Level"
+                                                    headerClass="min-w-[130px] text-center"
+                                                    bodyClass="min-w-[130px] align-middle text-center">
+                                                    <template #body="slotProps">
+                                                        <span class="text-sm text-gray-700 dark:text-gray-300">
+                                                            {{ slotProps.data.year_level || 'N/A' }}
+                                                        </span>
+                                                    </template>
+                                                </Column>
 
-                                        <Column header="Remarks" headerClass="min-w-[200px]" bodyClass="min-w-[200px]">
-                                            <template #body="slotProps">
-                                                <div v-if="slotProps.data.remarks" v-safe-html="slotProps.data.remarks"
-                                                    class="prose prose-sm max-w-none dark:prose-invert"></div>
-                                                <span v-else class="text-gray-400 dark:text-gray-500">—</span>
-                                            </template>
-                                        </Column>
+                                                <Column header="Semester" headerClass="min-w-[160px]"
+                                                    bodyClass="min-w-[160px]">
+                                                    <template #body="slotProps">
+                                                        <div class="space-y-1">
+                                                            <span class="text-sm text-gray-700 dark:text-gray-300">
+                                                                {{ slotProps.data.term || 'N/A' }}
+                                                            </span>
+                                                            <div v-if="slotProps.data.linkedRecordCount > 1"
+                                                                class="text-xs font-medium text-amber-700 dark:text-amber-300">
+                                                                Linked scholarship record {{
+                                                                slotProps.data.linkedRecordIndex + 1 }} of {{
+                                                                slotProps.data.linkedRecordCount }}
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </Column>
 
-                                        <Column header="Attachments" headerClass="min-w-[150px]"
-                                            bodyClass="min-w-[150px]">
-                                            <template #body="slotProps">
-                                                <div class="flex gap-2">
-                                                    <AppButton v-if="hasPermission('applicants.edit')" icon="qrcode"
-                                                        size="small" outlined severity="info"
-                                                        v-tooltip.top="'Show QR Code'"
-                                                        @click="showQrCode(slotProps.data)" />
-                                                    <AppButton v-if="hasPermission('applicants.edit')" icon="paperclip"
-                                                        size="small" outlined v-tooltip.top="'Manage Attachments'"
-                                                        @click="manageAttachments(slotProps.data)" />
-                                                    <Chip
-                                                        v-if="slotProps.data.attachments && slotProps.data.attachments.length > 0"
-                                                        :label="slotProps.data.attachments.length.toString()"
-                                                        class="bg-blue-100 text-blue-800 dark:text-blue-300" />
-                                                </div>
-                                            </template>
-                                        </Column>
+                                                <Column header="Dates" headerClass="min-w-[160px]"
+                                                    bodyClass="min-w-[160px]">
+                                                    <template #body="slotProps">
+                                                        <div class="space-y-1">
+                                                            <p class="text-sm"><span class="font-medium">Filed:</span>
+                                                                {{
+                                                                    formatDateShort(slotProps.data.date_filed)
+                                                                }}</p>
+                                                            <p class="text-sm"><span
+                                                                    class="font-medium">Approved:</span>
+                                                                {{
+                                                                    formatDateShort(slotProps.data.date_approved)
+                                                                }}</p>
+                                                        </div>
+                                                    </template>
+                                                </Column>
 
-                                        <Column header="Actions" headerClass="min-w-[150px]" bodyClass="min-w-[150px]"
-                                            v-if="hasPermission('applicants.edit')">
-                                            <template #body="slotProps">
-                                                <div class="flex gap-1">
-                                                    <AppButton icon="ellipsis-vertical" size="small" outlined
-                                                        severity="secondary" v-tooltip.top="'Open Actions'"
-                                                        @click="openAcademicRecordContextMenu($event, slotProps.data)" />
-                                                </div>
-                                            </template>
-                                        </Column>
-                                    </DataTable>
-                                    <ContextMenu ref="academicRecordContextMenu" :model="academicRecordContextMenuItems"
+                                                <Column header="Status" headerClass="min-w-[120px]"
+                                                    bodyClass="min-w-[120px]">
+                                                    <template #body="slotProps">
+                                                        <Chip v-if="slotProps.data.unified_status"
+                                                            :label="slotProps.data.unified_status"
+                                                            :class="getStatusClass(slotProps.data.unified_status)" />
+                                                        <span v-else class="text-gray-400 dark:text-gray-500">—</span>
+                                                    </template>
+                                                </Column>
+
+                                                <Column header="Remarks" headerClass="min-w-[220px]"
+                                                    bodyClass="min-w-[220px]">
+                                                    <template #body="slotProps">
+                                                        <div v-if="slotProps.data.remarks"
+                                                            v-safe-html="slotProps.data.remarks"
+                                                            class="prose prose-sm max-w-none dark:prose-invert">
+                                                        </div>
+                                                        <span v-else class="text-gray-400 dark:text-gray-500">—</span>
+                                                    </template>
+                                                </Column>
+
+                                                <Column header="Attachments" headerClass="min-w-[80px]"
+                                                    bodyClass="min-w-[80px]">
+                                                    <template #body="slotProps">
+                                                        <div class="flex gap-2">
+                                                            <AppButton
+                                                                v-if="canViewScholarshipAttachments && resolveAcademicRecord(slotProps.data)"
+                                                                icon="qrcode" text severity="info"
+                                                                v-tooltip.top="'Show QR Code'"
+                                                                @click="showQrCode(resolveAcademicRecord(slotProps.data))" />
+                                                            <AppButton
+                                                                v-if="canViewScholarshipAttachments && resolveAcademicRecord(slotProps.data)"
+                                                                icon="paperclip" text
+                                                                v-tooltip.top="'Manage Attachments'"
+                                                                @click="manageAttachments(resolveAcademicRecord(slotProps.data))" />
+                                                            <Chip
+                                                                v-if="slotProps.data.attachments && slotProps.data.attachments.length > 0"
+                                                                :label="slotProps.data.attachments.length.toString()"
+                                                                class="bg-blue-100 text-blue-800 dark:text-blue-300" />
+                                                        </div>
+                                                    </template>
+                                                </Column>
+
+                                                <Column header="Actions" headerClass="min-w-[50px]"
+                                                    bodyClass="min-w-[50px]" v-if="hasAcademicTermActionsPermission">
+                                                    <template #body="slotProps">
+                                                        <div class="flex gap-1">
+                                                            <AppButton v-if="canOpenAcademicTermActions(slotProps.data)"
+                                                                icon="ellipsis-vertical" text severity="secondary"
+                                                                v-tooltip.top="'Open Actions'"
+                                                                @click="openAcademicTermContextMenu($event, slotProps.data)" />
+                                                        </div>
+                                                    </template>
+                                                </Column>
+                                            </DataTable>
+                                        </div>
+                                    </div>
+                                    <ContextMenu ref="academicTermContextMenu" :model="academicTermContextMenuItems"
                                         appendTo="body">
                                         <template #item="{ item, props }">
                                             <a v-ripple v-bind="props.action" class="flex items-center gap-2 w-full">
@@ -385,7 +516,8 @@
                                 </div>
                                 <div v-else class="text-center py-12">
                                     <AppIcon name="info-circle" :size="48" class="text-gray-300 mb-4" />
-                                    <p class="text-gray-500 dark:text-gray-400">No scholarship records available</p>
+                                    <p class="text-gray-500 dark:text-gray-400">No academic enrollments
+                                        available</p>
                                 </div>
                             </div>
                         </TabPanel>
@@ -400,10 +532,13 @@
                         <TabPanel value="4">
                             <div class="p-6">
                                 <div v-if="allAttachments.length > 0">
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">All
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                                        All
                                         Attachments</h3>
-                                    <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
-                                        :value="allAttachments" stripedRows showGridlines paginator :rows="10">
+                                    <DataTable class="show-profile-table"
+                                        v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="allAttachments"
+                                        stripedRows showGridlines paginator :rows="10" scrollable
+                                        tableStyle="min-width: 68rem">
                                         <Column header="Source" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
                                             <template #body="slotProps">
                                                 <Chip :label="slotProps.data.attachment_source"
@@ -417,8 +552,9 @@
                                                 <div class="flex items-center gap-2">
                                                     <i :class="getFileIcon(slotProps.data.file_type)"
                                                         class="text-blue-600 dark:text-blue-400"></i>
-                                                    <span class="font-medium">{{ slotProps.data.attachment_name
-                                                        }}</span>
+                                                    <span class="font-medium">{{
+                                                        slotProps.data.attachment_name
+                                                    }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -427,8 +563,9 @@
                                             bodyClass="min-w-[250px]">
                                             <template #body="slotProps">
                                                 <div class="space-y-1">
-                                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{
-                                                        slotProps.data.record_info.program }}</p>
+                                                    <p class="font-semibold text-gray-900 dark:text-gray-100">
+                                                        {{
+                                                            slotProps.data.record_info.program }}</p>
                                                     <p class="text-sm text-gray-600 dark:text-gray-400">{{
                                                         slotProps.data.record_info.academic_year }} - {{
                                                             slotProps.data.record_info.term }}</p>
@@ -470,8 +607,10 @@
                                 </div>
                                 <div v-else class="text-center py-12">
                                     <AppIcon name="paperclip" :size="48" class="text-gray-300 mb-4" />
-                                    <p class="text-gray-500 dark:text-gray-400 text-lg">No Attachments Available</p>
-                                    <p class="text-gray-400 dark:text-gray-500 text-sm mt-2">Upload attachments from the
+                                    <p class="text-gray-500 dark:text-gray-400 text-lg">No Attachments
+                                        Available</p>
+                                    <p class="text-gray-400 dark:text-gray-500 text-sm mt-2">Upload
+                                        attachments from the
                                         Academic
                                         Information tab</p>
                                 </div>
@@ -484,9 +623,11 @@
                                 <!-- Status Timeline -->
                                 <div v-if="statusTimeline && statusTimeline.length > 0" class="space-y-4">
                                     <div class="mb-4">
-                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Status Change
+                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                            Status Change
                                             Timeline</h3>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">Complete history of all
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">Complete history
+                                            of all
                                             status updates</p>
                                     </div>
 
@@ -512,16 +653,18 @@
                                                         <h5 class="font-semibold text-gray-900 dark:text-gray-100">
                                                             Status: <span class="text-blue-600 dark:text-blue-400">{{
                                                                 timeline.new_status
-                                                                }}</span>
+                                                            }}</span>
                                                         </h5>
-                                                        <p class="text-sm text-gray-600 dark:text-gray-400">{{
-                                                            formatDateTime(timeline.performed_at) }}</p>
+                                                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                                                            {{
+                                                                formatDateTime(timeline.performed_at) }}</p>
                                                     </div>
                                                 </div>
 
                                                 <div class="grid grid-cols-2 gap-4 mb-3">
                                                     <div>
-                                                        <p class="text-xs text-gray-600 dark:text-gray-400">Previous
+                                                        <p class="text-xs text-gray-600 dark:text-gray-400">
+                                                            Previous
                                                             Status</p>
                                                         <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                             {{
@@ -529,7 +672,8 @@
                                                             }}</p>
                                                     </div>
                                                     <div>
-                                                        <p class="text-xs text-gray-600 dark:text-gray-400">New Status
+                                                        <p class="text-xs text-gray-600 dark:text-gray-400">
+                                                            New Status
                                                         </p>
                                                         <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                             {{
@@ -539,9 +683,11 @@
                                                 </div>
 
                                                 <div class="mb-3">
-                                                    <p class="text-xs text-gray-600 dark:text-gray-400">Encoded by</p>
-                                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{
-                                                        timeline.changed_by?.name || 'System'
+                                                    <p class="text-xs text-gray-600 dark:text-gray-400">
+                                                        Encoded by</p>
+                                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                        {{
+                                                            timeline.changed_by?.name || 'System'
                                                         }}</p>
                                                 </div>
 
@@ -563,7 +709,8 @@
                                 <div v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
                                     <AppIcon name="inbox" :size="48" class="mb-4 opacity-50" />
                                     <p class="text-lg">No Status History</p>
-                                    <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">No status changes have been
+                                    <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">No status
+                                        changes have been
                                         recorded yet</p>
                                 </div>
                             </div>
@@ -656,7 +803,8 @@
                                 <div v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
                                     <AppIcon name="history" :size="48" class="mb-4 opacity-50" />
                                     <p class="text-lg">No Activity Records</p>
-                                    <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">No activities have been
+                                    <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">No activities
+                                        have been
                                         logged for this
                                         profile yet</p>
                                 </div>
@@ -675,7 +823,7 @@
 
         <!-- Manage Attachments Modal -->
         <ManageAttachmentsModal v-model:visible="showAttachmentsModal" :record="selectedRecord"
-            :has-edit-permission="hasPermission('applicants.edit')" @success="handleModalSuccess" />
+            :has-edit-permission="canEditScholarshipAttachments" @success="handleModalSuccess" />
 
         <!-- View Attachment Modal -->
         <ViewAttachmentModal v-model:visible="showViewerModal" :attachment="viewerAttachment" />
@@ -683,12 +831,20 @@
         <!-- QR Code Modal -->
         <QrCodeModal v-model:visible="showQrModal" :qr-data="qrCodeData" />
 
-        <!-- Add/Edit Scholarship Record Modal -->
-        <ScholarshipRecordModal v-model:visible="showRecordModal" :mode="recordModalMode" :record="editingRecord"
-            :profile-id="profile.profile_id" @success="handleModalSuccess" />
+        <AcademicEnrollmentModal v-model:visible="showEnrollmentModal" :mode="enrollmentModalMode"
+            :enrollment="editingEnrollment" :profile-id="profile.profile_id" @success="handleModalSuccess" />
 
-        <!-- Delete Confirmation Dialog -->
-        <DeleteRecordModal v-model:visible="showDeleteConfirm" :record="recordToDelete" @success="handleModalSuccess" />
+        <AcademicEnrollmentTermModal v-model:visible="showTermModal" :mode="termModalMode" :term="editingTerm"
+            :enrollment-id="activeEnrollmentForTerm?.id ?? null" @success="handleModalSuccess" />
+
+        <AcademicEnrollmentGraduationModal v-model:visible="showGraduationModal" :enrollment="enrollmentForGraduation"
+            @success="handleModalSuccess" />
+
+        <AcademicEnrollmentTermCompletionModal v-model:visible="showTermCompletionModal" :term="termForCompletion"
+            @success="handleModalSuccess" />
+
+        <AcademicRecordDeleteModal v-model:visible="showAcademicDeleteModal" :target="deleteTarget"
+            :target-type="deleteTargetType" @success="handleModalSuccess" />
 
         <!-- Scholar Ledger PDF Preview -->
         <PdfPreviewModal :show="showPdfPreview" @update:show="showPdfPreview = $event" :htmlDoc="pdfPreviewHtml"
@@ -728,19 +884,33 @@
                                 <AppIcon name="file-text" :size="11" style="color: #007AFF; margin-right: 4px;" />
                                 Ledger Details
                             </div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
-                                        <span class="ios-row-label">Other Assistance</span>
-                                        <InputText v-model="ledgerOtherAssistance" placeholder="Enter other assistance"
-                                            style="border: none; background: transparent; box-shadow: none; padding: 0; font-size: 14px; color: #1c1c1e; width: 100%; outline: none;" />
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+                                <div class="ios-card">
+                                    <div class="ios-row" style="align-items: flex-start;">
+                                        <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
+                                            <span class="ios-row-label">Other Assistance</span>
+                                            <Editor v-model="ledgerOtherAssistance" editorStyle="height: 120px"
+                                                class="ledger-other-assistance-editor">
+                                                <template #toolbar>
+                                                    <span class="ql-formats">
+                                                        <button class="ql-bold"></button>
+                                                        <button class="ql-italic"></button>
+                                                        <button class="ql-underline"></button>
+                                                    </span>
+                                                </template>
+                                            </Editor>
+                                        </div>
                                     </div>
+                                </div>
 
-                                    <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
-                                        <span class="ios-row-label">Licensure Examination Result</span>
-                                        <InputText v-model="ledgerLicensureExaminationResult"
-                                            placeholder="Enter licensure examination result"
-                                            style="border: none; background: transparent; box-shadow: none; padding: 0; font-size: 14px; color: #1c1c1e; width: 100%; outline: none;" />
+                                <div class="ios-card">
+                                    <div class="ios-row">
+                                        <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
+                                            <span class="ios-row-label">Licensure Examination Result</span>
+                                            <DatePicker v-model="ledgerLicensureExaminationResult"
+                                                dateFormat="MM dd, yy" placeholder="April 08, 2026"
+                                                class="w-full ledger-licensure-datepicker" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -757,7 +927,7 @@
                         <div v-for="section in ledgerSections" :key="section.yearLevel" class="ios-section">
                             <div class="ios-section-label">{{ formatYearLevel(section.yearLevel) }}</div>
                             <div class="ios-card" style="overflow: auto;">
-                                <table style="width: 100%; min-width: 1120px; border-collapse: collapse;">
+                                <table style="width: 100%; min-width: 960px; border-collapse: collapse;">
                                     <thead>
                                         <tr style="background: #f9f9fb; border-bottom: 0.5px solid #e5e5ea;">
                                             <th
@@ -950,8 +1120,11 @@ import FamilyInformationModal from '@/Components/modals/FamilyInformationModal.v
 import ManageAttachmentsModal from '@/Components/modals/ManageAttachmentsModal.vue';
 import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
 import QrCodeModal from '@/Components/modals/QrCodeModal.vue';
-import ScholarshipRecordModal from '@/Components/modals/ScholarshipRecordModal.vue';
-import DeleteRecordModal from '@/Components/modals/DeleteRecordModal.vue';
+import AcademicEnrollmentModal from '@/Components/modals/AcademicEnrollmentModal.vue';
+import AcademicEnrollmentTermModal from '@/Components/modals/AcademicEnrollmentTermModal.vue';
+import AcademicEnrollmentGraduationModal from '@/Components/modals/AcademicEnrollmentGraduationModal.vue';
+import AcademicEnrollmentTermCompletionModal from '@/Components/modals/AcademicEnrollmentTermCompletionModal.vue';
+import AcademicRecordDeleteModal from '@/Components/modals/AcademicRecordDeleteModal.vue';
 import ObligationsTransactions from '@/Components/ObligationsTransactions.vue';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
 
@@ -1003,6 +1176,7 @@ const certDragOffset = ref({ x: 0, y: 0 });
 const certDragStart = ref(null);
 const certModalStyle = computed(() => ({
     width: '380px',
+    maxWidth: 'calc(100vw - 24px)',
     transform: `translate(${certDragOffset.value.x}px, ${certDragOffset.value.y}px)`,
 }));
 function onCertDragStart(e) {
@@ -1133,7 +1307,7 @@ const buildLedgerSectionsFromEntries = (entries = []) => {
 
 const ledgerSections = ref(buildDefaultLedgerSections());
 const ledgerOtherAssistance = ref('');
-const ledgerLicensureExaminationResult = ref('');
+const ledgerLicensureExaminationResult = ref(null);
 const ledgerSaving = ref(false);
 
 const getLedgerSection = (yearLevel) => {
@@ -1211,9 +1385,31 @@ const props = defineProps({
 
 const savedLedgerState = ref(props.profile?.scholar_ledger ?? null);
 
+const parseLedgerDisplayDate = (value) => {
+    const rawValue = String(value ?? '').trim();
+    if (!rawValue) {
+        return null;
+    }
+
+    const parsedDate = new Date(rawValue);
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+};
+
+const formatLedgerDisplayDate = (value) => {
+    if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+        return null;
+    }
+
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        day: '2-digit',
+        year: 'numeric',
+    }).format(value);
+};
+
 const hydrateLedgerState = (ledger = savedLedgerState.value) => {
     ledgerOtherAssistance.value = ledger?.other_assistance ?? '';
-    ledgerLicensureExaminationResult.value = ledger?.licensure_examination_result ?? '';
+    ledgerLicensureExaminationResult.value = parseLedgerDisplayDate(ledger?.licensure_examination_result);
     ledgerSections.value = buildLedgerSectionsFromEntries(ledger?.entries ?? []);
 };
 
@@ -1230,15 +1426,24 @@ const showFamilyInfoModal = ref(false);
 const showAttachmentsModal = ref(false);
 const showViewerModal = ref(false);
 const showQrModal = ref(false);
-const showRecordModal = ref(false);
-const showDeleteConfirm = ref(false);
-const recordModalMode = ref('add'); // 'add' or 'edit'
-const editingRecord = ref(null);
-const recordToDelete = ref(null);
+const showEnrollmentModal = ref(false);
+const showTermModal = ref(false);
+const showGraduationModal = ref(false);
+const showTermCompletionModal = ref(false);
+const showAcademicDeleteModal = ref(false);
+const enrollmentModalMode = ref('add');
+const termModalMode = ref('add');
+const editingEnrollment = ref(null);
+const activeEnrollmentForTerm = ref(null);
+const editingTerm = ref(null);
+const enrollmentForGraduation = ref(null);
+const termForCompletion = ref(null);
+const deleteTarget = ref(null);
+const deleteTargetType = ref('term');
 const qrCodeData = ref(null);
 const selectedRecord = ref(null);
-const selectedAcademicRecord = ref(null);
-const academicRecordContextMenu = ref(null);
+const selectedAcademicTerm = ref(null);
+const academicTermContextMenu = ref(null);
 const viewerAttachment = ref(null);
 const activityLogs = ref([]);
 const statusTimeline = ref([]);
@@ -1281,34 +1486,207 @@ const scholarshipRecords = computed(() => {
     return props.profile.scholarship_grant;
 });
 
-const academicRecordContextMenuItems = computed(() => {
-    if (!selectedAcademicRecord.value || !hasPermission('applicants.edit')) {
+const OPEN_ACADEMIC_TERM_STATUSES = ['pending', 'active'];
+
+const normalizeAcademicTermStatus = (status) => String(status ?? '').trim().toLowerCase();
+
+const countOpenAcademicTerms = (terms = []) => {
+    return terms.filter((term) => OPEN_ACADEMIC_TERM_STATUSES.includes(normalizeAcademicTermStatus(term?.unified_status))).length;
+};
+
+const createAcademicDisplayRows = (terms = [], enrollmentId = null) => {
+    return terms.flatMap((term) => {
+        const mappedRecords = Array.isArray(term?.record_maps)
+            ? term.record_maps
+                .map((recordMap) => recordMap?.scholarship_record || null)
+                .filter(Boolean)
+            : [];
+
+        const fallbackRecord = term?.primary_record_map?.scholarship_record || null;
+        const linkedRecords = mappedRecords.length > 0
+            ? mappedRecords
+            : (fallbackRecord ? [fallbackRecord] : []);
+
+        if (linkedRecords.length === 0) {
+            return [{
+                ...term,
+                displayId: `term:${term.id}:unmapped`,
+                isGroupedTerm: true,
+                enrollmentId,
+                legacyRecord: null,
+                attachments: [],
+                linkedRecordCount: 0,
+                linkedRecordIndex: 0,
+            }];
+        }
+
+        return linkedRecords.map((record, linkedRecordIndex) => ({
+            ...term,
+            displayId: `term:${term.id}:record:${record.id ?? linkedRecordIndex}`,
+            isGroupedTerm: true,
+            enrollmentId,
+            legacyRecord: record,
+            attachments: record.attachments || [],
+            linkedRecordCount: linkedRecords.length,
+            linkedRecordIndex,
+        }));
+    });
+};
+
+const buildLegacyAcademicEnrollmentGroups = (records = []) => {
+    const groups = new Map();
+
+    records.forEach((record) => {
+        const key = [
+            record.profile_id || props.profile.profile_id,
+            record.school_id ?? 'none',
+            record.course_id ?? 'none',
+        ].join(':');
+
+        if (!groups.has(key)) {
+            groups.set(key, {
+                id: `legacy:${key}`,
+                isGroupedEnrollment: false,
+                program: record.program || null,
+                school: record.school || null,
+                course: record.course || null,
+                graduation_date: null,
+                graduation_remarks: null,
+                is_graduated: false,
+                terms: [],
+            });
+        }
+
+        groups.get(key).terms.push({
+            ...record,
+            displayId: `legacy-record:${record.id ?? record.record_id ?? groups.get(key).terms.length}`,
+            isGroupedTerm: false,
+            enrollmentId: null,
+            legacyRecord: record,
+            attachments: record.attachments || [],
+            linkedRecordCount: 1,
+            linkedRecordIndex: 0,
+        });
+    });
+
+    return Array.from(groups.values()).map((group) => {
+        const openTermCount = countOpenAcademicTerms(group.terms);
+
+        return {
+            ...group,
+            displayTerms: group.terms,
+            openTermCount,
+            needsTermReview: openTermCount > 1,
+        };
+    });
+};
+
+const supportsAcademicEnrollmentCrud = computed(() => Array.isArray(props.profile.academic_enrollments));
+
+const academicEnrollmentGroups = computed(() => {
+    const enrollments = Array.isArray(props.profile.academic_enrollments)
+        ? props.profile.academic_enrollments
+        : [];
+
+    if (enrollments.length > 0) {
+        return enrollments.map((enrollment) => ({
+            terms: Array.isArray(enrollment.terms)
+                ? enrollment.terms.map((term) => ({
+                    ...term,
+                    isGroupedTerm: true,
+                    enrollmentId: enrollment.id,
+                    legacyRecord: term.primary_record_map?.scholarship_record || null,
+                    attachments: term.primary_record_map?.scholarship_record?.attachments || [],
+                }))
+                : [],
+            displayTerms: createAcademicDisplayRows(enrollment.terms, enrollment.id),
+            id: enrollment.id,
+            isGroupedEnrollment: true,
+            program: enrollment.program || null,
+            school: enrollment.school || null,
+            course: enrollment.course || null,
+            graduation_date: enrollment.graduation_date || null,
+            graduation_remarks: enrollment.graduation_remarks || null,
+            is_graduated: Boolean(enrollment.is_graduated || enrollment.graduation_date),
+            openTermCount: countOpenAcademicTerms(enrollment.terms),
+            needsTermReview: countOpenAcademicTerms(enrollment.terms) > 1,
+        }));
+    }
+
+    return buildLegacyAcademicEnrollmentGroups(scholarshipRecords.value);
+});
+
+const academicTermsNeedingReviewCount = computed(() => {
+    return academicEnrollmentGroups.value.filter((enrollment) => enrollment.needsTermReview).length;
+});
+
+const academicTermsNeedReview = computed(() => academicTermsNeedingReviewCount.value > 0);
+
+const canManageAcademicEnrollment = (enrollment) => {
+    return supportsAcademicEnrollmentCrud.value && Boolean(enrollment?.isGroupedEnrollment && typeof enrollment?.id === 'number');
+};
+
+const canManageAcademicTerm = (term) => {
+    return supportsAcademicEnrollmentCrud.value && Boolean(term?.isGroupedTerm && typeof term?.id === 'number');
+};
+
+const canCreateAcademicEnrollment = computed(() => supportsAcademicEnrollmentCrud.value && hasPermission('scholarships.create'));
+const canCreateAcademicTerm = computed(() => hasPermission('scholarships.create'));
+const canEditAcademicEnrollmentDetails = computed(() => hasPermission('scholarships.edit'));
+const canDeleteAcademicEnrollmentDetails = computed(() => hasPermission('scholarships.delete'));
+const canEditAcademicTermDetails = computed(() => hasPermission('scholarships.edit'));
+const canDeleteAcademicTermDetails = computed(() => hasPermission('scholarships.delete'));
+const hasAcademicTermActionsPermission = computed(() => canEditAcademicTermDetails.value || canDeleteAcademicTermDetails.value);
+const canViewScholarshipAttachments = computed(() => hasPermission('scholarships.view'));
+const canEditScholarshipAttachments = computed(() => hasPermission('scholarships.edit'));
+
+const canManageAcademicEnrollmentActions = (enrollment) => {
+    return canManageAcademicEnrollment(enrollment) && (
+        canCreateAcademicTerm.value
+        || canEditAcademicEnrollmentDetails.value
+        || canDeleteAcademicEnrollmentDetails.value
+    );
+};
+
+const canOpenAcademicTermActions = (term) => {
+    return canManageAcademicTerm(term) && hasAcademicTermActionsPermission.value;
+};
+
+const isCompletedAcademicTerm = (term) => {
+    return String(term?.unified_status ?? '').toLowerCase() === 'completed';
+};
+
+const academicTermContextMenuItems = computed(() => {
+    if (!selectedAcademicTerm.value || !canOpenAcademicTermActions(selectedAcademicTerm.value)) {
         return [];
     }
 
-    return [
-        {
-            label: 'Edit Record',
-            icon: 'pencil',
-            command: () => openEditRecordModal(selectedAcademicRecord.value),
-        },
-        {
-            label: 'Manage Attachments',
-            icon: 'paperclip',
-            command: () => manageAttachments(selectedAcademicRecord.value),
-        },
-        {
-            label: 'Show QR Code',
-            icon: 'qrcode',
-            command: () => showQrCode(selectedAcademicRecord.value),
-        },
-        { separator: true },
-        {
-            label: 'Delete Record',
+    const items = [];
+
+    if (canEditAcademicTermDetails.value) {
+        items.push(
+            {
+                label: 'Edit Term',
+                icon: 'pencil',
+                command: () => openEditTermModal(selectedAcademicTerm.value),
+            },
+            {
+                label: isCompletedAcademicTerm(selectedAcademicTerm.value) ? 'Update Completion' : 'Complete Semester',
+                icon: 'check-circle',
+                command: () => openCompleteTermModal(selectedAcademicTerm.value),
+            },
+        );
+    }
+
+    if (canDeleteAcademicTermDetails.value) {
+        items.push({
+            label: 'Delete Term',
             icon: 'trash',
-            command: () => confirmDeleteRecord(selectedAcademicRecord.value),
-        },
-    ];
+            command: () => confirmDeleteTerm(selectedAcademicTerm.value),
+        });
+    }
+
+    return items;
 });
 
 const allAttachments = computed(() => {
@@ -1361,6 +1739,14 @@ const allAttachments = computed(() => {
 
     return attachments;
 });
+
+const resolveAcademicRecord = (termOrRecord) => {
+    if (!termOrRecord) {
+        return null;
+    }
+
+    return termOrRecord.legacyRecord || termOrRecord;
+};
 
 // Methods
 const formatDate = (dateString) => {
@@ -1500,9 +1886,33 @@ const openLedgerModal = () => {
     showLedgerModal.value = true;
 };
 
+const getEditorTextContent = (value) => {
+    const html = String(value ?? '').trim();
+    if (!html) {
+        return '';
+    }
+
+    if (typeof DOMParser !== 'undefined') {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return (doc.body.textContent || '')
+            .replace(/\u00a0/g, ' ')
+            .trim();
+    }
+
+    return html
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .trim();
+};
+
+const normalizeEditorHtml = (value) => {
+    const html = String(value ?? '').trim();
+    return getEditorTextContent(html) ? html : null;
+};
+
 const buildLedgerPayload = () => ({
-    other_assistance: ledgerOtherAssistance.value.trim() || null,
-    licensure_examination_result: ledgerLicensureExaminationResult.value.trim() || null,
+    other_assistance: normalizeEditorHtml(ledgerOtherAssistance.value),
+    licensure_examination_result: formatLedgerDisplayDate(ledgerLicensureExaminationResult.value),
     entries: ledgerPrintableRows.value,
 });
 
@@ -1581,7 +1991,7 @@ const generateLedger = async () => {
         preparedByDesignation: authUser?.office_designation ?? '',
         today,
         otherAssistance: ledgerOtherAssistance.value.trim(),
-        licensureExaminationResult: ledgerLicensureExaminationResult.value.trim(),
+        licensureExaminationResult: formatLedgerDisplayDate(ledgerLicensureExaminationResult.value) ?? '',
         ledgerEntries: ledgerPrintableRows.value,
     });
     const safeName = `${props.profile.last_name}_${props.profile.first_name}`.replace(/\s+/g, '_');
@@ -1602,31 +2012,94 @@ const goBackToProfiles = () => {
     }
 };
 
-// Scholarship Record CRUD Methods
-const openAddRecordModal = () => {
-    recordModalMode.value = 'add';
-    editingRecord.value = null;
-    showRecordModal.value = true;
-};
-
-const openAcademicRecordContextMenu = (event, record) => {
-    if (!hasPermission('applicants.edit')) {
+// Academic enrollment and term actions
+const openAddEnrollmentModal = () => {
+    if (!canCreateAcademicEnrollment.value) {
         return;
     }
 
-    selectedAcademicRecord.value = record;
-    academicRecordContextMenu.value?.show(event);
+    enrollmentModalMode.value = 'add';
+    editingEnrollment.value = null;
+    showEnrollmentModal.value = true;
 };
 
-const openEditRecordModal = (record) => {
-    recordModalMode.value = 'edit';
-    editingRecord.value = record;
-    showRecordModal.value = true;
+const openEditEnrollmentModal = (enrollment) => {
+    if (!canManageAcademicEnrollment(enrollment) || !canEditAcademicEnrollmentDetails.value) {
+        return;
+    }
+
+    enrollmentModalMode.value = 'edit';
+    editingEnrollment.value = enrollment;
+    showEnrollmentModal.value = true;
 };
 
-const confirmDeleteRecord = (record) => {
-    recordToDelete.value = record;
-    showDeleteConfirm.value = true;
+const openAddTermModal = (enrollment) => {
+    if (!canManageAcademicEnrollment(enrollment) || !canCreateAcademicTerm.value) {
+        return;
+    }
+
+    termModalMode.value = 'add';
+    activeEnrollmentForTerm.value = enrollment;
+    editingTerm.value = null;
+    showTermModal.value = true;
+};
+
+const openAcademicTermContextMenu = (event, term) => {
+    if (!canOpenAcademicTermActions(term)) {
+        return;
+    }
+
+    selectedAcademicTerm.value = term;
+    academicTermContextMenu.value?.show(event);
+};
+
+const openEditTermModal = (term) => {
+    if (!canManageAcademicTerm(term) || !canEditAcademicTermDetails.value) {
+        return;
+    }
+
+    termModalMode.value = 'edit';
+    editingTerm.value = term;
+    activeEnrollmentForTerm.value = academicEnrollmentGroups.value.find((enrollment) => enrollment.id === term.enrollmentId) || null;
+    showTermModal.value = true;
+};
+
+const openGraduationModal = (enrollment) => {
+    if (!canManageAcademicEnrollment(enrollment) || !canEditAcademicEnrollmentDetails.value) {
+        return;
+    }
+
+    enrollmentForGraduation.value = enrollment;
+    showGraduationModal.value = true;
+};
+
+const openCompleteTermModal = (term) => {
+    if (!canManageAcademicTerm(term) || !canEditAcademicTermDetails.value) {
+        return;
+    }
+
+    termForCompletion.value = term;
+    showTermCompletionModal.value = true;
+};
+
+const confirmDeleteEnrollment = (enrollment) => {
+    if (!canManageAcademicEnrollment(enrollment) || !canDeleteAcademicEnrollmentDetails.value) {
+        return;
+    }
+
+    deleteTargetType.value = 'enrollment';
+    deleteTarget.value = enrollment;
+    showAcademicDeleteModal.value = true;
+};
+
+const confirmDeleteTerm = (term) => {
+    if (!canManageAcademicTerm(term) || !canDeleteAcademicTermDetails.value) {
+        return;
+    }
+
+    deleteTargetType.value = 'term';
+    deleteTarget.value = term;
+    showAcademicDeleteModal.value = true;
 };
 
 const getStatusClass = (status) => {
@@ -1667,6 +2140,13 @@ const showQrCode = async (record) => {
 
 // Handle success from external modals
 const handleModalSuccess = () => {
+    editingEnrollment.value = null;
+    activeEnrollmentForTerm.value = null;
+    editingTerm.value = null;
+    enrollmentForGraduation.value = null;
+    termForCompletion.value = null;
+    deleteTarget.value = null;
+    selectedAcademicTerm.value = null;
     router.reload({ only: ['profile'] });
     if (refreshActivityLogs) refreshActivityLogs();
 };
@@ -1926,5 +2406,56 @@ const loadStatusTimeline = async () => {
 
 .ledger-ios-nav :deep(.ledger-nav-button.ios-nav-action) {
     color: #374151;
+}
+
+.ledger-other-assistance-editor {
+    width: 100%;
+}
+
+.ledger-other-assistance-editor :deep(.p-editor-container) {
+    border: 1px solid #d1d1d6;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.ledger-other-assistance-editor :deep(.ql-toolbar.ql-snow) {
+    border: none;
+    border-bottom: 0.5px solid #e5e5ea;
+    padding: 6px 8px;
+}
+
+.ledger-other-assistance-editor :deep(.ql-container.ql-snow) {
+    border: none;
+    font-size: 14px;
+    color: #1c1c1e;
+}
+
+.ledger-other-assistance-editor :deep(.ql-editor) {
+    padding: 10px 12px;
+}
+
+.ledger-licensure-datepicker {
+    width: 100%;
+}
+
+.ledger-licensure-datepicker :deep(.p-inputtext),
+.ledger-licensure-datepicker :deep(.p-datepicker-input) {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    font-size: 14px;
+    color: #1c1c1e;
+    width: 100%;
+    outline: none;
+}
+
+.show-profile-table :deep(.p-datatable-table-container) {
+    overflow-x: auto;
+}
+
+.academic-terms-table :deep(.p-datatable-tbody > tr > td:first-child) {
+    border-left: 1px solid var(--p-datatable-body-cell-border-color, var(--p-content-border-color, #e5e7eb));
 }
 </style>

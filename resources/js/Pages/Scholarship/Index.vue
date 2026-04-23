@@ -5,12 +5,12 @@
     <AdminLayout>
         <div>
             <!-- Toolbar -->
-            <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+            <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-4 sm:!px-6 lg:!px-8 scholarship-toolbar">
                 <template #start>
-                    <div class="flex items-center gap-3">
+                    <div class="flex min-w-0 items-center gap-3 scholarship-toolbar__brand">
                         <AppIcon name="users" :size="32" class="text-indigo-500" />
-                        <div>
-                            <h1 class="text-2xl font-bold text-gray-700">Scholarship Profiles</h1>
+                        <div class="min-w-0">
+                            <h1 class="text-xl font-bold text-gray-700 sm:text-2xl">Scholarship Profiles</h1>
                             <p class="text-sm text-gray-600">Browse and manage scholarship applicant profiles</p>
                         </div>
                     </div>
@@ -19,7 +19,7 @@
                 <template #center>
                 </template>
                 <template #end>
-                    <div class="flex gap-3 items-center">
+                    <div class="flex flex-wrap items-center justify-end gap-3 scholarship-toolbar__actions">
                         <AppButton icon="plus" @click="addRecordPopover.toggle($event)" severity="success"
                             v-tooltip.bottom="'Add New Record'" v-if="hasPermission('applicants.create')" rounded
                             outlined />
@@ -41,7 +41,8 @@
             </Toolbar>
 
             <!-- Filter Drawer -->
-            <FloatingDrawer v-model:visible="showFilterDrawer" header="All Filters" position="right" class="!w-[600px]">
+            <FloatingDrawer v-model:visible="showFilterDrawer" header="All Filters" position="right"
+                class="!w-[calc(100vw-1rem)] sm:!w-[min(600px,calc(100vw-1rem))] !max-w-[calc(100vw-1rem)]">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
@@ -128,8 +129,8 @@
             <Panel class="!rounded-4xl overflow-hidden mt-8">
                 <!-- Info Bar -->
                 <div
-                    class="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
-                    <div class="flex gap-4 max-w-md">
+                    class="mb-4 flex flex-col gap-3 rounded-4xl bg-gray-50 p-3 dark:bg-[#1e242b] -mt-2 xl:flex-row xl:items-center xl:justify-between">
+                    <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:max-w-md">
                         <InputGroup>
                             <InputGroupAddon>
                                 <AppIcon name="search" :size="14" class="text-gray-400" />
@@ -140,8 +141,8 @@
                         <AppButton icon="filter" severity="warn" text rounded @click="openDrawer()"
                             v-tooltip.bottom="'More Filters'" />
                     </div>
-                    <div class="flex items-center gap-4">
-                        <div class="ml-auto flex items-center gap-2">
+                    <div class="flex w-full flex-wrap items-center justify-between gap-3 xl:w-auto xl:justify-end">
+                        <div class="flex items-center gap-2">
                             <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
                             <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
                         </div>
@@ -178,6 +179,11 @@
                             </template>
                         </Select>
                     </div>
+                    <div class="flex flex-col">
+                        <Select v-model="filter.needs_term_review" :options="legacyTermReviewOptions"
+                            optionLabel="label" optionValue="value" placeholder="Review Status" showClear size="small"
+                            class="min-w-[160px]" />
+                    </div>
                     <AppButton v-if="activeFilterTags.length" icon="times" severity="danger" text rounded size="small"
                         @click="clearFilters" v-tooltip.bottom="'Clear Filters'" />
                 </div>
@@ -191,245 +197,271 @@
                 </div>
 
                 <!-- DataTable View -->
-                <DataTable :value="tableData" paginator :rows="dataViewRows" :totalRecords="totalRecords" :first="first"
-                    @page="onPageChange" :lazy="true"
-                    paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                    :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'" :rowHover="true"
-                    stripedRows class="compact-table"
-                    @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu
-                    :globalFilter="globalFilter"
-                    :rowClass="(row) => expandedRows.length && !expandedRows.some(r => r.profile_id === row.profile_id) ? 'row-blurred' : ''"
-                    v-model:expandedRows="expandedRows">
+                <div class="scholarship-table-wrap">
+                    <DataTable :value="tableData" paginator :rows="dataViewRows" :totalRecords="totalRecords"
+                        :first="first" @page="onPageChange" :lazy="true"
+                        paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                        :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
+                        :rowHover="true" stripedRows class="compact-table" scrollable tableStyle="min-width: 84rem"
+                        @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu
+                        :globalFilter="globalFilter"
+                        :rowClass="(row) => expandedRows.length && !expandedRows.some(r => r.profile_id === row.profile_id) ? 'row-blurred' : ''"
+                        v-model:expandedRows="expandedRows">
 
-                    <Column expander headerClass="w-12" bodyClass="w-12" />
+                        <Column expander headerClass="w-12" bodyClass="w-12" />
 
-                    <Column field="unique_id" header="ID" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
-                        <template #body="slotProps">
-                            <div class="flex items-center gap-3">
-                                <div class="w-[40px]">
-                                    <Avatar :label="getInitials(slotProps.data)" size="normal" shape="circle"
-                                        class="bg-gradient-to-br from-blue-500 to-blue-600 text-white" />
-                                </div>
-                                <div>
-                                    <div as="button"
-                                        class="font-bold text-sm text-sky-700 underline underline-offset-2 cursor-pointer hover:text-blue-800"
-                                        @click="viewFullProfile(slotProps.data)"
-                                        @contextmenu.prevent="openContextMenu($event, slotProps.data)">{{
-                                            getFullName(slotProps.data) }}</div>
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <div class="text-xs text-gray-500">{{ slotProps.data.unique_id || 'N/A' }}
-                                        </div>
-                                        <Badge v-if="slotProps.data.has_contract"
-                                            :value="`Contract (${slotProps.data.contract_count})`" severity="success"
-                                            size="small" v-tooltip.bottom="'Contract attachment uploaded'" />
-                                        <Badge v-if="slotProps.data.has_voucher"
-                                            :value="`Voucher (${slotProps.data.voucher_count})`" severity="info"
-                                            size="small"
-                                            v-tooltip.bottom="'Disbursement/Voucher attachment uploaded'" />
+                        <Column field="unique_id" header="ID" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                            <template #body="slotProps">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-[40px]">
+                                        <Avatar :label="getInitials(slotProps.data)" size="normal" shape="circle"
+                                            class="bg-gradient-to-br from-blue-500 to-blue-600 text-white" />
                                     </div>
-                                </div>
-                            </div>
-                        </template>
-                    </Column>
-
-
-                    <Column field="contact_no" header="Contact" headerClass="min-w-[130px]" bodyClass="min-w-[130px]">
-                        <template #body="slotProps">
-                            <div class="text-sm">
-                                <div>{{ slotProps.data.contact_no || 'N/A' }}</div>
-                                <div class="text-xs text-gray-500">{{ slotProps.data.municipality || 'N/A' }}</div>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="program" header="Program" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
-                        <template #body="slotProps">
-                            <div v-if="slotProps.data.latest_scholarship_record" class="text-sm font-semibold truncate">
-                                {{ slotProps.data.latest_scholarship_record.program?.shortname || 'N/A' }}
-                            </div>
-                            <div v-else class="text-sm text-gray-400">N/A</div>
-                        </template>
-                    </Column>
-
-                    <Column field="course" header="Course" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
-                        <template #body="slotProps">
-                            <div v-if="slotProps.data.latest_scholarship_record">
-                                <div class="text-sm font-medium truncate">
-                                    {{ slotProps.data.latest_scholarship_record.course?.shortname || 'N/A' }}
-                                </div>
-                                <div class="text-xs text-gray-500 truncate">
-                                    {{ slotProps.data.latest_scholarship_record.school?.shortname || 'N/A' }}
-                                </div>
-                                <div class="text-xs text-gray-600 truncate"
-                                    v-if="slotProps.data.latest_scholarship_record.year_level">
-                                    {{ slotProps.data.latest_scholarship_record.year_level }} Year
-                                </div>
-                            </div>
-                            <div v-else class="text-sm text-gray-400">N/A</div>
-                        </template>
-                    </Column>
-
-                    <Column field="status" header="Status" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
-                        <template #body="slotProps">
-                            <template v-if="slotProps.data.latest_scholarship_record">
-                                <div :class="getStatusBadgeClass(slotProps.data.latest_scholarship_record.unified_status)"
-                                    :v-tooltip="getStatusTooltip(slotProps.data.latest_scholarship_record.unified_status)"
-                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
-                                    {{
-                                        getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
-                                    }}
+                                    <div>
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <div as="button"
+                                                class="font-bold text-sm text-sky-700 underline underline-offset-2 cursor-pointer hover:text-blue-800"
+                                                @click="viewFullProfile(slotProps.data)"
+                                                @contextmenu.prevent="openContextMenu($event, slotProps.data)">{{
+                                                    getFullName(slotProps.data) }}</div>
+                                            <span v-if="slotProps.data.is_graduated"
+                                                class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-800 dark:bg-emerald-900/35 dark:text-emerald-200"
+                                                v-tooltip.bottom="slotProps.data.graduation_date ? `Graduated ${formatDate(slotProps.data.graduation_date)}` : 'Graduated'">
+                                                Graduated
+                                            </span>
+                                            <span v-if="slotProps.data.has_ongoing_ros"
+                                                class="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-sky-800 dark:bg-sky-900/35 dark:text-sky-200"
+                                                v-tooltip.bottom="slotProps.data.ros_start_date ? `ROS ongoing since ${formatDate(slotProps.data.ros_start_date)}` : 'ROS ongoing'">
+                                                ROS Ongoing
+                                            </span>
+                                            <Badge v-if="slotProps.data.needs_legacy_term_review" value="Needs Review"
+                                                severity="warn" size="small"
+                                                v-tooltip.bottom="getLegacyTermReviewTooltip(slotProps.data)" />
+                                        </div>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <div class="text-xs text-gray-500">{{ slotProps.data.unique_id || 'N/A' }}
+                                            </div>
+                                            <Badge v-if="slotProps.data.has_contract"
+                                                :value="`Contract (${slotProps.data.contract_count})`"
+                                                severity="success" size="small"
+                                                v-tooltip.bottom="'Contract attachment uploaded'" />
+                                            <Badge v-if="slotProps.data.has_voucher"
+                                                :value="`Voucher (${slotProps.data.voucher_count})`" severity="info"
+                                                size="small"
+                                                v-tooltip.bottom="'Disbursement/Voucher attachment uploaded'" />
+                                        </div>
+                                    </div>
                                 </div>
                             </template>
-                            <div v-else
-                                class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600">
-                                No Record
-                            </div>
-                        </template>
-                    </Column>
+                        </Column>
 
-                    <Column header="Previous Records" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
-                        <template #body="slotProps">
-                            <div v-if="Object.keys(slotProps.data.previous_record_statuses ?? {}).length"
-                                class="flex flex-wrap gap-1">
-                                <div v-for="(count, status) in slotProps.data.previous_record_statuses" :key="status"
-                                    class="flex items-center gap-1">
-                                    <div :class="getStatusBadgeClass(status)"
-                                        class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block">
-                                        {{ getScholarshipStatusLabel(status) }}
-                                    </div>
-                                    <Badge v-if="count > 1" :value="count" severity="secondary" size="small"
-                                        v-tooltip.top="`${count} records with this status`" />
+
+                        <Column field="contact_no" header="Contact" headerClass="min-w-[130px]"
+                            bodyClass="min-w-[130px]">
+                            <template #body="slotProps">
+                                <div class="text-sm">
+                                    <div>{{ slotProps.data.contact_no || 'N/A' }}</div>
+                                    <div class="text-xs text-gray-500">{{ slotProps.data.municipality || 'N/A' }}</div>
                                 </div>
-                            </div>
-                            <span v-else class="text-xs text-gray-400">—</span>
-                        </template>
-                    </Column>
+                            </template>
+                        </Column>
 
-                    <Column field="grant_provision" header="Grant Provision" headerClass="min-w-[160px]"
-                        bodyClass="min-w-[160px]" v-if="!simpleView">
-                        <template #body="slotProps">
-                            <div v-if="slotProps.data.latest_scholarship_record" class="flex items-center gap-2">
-                                <Chip v-if="slotProps.data.latest_scholarship_record.grant_provision"
-                                    :label="getSystemOptionLabel('grant_provision', slotProps.data.latest_scholarship_record.grant_provision)"
-                                    size="small" class="font-medium cursor-pointer"
-                                    @click="hasPermission('applicants.edit') && openGrantProvisionDialog(slotProps.data)" />
-                                <AppButton v-else-if="hasPermission('applicants.edit')" icon="plus" label="Set"
-                                    size="small" severity="secondary" text
-                                    @click="openGrantProvisionDialog(slotProps.data)" />
-                                <AppButton
-                                    v-if="slotProps.data.latest_scholarship_record.grant_provision && hasPermission('applicants.edit')"
-                                    icon="pencil" size="small" severity="secondary" text rounded
-                                    @click="openGrantProvisionDialog(slotProps.data)" v-tooltip.top="'Edit'" />
-                            </div>
-                            <span v-else class="text-sm text-gray-400">N/A</span>
-                        </template>
-                    </Column>
+                        <Column field="program" header="Program" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
+                            <template #body="slotProps">
+                                <div v-if="slotProps.data.latest_scholarship_record"
+                                    class="text-sm font-semibold truncate">
+                                    {{ slotProps.data.latest_scholarship_record.program?.shortname || 'N/A' }}
+                                </div>
+                                <div v-else class="text-sm text-gray-400">N/A</div>
+                            </template>
+                        </Column>
 
-                    <Column header="Actions" headerClass="min-w-[120px]" bodyClass="min-w-[120px]" v-if="!simpleView">
-                        <template #body="slotProps">
-                            <div class="flex gap-2">
-                                <AppButton icon="eye" size="small" severity="info" outlined rounded
-                                    v-tooltip.top="'View'" @click="viewFullProfile(slotProps.data)" />
-                                <AppButton icon="trash" size="small" severity="danger" outlined rounded
-                                    v-tooltip.top="'Soft Delete (Admin Only)'"
-                                    @click="confirmDeleteProfile(slotProps.data)" :disabled="!hasRole('administrator')"
-                                    :class="{ 'opacity-50': !hasRole('administrator') }" />
-                            </div>
-                        </template>
-                    </Column>
+                        <Column field="course" header="Course" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
+                            <template #body="slotProps">
+                                <div v-if="slotProps.data.latest_scholarship_record">
+                                    <div class="text-sm font-medium truncate">
+                                        {{ slotProps.data.latest_scholarship_record.course?.shortname || 'N/A' }}
+                                    </div>
+                                    <div class="text-xs text-gray-500 truncate">
+                                        {{ slotProps.data.latest_scholarship_record.school?.shortname || 'N/A' }}
+                                    </div>
+                                    <div class="text-xs text-gray-600 truncate"
+                                        v-if="slotProps.data.latest_scholarship_record.year_level">
+                                        {{ slotProps.data.latest_scholarship_record.year_level }} Year
+                                    </div>
+                                </div>
+                                <div v-else class="text-sm text-gray-400">N/A</div>
+                            </template>
+                        </Column>
 
-                    <template #expansion="slotProps">
-                        <div class="px-4 py-3">
-                            <div class="flex items-center gap-2 mb-3">
-                                <AppIcon name="history" :size="16" class="text-indigo-500" />
-                                <span class="text-sm font-semibold text-gray-700">Scholarship Records</span>
-                                <Badge :value="slotProps.data.scholarship_grant?.length ?? 0" severity="secondary"
-                                    size="small" />
-                            </div>
-                            <DataTable :value="slotProps.data.scholarship_grant" size="small"
-                                v-if="slotProps.data.scholarship_grant?.length"
-                                :rowClass="(row) => row.id === slotProps.data.latest_scholarship_record?.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''">
-                                <Column header="#" headerClass="w-10" bodyClass="w-10">
-                                    <template #body="r">
-                                        <span class="text-xs text-gray-400">{{
-                                            slotProps.data.scholarship_grant.indexOf(r.data) + 1 }}</span>
-                                    </template>
-                                </Column>
-                                <Column header="Status" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">
-                                    <template #body="r">
-                                        <div class="flex items-center gap-1">
-                                            <div :class="getStatusBadgeClass(r.data.unified_status)"
-                                                class="px-2 py-0.5 rounded-full text-xs font-semibold border inline-block">
-                                                {{ getScholarshipStatusLabel(r.data.unified_status) }}
-                                            </div>
-                                            <AppIcon v-if="r.data.id === slotProps.data.latest_scholarship_record?.id"
-                                                name="star-fill" :size="12" class="text-blue-400"
-                                                v-tooltip.top="'Latest record'" />
+                        <Column field="status" header="Status" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                            <template #body="slotProps">
+                                <template v-if="slotProps.data.latest_scholarship_record">
+                                    <div :class="getStatusBadgeClass(slotProps.data.latest_scholarship_record.unified_status)"
+                                        :v-tooltip="getStatusTooltip(slotProps.data.latest_scholarship_record.unified_status)"
+                                        class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block cursor-help">
+                                        {{
+                                            getScholarshipStatusLabel(slotProps.data.latest_scholarship_record.unified_status)
+                                        }}
+                                    </div>
+                                </template>
+                                <div v-else
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+                                    No Record
+                                </div>
+                            </template>
+                        </Column>
+
+                        <Column header="Previous Records" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
+                            <template #body="slotProps">
+                                <div v-if="Object.keys(slotProps.data.previous_record_statuses ?? {}).length"
+                                    class="flex flex-wrap gap-1">
+                                    <div v-for="(count, status) in slotProps.data.previous_record_statuses"
+                                        :key="status" class="flex items-center gap-1">
+                                        <div :class="getStatusBadgeClass(status)"
+                                            class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block">
+                                            {{ getScholarshipStatusLabel(status) }}
                                         </div>
-                                    </template>
-                                </Column>
-                                <Column header="Program" headerClass="min-w-[100px]" bodyClass="min-w-[100px]">
-                                    <template #body="r">
-                                        <span class="text-xs">{{ r.data.program?.shortname || '—' }}</span>
-                                    </template>
-                                </Column>
-                                <Column header="Course" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
-                                    <template #body="r">
-                                        <span class="text-xs">{{ r.data.course?.shortname || '—' }}</span>
-                                    </template>
-                                </Column>
-                                <Column header="School" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
-                                    <template #body="r">
-                                        <span class="text-xs">{{ r.data.school?.shortname || '—' }}</span>
-                                    </template>
-                                </Column>
-                                <Column header="Year" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
-                                    <template #body="r">
-                                        <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—'
-                                        }}</span>
-                                    </template>
-                                </Column>
-                                <Column header="Academic Year" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">
-                                    <template #body="r">
-                                        <span class="text-xs">{{ r.data.academic_year || '—' }}</span>
-                                    </template>
-                                </Column>
-                                <Column header="Term" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
-                                    <template #body="r">
-                                        <span class="text-xs">{{ r.data.term || '—' }}</span>
-                                    </template>
-                                </Column>
-                                <Column header="Grant Provision" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">
-                                    <template #body="r">
-                                        <span class="text-xs">{{ getSystemOptionLabel('grant_provision',
-                                            r.data.grant_provision, '—') }}</span>
-                                    </template>
-                                </Column>
-                                <Column header="Date Filed" headerClass="min-w-[100px]" bodyClass="min-w-[100px]">
-                                    <template #body="r">
-                                        <span class="text-xs">{{ r.data.date_filed ? formatDate(r.data.date_filed) :
-                                            '—' }}</span>
-                                    </template>
-                                </Column>
-                                <Column header="Date Approved" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">
-                                    <template #body="r">
-                                        <span class="text-xs">{{ r.data.date_approved ?
-                                            formatDate(r.data.date_approved) : '—' }}</span>
-                                    </template>
-                                </Column>
-                            </DataTable>
-                            <p v-else class="text-xs text-gray-400 italic">No scholarship records found.</p>
-                        </div>
-                    </template>
+                                        <Badge v-if="count > 1" :value="count" severity="secondary" size="small"
+                                            v-tooltip.top="`${count} records with this status`" />
+                                    </div>
+                                </div>
+                                <span v-else class="text-xs text-gray-400">—</span>
+                            </template>
+                        </Column>
 
-                    <template #empty>
-                        <div class="text-center py-12">
-                            <AppIcon name="users" :size="64" class="text-gray-300 mb-4" />
-                            <p class="text-gray-500 text-lg">No profiles found</p>
-                            <p class="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
-                        </div>
-                    </template>
-                </DataTable>
+                        <Column field="grant_provision" header="Grant Provision" headerClass="min-w-[160px]"
+                            bodyClass="min-w-[160px]" v-if="!simpleView">
+                            <template #body="slotProps">
+                                <div v-if="slotProps.data.latest_scholarship_record" class="flex items-center gap-2">
+                                    <Chip v-if="slotProps.data.latest_scholarship_record.grant_provision"
+                                        :label="getSystemOptionLabel('grant_provision', slotProps.data.latest_scholarship_record.grant_provision)"
+                                        size="small" class="font-medium cursor-pointer"
+                                        @click="hasPermission('applicants.edit') && openGrantProvisionDialog(slotProps.data)" />
+                                    <AppButton v-else-if="hasPermission('applicants.edit')" icon="plus" label="Set"
+                                        size="small" severity="secondary" text
+                                        @click="openGrantProvisionDialog(slotProps.data)" />
+                                    <AppButton
+                                        v-if="slotProps.data.latest_scholarship_record.grant_provision && hasPermission('applicants.edit')"
+                                        icon="pencil" size="small" severity="secondary" text rounded
+                                        @click="openGrantProvisionDialog(slotProps.data)" v-tooltip.top="'Edit'" />
+                                </div>
+                                <span v-else class="text-sm text-gray-400">N/A</span>
+                            </template>
+                        </Column>
+
+                        <Column header="Actions" headerClass="min-w-[120px]" bodyClass="min-w-[120px]"
+                            v-if="!simpleView">
+                            <template #body="slotProps">
+                                <div class="flex gap-2">
+                                    <AppButton icon="eye" size="small" severity="info" outlined rounded
+                                        v-tooltip.top="'View'" @click="viewFullProfile(slotProps.data)" />
+                                    <AppButton icon="trash" size="small" severity="danger" outlined rounded
+                                        v-tooltip.top="'Soft Delete (Admin Only)'"
+                                        @click="confirmDeleteProfile(slotProps.data)"
+                                        :disabled="!hasRole('administrator')"
+                                        :class="{ 'opacity-50': !hasRole('administrator') }" />
+                                </div>
+                            </template>
+                        </Column>
+
+                        <template #expansion="slotProps">
+                            <div class="px-4 py-3">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <AppIcon name="history" :size="16" class="text-indigo-500" />
+                                    <span class="text-sm font-semibold text-gray-700">Scholarship Records</span>
+                                    <Badge :value="slotProps.data.scholarship_grant?.length ?? 0" severity="secondary"
+                                        size="small" />
+                                </div>
+                                <DataTable :value="slotProps.data.scholarship_grant" size="small" scrollable
+                                    tableStyle="min-width: 66rem" v-if="slotProps.data.scholarship_grant?.length"
+                                    :rowClass="(row) => row.id === slotProps.data.latest_scholarship_record?.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''">
+                                    <Column header="#" headerClass="w-10" bodyClass="w-10">
+                                        <template #body="r">
+                                            <span class="text-xs text-gray-400">{{
+                                                slotProps.data.scholarship_grant.indexOf(r.data) + 1 }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Status" headerClass="min-w-[110px]" bodyClass="min-w-[110px]">
+                                        <template #body="r">
+                                            <div class="flex items-center gap-1">
+                                                <div :class="getStatusBadgeClass(r.data.unified_status)"
+                                                    class="px-2 py-0.5 rounded-full text-xs font-semibold border inline-block">
+                                                    {{ getScholarshipStatusLabel(r.data.unified_status) }}
+                                                </div>
+                                                <AppIcon
+                                                    v-if="r.data.id === slotProps.data.latest_scholarship_record?.id"
+                                                    name="star-fill" :size="12" class="text-blue-400"
+                                                    v-tooltip.top="'Latest record'" />
+                                            </div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Program" headerClass="min-w-[100px]" bodyClass="min-w-[100px]">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.program?.shortname || '—' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Course" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.course?.shortname || '—' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="School" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.school?.shortname || '—' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Year" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—'
+                                                }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Academic Year" headerClass="min-w-[110px]"
+                                        bodyClass="min-w-[110px]">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.academic_year || '—' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Term" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.term || '—' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Grant Provision" headerClass="min-w-[110px]"
+                                        bodyClass="min-w-[110px]">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ getSystemOptionLabel('grant_provision',
+                                                r.data.grant_provision, '—') }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Date Filed" headerClass="min-w-[100px]" bodyClass="min-w-[100px]">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.date_filed ? formatDate(r.data.date_filed) :
+                                                '—' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Date Approved" headerClass="min-w-[110px]"
+                                        bodyClass="min-w-[110px]">
+                                        <template #body="r">
+                                            <span class="text-xs">{{ r.data.date_approved ?
+                                                formatDate(r.data.date_approved) : '—' }}</span>
+                                        </template>
+                                    </Column>
+                                </DataTable>
+                                <p v-else class="text-xs text-gray-400 italic">No scholarship records found.</p>
+                            </div>
+                        </template>
+
+                        <template #empty>
+                            <div class="text-center py-12">
+                                <AppIcon name="users" :size="64" class="text-gray-300 mb-4" />
+                                <p class="text-gray-500 text-lg">No profiles found</p>
+                                <p class="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
+                            </div>
+                        </template>
+                    </DataTable>
+                </div>
             </Panel>
         </div>
 
@@ -613,7 +645,8 @@
         <ReportWizardModal :show="showReportWizard" @update:show="showReportWizard = $event" />
 
         <!-- Grant Provision Update Dialog -->
-        <Dialog v-model:visible="showGrantProvisionDialog" modal header="Update Grant Provision" class="w-[500px]">
+        <Dialog v-model:visible="showGrantProvisionDialog" modal header="Update Grant Provision"
+            class="w-[calc(100vw-2rem)] sm:w-[min(500px,calc(100vw-2rem))]">
             <div class="space-y-4" v-if="selectedProfileForGrant">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Scholar Name</label>
@@ -642,7 +675,8 @@
         </Dialog>
 
         <!-- Delete Confirmation Modal -->
-        <Dialog v-model:visible="showDeleteConfirmDialog" modal header="Confirm Soft Delete" class="w-[500px]">
+        <Dialog v-model:visible="showDeleteConfirmDialog" modal header="Confirm Soft Delete"
+            class="w-[calc(100vw-2rem)] sm:w-[min(500px,calc(100vw-2rem))]">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
                     <AppIcon name="exclamation-triangle" :size="24" class="text-orange-500" />
@@ -748,6 +782,7 @@ const {
         { key: 'barangay', type: 'select', default: '', extract: v => v?.name?.toLowerCase() },
         { key: 'grant_provision', type: 'text', default: null },
         { key: 'unified_status', type: 'text', default: null },
+        { key: 'needs_term_review', type: 'text', default: null },
         { key: 'contract_status', type: 'text', default: null },
         { key: 'voucher_status', type: 'text', default: null },
     ],
@@ -779,6 +814,7 @@ const activeFilterTags = computed(() => {
         term: 'Term',
         grant_provision: 'Grant Provision',
         unified_status: 'Status',
+        needs_term_review: 'Review Status',
         contract_status: 'Contract',
         voucher_status: 'Voucher',
     };
@@ -786,7 +822,9 @@ const activeFilterTags = computed(() => {
         const val = f[key];
         if (!val) continue;
         let display;
-        if (typeof val === 'object') {
+        if (key === 'needs_term_review' && val === 'needs_review') {
+            display = 'Needs Review';
+        } else if (typeof val === 'object') {
             display = val.shortname || val.name || val.value || JSON.stringify(val);
         } else {
             display = String(val);
@@ -797,7 +835,7 @@ const activeFilterTags = computed(() => {
 });
 
 const removeFilter = (key) => {
-    const selectKeys = ['grant_provision', 'unified_status', 'contract_status', 'voucher_status', 'academic_year', 'term'];
+    const selectKeys = ['grant_provision', 'unified_status', 'needs_term_review', 'contract_status', 'voucher_status', 'academic_year', 'term'];
     filter.value[key] = selectKeys.includes(key) ? null : '';
     collapseExpandedRows();
     triggerSearch();
@@ -805,7 +843,7 @@ const removeFilter = (key) => {
 
 // Auto-trigger search when basic filters change
 watch(
-    () => [filter.value.program, filter.value.course, filter.value.year_level, filter.value.unified_status],
+    () => [filter.value.program, filter.value.course, filter.value.year_level, filter.value.unified_status, filter.value.needs_term_review],
     () => {
         collapseExpandedRows();
         triggerSearch();
@@ -824,7 +862,7 @@ watch(records, () => {
 // Filter drawer state
 const showFilterDrawer = ref(false);
 const drawerFilter = ref({});
-const drawerFilterKeys = ['program', 'course', 'school', 'municipality', 'barangay', 'year_level', 'academic_year', 'term', 'grant_provision', 'unified_status', 'contract_status', 'voucher_status'];
+const drawerFilterKeys = ['program', 'course', 'school', 'municipality', 'barangay', 'year_level', 'academic_year', 'term', 'grant_provision', 'unified_status', 'needs_term_review', 'contract_status', 'voucher_status'];
 
 const openDrawer = () => {
     const snapshot = {};
@@ -846,7 +884,7 @@ const applyDrawerFilters = () => {
 };
 
 const clearDrawerFilters = () => {
-    const nullKeys = ['grant_provision', 'unified_status', 'contract_status', 'voucher_status', 'academic_year', 'term'];
+    const nullKeys = ['grant_provision', 'unified_status', 'needs_term_review', 'contract_status', 'voucher_status', 'academic_year', 'term'];
     for (const key of drawerFilterKeys) {
         drawerFilter.value[key] = nullKeys.includes(key) ? null : '';
     }
@@ -961,6 +999,10 @@ const attachmentStatusOptions = computed(() => [
     { label: 'Without Attachment', value: 'without' }
 ]);
 
+const legacyTermReviewOptions = [
+    { label: 'Needs Review', value: 'needs_review' },
+];
+
 const profilesData = computed(() => {
     return props.profiles?.data || [];
 });
@@ -1045,6 +1087,19 @@ const getInitials = (profile) => {
     return (firstInitial + lastInitial).toUpperCase() || '?';
 };
 
+const getLegacyTermReviewTooltip = (profile) => {
+    if (!profile?.needs_legacy_term_review) {
+        return 'Legacy records are aligned with the single open-term rule.';
+    }
+
+    const conflictingGroups = profile.legacy_term_review_group_count || 0;
+    const totalOpenTerms = profile.legacy_term_review_open_term_total || 0;
+    const groupLabel = conflictingGroups === 1 ? 'legacy enrollment group' : 'legacy enrollment groups';
+    const termLabel = totalOpenTerms === 1 ? 'open term' : 'open terms';
+
+    return `${conflictingGroups} ${groupLabel} still contain ${totalOpenTerms} pending/active ${termLabel}. Review this profile's legacy records.`;
+};
+
 const getApprovalStatusLabel = (status) => {
     if (!Array.isArray(props.approvalStatuses)) return status || 'Unknown';
     const statusObj = props.approvalStatuses.find(s => s.value === status);
@@ -1125,6 +1180,7 @@ const viewFullProfile = (profile) => {
         course: route().params?.course || null,
         municipality: route().params?.municipality || null,
         year_level: route().params?.year_level || null,
+        needs_term_review: route().params?.needs_term_review || null,
         global_search: route().params?.global_search || null,
         grant_provision: route().params?.grant_provision || null,
         contract_status: route().params?.contract_status || null,
@@ -1290,6 +1346,14 @@ onBeforeUnmount(() => {
     justify-self: end;
 }
 
+.scholarship-table-wrap {
+    max-width: 100%;
+}
+
+:deep(.compact-table .p-datatable-table-container) {
+    overflow-x: auto;
+}
+
 /* Compact DataTable */
 :deep(.compact-table .p-datatable-tbody > tr > td) {
     padding: 0.5rem 0.75rem;
@@ -1314,5 +1378,31 @@ onBeforeUnmount(() => {
     filter: blur(1.5px);
     transition: opacity 0.25s ease, filter 0.25s ease;
     pointer-events: none;
+}
+
+@media (max-width: 1279px) {
+    :deep(.p-toolbar) {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
+
+    :deep(.p-toolbar-start),
+    :deep(.p-toolbar-center),
+    :deep(.p-toolbar-end) {
+        justify-self: stretch;
+    }
+
+    .scholarship-toolbar__brand,
+    .scholarship-toolbar__actions {
+        width: 100%;
+    }
+}
+
+@media (max-width: 767px) {
+
+    :deep(.compact-table .p-datatable-tbody > tr > td),
+    :deep(.compact-table .p-datatable-thead > tr > th) {
+        padding: 0.5rem 0.625rem;
+    }
 }
 </style>

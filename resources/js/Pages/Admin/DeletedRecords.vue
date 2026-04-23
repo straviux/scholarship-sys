@@ -156,7 +156,7 @@
 
         <!-- Delete Profile Confirmation Modal -->
         <Dialog v-model:visible="showDeleteProfileConfirmDialog" modal header="Confirm Permanent Deletion"
-            :style="{ width: '500px' }">
+            :style="{ width: 'calc(100vw - 2rem)', maxWidth: '500px' }">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
                     <AppIcon name="exclamation-triangle" class="text-2xl text-red-500" />
@@ -181,7 +181,7 @@
 
         <!-- Delete Record Confirmation Modal -->
         <Dialog v-model:visible="showDeleteRecordConfirmDialog" modal header="Confirm Permanent Deletion"
-            :style="{ width: '500px' }">
+            :style="{ width: 'calc(100vw - 2rem)', maxWidth: '500px' }">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
                     <AppIcon name="exclamation-triangle" class="text-2xl text-red-500" />
