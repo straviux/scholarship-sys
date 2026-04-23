@@ -266,7 +266,7 @@ onBeforeUnmount(() => {
                                     <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
                                         <Tag severity="info">
                                             <span style="font-size: 10px;">#{{ currentApplicant.sequence_number || '-'
-                                                }} {{ currentApplicant.scholarship_grant?.[0]?.program?.shortname
+                                            }} {{ currentApplicant.scholarship_grant?.[0]?.program?.shortname
                                                 }}</span>
                                         </Tag>
                                         <Tag severity="warn">
@@ -361,17 +361,17 @@ onBeforeUnmount(() => {
                                                     <span class="ios-info-label">Gender</span>
                                                     <span class="ios-info-value">{{ currentApplicant.gender === 'M' ?
                                                         'Male' : currentApplicant.gender === 'F' ? 'Female' : 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Contact</span>
                                                     <span class="ios-info-value">{{ currentApplicant.contact_no || 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Email</span>
                                                     <span class="ios-info-value">{{ currentApplicant.email || 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item" style="grid-column: 1 / -1;">
                                                     <span class="ios-info-label">Income</span>
@@ -415,13 +415,13 @@ onBeforeUnmount(() => {
                                                     <span class="ios-info-label">Year Level</span>
                                                     <span class="ios-info-value">{{
                                                         currentApplicant.scholarship_grant?.[0]?.year_level || 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Academic Year</span>
                                                     <span class="ios-info-value">{{
                                                         currentApplicant.scholarship_grant?.[0]?.academic_year || 'N/A'
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div class="ios-info-item">
                                                     <span class="ios-info-label">Term</span>
@@ -452,15 +452,15 @@ onBeforeUnmount(() => {
                                                     <div><span class="ios-info-label">Name</span><span
                                                             class="ios-info-value">{{
                                                                 currentApplicant.father_name ||
-                                                            'N/A' }}</span></div>
+                                                                'N/A' }}</span></div>
                                                     <div><span class="ios-info-label">Occupation</span><span
                                                             class="ios-info-value">{{
                                                                 currentApplicant.father_occupation
-                                                            || 'N/A' }}</span></div>
+                                                                || 'N/A' }}</span></div>
                                                     <div><span class="ios-info-label">Contact</span><span
                                                             class="ios-info-value">{{
                                                                 currentApplicant.father_contact_no
-                                                            || 'N/A' }}</span></div>
+                                                                || 'N/A' }}</span></div>
                                                 </div>
                                             </div>
                                             <!-- Mother -->
@@ -473,15 +473,15 @@ onBeforeUnmount(() => {
                                                     <div><span class="ios-info-label">Name</span><span
                                                             class="ios-info-value">{{
                                                                 currentApplicant.mother_name ||
-                                                            'N/A' }}</span></div>
+                                                                'N/A' }}</span></div>
                                                     <div><span class="ios-info-label">Occupation</span><span
                                                             class="ios-info-value">{{
                                                                 currentApplicant.mother_occupation
-                                                            || 'N/A' }}</span></div>
+                                                                || 'N/A' }}</span></div>
                                                     <div><span class="ios-info-label">Contact</span><span
                                                             class="ios-info-value">{{
                                                                 currentApplicant.mother_contact_no
-                                                            || 'N/A' }}</span></div>
+                                                                || 'N/A' }}</span></div>
                                                 </div>
                                             </div>
                                             <!-- Guardian -->
@@ -494,7 +494,7 @@ onBeforeUnmount(() => {
                                                     <div><span class="ios-info-label">Name</span><span
                                                             class="ios-info-value">{{
                                                                 currentApplicant.guardian_name ||
-                                                            'N/A' }}</span></div>
+                                                                'N/A' }}</span></div>
                                                     <div><span class="ios-info-label">Occupation</span><span
                                                             class="ios-info-value">{{
                                                                 currentApplicant.guardian_occupation || 'N/A' }}</span>
@@ -521,7 +521,7 @@ onBeforeUnmount(() => {
                         <AppIcon name="chevron-left" :size="12" style="margin-right: 4px;" />Previous
                     </button>
                     <span class="ios-footer-counter">{{ currentProfileIndex + 1 }} / {{ applicants?.length || 0
-                        }}</span>
+                    }}</span>
                     <button class="ios-footer-btn" @click="goToNextProfile" :disabled="!hasNextProfile">
                         Next
                         <AppIcon name="chevron-right" :size="12" style="margin-left: 4px;" />

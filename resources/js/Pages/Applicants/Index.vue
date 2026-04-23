@@ -1741,8 +1741,7 @@ const truncateText = (text, maxLength = 80) => {
                         <template #body="slotProps">
                             <div class="flex items-center justify-center gap-1">
                                 <AppButton v-if="hasPermission('scholarships.view')" icon="eye" text severity="info"
-                                    @click="viewFullProfile(slotProps.data)"
-                                    v-tooltip.top="'View full profile'" />
+                                    @click="viewFullProfile(slotProps.data)" v-tooltip.top="'View full profile'" />
                                 <AppButton icon="ellipsis-vertical" text severity="secondary"
                                     @click="(event) => showRowContextMenu(event, slotProps.data)"
                                     v-tooltip.top="'More actions'" />
@@ -1771,8 +1770,7 @@ const truncateText = (text, maxLength = 80) => {
         <!-- Integrated Profile & Review Modal -->
         <ProfileReviewModal v-model:visible="showProfileReviewModal" :applicant="selectedApplicantForReview"
             :applicants="applicants" @interview="handleProfileReviewInterview" @edit-profile="handleProfileReviewEdit"
-            @edit-requirements="openRequirementsModal"
-            @closed="closeProfileReviewModal" />
+            @edit-requirements="openRequirementsModal" @closed="closeProfileReviewModal" />
 
         <Dialog :visible="showAcademicInfoIncompleteDialog" modal
             @update:visible="val => !val && closeAcademicInfoIncompleteDialog()"
