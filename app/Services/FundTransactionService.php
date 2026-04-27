@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\FundTransaction;
 use App\Models\FundTransactionDocument;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -17,11 +18,9 @@ class FundTransactionService
      */
     public function generateTransactionId(): string
     {
-        $year = date('Y');
-        $month = date('m');
-        $prefix = sprintf('FTR-%s%s-', $year, $month);
+        $prefix = sprintf('FTR-%s-', now()->format('Ym'));
 
-        $lastVoucher = FundTransaction::withoutTrashed()
+        $lastVoucher = FundTransaction::withTrashed()
             ->where('transaction_id', 'like', $prefix . '%')
             ->orderBy('transaction_id', 'desc')
             ->first();
@@ -41,19 +40,50 @@ class FundTransactionService
      */
     public function create(array $data): FundTransaction
     {
-        return DB::transaction(function () use ($data) {
-            $data['transaction_id'] = $this->generateTransactionId();
+        $maxAttempts = 5;
 
-            $voucher = FundTransaction::create($data);
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            try {
+                return DB::transaction(function () use ($data) {
+                    $data['transaction_id'] = $this->generateTransactionId();
 
-            Log::info('fund_transaction_created', [
-                'id' => $voucher->id,
-                'transaction_id' => $voucher->transaction_id,
-                'created_by' => $data['created_by'] ?? null,
-            ]);
+                    $voucher = FundTransaction::create($data);
 
-            return $voucher;
-        });
+                    Log::info('fund_transaction_created', [
+                        'id' => $voucher->id,
+                        'transaction_id' => $voucher->transaction_id,
+                        'created_by' => $data['created_by'] ?? null,
+                    ]);
+
+                    return $voucher;
+                });
+            } catch (QueryException $exception) {
+                if ($attempt === $maxAttempts || ! $this->causedByDuplicateTransactionId($exception)) {
+                    throw $exception;
+                }
+
+                Log::warning('fund_transaction_transaction_id_collision', [
+                    'attempt' => $attempt,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        throw new \RuntimeException('Unable to generate a unique transaction ID.');
+    }
+
+    private function causedByDuplicateTransactionId(QueryException $exception): bool
+    {
+        $sqlState = $exception->errorInfo[0] ?? null;
+        $driverCode = (int) ($exception->errorInfo[1] ?? 0);
+        $message = $exception->errorInfo[2] ?? $exception->getMessage();
+
+        if ($sqlState !== '23000' || $driverCode !== 1062) {
+            return false;
+        }
+
+        return str_contains($message, 'fund_transactions_transaction_id_unique')
+            || str_contains($message, 'vouchers_voucher_number_unique');
     }
 
     /**
