@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Exists;
+use Carbon\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Gate;
@@ -112,7 +113,8 @@ class ScholarshipProfileController extends Controller
             [
                 'action' => fn() => 'create',
                 'profile' => $new_profile, // Return only the newly added profile
-                'profiles' => fn() => [] // Return empty array - frontend will populate from it's own dataTable
+                'profiles' => fn() => [], // Return empty array - frontend will populate from it's own dataTable
+                'interviewers' => fn() => User::query()->select('id', 'name')->orderBy('name')->get(),
             ]
         );
     }
@@ -1287,24 +1289,10 @@ class ScholarshipProfileController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $validated = $request->validate([
-            'academic_potential' => 'required|string|in:excellent,good,fair',
-            'financial_need_level' => 'required|string|in:high,moderate,low',
-            'communication_skills' => 'required|string|in:excellent,good,fair',
-            'recommendation' => 'required|string|in:recommended,further_evaluation,not_recommended',
-            'grant_provision' => [
-                'nullable',
-                'string',
-                'max:255',
-                $this->grantProvisionValidationRule(ScholarshipProgram::whereKey($record->program_id)->value('shortname')),
-            ],
-            'interview_remarks' => 'nullable|string|max:2000',
-        ], [
-            'grant_provision.exists' => 'The selected grant provision is invalid for this program.',
-        ]);
+        $validated = $this->validateInterviewAssessment($request, $record);
 
         try {
-            $record->update($validated);
+            $record->update($this->mapInterviewAssessmentAttributes($validated, $record));
 
             return response()->json(['message' => 'Interview assessment updated successfully.']);
         } catch (\Exception $e) {
@@ -1326,28 +1314,12 @@ class ScholarshipProfileController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $validated = $request->validate([
-            'academic_potential' => 'required|string|in:excellent,good,fair',
-            'financial_need_level' => 'required|string|in:high,moderate,low',
-            'communication_skills' => 'required|string|in:excellent,good,fair',
-            'recommendation' => 'required|string|in:recommended,further_evaluation,not_recommended',
-            'grant_provision' => [
-                'nullable',
-                'string',
-                'max:255',
-                $this->grantProvisionValidationRule(ScholarshipProgram::whereKey($record->program_id)->value('shortname')),
-            ],
-            'interview_remarks' => 'nullable|string|max:2000',
-        ], [
-            'grant_provision.exists' => 'The selected grant provision is invalid for this program.',
-        ]);
+        $validated = $this->validateInterviewAssessment($request, $record);
 
         try {
             $record->update([
-                ...$validated,
+                ...$this->mapInterviewAssessmentAttributes($validated, $record),
                 'unified_status' => 'interviewed',
-                'interviewed_by' => Auth::id(),
-                'interviewed_at' => now(),
             ]);
 
             return response()->json(['message' => 'Interview assessment submitted successfully.']);
@@ -1416,6 +1388,7 @@ class ScholarshipProfileController extends Controller
         return Inertia::render('InterviewedApplicants/Index', [
             'interviewed_applicants' => $reviewed,
             'decline_reasons' => config('scholarship.decline_reasons'),
+            'interviewers' => User::query()->select('id', 'name')->orderBy('name')->get(),
         ]);
     }
 
@@ -1433,6 +1406,47 @@ class ScholarshipProfileController extends Controller
         );
 
         return $record;
+    }
+
+    private function validateInterviewAssessment(Request $request, ScholarshipRecord $record): array
+    {
+        return $request->validate([
+            'academic_potential' => 'required|string|in:excellent,good,fair',
+            'financial_need_level' => 'required|string|in:high,moderate,low',
+            'communication_skills' => 'required|string|in:excellent,good,fair',
+            'recommendation' => 'required|string|in:recommended,further_evaluation,not_recommended',
+            'grant_provision' => [
+                'nullable',
+                'string',
+                'max:255',
+                $this->grantProvisionValidationRule(ScholarshipProgram::whereKey($record->program_id)->value('shortname')),
+            ],
+            'interview_date' => ['nullable', 'date'],
+            'interviewer_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
+            'interview_remarks' => 'nullable|string|max:2000',
+        ], [
+            'grant_provision.exists' => 'The selected grant provision is invalid for this program.',
+            'interviewer_id.exists' => 'The selected interviewer is invalid.',
+        ]);
+    }
+
+    private function mapInterviewAssessmentAttributes(array $validated, ?ScholarshipRecord $record = null): array
+    {
+        $referenceTimestamp = $record?->interviewed_at ?? now();
+        $interviewDate = $validated['interview_date'] ?? $referenceTimestamp->toDateString();
+        $interviewerId = $validated['interviewer_id'] ?? Auth::id();
+
+        unset($validated['interview_date'], $validated['interviewer_id']);
+
+        return [
+            ...$validated,
+            'interviewed_by' => $interviewerId,
+            'interviewed_at' => Carbon::parse($interviewDate)->setTime(
+                $referenceTimestamp->hour,
+                $referenceTimestamp->minute,
+                $referenceTimestamp->second,
+            ),
+        ];
     }
 
     private function hasCurrentScholarshipRecord(string $profileId): bool

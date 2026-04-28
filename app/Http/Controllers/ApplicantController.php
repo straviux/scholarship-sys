@@ -7,6 +7,7 @@ use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipProgram;
 use App\Models\ScholarshipProfileRequirement;
 use App\Models\Requirement;
+use App\Models\User;
 use App\Services\SequenceNumberCalculator;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
@@ -449,6 +450,7 @@ class ApplicantController extends Controller
                     'records' => $request->get('records', 10),
                     'completionStatuses' => config('scholarship.completion_statuses'),
                     'declineReasons' => config('scholarship.decline_reasons'),
+                    'interviewers' => fn() => User::query()->select('id', 'name')->orderBy('name')->get(),
                 ]
             );
         }
@@ -495,6 +497,7 @@ class ApplicantController extends Controller
                 'records' => $request->get('records', 10),
                 'declineReasons' => config('scholarship.decline_reasons'),
                 'completionStatuses' => config('scholarship.completion_statuses'),
+                'interviewers' => fn() => User::query()->select('id', 'name')->orderBy('name')->get(),
             ]
         );
     }
