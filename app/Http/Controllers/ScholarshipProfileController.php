@@ -1410,7 +1410,26 @@ class ScholarshipProfileController extends Controller
 
     private function validateInterviewAssessment(Request $request, ScholarshipRecord $record): array
     {
+        $selectedProgramId = $request->filled('program_id')
+            ? (int) $request->input('program_id')
+            : $record->program_id;
+
+        $selectedProgramCode = ScholarshipProgram::whereKey($selectedProgramId)->value('shortname');
+
         return $request->validate([
+            'program_id' => ['nullable', 'integer', Rule::exists('scholarship_programs', 'id')],
+            'course_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('courses', 'id')->where(function ($query) use ($selectedProgramId) {
+                    if ($selectedProgramId) {
+                        $query->where('scholarship_program_id', $selectedProgramId);
+                    }
+                }),
+            ],
+            'school_id' => ['nullable', 'integer', Rule::exists('schools', 'id')],
+            'year_level' => 'nullable|string|max:50',
+            'term' => 'nullable|string|max:50',
             'academic_potential' => 'required|string|in:excellent,good,fair',
             'financial_need_level' => 'required|string|in:high,moderate,low',
             'communication_skills' => 'required|string|in:excellent,good,fair',
@@ -1419,12 +1438,15 @@ class ScholarshipProfileController extends Controller
                 'nullable',
                 'string',
                 'max:255',
-                $this->grantProvisionValidationRule(ScholarshipProgram::whereKey($record->program_id)->value('shortname')),
+                $this->grantProvisionValidationRule($selectedProgramCode),
             ],
             'interview_date' => ['nullable', 'date'],
             'interviewer_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
             'interview_remarks' => 'nullable|string|max:2000',
         ], [
+            'program_id.exists' => 'The selected program is invalid.',
+            'course_id.exists' => 'The selected course is invalid for the chosen program.',
+            'school_id.exists' => 'The selected school is invalid.',
             'grant_provision.exists' => 'The selected grant provision is invalid for this program.',
             'interviewer_id.exists' => 'The selected interviewer is invalid.',
         ]);
