@@ -54,7 +54,10 @@ class RoleController extends Controller
         $role->update([
             'name' => $request->name
         ]);
-        $role->syncPermissions($request->input('permissions.*.name'));
+
+        if ($request->has('permissions')) {
+            $role->syncPermissions($request->input('permissions.*.name'));
+        }
 
         // Log role update
         ActivityLogService::logRecordUpdated(

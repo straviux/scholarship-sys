@@ -17,8 +17,8 @@
             <p style="font-size:11.5pt;font-weight:400;">Republic of the Philippines</p>
             <p style="font-size:11.5pt;font-weight:400;">Provincial Government of Palawan</p>
             <p style="font-size:11.5pt;font-weight:400;">OFFICE OF THE GOVERNOR</p>
-            <p style="font-size:11.5pt;font-weight:700;">YAKAP SA EDUKASYON</p>
-            <p style="font-size:11.5pt;font-weight:400;">SCHOLARSHIP PROGRAM</p>
+            <p style="font-size:11.5pt;font-weight:700;">AKBAY SA MAG-AARAL YAMAN NG KINABUKASAN</p>
+            <p style="font-size:11.5pt;font-weight:400;">(Programang Pang-Edukasyon Para sa Palawenyo)</p>
         </div>
 
         <!-- ── Document Title ──────────────────────────────── -->
@@ -30,14 +30,23 @@
         <!-- ── Body ────────────────────────────────────────── -->
         <div style="margin-top:32pt;font-size:11pt;line-height:1.8;text-align: justify;">
 
-            <!-- Paragraph 1 (shared) -->
-            <p style="text-align:justify;text-indent:60pt;margin-bottom:14pt !important;">
+            <!-- Paragraph 1 - REVIEW -->
+            <p v-if="certType === 'review'" style="text-align:justify;text-indent:60pt;margin-bottom:14pt !important;">
                 This is to certify that, <strong>{{ honorific }} {{ fullNameCaps }}</strong>, {{ displayCourseName }}
                 student of {{
                     schoolName }},
                 is a recipient of Doctor of Medicine/Medical Related Scholarship of Provincial Government of Palawan
                 through Scholarship Program
                 &#8220;Programang Pang-Edukasyon para sa Palawe&#241;o&#8221;.
+            </p>
+
+            <!-- Paragraph 1 - POST-GRAD -->
+            <p v-else style="text-align:justify;text-indent:60pt;margin-bottom:14pt !important;">
+                This is to certify that, <strong>{{ honorific }} {{ fullNameCaps }}</strong>, a {{ displayCourseName }}
+                student of {{
+                    schoolName }},
+                , is a recipient of the Medical Scholarship of Akbay sa Mag-Aaral Yaman Ng Kinabukasan Scholarship
+                Program of the Provincial Government of Palawan.
             </p>
 
             <!-- Paragraph 2 – REVIEW -->
@@ -51,12 +60,12 @@
 
             <!-- Paragraph 2 – POST-GRAD -->
             <p v-else style="text-align:justify;text-indent:60pt;margin-top:14pt !important;">
-                {{ lastNameRef }}, presently taking Post
-                Graduate
-                Internship (PGI), {{ pronoun }} is requesting us to
-                grant Financial Assistance to cover the cost of {{ possessive }} PGI. Per our policy and SP Resolution,
-                this is allowed but with corresponding equivalent of additional six (6) months to one (1) year
-                Return-of-Service.
+                {{ lastNameRef }}, is presently taking her Post-Graduate Internship (PGI) and has requested Financial
+                Assistance to cover the cost of her internship. In accordance with our policy and the Sangguniang
+                Panlalawigan Resolution, the granting of said assistance is allowed, subject to an additional six (6)
+                moths Return-of-Service (ROS) obligation for every year of support. The amount granted for PGI is
+                Seventy Thousand Pesos (₱70,000.00) per semester, or One Hundred Forty Thousand Pesos (₱140,000.00) per
+                year.
             </p>
 
             <!-- Paragraph 3 – REVIEW -->
@@ -66,8 +75,7 @@
 
             <!-- Paragraph 3 – POST-GRAD -->
             <p v-else style="text-align:justify;text-indent:60pt;margin-top: 14pt !important;">
-                The amount granted on PGI is Seventy Thousand Pesos only (Php 70,000.00) per semester
-                to One hundred forty thousand (Php 140,000.00)per year.
+                Issued upon the request of {{ lastNameRef }} for whatever legal purposes this may serve her.
             </p>
 
         </div>
@@ -76,7 +84,7 @@
         <div style="margin-top:72pt;text-align:center;">
             <p style="font-weight:700;font-size:11pt;text-decoration: underline;">NUR-AINA S. IBRAHIM</p>
             <p style="font-size:11pt;">Program Manager</p>
-            <p style="font-size:11pt;margin-top: -6pt;">Yakap sa Edukasyon</p>
+            <p style="font-size:11pt;margin-top: -6pt;">Akbay sa Mag-Aaral Yaman ng Kinabukasan</p>
         </div>
 
     </div>

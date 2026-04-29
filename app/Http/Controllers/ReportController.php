@@ -1518,7 +1518,7 @@ class ReportController extends Controller
         $filename = "interviewed-applicants_{$currentDateTime}.xlsx";
 
         // Build spreadsheet data
-        $headers = ['#', 'Last Name', 'First Name', 'Program', 'Course', 'Projected Total Expense', 'Projected Terms', 'Completion Year', 'Year Level', 'Semester', 'Grant Provision', 'Interview Date', 'Interviewer'];
+        $headers = ['#', 'Last Name', 'First Name', 'Program', 'Course', 'Projected Total Expense', 'Projected Terms', 'Completion Year', 'Year Level', 'Semester', 'Academic Year', 'Grant Provision', 'Interview Date', 'Interviewer', 'Endorsed By'];
 
         $rows = [];
         foreach ($records as $idx => $record) {
@@ -1535,10 +1535,12 @@ class ReportController extends Controller
                 $record->projected_completion_year ?? 'Not configured',
                 $record->year_level ?? 'N/A',
                 $record->term ?? 'N/A',
+                $record->academic_year ?? 'N/A',
                 $record->grant_provision_label ?? SystemOption::formatGrantProvisionLabel($record->grant_provision, 'N/A'),
             ];
             $row[] = $record->interviewed_at ? \Carbon\Carbon::parse($record->interviewed_at)->format('M d, Y') : 'N/A';
-            $row[] = $record->interviewer->name ?? 'N/A';
+            $row[] = mb_strtoupper((string) ($record->interviewer->name ?? 'N/A'), 'UTF-8');
+            $row[] = mb_strtoupper((string) ($record->endorsed_by ?? 'N/A'), 'UTF-8');
             $rows[] = $row;
         }
 

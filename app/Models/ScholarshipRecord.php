@@ -48,6 +48,7 @@ class ScholarshipRecord extends Model
         'recommendation',
         'interview_remarks',
         'interviewed_by',
+        'endorsed_by',
         'interviewed_at',
     ];
 

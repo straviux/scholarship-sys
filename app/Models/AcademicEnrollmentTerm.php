@@ -34,6 +34,7 @@ class AcademicEnrollmentTerm extends Model
         'recommendation',
         'interview_remarks',
         'interviewed_by',
+        'endorsed_by',
         'interviewed_at',
         'created_by',
         'updated_by',

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, computed, onBeforeUnmount } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
 import { useSystemOptions } from '@/composables/useSystemOptions';
@@ -9,6 +10,10 @@ const props = defineProps({
     applicant: Object,
     recordId: [Number, String],
     initialValues: Object,
+    interviewers: {
+        type: Array,
+        default: () => [],
+    },
     isEdit: {
         type: Boolean,
         default: false,
@@ -24,6 +29,8 @@ const emit = defineEmits(['update:modelValue', 'submitted']);
 const visible = ref(props.modelValue);
 const submitting = ref(false);
 const errors = ref({});
+const page = usePage();
+const currentUser = computed(() => page.props.auth?.user ?? null);
 
 const form = ref({
     academic_potential: null,
@@ -31,10 +38,65 @@ const form = ref({
     communication_skills: null,
     recommendation: null,
     grant_provision: null,
+    interview_date: null,
+    interviewer_id: null,
+    endorsed_by: '',
     interview_remarks: '',
 });
 
 const grantProvisionRaw = useSystemOptions('grant_provision');
+
+const formatDateForPicker = (value) => {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        const [year, month, day] = value.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    }
+
+    const parsedDate = new Date(value);
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+};
+
+const formatDateForBackend = (value) => {
+    if (!value) return null;
+
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+};
+
+const buildInterviewerOptions = (...users) => {
+    const seen = new Set();
+
+    return users
+        .flatMap((user) => Array.isArray(user) ? user : [user])
+        .filter((user) => user?.id && user?.name)
+        .filter((user) => {
+            if (seen.has(user.id)) {
+                return false;
+            }
+
+            seen.add(user.id);
+            return true;
+        })
+        .map((user) => ({
+            id: user.id,
+            name: user.name,
+        }));
+};
+
+const interviewerOptions = computed(() => buildInterviewerOptions(props.interviewers));
+
+const resolveInterviewerId = (...candidateIds) => {
+    return candidateIds.find((candidateId) => interviewerOptions.value.some((option) => option.id === candidateId)) || null;
+};
 
 const academicPotentialOptions = [
     { label: 'Excellent', value: 'excellent' },
@@ -69,17 +131,30 @@ watch(visible, (val) => {
     emit('update:modelValue', val);
 });
 
+const createFormState = () => ({
+    academic_potential: props.initialValues?.academic_potential || null,
+    financial_need_level: props.initialValues?.financial_need_level || null,
+    communication_skills: props.initialValues?.communication_skills || null,
+    recommendation: props.initialValues?.recommendation || null,
+    grant_provision: props.initialValues?.grant_provision || null,
+    interview_date: formatDateForPicker(props.initialValues?.interview_date || props.initialValues?.interviewed_at)
+        || new Date(),
+    interviewer_id: resolveInterviewerId(
+        props.initialValues?.interviewer_id,
+        props.initialValues?.interviewed_by,
+        props.initialValues?.interviewer?.id,
+        currentUser.value?.id,
+    ),
+    endorsed_by: props.initialValues?.endorsed_by || '',
+    interview_remarks: props.initialValues?.interview_remarks || '',
+});
+
 const resetForm = () => {
-    form.value = {
-        academic_potential: props.initialValues?.academic_potential || null,
-        financial_need_level: props.initialValues?.financial_need_level || null,
-        communication_skills: props.initialValues?.communication_skills || null,
-        recommendation: props.initialValues?.recommendation || null,
-        grant_provision: props.initialValues?.grant_provision || null,
-        interview_remarks: props.initialValues?.interview_remarks || '',
-    };
+    form.value = createFormState();
     errors.value = {};
 };
+
+form.value = createFormState();
 
 const close = () => {
     visible.value = false;
@@ -92,6 +167,8 @@ const validate = () => {
     if (!form.value.financial_need_level) errs.financial_need_level = 'Please select financial need level.';
     if (!form.value.communication_skills) errs.communication_skills = 'Please select communication skills.';
     if (!form.value.recommendation) errs.recommendation = 'Please select a recommendation.';
+    if (!form.value.interview_date || !formatDateForBackend(form.value.interview_date)) errs.interview_date = 'Please select interview date.';
+    if (!form.value.interviewer_id) errs.interviewer_id = 'Please select interviewer.';
     errors.value = errs;
     return Object.keys(errs).length === 0;
 };
@@ -162,6 +239,32 @@ watch(() => form.value.grant_provision, () => {
     }
 });
 
+watch(() => form.value.interview_date, () => {
+    if (errors.value.interview_date) {
+        delete errors.value.interview_date;
+    }
+});
+
+watch(() => form.value.interviewer_id, () => {
+    if (errors.value.interviewer_id) {
+        delete errors.value.interviewer_id;
+    }
+});
+
+watch(() => form.value.endorsed_by, () => {
+    if (errors.value.endorsed_by) {
+        delete errors.value.endorsed_by;
+    }
+});
+
+watch(interviewerOptions, () => {
+    if (!interviewerOptions.value.length || interviewerOptions.value.some((option) => option.id === form.value.interviewer_id)) {
+        return;
+    }
+
+    form.value.interviewer_id = resolveInterviewerId(currentUser.value?.id);
+});
+
 const submitAssessment = async () => {
     if (!validate()) return;
     if (!props.recordId) {
@@ -173,9 +276,14 @@ const submitAssessment = async () => {
     const endpoint = props.isEdit
         ? `/api/scholarship/${props.recordId}/update-interview`
         : `/api/scholarship/${props.recordId}/interview`;
+    const payload = {
+        ...form.value,
+        interview_date: formatDateForBackend(form.value.interview_date),
+        endorsed_by: form.value.endorsed_by?.trim() || null,
+    };
 
     try {
-        await axios.post(endpoint, form.value);
+        await axios.post(endpoint, payload);
         toast.success(props.successMessage);
         visible.value = false;
         emit('submitted');
@@ -202,7 +310,7 @@ const modalStyle = computed(() => ({
 }));
 
 function onDragStart(e) {
-    if (e.target.closest('button, input, textarea, select, a, .p-select, .p-radiobutton, .p-editor')) return;
+    if (e.target.closest('button, input, textarea, select, a, .p-select, .p-radiobutton, .p-editor, .p-datepicker')) return;
     dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
     document.addEventListener('pointermove', onDragMove);
     document.addEventListener('pointerup', onDragEnd);
@@ -259,6 +367,39 @@ onBeforeUnmount(() => {
                                 </span>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="ios-section">
+                        <div class="ios-section-label">
+                            <AppIcon name="calendar-days" :size="16" style="color: #8E8E93; margin-right: 8px;" />
+                            Interview Details
+                        </div>
+                        <div class="ios-card" style="overflow: visible;">
+                            <div class="ios-row">
+                                <span class="ios-row-label">Interview Date</span>
+                                <div class="ios-row-control ios-select">
+                                    <DatePicker v-model="form.interview_date" showIcon showButtonBar class="w-full"
+                                        dateFormat="M dd, yy" placeholder="Select date" />
+                                </div>
+                            </div>
+                            <div class="ios-row ios-row-stacked" style="gap: 8px; align-items: stretch;">
+                                <span class="ios-row-label">Interviewer</span>
+                                <Select v-model="form.interviewer_id" :options="interviewerOptions" optionLabel="name"
+                                    class="w-[200px]" optionValue="id" placeholder="Select interviewer" filter
+                                    autoFilterFocus :filterFields="['name']" :disabled="!interviewerOptions.length" />
+                            </div>
+                            <div class="ios-row ios-row-stacked ios-row-last" style="gap: 8px; align-items: stretch;">
+                                <span class="ios-row-label">Endorsed By</span>
+                                <InputText v-model="form.endorsed_by" class="w-[200px]"
+                                    placeholder="Enter endorser name" maxlength="255" />
+                            </div>
+                        </div>
+                        <div v-if="errors.interview_date" class="ios-section-footer ios-error">{{
+                            errors.interview_date }}</div>
+                        <div v-if="errors.interviewer_id" class="ios-section-footer ios-error">{{
+                            errors.interviewer_id }}</div>
+                        <div v-if="errors.endorsed_by" class="ios-section-footer ios-error">{{
+                            errors.endorsed_by }}</div>
                     </div>
 
                     <!-- Academic Potential -->
@@ -353,7 +494,7 @@ onBeforeUnmount(() => {
                             </button>
                         </div>
                         <div v-if="errors.recommendation" class="ios-section-footer ios-error">{{ errors.recommendation
-                            }}</div>
+                        }}</div>
                     </div>
 
                     <!-- Grant Provision -->

@@ -64,6 +64,10 @@ const props = defineProps({
     autoApprovalConfig: {
         type: Object,
         default: () => ({})
+    },
+    interviewers: {
+        type: Array,
+        default: () => []
     }
 });
 
@@ -1833,7 +1837,7 @@ const truncateText = (text, maxLength = 80) => {
 
         <!-- Interview Assessment Modal -->
         <InterviewAssessmentModal v-model="showInterviewModal" :applicant="selectedApplicantForReview"
-            :recordId="interviewRecordId" @submitted="onInterviewSubmitted" />
+            :recordId="interviewRecordId" :interviewers="interviewers" @submitted="onInterviewSubmitted" />
 
         <!-- Batch Update YAKAP Category Modal -->
         <BatchUpdateYakapModal :show="showBatchYakapModal" :selectedRows="selectedRows"

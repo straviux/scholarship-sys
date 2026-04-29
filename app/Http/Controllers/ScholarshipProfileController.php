@@ -1356,7 +1356,7 @@ class ScholarshipProfileController extends Controller
                 'school' => function ($q) {
                     $q->select('schools.id', 'schools.name', 'schools.shortname');
                 },
-                'interviewer'
+                'interviewer',
             ]);
 
         // Filter by recommendation
@@ -1442,6 +1442,7 @@ class ScholarshipProfileController extends Controller
             ],
             'interview_date' => ['nullable', 'date'],
             'interviewer_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
+            'endorsed_by' => ['nullable', 'string', 'max:255'],
             'interview_remarks' => 'nullable|string|max:2000',
         ], [
             'program_id.exists' => 'The selected program is invalid.',

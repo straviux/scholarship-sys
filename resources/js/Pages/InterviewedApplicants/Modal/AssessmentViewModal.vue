@@ -87,6 +87,14 @@
                                                 <span class="text-sm text-gray-600">{{ localRecord.interviewer?.name ||
                                                     'N/A' }}</span>
                                             </div>
+                                            <div class="ios-row ios-row-last">
+                                                <div class="ios-row-label">
+                                                    <AppIcon name="user" :size="13" style="color: #34C759;" />
+                                                    Endorsed By
+                                                </div>
+                                                <span class="text-sm text-gray-600">{{ localRecord.endorsed_by ||
+                                                    'N/A' }}</span>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -178,6 +186,127 @@
                                                 || 'N/A' }}
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+
+                            <div class="ios-section">
+                                <div class="ios-section-label">Academic Details</div>
+                                <div class="ios-card">
+                                    <div class="ios-row">
+                                        <div class="ios-row-label">
+                                            <AppIcon name="book-open" :size="13" style="color: #007AFF;" />
+                                            Program
+                                        </div>
+                                        <div class="ios-row-control ios-row-control-validation">
+                                            <div :class="['ios-input-stack', { 'has-error': editErrors.program_id }]">
+                                                <ProgramSelect v-model="editForm.program"
+                                                    custom-placeholder="Select program" class="ios-full-input" />
+                                                <small v-if="editErrors.program_id" class="ios-field-error">
+                                                    {{ editErrors.program_id }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ios-row">
+                                        <div class="ios-row-label">
+                                            <AppIcon name="graduation-cap" :size="13" style="color: #34C759;" />
+                                            Course
+                                        </div>
+                                        <div class="ios-row-control ios-row-control-validation">
+                                            <div :class="['ios-input-stack', { 'has-error': editErrors.course_id }]">
+                                                <CourseSelect v-model="editForm.course"
+                                                    :scholarship-program-id="editProgramId"
+                                                    :custom-placeholder="editCoursePlaceholder"
+                                                    class="ios-full-input" />
+                                                <small v-if="!editProgramId && !editErrors.course_id"
+                                                    class="ios-field-hint">
+                                                    Select a program first to narrow the course list.
+                                                </small>
+                                                <small v-if="editErrors.course_id" class="ios-field-error">
+                                                    {{ editErrors.course_id }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ios-row">
+                                        <div class="ios-row-label">
+                                            <AppIcon name="building-2" :size="13" style="color: #FF9500;" />
+                                            School
+                                        </div>
+                                        <div class="ios-row-control ios-row-control-validation">
+                                            <div :class="['ios-input-stack', { 'has-error': editErrors.school_id }]">
+                                                <SchoolSelect v-model="editForm.school"
+                                                    custom-placeholder="Select school" class="ios-full-input" />
+                                                <small v-if="editErrors.school_id" class="ios-field-error">
+                                                    {{ editErrors.school_id }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ios-row">
+                                        <div class="ios-row-label">
+                                            <AppIcon name="list-checks" :size="13" style="color: #5856D6;" />
+                                            Year Level
+                                        </div>
+                                        <div class="ios-row-control ios-row-control-validation">
+                                            <div :class="['ios-input-stack', { 'has-error': editErrors.year_level }]">
+                                                <YearLevelSelect v-model="editForm.year_level" class="ios-full-input" />
+                                                <small v-if="editErrors.year_level" class="ios-field-error">
+                                                    {{ editErrors.year_level }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ios-row ios-row-last">
+                                        <div class="ios-row-label">
+                                            <AppIcon name="calendar" :size="13" style="color: #AF52DE;" />
+                                            Term
+                                        </div>
+                                        <div class="ios-row-control ios-row-control-validation">
+                                            <div :class="['ios-input-stack', { 'has-error': editErrors.term }]">
+                                                <TermSelect v-model="editForm.term" class="ios-full-input" />
+                                                <small v-if="editErrors.term" class="ios-field-error">
+                                                    {{ editErrors.term }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ios-section">
+                                <div class="ios-section-label">Interview Details</div>
+                                <div class="ios-card" style="overflow: visible;">
+                                    <div class="ios-row">
+                                        <div class="ios-row-label">Interview Date</div>
+                                        <div class="ios-row-control ios-select">
+                                            <Calendar v-model="editForm.interview_date" showIcon dateFormat="M dd, yy"
+                                                class="w-full assessment-full-input" inputClass="assessment-full-input"
+                                                placeholder="Select date" />
+                                        </div>
+                                    </div>
+                                    <div class="ios-row ios-row-stacked" style="gap: 8px; align-items: stretch;">
+                                        <div class="ios-row-label">Interviewer</div>
+                                        <Select v-model="editForm.interviewer_id" :options="editInterviewerOptions"
+                                            optionLabel="name" optionValue="id" placeholder="Select interviewer"
+                                            class="w-[200px]" filter autoFilterFocus :filterFields="['name']"
+                                            :disabled="!editInterviewerOptions.length" />
+                                    </div>
+                                    <div class="ios-row ios-row-stacked ios-row-last"
+                                        style="gap: 8px; align-items: stretch;">
+                                        <div class="ios-row-label">Endorsed By</div>
+                                        <InputText v-model="editForm.endorsed_by" placeholder="Enter endorser name"
+                                            class="w-[200px]" maxlength="255" />
+                                    </div>
+                                </div>
+                                <div v-if="editErrors.interview_date" class="ios-section-footer ios-error">
+                                    {{ editErrors.interview_date }}
+                                </div>
+                                <div v-if="editErrors.interviewer_id" class="ios-section-footer ios-error">
+                                    {{ editErrors.interviewer_id }}
+                                </div>
+                                <div v-if="editErrors.endorsed_by" class="ios-section-footer ios-error">
+                                    {{ editErrors.endorsed_by }}
                                 </div>
                             </div>
 
@@ -434,7 +563,7 @@
                                             Date Filed
                                         </div>
                                         <span class="text-sm text-gray-700">{{ formatDate(localRecord.date_filed)
-                                            }}</span>
+                                        }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -597,6 +726,7 @@
 
 <script setup>
 import { computed, ref, toRef, watch } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import moment from 'moment';
 import { toast } from 'vue3-toastify';
@@ -643,6 +773,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    interviewers: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const emit = defineEmits(['update:show', 'updated', 'confirm-approve', 'confirm-deny', 'revert']);
@@ -655,18 +789,76 @@ const denyForm = toRef(props, 'denyForm');
 const declineReasons = toRef(props, 'declineReasons');
 const drag = useDraggableModal();
 const grantProvisionRaw = useSystemOptions('grant_provision');
+const page = usePage();
+const currentUser = computed(() => page.props.auth?.user ?? null);
 
 const activeMode = ref('view');
 const localRecord = ref(null);
 const editSubmitting = ref(false);
 const editErrors = ref({});
 const editForm = ref({
+    program: null,
+    course: null,
+    school: null,
+    year_level: null,
+    term: null,
     academic_potential: null,
     financial_need_level: null,
     communication_skills: null,
     recommendation: null,
     grant_provision: null,
+    interview_date: null,
+    interviewer_id: null,
+    endorsed_by: '',
     interview_remarks: '',
+});
+
+const formatDateForPicker = (value) => {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        const [year, month, day] = value.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    }
+
+    const parsedDate = new Date(value);
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+};
+
+const formatDateForPayload = (value) => {
+    if (!value) return null;
+    return moment(value).format('YYYY-MM-DD');
+};
+
+const buildInterviewerOptions = (...users) => {
+    const seen = new Set();
+
+    return users
+        .flatMap((user) => Array.isArray(user) ? user : [user])
+        .filter((user) => user?.id && user?.name)
+        .filter((user) => {
+            if (seen.has(user.id)) {
+                return false;
+            }
+
+            seen.add(user.id);
+            return true;
+        })
+        .map((user) => ({
+            id: user.id,
+            name: user.name,
+        }));
+};
+
+const editInterviewerOptions = computed(() => buildInterviewerOptions(props.interviewers));
+
+const resolveEditInterviewerId = (...candidateIds) => {
+    return candidateIds.find((candidateId) => editInterviewerOptions.value.some((option) => option.id === candidateId)) || null;
+};
+
+const selectedEditInterviewer = computed(() => {
+    return editInterviewerOptions.value.find((option) => option.id === editForm.value.interviewer_id) || null;
 });
 
 const academicPotentialOptions = [
@@ -704,12 +896,41 @@ const approvalValidationLabels = {
     remarks: 'Remarks',
 };
 
+const editValidationLabels = {
+    program_id: 'Program',
+    course_id: 'Course',
+    school_id: 'School',
+    year_level: 'Year Level',
+    term: 'Term',
+    interview_date: 'Interview Date',
+    interviewer_id: 'Interviewer',
+    endorsed_by: 'Endorsed By',
+    academic_potential: 'Academic Potential',
+    financial_need_level: 'Financial Need',
+    communication_skills: 'Communication Skills',
+    recommendation: 'Recommendation',
+    grant_provision: 'Grant Provision',
+    interview_remarks: 'Remarks',
+};
+
 const createEditFormState = () => ({
+    program: localRecord.value?.program || null,
+    course: localRecord.value?.course || null,
+    school: localRecord.value?.school || null,
+    year_level: localRecord.value?.year_level || null,
+    term: localRecord.value?.term || null,
     academic_potential: localRecord.value?.academic_potential || null,
     financial_need_level: localRecord.value?.financial_need_level || null,
     communication_skills: localRecord.value?.communication_skills || null,
     recommendation: localRecord.value?.recommendation || null,
     grant_provision: localRecord.value?.grant_provision || null,
+    interview_date: formatDateForPicker(localRecord.value?.interviewed_at) || new Date(),
+    interviewer_id: resolveEditInterviewerId(
+        localRecord.value?.interviewer?.id,
+        localRecord.value?.interviewed_by,
+        currentUser.value?.id,
+    ),
+    endorsed_by: localRecord.value?.endorsed_by || '',
     interview_remarks: localRecord.value?.interview_remarks || '',
 });
 
@@ -871,12 +1092,27 @@ const mapGrantProvisionOptions = (programCode) => {
         }));
 };
 
-const editProgramCode = computed(() => localRecord.value?.program?.shortname || null);
+const editProgramId = computed(() => extractOptionId(editForm.value?.program));
+
+const editProgramCode = computed(() => {
+    const program = editForm.value?.program;
+
+    if (program && typeof program === 'object') {
+        return program.shortname ?? null;
+    }
+
+    return localRecord.value?.program?.id === program ? localRecord.value?.program?.shortname ?? null : null;
+});
+
 const editGrantProvisionOptions = computed(() => mapGrantProvisionOptions(editProgramCode.value));
+
+const editCoursePlaceholder = computed(() => {
+    return editProgramId.value ? 'Select course' : 'Select program first';
+});
 
 const editGrantProvisionPlaceholder = computed(() => {
     if (!editProgramCode.value) {
-        return 'Program not available';
+        return 'Select program first';
     }
 
     if (!editGrantProvisionOptions.value.length) {
@@ -888,7 +1124,7 @@ const editGrantProvisionPlaceholder = computed(() => {
 
 const editGrantProvisionHint = computed(() => {
     if (!editProgramCode.value) {
-        return 'Grant provision options require a program on the scholarship record.';
+        return 'Grant provision options appear after selecting a program.';
     }
 
     if (!editGrantProvisionOptions.value.length) {
@@ -953,16 +1189,7 @@ const approvalValidationSummary = computed(() => {
 });
 
 const editValidationSummary = computed(() => {
-    const labels = {
-        academic_potential: 'Academic Potential',
-        financial_need_level: 'Financial Need',
-        communication_skills: 'Communication Skills',
-        recommendation: 'Recommendation',
-        grant_provision: 'Grant Provision',
-        interview_remarks: 'Remarks',
-    };
-
-    const activeLabels = Object.entries(labels)
+    const activeLabels = Object.entries(editValidationLabels)
         .filter(([field]) => Boolean(editErrors.value[field]))
         .map(([, label]) => label);
 
@@ -1011,6 +1238,36 @@ watch(() => approvalForm.value?.grant_provision, (value) => {
     if (value) clearApprovalFieldError('grant_provision');
 });
 
+watch(() => extractOptionId(editForm.value?.program), (value) => {
+    if (value) {
+        delete editErrors.value.program_id;
+    }
+});
+
+watch(() => extractOptionId(editForm.value?.course), (value) => {
+    if (value) {
+        delete editErrors.value.course_id;
+    }
+});
+
+watch(() => extractOptionId(editForm.value?.school), (value) => {
+    if (value) {
+        delete editErrors.value.school_id;
+    }
+});
+
+watch(() => extractOptionValue(editForm.value?.year_level), (value) => {
+    if (value) {
+        delete editErrors.value.year_level;
+    }
+});
+
+watch(() => extractOptionValue(editForm.value?.term), (value) => {
+    if (value) {
+        delete editErrors.value.term;
+    }
+});
+
 watch(
     () => [approvalProgramCode.value, approvalGrantProvisionOptions.value.map((option) => option.value).join('|')],
     () => {
@@ -1051,6 +1308,32 @@ watch(() => editForm.value.grant_provision, () => {
     }
 });
 
+watch(() => editForm.value.interview_date, () => {
+    if (editErrors.value.interview_date) {
+        delete editErrors.value.interview_date;
+    }
+});
+
+watch(() => editForm.value.interviewer_id, () => {
+    if (editErrors.value.interviewer_id) {
+        delete editErrors.value.interviewer_id;
+    }
+});
+
+watch(() => editForm.value.endorsed_by, () => {
+    if (editErrors.value.endorsed_by) {
+        delete editErrors.value.endorsed_by;
+    }
+});
+
+watch(editInterviewerOptions, () => {
+    if (!editInterviewerOptions.value.length || editInterviewerOptions.value.some((option) => option.id === editForm.value.interviewer_id)) {
+        return;
+    }
+
+    editForm.value.interviewer_id = resolveEditInterviewerId(currentUser.value?.id);
+});
+
 watch(() => denyForm.value?.reason, () => {
     if (denyForm.value?.errors?.reason) {
         denyForm.value.clearErrors('reason');
@@ -1086,6 +1369,8 @@ const openDenyMode = () => {
 const validateEditForm = () => {
     const errs = {};
 
+    if (!editForm.value.interview_date || !formatDateForPayload(editForm.value.interview_date)) errs.interview_date = 'Please select interview date.';
+    if (!editForm.value.interviewer_id) errs.interviewer_id = 'Please select interviewer.';
     if (!editForm.value.academic_potential) errs.academic_potential = 'Please select academic potential.';
     if (!editForm.value.financial_need_level) errs.financial_need_level = 'Please select financial need level.';
     if (!editForm.value.communication_skills) errs.communication_skills = 'Please select communication skills.';
@@ -1107,19 +1392,57 @@ const submitEdit = async () => {
     }
 
     editSubmitting.value = true;
+    const payload = {
+        program_id: extractOptionId(editForm.value.program),
+        course_id: extractOptionId(editForm.value.course),
+        school_id: extractOptionId(editForm.value.school),
+        year_level: extractOptionValue(editForm.value.year_level),
+        term: extractOptionValue(editForm.value.term),
+        academic_potential: editForm.value.academic_potential,
+        financial_need_level: editForm.value.financial_need_level,
+        communication_skills: editForm.value.communication_skills,
+        recommendation: editForm.value.recommendation,
+        grant_provision: editForm.value.grant_provision,
+        interview_date: formatDateForPayload(editForm.value.interview_date),
+        interviewer_id: editForm.value.interviewer_id,
+        endorsed_by: editForm.value.endorsed_by?.trim() || null,
+        interview_remarks: editForm.value.interview_remarks,
+    };
 
     try {
-        await axios.post(route('scholarship.record.update-interview', localRecord.value.id), editForm.value);
+        await axios.post(route('scholarship.record.update-interview', localRecord.value.id), payload);
+
+        const interviewer = selectedEditInterviewer.value || localRecord.value?.interviewer || null;
+        const changes = {
+            program_id: payload.program_id,
+            course_id: payload.course_id,
+            school_id: payload.school_id,
+            year_level: payload.year_level,
+            term: payload.term,
+            program: editForm.value.program || null,
+            course: editForm.value.course || null,
+            school: editForm.value.school || null,
+            academic_potential: payload.academic_potential,
+            financial_need_level: payload.financial_need_level,
+            communication_skills: payload.communication_skills,
+            recommendation: payload.recommendation,
+            grant_provision: payload.grant_provision,
+            interview_remarks: payload.interview_remarks,
+            interviewed_at: payload.interview_date,
+            interviewed_by: payload.interviewer_id,
+            endorsed_by: payload.endorsed_by,
+            interviewer: interviewer ? { id: interviewer.id, name: interviewer.name } : null,
+        };
 
         localRecord.value = {
             ...localRecord.value,
-            ...editForm.value,
+            ...changes,
         };
 
         editErrors.value = {};
         activeMode.value = 'view';
         toast.success('Assessment updated successfully.');
-        emit('updated', { ...editForm.value });
+        emit('updated', changes);
     } catch (error) {
         if (error.response?.status === 422 && error.response.data?.errors) {
             editErrors.value = {};

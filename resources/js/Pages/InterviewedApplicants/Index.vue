@@ -112,37 +112,44 @@
                             <div class="font-medium">
                                 {{ slotProps.data.profile.last_name }}, {{ slotProps.data.profile.first_name }}
                             </div>
-                            <div class="text-xs text-gray-500">{{ slotProps.data.profile.contact_no }}</div>
+                            <div class="text-[11px] mono text-gray-500">{{ slotProps.data.profile.contact_no }}</div>
                         </template>
                     </Column>
                     <Column field="program.shortname" header="Program" sortable>
                         <template #body="slotProps">
-                            {{ slotProps.data.program?.shortname || 'N/A' }}
+                            <span class="text-xs"> {{ slotProps.data.program?.shortname || 'N/A' }}</span>
                         </template>
                     </Column>
                     <Column field="school.shortname" header="School" sortable>
                         <template #body="slotProps">
-                            {{ slotProps.data.school?.shortname || slotProps.data.school?.name || 'N/A' }}
+                            <span class="text-xs"> {{ slotProps.data.school?.shortname ||
+                                slotProps.data.school?.name || 'N/A' }}</span>
                         </template>
                     </Column>
                     <Column field="course.shortname" header="Course" sortable>
                         <template #body="slotProps">
-                            {{ slotProps.data.course?.shortname || 'N/A' }}
+                            <span class="text-[10px] font-semibold"> {{ slotProps.data.course?.name || 'N/A' }}</span>
                         </template>
                     </Column>
                     <Column header="Year Level" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
                         <template #body="slotProps">
-                            {{ getSystemOptionLabel('year_level', slotProps.data.year_level, 'N/A') }}
+                            <span class="text-xs"> {{ getSystemOptionLabel('year_level', slotProps.data.year_level,
+                                'N/A') }}</span>
                         </template>
                     </Column>
                     <Column header="Term" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
                         <template #body="slotProps">
-                            {{ getSystemOptionLabel('term', slotProps.data.term, 'N/A') }}
+                            <span class="text-xs"> {{ getSystemOptionLabel('term', slotProps.data.term, 'N/A') }}</span>
+                        </template>
+                    </Column>
+                    <Column header="Academic Year" headerClass="min-w-[140px]" bodyClass="min-w-[140px]">
+                        <template #body="slotProps">
+                            <span class="text-xs"> {{ slotProps.data.academic_year || 'N/A' }}</span>
                         </template>
                     </Column>
                     <Column header="Grant Provision" headerClass="min-w-[200px]" bodyClass="min-w-[200px]">
                         <template #body="slotProps">
-                            <div class="text-sm leading-snug">
+                            <div class="text-xs leading-snug">
                                 {{ slotProps.data.grant_provision_label || getSystemOptionLabel('grant_provision',
                                     slotProps.data.grant_provision, 'N/A') }}
                             </div>
@@ -150,8 +157,17 @@
                     </Column>
                     <Column header="Recommendation" sortable sortField="recommendation">
                         <template #body="slotProps">
-                            <Tag :value="formatRecommendation(slotProps.data.recommendation)"
-                                :severity="getRecommendationSeverity(slotProps.data.recommendation)" />
+                            <span
+                                :class="['text-[11px] font-semibold', getRecommendationTextClass(slotProps.data.recommendation)]">
+                                {{ formatRecommendation(slotProps.data.recommendation) }}
+                            </span>
+                        </template>
+                    </Column>
+                    <Column header="Endorsed By" headerClass="min-w-[180px]" bodyClass="min-w-[180px]">
+                        <template #body="slotProps">
+                            <div class="text-sm leading-snug uppercase">
+                                {{ slotProps.data.endorsed_by || '-' }}
+                            </div>
                         </template>
                     </Column>
                     <Column header="Actions" :style="{ width: '80px' }">
@@ -226,7 +242,7 @@
                                                 class="border-l border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700">
                                                 {{ formatDate(slotProps.data.interviewed_at) }}
                                             </td>
-                                            <td class="px-3 py-3 text-sm font-semibold text-slate-700">
+                                            <td class="px-3 py-3 text-sm font-semibold text-slate-700 uppercase">
                                                 {{ slotProps.data.interviewer?.name || 'N/A' }}
                                             </td>
                                         </tr>
@@ -257,8 +273,8 @@
         <AssessmentViewModal v-model:show="showAssessmentDialog" :record="selectedRecord"
             :initial-mode="assessmentInitialMode" :can-manage="canManageActions" :can-revert="canManageActions"
             :approval-form="approvalForm" :deny-form="denyForm" :decline-reasons="declineReasons"
-            @updated="onAssessmentUpdated" @confirm-approve="confirmApprove" @confirm-deny="confirmDeny"
-            @revert="confirmRevert" />
+            :interviewers="interviewers" @updated="onAssessmentUpdated" @confirm-approve="confirmApprove"
+            @confirm-deny="confirmDeny" @revert="confirmRevert" />
     </AdminLayout>
 </template>
 
@@ -283,6 +299,10 @@ const { hasRole } = usePermission();
 const props = defineProps({
     interviewed_applicants: Array,
     decline_reasons: Object,
+    interviewers: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 // State
@@ -316,7 +336,7 @@ const denyForm = useForm({
 });
 
 const selectedRecord = ref(null);
-const canManageActions = computed(() => hasRole('administrator') || hasRole('program_manager'));
+const canManageActions = computed(() => hasRole('administrator') || hasRole('program_manager') || hasRole('screening_officer'));
 
 // Options
 const recommendationOptions = [
@@ -703,13 +723,13 @@ const formatRecommendation = (value) => {
     return labels[value] || 'N/A';
 };
 
-const getRecommendationSeverity = (value) => {
+const getRecommendationTextClass = (value) => {
     const map = {
-        recommended: 'success',
-        further_evaluation: 'warn',
-        not_recommended: 'danger',
+        recommended: 'text-green-600',
+        further_evaluation: 'text-yellow-600',
+        not_recommended: 'text-red-600',
     };
-    return map[value] || 'secondary';
+    return map[value] || 'text-slate-500';
 };
 
 const applyFilters = () => {

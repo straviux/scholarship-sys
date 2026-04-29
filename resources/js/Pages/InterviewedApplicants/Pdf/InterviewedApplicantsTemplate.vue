@@ -55,24 +55,45 @@
                     </div>
 
                     <table style="width:100%;border-collapse:collapse;font-size:7pt;table-layout:fixed;">
+                        <colgroup>
+                            <col style="width:3%;" />
+                            <col style="width:11%;" />
+                            <col style="width:5.5%;" />
+                            <col style="width:9%;" />
+                            <col style="width:11%;" />
+                            <col style="width:4%;" />
+                            <col style="width:6.5%;" />
+                            <col style="width:7%;" />
+                            <col style="width:8%;" />
+                            <col style="width:4%;" />
+                            <col style="width:7.5%;" />
+                            <col style="width:5%;" />
+                            <col style="width:7.5%;" />
+                            <col style="width:6%;" />
+                            <col style="width:5%;" />
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th :style="TH + 'vertical-align:middle;'" style="width:18pt;" rowspan="2">#</th>
-                                <th :style="TH + 'vertical-align:middle;'" style="width:13%;" rowspan="2">Name</th>
+                                <th :style="TH + 'vertical-align:middle;'" style="width:11%;" rowspan="2">Name</th>
                                 <th :style="TH + 'vertical-align:middle;'" style="width:7%;" rowspan="2">Program</th>
-                                <th :style="TH + 'vertical-align:middle;'" style="width:18%;" rowspan="2">Course</th>
-                                <th :style="TH + 'vertical-align:middle;'" style="width:7%;" rowspan="2">Year</th>
-                                <th :style="TH + 'vertical-align:middle;'" style="width:10%;" rowspan="2">Semester</th>
-                                <th :style="TH + 'vertical-align:middle;'" style="width:10%;" rowspan="2">Grant</th>
+                                <th :style="TH + 'vertical-align:middle;'" style="width:11%;" rowspan="2">School</th>
+                                <th :style="TH + 'vertical-align:middle;'" style="width:14%;" rowspan="2">Course</th>
+                                <th :style="TH + 'vertical-align:middle;'" style="width:6%;" rowspan="2">Year</th>
+                                <th :style="TH + 'vertical-align:middle;'" style="width:8%;" rowspan="2">Semester</th>
+                                <th :style="TH + 'vertical-align:middle;'" style="width:9%;" rowspan="2">Academic Year
+                                </th>
+                                <th :style="TH + 'vertical-align:middle;'" style="width:9%;" rowspan="2">Grant</th>
                                 <th :style="TH" colspan="3">Projected</th>
-                                <th :style="TH" colspan="2">Interview</th>
+                                <th :style="TH" colspan="3">Interview</th>
                             </tr>
                             <tr>
-                                <th :style="TH" style="width:7%;">Terms</th>
-                                <th :style="TH" style="width:11%;">Expense</th>
+                                <th :style="TH" style="width:6%;">Terms</th>
+                                <th :style="TH" style="width:10%;">Expense</th>
                                 <th :style="TH" style="width:7%;">Completion</th>
-                                <th :style="TH" style="width:9%;">Date</th>
-                                <th :style="TH" style="width:9%;">By</th>
+                                <th :style="TH" style="width:7.5%;">Date</th>
+                                <th :style="TH" style="width:6%;">By</th>
+                                <th :style="TH" style="width:5%;">Endorsed By</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -81,17 +102,28 @@
                                 <td :style="TD + 'font-weight:600;'">{{ record.profile.last_name }}, {{
                                     record.profile.first_name }}</td>
                                 <td :style="TD">{{ record.program?.shortname || '—' }}</td>
+                                <td :style="TD">{{ record.school?.name || record.school?.shortname || '—' }}</td>
                                 <td :style="TD">{{ record.course?.name || record.course?.shortname || '—' }}</td>
                                 <td :style="TD + 'text-align:center;'">{{ record.year_level || '—' }}</td>
-                                <td :style="TD + 'text-align:center;'">{{ record.term || '—' }}</td>
-                                <td :style="TD">{{ fmtGrantProvision(record.grant_provision_label ||
-                                    record.grant_provision) }}</td>
+                                <td :style="TD + 'text-align:center;'">{{ record.term || '—' }} </td>
+                                <td :style="TD + 'text-align:center;'">{{ record.academic_year || '—' }}</td>
+                                <td :style="TD">
+                                    <div>{{ fmtGrantProvisionName(record.grant_provision_label ||
+                                        record.grant_provision) }}</div>
+                                    <div v-if="fmtGrantProvisionAmount(record)"
+                                        style="margin-top:2px;font-size:6px;line-height:1.1;">
+                                        {{ fmtGrantProvisionAmount(record) }}
+                                    </div>
+                                </td>
                                 <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
                                 <td :style="TD + 'text-align:right;'">{{ fmtProjectedExpense(record) }}</td>
                                 <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
-                                <td :style="TD + 'text-align:center;white-space:nowrap;'">{{
+                                <td :style="TD + 'text-align:center;white-space:nowrap;width:7.5%;'">{{
                                     fmtDate(record.interviewed_at) }}</td>
-                                <td :style="TD + 'text-align:center;'">{{ record.interviewer?.name || '—' }}</td>
+                                <td :style="TD + 'text-align:center;text-transform:uppercase;'">{{
+                                    record.interviewer?.name || '—' }}</td>
+                                <td :style="TD + 'text-align:center;text-transform:uppercase;'">{{ record.endorsed_by ||
+                                    '—' }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -100,24 +132,43 @@
 
             <template v-else>
                 <table style="width:100%;border-collapse:collapse;font-size:7pt;margin-top:6pt;table-layout:fixed;">
+                    <colgroup>
+                        <col style="width:3%;" />
+                        <col style="width:12%;" />
+                        <col style="width:4%;" />
+                        <col style="width:10%;" />
+                        <col style="width:10.5%;" />
+                        <col style="width:3.5%;" />
+                        <col style="width:7%;" />
+                        <col style="width:8.5%;" />
+                        <col style="width:4%;" />
+                        <col style="width:8%;" />
+                        <col style="width:5%;" />
+                        <col style="width:6%;" />
+                        <col style="width:9%;" />
+                        <col style="width:9.5%;" />
+                    </colgroup>
                     <thead>
                         <tr>
                             <th :style="TH + 'vertical-align:middle;'" style="width:18pt;" rowspan="2">#</th>
-                            <th :style="TH + 'vertical-align:middle;'" style="width:13%;" rowspan="2">Name</th>
-                            <th :style="TH + 'vertical-align:middle;'" style="width:7%;" rowspan="2">Program</th>
-                            <th :style="TH + 'vertical-align:middle;'" style="width:18%;" rowspan="2">Course</th>
-                            <th :style="TH + 'vertical-align:middle;'" style="width:7%;" rowspan="2">Year</th>
-                            <th :style="TH + 'vertical-align:middle;'" style="width:10%;" rowspan="2">Semester</th>
-                            <th :style="TH + 'vertical-align:middle;'" style="width:10%;" rowspan="2">Grant</th>
-                            <th :style="TH" colspan="3">Projected</th>
+                            <th :style="TH + 'vertical-align:middle;'" style="width:12%;" rowspan="2">Name</th>
+                            <th :style="TH + 'vertical-align:middle;'" style="width:4%;" rowspan="2">Program</th>
+                            <th :style="TH + 'vertical-align:middle;'" style="width:11%;" rowspan="2">School</th>
+                            <th :style="TH + 'vertical-align:middle;'" style="width:11%;" rowspan="2">Course</th>
+                            <th :style="TH + 'vertical-align:middle;'" style="width:3%;" rowspan="2">Year</th>
+                            <th :style="TH + 'vertical-align:middle;'" style="width:7%;" rowspan="2">Term</th>
+                            <th :style="TH + 'vertical-align:middle;'" style="width:7%;" rowspan="2">Grant</th>
+                            <th :style="TH" colspan="3" style="width: 16%;">Projected</th>
                             <th :style="TH" colspan="2">Interview</th>
+                            <th :style="TH" rowspan="2">Endorsed By</th>
                         </tr>
                         <tr>
-                            <th :style="TH" style="width:7%;">Terms</th>
-                            <th :style="TH" style="width:11%;">Expense</th>
-                            <th :style="TH" style="width:7%;">Completion</th>
-                            <th :style="TH" style="width:9%;">Date</th>
-                            <th :style="TH" style="width:9%;">By</th>
+                            <th :style="TH">Terms</th>
+                            <th :style="TH">Expense</th>
+                            <th :style="TH">Completion</th>
+                            <th :style="TH" style="width:18pt;">Date</th>
+                            <th :style="TH" style="width:46pt;">By</th>
+
                         </tr>
                     </thead>
                     <tbody>
@@ -125,18 +176,32 @@
                             <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                             <td :style="TD + 'font-weight:600;'">{{ record.profile.last_name }}, {{
                                 record.profile.first_name }}</td>
-                            <td :style="TD">{{ record.program?.shortname || '—' }}</td>
+                            <td :style="TD + 'text-align:center;'">{{ record.program?.shortname || '—' }}</td>
+                            <td :style="TD">{{ record.school?.name || record.school?.shortname || '—' }}</td>
                             <td :style="TD">{{ record.course?.name || record.course?.shortname || '—' }}</td>
-                            <td :style="TD + 'text-align:center;'">{{ record.year_level || '—' }}</td>
-                            <td :style="TD + 'text-align:center;'">{{ record.term || '—' }}</td>
-                            <td :style="TD">{{ fmtGrantProvision(record.grant_provision_label || record.grant_provision)
-                                }}</td>
+                            <td :style="TD + 'text-align:center;'">{{ record.year_level || '—' }} </td>
+                            <td :style="TD + 'text-align:center;'">{{ record.term || '—' }}
+                                <p>{{ record.academic_year || '—' }}</p>
+                            </td>
+                            <td :style="TD + 'text-align:center;'">
+                                <div style="font-size: 8px;">{{ fmtGrantProvisionName(record.grant_provision_label ||
+                                    record.grant_provision) }}
+                                </div>
+                                <div v-if="fmtGrantProvisionAmount(record)" class="mono"
+                                    style="margin-top:2px;font-size:7px;line-height:1.1;">
+                                    {{ fmtGrantProvisionAmount(record) }}
+                                </div>
+                            </td>
                             <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
-                            <td :style="TD + 'text-align:right;'">{{ fmtProjectedExpense(record) }}</td>
+                            <td :style="TD + 'text-align:center;'">{{ fmtProjectedExpense(record) }}</td>
                             <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
-                            <td :style="TD + 'text-align:center;white-space:nowrap;'">{{ fmtDate(record.interviewed_at)
+                            <td :style="TD + 'text-align:center;white-space:nowrap;width:18pt;'">{{
+                                fmtDate(record.interviewed_at)
+                            }}</td>
+                            <td :style="TD + 'text-align:center;text-transform:uppercase;'">{{ record.interviewer?.name
+                                || '—' }}</td>
+                            <td :style="TD + 'text-align:center;text-transform:uppercase;'">{{ record.endorsed_by || '—'
                                 }}</td>
-                            <td :style="TD + 'text-align:center;'">{{ record.interviewer?.name || '—' }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -279,20 +344,71 @@ function fmtCompletionYear(record) {
     return record?.projected_completion_year ?? 'Not configured';
 }
 
-function fmtGrantProvision(value) {
+function parseGrantProvision(value) {
     if (!value) {
-        return '—';
+        return { name: '—', amount: '' };
     }
 
-    if (typeof value === 'string' && !value.includes('_')) {
-        return value;
+    const formattedValue = typeof value === 'string' && !value.includes('_')
+        ? value
+        : value
+            .toString()
+            .split('_')
+            .map(part => (part ? part.charAt(0).toUpperCase() + part.slice(1) : ''))
+            .join(' ');
+
+    const normalizedValue = formattedValue
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+
+    const amountMatch = normalizedValue.match(/^(.*?)(?:\s*\((?:PHP\s*)?([^()]+)\))$/i);
+
+    if (!amountMatch) {
+        return {
+            name: normalizedValue.replace(/\bPHP\b/g, '').replace(/\s{2,}/g, ' ').trim(),
+            amount: '',
+        };
     }
 
-    return value
-        .toString()
-        .split('_')
-        .map(part => (part ? part.charAt(0).toUpperCase() + part.slice(1) : ''))
-        .join(' ');
+    return {
+        name: amountMatch[1].trim(),
+        amount: amountMatch[2].replace(/\bPHP\b/g, '').replace(/\s{2,}/g, ' ').trim(),
+    };
+}
+
+function fmtGrantProvisionName(value) {
+    return parseGrantProvision(value).name;
+}
+
+function isTrimesterTerm(term) {
+    return typeof term === 'string' && term.toLowerCase().includes('trimester');
+}
+
+function fmtGrantAmount(value) {
+    return new Intl.NumberFormat('en-PH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(Number(value) || 0);
+}
+
+function fmtGrantProvisionAmount(record) {
+    const rawAmount = parseGrantProvision(record?.grant_provision_label || record?.grant_provision).amount;
+
+    if (!rawAmount) {
+        return '';
+    }
+
+    const numericAmount = Number(rawAmount.toString().replace(/,/g, ''));
+
+    if (!Number.isFinite(numericAmount)) {
+        return rawAmount;
+    }
+
+    const adjustedAmount = isTrimesterTerm(record?.term)
+        ? (numericAmount * 2) / 3
+        : numericAmount;
+
+    return fmtGrantAmount(adjustedAmount);
 }
 
 function sumProjectedExpense(records) {
@@ -311,6 +427,7 @@ const groupedData = computed(() => {
         let key;
 
         if (props.groupBy === 'program') key = record.program?.shortname || 'N/A';
+        else if (props.groupBy === 'school') key = record.school?.name || record.school?.shortname || 'N/A';
         else if (props.groupBy === 'course') key = record.course?.name || record.course?.shortname || 'N/A';
         else if (props.groupBy === 'recommendation') key = recLabel(record.recommendation);
         else if (props.groupBy === 'interviewer') key = record.interviewer?.name || 'N/A';

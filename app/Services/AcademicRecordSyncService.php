@@ -150,6 +150,7 @@ class AcademicRecordSyncService
         $term->recommendation = $record->recommendation;
         $term->interview_remarks = $record->interview_remarks;
         $term->interviewed_by = $record->interviewed_by;
+        $term->endorsed_by = $record->endorsed_by;
         $term->interviewed_at = $record->interviewed_at;
         $term->updated_by = $record->updated_by;
     }
@@ -224,9 +225,9 @@ class AcademicRecordSyncService
         $term->deleted_at = $activeExists
             ? null
             : ScholarshipRecord::withTrashed()
-                ->join('academic_enrollment_term_record_maps as maps', 'maps.scholarship_record_id', '=', 'scholarship_records.id')
-                ->where('maps.academic_enrollment_term_id', $termId)
-                ->max('scholarship_records.deleted_at');
+            ->join('academic_enrollment_term_record_maps as maps', 'maps.scholarship_record_id', '=', 'scholarship_records.id')
+            ->where('maps.academic_enrollment_term_id', $termId)
+            ->max('scholarship_records.deleted_at');
 
         $term->save();
     }

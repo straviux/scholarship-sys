@@ -158,6 +158,17 @@
                                 </div>
                             </div>
 
+                            <div class="ios-row">
+                                <div class="ios-row-label">
+                                    <AppIcon name="user" :size="13" style="color: #34C759;" />
+                                    Prepared By
+                                </div>
+                                <div class="ios-row-control">
+                                    <InputText v-model="preparedBy" class="ios-select" placeholder="Enter preparer name"
+                                        maxlength="255" />
+                                </div>
+                            </div>
+
                             <div class="ios-row ios-row-last">
                                 <div class="ios-row-label">
                                     <AppIcon name="panel-right-open" :size="13" style="color: #34C759;" />
@@ -191,7 +202,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeUnmount } from 'vue';
+import { ref, computed, onBeforeUnmount, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import moment from 'moment';
 import AppIcon from '@/Components/ui/AppIcon.vue';
@@ -212,6 +223,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:show']);
+const page = usePage();
+const currentUser = computed(() => page.props.auth?.user ?? null);
 
 // Filter States
 const selectedRecommendation = ref(null);
@@ -220,6 +233,7 @@ const selectedSchool = ref(null);
 const selectedCourse = ref(null);
 const dateFrom = ref(null);
 const dateTo = ref(null);
+const preparedBy = ref(currentUser.value?.name ?? '');
 
 // Report Options
 const reportType = ref('list');
@@ -244,6 +258,7 @@ const recommendationOptions = [
 const groupByOptions = [
     { label: 'No Grouping', value: 'none' },
     { label: 'By Program', value: 'program' },
+    { label: 'By School', value: 'school' },
     { label: 'By Course', value: 'course' },
     { label: 'By Recommendation', value: 'recommendation' },
     { label: 'By Interviewer', value: 'interviewer' },
@@ -280,6 +295,20 @@ const activeFiltersCount = computed(() => {
 
 const previewCount = computed(() => filterApplicants().length);
 
+const compareApplicantsByName = (left, right) => {
+    const leftLastName = left?.profile?.last_name || '';
+    const rightLastName = right?.profile?.last_name || '';
+    const lastNameComparison = leftLastName.localeCompare(rightLastName, undefined, { sensitivity: 'base' });
+
+    if (lastNameComparison !== 0) {
+        return lastNameComparison;
+    }
+
+    const leftFirstName = left?.profile?.first_name || '';
+    const rightFirstName = right?.profile?.first_name || '';
+    return leftFirstName.localeCompare(rightFirstName, undefined, { sensitivity: 'base' });
+};
+
 // Methods
 function filterApplicants() {
     let list = [...(props.interviewedApplicants || [])];
@@ -289,7 +318,7 @@ function filterApplicants() {
     if (selectedCourse.value) list = list.filter(r => r.course?.id === selectedCourse.value.id);
     if (dateFrom.value) list = list.filter(r => r.interviewed_at && moment(r.interviewed_at).isSameOrAfter(moment(dateFrom.value), 'day'));
     if (dateTo.value) list = list.filter(r => r.interviewed_at && moment(r.interviewed_at).isSameOrBefore(moment(dateTo.value), 'day'));
-    return list;
+    return list.sort(compareApplicantsByName);
 }
 
 function close() {
@@ -305,13 +334,19 @@ function clearAllFilters() {
     dateTo.value = null;
 }
 
+watch(() => props.show, (value) => {
+    if (value) {
+        preparedBy.value = currentUser.value?.name ?? '';
+    }
+});
+
 function generateReport() {
     if (isDateToInvalid.value) return;
     const filtered = filterApplicants();
     const fl = {
         recommendation: selectedRecommendation.value ? recommendationOptions.find(o => o.value === selectedRecommendation.value)?.label : '',
         program: selectedProgram.value?.shortname || '',
-        school: selectedSchool.value?.shortname || '',
+        school: selectedSchool.value?.name || selectedSchool.value?.shortname || '',
         course: selectedCourse.value?.name || selectedCourse.value?.shortname || '',
         date_from: dateFrom.value ? moment(dateFrom.value).format('MMM DD, YYYY') : '',
         date_to: dateTo.value ? moment(dateTo.value).format('MMM DD, YYYY') : '',
@@ -335,14 +370,13 @@ function generateReport() {
     const ps = previewPaperSizeMap[paperSize.value]?.[orientation.value] || 'a4-landscape';
     pdfPaperSize.value = ps;
 
-    const authUser = usePage().props.auth?.user;
     const bodyHtml = renderVueTemplate(InterviewedApplicantsTemplate, {
         records: filtered,
         reportType: reportType.value,
         groupBy: groupBy.value,
         filterLabels: fl,
         today: moment().format('MMMM D, YYYY'),
-        preparedBy: authUser?.name ?? '',
+        preparedBy: preparedBy.value?.trim() || currentUser.value?.name || '',
     });
 
     const { buildHtmlDoc } = usePdfPrint();
