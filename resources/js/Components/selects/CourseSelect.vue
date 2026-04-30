@@ -350,5 +350,3 @@ const onSelectHide = () => {
     border-radius: 0.875rem;
 }
 </style>
-
-<style src="vue-multiselect/dist/vue-multiselect.css"></style>

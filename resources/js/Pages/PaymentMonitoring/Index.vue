@@ -89,27 +89,51 @@ function onBudgetReportPreview({ htmlDoc, title, paperSize, reportData, today })
     showPdfPreview.value = true;
 }
 
-// Format currency helper
-const formatCurrency = (val) =>
-    parseFloat(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function normalizeNamedFilter(value) {
+    if (!value) {
+        return '';
+    }
+
+    return typeof value === 'object' ? value.name ?? '' : value;
+}
+
+// Normalize filter values once so request-building and client-side filtering share the same work.
+const normalizedSelectedStatus = computed(() => selectedStatus.value === 'all' ? '' : selectedStatus.value);
+const normalizedSelectedProgram = computed(() => normalizeNamedFilter(selectedProgram.value));
+const normalizedSelectedCourseNames = computed(() => (
+    Array.isArray(selectedCourse.value)
+        ? selectedCourse.value.map(course => (typeof course === 'object' ? course.name : course)).filter(Boolean)
+        : []
+));
+const normalizedSelectedCourseSet = computed(() => new Set(normalizedSelectedCourseNames.value));
+const normalizedSelectedSchool = computed(() => normalizeNamedFilter(selectedSchool.value));
+const statusSeverityMap = {
+    'LOA': 'info',
+    'Irregular': 'warn',
+    'Transferred': 'secondary',
+    'Claimed': 'contrast',
+    'Paid': 'success',
+    'On Process': 'warn',
+    'Denied': 'danger',
+};
+const dateFormatter = new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+});
 
 // Methods
 const applyFilters = () => {
     clearTimeout(filterTimeout);
     filterTimeout = setTimeout(() => {
-        // Extract course names from objects if needed
-        const courseValues = selectedCourse.value ? selectedCourse.value.map(course =>
-            typeof course === 'object' ? course.name : course
-        ) : [];
-
         router.get(route('payment-monitoring.index'), {
             search: searchInput.value,
-            transaction_status: selectedStatus.value === 'all' ? '' : selectedStatus.value,
+            transaction_status: normalizedSelectedStatus.value,
             academic_year: selectedAcademicYear.value,
             semester: selectedSemester.value,
-            program: typeof selectedProgram.value === 'object' ? selectedProgram.value?.name : selectedProgram.value,
-            course: courseValues.length > 0 ? courseValues : [],
-            school: typeof selectedSchool.value === 'object' ? selectedSchool.value?.name : selectedSchool.value,
+            program: normalizedSelectedProgram.value,
+            course: normalizedSelectedCourseNames.value,
+            school: normalizedSelectedSchool.value,
         }, {
             preserveState: false,
             replace: true,
@@ -132,30 +156,33 @@ const clearFilters = () => {
     });
 };
 
-// Computed property for status options including "No OBR assigned"
-const statusOptionsWithNoOBR = computed(() => {
-    return [
-        { label: 'Show All', value: '' },
-        { label: 'No OBR Assigned', value: 'no-obr' },
-        { label: 'On Process', value: 'on process' },
-        { label: 'Suspend', value: 'suspend' },
-        { label: 'Completed', value: 'completed' }
-    ];
-});
-
 // Computed property for status counts
 const statusCounts = computed(() => {
     const counts = {
-        all: props.paymentData.length,
-        'no-obr': props.paymentData.filter(item => !item.transaction_status).length,
-        'LOA': props.paymentData.filter(item => item.transaction_status === 'LOA').length,
-        'Irregular': props.paymentData.filter(item => item.transaction_status === 'Irregular').length,
-        'Transferred': props.paymentData.filter(item => item.transaction_status === 'Transferred').length,
-        'Claimed': props.paymentData.filter(item => item.transaction_status === 'Claimed').length,
-        'Paid': props.paymentData.filter(item => item.transaction_status === 'Paid').length,
-        'On Process': props.paymentData.filter(item => item.transaction_status === 'On Process').length,
-        'Denied': props.paymentData.filter(item => item.transaction_status === 'Denied').length,
+        all: 0,
+        'no-obr': 0,
+        'LOA': 0,
+        'Irregular': 0,
+        'Transferred': 0,
+        'Claimed': 0,
+        'Paid': 0,
+        'On Process': 0,
+        'Denied': 0,
     };
+
+    props.paymentData.forEach((item) => {
+        counts.all += 1;
+
+        if (!item.transaction_status) {
+            counts['no-obr'] += 1;
+            return;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(counts, item.transaction_status)) {
+            counts[item.transaction_status] += 1;
+        }
+    });
+
     return counts;
 });
 
@@ -163,91 +190,78 @@ const statusCounts = computed(() => {
 
 // Computed property for filtered data
 const filteredData = computed(() => {
-    let data = [...props.paymentData];
+    const data = [];
+    const normalizedSearch = searchInput.value?.toLowerCase() || '';
+    const normalizedStatus = normalizedSelectedStatus.value;
+    const academicYear = selectedAcademicYear.value;
+    const semester = selectedSemester.value;
+    const program = normalizedSelectedProgram.value;
+    const school = normalizedSelectedSchool.value;
+    const selectedCourseSet = normalizedSelectedCourseSet.value;
+    const hasSelectedCourses = selectedCourseSet.size > 0;
 
-    if (searchInput.value) {
-        data = data.filter((item) =>
-            item.scholar_name.toLowerCase().includes(searchInput.value.toLowerCase())
-        );
-    }
-
-    if (selectedStatus.value && selectedStatus.value !== 'all') {
-        if (selectedStatus.value === 'no-obr') {
-            data = data.filter((item) => !item.transaction_status);
-        } else {
-            data = data.filter((item) => item.transaction_status === selectedStatus.value);
+    props.paymentData.forEach((item) => {
+        if (normalizedSearch && !item.scholar_name.toLowerCase().includes(normalizedSearch)) {
+            return;
         }
-    }
 
-    if (selectedAcademicYear.value && selectedAcademicYear.value !== '') {
-        data = data.filter((item) => item.academic_year === selectedAcademicYear.value);
-    }
+        if (normalizedStatus) {
+            if (normalizedStatus === 'no-obr') {
+                if (item.transaction_status) {
+                    return;
+                }
+            } else if (item.transaction_status !== normalizedStatus) {
+                return;
+            }
+        }
 
-    if (selectedSemester.value) {
-        data = data.filter((item) => item.term === selectedSemester.value);
-    }
+        if (academicYear && item.academic_year !== academicYear) {
+            return;
+        }
 
-    if (selectedProgram.value && selectedProgram.value !== '') {
-        const programValue = typeof selectedProgram.value === 'object' ? selectedProgram.value.name : selectedProgram.value;
-        data = data.filter((item) => item.program === programValue);
-    }
+        if (semester && item.term !== semester) {
+            return;
+        }
 
-    if (selectedCourse.value && Array.isArray(selectedCourse.value) && selectedCourse.value.length > 0) {
-        const courseNames = selectedCourse.value.map(course =>
-            typeof course === 'object' ? course.name : course
-        );
-        data = data.filter((item) => courseNames.includes(item.course));
-    }
+        if (program && item.program !== program) {
+            return;
+        }
 
-    if (selectedSchool.value && selectedSchool.value !== '') {
-        const schoolValue = typeof selectedSchool.value === 'object' ? selectedSchool.value.name : selectedSchool.value;
-        data = data.filter((item) => item.school === schoolValue);
-    }
+        if (hasSelectedCourses && !selectedCourseSet.has(item.course)) {
+            return;
+        }
 
-    // Sort alphabetically by scholar name
-    data.sort((a, b) => a.scholar_name.localeCompare(b.scholar_name));
+        if (school && item.school !== school) {
+            return;
+        }
+
+        data.push(item);
+    });
+
+    // Keep the list ordered for grouped rendering and latest-transaction previews.
+    data.sort((a, b) => {
+        const scholarCompare = a.scholar_name.localeCompare(b.scholar_name);
+        if (scholarCompare !== 0) {
+            return scholarCompare;
+        }
+
+        const dateA = a.date_obligated ? Date.parse(a.date_obligated) : 0;
+        const dateB = b.date_obligated ? Date.parse(b.date_obligated) : 0;
+        return dateB - dateA;
+    });
 
     return data;
 });
 
 // PrimeVue Tag severity mapping
 const getStatusSeverity = (status) => {
-    const map = {
-        'LOA': 'info',
-        'Irregular': 'warn',
-        'Transferred': 'secondary',
-        'Claimed': 'contrast',
-        'Paid': 'success',
-        'On Process': 'warn',
-        'Denied': 'danger',
-    };
-    return map[status] || 'secondary';
-};
-
-// Status badge styling (legacy — kept for reference)
-const getStatusBadgeClass = (status) => {
-    const baseClass = 'px-2 sm:px-3 py-1 rounded-full text-xs font-semibold';
-    const statusMap = {
-        'LOA': 'bg-blue-100 text-blue-800',
-        'Irregular': 'bg-yellow-100 text-yellow-800',
-        'Transferred': 'bg-purple-100 text-purple-800',
-        'Claimed': 'bg-indigo-100 text-indigo-800',
-        'Paid': 'bg-green-100 text-green-800',
-        'On Process': 'bg-orange-100 text-orange-800',
-        'Denied': 'bg-red-100 text-red-800',
-        '': 'bg-gray-100 text-gray-800',
-    };
-    return `${baseClass} ${statusMap[status] || statusMap['']}`;
+    return statusSeverityMap[status] || 'secondary';
 };
 
 // Format date
 const formatDate = (date) => {
     if (!date) return '';
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
+    return dateFormatter.format(new Date(date));
 };
 
 // Expanded rows for accordion (blur effect on other rows)
@@ -269,31 +283,25 @@ const handleRowCollapse = () => {
 
 // Group filteredData by scholar — latest transaction shown as preview row
 const groupedData = computed(() => {
-    const groups = {};
+    const groups = new Map();
+
     filteredData.value.forEach(item => {
-        if (!groups[item.profile_id]) {
-            groups[item.profile_id] = {
+        if (!groups.has(item.profile_id)) {
+            groups.set(item.profile_id, {
                 profile_id: item.profile_id,
                 scholar_name: item.scholar_name,
                 transactions: [],
-            };
+                latest: item,
+                totalAmount: 0,
+            });
         }
-        groups[item.profile_id].transactions.push(item);
+
+        const group = groups.get(item.profile_id);
+        group.transactions.push(item);
+        group.totalAmount += parseFloat(item.amount) || 0;
     });
 
-    return Object.values(groups).map(g => {
-        const sorted = [...g.transactions].sort((a, b) => {
-            const dateA = a.date_obligated ? new Date(a.date_obligated) : new Date(0);
-            const dateB = b.date_obligated ? new Date(b.date_obligated) : new Date(0);
-            return dateB - dateA;
-        });
-        return {
-            ...g,
-            transactions: sorted,
-            latest: sorted[0],
-            totalAmount: g.transactions.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0),
-        };
-    }).sort((a, b) => a.scholar_name.localeCompare(b.scholar_name));
+    return Array.from(groups.values());
 });
 </script>
 

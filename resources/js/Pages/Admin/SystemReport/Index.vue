@@ -3,61 +3,33 @@
     <Head title="System Stats" />
 
     <AdminLayout>
-        <template #header>
-            System Stats
-        </template>
+        <AdminPageShell title="System Statistics Report"
+            description="Prioritize cleanup, monitor scholarship flow, and jump directly to the section that needs action from the iOS-styled management dashboard."
+            icon="chart-bar" eyebrow="Management Dashboard">
+            <template #meta>
+                <span>Generated {{ formattedGeneratedAt }}</span>
+                <span>System Health: {{ systemHealthStatus }}</span>
+                <span>{{ attentionSummaryText }}</span>
+            </template>
+            <template #actions>
+                <AppButton @click="refreshReport" :loading="loading" icon="refresh" label="Refresh"
+                    severity="secondary" raised />
+                <AppButton @click="exportReport" icon="download" label="Export JSON" severity="success"
+                    raised />
+            </template>
 
-        <div class="mx-auto max-w-[1600px] p-4 short:p-3 space-y-5 short:space-y-3">
-            <section
-                class="overflow-hidden rounded-[28px] border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white shadow-sm">
-                <div class="flex flex-col gap-6 p-6 lg:flex-row lg:items-start lg:justify-between">
-                    <div class="space-y-4">
-                        <div
-                            class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-100">
-                            <AppIcon name="chart-bar" :size="14" />
-                            Management Dashboard
-                        </div>
-                        <div>
-                            <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">System Statistics Report</h1>
-                            <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-200/90 sm:text-base">
-                                Prioritize cleanup, monitor scholarship flow, and jump directly to the section that
-                                needs
-                                action.
-                            </p>
-                        </div>
-                        <div class="flex flex-wrap gap-2 text-sm text-slate-200">
-                            <span
-                                class="inline-flex items-center rounded-full border border-white/10 bg-white/10 px-3 py-1">
-                                Generated {{ formattedGeneratedAt }}
-                            </span>
-                            <span
-                                class="inline-flex items-center rounded-full border border-white/10 bg-white/10 px-3 py-1">
-                                System Health: {{ systemHealthStatus }}
-                            </span>
-                            <span
-                                class="inline-flex items-center rounded-full border border-white/10 bg-white/10 px-3 py-1">
-                                {{ attentionSummaryText }}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-3 lg:justify-end">
-                        <AppButton @click="refreshReport" :loading="loading" icon="refresh" label="Refresh"
-                            severity="secondary" raised />
-                        <AppButton @click="exportReport" icon="download" label="Export JSON" severity="success"
-                            raised />
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 gap-px border-t border-white/10 bg-white/10 sm:grid-cols-2 xl:grid-cols-4">
-                    <div v-for="card in summaryCards" :key="card.label" class="bg-black/10 px-5 py-4">
+            <section class="ios-section">
+                <div class="ios-section-label">Summary</div>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div v-for="card in summaryCards" :key="card.label" class="ios-card px-5 py-4">
                         <div class="flex items-start justify-between gap-4">
                             <div>
-                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">{{
+                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{
                                     card.label }}</p>
-                                <p class="mt-2 text-2xl font-semibold text-white sm:text-3xl">{{ card.value }}</p>
-                                <p class="mt-1 text-sm text-slate-300">{{ card.note }}</p>
+                                <p class="mt-2 text-2xl font-semibold text-slate-900 sm:text-3xl">{{ card.value }}</p>
+                                <p class="mt-1 text-sm text-slate-600">{{ card.note }}</p>
                             </div>
-                            <AppIcon :name="card.icon" class="text-2xl text-slate-200" />
+                            <AppIcon :name="card.icon" class="text-2xl text-slate-500" />
                         </div>
                     </div>
                 </div>
@@ -83,7 +55,11 @@
                 </div>
             </section>
 
-            <section id="attention-center" class="report-section">
+        </AdminPageShell>
+
+    <div class="mx-auto max-w-[1600px] p-4 short:p-3 space-y-5 short:space-y-3">
+
+        <section id="attention-center" class="report-section">
                 <Card class="border border-slate-200 shadow-sm">
                     <template #title>
                         <div class="flex items-center gap-2">
@@ -122,10 +98,10 @@
                         </div>
                     </template>
                 </Card>
-            </section>
+        </section>
 
             <!-- Data Integrity Section -->
-            <section id="data-integrity" class="report-section">
+        <section id="data-integrity" class="report-section">
                 <Card>
                     <template #title>
                         <div class="flex items-center gap-2">
@@ -227,10 +203,10 @@
                         </div>
                     </template>
                 </Card>
-            </section>
+        </section>
 
             <!-- Application Status Charts -->
-            <section id="status-trends" class="report-section grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
+        <section id="status-trends" class="report-section grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
                 <Card>
                     <template #title>Application Status Distribution</template>
                     <template #content>
@@ -244,10 +220,10 @@
                         <Chart type="bar" :data="programChartData" :options="barChartOptions" class="w-full h-64" />
                     </template>
                 </Card>
-            </section>
+        </section>
 
             <!-- Performance Metrics -->
-            <section id="performance" class="report-section">
+        <section id="performance" class="report-section">
                 <Card>
                     <template #title>
                         <div class="flex items-center gap-2">
@@ -437,6 +413,7 @@
 import { ref, computed } from 'vue'
 import { router, Head } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
+import AdminPageShell from '@/Components/admin/AdminPageShell.vue'
 
 
 
@@ -487,16 +464,6 @@ const systemHealthStatus = computed(() => {
         return 'Warning'
     } else {
         return 'Critical'
-    }
-})
-
-const systemHealthColor = computed(() => {
-    const status = systemHealthStatus.value
-    switch (status) {
-        case 'Healthy': return 'text-green-600'
-        case 'Warning': return 'text-yellow-600'
-        case 'Critical': return 'text-red-600'
-        default: return 'text-gray-600'
     }
 })
 

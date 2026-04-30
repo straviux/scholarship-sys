@@ -1,4 +1,4 @@
-﻿<template>
+<template>
 
     <Head :title="`${profile.first_name} ${profile.last_name} - Scholar Profile`" />
 
@@ -1104,8 +1104,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue';
 import axios from 'axios';
-import { toast } from 'vue3-toastify';
-import 'vue3-toastify/dist/index.css';
+import { toast } from '@/utils/toast';
 import { usePermission } from '@/composable/permissions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { useSystemOptions } from '@/composables/useSystemOptions';
@@ -1453,20 +1452,16 @@ const { statusOptions, getStatusLabel, getStatusSeverity } = useScholarshipStatu
 
 // Watch for tab changes and persist to localStorage
 watch(activeTab, (newValue) => {
-    console.log('Tab changed to:', newValue);
     localStorage.setItem('scholarProfileActiveTab', newValue);
     // Load status timeline when tab 5 (Approval History) is selected
     if (newValue === '5') {
-        console.log('Approval History tab selected, loading timeline...');
         loadStatusTimeline();
     }
 });
 
 // Load status timeline if Approval History tab is already open on mount
 onMounted(() => {
-    console.log('Component mounted, activeTab:', activeTab.value);
     if (activeTab.value === '5') {
-        console.log('Tab 5 is already active, loading timeline on mount...');
         loadStatusTimeline();
     }
 });
@@ -2256,9 +2251,7 @@ const maskIdValue = (key, value) => {
 // Fetch activity logs for the profile
 const fetchActivityLogs = async () => {
     try {
-        console.log('Fetching activities for profile_id:', props.profile.profile_id);
         const response = await axios.get(`/activity-logs/${props.profile.profile_id}`);
-        console.log('Activity logs response:', response.data);
         let activities = response.data.data || response.data || [];
 
         // Sort by activity type hierarchy and then by date (latest first within each type)
@@ -2286,7 +2279,6 @@ const fetchActivityLogs = async () => {
         });
 
         activityLogs.value = activities;
-        console.log('Activities loaded:', activityLogs.value.length);
     } catch (error) {
         console.error('Error fetching activity logs:', error);
         activityLogs.value = [];
@@ -2299,11 +2291,8 @@ fetchActivityLogs();
 // Load status timeline data from API
 const loadStatusTimeline = async () => {
     try {
-        console.log('Loading status timeline for profile_id:', props.profile.profile_id);
         const response = await axios.get(`/activity-logs/${props.profile.profile_id}/status-timeline`);
-        console.log('Status timeline response:', response.data);
         statusTimeline.value = response.data.data || response.data || [];
-        console.log('Status timeline loaded:', statusTimeline.value.length, 'items');
     } catch (error) {
         console.error('Error loading status timeline:', error);
         statusTimeline.value = [];

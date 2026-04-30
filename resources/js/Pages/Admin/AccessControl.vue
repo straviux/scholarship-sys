@@ -1,5 +1,6 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
+import AdminPageShell from "@/Components/admin/AdminPageShell.vue";
 import AppIcon from "@/Components/ui/AppIcon.vue";
 import AppButton from "@/Components/ui/AppButton.vue";
 import { Head, useForm, router } from "@inertiajs/vue3";
@@ -8,10 +9,7 @@ import axios from "axios";
 import ChangePasswordModal from "@/Pages/Admin/Users/ChangePasswordModal.vue";
 import CreateUserModal from "@/Pages/Admin/Users/CreateUserModal.vue";
 import EditUserModal from "@/Pages/Admin/Users/EditUserModal.vue";
-import { toast } from 'vue3-toastify';
-import 'vue3-toastify/dist/index.css';
-
-// PrimeVue Components
+import { toast } from '@/utils/toast';
 
 const props = defineProps({
     users: Array,
@@ -651,25 +649,18 @@ const runCleanup = async () => {
     <Head title="Access Control" />
 
     <AdminLayout>
-        <template #header>Access Control</template>
+        <AdminPageShell title="Access Control"
+            description="Manage users, roles, permissions, and cleanup workflows from one iOS-styled security workspace."
+            icon="lock" eyebrow="Security">
+            <template #meta>
+                <span>{{ users.length }} users</span>
+                <span>{{ roles.length }} roles</span>
+                <span>{{ permissions.length }} permissions</span>
+            </template>
 
-        <div class="max-w-8xl mx-auto py-4">
-            <!-- Main Header Panel -->
-            <Panel>
-                <template #header>
-                    <div class="flex items-center gap-2">
-                        <AppIcon name="lock" :size="20" />
-                        <span class="font-semibold text-lg">Access Control Management</span>
-                    </div>
-                </template>
-
-                <div class="text-gray-600">
-                    Manage users, roles, and permissions in one unified interface
-                </div>
-            </Panel>
-
-            <!-- Tabs for Users, Roles, and Permissions -->
-            <div class="mt-6">
+            <section class="ios-section">
+                <div class="ios-section-label">Control Center</div>
+                <div class="mt-2">
                 <Tabs value="0">
                     <TabList>
                         <Tab value="0">
@@ -934,8 +925,9 @@ const runCleanup = async () => {
                         </TabPanel>
                     </TabPanels>
                 </Tabs>
-            </div>
-        </div>
+                </div>
+            </section>
+        </AdminPageShell>
 
         <!-- ============================================ -->
         <!-- USER MODALS -->

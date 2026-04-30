@@ -1,12 +1,12 @@
-# GSAP Animation Integration Guide
+# Animation Integration Guide
 
-This guide shows how to integrate GSAP animations into your components.
+This guide shows how to integrate the shared animation utilities into your components.
 
 ## Setup
 
-GSAP is now integrated as a Vue 3 plugin with automatic context cleanup to prevent memory leaks during Inertia page transitions.
+Animations are provided through direct composable imports. There is no global animation plugin, injected animation config, or `$animate` helper in the current app bootstrap.
 
-### Global Usage (Options API)
+### Options API Usage
 
 ```vue
 <template>
@@ -14,20 +14,16 @@ GSAP is now integrated as a Vue 3 plugin with automatic context cleanup to preve
 </template>
 
 <script>
+import { quickAnimateFrom } from '@/composables/useGSAPAnimation';
+
 export default {
-  data() {
-    return {
-      button: null,
-    };
-  },
   methods: {
     handleClick() {
-      // Use $animate for simple tweens
-      this.$animate(this.$refs.button, {
-        scale: 0.95,
+      quickAnimateFrom(this.$refs.button, {
+        x: 12,
+        opacity: 0,
         duration: 0.2,
-        yoyo: true,
-        repeat: 1,
+        clearProps: 'transform,opacity',
       });
     },
   },
@@ -55,6 +51,12 @@ const handleClick = () => {
 };
 </script>
 ```
+
+### Notes
+
+- Use `useGSAPAnimation()` when you need `animate`, `animateFrom`, or `stagger` from the shared transition wrapper.
+- Use `quickAnimateFrom()` for small one-off transitions when a component-level composable instance is unnecessary.
+- There is no injected `animations` object or `$animationConfig`; import timing presets from `@/composables/useAnimationDefaults` when needed.
 
 ## Common Animations
 
@@ -217,18 +219,21 @@ onMounted(() => {
 ## Available Animation Presets
 
 ### timings (in seconds)
+
 - `microInteraction`: 0.2 - quick feedback
 - `transition`: 0.3 - general transitions
 - `entrance`: 0.4 - entering elements
 - `exit`: 0.25 - leaving elements
 
 ### easings
+
 - `default`: 'power2.out'
 - `bounce`: 'elastic.out(1, 0.5)'
 - `spring`: 'back.out(1.7)'
 - `smooth`: 'sine.inOut'
 
 ### Available Animations
+
 - `toggleAnimation` - pulse, flip
 - `selectAnimation` - open, close, optionStagger
 - `buttonAnimation` - click, hover, success
@@ -245,16 +250,17 @@ onMounted(() => {
 Animations automatically respect `prefers-reduced-motion` media query. No configuration needed.
 
 If animation is disabled by the user or in `useAnimationDefaults.js`:
+
 - All animations return immediately without visual effect
 - `shouldAnimate()` returns `false`
 
 ## Performance Tips
 
-1. **Always use `useGSAPAnimation()` composable** - Provides automatic context cleanup
-2. **Use `gsap.context()`** - Prevents memory leaks with Inertia transitions
-3. **Limit simultaneous animations** - Stagger heavy animations
-4. **Avoid animating large DOM trees** - Animate containers instead
-5. **Use `transform` properties** - Faster than layout properties (top, left)
+1. **Prefer `useGSAPAnimation()` for shared patterns** - It keeps component animation code consistent.
+2. **Use `quickAnimateFrom()` for one-off transitions** - Avoid extra composable setup when you only need a single entrance effect.
+3. **Limit simultaneous animations** - Stagger heavy animations.
+4. **Avoid animating large DOM trees** - Animate containers instead.
+5. **Prefer `transform` and `opacity`** - They are cheaper than layout-affecting properties.
 
 ## Timing Guidelines
 
@@ -265,10 +271,12 @@ If animation is disabled by the user or in `useAnimationDefaults.js`:
 
 ## Memory Cleanup
 
-The `useGSAPAnimation()` composable automatically runs `ctx.revert()` on component unmount, which:
-- Kills all animations
-- Removes all selectors
-- Clears the context
-- Prevents memory leaks
+The current implementation uses native transitions through the shared composable helpers, so most components do not need explicit animation teardown.
 
-This is critical when using Inertia page transitions where components are frequently mounted/unmounted.
+On unmount, the composable clears its local context reference, which helps components avoid holding stale animation state.
+
+- Clears the composable's local context ref
+- Avoids stale references after unmount
+- Keeps cleanup requirements minimal for standard component transitions
+
+In practice, the main rule is simple: keep animation work scoped to mounted elements and avoid long-lived timers or observers in custom animation code.

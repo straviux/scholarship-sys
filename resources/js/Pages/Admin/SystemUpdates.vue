@@ -1,31 +1,20 @@
 <template>
     <AdminLayout>
-        <template #header>
-            Manage Updates
-        </template>
+        <AdminPageShell title="System Updates"
+            description="Create, publish, deactivate, and retire system-wide announcements from the shared iOS-styled communications feed."
+            icon="megaphone" eyebrow="Communications">
+            <template #meta>
+                <span>{{ updates.length }} updates</span>
+            </template>
+            <template #actions>
+                <AppButton v-if="hasRole('administrator')" @click="showCreateModal = true" label="Create Update"
+                    icon="plus" severity="success" raised />
+            </template>
 
-        <div class="py-4 short:py-2">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Header Panel -->
-                <Panel class="mb-4 short:mb-2">
-                    <template #header>
-                        <div class="flex items-center gap-2">
-                            <AppIcon name="megaphone" :size="20" />
-                            <span class="font-semibold text-lg">System Updates Management</span>
-                        </div>
-                    </template>
-
-                    <div class="flex justify-between items-center">
-                        <div class="text-gray-600">
-                            Create and manage system-wide updates and announcements
-                        </div>
-                        <AppButton v-if="hasRole('administrator')" @click="showCreateModal = true" label="Create Update"
-                            icon="plus" severity="success" raised />
-                    </div>
-                </Panel>
-
-                <!-- Updates List -->
-                <Panel header="System Updates" class="w-full">
+            <section class="ios-section">
+                <div class="ios-section-label">Update Feed</div>
+                <div class="max-w-7xl">
+                    <Panel header="System Updates" class="w-full">
                     <div v-if="updates.length === 0" class="text-center py-8">
                         <Message severity="info" :closable="false">
                             <p>No system updates found.</p>
@@ -76,9 +65,10 @@
                             </template>
                         </Card>
                     </div>
-                </Panel>
-            </div>
-        </div>
+                    </Panel>
+                </div>
+            </section>
+        </AdminPageShell>
 
         <!-- Create Update Dialog -->
         <Dialog v-model:visible="showCreateModal" modal header="Create System Update" :style="{ width: '56rem' }"
@@ -219,6 +209,7 @@ import { ref, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { usePermission } from '@/composable/permissions'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
+import AdminPageShell from '@/Components/admin/AdminPageShell.vue'
 import axios from 'axios'
 
 
@@ -243,7 +234,7 @@ marked.setOptions({
 })
 
 // Composables
-const { hasRole, hasPermission } = usePermission()
+const { hasRole } = usePermission()
 
 // Data
 const updates = ref([])

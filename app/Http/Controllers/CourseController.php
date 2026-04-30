@@ -21,12 +21,45 @@ class CourseController extends Controller
     public function index($action = null, $id = null): Response
     {
         $course = null;
+        $scholarshipPrograms = ScholarshipProgram::with('createdBy')
+            ->where('is_active', '=', 1)->get()->map(function ($program) {
+                return [
+                    'id' => $program->id,
+                    'name' => $program->name,
+                ];
+            });
+
+        $courses = Course::with(['createdBy', 'scholarshipProgram'])
+            ->orderBy('name')
+            ->orderBy('shortname')
+            ->get()
+            ->map(function ($course) {
+                return [
+                    'id' => $course->id,
+                    'scholarship_program_id' => $course->scholarship_program_id,
+                    'program' => $course->scholarshipProgram ? $course->scholarshipProgram->name : 'N/A',
+                    'name' => $course->name,
+                    'shortname' => $course->shortname,
+                    'field_of_study' => $course->field_of_study,
+                    'description' => $course->description,
+                    'remarks' => $course->remarks,
+                    'start_date' => $course->start_date,
+                    'end_date' => $course->end_date,
+                    'created_by' => $course->createdBy ? $course->createdBy->name : 'N/A',
+                    'is_active' => $course->is_active,
+                ];
+            });
+
         if ($action === 'edit' && $id) {
             // Fetch the profile by ID
             $course = Course::find($id);
             if (!$course) {
                 $msg = ['error' => true, 'message' => 'Data not found'];
-                return Inertia::render('ProgramRequirement/Index', [
+                return Inertia::render('Course/Index', [
+                    'action' => fn() => null,
+                    'course' => null,
+                    'scholarshipPrograms' => $scholarshipPrograms,
+                    'courses' => $courses,
                     'message' => $msg,
                 ]);
             }
@@ -34,33 +67,8 @@ class CourseController extends Controller
         return Inertia::render('Course/Index', [
             'action' => fn() => $action,
             'course' => $course,
-            'scholarshipPrograms' => ScholarshipProgram::with('createdBy')
-                ->where('is_active', '=', 1)->get()->map(function ($program) {
-                    return [
-                        'id' => $program->id,
-                        'name' => $program->name,
-                    ];
-                }),
-            'courses' => Course::with(['createdBy', 'scholarshipProgram'])
-                ->orderBy('name')
-                ->orderBy('shortname')
-                ->get()
-                ->map(function ($course) {
-                    return [
-                        'id' => $course->id,
-                        'scholarship_program_id' => $course->scholarship_program_id,
-                        'program' => $course->scholarshipProgram ? $course->scholarshipProgram->name : 'N/A',
-                        'name' => $course->name,
-                        'shortname' => $course->shortname,
-                        'field_of_study' => $course->field_of_study,
-                        'description' => $course->description,
-                        'remarks' => $course->remarks,
-                        'start_date' => $course->start_date,
-                        'end_date' => $course->end_date,
-                        'created_by' => $course->createdBy ? $course->createdBy->name : 'N/A',
-                        'is_active' => $course->is_active,
-                    ];
-                }),
+            'scholarshipPrograms' => $scholarshipPrograms,
+            'courses' => $courses,
         ]);
     }
 

@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +11,6 @@ use App\Http\Requests\CreateScholarshipRecordRequest;
 use App\Models\ScholarshipRecord;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipRecordRequirement;
-use App\Models\ScholarshipProgram;
 use App\Services\AcademicRecordSyncService;
 use App\Services\ActivityLogService;
 use Carbon\Carbon;
@@ -26,140 +23,6 @@ class ScholarshipRecordController extends Controller
 {
     public function __construct(private readonly AcademicRecordSyncService $academicRecordSyncService)
     {
-    }
-
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request, $action = null, $id = null): Response
-    {
-        $msg = ['error' => false, 'message' => ''];
-        $props = [];
-        $scholarshipPrograms = ScholarshipProgram::with('createdBy')
-            ->where('is_active', '=', 1)->get()->map(function ($program) {
-                return [
-                    'id' => $program->id,
-                    'name' => $program->name,
-                    'shortname' => $program->shortname,
-                ];
-            });
-
-        // START VIEW ACTION LOGIC
-        if ($action === 'view'  && $id) {
-            // Fetch the profile by ID
-            $record = ScholarshipRecord::with(['requirements', 'program', 'course', 'profile'])->find($id);
-            if (!$record) {
-                $msg = ['error' => true, 'message' => 'Record not found'];
-                return Inertia::render('ScholarshipRecord/Index', [
-                    'message' => $msg,
-                ]);
-            }
-
-
-            return Inertia::render('ScholarshipRecord/View', [
-                'record' => $record,
-                'scholarshipPrograms' => $scholarshipPrograms,
-            ]);
-        }
-        // END VIEW ACTION
-
-
-        // default actiont Index 
-        $query = ScholarshipRecord::with(['course', 'program', 'profile', 'school'])
-            ->whereHas('profile', function ($q) {
-                $q->where('is_active', '=', 1);
-            });
-
-        // By default, do not show pending records (scholarship_status == 0)
-        $showAll = $request->boolean('show_all_status', false);
-        if (!$showAll) {
-            $query->where('unified_status', '!=', 'pending');
-        }
-        // Filter by course
-        if ($request->filled('course')) {
-            $query->whereRelation('course', 'name', '=', $request->course);
-        }
-
-        // Filter by municipality
-        if ($request->filled('municipality')) {
-            $query->whereRelation('profile', 'municipality', 'like', '%' . $request->municipality . '%');
-        }
-
-        // Filter by name (first_name, last_name, or full name)
-        if ($request->filled('name')) {
-
-            $searchName = $request->name;
-            $query->whereHas('profile', function ($query) use ($searchName) {
-                $query->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $searchName . '%'])
-                    ->orWhereRaw("CONCAT(last_name, ', ', first_name) LIKE ?", ['%' . $searchName . '%']);
-            });
-        }
-
-        // Filter by grant provision
-        if ($request->filled('grant_provision')) {
-            $query->where('grant_provision', $request->grant_provision);
-        }
-
-        if ($request->filled('sort')) {
-            // $query->orderBy('last_name', $request->sort['last_name'] ?? "asc");
-            if (isset($request->sort['date_filed'])) {
-                $query->orderBy('date_filed', $request->sort['date_filed']);
-            }
-            if (isset($request->sort['last_name'])) {
-                $query->orderBy('last_name', $request->sort['last_name']);
-            }
-        }
-
-        $perPage = $request->get('per_page', 10);
-        /** @disregard UndefinedMethod withQueryString */
-        $records = $query->paginate($perPage)->withQueryString();
-
-        return Inertia::render(
-            'ScholarshipRecord/Index',
-            [
-                'action' => fn() => $action,
-                'records' => $records,
-                'record' => fn() => $id ? ScholarshipRecord::with(['requirements', 'program', 'course', 'profile'])->find($id) : null,
-                'message' => $msg,
-            ]
-        );
-    }
-
-    public function showByProgram($scholarship_program, $action = null, $id = null): Response
-    {
-
-        $msg = ['error' => false, 'message' => ''];
-        if (!Gate::allows('scholarships.create') && $action === 'create') {
-
-            // insert create logic here
-            $action = null;
-            $msg = ['error' => true, 'message' => 'You are not allowed to perform this action'];
-            abort(403, 'Unauthorized action.');
-        }
-        return Inertia::render(
-            'ScholarshipRecord/Index',
-            [
-                'action' => fn() => $action,
-                'message' => $msg,
-                'scholars' => ScholarshipProfile::with(['createdBy', 'ongoingScholarshipGrant'])->get()
-            ]
-        );
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(Request $request): Response
-    {
-        //
-        if (Gate::allows('scholarships.create')) {
-
-            // insert create logic here
-            return Inertia::render('ScholarshipRecord/ScholarCreate');
-        }
-
-        // Return a 403 Forbidden response if not authorized
-        abort(403, 'Unauthorized action.');
     }
 
     /**

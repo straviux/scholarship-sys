@@ -1,15 +1,21 @@
 <template>
     <AdminLayout>
         <Toast position="top-right" :life="3500" :baseZIndex="20000" />
-        <div class="p-4 short:p-3 bg-white rounded-lg shadow-sm">
-            <div class="flex justify-between items-center mb-4 short:mb-2">
-                <h1 class="text-2xl short:text-xl font-bold text-gray-900">Role Menu Management</h1>
-            </div>
+        <AdminPageShell title="Role Menu Management"
+            description="Assign available menu items to roles, review role-specific navigation, and save ordering changes from a shared iOS-styled workspace."
+            icon="shield" eyebrow="Administration">
+            <template #meta>
+                <span>{{ roles.length }} roles</span>
+                <span>{{ menuItems.length }} menu items</span>
+                <span v-if="selectedRole">Selected: {{ selectedRole.name }}</span>
+            </template>
 
-            <div class="grid grid-cols-1 gap-4 short:gap-2 xl:grid-cols-12">
+            <section class="ios-section">
+                <div class="ios-section-label">Role Assignment Workspace</div>
+                <div class="grid grid-cols-1 gap-4 short:gap-2 xl:grid-cols-12">
                 <!-- Roles List -->
                 <div class="col-span-1 xl:col-span-3">
-                    <Card>
+                    <Card class="ios-page-panel">
                         <template #title>
                             Roles
                         </template>
@@ -34,7 +40,7 @@
 
                 <!-- Available Menus -->
                 <div class="col-span-1 xl:col-span-4">
-                    <Card>
+                    <Card class="ios-page-panel">
                         <template #title>
                             Available Menu Items
                         </template>
@@ -106,7 +112,7 @@
 
                 <!-- Assigned Menus with Drag & Drop -->
                 <div class="col-span-1 xl:col-span-5">
-                    <Card>
+                    <Card class="ios-page-panel">
                         <template #title>
                             <div class="flex items-center justify-between">
                                 <span>Assigned Menus for {{ selectedRole?.name || 'Role' }}</span>
@@ -160,16 +166,17 @@
                         </template>
                     </Card>
                 </div>
-            </div>
-        </div>
+                </div>
+            </section>
+        </AdminPageShell>
     </AdminLayout>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import AdminPageShell from '@/Components/admin/AdminPageShell.vue';
 import PrimaryButton from '@/Components/ui/buttons/PrimaryButton.vue';
 
 const props = defineProps({

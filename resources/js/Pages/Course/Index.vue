@@ -7,8 +7,7 @@ import { onMounted, ref, watch, computed, onBeforeUnmount } from "vue";
 import CourseModal from "@/Pages/Course/Modal/CourseModal.vue";
 import axios from 'axios';
 import { usePermission } from '@/composable/permissions';
-import { toast } from 'vue3-toastify';
-import 'vue3-toastify/dist/index.css';
+import { toast } from '@/utils/toast';
 
 const props = defineProps({
     courses: Object,

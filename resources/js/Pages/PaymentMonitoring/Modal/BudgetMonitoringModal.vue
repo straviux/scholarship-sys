@@ -212,15 +212,12 @@ const fmt = (val) =>
     parseFloat(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const summary = computed(() => {
-    console.log('[BudgetMonitoring] disbursedByProgramYear keys:', Object.keys(props.disbursedByProgramYear));
-    console.log('[BudgetMonitoring] budgetParticulars:', props.budgetParticulars.map(bp => ({ program: bp.program, fiscal_year: bp.fiscal_year, total_allotment: bp.total_allotment })));
     return props.budgetParticulars
         .filter(bp => !activeFiscalYear.value || bp.fiscal_year === activeFiscalYear.value)
         .filter(bp => !activeProgram.value || bp.program === activeProgram.value)
         .map(bp => {
             const programDisbursed = props.disbursedByProgramYear[bp.program] ?? {};
             const disbursed = programDisbursed[bp.fiscal_year] ?? 0;
-            console.log(`[BudgetMonitoring] ${bp.program} | fy="${bp.fiscal_year}" | programDisbursed keys:`, Object.keys(programDisbursed), '| disbursed:', disbursed);
             const remaining = bp.total_allotment - disbursed;
             const pct = bp.total_allotment > 0
                 ? Math.round((disbursed / bp.total_allotment) * 100)

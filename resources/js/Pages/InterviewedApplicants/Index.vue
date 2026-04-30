@@ -285,7 +285,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import moment from 'moment';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 import { usePermission } from '@/composable/permissions';
 
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';

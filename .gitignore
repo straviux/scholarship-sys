@@ -38,3 +38,6 @@ build-output.txt
 download-cdn-assets.ps1
 scholarship_program_devmode
 *.md
+tests/TestCase.php
+config/filesystems.php
+public/build/manifest.json

@@ -2,7 +2,7 @@
 import { ref, computed, onBeforeUnmount } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 

@@ -1,5 +1,7 @@
 # Smooth Scroll Implementation Guide
 
+> Note: The old `v-smooth-scroll` directive has been removed. Use `useSmoothScroll()` in click handlers instead.
+
 ## Quick Start
 
 ### 1. **Scroll to Top Button**
@@ -16,19 +18,28 @@ import ScrollToTop from '@/Components/ui/ScrollToTop.vue';
 </script>
 ```
 
-### 2. **Smooth Scroll Links (Anchor Navigation)**
+### 2. **Anchor-Style Navigation**
 
-Use the `v-smooth-scroll` directive on any link:
+Use the composable directly in click handlers when you want link-like section navigation:
 
 ```vue
-<!-- Basic usage -->
-<a href="#section-1" v-smooth-scroll>Go to Section 1</a>
+<script setup>
+import { useSmoothScroll } from '@/composables/useSmoothScroll';
 
-<!-- Custom offset and duration -->
-<a href="#section-2" v-smooth-scroll="{ offset: 80, duration: 1.0 }">Go to Section 2</a>
+const { scrollToElement } = useSmoothScroll();
 
-<!-- Target element -->
-<div id="section-1">Content here</div>
+const goToSection = (selector) => {
+  scrollToElement(selector, 80, 0.8);
+};
+</script>
+
+<template>
+  <a href="#section-1" @click.prevent="goToSection('#section-1')">Go to Section 1</a>
+  <a href="#section-2" @click.prevent="goToSection('#section-2')">Go to Section 2</a>
+
+  <div id="section-1">Content here</div>
+  <div id="section-2">More content here</div>
+</template>
 ```
 
 ### 3. **Programmatic Scrolling**
@@ -43,17 +54,17 @@ const { scrollToElement, scrollToTop, scrollToPosition } = useSmoothScroll();
 
 // Scroll to element
 const handleScrollToElement = () => {
-  scrollToElement('#my-element', offset = 60, duration = 0.8);
+  scrollToElement('#my-element', 60, 0.8);
 };
 
 // Scroll to position
 const handleScrollToPosition = () => {
-  scrollToPosition(500, duration = 0.8); // Scroll to 500px from top
+  scrollToPosition(500, 0.8); // Scroll to 500px from top
 };
 
 // Scroll to top
 const handleScrollToTop = () => {
-  scrollToTop(duration = 0.6);
+  scrollToTop(0.6);
 };
 </script>
 
@@ -107,24 +118,21 @@ const handleScrollToTop = () => {
 - **`hasScrolledPast(position)`**
   - Returns true if user has scrolled past a specific Y position
 
-### `v-smooth-scroll` Directive
+### Anchor-Style Links Without a Directive
 
-#### Basic Usage
+```vue
+<script setup>
+import { useSmoothScroll } from '@/composables/useSmoothScroll';
 
-```html
-<a href="#target-id" v-smooth-scroll>Link</a>
+const { scrollToElement } = useSmoothScroll();
+</script>
+
+<template>
+  <a href="#target-id" @click.prevent="scrollToElement('#target-id', 80, 0.8)">
+    Link
+  </a>
+</template>
 ```
-
-#### With Options
-
-```html
-<a href="#target-id" v-smooth-scroll="{ offset: 80, duration: 1 }">Link</a>
-```
-
-#### Options
-
-- `offset` (number, default: 0) - Pixels offset from top
-- `duration` (number, default: 0.8) - Animation duration in seconds
 
 ## Component: ScrollToTop
 
@@ -144,14 +152,11 @@ const handleScrollToTop = () => {
 
 ## Features
 
-✅ **Smooth animations** using GSAP ScrollToPlugin
+✅ **Smooth scrolling** via `window.scrollTo({ behavior: 'smooth' })`
 ✅ **Respects prefers-reduced-motion** for accessibility
-✅ **Automatic GSAP cleanup** prevents memory leaks
-✅ **CSS fallback** via `scroll-behavior: smooth`
 ✅ **Offset support** for fixed headers
 ✅ **Progress tracking** for UI integrations
 ✅ **Reusable composable** for programmatic control
-✅ **Directive support** for declarative usage
 ✅ **Scroll-to-top button** component included
 
 ## Accessibility Considerations
@@ -171,8 +176,6 @@ const handleScrollToTop = () => {
 ## Browser Support
 
 - Modern browsers with smooth scroll support
-- Fallback to CSS `scroll-behavior: smooth`
-- GSAP ScrollToPlugin for enhanced animations
 - Works on mobile (iOS, Android)
 
 ## Examples
@@ -213,11 +216,11 @@ const sections = [
 
 <template>
   <nav>
-    <a 
-      v-for="section in sections" 
+    <a
+      v-for="section in sections"
       :key="section.id"
       :href="`#${section.id}`"
-      v-smooth-scroll="{ offset: 80 }"
+      @click.prevent="scrollToElement(`#${section.id}`, 80, 0.8)"
     >
       {{ section.title }}
     </a>

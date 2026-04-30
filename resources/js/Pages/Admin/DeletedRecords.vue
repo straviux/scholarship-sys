@@ -2,26 +2,31 @@
 
     <Head title="Review Deleted Records" />
     <AdminLayout>
-        <div class="px-4 short:px-3 py-6 short:py-3">
-            <div class="flex items-center justify-between mb-6 short:mb-3">
-                <div>
-                    <h1 class="text-3xl short:text-xl font-bold text-gray-900">Deleted Records Management</h1>
-                    <p class="text-gray-600 mt-2">Review and restore deleted applicants and scholarship records</p>
-                </div>
-            </div>
+        <AdminPageShell title="Deleted Records Management"
+            description="Review soft-deleted profiles and scholarship grants, then restore or permanently remove them from the same iOS-styled recovery workspace."
+            icon="trash" eyebrow="Recovery">
+            <template #meta>
+                <span>{{ filteredProfiles.length }} deleted profiles</span>
+                <span>{{ filteredRecords.length }} deleted grants</span>
+            </template>
+
+            <div class="space-y-4 short:space-y-2">
 
             <!-- Search Filter -->
-            <div class="mb-4 short:mb-2">
+            <section class="ios-section">
+                <div class="ios-section-label">Search</div>
                 <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-3">
                     <AppIcon name="search" class="text-gray-500" />
                     <InputText v-model="searchQuery" type="text" placeholder="Search by name..." class="flex-1" />
                     <AppButton v-if="searchQuery" @click="searchQuery = ''" icon="times" severity="secondary"
                         variant="text" size="small" />
                 </div>
-            </div>
+            </section>
 
             <!-- Tabs for switching between deleted profiles and records -->
-            <div class="mb-4 short:mb-2 border-b border-gray-200">
+            <section class="ios-section">
+                <div class="ios-section-label">Record Types</div>
+                <div class="border-b border-gray-200">
                 <nav class="flex gap-4">
                     <button @click="activeTab = 'profiles'" :class="[
                         'px-4 py-2 font-medium text-sm border-b-2 transition-colors',
@@ -40,7 +45,8 @@
                         <AppIcon name="award" class="mr-2" />Deleted Scholarship Grants ({{ filteredRecords.length }})
                     </button>
                 </nav>
-            </div>
+                </div>
+            </section>
 
             <!-- Info banner -->
             <div v-if="activeTab === 'profiles'"
@@ -152,7 +158,8 @@
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+        </AdminPageShell>
 
         <!-- Delete Profile Confirmation Modal -->
         <Dialog v-model:visible="showDeleteProfileConfirmDialog" modal header="Confirm Permanent Deletion"
@@ -208,9 +215,9 @@
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import AdminPageShell from '@/Components/admin/AdminPageShell.vue';
 import axios from 'axios';
-import { toast } from 'vue3-toastify';
-import 'vue3-toastify/dist/index.css';
+import { toast } from '@/utils/toast';
 
 const props = defineProps({
     deletedProfiles: {
@@ -251,14 +258,6 @@ const filteredRecords = computed(() => {
     });
 });
 
-const showNotification = (message, type = 'success') => {
-    if (type === 'error') {
-        toast.error(message);
-    } else {
-        toast.success(message);
-    }
-};
-
 const formatDate = (date) => {
     if (!date) return 'N/A';
     const d = new Date(date);
@@ -273,32 +272,32 @@ const formatDate = (date) => {
 
 const restoreProfile = async (profileId) => {
     if (!profileId) {
-        showNotification('Invalid profile ID', 'error');
+        toast.error('Invalid profile ID');
         return;
     }
 
     try {
         const response = await axios.post(`/admin/profiles/${profileId}/restore`);
-        showNotification(response.data?.message || 'Profile and related records restored successfully.');
+        toast.success(response.data?.message || 'Profile and related records restored successfully.');
         setTimeout(() => location.reload(), 1000);
     } catch (error) {
         console.error('Restore error:', error);
-        showNotification(error.response?.data?.message || 'Failed to restore profile', 'error');
+        toast.error(error.response?.data?.message || 'Failed to restore profile');
     }
 };
 
 const restoreRecord = async (recordId) => {
     if (!recordId) {
-        showNotification('Invalid record ID', 'error');
+        toast.error('Invalid record ID');
         return;
     }
 
     try {
         const response = await axios.post(`/admin/scholarship-records/${recordId}/restore`);
-        showNotification(response.data.message);
+        toast.success(response.data.message);
         setTimeout(() => location.reload(), 1500);
     } catch (error) {
-        showNotification(error.response?.data?.message || 'Failed to restore record', 'error');
+        toast.error(error.response?.data?.message || 'Failed to restore record');
     }
 };
 
@@ -315,10 +314,10 @@ const permanentlyDeleteProfile = async () => {
 
     try {
         await axios.delete(route('admin.profiles.permanently-delete', profile.profile_id));
-        showNotification('Profile permanently deleted.');
+        toast.success('Profile permanently deleted.');
         setTimeout(() => location.reload(), 1500);
     } catch (error) {
-        showNotification(error.response?.data?.message || 'Failed to permanently delete profile', 'error');
+        toast.error(error.response?.data?.message || 'Failed to permanently delete profile');
     } finally {
         profileToDelete.value = null;
     }
@@ -337,10 +336,10 @@ const permanentlyDeleteRecord = async () => {
 
     try {
         await axios.delete(route('admin.records.permanently-delete', record.id));
-        showNotification('Record permanently deleted.');
+        toast.success('Record permanently deleted.');
         setTimeout(() => location.reload(), 1500);
     } catch (error) {
-        showNotification(error.response?.data?.message || 'Failed to permanently delete record', 'error');
+        toast.error(error.response?.data?.message || 'Failed to permanently delete record');
     } finally {
         recordToDelete.value = null;
     }

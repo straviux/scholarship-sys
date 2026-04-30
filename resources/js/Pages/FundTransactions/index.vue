@@ -329,8 +329,6 @@ const previewDocument = async (docType) => {
         return;
     }
 
-    console.log('Preview document:', doc);
-
     const downloadUrl = doc.download_url || `/api/fund-transactions/${selectedVoucherForUpload.value.id}/document/${docType}/download`;
 
     previewData.value = {
@@ -342,20 +340,15 @@ const previewDocument = async (docType) => {
     };
 
     previewZoom.value = 100; // Reset zoom when opening new preview
-    console.log('Preview data:', previewData.value);
     showPreviewModal.value = true;
 };
 
 // Show QR code for mobile upload
 const showQrCode = async (voucher, docType = null) => {
     try {
-        console.log('Generating QR code for voucher:', voucher, 'docType:', docType);
         const response = await axios.post(`/api/fund-transactions/${voucher.id}/generate-qr`, {
             doc_type: docType
         });
-        console.log('QR Code Response:', response.data);
-        console.log('QR Code SVG Type:', typeof response.data.qr_code_svg);
-        console.log('QR Code SVG Value:', response.data.qr_code_svg);
 
         if (!response.data.qr_code_svg) {
             throw new Error('No QR code SVG in response');
@@ -370,7 +363,6 @@ const showQrCode = async (voucher, docType = null) => {
             voucher: voucher,
             docType: docType
         };
-        console.log('QR Code Data Set:', qrCodeData.value);
         showQrModal.value = true;
         startQrCountdown();
     } catch (error) {
@@ -596,8 +588,6 @@ const fetchTrackingHistory = async (voucher) => {
         };
 
         const response = await axios.get('/api/obr-tracking-info', { params });
-
-        console.log('Tracking history response:', response.data);
 
         if (response.data.success) {
             // Store the tracking data from wrapped response
@@ -958,11 +948,6 @@ const saveStatus = async () => {
 
     savingStatus.value = true;
     try {
-        console.log('Saving status - Current form data:', {
-            obr_status: statusForm.obr_status,
-            remarks: statusForm.remarks
-        });
-
         // Just send the status and remarks - minimal update
         const response = await axios.patch(
             `/api/fund-transactions/${selectedVoucherForStatus.value.id}/update-status`,
@@ -971,10 +956,6 @@ const saveStatus = async () => {
                 remarks: statusForm.remarks
             }
         );
-
-        console.log('Status update response:', response.data);
-        console.log('Response obr_status value:', response.data.data?.obr_status);
-        console.log('Response remarks value:', response.data.data?.remarks);
 
         // Update the voucher in the list with the actual returned values
         const voucherIndex = vouchers.value.findIndex(v => v.id === selectedVoucherForStatus.value.id);
@@ -1193,17 +1174,6 @@ const openOBRTrackingDialog = (voucher) => {
     obrTrackingForm.date_obligated = voucher.date_obligated ? voucher.date_obligated.substring(0, 10) : null;
     obrTrackingForm.dv_no = voucher.dv_no || '';
     obrTrackingResult.value = null;
-
-    // Debug: Log what was loaded from the database
-    console.log('openOBRTrackingDialog - Loaded from voucher:', {
-        voucher_id: voucher.id,
-        fiscal_year: voucher.fiscal_year,
-        obr_no: voucher.obr_no,
-        dv_no: voucher.dv_no,
-        fiscal_year_type: typeof voucher.fiscal_year,
-        obr_no_type: typeof voucher.obr_no,
-        dv_no_type: typeof voucher.dv_no
-    });
 
     showOBRTrackingDialog.value = true;
 };

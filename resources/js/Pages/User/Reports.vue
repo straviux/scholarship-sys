@@ -78,32 +78,6 @@ const getReportData = computed(() => {
         }))
         .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    console.log('Report Data Sample:', result[0]);
-    console.log('Total Records:', {
-        totalProfiles: props.reportData?.profiles?.length || 0,
-        totalVouchers: props.reportData?.vouchers?.length || 0
-    });
-
-    // Show first few records from each type
-    console.log('First 3 profile records:', props.reportData?.profiles?.slice(0, 3));
-    console.log('First 3 voucher records:', props.reportData?.vouchers?.slice(0, 3));
-
-    // Log first date details
-    if (result.length > 0) {
-        const firstDate = result[0].date;
-        const profilesOnDate = props.reportData?.profiles?.filter(p => extractDate(p.created_at) === firstDate).length || 0;
-        const vouchersOnDate = props.reportData?.vouchers?.filter(v => extractDate(v.created_at) === firstDate);
-
-        console.log(`Date ${firstDate}:`, {
-            profilesOnDate,
-            voucherRecords: vouchersOnDate.length,
-            voucherIds: vouchersOnDate.map(v => v.voucher_id)
-        });
-
-        const uniqueVoucherIds = new Set(vouchersOnDate.map(v => String(v.voucher_id)));
-        console.log('Unique Voucher IDs on first date:', Array.from(uniqueVoucherIds));
-    }
-
     return result;
 });
 

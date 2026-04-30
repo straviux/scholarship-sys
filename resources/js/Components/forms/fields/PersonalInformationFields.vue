@@ -213,7 +213,7 @@
 </template>
 
 <script setup>
-import { onMounted, watch, computed, ref } from 'vue';
+import { watch, computed, ref } from 'vue';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import BarangaySelect from '@/Components/selects/BarangaySelect.vue';
 import GenderSelect from '@/Components/selects/GenderSelect.vue';
@@ -375,10 +375,6 @@ const formatDateInput = (event) => {
         }
     }
 };
-
-onMounted(() => {
-    console.log('PersonalInformationFields mounted with props:', props);
-});
 
 </script>
 

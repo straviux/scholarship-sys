@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onBeforeUnmount } from 'vue';
 import { useForm } from '@inertiajs/vue3';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 
 const props = defineProps({
     show: Boolean,

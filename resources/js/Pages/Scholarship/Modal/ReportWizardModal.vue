@@ -219,9 +219,45 @@
                                             placeholder="Enter preparer name" />
                                     </div>
                                 </div>
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <AppIcon name="briefcase" :size="13" style="color: #8E8E93;" />
+                                        Designation
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <InputText v-model="preparedByTitle" class="ios-select"
+                                            placeholder="Position / Title" />
+                                    </div>
+                                </div>
                             </div>
                             <div class="ios-section-footer">
                                 The prepared-by line defaults to the logged in user.
+                            </div>
+                        </div>
+
+                        <div class="ios-section">
+                            <div class="ios-section-label">Signatory</div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <AppIcon name="user-check" :size="13" style="color: #007AFF;" />
+                                        Noted By
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <InputText v-model="signatoryName" class="ios-select"
+                                            placeholder="Enter signatory name" />
+                                    </div>
+                                </div>
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <AppIcon name="briefcase" :size="13" style="color: #8E8E93;" />
+                                        Designation
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <InputText v-model="signatoryTitle" class="ios-select"
+                                            placeholder="Position / Title" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -407,6 +443,9 @@ const selectedGrantProvision = ref(null);
 // Step 3
 const paperSize = ref('A4');
 const orientation = ref('landscape');
+const preparedByTitle = ref('');
+const signatoryName = ref('');
+const signatoryTitle = ref('');
 const groupBy = ref('none');
 const groupBySecondary = ref('none');
 const groupByTertiary = ref('none');
@@ -519,10 +558,34 @@ const activeFiltersCount = computed(() => {
 
 const paperConfig = computed(() => getReportPaperConfig(paperSize.value, orientation.value));
 const iframeWidth = computed(() => paperConfig.value.widthPx);
-const iframeHeight = computed(() => paperConfig.value.heightPx);
+const iframePagedHeight = ref(null); // set by postMessage from Paged.js after render
+const iframeHeight = computed(() => iframePagedHeight.value ?? paperConfig.value.heightPx);
+
+function _onPagedMessage(e) {
+    if (e.data?.type === 'pagedjs:rendered') {
+        iframePagedHeight.value = e.data.height;
+    }
+}
+
+function resetPreviewState() {
+    window.removeEventListener('message', _onPagedMessage);
+    showPreview.value = false;
+    previewHtml.value = '';
+    iframePagedHeight.value = null;
+}
+
+watch(showPreview, (v) => {
+    if (v) {
+        iframePagedHeight.value = null;
+        window.addEventListener('message', _onPagedMessage);
+    } else {
+        window.removeEventListener('message', _onPagedMessage);
+    }
+});
 
 // ─── Methods ───
 function close() {
+    resetPreviewState();
     emit('update:show', false);
     // Reset to step 1 on close
     setTimeout(() => { step.value = 1; }, 300);
@@ -594,6 +657,9 @@ async function generateReport() {
                 groupBy: groupBy.value,
                 groupBySecondary: groupBySecondary.value !== 'none' ? groupBySecondary.value : null,
                 groupByTertiary: groupByTertiary.value !== 'none' ? groupByTertiary.value : null,
+                preparedByTitle: preparedByTitle.value?.trim() || '',
+                signatoryName: signatoryName.value?.trim() || '',
+                signatoryTitle: signatoryTitle.value?.trim() || '',
             },
             generatedAt: moment().format('MMMM DD, YYYY — h:mm A'),
         };
@@ -648,7 +714,22 @@ function buildReportDoc(bodyHtml, title, paperSettings) {
 <head>
   <meta charset="UTF-8">
   <title>${title}</title>
-    <style>${getReportCss(paperSettings)}</style>
+  <style>
+    body { visibility: hidden; margin: 0; padding: 0; }
+    ${getReportCss(paperSettings)}
+  </style>
+  <script src="/vendor/pagedjs/paged.polyfill.min.js"><\/script>
+  <script>
+    window.PagedPolyfill.on('rendered', function () {
+      var pages = document.querySelector('.pagedjs_pages');
+      var h = pages ? pages.scrollHeight + 48 : document.documentElement.scrollHeight;
+      window.parent.postMessage({ type: 'pagedjs:rendered', height: h }, '*');
+      document.body.style.visibility = 'visible';
+      if (document.body.getAttribute('data-auto-print') === '1') {
+        window.print();
+      }
+    });
+  <\/script>
 </head>
 <body>${bodyHtml}</body>
 </html>`;
@@ -661,10 +742,10 @@ function doPrint() {
         alert('Pop-up blocked. Please allow pop-ups for this site.');
         return;
     }
-    win.document.write(previewHtml.value);
+    // Inject data-auto-print so Paged.js triggers window.print() after rendering
+    const htmlForPrint = previewHtml.value.replace('<body>', '<body data-auto-print="1">');
+    win.document.write(htmlForPrint);
     win.document.close();
-    win.onload = () => { win.focus(); win.print(); };
-    setTimeout(() => { if (win && !win.closed) { win.focus(); win.print(); } }, 800);
 }
 
 // ─── Watchers ───
@@ -677,6 +758,11 @@ watch(() => props.show, v => {
     if (v) {
         step.value = 1;
         preparedBy.value = currentUser.value?.name || '';
+        preparedByTitle.value = '';
+        signatoryName.value = '';
+        signatoryTitle.value = '';
+    } else {
+        resetPreviewState();
     }
 });
 
@@ -730,6 +816,7 @@ function onPreviewDragEnd() {
 }
 
 onBeforeUnmount(() => {
+    resetPreviewState();
     document.removeEventListener('pointermove', onDragMove);
     document.removeEventListener('pointerup', onDragEnd);
     document.removeEventListener('pointermove', onPreviewDragMove);

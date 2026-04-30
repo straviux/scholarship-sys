@@ -25,8 +25,6 @@
                 <AppIcon name="graduation-cap" :size="14" class="text-green-600" />
                 Academic
             </h4>
-
-            <!-- <pre>{{ application }}</pre> -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                 <div>
                     <label class="text-gray-600">Program</label>

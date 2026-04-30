@@ -2,7 +2,7 @@
 import { ref, computed, onBeforeUnmount } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { usePermission } from '@/composable/permissions';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 
 const props = defineProps({
     show: Boolean,

@@ -1,11 +1,19 @@
 <template>
     <AdminLayout>
-        <template #header>
-            Update Details
-        </template>
+        <AdminPageShell title="Update Details"
+            description="Review the full update body, confirm publication state, and manage follow-up actions from the iOS-styled detail view."
+            icon="file-edit" eyebrow="Communications">
+            <template #meta>
+                <span v-if="update">{{ update.is_active ? 'Active' : 'Inactive' }}</span>
+                <span v-if="update">{{ update.type }}</span>
+            </template>
+            <template #actions>
+                <AppButton @click="goBack" label="Back to Management" icon="arrow-left" text size="small" />
+            </template>
 
-        <div class="py-4 short:py-2">
-            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <section class="ios-section">
+                <div class="ios-section-label">Update Details</div>
+                <div class="max-w-4xl">
                 <!-- Loading State -->
                 <div v-if="loading" class="text-center py-12">
                     <AppIcon name="spinner" :size="40" class="text-blue-500" />
@@ -23,13 +31,8 @@
 
                 <!-- Update Content -->
                 <div v-else-if="update" class="space-y-4 short:space-y-2">
-                    <!-- Back Button -->
-                    <div>
-                        <AppButton @click="goBack" label="Back to Management" icon="arrow-left" text size="small" />
-                    </div>
-
                     <!-- Update Card -->
-                    <Card class="w-full">
+                    <Card class="w-full ios-page-panel">
                         <template #content>
                             <!-- Admin Info Banner -->
                             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 short:mb-2">
@@ -123,8 +126,9 @@
                         </template>
                     </Card>
                 </div>
-            </div>
-        </div>
+                </div>
+            </section>
+        </AdminPageShell>
 
         <!-- Delete Confirmation Dialog -->
         <Dialog v-model:visible="showDeleteDialog" modal header="Confirm Deletion" :style="{ width: '28rem' }">
@@ -152,6 +156,7 @@
 import { ref, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
+import AdminPageShell from '@/Components/admin/AdminPageShell.vue'
 import axios from 'axios'
 
 

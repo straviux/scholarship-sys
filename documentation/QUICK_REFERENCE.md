@@ -79,15 +79,12 @@ Route::middleware(['check.role:users', 'check.permission:users.create'])
 
 ## 📄 Available Pages
 
-- `users` - User management
-- `roles` - Roles management  
-- `permissions` - Permissions management
-- `access-control` - Combined access control
+- `users` - Legacy alias; GET requests redirect to `access-control`
+- `access-control` - Unified user, role, and permission management
 - `system-options` - System options
 - `system-report` - System reports
 - `deleted-records` - Soft-deleted records
 - `maintenance` - System maintenance
-- `permission-management` - Permission assignments
 
 ---
 
@@ -110,14 +107,14 @@ Go to **Access Control** → **Roles & Permissions** tab:
 1. Click "New Role" button
 2. Enter role name
 3. Click "Create Role"
-4. Assign permissions and pages as needed
+4. Assign permissions as needed
 
 ---
 
 ## 🔍 Troubleshooting
 
 **User can't see a page?**
-- ✅ Check if their role is assigned to that page (Page Access tab)
+- ✅ Check the route's `check.role` middleware and confirm the user's page keys are present in the auth payload
 - ✅ Clear cache: `php artisan cache:clear`
 
 **Action button not showing?**

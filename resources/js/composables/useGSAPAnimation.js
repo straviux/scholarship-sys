@@ -124,6 +124,4 @@ export const useGSAPAnimation = () => {
 		timeline,
 	};
 };
-
-export const quickAnimate = (target, vars) => runTransition(target, vars, false);
 export const quickAnimateFrom = (target, vars) => runTransition(target, vars, true);

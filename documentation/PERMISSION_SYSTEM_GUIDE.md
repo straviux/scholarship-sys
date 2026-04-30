@@ -252,17 +252,18 @@ Route::post('/applicants', [ApplicantController::class, 'store'])
 ### Accessing Role Permissions
 
 1. Login as administrator
-2. Navigate to: **Administrator → Role Permissions**
-3. Select the role tab you want to configure
-4. Toggle permissions on/off
-5. Click "Save All Changes"
+2. Navigate to: **Access Control**
+3. Open the **Roles & Permissions** area
+4. Select the role you want to configure
+5. Toggle permissions on or off
 
 ### Role Permissions Features
 
-- ✅ Tabbed interface by role
+- ✅ Unified access-control workspace
+- ✅ Role list with inline permission management
 - ✅ Grouped permissions by module
 - ✅ Quick select/clear all
-- ✅ Real-time toggle switches
+- ✅ Real-time toggle switches or immediate updates
 - ✅ Permission counter per module
 - ✅ Administrator role is read-only (has all permissions)
 

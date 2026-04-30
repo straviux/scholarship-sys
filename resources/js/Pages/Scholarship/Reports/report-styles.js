@@ -99,15 +99,14 @@ body {
   body { padding: 0; }
   .no-print { display: none !important; }
   .page-break { page-break-before: always; }
-  .report-page {
-    min-height: {{PRINTABLE_HEIGHT_MM}}mm;
-    padding: 0;
-  }
+}
+
+/* ── Paged.js page breaks ────────────────────── */
+.summary-section {
+  break-before: page;
 }
 
 .report-page {
-  min-height: {{PAGE_HEIGHT_MM}}mm;
-  padding: {{MARGIN_TOP_MM}}mm {{MARGIN_RIGHT_MM}}mm {{MARGIN_BOTTOM_MM}}mm {{MARGIN_LEFT_MM}}mm;
   display: flex;
   flex-direction: column;
 }

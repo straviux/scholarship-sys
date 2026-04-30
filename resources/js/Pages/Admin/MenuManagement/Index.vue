@@ -1,11 +1,12 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
+import { Head, useForm, router } from '@inertiajs/vue3';
 import * as LucideIcons from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 import draggable from 'vuedraggable';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import AdminPageShell from '@/Components/admin/AdminPageShell.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import PrimaryButton from '@/Components/ui/buttons/PrimaryButton.vue';
@@ -18,7 +19,6 @@ import TextArea from '@/Components/ui/inputs/TextArea.vue';
 
 // PrimeVue
 
-const $page = usePage();
 const toast = useToast();
 
 const props = defineProps({
@@ -41,9 +41,7 @@ const menusData = ref([...props.menus]); // Local copy of menu data
 // Fetch fresh menu data from server via dedicated API endpoint
 const refreshMenus = async () => {
     try {
-        console.log('Fetching menus from API...');
         const response = await axios.get(route('api.menu-items.index'));
-        console.log('API response:', response.data);
 
         if (!Array.isArray(response.data)) {
             console.error('Expected array response from API, got:', typeof response.data);
@@ -51,7 +49,6 @@ const refreshMenus = async () => {
         }
 
         menusData.value = response.data;
-        console.log('Menus updated successfully:', menusData.value.length, 'items');
     } catch (error) {
         console.error('Error refreshing menus:', error);
         toast.add({
@@ -95,7 +92,6 @@ const allTreeNodes = ref([]);
 // Initialize and sync when treeNodes changes (from API or optimistic updates)
 // Watch treeNodes to update allTreeNodes when menusData changes
 watch(treeNodes, (newTreeNodes) => {
-    console.log('treeNodes changed, syncing to allTreeNodes');
     allTreeNodes.value = JSON.parse(JSON.stringify(newTreeNodes));
 }, { immediate: true });
 
@@ -113,12 +109,6 @@ const flatItemsList = computed(() => {
     });
     return items;
 });
-
-// Sync flat list back to tree structure (no longer needed since allTreeNodes is computed)
-const syncFlatToTree = () => {
-    // allTreeNodes is now a computed property that automatically syncs
-    // This function is kept for backwards compatibility but does nothing
-};
 
 // Get all groups (parent items only)
 const groupOptions = computed(() => {
@@ -380,7 +370,6 @@ const submitAssignToGroup = () => {
                 parent_id: assigningToGroup.value.id,
                 order: childrenCount + currentIndex + 1
             };
-            console.log('Optimistically assigned item to group:', item.name);
         }
 
         router.put(
@@ -399,7 +388,6 @@ const submitAssignToGroup = () => {
             },
             {
                 onSuccess: async () => {
-                    console.log('Server confirmed item assignment to group:', item.name);
                     currentIndex++;
                     await updateNextItem();
                 },
@@ -410,7 +398,6 @@ const submitAssignToGroup = () => {
                     const stateToRevert = originalStates.find(s => s.index === originalIndex);
                     if (stateToRevert) {
                         menusData.value[stateToRevert.index] = stateToRevert.data;
-                        console.log('Reverted optimistic update due to error');
                     }
 
                     const errorMsg = Object.values(errors).join(', ') || 'Failed to update item';
@@ -521,7 +508,6 @@ const removeFromGroup = (item) => {
             ...menusData.value[itemIndex],
             parent_id: null
         };
-        console.log('Optimistically removed item from group:', item.label);
     }
 
     // Show success toast immediately (before server confirmation)
@@ -544,7 +530,6 @@ const removeFromGroup = (item) => {
         },
         {
             onSuccess: async () => {
-                console.log('Server confirmed item removal from group');
                 // Refresh to ensure UI is in sync with server
                 await refreshMenus();
             },
@@ -557,7 +542,6 @@ const removeFromGroup = (item) => {
                         ...menusData.value[itemIndex],
                         parent_id: originalParentId
                     };
-                    console.log('Reverted optimistic update due to error');
                 }
 
                 const errorMsg = Object.values(errors).join(', ') || 'Failed to remove item from group';
@@ -593,7 +577,6 @@ const saveOrder = async () => {
     });
 
     try {
-        console.log('Saving menu order:', updates);
         const response = await axios.post(route('admin.menu-items.reorder'), {
             menus: updates
         });
@@ -604,7 +587,6 @@ const saveOrder = async () => {
             detail: 'Menu order updated',
             life: 3000
         });
-        console.log('Server confirmed menu order update');
         // Reload page to refresh data from server
         await refreshMenus();
     } catch (error) {
@@ -666,16 +648,15 @@ const debouncedSaveOrder = () => {
             </template>
         </Dialog>
 
-        <div class="space-y-4 short:space-y-2">
-            <!-- Header -->
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="text-3xl short:text-xl font-bold text-gray-900">Menu Management</h2>
-                    <p class="text-gray-600 mt-1">Create groups, add standalone links, and add items to groups. Drag &
-                        drop to
-                        reorder.</p>
-                </div>
-                <div class="flex gap-2">
+        <AdminPageShell title="Menu Management"
+            description="Create menu groups, add standalone links, assign grouped items, and reorder the full navigation tree from the iOS-styled menu workspace."
+            icon="layout-dashboard" eyebrow="Navigation">
+            <template #meta>
+                <span>{{ menusData.length }} configured items</span>
+                <span>{{ groupOptions.length }} groups available</span>
+            </template>
+            <template #actions>
+                <div class="flex flex-wrap gap-2">
                     <PrimaryButton @click="openGroupDialog" class="flex items-center gap-2">
                         <AppIcon name="plus" />
                         Create Group
@@ -691,10 +672,11 @@ const debouncedSaveOrder = () => {
                         Add Item to Group
                     </PrimaryButton>
                 </div>
-            </div>
+            </template>
 
-            <!-- Content Area -->
-            <Card>
+            <section class="ios-section">
+                <div class="ios-section-label">Menu Tree</div>
+                <Card class="ios-page-panel">
                 <template #content>
                     <div class="space-y-4">
                         <div class="flex justify-between items-center">
@@ -825,8 +807,9 @@ const debouncedSaveOrder = () => {
                         </draggable>
                     </div>
                 </template>
-            </Card>
-        </div>
+                </Card>
+            </section>
+        </AdminPageShell>
 
         <!-- Dialog for Creating/Editing Groups and Items -->
         <Dialog v-model:visible="showDialog" :header="dialogHeader" :modal="true" class="w-full md:w-1/2">

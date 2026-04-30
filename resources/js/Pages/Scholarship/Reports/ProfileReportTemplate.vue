@@ -27,6 +27,9 @@ const grouped = computed(() => props.reportType === 'list'
     ? groupRecords(sortedRecords.value, props.options?.groupBy, props.options?.groupBySecondary, props.options?.groupByTertiary)
     : null);
 const preparedBy = computed(() => props.options?.preparedBy || '');
+const preparedByTitle = computed(() => props.options?.preparedByTitle || '');
+const signatoryName = computed(() => props.options?.signatoryName || '');
+const signatoryTitle = computed(() => props.options?.signatoryTitle || '');
 
 const reportLabel = computed(() => {
     const map = {
@@ -190,69 +193,125 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                 <template v-else>
                     <ProfileReportTable :records="sortedRecords" :filters="filters" :options="options" />
                 </template>
-
-                <div style="margin-top:8pt;text-align:right;font-size:8pt;font-weight:700;">
-                    Total Records: {{ records.length }} | Total Projected Expense: {{ fmtCurrency(totalProjectedExpense)
-                    }}
-                </div>
             </template>
 
             <template v-else>
-                <div style="display:flex;gap:16pt;margin-top:10pt;">
-                    <div style="flex:1;border:0.5pt solid #ccc;">
-                        <div :style="SUMMARY_HDR">By Status</div>
-                        <table style="width:100%;border-collapse:collapse;font-size:8pt;table-layout:fixed;">
-                            <thead>
-                                <tr>
-                                    <th :style="SUMMARY_TH">Status</th>
-                                    <th :style="SUMMARY_TH + 'text-align:right;'">Records</th>
-                                    <th :style="SUMMARY_TH + 'text-align:right;'">Projected</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="row in statusSummaryRows" :key="row.key">
-                                    <td :style="SUMMARY_TD">{{ row.label }}</td>
-                                    <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;'">{{ row.count }}</td>
-                                    <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;'">{{
-                                        fmtCurrency(row.projected) }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div style="flex:1;border:0.5pt solid #ccc;">
-                        <div :style="SUMMARY_HDR">By Program</div>
-                        <table style="width:100%;border-collapse:collapse;font-size:8pt;table-layout:fixed;">
-                            <thead>
-                                <tr>
-                                    <th :style="SUMMARY_TH">Program</th>
-                                    <th :style="SUMMARY_TH + 'text-align:right;'">Records</th>
-                                    <th :style="SUMMARY_TH + 'text-align:right;'">Projected</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="row in programSummaryRows" :key="row.key">
-                                    <td :style="SUMMARY_TD">{{ row.label }}</td>
-                                    <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;'">{{ row.count }}</td>
-                                    <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;'">{{
-                                        fmtCurrency(row.projected) }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div
-                    style="margin-top:12pt;padding:8pt;border:0.5pt solid #ccc;text-align:center;font-size:11pt;font-weight:700;">
-                    Total Records: {{ records.length }} | Total Projected Expense: {{ fmtCurrency(totalProjectedExpense)
-                    }}
-                </div>
+                <!-- Summary report: tables shown via shared summary block below -->
             </template>
         </div>
 
-        <div v-if="preparedBy" style="margin-top:24pt;font-size:8pt;">
-            <span>Prepared by: </span>
-            <span style="font-weight:700;">{{ preparedBy }}</span>
+        <!-- ── Report Summary (last page) ───────────────────────── -->
+        <div v-if="records.length > 0" class="summary-section" style="margin-top:18pt;page-break-inside:avoid;">
+            <div
+                style="text-align:center;border-top:1.5pt solid #000;border-bottom:0.5pt solid #000;padding:5pt 0;margin-bottom:10pt;">
+                <p style="font-weight:700;font-size:10pt;letter-spacing:1pt;text-transform:uppercase;">Report Summary
+                </p>
+            </div>
+
+            <!-- Grand Total Banner -->
+            <div style="display:flex;gap:0;border:0.5pt solid #000;margin-bottom:8pt;font-size:8pt;">
+                <div style="flex:1;padding:3pt 6pt;border-right:0.5pt solid #000;display:flex;align-items:center;justify-content:space-between;gap:6pt;">
+                    <span style="font-size:7pt;text-transform:uppercase;letter-spacing:0.4pt;color:#555;">Total Records</span>
+                    <span style="font-size:9pt;font-weight:700;">{{ records.length.toLocaleString() }}</span>
+                </div>
+                <div style="flex:2;padding:3pt 6pt;display:flex;align-items:center;justify-content:space-between;gap:6pt;">
+                    <span style="font-size:7pt;text-transform:uppercase;letter-spacing:0.4pt;color:#555;">Total Projected Expense</span>
+                    <span style="font-size:9pt;font-weight:700;">{{ fmtCurrency(totalProjectedExpense) }}</span>
+                </div>
+            </div>
+
+            <!-- Breakdown Tables -->
+            <div style="display:flex;gap:12pt;">
+                <!-- By Status -->
+                <div v-if="statusSummaryRows.length > 1 || !selectedStatus" style="flex:1;border:0.5pt solid #000;">
+                    <div :style="SUMMARY_HDR">Breakdown by Status</div>
+                    <table style="width:100%;border-collapse:collapse;font-size:8pt;table-layout:fixed;">
+                        <thead>
+                            <tr>
+                                <th :style="SUMMARY_TH">Status</th>
+                                <th :style="SUMMARY_TH + 'text-align:right;width:18%;'">Records</th>
+                                <th :style="SUMMARY_TH + 'text-align:right;width:32%;'">Projected</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="row in statusSummaryRows" :key="row.key">
+                                <td :style="SUMMARY_TD">{{ row.label }}</td>
+                                <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;'">{{
+                                    row.count.toLocaleString() }}
+                                </td>
+                                <td :style="SUMMARY_TD + 'text-align:right;'">{{ fmtCurrency(row.projected) }}</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td :style="SUMMARY_TD + 'font-weight:700;background:#f0f0f0;'">TOTAL</td>
+                                <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
+                                    records.length.toLocaleString() }}</td>
+                                <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
+                                    fmtCurrency(totalProjectedExpense) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- By Program -->
+                <div style="flex:1;border:0.5pt solid #000;">
+                    <div :style="SUMMARY_HDR">Breakdown by Program</div>
+                    <table style="width:100%;border-collapse:collapse;font-size:8pt;table-layout:fixed;">
+                        <thead>
+                            <tr>
+                                <th :style="SUMMARY_TH">Program</th>
+                                <th :style="SUMMARY_TH + 'text-align:right;width:18%;'">Records</th>
+                                <th :style="SUMMARY_TH + 'text-align:right;width:32%;'">Projected</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="row in programSummaryRows" :key="row.key">
+                                <td :style="SUMMARY_TD">{{ row.label }}</td>
+                                <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;'">{{
+                                    row.count.toLocaleString() }}
+                                </td>
+                                <td :style="SUMMARY_TD + 'text-align:right;'">{{ fmtCurrency(row.projected) }}</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td :style="SUMMARY_TD + 'font-weight:700;background:#f0f0f0;'">TOTAL</td>
+                                <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
+                                    records.length.toLocaleString() }}</td>
+                                <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
+                                    fmtCurrency(totalProjectedExpense) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Signatory Block ──────────────────────────────────── -->
+        <div style="margin-top:28pt;page-break-inside:avoid;">
+            <div style="display:flex;justify-content:space-between;gap:32pt;">
+                <!-- Prepared By -->
+                <div style="flex:1;text-align:center;">
+                    <p style="font-size:8pt;margin-bottom:32pt;">Prepared by:</p>
+                    <div style="border-top:0.75pt solid #000;padding-top:3pt;">
+                        <p style="font-weight:700;font-size:9pt;text-transform:uppercase;letter-spacing:0.3pt;">{{
+                            preparedBy ||
+                            '\u00A0' }}</p>
+                        <p style="font-size:8pt;color:#444;min-height:10pt;">{{ preparedByTitle || '\u00A0' }}</p>
+                    </div>
+                </div>
+                <!-- Noted By -->
+                <div style="flex:1;text-align:center;">
+                    <p style="font-size:8pt;margin-bottom:32pt;">Noted by:</p>
+                    <div style="border-top:0.75pt solid #000;padding-top:3pt;">
+                        <p style="font-weight:700;font-size:9pt;text-transform:uppercase;letter-spacing:0.3pt;">{{
+                            signatoryName
+                            || '\u00A0' }}</p>
+                        <p style="font-size:8pt;color:#444;min-height:10pt;">{{ signatoryTitle || '\u00A0' }}</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="report-footer">

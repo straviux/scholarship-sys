@@ -22,19 +22,14 @@ use App\Http\Controllers\SystemReportController;
 use App\Http\Controllers\SystemUpdateController;
 use App\Http\Controllers\SystemOptionController;
 use App\Http\Controllers\MobileUploadController;
-use App\Http\Controllers\DataExportController;
 use App\Http\Controllers\HelpController;
-use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\Admin\MaintenanceController;
-use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\User\ProfileController as UserProfileController;
 use App\Http\Controllers\User\SettingsController;
 use App\Http\Controllers\Admin\MobileUploadSettingController;
 use App\Http\Controllers\PaymentMonitoringController;
 use App\Http\Controllers\DisbursementManagementController;
 use App\Http\Controllers\BudgetReportController;
-use App\Http\Controllers\TestPageController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -93,11 +88,6 @@ Route::middleware(['auth', 'maintenance'])->group(function () {
         ->name('dashboard');
     Route::get('/help', [HelpController::class, 'index'])->name('help.index');
 
-    // Test Pages (Development/Testing)
-    Route::get('/test/obr-tracking', [TestPageController::class, 'obrTest'])
-        ->name('test.obr-tracking')
-        ->middleware('check.role:system-report'); // Restrict to admins
-
     // User Profile, Settings, and Activity Routes
     Route::get('/user/profile', [UserProfileController::class, 'show'])->name('user.profile');
     Route::get('/user/settings', [SettingsController::class, 'show'])->name('user.settings');
@@ -107,12 +97,20 @@ Route::middleware(['auth', 'maintenance'])->group(function () {
 });
 
 
+
 Route::middleware(['auth', 'check.role:users,access-control', 'maintenance'])->group(function () {
     // Unified Access Control Page
     Route::get('/access-control', [AccessControlController::class, 'index'])->name('access-control.index');
 
-    // Individual resource routes (kept for create/edit/delete operations)
-    Route::resource('/users', UserController::class);
+    // Retire legacy standalone user pages in favor of the unified access control page.
+    Route::get('/users', fn () => to_route('access-control.index'))->name('users.index');
+    Route::get('/users/create', fn () => to_route('access-control.index'))->name('users.create');
+    Route::get('/users/{user}/edit', fn ($user) => to_route('access-control.index'))->name('users.edit');
+
+    // User management write routes still back the access control modals.
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::post('/users/{user}/change-password', [UserController::class, 'changePassword'])->name('users.changePassword');
 
     // Role and Permission API routes (accessed from AccessControl page)

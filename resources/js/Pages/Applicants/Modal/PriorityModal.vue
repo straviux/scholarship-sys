@@ -1,6 +1,6 @@
 <script setup>
 import { watch, ref, reactive, inject, computed, onBeforeUnmount } from "vue";
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 import axios from 'axios';
 
 const props = defineProps({

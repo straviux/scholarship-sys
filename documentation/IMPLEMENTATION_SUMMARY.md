@@ -4,14 +4,16 @@
 **Status**: ✅ COMPLETE  
 **Backup Location**: `scholarship-sys_backup_2026-02-12_102403`
 
+> Current note: the live Access Control UI now exposes three tabs only: `Users`, `Roles & Permissions`, and `Permissions`. Older references to a `Page Access` admin tab or role-page CRUD endpoints in this document are historical and no longer describe the current UI.
+
 ---
 
 ## 🎯 What Was Implemented
 
-### 1. **Role-Based Page Access System**
-- Users can only access pages their role has been granted access to
-- Each role can be assigned zero or more pages independently
-- Administrator role automatically has access to all pages
+### 1. **Role-Aware Route Access**
+- Protected sections still use role/page-aware middleware checks
+- Legacy page keys such as `users` can coexist with the unified `access-control` route during transitions
+- Administrator access remains the broadest access profile
 
 ### 2. **Permission-Based Action Control**
 - Permissions control specific actions (create, edit, delete, etc.)
@@ -19,9 +21,9 @@
 - All existing permissions standardized to `resource.action` format
 
 ### 3. **Admin UI for Managing Access Control**
-- New "Page Access" tab in Access Control page
-- Easy CRUD interface to manage role ↔ page assignments
-- Visual display of which pages each role can access
+- Unified Access Control workspace at `/access-control`
+- `Users` tab for account management
+- `Roles & Permissions` and `Permissions` tabs for role/permission administration
 
 ---
 
@@ -30,42 +32,34 @@
 ### Database
 ```
 database/migrations/
-├── 2026_02_12_000001_create_role_page_table.php     (New role_page table)
+├── 2026_02_12_000001_create_role_page_table.php     (Legacy role_page migration still present)
 └── 2026_02_12_000002_standardize_permissions.php    (Permission name migration)
-
-database/seeders/
-├── AssignPagesToRolesSeeder.php                     (Initial page → role assignments)
-└── EnhanceRolePageAccessSeeder.php                  (Optional: Enhanced assignments)
 ```
 
 ### Backend
 ```
-app/Http/
-├── Controllers/
-│   └── RolePageController.php                       (API endpoints for page management)
-└── Middleware/
-    ├── CheckRole.php                                (Page-level access control)
-    └── CheckPermission.php                          (Action-level permission control)
+app/Http/Middleware/
+├── CheckRole.php                                    (Route/page access checks)
+└── CheckPermission.php                              (Action-level permission control)
 
 app/Models/
-├── Role.php                                         (Extended Spatie Role with pages relationship)
-└── RolePage.php                                     (New model for role ↔ page mapping)
+└── Role.php                                         (Role model used by access-control flows)
 ```
 
 ### Frontend
 ```
 resources/js/
-├── Pages/Admin/AccessControl.vue                    (Updated with Page Access tab)
-└── composable/permissions.js                        (Enhanced with 7 new helper methods)
+├── Pages/Admin/AccessControl.vue                    (Unified Users / Roles & Permissions / Permissions UI)
+└── composable/permissions.js                        (Role, permission, and page-access helpers)
 ```
 
 ### Configuration & Documentation
 ```
 Root Directory/
-├── ROLE_BASED_ACCESS_CONTROL_GUIDE.md              (Complete usage guide)
-├── routes/web.php                                   (Updated with new middleware)
+├── ROLE_BASED_ACCESS_CONTROL_GUIDE.md               (Complete usage guide)
+├── routes/web.php                                   (Unified access-control routing)
 ├── bootstrap/app.php                                (Middleware registration)
-└── config/permission.php                            (Updated to use custom Role model)
+└── config/permission.php                            (Permission configuration)
 ```
 
 ---
@@ -96,15 +90,11 @@ Root Directory/
 
 ## 🛠️ Routes Updated
 
-### Page Access Routes (New)
-```php
-POST   /role-pages                           # Assign pages to a role
-DELETE /role-pages/{role}/{page}            # Remove page from role
-GET    /api/role-pages/{role}               # Get pages assigned to a role
-```
+### Current Access Routes
+The live admin surface centers on `/access-control`, while legacy `/users` GET requests redirect there and write operations remain on `/users`, `/roles`, and `/permissions`.
 
 ### Protected Routes (Updated)
-All admin routes now use: `middleware(['auth', 'check.role:{page}', 'maintenance'])`
+Admin routes use role/page-aware middleware together with permission middleware where needed.
 
 Examples:
 ```php
@@ -130,11 +120,10 @@ const {
 } = usePermission()
 ```
 
-### New Admin UI Tab: "Page Access"
-- Grid display of all roles
-- Shows current page assignments per role
-- Edit modal for managing page assignments
-- Color-coded tags for easy visualization
+### Current Admin UI Tabs
+- `Users` for account administration
+- `Roles & Permissions` for assigning permissions to roles
+- `Permissions` for managing permission records and cleanup
 
 ---
 
@@ -161,15 +150,12 @@ Route::middleware(['auth', 'check.role:users'])
 
 ### In Controllers
 ```php
-// Page access check
-if (!$request->user()->hasAccessToPage('users')) {
-    abort(403);
-}
-
-// Permission check  
+// Permission check
 if (!$request->user()->hasPermission('users.create')) {
     abort(403);
 }
+
+// Route-level page access is typically enforced by middleware
 ```
 
 ### In Vue Components
@@ -213,66 +199,50 @@ Run these to verify everything is working:
 # 1. Verify migrations ran
 php artisan migrate:status
 
-# 2. Verify seeders ran
-php artisan db:seed --class=AssignPagesToRolesSeeder
+# 2. Verify permissions are seeded
+php artisan db:seed --class=PermissionSeeder
 
 # 3. Check routes are registered
-php artisan route:list | grep role-pages
+php artisan route:list
 
 # 4. Clear caches
 php artisan cache:clear
 php artisan config:clear
 
 # 5. Test in browser
-# Navigate to /access-control → Page Access tab
+# Navigate to /access-control and verify the three live tabs
 ```
 
 ---
 
-## 📊 Summary of Changes
+## 📊 Summary of Current State
 
-| Category | Count | Details |
-|----------|-------|---------|
-| New Files | 12 | Controllers, Models, Middleware, Seeders |
-| Modified Files | 4 | web.php, AccessControl.vue, permissions.js, app.php |
-| New DB Tables | 1 | role_page (role-to-page mapping) |
-| New Routes | 3 | Role page assignment endpoints |
-| New Permissions | 2 | admin.manage, admin.access |
-| Permissions Migrated | 3 | Old names → new standard names |
-| Default Roles | 5 | administrator, program_manager, moderator, jpm_admin, user |
-| Vue Helpers | 7 | New permission/role checking functions |
+| Area | Current State |
+|------|---------------|
+| Admin UI | `/access-control` with `Users`, `Roles & Permissions`, and `Permissions` tabs |
+| Write Endpoints | `/users`, `/roles`, and `/permissions` remain active |
+| Route Protection | `check.role` and `check.permission` middleware guard protected flows |
+| Frontend Helpers | `hasRole`, `hasPermission`, `hasPageAccess`, `isAdmin`, `can` |
+| Legacy Notes | Historical role-page migration artifacts remain, but no `Page Access` admin tab is exposed |
 
 ---
 
-## 🔄 How to Modify Role-Page Access
+## 🔄 How to Modify Current Access Control
 
-### Via Admin UI (Easiest)
-1. Go to **Access Control** page
-2. Click **"Page Access"** tab
-3. Click the gear icon on a role
-4. Select/deselect pages
-5. Click **"Save Changes"**
+### Via Admin UI
+1. Go to **Access Control**
+2. Use **Users** for account administration
+3. Use **Roles & Permissions** to assign role permissions
+4. Use **Permissions** to create, edit, clean up, or retire permission records
 
-### Via Database
-```php
-use App\Models\Role;
-use App\Models\RolePage;
-
-$role = Role::where('name', 'moderator')->first();
-RolePage::create(['role_id' => $role->id, 'page' => 'users']);
-```
-
-### Via Seeder
-Edit `AssignPagesToRolesSeeder.php` and run:
-```bash
-php artisan db:seed --class=AssignPagesToRolesSeeder
-```
+### For Route/Page Access Rules
+Review the relevant `check.role` middleware usage in `routes/web.php` and the auth payload consumed by `resources/js/composable/permissions.js`. The current admin UI does not expose a dedicated `Page Access` tab.
 
 ---
 
 ## 🚨 Important Notes
 
-1. **Clear Cache After Changes**: Updates to role-page mappings require cache clear
+1. **Clear Cache After Changes**: Permission or route-access updates may require cache clear
    ```bash
    php artisan cache:clear
    ```
@@ -303,8 +273,7 @@ See `ROLE_BASED_ACCESS_CONTROL_GUIDE.md` for:
 
 ✅ **Two-tier security model** - Pages + Permissions  
 ✅ **Automatic administrator access** - No manual assignment needed  
-✅ **Flexible role configuration** - Assign any page to any role  
-✅ **Admin UI for management** - No database editing needed  
+✅ **Unified admin UI** - Users, roles, and permissions managed in one workspace  
 ✅ **Vue helper functions** - Easy frontend checks  
 ✅ **Middleware protection** - Automatic route protection  
 ✅ **Permission standardization** - Consistent naming across system  

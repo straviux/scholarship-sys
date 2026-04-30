@@ -103,7 +103,7 @@ import { ref } from 'vue';
 import { useDraggableModal } from '@/composables/useDraggableModal';
 import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
 import axios from 'axios';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 
 const props = defineProps({
     visible: { type: Boolean, default: false },

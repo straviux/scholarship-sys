@@ -45,7 +45,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import axios from 'axios';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 import { useDraggableModal } from '@/composables/useDraggableModal';
 
 const props = defineProps({

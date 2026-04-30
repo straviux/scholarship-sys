@@ -4,36 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 
 class PermissionManagementController extends Controller
 {
-    public function index()
-    {
-        $roles = Role::with('permissions')->get();
-
-        // Group permissions by module (extract module from permission name before the dot)
-        $allPermissions = Permission::all();
-        $groupedPermissions = $allPermissions->groupBy(function ($permission) {
-            $parts = explode('.', $permission->name);
-            return $parts[0] ?? 'other';
-        });
-
-        // Get all permissions for each role
-        $rolePermissions = [];
-        foreach ($roles as $role) {
-            $rolePermissions[$role->name] = $role->permissions->pluck('name')->toArray();
-        }
-
-        return Inertia::render('Administrator/PermissionManagement', [
-            'roles' => $roles,
-            'groupedPermissions' => $groupedPermissions,
-            'rolePermissions' => $rolePermissions,
-        ]);
-    }
-
     public function updateRolePermissions(Request $request)
     {
         $request->validate([
@@ -60,7 +35,7 @@ class PermissionManagementController extends Controller
 
         // If the current user is affected by this change, refresh their session permissions
         if ($request->user()->hasRole($request->role_name)) {
-            auth()->setUser(auth()->user()->refresh());
+            Auth::setUser($request->user()->refresh());
         }
 
         return back()->with('success', 'Permissions updated successfully for ' . $role->name);
@@ -87,7 +62,7 @@ class PermissionManagementController extends Controller
 
         // If the current user is affected by this change, refresh their session permissions
         if ($request->user()->hasRole($request->role_name)) {
-            auth()->setUser(auth()->user()->refresh());
+            Auth::setUser($request->user()->refresh());
         }
 
         return back()->with('success', 'Permission updated successfully');

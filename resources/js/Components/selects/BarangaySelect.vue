@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, watchEffect, computed, onMounted } from 'vue';
+import { ref, watch, watchEffect, computed } from 'vue';
 import { useApi } from '@/composable/api';
 
 const props = defineProps({
@@ -161,9 +161,6 @@ watch(
     },
     { immediate: true }
 );
-onMounted(() => {
-    console.log('BarangaySelect mounted with props:', props);
-});
 </script>
 
 <template>

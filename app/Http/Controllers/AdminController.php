@@ -16,12 +16,6 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
-
-    public function index(): Response
-    {
-        return Inertia::render('Admin/AdminIndex');
-    }
-
     /**
      * Display deleted records for admin review and restoration
      */

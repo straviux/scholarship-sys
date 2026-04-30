@@ -47,7 +47,7 @@
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue';
 import axios from 'axios';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 import { useDraggableModal } from '@/composables/useDraggableModal';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';

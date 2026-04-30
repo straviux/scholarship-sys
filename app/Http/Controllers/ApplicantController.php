@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Browsershot\Browsershot;
 
 class ApplicantController extends Controller
 {
@@ -587,36 +586,6 @@ class ApplicantController extends Controller
     }
 
     /**
-     * Get the Chrome executable path with fallback logic
-     * 
-     * @return string
-     * @throws \Exception
-     */
-    protected function getChromePath()
-    {
-        $primaryPath = config('scholarship.browsershot.chrome_path');
-
-        // Try primary path first
-        if ($primaryPath && file_exists($primaryPath)) {
-            return $primaryPath;
-        }
-
-        // Try fallback paths
-        $fallbackPaths = config('scholarship.browsershot.fallback_paths', []);
-        foreach ($fallbackPaths as $path) {
-            if (file_exists($path)) {
-                return $path;
-            }
-        }
-
-        // If no valid path found, throw exception
-        throw new \Exception(
-            'Chrome executable not found. Please configure CHROME_PATH in your .env file or install Chrome/Chromium. ' .
-                'Tried paths: ' . $primaryPath . ', ' . implode(', ', $fallbackPaths)
-        );
-    }
-
-    /**
      * Export filtered applicants to Excel/PDF
      */
     public function export(Request $request)
@@ -778,53 +747,11 @@ class ApplicantController extends Controller
 
         // Return appropriate format
         if ($exportFormat === 'pdf') {
-            // Generate HTML from applicants_report view
-            $html = view('applicants_report', [
-                'profiles' => $profiles,
-                'summary' => [
-                    'total' => $profiles->count(),
-                ],
-                'reportType' => 'list',
-                'filters' => $filters,
-                'canViewJpm' => $canViewJpm,
-            ])->render();
-
-            try {
-                // Use Browsershot for PDF generation
-                $browsershot = Browsershot::html($html)
-                    ->setChromePath($this->getChromePath())
-                    ->showBackground()
-                    ->showBrowserHeaderAndFooter()
-                    ->footerHtml('<div class="report-footer" style="font-size: 9px; color: #444;position:fixed;right:0.5cm;bottom:0.1cm;">
-                        <span>Generated on <span class="date"></span></span>
-                        <span> - Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
-                    </div>')
-                    ->margins(4, 4, 4, 4);
-
-                // Set orientation
-                if ($orientation === 'landscape') {
-                    $browsershot->landscape();
-                }
-
-                // Handle paper size
-                if ($paperSize === 'Legal' || $paperSize === 'Long') {
-                    $browsershot->setPaperSize(215.9, 330.2); // Legal/Long size in mm
-                } else {
-                    $browsershot->format($paperSize); // A4, Letter, etc.
-                }
-
-                $pdf = $browsershot->pdf();
-
-                return response($pdf)
-                    ->header('Content-Type', 'application/pdf')
-                    ->header('Content-Disposition', 'inline; filename="' . $filename . '.pdf"');
-            } catch (\Exception $e) {
-                Log::error('PDF generation failed: ' . $e->getMessage());
-                return response()->json([
-                    'error' => true,
-                    'message' => 'PDF generation failed: ' . $e->getMessage()
-                ], 500);
-            }
+            // PDF export is handled client-side via the Report Wizard (Paged.js pipeline).
+            return response()->json([
+                'error' => true,
+                'message' => 'Server-side PDF export is no longer supported. Use the Report Wizard to generate PDFs in the browser.',
+            ], 422);
         }
 
         // Excel export using Maatwebsite Excel

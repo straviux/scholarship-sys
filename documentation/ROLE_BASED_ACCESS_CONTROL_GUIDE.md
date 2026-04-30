@@ -1,5 +1,7 @@
 # Role-Based & Permission-Based Access Control Guide
 
+> Current note: the app no longer exposes separate `/roles` or `/permissions` management pages. The active management UI is the unified `/access-control` page, and the legacy `/users` GET route now redirects there while write endpoints remain on `/users`, `/roles`, and `/permissions`.
+
 ## Overview
 
 The system now uses a **two-tiered access control model**:
@@ -12,15 +14,12 @@ The system now uses a **two-tiered access control model**:
 ### Pages (Role-Based)
 Pages are the main UI sections in the system. Each role can have access to zero or more pages:
 
-- `users` - User management page
-- `roles` - Roles management page
-- `permissions` - Permissions management page
+- `users` - Legacy alias used by some role checks; GET requests redirect to `access-control`
 - `access-control` - Unified access control page
 - `system-options` - System options management
 - `system-report` - System reports
 - `deleted-records` - Soft-deleted records recovery
 - `maintenance` - System maintenance announcements
-- `permission-management` - Permission assignment
 
 ### Permissions (Action-Based)
 Permissions control specific actions within pages:
@@ -37,11 +36,11 @@ Permissions control specific actions within pages:
 
 **Page-Level Access (Role-Based)**
 ```php
-// Only users with roles that have 'users' page access can visit
-Route::middleware(['auth', 'check.role:users'])->group(function () {
-    Route::get('/users', [UserController::class, 'index']);
+// Unified access-control page
+Route::middleware(['auth', 'check.role:access-control'])->group(function () {
+   Route::get('/access-control', [AccessControlController::class, 'index']);
     
-    // Further restrict to those with users.create permission
+   // Further restrict writes to those with users.create permission
     Route::post('/users', [UserController::class, 'store'])
         ->middleware('check.permission:users.create');
 });
@@ -50,8 +49,8 @@ Route::middleware(['auth', 'check.role:users'])->group(function () {
 **Multiple Pages**
 ```php
 Route::middleware(['auth', 'check.role:users,access-control'])->group(function () {
-    // Users can access if they have access to EITHER page
-    Route::get('/some-route', ...);
+   // Legacy aliases may still allow either page key during the transition
+   Route::get('/users', fn () => to_route('access-control.index'));
 });
 ```
 
@@ -119,36 +118,11 @@ if (!$request->user()->hasPermission('users.create')) {
 
 ### Managing Role Pages
 
-**Via Admin UI** (Access Control → Page Access tab)
-1. Navigate to Access Control page
-2. Go to the "Page Access" tab
-3. Click the gear icon on any role
-4. Select/deselect pages
-5. Click "Save Changes"
+There is no dedicated `Page Access` tab in the current Access Control UI.
 
-**Via Database**
-```php
-use App\Models\Role;
-use App\Models\RolePage;
+Use the live `/access-control` page for user, role, and permission management, and review `check.role` middleware usage in `routes/web.php` for page-level access rules.
 
-$role = Role::where('name', 'moderator')->first();
-
-// Assign pages
-RolePage::create([
-    'role_id' => $role->id,
-    'page' => 'users',
-]);
-
-// Remove pages
-RolePage::where('role_id', $role->id)
-    ->where('page', 'users')
-    ->delete();
-```
-
-**Via Seeder**
-```php
-php artisan db:seed --class=EnhanceRolePageAccessSeeder
-```
+If you still maintain legacy page-access mappings, inspect the `role_page` table directly rather than expecting an admin UI for it.
 
 ## Permission Assignment
 

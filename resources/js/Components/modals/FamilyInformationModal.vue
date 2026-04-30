@@ -45,7 +45,7 @@ import { ref, watch } from 'vue';
 import { useDraggableModal } from '@/composables/useDraggableModal';
 import FamilyInformationFields from '@/Components/forms/fields/FamilyInformationFields.vue';
 import axios from 'axios';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 
 const props = defineProps({
     visible: {

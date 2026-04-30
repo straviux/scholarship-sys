@@ -1,15 +1,17 @@
 <template>
     <AdminLayout title="Data Export">
-        <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Data Export
-            </h2>
-        </template>
+        <AdminPageShell title="Data Export"
+            description="Preview and export scholarship records, related profiles, requirements, and approval history into a portable JSON package."
+            icon="download" eyebrow="Admin Utilities">
+            <template #meta>
+                <span>{{ summary ? `${summary.total_records} records ready` : 'Preview the dataset before export' }}</span>
+            </template>
 
-        <div class="py-8 short:py-4">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-4 short:p-3 bg-white border-b border-gray-200">
+            <section class="ios-section">
+                <div class="ios-section-label">Export Controls</div>
+                <div class="max-w-7xl">
+                    <div class="ios-card overflow-hidden">
+                        <div class="p-4 short:p-3 bg-white border-b border-gray-200">
                         <!-- Info Section -->
                         <div class="mb-4 short:mb-2 p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-700">
                             <div class="flex">
@@ -160,17 +162,18 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+                </div>
+            </section>
+        </AdminPageShell>
     </AdminLayout>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import { router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import AdminPageShell from '@/Components/admin/AdminPageShell.vue';
 import axios from 'axios';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 
 const props = defineProps({
     programs: Array,

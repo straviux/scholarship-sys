@@ -5,8 +5,7 @@ import Checkbox from 'primevue/checkbox';
 import ProgressSpinner from 'primevue/progressspinner';
 import Dialog from 'primevue/dialog';
 import { useConfirm } from 'primevue/useconfirm';
-import { toast } from 'vue3-toastify';
-import 'vue3-toastify/dist/index.css';
+import { toast } from '@/utils/toast';
 import axios from 'axios';
 import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
 
@@ -392,7 +391,7 @@ function onQrDragEnd() {
                     <button class="ios-nav-btn ios-nav-cancel" @click="closeMain">
                         <AppIcon name="times" :size="14" />
                     </button>
-                    <span class="ios-nav-title">Requirements</span>
+                    <span class="ios-nav-title ios-nav-title--truncate">Requirements</span>
                     <span class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
                 </div>
 
@@ -495,7 +494,7 @@ function onQrDragEnd() {
                     <button class="ios-nav-btn ios-nav-cancel" @click="showQrModal = false">
                         <AppIcon name="times" :size="14" />
                     </button>
-                    <span class="ios-nav-title">QR Upload</span>
+                    <span class="ios-nav-title ios-nav-title--truncate">QR Upload</span>
                     <button class="ios-nav-btn ios-nav-action" @click="loadRequirements()">
                         <AppIcon name="refresh" :size="13" />
                     </button>
@@ -560,14 +559,6 @@ function onQrDragEnd() {
 </template>
 
 <style scoped>
-/* Component-unique: title truncation for narrow modals */
-.ios-nav-title {
-    max-width: 60%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 /* Component-unique: applicant name subtitle bar */
 .ios-subtitle {
     padding: 6px 16px;

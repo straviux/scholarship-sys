@@ -338,12 +338,7 @@ const isEndDateInvalid = computed(() => {
     return endDate < startDate;
 });
 const computedYearsOfService = computed(() => {
-    console.log('Computing years of service...');
-    console.log('Start date:', scholarForm.service_start_date, 'type:', typeof scholarForm.service_start_date);
-    console.log('End date:', scholarForm.service_end_date, 'type:', typeof scholarForm.service_end_date);
-
     if (!scholarForm.service_start_date || !scholarForm.service_end_date) {
-        console.log('Missing dates, returning null');
         return null;
     }
 
@@ -358,19 +353,13 @@ const computedYearsOfService = computed(() => {
         endDate = new Date(endDate);
     }
 
-    console.log('Parsed start:', startDate);
-    console.log('Parsed end:', endDate);
-
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        console.log('Invalid dates');
         return null;
     }
 
     // Calculate difference in days and convert to years with decimal places
     const diffTime = endDate - startDate;
     const diffDays = diffTime / (1000 * 60 * 60 * 24);
-
-    console.log('Diff days:', diffDays);
 
     // Convert days to months (average 30.44 days per month), then to years
     const monthsDecimal = diffDays / 30.44;
@@ -379,8 +368,6 @@ const computedYearsOfService = computed(() => {
     // Round to 1 decimal place (e.g., 3.5 for 3 years 6 months)
     const rounded = Math.round(yearsDecimal * 10) / 10;
 
-    console.log('Computed years:', rounded);
-
     return rounded >= 0 ? rounded : null;
 });
 
@@ -388,11 +375,6 @@ const computedYearsOfService = computed(() => {
 watch(
     () => [scholarForm.service_start_date, scholarForm.service_end_date],
     () => {
-        console.log('Dates changed:', {
-            start: scholarForm.service_start_date,
-            end: scholarForm.service_end_date,
-            computed: computedYearsOfService.value
-        });
         // Auto-populate years_of_service if both dates are set and years_of_service is empty
         if (computedYearsOfService.value !== null && !scholarForm.years_of_service) {
             scholarForm.years_of_service = computedYearsOfService.value;
@@ -403,13 +385,8 @@ watch(
 
 // Watch for profile selection
 watch(() => scholarForm.selectedProfile, (selected) => {
-    console.log('=== PROFILE SELECTION CHANGED ===');
-    console.log('selected value:', selected);
-    console.log('is array:', Array.isArray(selected));
-
     if (Array.isArray(selected) && selected.length > 0) {
         // MultiSelect returns an array, get the first (and only) selected item
-        console.log('first item:', selected[0]);
         scholarForm.profile_id = selected[0].id;
         scholarForm.record_label = selected[0].label;
         // Populate name fields from profile
@@ -417,7 +394,6 @@ watch(() => scholarForm.selectedProfile, (selected) => {
         scholarForm.firstname = selected[0].firstname || '';
         scholarForm.middlename = selected[0].middlename || '';
         scholarForm.ext = selected[0].ext || '';
-        console.log('Set profile_id to:', scholarForm.profile_id);
         // Open preview drawer
         showPreviewScholarDialog.value = true;
     } else if (selected && selected.id) {
@@ -429,7 +405,6 @@ watch(() => scholarForm.selectedProfile, (selected) => {
         scholarForm.firstname = selected.firstname || '';
         scholarForm.middlename = selected.middlename || '';
         scholarForm.ext = selected.ext || '';
-        console.log('Set profile_id (single object) to:', scholarForm.profile_id);
         // Open preview drawer
         showPreviewScholarDialog.value = true;
     } else {
@@ -440,7 +415,6 @@ watch(() => scholarForm.selectedProfile, (selected) => {
         scholarForm.firstname = '';
         scholarForm.middlename = '';
         scholarForm.ext = '';
-        console.log('Cleared profile_id');
         // Close preview drawer
         showPreviewScholarDialog.value = false;
     }

@@ -415,7 +415,7 @@ import { computed, ref, toRef, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import moment from 'moment';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 import AppButton from '@/Components/ui/AppButton.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import InterviewAssessmentForm from '@/Components/forms/InterviewAssessmentForm.vue';

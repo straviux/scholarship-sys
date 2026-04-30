@@ -25,14 +25,10 @@
                             outlined />
                         <Popover ref="addRecordPopover">
                             <div class="flex flex-col gap-2 w-48">
-                                <!-- <Button @click="openAddApplicantModal" label="Add Applicant" icon="user-plus"
-                                    severity="success" outlined class="justify-start" /> -->
                                 <AppButton @click="openAddActiveModal" label="Add Active" icon="user-edit"
                                     severity="info" outlined class="justify-start" />
                             </div>
                         </Popover>
-                        <!-- <Button icon="refresh" @click="refreshData" severity="secondary" outlined
-                            v-tooltip.bottom="'Refresh'" /> -->
                         <AppButton icon="print" @click="showReportWizard = true" severity="secondary"
                             v-tooltip.bottom="'Generate Report'" v-if="hasPermission('reports.view')" rounded
                             outlined />
@@ -641,7 +637,6 @@
         </Dialog>
 
         <!-- Generate Report Modal -->
-        <!-- <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event" /> -->
         <ReportWizardModal :show="showReportWizard" @update:show="showReportWizard = $event" />
 
         <!-- Grant Provision Update Dialog -->
@@ -724,8 +719,7 @@ import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { useFilterManager } from '@/composables/useFilterManager';
 
 import FloatingDrawer from '@/Components/FloatingDrawer.vue';
-import { toast } from 'vue3-toastify';
-import 'vue3-toastify/dist/index.css';
+import { toast } from '@/utils/toast';
 import axios from 'axios';
 import { getSystemOptionLabel, useSystemOptions } from '@/composables/useSystemOptions';
 import moment from 'moment';
@@ -741,7 +735,6 @@ import TermSelect from '@/Components/selects/TermSelect.vue';
 
 // Modal Components
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
-// import GenerateReportModal from './Modal/GenerateReportModal.vue';
 import ReportWizardModal from './Modal/ReportWizardModal.vue';
 
 // Props

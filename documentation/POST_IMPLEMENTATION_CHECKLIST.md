@@ -4,9 +4,8 @@
 
 ### Database Setup
 - [ ] Run migrations: `php artisan migrate`
-- [ ] Run seeders: `php artisan db:seed --class=AssignPagesToRolesSeeder`
 - [ ] Run permissions seeder: `php artisan db:seed --class=PermissionSeeder`
-- [ ] Verify role_page table exists: `php artisan migrate:status`
+- [ ] If legacy page-access mappings are still in use, verify `role_page` exists after migrations
 
 ### Cache & Configuration
 - [ ] Clear cache: `php artisan cache:clear`
@@ -16,10 +15,8 @@
 
 ### Files Verification
 - [ ] `app/Models/Role.php` exists ✓
-- [ ] `app/Models/RolePage.php` exists ✓
 - [ ] `app/Http/Middleware/CheckRole.php` exists ✓
 - [ ] `app/Http/Middleware/CheckPermission.php` exists ✓
-- [ ] `app/Http/Controllers/RolePageController.php` exists ✓
 - [ ] Routes in `routes/web.php` updated ✓
 - [ ] Middleware in `bootstrap/app.php` registered ✓
 - [ ] Vue component updated (`AccessControl.vue`) ✓
@@ -27,20 +24,17 @@
 
 ### Route Verification
 ```bash
-php artisan route:list | grep "role-pages"
-# Should see 3 routes:
-# - POST /role-pages
-# - DELETE /role-pages/{role}/{page}
-# - GET /api/role-pages/{role}
+php artisan route:list
+# Verify the unified /access-control page exists and that
+# /users, /roles, and /permissions write endpoints are registered.
 ```
 
 ### Test Access Control
 - [ ] Login as administrator
 - [ ] Navigate to `/access-control`
-- [ ] Verify "Page Access" tab appears
-- [ ] Click gear icon on a role
-- [ ] Verify page selection dialog works
-- [ ] Save and verify changes persist
+- [ ] Verify these tabs appear: `Users | Roles & Permissions | Permissions`
+- [ ] Verify user, role, and permission actions load without errors
+- [ ] Verify permission assignment changes save successfully
 
 ### Test Permissions
 - [ ] Verify roles have permissions assigned
@@ -51,14 +45,11 @@ php artisan route:list | grep "role-pages"
 ```bash
 php artisan tinker
 # Run these checks:
-# role_page table has entries
-RolePage::count()
-
 # Permissions exist
 Permission::count()
 
-# Roles have pages
-Role::first()->pages()->count()
+# Roles exist
+Role::count()
 
 # Roles have permissions
 Role::first()->permissions()->count()
@@ -73,7 +64,7 @@ Role::first()->permissions()->count()
 - [ ] Should see all admin features
 - [ ] Should be able to manage roles/permissions
 - [ ] Should be able to manage users
-- [ ] Should see all Page Access controls
+- [ ] Should see all Access Control tabs
 
 ### Scenario 2: Program Manager
 - [ ] Should access `/users` page
@@ -94,10 +85,9 @@ Role::first()->permissions()->count()
 
 ### Scenario 5: New Role
 - [ ] Create a custom role
-- [ ] Assign pages to it
 - [ ] Assign permissions
 - [ ] Login as user with new role
-- [ ] Verify access matches assignments
+- [ ] Verify access matches the role and granted permissions
 
 ---
 
@@ -136,33 +126,14 @@ Role::first()->permissions()->count()
 - ... (and 49 more)
 ```
 
-**Role_Page Table** (9 entries)
-```
-- administrator: [all 9 pages]
-- program_manager: [users, access-control]
-- moderator: []
-- user: []
-- jpm_admin: []
-```
-
----
-
 ## 🐛 Debugging Tips
-
-### View Assigned Pages for a Role
-```bash
-php artisan tinker
-> Role::where('name', 'program_manager')->first()->pages()->pluck('page')
-```
 
 ### Check User's Full Access
 ```bash
 php artisan tinker
 > $user = User::first()
 > $user->roles
-> $user->permissions()->pluck('name')
-> $user->hasAccessToPage('users')
-> $user->hasPermission('users.create')
+> $user->getAllPermissions()->pluck('name')
 ```
 
 ### Test Middleware Directly
@@ -206,7 +177,7 @@ php artisan permission:cache-warmup
 | `QUICK_REFERENCE.md` | Quick lookup guide |
 | `POST_IMPLEMENTATION_CHECKLIST.md` | This file - verification steps |
 | `app/Models/User.php` | User permission methods |
-| `app/Http/Controllers/RolePageController.php` | API endpoint details |
+| `resources/js/Pages/Admin/AccessControl.vue` | Current admin management UI |
 
 ---
 
@@ -217,7 +188,6 @@ Once all checkboxes are complete, your role-based access control system is ready
 ### Quick Commands to Run Now
 ```bash
 php artisan migrate
-php artisan db:seed --class=AssignPagesToRolesSeeder
 php artisan cache:clear
 php artisan config:clear
 ```
@@ -225,8 +195,8 @@ php artisan config:clear
 ### Access the Admin UI
 1. Login as administrator
 2. Go to `/access-control`
-3. Verify three tabs appear: Users | Roles & Permissions | Page Access
-4. Click "Page Access" tab to manage role-to-page assignments
+3. Verify three tabs appear: Users | Roles & Permissions | Permissions
+4. Use the Roles & Permissions tab to manage role assignments and the Permissions tab for permission records
 
 ---
 

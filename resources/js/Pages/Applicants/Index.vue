@@ -32,8 +32,7 @@ import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
-import { toast } from 'vue3-toastify';
-import 'vue3-toastify/dist/index.css';
+import { toast } from '@/utils/toast';
 
 const { hasPermission, hasRole } = usePermission();
 
@@ -217,10 +216,8 @@ const priorityFilterOptions = [
 ];
 
 // Applicant Modal state
-// const showApplicantModal = ref(false);
 const showApplicationFormModal = ref(false);
 const applicationFormMode = ref('create');
-// const modalAction = ref('');
 const modalProfile = ref(null);
 
 // YAKAP Category Modal state - restore from localStorage (no default to force user selection)
@@ -415,11 +412,6 @@ const closeModal = () => {
     showApplicationFormModal.value = false;
     modalProfile.value = null;
     // Don't reset yakap values - they persist for next new applicant
-    // For UPDATE mode, refresh to show updated data
-    // For CREATE mode, refresh is handled by handleApplicantCreated
-    // if (applicationFormMode.value === 'edit') {
-    //     refreshApplicationList();
-    // }
 }
 
 const handleApplicantCreated = (newProfile) => {
@@ -447,12 +439,6 @@ const handleYakapCategorySelected = (data) => {
     // Now open the applicant form modal
     openApplicationFormModal();
 }
-
-// const closeApplicantModal = () => {
-//     showApplicantModal.value = false;
-//     modalProfile.value = null;
-//     modalAction.value = '';
-// }
 
 // filterList and clearFilter are provided by useFilterManager as triggerSearch and clearFilter
 
@@ -1171,12 +1157,6 @@ const truncateText = (text, maxLength = 80) => {
                                 <AppIcon name="user-plus" :size="24" />
                             </template>
                         </Button>
-
-
-                        <!-- <Button as="a" label="Existing" icon="user"
-                            v-if="hasPermission('applicants.create') && !hasRole('user')"
-                            :href="route('applicants.index', { action: 'add-existing' })" severity="secondary"
-                            size="small" /> -->
                     </div>
                 </template>
             </Toolbar>
@@ -1410,8 +1390,6 @@ const truncateText = (text, maxLength = 80) => {
                     <Column header="Applicant" style="min-width: 300px">
                         <template #body="slotProps">
                             <div class="flex flex-col gap-2">
-                                <!-- <span class="text-gray-400 text-sm">#{{
-                                        slotProps.data.sequence_number_by_school_course || '-' }}</span> -->
                                 <div class="flex gap-2 items-start w-full">
 
                                     <div class="flex flex-col gap-1 flex-1 min-w-0">
@@ -1695,12 +1673,6 @@ const truncateText = (text, maxLength = 80) => {
             :profile="modalProfile" :yakap-category="selectedYakapCategory" :yakap-location="selectedYakapLocation"
             @success="closeModal" @applicant-created="handleApplicantCreated" />
 
-        <!-- Applicant Profile Modal - for editing existing applicants (keeping for backward compatibility) -->
-        <!-- <ApplicantProfileModal v-if="(props.action == 'update') || showApplicantModal"
-            :action="showApplicantModal ? modalAction : props.action"
-            :profile="showApplicantModal ? modalProfile : props.profile" :is-inline-modal="showApplicantModal"
-            @close="closeApplicantModal" /> -->
-
         <!-- Priority Modal -->
         <PriorityModal :show="showPriorityModal" :applicant="selectedApplicantForPriority"
             @update:show="showPriorityModal = $event" @success="handlePrioritySuccess" />
@@ -1835,59 +1807,6 @@ const truncateText = (text, maxLength = 80) => {
     margin: 0 auto;
 }
 
-.ios-nav-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    padding: 14px 16px;
-    background: #FFFFFF;
-    border-bottom: 0.5px solid #E5E5EA;
-    flex-shrink: 0;
-    cursor: grab;
-    user-select: none;
-}
-
-.ios-nav-bar:active {
-    cursor: grabbing;
-}
-
-.ios-nav-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: #000;
-    letter-spacing: -0.4px;
-}
-
-.ios-nav-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    font-size: 17px;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 8px;
-    transition: opacity 0.15s;
-}
-
-.ios-nav-btn:hover {
-    opacity: 0.6;
-}
-
-.ios-nav-cancel {
-    left: 16px;
-    color: #8E8E93;
-    font-size: 20px;
-}
-
-.ios-nav-action {
-    right: 16px;
-    color: #374151;
-    font-weight: 600;
-}
-
 .ios-body {
     flex: 1;
     overflow-y: auto;
@@ -1953,23 +1872,6 @@ const truncateText = (text, maxLength = 80) => {
 
 .dark .ios-modal {
     background: #111827 !important;
-}
-
-.dark .ios-nav-bar {
-    background: #111827 !important;
-    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.dark .ios-nav-title {
-    color: #d1d5db !important;
-}
-
-.dark .ios-nav-cancel {
-    color: #9ca3af !important;
-}
-
-.dark .ios-nav-action {
-    color: #d1d5db !important;
 }
 
 .dark .ios-section-label,

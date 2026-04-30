@@ -91,7 +91,7 @@
 <script setup>
 import { useForm } from "@inertiajs/vue3";
 import { computed, watch } from "vue";
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 
 const props = defineProps({
     show: Boolean,

@@ -267,8 +267,7 @@ import axios from 'axios';
 import PersonalInformationFields from '@/Components/forms/fields/PersonalInformationFields.vue';
 import FamilyInformationFields from '@/Components/forms/fields/FamilyInformationFields.vue';
 import AcademicInformationFields from '@/Components/forms/fields/AcademicInformationFields.vue';
-import { toast } from 'vue3-toastify';
-import 'vue3-toastify/dist/index.css';
+import { toast } from '@/utils/toast';
 
 const props = defineProps({
     visible: {
@@ -624,8 +623,6 @@ const handleSubmit = () => {
     if (props.mode === 'edit' && props.profile) {
         // Update existing scholar
         const profileId = props.profile.profile_id;
-        console.log('Updating scholar with ID:', profileId);
-        console.log('Submitting data:', submitData);
 
         form.transform(() => submitData).put(route('scholars.update', profileId), {
             preserveScroll: true,
@@ -646,7 +643,6 @@ const handleSubmit = () => {
         });
     } else {
         // Create new scholar
-        console.log('Creating new scholar with data:', submitData);
 
         form.transform(() => submitData).post(route('scholars.store'), {
             preserveScroll: true,

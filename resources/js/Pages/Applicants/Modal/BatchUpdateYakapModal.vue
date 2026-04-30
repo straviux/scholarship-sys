@@ -2,7 +2,7 @@
 import { ref, computed, onBeforeUnmount } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 
@@ -200,64 +200,6 @@ onBeforeUnmount(() => {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
     overflow: hidden;
     margin: 0 auto;
-}
-
-.ios-nav-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    padding: 14px 16px;
-    background: #FFFFFF;
-    border-bottom: 0.5px solid #E5E5EA;
-    flex-shrink: 0;
-    cursor: grab;
-    user-select: none;
-}
-
-.ios-nav-bar:active {
-    cursor: grabbing;
-}
-
-.ios-nav-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: #000;
-    letter-spacing: -0.4px;
-}
-
-.ios-nav-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    font-size: 17px;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 8px;
-    transition: opacity 0.15s;
-}
-
-.ios-nav-btn:hover {
-    opacity: 0.6;
-}
-
-.ios-nav-cancel {
-    left: 16px;
-    color: #8E8E93;
-    font-size: 20px;
-}
-
-.ios-nav-action {
-    right: 16px;
-    color: #374151;
-    font-weight: 600;
-}
-
-.ios-nav-action:disabled {
-    color: #C7C7CC;
-    cursor: not-allowed;
 }
 
 .ios-body {

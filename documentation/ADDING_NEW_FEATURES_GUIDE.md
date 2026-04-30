@@ -374,10 +374,11 @@ After adding permissions, assign them to roles:
 ### **Method A: Using Admin UI**
 
 1. Login as administrator
-2. Go to **Administrator → Role Permissions**
-3. Select role tab (Moderator, User, etc.)
-4. Toggle the new permissions on/off
-5. Click "Save All Changes"
+2. Go to **Access Control** (`/access-control`)
+3. Open the **Roles & Permissions** tab
+4. Select the role you want to update
+5. Toggle the new permissions on/off
+6. Click "Save All Changes"
 
 ### **Method B: Programmatically in Seeder**
 

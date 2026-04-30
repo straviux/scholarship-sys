@@ -32,14 +32,10 @@ use Carbon\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Gate;
-use App\Traits\ManagesChromeForPdf;
-use Spatie\Browsershot\Browsershot;
 
 class ScholarshipProfileController extends Controller
 {
     private const CURRENT_SCHOLARSHIP_RECORD_STATUSES = ['pending', 'interviewed', 'approved', 'active'];
-
-    use ManagesChromeForPdf;
 
     /**
      * Store a newly created resource in storage.
@@ -1094,51 +1090,14 @@ class ScholarshipProfileController extends Controller
     }
 
     /**
-     * Generate Scholar Ledger PDF.
+     * Generate Scholar Ledger PDF — server-side PDF generation removed.
+     * Use the client-side ledger print functionality in the scholar profile view instead.
      */
     public function generateLedgerPdf($profileId)
     {
-        try {
-            $profile = ScholarshipProfile::with([
-                'scholarshipGrant' => function ($q) {
-                    $q->with(['program', 'course', 'school'])
-                        ->whereNull('deleted_at')
-                        ->orderBy('created_at', 'desc');
-                },
-                'disbursements' => function ($q) {
-                    $q->whereNull('deleted_at')
-                        ->orderByRaw("FIELD(year_level,'1ST YEAR','2ND YEAR','3RD YEAR','4TH YEAR','5TH YEAR') ASC")
-                        ->orderBy('academic_year')
-                        ->orderBy('semester');
-                },
-            ])->findOrFail($profileId);
-
-            $html = view('scholars.ledger', [
-                'profile'      => $profile,
-                'preparedBy'   => Auth::user(),
-            ])->render();
-
-            $browsershot = Browsershot::html($html);
-            $chromePath  = $this->getChromePath();
-            if ($chromePath) {
-                $browsershot->setChromePath($chromePath);
-            }
-
-            $browsershot->paperSize(215.9, 330.2)->margins(10, 12, 10, 12);
-            $pdf = $browsershot->pdf();
-
-            $safeName = preg_replace('/[^A-Za-z0-9_-]/', '_', $profile->last_name . '_' . $profile->first_name);
-            $filename = 'Ledger-' . $safeName . '.pdf';
-
-            return response($pdf, 200)
-                ->header('Content-Type', 'application/pdf')
-                ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error generating ledger PDF',
-                'error'   => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Server-side PDF generation is no longer supported. Please use the print/export button in the scholar profile view.',
+        ], 410);
     }
 
     /**

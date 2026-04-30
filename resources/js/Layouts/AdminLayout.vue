@@ -189,19 +189,14 @@ function scheduleSmartPolling(startTimeStr) {
     const now = new Date();
     const minutesUntilStart = (startTime - now) / (1000 * 60);
 
-    console.log(`🔵 Maintenance check scheduled. Minutes until start: ${minutesUntilStart.toFixed(1)}`);
-
     // Determine polling interval based on time remaining
     let newInterval;
     if (minutesUntilStart > 10) {
         newInterval = 5 * 60 * 1000; // 5 minutes if more than 10 mins away
-        console.log('[DEBUG] 5-minute polling (far away)');
     } else if (minutesUntilStart > 0) {
         newInterval = 30 * 1000; // 30 seconds if less than 10 mins away
-        console.log('[DEBUG] 30-second polling (close)');
     } else {
         newInterval = 10 * 1000; // 10 seconds if maintenance is starting
-        console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ 10-second polling (starting soon)');
     }
 
     // Update interval if it changed
@@ -928,7 +923,6 @@ watch(sidebarMinimized, (isMinimized) => {
             <div ref="contentRef"
                 class="content-scroll flex-1 overflow-y-auto px-4 md:px-6 pt-6 short:pt-3 pb-10 short:pb-4 transition-[margin-left] duration-300"
                 :class="sidebarMinimized ? 'md:ml-[130px]' : 'md:ml-[240px]'">
-                <!-- <ToastList /> -->
                 <slot />
             </div>
 

@@ -3,7 +3,7 @@ import { ref, watch, computed, onBeforeUnmount } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import InterviewAssessmentForm from '@/Components/forms/InterviewAssessmentForm.vue';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 
 const props = defineProps({
     modelValue: Boolean,

@@ -542,14 +542,6 @@ onBeforeUnmount(() => {
     margin-top: 16px;
 }
 
-/* Override: action button is blue (interactive) unlike global gray */
-.ios-nav-action {
-    color: #007AFF;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-}
-
 .ios-nav-dropdown {
     gap: 4px;
 }
@@ -690,11 +682,6 @@ onBeforeUnmount(() => {
 
 .ios-dialog-mask {
     background: rgba(0, 0, 0, 0.4);
-}
-
-/* Dark mode — component-unique classes */
-.dark .ios-nav-action {
-    color: #60a5fa !important;
 }
 
 .dark .ios-icon-btn:hover {

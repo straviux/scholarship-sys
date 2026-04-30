@@ -1,5 +1,4 @@
-import { animationTimings, easings, shouldAnimate } from '../composables/useAnimationDefaults';
-import { quickAnimate } from '../composables/useGSAPAnimation';
+import { animationTimings, easings } from '../composables/useAnimationDefaults';
 
 /**
  * Predefined animations for common component interactions
@@ -169,40 +168,3 @@ export const highlightAnimation = (element) => ({
 	duration: animationTimings.transition,
 	ease: easings.smooth,
 });
-
-// DataTable Row animations
-export const dataTableAnimation = {
-	// Stagger rows on table load
-	rowStagger: (selector) => ({
-		opacity: 1,
-		y: 0,
-		duration: animationTimings.transition,
-		stagger: 0.05, // 50ms between each row
-		ease: easings.smooth,
-	}),
-	// Individual row entry state
-	rowEntry: () => ({
-		opacity: 0,
-		y: 10,
-		duration: animationTimings.transition,
-		ease: easings.smooth,
-	}),
-	// Row hover effect
-	rowHover: (element) => ({
-		backgroundColor: 'rgba(79, 172, 254, 0.05)',
-		duration: animationTimings.microInteraction * 0.75,
-		ease: easings.default,
-	}),
-	// Row click/select animation
-	rowSelect: (element) => ({
-		scale: 1.02,
-		duration: animationTimings.microInteraction,
-		ease: easings.spring,
-	}),
-	// Cell highlight
-	cellHighlight: (element) => ({
-		backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent'],
-		duration: animationTimings.transition,
-		ease: easings.smooth,
-	}),
-};

@@ -69,7 +69,7 @@
 <script setup>
 import { ref, watch, onUnmounted } from 'vue';
 import { useDraggableModal } from '@/composables/useDraggableModal';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 
 const props = defineProps({
     visible: { type: Boolean, default: false },

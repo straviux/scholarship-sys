@@ -5,10 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreatePermissionRequest;
 use App\Http\Resources\PermissionResource;
 use App\Services\ActivityLogService;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Permission;
 
 class PermissionController extends Controller
@@ -64,7 +63,7 @@ class PermissionController extends Controller
             ]);
         }
 
-        return to_route('permissions.index');
+        return to_route('access-control.index');
     }
 
     /**
@@ -100,7 +99,7 @@ class PermissionController extends Controller
 
             return back()->with('success', 'Permission deleted successfully');
         } catch (\Exception $e) {
-            \Log::error('Permission deletion failed', [
+            Log::error('Permission deletion failed', [
                 'permission_id' => $permission->id,
                 'error' => $e->getMessage()
             ]);
@@ -125,7 +124,7 @@ class PermissionController extends Controller
             $results = [];
 
             // 1. Remove orphaned entries in role_has_permissions
-            $deletedOrphanedRole = \DB::table('role_has_permissions')
+            $deletedOrphanedRole = DB::table('role_has_permissions')
                 ->leftJoin('permissions', 'role_has_permissions.permission_id', '=', 'permissions.id')
                 ->whereNull('permissions.id')
                 ->delete();
@@ -135,7 +134,7 @@ class PermissionController extends Controller
             }
 
             // 2. Remove duplicate entries in role_has_permissions
-            $dupRolePerms = \DB::select(
+            $dupRolePerms = DB::select(
                 "SELECT role_id, permission_id FROM role_has_permissions 
                 GROUP BY role_id, permission_id 
                 HAVING COUNT(*) > 1"
@@ -143,7 +142,7 @@ class PermissionController extends Controller
 
             $dupRoleCount = 0;
             foreach ($dupRolePerms as $dup) {
-                $dupRoleCount += \DB::table('role_has_permissions')
+                $dupRoleCount += DB::table('role_has_permissions')
                     ->where('role_id', $dup->role_id)
                     ->where('permission_id', $dup->permission_id)
                     ->skip(1)
@@ -164,7 +163,7 @@ class PermissionController extends Controller
                 'results' => $results
             ]);
         } catch (\Exception $e) {
-            \Log::error('Permission cleanup failed', [
+            Log::error('Permission cleanup failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);

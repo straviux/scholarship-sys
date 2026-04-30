@@ -133,13 +133,7 @@ const fetchScholars = async (programId = null, preSelectedIds = [], profileIds =
         }));
         filteredScholars.value = scholars.value;
 
-        // Debug: show pre-selection result
         const preSelectedCount = scholars.value.filter(s => s.selected).length;
-        if (preSelectedIds.length > 0) {
-            console.log('[VoucherWizard] fetchScholars preSelectedIds:', preSelectedIds);
-            console.log('[VoucherWizard] fetchScholars sample profile_ids from API:', data.slice(0, 3).map(s => s.profile_id));
-            console.log('[VoucherWizard] fetchScholars pre-selected result:', preSelectedCount, 'of', scholars.value.length);
-        }
         logger.info(`Loaded ${scholars.value.length} scholars for program ${programId}, ${preSelectedIds.length} pre-selected (${preSelectedCount} matched)`);
     } catch (err) {
         error.value = `Failed to fetch scholars: ${err.message}`;
@@ -217,8 +211,6 @@ watch(scholars, () => {
     });
     filteredScholars.value = scholars.value;
     updateSelectedCount();
-    const reApplied = scholars.value.filter(s => s.selected).length;
-    console.log('[VoucherWizard] watch(scholars) safety net fired — re-applied', reApplied, 'selections from editPreSelectedIds:', editPreSelectedIds.value);
 });
 
 // Toggle select all
@@ -391,8 +383,6 @@ const loadEditData = async () => {
         const data = props.initialData;
 
         // Step 1: Extract scholar IDs FIRST so we can pre-select during fetch
-        console.log('[VoucherWizard] loadEditData: raw scholar_ids =', JSON.stringify(data.scholar_ids));
-        console.log('[VoucherWizard] loadEditData: scholarship_program_id =', data.scholarship_program_id, 'scholarship_program =', data.scholarship_program);
         let scholarIds = [];
         if (data.scholar_ids && Array.isArray(data.scholar_ids)) {
             scholarIds = data.scholar_ids.map(sid =>
@@ -403,8 +393,6 @@ const loadEditData = async () => {
                 typeof s === 'object' ? String(s.profile_id) : String(s)
             );
         }
-
-        console.log('[VoucherWizard] loadEditData: extracted scholarIds =', scholarIds);
         logger.info('Pre-selecting scholar IDs for edit:', scholarIds);
 
         // Persist IDs so the programFilter watcher re-applies them on any re-fetch
@@ -417,12 +405,10 @@ const loadEditData = async () => {
         } else if (scholarIds.length > 0) {
             // Legacy: voucher was saved before scholarship_program_id was tracked.
             // Fetch the saved scholars by profile IDs first to resolve their program.
-            console.log('[VoucherWizard] loadEditData: no program_id, fetching by profile_ids (legacy)');
             await fetchScholars(null, scholarIds, scholarIds);
 
             // Derive program from first returned scholar, then re-fetch the full program list.
             const derivedProgramId = scholars.value[0]?.program_id ?? null;
-            console.log('[VoucherWizard] loadEditData: derived program_id from scholar =', derivedProgramId);
             if (derivedProgramId) {
                 // programFilter watcher will fire and re-fetch all scholars in this program
                 // with editPreSelectedIds still set, so pre-selections are maintained.
@@ -674,13 +660,9 @@ const particularsCourse = computed(() => {
     // Priority: Additional Info (Step 3) → Scholar data
     const course = voucherData.disbursements.course?.trim() || voucherData.disbursements.los_course?.trim();
     if (course) {
-        console.log('Course Priority: Using additional info -', course);
         return course;
     }
     const scholarCourse = primaryParticularScholar.value?.course || '';
-    if (scholarCourse) {
-        console.log('Course Priority: Fallback to scholar -', scholarCourse);
-    }
     return scholarCourse;
 });
 
@@ -688,66 +670,48 @@ const particularsYearLevel = computed(() => {
     // Priority: Additional Info (Step 3) → Scholar data
     const yearLevel = voucherData.disbursements.year_level?.trim();
     if (yearLevel) {
-        console.log('Year Level Priority: Using additional info -', yearLevel);
         return formatYearLevel(yearLevel);
     }
     const scholarYearLevel = primaryParticularScholar.value?.year_level || '';
-    if (scholarYearLevel) {
-        console.log('Year Level Priority: Fallback to scholar -', scholarYearLevel);
-    }
     return formatYearLevel(scholarYearLevel);
 });
 
 const particularsSchool = computed(() => {
     // Priority: Additional Info (Step 3) → Payee school → Scholar data
     if (voucherData.disbursements.school?.trim()) {
-        console.log('School Priority: Using additional info -', voucherData.disbursements.school);
         return voucherData.disbursements.school;
     }
     if (voucherData.obligations.payee_type === 'school') {
         const payeeSchool = voucherData.obligations.payee_id || voucherData.obligations.payee_name || '';
         if (payeeSchool) {
-            console.log('School Priority: Using payee school -', payeeSchool);
             return payeeSchool;
         }
     }
     const scholarSchool = primaryParticularScholar.value?.school || '';
-    if (scholarSchool) {
-        console.log('School Priority: Fallback to scholar -', scholarSchool);
-    }
     return scholarSchool;
 });
 
 const particularsSemester = computed(() => {
     // Priority: Additional Info (Step 3) → Scholar data
     if (voucherData.disbursements.semester?.trim()) {
-        console.log('Semester Priority: Using additional info -', voucherData.disbursements.semester);
         return voucherData.disbursements.semester;
     }
     const scholarSemester = primaryParticularScholar.value?.term || '';
-    if (scholarSemester) {
-        console.log('Semester Priority: Fallback to scholar -', scholarSemester);
-    }
     return scholarSemester;
 });
 
 const particularsAcademicYear = computed(() => {
     // Priority: Additional Info (Step 3) → Scholar data
     if (voucherData.disbursements.academic_year?.trim()) {
-        console.log('Academic Year Priority: Using additional info -', voucherData.disbursements.academic_year);
         return voucherData.disbursements.academic_year;
     }
     const scholarAcademicYear = primaryParticularScholar.value?.academic_year || '';
-    if (scholarAcademicYear) {
-        console.log('Academic Year Priority: Fallback to scholar -', scholarAcademicYear);
-    }
     return scholarAcademicYear;
 });
 
 const particularsGrantProvision = computed(() => {
     const grant = (voucherData.disbursements.grant_provision || '').trim();
     const particular = (voucherData.obligations.particulars_name || '').trim();
-    console.log('Grant Provision Priority:', { grant, particular, result: grant || particular || '' });
     // Explicitly prioritize grant_provision first
     if (grant) return grant;
     if (particular) return particular;
@@ -776,7 +740,6 @@ const buildParticularsDescriptionByObrType = () => {
         const course = toUpperOrFallback(particularsCourse.value);
         const termAcadYear = toUpperOrFallback(joinNonEmpty(particularsSemester.value, particularsAcademicYear.value));
         const schoolLine = toUpperOrFallback(particularsSchool.value);
-        console.log('REIMBURSEMENT Description Build:', { yearLevel, course, termAcadYear, schoolLine, disbYear: voucherData.disbursements.year_level, disbCourse: voucherData.disbursements.course });
         return `<p>(REIMBURSEMENT FOR ${yearLevel}, ${course} STUDENT, ${termAcadYear})</p><p>(${schoolLine})</p>`;
     }
 
@@ -967,14 +930,6 @@ watch(
         () => voucherData.disbursements.academic_year
     ],
     () => {
-        console.log('Step 3 Additional Info Watch Triggered:', {
-            course: voucherData.disbursements.course,
-            year_level: voucherData.disbursements.year_level,
-            school: voucherData.disbursements.school,
-            semester: voucherData.disbursements.semester,
-            academic_year: voucherData.disbursements.academic_year
-        });
-
         // Rebuild explanation
         const explanation = buildExplanationByObrType();
         if (explanation) {

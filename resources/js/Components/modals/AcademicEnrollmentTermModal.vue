@@ -88,7 +88,7 @@
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue';
 import axios from 'axios';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 import { useDraggableModal } from '@/composables/useDraggableModal';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { useSystemOptions } from '@/composables/useSystemOptions';

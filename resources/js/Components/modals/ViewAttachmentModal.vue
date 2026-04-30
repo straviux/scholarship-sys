@@ -7,14 +7,13 @@
                     <button class="ios-nav-btn ios-nav-cancel" @click="close">
                         <AppIcon name="times" :size="14" />
                     </button>
-                    <span class="ios-nav-title">{{ attachment?.file_name }}</span>
-                    <div
-                        style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); display: flex; gap: 4px;">
-                        <button class="ios-nav-btn ios-nav-action" style="position: static; transform: none;"
-                            @click="isMaximized = !isMaximized" v-tooltip.bottom="isMaximized ? 'Restore' : 'Maximize'">
+                    <span class="ios-nav-title ios-nav-title--truncate">{{ attachment?.file_name }}</span>
+                    <div class="ios-nav-actions">
+                        <button class="ios-nav-btn ios-nav-action ios-nav-btn--inline" @click="isMaximized = !isMaximized"
+                            v-tooltip.bottom="isMaximized ? 'Restore' : 'Maximize'">
                             <AppIcon :name="isMaximized ? 'window-minimize' : 'window-maximize'" :size="14" />
                         </button>
-                        <button class="ios-nav-btn ios-nav-action" style="position: static; transform: none;"
+                        <button class="ios-nav-btn ios-nav-action ios-nav-btn--inline"
                             @click="downloadAttachment(attachment)">
                             <AppIcon name="download" :size="14" />
                         </button>
@@ -70,7 +69,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </template>
     </Dialog>
@@ -192,50 +190,6 @@ const formatFileSize = (bytes) => {
     border-radius: 14px;
     width: min(900px, 92vw);
     height: 85vh;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-}
-
-.ios-modal-maximized {
-    width: 100vw !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    border-radius: 0;
-}
-
-.ios-nav-bar {
-    padding: 14px 16px;
-    background: #FFFFFF;
-    border-bottom: 0.5px solid #E5E5EA;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    min-height: 48px;
-    cursor: grab;
-}
-
-.ios-nav-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: #000;
-    letter-spacing: -0.4px;
-}
-
-.ios-nav-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     transition: background 0.2s;
 }
 

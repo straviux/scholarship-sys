@@ -4,31 +4,19 @@
     <AdminLayout>
         <Toast />
 
-        <div class="space-y-5">
-            <!-- Header Toolbar -->
-            <Toolbar class="!rounded-4xl !px-8">
-                <template #start>
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
-                            <AppIcon name="mobile" class="text-indigo-600" :size="18" />
-                        </div>
-                        <div>
-                            <h1 class="text-xl font-bold text-gray-900">Mobile Upload Settings</h1>
-                            <p class="text-sm text-gray-500">Configure base URL, file limits, token expiry &amp; image
-                                optimization</p>
-                        </div>
-                    </div>
-                </template>
-                <template #end>
-                    <AppButton label="Save Settings" icon="save" class="rounded" :loading="saving"
-                        @click="saveSettings" />
-                </template>
-            </Toolbar>
+        <AdminPageShell title="Mobile Upload Settings"
+            description="Configure the mobile upload entrypoint, upload limits, token lifetime, and image optimization defaults from one iOS-styled control surface."
+            icon="mobile" eyebrow="Admin Settings">
+            <template #actions>
+                <AppButton label="Save Settings" icon="save" class="rounded-full" :loading="saving"
+                    @click="saveSettings" />
+            </template>
 
-            <!-- Tabs -->
-            <Card class="!rounded-4xl overflow-hidden">
-                <template #content>
-                    <Tabs v-model:value="activeTab">
+            <section class="ios-section">
+                <div class="ios-section-label">Configuration</div>
+                <Card class="ios-page-panel">
+                    <template #content>
+                        <Tabs v-model:value="activeTab">
                         <TabList>
                             <Tab value="general">
                                 <AppIcon name="globe" class="mr-2" />General
@@ -281,10 +269,11 @@
                                 </div>
                             </TabPanel>
                         </TabPanels>
-                    </Tabs>
-                </template>
-            </Card>
-        </div>
+                        </Tabs>
+                    </template>
+                </Card>
+            </section>
+        </AdminPageShell>
     </AdminLayout>
 </template>
 
@@ -294,19 +283,7 @@ import { Head } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import Toolbar from 'primevue/toolbar';
-import Card from 'primevue/card';
-import Tabs from 'primevue/tabs';
-import TabList from 'primevue/tablist';
-import Tab from 'primevue/tab';
-import TabPanels from 'primevue/tabpanels';
-import TabPanel from 'primevue/tabpanel';
-import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
-import InputNumber from 'primevue/inputnumber';
-import Checkbox from 'primevue/checkbox';
-import ToggleSwitch from 'primevue/toggleswitch';
-import Toast from 'primevue/toast';
+import AdminPageShell from '@/Components/admin/AdminPageShell.vue';
 
 const props = defineProps({
     settings: {

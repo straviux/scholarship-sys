@@ -13,24 +13,17 @@ import { createApp, h } from 'vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
-// import VueDeviceDetect from '@basitcodeenv/vue3-device-detect';
 import PrimeVue from 'primevue/config';
 import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 import VueDeviceDetect from '@basitcodeenv/vue3-device-detect';
-import VueDatePicker from '@vuepic/vue-datepicker';
 import 'primeicons/primeicons.css';
-import Vue3Toastify from 'vue3-toastify';
-import 'vue3-toastify/dist/index.css';
-import permissionDirective from './directives/permission';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
-import smoothScrollDirective from './directives/smoothScroll';
 import animateTableRowsDirective from './directives/animateTableRows';
 import safeHtmlDirective from './directives/safeHtml';
-import animationPlugin from './plugins/animationPlugin';
 
 // PrimeVue Components - Global Registration
 import Button from 'primevue/button';
@@ -157,11 +150,6 @@ createInertiaApp({
 			})
 			.use(ToastService)
 			.use(ConfirmationService)
-			.use(Vue3Toastify, { autoClose: 3000 })
-			.use(animationPlugin)
-			.component('VueDatePicker', VueDatePicker)
-			.directive('can', permissionDirective)
-			.directive('smooth-scroll', smoothScrollDirective)
 			.directive('animate-table-rows', animateTableRowsDirective)
 			.directive('safe-html', safeHtmlDirective);
 

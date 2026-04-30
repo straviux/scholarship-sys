@@ -147,7 +147,6 @@
                     <div
                         class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs opacity-60 space-y-2 sm:space-y-0">
                         <div class="flex items-center space-x-4">
-                            <!-- <span>Type: <span class="font-medium">{{ selectedNotification?.type }}</span></span> -->
                             <span>Priority: <span class="font-medium capitalize">{{ selectedNotification?.priority
                             }}</span></span>
                         </div>
@@ -341,9 +340,7 @@ onMounted(() => {
     // Update unread count from page props if available
     if (page.props.auth?.user?.unread_notifications_count !== undefined) {
         unreadCount.value = page.props.auth.user.unread_notifications_count
-        console.log('Set unread count from props:', unreadCount.value)
     } else {
-        console.log('No unread_notifications_count in props, fetching...')
         // Fallback: fetch unread count
         fetchUnreadCount()
     }

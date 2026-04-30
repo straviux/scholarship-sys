@@ -372,7 +372,7 @@ import { ref, reactive, nextTick, watch, onUnmounted } from 'vue';
 import { useForm, usePage, Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import axios from 'axios';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 import { useTheme } from '@/composables/useTheme';
 
 const page = usePage();
@@ -751,7 +751,6 @@ const showQrCode = async () => {
     try {
         const response = await axios.post(route('profile.generate-qr'));
         const { qr_code_svg, url, expires_at } = response.data;
-        console.log('QR Code Response:', { qr_code_svg: '...', url, expires_at });
         qrCodeData.value = {
             qrCode: qr_code_svg,
             url,

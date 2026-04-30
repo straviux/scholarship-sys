@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\ScholarshipRecord;
 use App\Models\ScholarshipProfile;
 use App\Models\FundTransaction;
@@ -11,7 +10,6 @@ use App\Models\Course;
 use App\Models\School;
 use App\Models\User;
 use App\Services\ActivityLogService;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,73 +22,6 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
-
-    /**
-     * Display the user's profile form.
-     */
-    public function edit(Request $request): Response
-    {
-        return Inertia::render('Profile/Edit', [
-            // 'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => session('status'),
-        ]);
-    }
-
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $user = $request->user();
-        $oldData = $user->getAttributes();
-        $user->fill($request->validated());
-
-        if ($user->isDirty('email')) {
-            $user->user_verified_at = null;
-        }
-
-        $user->save();
-
-        // Log profile update
-        ActivityLogService::logRecordUpdated(
-            profileId: null,
-            oldData: $oldData,
-            newData: $user->fresh()->getAttributes(),
-            remarks: "Updated profile information"
-        );
-
-        return Redirect::route('profile.edit');
-    }
-
-    /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'password' => ['required', 'current_password'],
-        ]);
-
-        $user = $request->user();
-        $userData = $user->getAttributes();
-
-        Auth::logout();
-
-        // Log account deletion
-        ActivityLogService::logRecordDeleted(
-            profileId: null,
-            recordData: $userData,
-            remarks: "Deleted user account: {$userData['name']}"
-        );
-
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
-    }
-
     /**
      * Update the user's profile name.
      */

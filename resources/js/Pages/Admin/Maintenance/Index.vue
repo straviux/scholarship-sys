@@ -1,60 +1,66 @@
 <template>
     <AdminLayout>
-        <div class="maintenance-panel">
-            <div class="container mx-auto p-4 short:p-3">
-                <!-- Header -->
-                <div class="mb-6 short:mb-3">
-                    <h1 class="text-4xl short:text-2xl font-bold text-gray-900">Maintenance Management</h1>
-                    <p class="text-gray-600 mt-2">Manage system maintenance schedules and alerts</p>
-                </div>
+        <AdminPageShell title="Maintenance Management"
+            description="Manage maintenance schedules, activation windows, alerts, and user-facing preview states from a single operational control surface."
+            icon="settings-2" eyebrow="Operations">
+            <template #meta>
+                <span>{{ isActive ? 'Maintenance active' : 'System operational' }}</span>
+                <span>Last updated {{ lastUpdated }}</span>
+            </template>
 
+            <div class="maintenance-panel">
                 <!-- Status Overview -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 short:gap-2 mb-6 short:mb-3">
-                    <!-- Current Status Card -->
-                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                        <div :class="[
-                            'p-4 short:p-3 border-t-4',
-                            isActive
-                                ? 'bg-red-50 border-red-500'
-                                : 'bg-green-50 border-green-500'
-                        ]">
-                            <p class="text-sm text-gray-600 font-semibold uppercase">Current Status</p>
-                            <p :class="[
-                                'text-3xl short:text-xl font-bold mt-2',
-                                isActive ? 'text-red-600' : 'text-green-600'
+                <section class="ios-section">
+                    <div class="ios-section-label">Status Overview</div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 short:gap-2">
+                        <!-- Current Status Card -->
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <div :class="[
+                                'p-4 short:p-3 border-t-4',
+                                isActive
+                                    ? 'bg-red-50 border-red-500'
+                                    : 'bg-green-50 border-green-500'
                             ]">
-                                {{ isActive ? '[MAINT] MAINTENANCE' : '[OPER] OPERATIONAL' }}
-                            </p>
-                            <p class="text-xs text-gray-500 mt-3">Last updated: {{ lastUpdated }}</p>
+                                <p class="text-sm text-gray-600 font-semibold uppercase">Current Status</p>
+                                <p :class="[
+                                    'text-3xl short:text-xl font-bold mt-2',
+                                    isActive ? 'text-red-600' : 'text-green-600'
+                                ]">
+                                    {{ isActive ? '[MAINT] MAINTENANCE' : '[OPER] OPERATIONAL' }}
+                                </p>
+                                <p class="text-xs text-gray-500 mt-3">Last updated: {{ lastUpdated }}</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Countdown Card -->
-                    <div v-if="countdown && countdown.status === 'upcoming'"
-                        class="bg-white rounded-lg shadow-md overflow-hidden">
-                        <div class="p-4 short:p-3 bg-blue-50 border-t-4 border-blue-500">
-                            <p class="text-sm text-gray-600 font-semibold uppercase">Starting In</p>
-                            <p class="text-3xl short:text-xl font-bold mt-2 text-blue-600 font-mono">{{ countdownDisplay
-                                }}</p>
-                            <p class="text-xs text-gray-500 mt-3">{{ formatTime(countdown.start_time) }}</p>
+                        <!-- Countdown Card -->
+                        <div v-if="countdown && countdown.status === 'upcoming'"
+                            class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <div class="p-4 short:p-3 bg-blue-50 border-t-4 border-blue-500">
+                                <p class="text-sm text-gray-600 font-semibold uppercase">Starting In</p>
+                                <p class="text-3xl short:text-xl font-bold mt-2 text-blue-600 font-mono">{{ countdownDisplay
+                                    }}</p>
+                                <p class="text-xs text-gray-500 mt-3">{{ formatTime(countdown.start_time) }}</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Remaining Time Card -->
-                    <div v-if="countdown && countdown.status === 'active'"
-                        class="bg-white rounded-lg shadow-md overflow-hidden">
-                        <div class="p-4 short:p-3 bg-orange-50 border-t-4 border-orange-500">
-                            <p class="text-sm text-gray-600 font-semibold uppercase">Duration</p>
-                            <p class="text-3xl short:text-xl font-bold mt-2 text-orange-600">{{
-                                countdown.duration_minutes || '?' }}
-                                min</p>
-                            <p class="text-xs text-gray-500 mt-3 animate-pulse"> MAINTENANCE IN PROGRESS</p>
+                        <!-- Remaining Time Card -->
+                        <div v-if="countdown && countdown.status === 'active'"
+                            class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <div class="p-4 short:p-3 bg-orange-50 border-t-4 border-orange-500">
+                                <p class="text-sm text-gray-600 font-semibold uppercase">Duration</p>
+                                <p class="text-3xl short:text-xl font-bold mt-2 text-orange-600">{{
+                                    countdown.duration_minutes || '?' }}
+                                    min</p>
+                                <p class="text-xs text-gray-500 mt-3 animate-pulse"> MAINTENANCE IN PROGRESS</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </section>
 
                 <!-- Two Column Layout -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 short:gap-2">
+                <section class="ios-section">
+                    <div class="ios-section-label">Control Center</div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 short:gap-2">
                     <!-- Left Column - Configuration Form -->
                     <div class="lg:col-span-2">
                         <!-- Control Panel -->
@@ -250,10 +256,11 @@
                         </div>
                     </div>
                 </div>
+                </section>
 
 
             </div>
-        </div>
+        </AdminPageShell>
 
         <!-- Confirmation Dialog -->
         <Teleport to="body">
@@ -315,6 +322,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import AdminPageShell from '@/Components/admin/AdminPageShell.vue';
 
 const $page = usePage();
 
@@ -364,7 +372,6 @@ const showToast = (type, title, message, duration = 4000) => {
     const id = toastId++;
     const toast = { id, type, title, message };
     toasts.value.push(toast);
-    console.warn(`[DEBUG] Toast[${id}] (${type}):`, title, message);
 
     if (duration > 0) {
         setTimeout(() => {
@@ -449,10 +456,7 @@ const setDefaultTimes = () => {
     minStartTime.value = startInput;
 };
 const showConfirmDialog = () => {
-    console.warn(' showConfirmDialog() called');
-
     if (!form.value.start_time || !form.value.end_time) {
-        console.warn(' Missing times');
         showToast('error', 'Validation Error', 'Please fill in start and end times');
         return;
     }
@@ -461,12 +465,10 @@ const showConfirmDialog = () => {
     const endTime = new Date(form.value.end_time);
 
     if (endTime <= startTime) {
-        console.warn(' End time not after start time');
         showToast('error', 'Validation Error', 'End time must be after start time');
         return;
     }
 
-    console.warn(' Validation passed - showing dialog');
     dialogType.value = 'save';
     dialogTitle.value = 'Save Configuration?';
     dialogMessage.value = form.value.is_active
@@ -475,7 +477,6 @@ const showConfirmDialog = () => {
     dialogAction.value = 'Save';
     pendingAction.value = 'save';
     showDialog.value = true;
-    console.warn(' Dialog shown with pendingAction=save');
 };
 
 const showDeactivateDialog = () => {
@@ -493,17 +494,13 @@ const closeDialog = () => {
 };
 
 const confirmDialog = async () => {
-    console.warn(' confirmDialog() called - pendingAction:', pendingAction.value);
-
     // Save the action BEFORE closing the dialog
     const action = pendingAction.value;
     closeDialog();
 
     if (action === 'save') {
-        console.warn(' Executing SAVE action');
         await saveMaintenance();
     } else if (action === 'deactivate') {
-        console.warn(' Executing DEACTIVATE action');
         await deactivateMaintenance();
     } else {
         console.error(' Unknown action:', action);
@@ -512,10 +509,8 @@ const confirmDialog = async () => {
 
 // Save Maintenance
 const saveMaintenance = async () => {
-    console.warn(' saveMaintenance() called - START');
     try {
         const csrfToken = getCsrfToken();
-        console.warn(' CSRF Token obtained:', csrfToken ? 'exists' : 'MISSING');
 
         // Convert datetime-local format to Laravel datetime format (YYYY-MM-DD HH:mm:ss)
         const startStr = form.value.start_time ? form.value.start_time.replace('T', ' ') + ':00' : '';
@@ -531,8 +526,6 @@ const saveMaintenance = async () => {
             allow_admin_access: form.value.allow_admin_access,
         };
 
-        console.warn(' Sending payload:', JSON.stringify(payload, null, 2));
-
         const response = await fetch('/api/admin/maintenance', {
             method: 'POST',
             credentials: 'include',  // Include cookies for auth
@@ -543,23 +536,17 @@ const saveMaintenance = async () => {
             body: JSON.stringify(payload),
         });
 
-        console.warn(' Response received - Status:', response.status, 'OK:', response.ok);
-
         let responseData;
         const contentType = response.headers.get('content-type');
-        console.warn('Response Content-Type:', contentType);
 
         if (contentType && contentType.includes('application/json')) {
             responseData = await response.json();
-            console.warn('Response JSON:', JSON.stringify(responseData, null, 2));
         } else {
             const text = await response.text();
-            console.warn('Response Text:', text);
             responseData = {};
         }
 
         if (response.ok) {
-            console.warn(' Save SUCCESS');
             showToast('success', 'Saved!', 'Maintenance configuration has been saved successfully');
             fetchStatus();
             fetchHistory();
@@ -576,7 +563,6 @@ const saveMaintenance = async () => {
         console.error('Stack:', error.stack);
         showToast('error', 'Error', error.message || 'An error occurred while saving');
     }
-    console.warn(' saveMaintenance() - END\n');
 };
 
 // Deactivate Maintenance
@@ -682,7 +668,6 @@ const formatDatetimeLocal = (date) => {
 
 // Lifecycle
 onMounted(() => {
-    console.warn(' Maintenance page mounted - fetching initial data');
     fetchStatus();
     fetchHistory();
 

@@ -1,7 +1,4 @@
 <template>
-    <!-- <Select v-model="localValue" :options="profiles" :optionLabel="props.label" optionValue="id"
-        placeholder="Search Profile" :loading="loading" :filter="true" showClear class="w-full" @filter="onFilter" /> -->
-
     <Select v-model="localValue" :options="profiles" filter autoFilterFocus showClear optionLabel="name"
         @filter="onFilter" placeholder="Search Name" class="w-full" :size="iosCompact ? 'small' : undefined"
         :pt="selectPt">
@@ -58,7 +55,6 @@ const onFilter = async (event) => {
 
 watch(() => props.modelValue, (val) => {
     localValue.value = val;
-    // console.log(val)
 });
 
 watch(localValue, (val) => {

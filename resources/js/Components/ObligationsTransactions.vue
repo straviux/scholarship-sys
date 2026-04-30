@@ -586,7 +586,7 @@
 <script setup>
 import { ref, onMounted, watch, onUnmounted, computed } from 'vue';
 import axios from 'axios';
-import { toast } from 'vue3-toastify';
+import { toast } from '@/utils/toast';
 import { usePermission } from '@/composable/permissions';
 import { useSystemOptions } from '@/composables/useSystemOptions';
 import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
@@ -668,12 +668,6 @@ const loadDisbursements = async () => {
     try {
         const response = await axios.get(route('disbursements.index', props.profileId));
         disbursements.value = response.data;
-        // Debug: Log first disbursement to check data structure
-        if (response.data.length > 0) {
-            console.log('First disbursement:', response.data[0]);
-            console.log('Profile:', response.data[0].profile);
-            console.log('Scholarship Grant:', response.data[0].profile?.scholarship_grant);
-        }
     } catch (error) {
         console.error('Error loading disbursements:', error);
         toast.error('Failed to load disbursements');

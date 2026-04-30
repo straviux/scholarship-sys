@@ -9,18 +9,15 @@ use App\Http\Requests\UpdateFundTransactionStatusRequest;
 use App\Models\FundTransaction;
 use App\Models\FundTransactionDocument;
 use App\Services\FundTransactionService;
-use App\Traits\ManagesChromeForPdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use GuzzleHttp\Client;
-use Spatie\Browsershot\Browsershot;
 
 class FundTransactionController extends Controller
 {
-    use ManagesChromeForPdf;
 
     public function __construct(
         private FundTransactionService $service,
@@ -209,34 +206,14 @@ class FundTransactionController extends Controller
     }
 
     /**
-     * Generate OBR PDF using Browsershot.
+     * Generate OBR PDF — server-side PDF generation removed.
+     * Use the client-side voucher print functionality instead.
      */
     public function generateOBRPdf(int $id)
     {
-        try {
-            $voucher = FundTransaction::findOrFail($id);
-            $html = view('vouchers.obr', ['voucher' => $voucher])->render();
-
-            $browsershot = Browsershot::html($html);
-            $chromePath = $this->getChromePath();
-            if ($chromePath) {
-                $browsershot->setChromePath($chromePath);
-            }
-
-            $browsershot->format('A4')->margins(0, 0, 0, 0);
-            $pdf = $browsershot->pdf();
-
-            $filename = 'OBR-' . $voucher->transaction_id . '.pdf';
-
-            return response($pdf, 200)
-                ->header('Content-Type', 'application/pdf')
-                ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error generating PDF',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Server-side PDF generation is no longer supported. Please use the print/export button in the voucher detail view.',
+        ], 410);
     }
 
     /**
@@ -261,34 +238,14 @@ class FundTransactionController extends Controller
     }
 
     /**
-     * Generate DV (Disbursement Voucher) PDF using Browsershot.
+     * Generate DV (Disbursement Voucher) PDF — server-side PDF generation removed.
+     * Use the client-side voucher print functionality instead.
      */
     public function generateDVPdf(int $id)
     {
-        try {
-            $voucher = FundTransaction::findOrFail($id);
-            $html = view('vouchers.disbursement', ['voucher' => $voucher])->render();
-
-            $browsershot = Browsershot::html($html);
-            $chromePath = $this->getChromePath();
-            if ($chromePath) {
-                $browsershot->setChromePath($chromePath);
-            }
-
-            $browsershot->margins(0, 0, 0, 0)->paperSize(216, 330, 'mm');
-            $pdf = $browsershot->pdf();
-
-            $filename = 'DV-' . $voucher->transaction_id . '.pdf';
-
-            return response($pdf, 200)
-                ->header('Content-Type', 'application/pdf')
-                ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error generating PDF',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Server-side PDF generation is no longer supported. Please use the print/export button in the voucher detail view.',
+        ], 410);
     }
 
     /**
@@ -313,73 +270,25 @@ class FundTransactionController extends Controller
     }
 
     /**
-     * Generate Payroll PDF using Browsershot.
+     * Generate Payroll PDF — server-side PDF generation removed.
+     * Use the client-side voucher print functionality instead.
      */
     public function generatePayrollPdf(int $id)
     {
-        try {
-            $voucher = FundTransaction::findOrFail($id);
-            $html = view('vouchers.payroll', ['voucher' => $voucher])->render();
-
-            $browsershot = Browsershot::html($html);
-            $chromePath = $this->getChromePath();
-            if ($chromePath) {
-                $browsershot->setChromePath($chromePath);
-            }
-
-            $browsershot->margins(0, 0, 0, 0)
-                ->paperSize(330, 215.9, 'mm')
-                ->showBackground()
-                ->printBackground();
-
-            $pdf = $browsershot->pdf();
-
-            $filename = 'Payroll-' . $voucher->transaction_id . '.pdf';
-
-            return response($pdf, 200)
-                ->header('Content-Type', 'application/pdf')
-                ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error generating PDF',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Server-side PDF generation is no longer supported. Please use the print/export button in the voucher detail view.',
+        ], 410);
     }
 
     /**
-     * Generate List of Scholars PDF using Browsershot.
+     * Generate List of Scholars PDF — server-side PDF generation removed.
+     * Use the client-side voucher print functionality instead.
      */
     public function generateListOfScholarsPdf(int $id)
     {
-        try {
-            $voucher = FundTransaction::findOrFail($id);
-            $html = view('vouchers.list_of_scholars', ['voucher' => $voucher])->render();
-
-            $browsershot = Browsershot::html($html);
-            $chromePath = $this->getChromePath();
-            if ($chromePath) {
-                $browsershot->setChromePath($chromePath);
-            }
-
-            $browsershot->margins(0, 0, 0, 0)
-                ->paperSize(210, 297, 'mm')
-                ->showBackground()
-                ->printBackground();
-
-            $pdf = $browsershot->pdf();
-
-            $filename = 'ListOfScholars-' . $voucher->transaction_id . '.pdf';
-
-            return response($pdf, 200)
-                ->header('Content-Type', 'application/pdf')
-                ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error generating PDF',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Server-side PDF generation is no longer supported. Please use the print/export button in the voucher detail view.',
+        ], 410);
     }
 
     /**
