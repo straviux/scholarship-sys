@@ -113,7 +113,7 @@ onBeforeUnmount(() => {
                             <div class="ios-row ios-row-last">
                                 <span class="ios-row-label">Selected Applicants</span>
                                 <span style="font-size: 15px; font-weight: 600; color: #007AFF;">{{ selectedRows.length
-                                }}</span>
+                                    }}</span>
                             </div>
                         </div>
                     </div>
@@ -177,7 +177,7 @@ onBeforeUnmount(() => {
                             <div v-for="(row, idx) in selectedRows.slice(0, 10)" :key="idx" class="ios-row"
                                 :class="{ 'ios-row-last': idx === Math.min(selectedRows.length, 10) - 1 }">
                                 <span style="font-size: 13px; color: #000;">{{ row.last_name }}, {{ row.first_name
-                                }}</span>
+                                    }}</span>
                             </div>
                             <div v-if="selectedRows.length > 10" class="ios-row ios-row-last"
                                 style="justify-content: center;">

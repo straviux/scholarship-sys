@@ -53,14 +53,14 @@ export function getReportPaperConfig(paperSize = 'A4', orientation = 'landscape'
  */
 export function getReportCss(pageConfig = getReportPaperConfig()) {
 	const config =
-		typeof pageConfig === 'string'
-			? {
-					cssPageSize: pageConfig,
-					heightMm: 210,
-					printableHeightMm: 186,
-					marginsMm: REPORT_MARGINS_MM,
-			  }
-			: pageConfig;
+		typeof pageConfig === 'string' ?
+			{
+				cssPageSize: pageConfig,
+				heightMm: 210,
+				printableHeightMm: 186,
+				marginsMm: REPORT_MARGINS_MM,
+			}
+		:	pageConfig;
 
 	return CSS_TEMPLATE.replace(/\{\{PAGE_SIZE\}\}/g, config.cssPageSize)
 		.replace(/\{\{PAGE_HEIGHT_MM\}\}/g, String(config.heightMm))

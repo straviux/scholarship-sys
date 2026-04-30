@@ -15,56 +15,57 @@
                 <div class="ios-section-label">Update Feed</div>
                 <div class="max-w-7xl">
                     <Panel header="System Updates" class="w-full">
-                    <div v-if="updates.length === 0" class="text-center py-8">
-                        <Message severity="info" :closable="false">
-                            <p>No system updates found.</p>
-                        </Message>
-                    </div>
+                        <div v-if="updates.length === 0" class="text-center py-8">
+                            <Message severity="info" :closable="false">
+                                <p>No system updates found.</p>
+                            </Message>
+                        </div>
 
-                    <div v-else class="space-y-4">
-                        <Card v-for="update in updates" :key="update.id"
-                            class="w-full cursor-pointer hover:shadow-lg transition-shadow"
-                            @click="viewUpdate(update.id)">
-                            <template #content>
-                                <div class="flex justify-between items-start">
-                                    <div class="flex-1">
-                                        <div class="flex items-center space-x-2 mb-3">
-                                            <h3 class="text-lg font-medium text-gray-900">{{ update.title }}</h3>
-                                            <Tag :value="update.priority"
-                                                :severity="getPrioritySeverity(update.priority)" class="text-xs" />
-                                            <Tag :value="update.type" :severity="getTypeSeverity(update.type)"
-                                                class="text-xs" />
-                                            <Tag v-if="update.is_markdown" value="Markdown" severity="info"
-                                                icon="file-edit" class="text-xs" />
+                        <div v-else class="space-y-4">
+                            <Card v-for="update in updates" :key="update.id"
+                                class="w-full cursor-pointer hover:shadow-lg transition-shadow"
+                                @click="viewUpdate(update.id)">
+                                <template #content>
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1">
+                                            <div class="flex items-center space-x-2 mb-3">
+                                                <h3 class="text-lg font-medium text-gray-900">{{ update.title }}</h3>
+                                                <Tag :value="update.priority"
+                                                    :severity="getPrioritySeverity(update.priority)" class="text-xs" />
+                                                <Tag :value="update.type" :severity="getTypeSeverity(update.type)"
+                                                    class="text-xs" />
+                                                <Tag v-if="update.is_markdown" value="Markdown" severity="info"
+                                                    icon="file-edit" class="text-xs" />
+                                            </div>
+                                            <!-- Content Preview (truncated) -->
+                                            <div v-if="update.is_markdown && update.markdown_content"
+                                                class="text-gray-600 mb-3 line-clamp-2">
+                                                {{ stripMarkdown(update.markdown_content) }}
+                                            </div>
+                                            <p v-else class="text-gray-600 mb-3 line-clamp-2">{{ update.content }}</p>
+                                            <div class="text-sm text-gray-500">
+                                                Created {{ update.created_at }} by {{ update.created_by_name }}
+                                            </div>
+                                            <p class="text-sm text-blue-600 mt-2 font-medium">Click to view details ➔
+                                            </p>
                                         </div>
-                                        <!-- Content Preview (truncated) -->
-                                        <div v-if="update.is_markdown && update.markdown_content"
-                                            class="text-gray-600 mb-3 line-clamp-2">
-                                            {{ stripMarkdown(update.markdown_content) }}
-                                        </div>
-                                        <p v-else class="text-gray-600 mb-3 line-clamp-2">{{ update.content }}</p>
-                                        <div class="text-sm text-gray-500">
-                                            Created {{ update.created_at }} by {{ update.created_by_name }}
-                                        </div>
-                                        <p class="text-sm text-blue-600 mt-2 font-medium">Click to view details ➔</p>
-                                    </div>
 
-                                    <div class="flex items-center space-x-2 ml-4" @click.stop>
-                                        <Tag :value="update.is_active ? 'Active' : 'Inactive'"
-                                            :severity="update.is_active ? 'success' : 'danger'" />
-                                        <div v-if="hasRole('administrator')" class="flex items-center space-x-1">
-                                            <Button v-if="update.is_active" @click="deactivateUpdate(update)"
-                                                label="Deactivate" severity="warning" size="small" outlined />
-                                            <Button v-else @click="reactivateUpdate(update)" label="Reactivate"
-                                                severity="success" size="small" outlined />
-                                            <Button @click="deleteUpdate(update)" label="Delete" severity="danger"
-                                                size="small" outlined />
+                                        <div class="flex items-center space-x-2 ml-4" @click.stop>
+                                            <Tag :value="update.is_active ? 'Active' : 'Inactive'"
+                                                :severity="update.is_active ? 'success' : 'danger'" />
+                                            <div v-if="hasRole('administrator')" class="flex items-center space-x-1">
+                                                <Button v-if="update.is_active" @click="deactivateUpdate(update)"
+                                                    label="Deactivate" severity="warning" size="small" outlined />
+                                                <Button v-else @click="reactivateUpdate(update)" label="Reactivate"
+                                                    severity="success" size="small" outlined />
+                                                <Button @click="deleteUpdate(update)" label="Delete" severity="danger"
+                                                    size="small" outlined />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </template>
-                        </Card>
-                    </div>
+                                </template>
+                            </Card>
+                        </div>
                     </Panel>
                 </div>
             </section>

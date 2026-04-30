@@ -133,7 +133,7 @@ onBeforeUnmount(() => {
                         </div>
                         <div v-if="form.errors.name" class="ios-section-footer ios-error">{{ form.errors.name }}</div>
                         <div v-if="form.errors.shortname" class="ios-section-footer ios-error">{{ form.errors.shortname
-                        }}</div>
+                            }}</div>
                     </div>
 
                     <!-- LOCATION SECTION -->

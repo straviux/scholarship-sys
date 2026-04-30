@@ -727,7 +727,7 @@ watch(sidebarMinimized, (isMinimized) => {
                                 class="flex flex-col justify-center items-center text-center">
                                 <AppIcon :name="item.icon" :size="20" />
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                }}</span>
+                                    }}</span>
                             </SidebarLink>
                         </li>
 
@@ -740,7 +740,7 @@ watch(sidebarMinimized, (isMinimized) => {
                                     : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'">
                                 <AppIcon :name="item.icon" :size="20" />
                                 <span class="text-xs">{{ item.name.split(' ').slice(0, 1).join(' ').toLowerCase()
-                                }}</span>
+                                    }}</span>
                             </button>
                         </li>
                     </template>

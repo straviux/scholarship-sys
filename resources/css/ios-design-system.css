@@ -103,7 +103,9 @@
 	color: #374151;
 	cursor: pointer;
 	border-radius: 999px;
-	transition: opacity 0.18s ease, color 0.18s ease;
+	transition:
+		opacity 0.18s ease,
+		color 0.18s ease;
 }
 
 .ios-nav-bar .p-button.ios-nav-btn,
@@ -130,8 +132,8 @@
 
 .ios-nav-btn svg,
 .ios-nav-btn .p-button-icon,
-	.ios-nav-btn .p-button-icon-left,
-	.ios-nav-btn .p-button-icon-right,
+.ios-nav-btn .p-button-icon-left,
+.ios-nav-btn .p-button-icon-right,
 .ios-nav-btn .p-icon {
 	width: 18px;
 	height: 18px;
@@ -394,7 +396,11 @@ body.ios-admin-page .p-dialog .p-button {
 	font-weight: 600;
 	letter-spacing: -0.01em;
 	box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-	transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+	transition:
+		transform 0.18s ease,
+		box-shadow 0.18s ease,
+		background 0.18s ease,
+		border-color 0.18s ease;
 }
 
 body.ios-admin-page .ios-page-shell .p-button:not(.p-disabled):hover,
@@ -555,7 +561,10 @@ body.ios-admin-page .ios-page-shell .p-tab {
 	background: transparent;
 	color: #64748b;
 	font-weight: 600;
-	transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+	transition:
+		background 0.18s ease,
+		color 0.18s ease,
+		box-shadow 0.18s ease;
 }
 
 body.ios-admin-page .ios-page-shell .p-tab[aria-selected='true'],
@@ -585,7 +594,10 @@ body.ios-admin-page .p-dialog textarea {
 	border: 1px solid #dbe4ee;
 	background: rgba(248, 250, 252, 0.92);
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-	transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+	transition:
+		border-color 0.18s ease,
+		box-shadow 0.18s ease,
+		background 0.18s ease;
 }
 
 body.ios-admin-page .ios-page-shell textarea,
@@ -618,7 +630,11 @@ body.ios-admin-page .p-dialog-mask {
 body.ios-admin-page .p-dialog {
 	border-radius: 28px !important;
 	border: 1px solid rgba(255, 255, 255, 0.7);
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%) !important;
+	background: linear-gradient(
+		180deg,
+		rgba(255, 255, 255, 0.98) 0%,
+		rgba(248, 250, 252, 0.98) 100%
+	) !important;
 	box-shadow: 0 28px 80px rgba(15, 23, 42, 0.24) !important;
 	overflow: hidden;
 }
@@ -658,7 +674,9 @@ body.ios-admin-page .p-dialog .p-dialog-header-close-button {
 	border-color: transparent;
 	color: #64748b;
 	box-shadow: none;
-	transition: background 0.18s ease, color 0.18s ease;
+	transition:
+		background 0.18s ease,
+		color 0.18s ease;
 }
 
 body.ios-admin-page .p-dialog .p-dialog-close-button .p-button-icon,
@@ -1761,7 +1779,9 @@ body.ios-admin-page .p-dialog .p-dialog-footer .p-button {
 	font-weight: 500;
 	color: #8e8e93;
 	cursor: pointer;
-	transition: background 0.15s, color 0.15s;
+	transition:
+		background 0.15s,
+		color 0.15s;
 	min-width: 80px;
 	letter-spacing: -0.2px;
 }
@@ -1798,7 +1818,9 @@ body.ios-admin-page .p-dialog .p-dialog-footer .p-button {
 	font-size: 14px;
 	font-weight: 500;
 	cursor: pointer;
-	transition: opacity 0.15s, background 0.15s;
+	transition:
+		opacity 0.15s,
+		background 0.15s;
 	letter-spacing: -0.3px;
 }
 
@@ -1913,7 +1935,9 @@ body.ios-admin-page .p-dialog .p-dialog-footer .p-button {
 /* ── Segment active ── */
 .dark .ios-segment-active {
 	background: #2a3040;
-	box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
+	box-shadow:
+		0 3px 8px rgba(0, 0, 0, 0.3),
+		0 1px 1px rgba(0, 0, 0, 0.2);
 }
 
 /* ── Preview body (report modals) ── */

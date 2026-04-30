@@ -99,7 +99,7 @@
                                     <div>
                                         <h4 class="font-semibold text-gray-900 text-base leading-tight">{{
                                             batch.batch_name
-                                        }}</h4>
+                                            }}</h4>
                                         <div class="text-xs text-gray-500 space-y-0.5 mt-1">
                                             <p v-if="batch.exam_date_from || batch.exam_date_to">
                                                 <span class="font-medium">Exam:</span>

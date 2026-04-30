@@ -210,12 +210,17 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
 
             <!-- Grand Total Banner -->
             <div style="display:flex;gap:0;border:0.5pt solid #000;margin-bottom:8pt;font-size:8pt;">
-                <div style="flex:1;padding:3pt 6pt;border-right:0.5pt solid #000;display:flex;align-items:center;justify-content:space-between;gap:6pt;">
-                    <span style="font-size:7pt;text-transform:uppercase;letter-spacing:0.4pt;color:#555;">Total Records</span>
+                <div
+                    style="flex:1;padding:3pt 6pt;border-right:0.5pt solid #000;display:flex;align-items:center;justify-content:space-between;gap:6pt;">
+                    <span style="font-size:7pt;text-transform:uppercase;letter-spacing:0.4pt;color:#555;">Total
+                        Records</span>
                     <span style="font-size:9pt;font-weight:700;">{{ records.length.toLocaleString() }}</span>
                 </div>
-                <div style="flex:2;padding:3pt 6pt;display:flex;align-items:center;justify-content:space-between;gap:6pt;">
-                    <span style="font-size:7pt;text-transform:uppercase;letter-spacing:0.4pt;color:#555;">Total Projected Expense</span>
+                <div
+                    style="flex:2;padding:3pt 6pt;display:flex;align-items:center;justify-content:space-between;gap:6pt;">
+                    <span style="font-size:7pt;text-transform:uppercase;letter-spacing:0.4pt;color:#555;">Total
+                        Projected
+                        Expense</span>
                     <span style="font-size:9pt;font-weight:700;">{{ fmtCurrency(totalProjectedExpense) }}</span>
                 </div>
             </div>

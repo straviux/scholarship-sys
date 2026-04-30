@@ -363,7 +363,7 @@
                                     Result Date
                                 </div>
                                 <span class="text-sm text-gray-700">{{ formatDateLong(viewingBatch.result_date)
-                                    }}</span>
+                                }}</span>
                             </div>
                             <div class="ios-row">
                                 <div class="ios-row-label">
@@ -398,7 +398,7 @@
                             <Column field="years_of_service" header="Years ROS" sortable style="width: 120px">
                                 <template #body="slotProps">
                                     <span class="font-semibold text-blue-600">{{ slotProps.data.years_of_service || 0
-                                        }}</span>
+                                    }}</span>
                                 </template>
                             </Column>
                             <Column field="completion_status" header="Status" sortable style="width: 130px">
@@ -410,13 +410,13 @@
                             <Column field="service_start_date" header="Service Start" sortable style="min-width: 140px">
                                 <template #body="slotProps">
                                     <span class="font-mono text-sm">{{ formatDateLong(slotProps.data.service_start_date)
-                                        }}</span>
+                                    }}</span>
                                 </template>
                             </Column>
                             <Column field="service_end_date" header="Service End" sortable style="min-width: 140px">
                                 <template #body="slotProps">
                                     <span class="font-mono text-sm">{{ formatDateLong(slotProps.data.service_end_date)
-                                        }}</span>
+                                    }}</span>
                                 </template>
                             </Column>
                             <Column field="remarks" header="Remarks" style="min-width: 200px">

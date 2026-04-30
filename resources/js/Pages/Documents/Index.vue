@@ -182,7 +182,7 @@
                             <AppIcon name="x" :size="16" />
                         </button>
                         <span class="ios-nav-title">{{ dialogMode === 'upload' ? 'Upload File' : 'Edit Document'
-                            }}</span>
+                        }}</span>
                         <button class="ios-nav-btn ios-nav-action" type="button" @click="submitForm"
                             :disabled="form.processing">
                             {{ form.processing ? 'Saving...' : (dialogMode === 'upload' ? 'Upload' : 'Save') }}
@@ -389,7 +389,7 @@
                                     </span>
                                     <span class="inline-flex items-center">
                                         <AppIcon name="download" :size="14" class="mr-1" />{{
-                                        viewingDocument.download_count }}
+                                            viewingDocument.download_count }}
                                         downloads
                                     </span>
                                 </div>

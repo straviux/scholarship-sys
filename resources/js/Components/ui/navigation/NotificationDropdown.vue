@@ -148,7 +148,7 @@
                         class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs opacity-60 space-y-2 sm:space-y-0">
                         <div class="flex items-center space-x-4">
                             <span>Priority: <span class="font-medium capitalize">{{ selectedNotification?.priority
-                            }}</span></span>
+                                    }}</span></span>
                         </div>
                         <div class="flex items-center space-x-4">
                             <span>@<span class="font-medium">{{ selectedNotification?.created_by }}</span></span>

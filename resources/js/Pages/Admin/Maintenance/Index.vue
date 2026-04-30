@@ -37,7 +37,8 @@
                             class="bg-white rounded-lg shadow-md overflow-hidden">
                             <div class="p-4 short:p-3 bg-blue-50 border-t-4 border-blue-500">
                                 <p class="text-sm text-gray-600 font-semibold uppercase">Starting In</p>
-                                <p class="text-3xl short:text-xl font-bold mt-2 text-blue-600 font-mono">{{ countdownDisplay
+                                <p class="text-3xl short:text-xl font-bold mt-2 text-blue-600 font-mono">{{
+                                    countdownDisplay
                                     }}</p>
                                 <p class="text-xs text-gray-500 mt-3">{{ formatTime(countdown.start_time) }}</p>
                             </div>
@@ -61,201 +62,215 @@
                 <section class="ios-section">
                     <div class="ios-section-label">Control Center</div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 short:gap-2">
-                    <!-- Left Column - Configuration Form -->
-                    <div class="lg:col-span-2">
-                        <!-- Control Panel -->
-                        <div class="bg-white rounded-lg shadow-md p-4 short:p-3 mb-4 short:mb-2">
-                            <div class="flex items-center justify-between mb-4 short:mb-2">
-                                <h2 class="text-2xl short:text-xl font-bold text-gray-900">Configuration</h2>
-                                <div v-if="isActive" class="flex items-center gap-2 px-3 py-1 bg-red-100 rounded-full">
-                                    <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-                                    <span class="text-sm font-semibold text-red-600">ACTIVE</span>
+                        <!-- Left Column - Configuration Form -->
+                        <div class="lg:col-span-2">
+                            <!-- Control Panel -->
+                            <div class="bg-white rounded-lg shadow-md p-4 short:p-3 mb-4 short:mb-2">
+                                <div class="flex items-center justify-between mb-4 short:mb-2">
+                                    <h2 class="text-2xl short:text-xl font-bold text-gray-900">Configuration</h2>
+                                    <div v-if="isActive"
+                                        class="flex items-center gap-2 px-3 py-1 bg-red-100 rounded-full">
+                                        <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+                                        <span class="text-sm font-semibold text-red-600">ACTIVE</span>
+                                    </div>
                                 </div>
+
+                                <form @submit.prevent="showConfirmDialog" class="space-y-5">
+                                    <!-- Quick Toggle -->
+                                    <div
+                                        class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200">
+                                        <div>
+                                            <label class="flex items-center cursor-pointer gap-3">
+                                                <Checkbox v-model="form.is_active" :binary="true" />
+                                                <span class="font-semibold text-gray-900">Enable Maintenance Mode</span>
+                                            </label>
+                                            <p class="text-xs text-gray-500 mt-1 ml-8">Users will see a banner with your
+                                                message</p>
+                                        </div>
+                                        <Button v-if="isActive" type="button" @click="showDeactivateDialog"
+                                            label="Deactivate Now" severity="success" size="small" />
+                                    </div>
+
+                                    <!-- Title -->
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-900 mb-2">Banner
+                                            Title</label>
+                                        <InputText v-model="form.title" type="text" class="w-full"
+                                            placeholder="e.g., Scheduled System Maintenance" maxlength="100" />
+                                        <p class="text-xs text-gray-500 mt-1">{{ form.title.length }}/100 characters</p>
+                                    </div>
+
+                                    <!-- Message -->
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-900 mb-2">Message</label>
+                                        <Textarea v-model="form.message" class="w-full" rows="4"
+                                            placeholder="Inform users about what's happening..." maxlength="500" />
+                                        <p class="text-xs text-gray-500 mt-1">{{ form.message.length }}/500 characters
+                                        </p>
+                                    </div>
+
+                                    <!-- Schedule -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-900 mb-2">Start
+                                                Time</label>
+                                            <InputText v-model="form.start_time" type="datetime-local" class="w-full"
+                                                :min="minStartTime" required />
+                                            <p class="text-xs text-gray-500 mt-1">Minimum 10 minutes from now</p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-900 mb-2">End
+                                                Time</label>
+                                            <InputText v-model="form.end_time" type="datetime-local" class="w-full"
+                                                :min="form.start_time" required />
+                                            <p class="text-xs text-gray-500 mt-1">Must be after start time</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Alert Type -->
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-900 mb-3">Alert
+                                            Severity</label>
+                                        <div class="grid grid-cols-3 gap-3">
+                                            <label class="relative flex cursor-pointer">
+                                                <input type="radio" v-model="form.type" value="info" class="sr-only" />
+                                                <div class="w-full px-4 py-3 border-2 rounded-lg text-center transition"
+                                                    :class="[
+                                                        form.type === 'info'
+                                                            ? 'border-blue-500 bg-blue-50'
+                                                            : 'border-gray-300 hover:border-blue-300'
+                                                    ]">
+                                                    <span class="text-xl">⚙</span>
+                                                    <p class="font-semibold text-sm mt-1">Info</p>
+                                                </div>
+                                            </label>
+                                            <label class="relative flex cursor-pointer">
+                                                <input type="radio" v-model="form.type" value="warning"
+                                                    class="sr-only" />
+                                                <div class="w-full px-4 py-3 border-2 rounded-lg text-center transition"
+                                                    :class="[
+                                                        form.type === 'warning'
+                                                            ? 'border-yellow-500 bg-yellow-50'
+                                                            : 'border-gray-300 hover:border-yellow-300'
+                                                    ]">
+                                                    <span class="text-xl">⚙</span>
+                                                    <p class="font-semibold text-sm mt-1">Warning</p>
+                                                </div>
+                                            </label>
+                                            <label class="relative flex cursor-pointer">
+                                                <input type="radio" v-model="form.type" value="critical"
+                                                    class="sr-only" />
+                                                <div class="w-full px-4 py-3 border-2 rounded-lg text-center transition"
+                                                    :class="[
+                                                        form.type === 'critical'
+                                                            ? 'border-red-500 bg-red-50'
+                                                            : 'border-gray-300 hover:border-red-300'
+                                                    ]">
+                                                    <span class="text-xl">⚙</span>
+                                                    <p class="font-semibold text-sm mt-1">Critical</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Admin Access Notice -->
+                                    <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
+                                        <span class="text-xl">⚙</span>
+                                        <div>
+                                            <p class="font-semibold text-sm text-blue-900">Admin Access Protected</p>
+                                            <p class="text-xs text-blue-700 mt-1">Admins can always access the system
+                                                even
+                                                during maintenance</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="flex gap-3 pt-4 border-t">
+                                        <Button type="submit" label="Save Configuration" class="flex-1" />
+                                        <Button type="button" @click="resetForm" label="Reset" severity="secondary" />
+                                    </div>
+                                </form>
                             </div>
 
-                            <form @submit.prevent="showConfirmDialog" class="space-y-5">
-                                <!-- Quick Toggle -->
-                                <div
-                                    class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200">
-                                    <div>
-                                        <label class="flex items-center cursor-pointer gap-3">
-                                            <Checkbox v-model="form.is_active" :binary="true" />
-                                            <span class="font-semibold text-gray-900">Enable Maintenance Mode</span>
-                                        </label>
-                                        <p class="text-xs text-gray-500 mt-1 ml-8">Users will see a banner with your
-                                            message</p>
-                                    </div>
-                                    <Button v-if="isActive" type="button" @click="showDeactivateDialog"
-                                        label="Deactivate Now" severity="success" size="small" />
-                                </div>
-
-                                <!-- Title -->
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-900 mb-2">Banner Title</label>
-                                    <InputText v-model="form.title" type="text" class="w-full"
-                                        placeholder="e.g., Scheduled System Maintenance" maxlength="100" />
-                                    <p class="text-xs text-gray-500 mt-1">{{ form.title.length }}/100 characters</p>
-                                </div>
-
-                                <!-- Message -->
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-900 mb-2">Message</label>
-                                    <Textarea v-model="form.message" class="w-full" rows="4"
-                                        placeholder="Inform users about what's happening..." maxlength="500" />
-                                    <p class="text-xs text-gray-500 mt-1">{{ form.message.length }}/500 characters</p>
-                                </div>
-
-                                <!-- Schedule -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-900 mb-2">Start Time</label>
-                                        <InputText v-model="form.start_time" type="datetime-local" class="w-full"
-                                            :min="minStartTime" required />
-                                        <p class="text-xs text-gray-500 mt-1">Minimum 10 minutes from now</p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-900 mb-2">End Time</label>
-                                        <InputText v-model="form.end_time" type="datetime-local" class="w-full"
-                                            :min="form.start_time" required />
-                                        <p class="text-xs text-gray-500 mt-1">Must be after start time</p>
+                            <!-- Preview Banner -->
+                            <div class="bg-white rounded-lg shadow-md p-4 short:p-3">
+                                <h2 class="text-2xl short:text-xl font-bold text-gray-900 mb-5">Preview</h2>
+                                <div v-if="form.is_active" class="rounded-lg overflow-hidden" :class="[
+                                    form.type === 'info' ? 'bg-blue-50 border-l-4 border-blue-500' : '',
+                                    form.type === 'warning' ? 'bg-yellow-50 border-l-4 border-yellow-500' : '',
+                                    form.type === 'critical' ? 'bg-red-50 border-l-4 border-red-500' : '',
+                                ]">
+                                    <div class="p-5">
+                                        <h3 class="font-bold text-lg" :class="[
+                                            form.type === 'info' ? 'text-blue-600' : '',
+                                            form.type === 'warning' ? 'text-yellow-600' : '',
+                                            form.type === 'critical' ? 'text-red-600' : '',
+                                        ]">
+                                            {{ form.title || 'Your title here' }}
+                                        </h3>
+                                        <p class="mt-2 text-sm text-gray-700">{{ form.message || `Your message will
+                                            appear
+                                            here` }}</p>
                                     </div>
                                 </div>
-
-                                <!-- Alert Type -->
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-900 mb-3">Alert Severity</label>
-                                    <div class="grid grid-cols-3 gap-3">
-                                        <label class="relative flex cursor-pointer">
-                                            <input type="radio" v-model="form.type" value="info" class="sr-only" />
-                                            <div class="w-full px-4 py-3 border-2 rounded-lg text-center transition"
-                                                :class="[
-                                                    form.type === 'info'
-                                                        ? 'border-blue-500 bg-blue-50'
-                                                        : 'border-gray-300 hover:border-blue-300'
-                                                ]">
-                                                <span class="text-xl">⚙</span>
-                                                <p class="font-semibold text-sm mt-1">Info</p>
-                                            </div>
-                                        </label>
-                                        <label class="relative flex cursor-pointer">
-                                            <input type="radio" v-model="form.type" value="warning" class="sr-only" />
-                                            <div class="w-full px-4 py-3 border-2 rounded-lg text-center transition"
-                                                :class="[
-                                                    form.type === 'warning'
-                                                        ? 'border-yellow-500 bg-yellow-50'
-                                                        : 'border-gray-300 hover:border-yellow-300'
-                                                ]">
-                                                <span class="text-xl">⚙</span>
-                                                <p class="font-semibold text-sm mt-1">Warning</p>
-                                            </div>
-                                        </label>
-                                        <label class="relative flex cursor-pointer">
-                                            <input type="radio" v-model="form.type" value="critical" class="sr-only" />
-                                            <div class="w-full px-4 py-3 border-2 rounded-lg text-center transition"
-                                                :class="[
-                                                    form.type === 'critical'
-                                                        ? 'border-red-500 bg-red-50'
-                                                        : 'border-gray-300 hover:border-red-300'
-                                                ]">
-                                                <span class="text-xl">⚙</span>
-                                                <p class="font-semibold text-sm mt-1">Critical</p>
-                                            </div>
-                                        </label>
-                                    </div>
+                                <div v-else
+                                    class="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                                    <p class="text-gray-500 font-semibold">Maintenance mode is disabled</p>
+                                    <p class="text-xs text-gray-400 mt-1">Enable it to preview the banner</p>
                                 </div>
-
-                                <!-- Admin Access Notice -->
-                                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
-                                    <span class="text-xl">⚙</span>
-                                    <div>
-                                        <p class="font-semibold text-sm text-blue-900">Admin Access Protected</p>
-                                        <p class="text-xs text-blue-700 mt-1">Admins can always access the system even
-                                            during maintenance</p>
-                                    </div>
-                                </div>
-
-                                <!-- Action Buttons -->
-                                <div class="flex gap-3 pt-4 border-t">
-                                    <Button type="submit" label="Save Configuration" class="flex-1" />
-                                    <Button type="button" @click="resetForm" label="Reset" severity="secondary" />
-                                </div>
-                            </form>
+                            </div>
                         </div>
 
-                        <!-- Preview Banner -->
-                        <div class="bg-white rounded-lg shadow-md p-4 short:p-3">
-                            <h2 class="text-2xl short:text-xl font-bold text-gray-900 mb-5">Preview</h2>
-                            <div v-if="form.is_active" class="rounded-lg overflow-hidden" :class="[
-                                form.type === 'info' ? 'bg-blue-50 border-l-4 border-blue-500' : '',
-                                form.type === 'warning' ? 'bg-yellow-50 border-l-4 border-yellow-500' : '',
-                                form.type === 'critical' ? 'bg-red-50 border-l-4 border-red-500' : '',
-                            ]">
-                                <div class="p-5">
-                                    <h3 class="font-bold text-lg" :class="[
-                                        form.type === 'info' ? 'text-blue-600' : '',
-                                        form.type === 'warning' ? 'text-yellow-600' : '',
-                                        form.type === 'critical' ? 'text-red-600' : '',
-                                    ]">
-                                        {{ form.title || 'Your title here' }}
-                                    </h3>
-                                    <p class="mt-2 text-sm text-gray-700">{{ form.message || `Your message will appear
-                                        here` }}</p>
-                                </div>
-                            </div>
-                            <div v-else
-                                class="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                                <p class="text-gray-500 font-semibold">Maintenance mode is disabled</p>
-                                <p class="text-xs text-gray-400 mt-1">Enable it to preview the banner</p>
-                            </div>
-                        </div>
-                    </div>
+                        <!-- Right Column - Maintenance History -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-white rounded-lg shadow-md p-4 short:p-3 sticky top-6">
+                                <h2 class="text-2xl short:text-xl font-bold text-gray-900 mb-4">History</h2>
 
-                    <!-- Right Column - Maintenance History -->
-                    <div class="lg:col-span-1">
-                        <div class="bg-white rounded-lg shadow-md p-4 short:p-3 sticky top-6">
-                            <h2 class="text-2xl short:text-xl font-bold text-gray-900 mb-4">History</h2>
-
-                            <div v-if="history.length > 0" class="space-y-3 max-h-screen overflow-y-auto">
-                                <div v-for="record in history" :key="record.id"
-                                    class="p-3 bg-gray-50 rounded-lg border-l-4 border-gray-300 hover:border-blue-400 transition">
-                                    <div class="flex items-start gap-2">
-                                        <span class="text-lg mt-0.5">
-                                            {{ record.type === 'info' ? '[INFO]' : record.type === 'warning' ? '[WARN]'
-                                                : '[ERROR]'
-                                            }}
-                                        </span>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="font-semibold text-sm text-gray-900 truncate">{{ record.title }}
-                                            </p>
-                                            <p class="text-xs text-gray-600 mt-0.5">{{ record.message.substring(0, 40)
-                                                }}...</p>
-                                            <div class="flex items-center gap-2 mt-1.5">
-                                                <span class="px-2 py-0.5 rounded text-xs font-semibold inline-block"
-                                                    :class="{
-                                                        'bg-blue-100 text-blue-800': record.type === 'info',
-                                                        'bg-yellow-100 text-yellow-800': record.type === 'warning',
-                                                        'bg-red-100 text-red-800': record.type === 'critical',
-                                                    }">
-                                                    {{ record.type.toUpperCase() }}
-                                                </span>
-                                                <span v-if="record.is_active"
-                                                    class="inline-flex items-center gap-0.5 px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-semibold">
-                                                    <span class="w-1 h-1 bg-red-600 rounded-full animate-pulse"></span>
-                                                    ACTIVE
-                                                </span>
+                                <div v-if="history.length > 0" class="space-y-3 max-h-screen overflow-y-auto">
+                                    <div v-for="record in history" :key="record.id"
+                                        class="p-3 bg-gray-50 rounded-lg border-l-4 border-gray-300 hover:border-blue-400 transition">
+                                        <div class="flex items-start gap-2">
+                                            <span class="text-lg mt-0.5">
+                                                {{ record.type === 'info' ? '[INFO]' : record.type === 'warning' ?
+                                                    '[WARN]'
+                                                    : '[ERROR]'
+                                                }}
+                                            </span>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="font-semibold text-sm text-gray-900 truncate">{{ record.title
+                                                    }}
+                                                </p>
+                                                <p class="text-xs text-gray-600 mt-0.5">{{ record.message.substring(0,
+                                                    40)
+                                                    }}...</p>
+                                                <div class="flex items-center gap-2 mt-1.5">
+                                                    <span class="px-2 py-0.5 rounded text-xs font-semibold inline-block"
+                                                        :class="{
+                                                            'bg-blue-100 text-blue-800': record.type === 'info',
+                                                            'bg-yellow-100 text-yellow-800': record.type === 'warning',
+                                                            'bg-red-100 text-red-800': record.type === 'critical',
+                                                        }">
+                                                        {{ record.type.toUpperCase() }}
+                                                    </span>
+                                                    <span v-if="record.is_active"
+                                                        class="inline-flex items-center gap-0.5 px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-semibold">
+                                                        <span
+                                                            class="w-1 h-1 bg-red-600 rounded-full animate-pulse"></span>
+                                                        ACTIVE
+                                                    </span>
+                                                </div>
+                                                <p class="text-xs text-gray-400 mt-2">{{
+                                                    formatDateTime(record.start_time) }}</p>
                                             </div>
-                                            <p class="text-xs text-gray-400 mt-2">{{
-                                                formatDateTime(record.start_time) }}</p>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div v-else class="text-center py-8 text-gray-500">
-                                <p class="text-sm">No maintenance records yet</p>
+                                <div v-else class="text-center py-8 text-gray-500">
+                                    <p class="text-sm">No maintenance records yet</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 </section>
 
 

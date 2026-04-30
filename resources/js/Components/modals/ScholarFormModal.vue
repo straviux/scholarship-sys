@@ -109,7 +109,7 @@
                                                                         style="color: #FF9500;" />
                                                                     The following record(s) match
                                                                     <strong>{{ form.first_name }} {{ form.last_name
-                                                                        }}</strong>:
+                                                                    }}</strong>:
                                                                 </div>
                                                             </div>
                                                             <div class="ios-section">

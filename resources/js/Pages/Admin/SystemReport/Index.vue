@@ -12,10 +12,9 @@
                 <span>{{ attentionSummaryText }}</span>
             </template>
             <template #actions>
-                <AppButton @click="refreshReport" :loading="loading" icon="refresh" label="Refresh"
-                    severity="secondary" raised />
-                <AppButton @click="exportReport" icon="download" label="Export JSON" severity="success"
+                <AppButton @click="refreshReport" :loading="loading" icon="refresh" label="Refresh" severity="secondary"
                     raised />
+                <AppButton @click="exportReport" icon="download" label="Export JSON" severity="success" raised />
             </template>
 
             <section class="ios-section">
@@ -57,9 +56,9 @@
 
         </AdminPageShell>
 
-    <div class="mx-auto max-w-[1600px] p-4 short:p-3 space-y-5 short:space-y-3">
+        <div class="mx-auto max-w-[1600px] p-4 short:p-3 space-y-5 short:space-y-3">
 
-        <section id="attention-center" class="report-section">
+            <section id="attention-center" class="report-section">
                 <Card class="border border-slate-200 shadow-sm">
                     <template #title>
                         <div class="flex items-center gap-2">
@@ -98,10 +97,10 @@
                         </div>
                     </template>
                 </Card>
-        </section>
+            </section>
 
             <!-- Data Integrity Section -->
-        <section id="data-integrity" class="report-section">
+            <section id="data-integrity" class="report-section">
                 <Card>
                     <template #title>
                         <div class="flex items-center gap-2">
@@ -115,7 +114,7 @@
                                 <p class="text-sm text-red-600">Records without Programs</p>
                                 <p class="text-xl font-bold text-red-700">{{
                                     report.data_integrity.records_without_programs
-                                    }}</p>
+                                }}</p>
                             </div>
                             <div class="p-4 bg-orange-50 rounded-lg border border-orange-200">
                                 <p class="text-sm text-orange-600">Records without Courses</p>
@@ -131,7 +130,7 @@
                                 <p class="text-sm text-purple-600">Orphaned Requirements</p>
                                 <p class="text-xl font-bold text-purple-700">{{
                                     report.data_integrity.orphaned_requirements
-                                    }}</p>
+                                }}</p>
                             </div>
                         </div>
 
@@ -203,10 +202,10 @@
                         </div>
                     </template>
                 </Card>
-        </section>
+            </section>
 
             <!-- Application Status Charts -->
-        <section id="status-trends" class="report-section grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
+            <section id="status-trends" class="report-section grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
                 <Card>
                     <template #title>Application Status Distribution</template>
                     <template #content>
@@ -220,10 +219,10 @@
                         <Chart type="bar" :data="programChartData" :options="barChartOptions" class="w-full h-64" />
                     </template>
                 </Card>
-        </section>
+            </section>
 
             <!-- Performance Metrics -->
-        <section id="performance" class="report-section">
+            <section id="performance" class="report-section">
                 <Card>
                     <template #title>
                         <div class="flex items-center gap-2">

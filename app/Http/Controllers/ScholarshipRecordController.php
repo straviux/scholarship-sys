@@ -21,9 +21,7 @@ use Illuminate\Support\Collection;
 
 class ScholarshipRecordController extends Controller
 {
-    public function __construct(private readonly AcademicRecordSyncService $academicRecordSyncService)
-    {
-    }
+    public function __construct(private readonly AcademicRecordSyncService $academicRecordSyncService) {}
 
     /**
      * Store a newly created resource in storage.

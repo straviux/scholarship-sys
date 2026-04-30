@@ -9,8 +9,8 @@
                     </button>
                     <span class="ios-nav-title ios-nav-title--truncate">{{ attachment?.file_name }}</span>
                     <div class="ios-nav-actions">
-                        <button class="ios-nav-btn ios-nav-action ios-nav-btn--inline" @click="isMaximized = !isMaximized"
-                            v-tooltip.bottom="isMaximized ? 'Restore' : 'Maximize'">
+                        <button class="ios-nav-btn ios-nav-action ios-nav-btn--inline"
+                            @click="isMaximized = !isMaximized" v-tooltip.bottom="isMaximized ? 'Restore' : 'Maximize'">
                             <AppIcon :name="isMaximized ? 'window-minimize' : 'window-maximize'" :size="14" />
                         </button>
                         <button class="ios-nav-btn ios-nav-action ios-nav-btn--inline"

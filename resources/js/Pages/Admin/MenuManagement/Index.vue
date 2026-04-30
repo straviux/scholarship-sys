@@ -677,136 +677,137 @@ const debouncedSaveOrder = () => {
             <section class="ios-section">
                 <div class="ios-section-label">Menu Tree</div>
                 <Card class="ios-page-panel">
-                <template #content>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h3 class="text-xl font-semibold text-gray-900">Menu Items</h3>
-                                <p class="text-sm text-gray-600 mt-1 flex items-center gap-2">
-                                    <AppIcon name="info-circle" />
-                                    Click on groups to expand/collapse.
-                                </p>
+                    <template #content>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-xl font-semibold text-gray-900">Menu Items</h3>
+                                    <p class="text-sm text-gray-600 mt-1 flex items-center gap-2">
+                                        <AppIcon name="info-circle" />
+                                        Click on groups to expand/collapse.
+                                    </p>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Tree View with Expandable Groups - Draggable -->
-                        <draggable v-model="allTreeNodes" tag="div"
-                            :options="{ animation: 150, handle: '.drag-handle' }" class="space-y-2" item-key="key"
-                            @change="debouncedSaveOrder()">
-                            <template #item="{ element: node }">
-                                <div class="space-y-1">
-                                    <!-- Group Header (if is_group) -->
-                                    <div v-if="node.data.is_group"
-                                        :class="['bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition']"
-                                        @click="expandedGroups[node.data.id] = !expandedGroups[node.data.id]">
-                                        <div class="flex items-center gap-3 flex-1">
-                                            <AppIcon
-                                                :name="expandedGroups[node.data.id] ? 'chevron-down' : 'chevron-right'"
-                                                class="transition-transform" />
-                                            <AppIcon name="grip-vertical"
-                                                class="drag-handle text-blue-400 cursor-grab hover:text-blue-600"
-                                                @click.stop v-tooltip.bottom="'Drag to reorder'" />
-                                            <AppIcon :name="node.data.icon || 'folder'"
-                                                class="text-lg text-blue-400 font-bold" />
-                                            <div>
-                                                <div class="font-bold text-blue-700">{{ node.data.name }}</div>
-                                                <span
-                                                    class="inline-flex items-center gap-1 px-2 py-1 mt-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
-                                                    <AppIcon name="folder" :size="12" />
-                                                    {{ node.children?.length || 0 }} item(s)
-                                                </span>
+                            <!-- Tree View with Expandable Groups - Draggable -->
+                            <draggable v-model="allTreeNodes" tag="div"
+                                :options="{ animation: 150, handle: '.drag-handle' }" class="space-y-2" item-key="key"
+                                @change="debouncedSaveOrder()">
+                                <template #item="{ element: node }">
+                                    <div class="space-y-1">
+                                        <!-- Group Header (if is_group) -->
+                                        <div v-if="node.data.is_group"
+                                            :class="['bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition']"
+                                            @click="expandedGroups[node.data.id] = !expandedGroups[node.data.id]">
+                                            <div class="flex items-center gap-3 flex-1">
+                                                <AppIcon
+                                                    :name="expandedGroups[node.data.id] ? 'chevron-down' : 'chevron-right'"
+                                                    class="transition-transform" />
+                                                <AppIcon name="grip-vertical"
+                                                    class="drag-handle text-blue-400 cursor-grab hover:text-blue-600"
+                                                    @click.stop v-tooltip.bottom="'Drag to reorder'" />
+                                                <AppIcon :name="node.data.icon || 'folder'"
+                                                    class="text-lg text-blue-400 font-bold" />
+                                                <div>
+                                                    <div class="font-bold text-blue-700">{{ node.data.name }}</div>
+                                                    <span
+                                                        class="inline-flex items-center gap-1 px-2 py-1 mt-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
+                                                        <AppIcon name="folder" :size="12" />
+                                                        {{ node.children?.length || 0 }} item(s)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="flex gap-1" @click.stop>
+                                                <AppButton icon="plus" rounded text severity="success" size="small"
+                                                    @click="openAssignDialog(node)"
+                                                    v-tooltip.bottom="'Add items to this group'" />
+                                                <AppButton icon="pencil" rounded text severity="info" size="small"
+                                                    @click="editMenuItem(node)" />
+                                                <AppButton icon="trash" rounded text severity="danger" size="small"
+                                                    @click="deleteMenuItem(node)" />
                                             </div>
                                         </div>
-                                        <div class="flex gap-1" @click.stop>
-                                            <AppButton icon="plus" rounded text severity="success" size="small"
-                                                @click="openAssignDialog(node)"
-                                                v-tooltip.bottom="'Add items to this group'" />
-                                            <AppButton icon="pencil" rounded text severity="info" size="small"
-                                                @click="editMenuItem(node)" />
-                                            <AppButton icon="trash" rounded text severity="danger" size="small"
-                                                @click="deleteMenuItem(node)" />
-                                        </div>
-                                    </div>
 
-                                    <!-- Group Children (items in group) - Draggable -->
-                                    <draggable v-if="node.data.is_group && expandedGroups[node.data.id]"
-                                        v-model="node.children" tag="div"
-                                        :options="{ animation: 150, handle: '.drag-handle' }"
-                                        class="ml-4 space-y-1 cursor-pointer" item-key="key"
-                                        @change="debouncedSaveOrder()">
-                                        <template #item="{ element: child }">
-                                            <div
-                                                class="bg-blue-50 border-l-4 border-blue-300 rounded p-3 flex items-center justify-between hover:bg-blue-100 transition">
-                                                <div class="flex items-center gap-3 flex-1">
-                                                    <AppIcon name="grip-vertical"
-                                                        class="drag-handle text-blue-400 cursor-grab hover:text-blue-600"
-                                                        v-tooltip.bottom="'Drag to reorder'" />
-                                                    <AppIcon :name="child.data.icon || 'link'"
-                                                        class="text-lg text-gray-600" />
-                                                    <div>
-                                                        <div class="text-gray-800 font-medium">{{ child.data.name }}
-                                                        </div>
-                                                        <div v-if="child.data.route" class="text-xs text-gray-500">
-                                                            {{ child.data.route }}
+                                        <!-- Group Children (items in group) - Draggable -->
+                                        <draggable v-if="node.data.is_group && expandedGroups[node.data.id]"
+                                            v-model="node.children" tag="div"
+                                            :options="{ animation: 150, handle: '.drag-handle' }"
+                                            class="ml-4 space-y-1 cursor-pointer" item-key="key"
+                                            @change="debouncedSaveOrder()">
+                                            <template #item="{ element: child }">
+                                                <div
+                                                    class="bg-blue-50 border-l-4 border-blue-300 rounded p-3 flex items-center justify-between hover:bg-blue-100 transition">
+                                                    <div class="flex items-center gap-3 flex-1">
+                                                        <AppIcon name="grip-vertical"
+                                                            class="drag-handle text-blue-400 cursor-grab hover:text-blue-600"
+                                                            v-tooltip.bottom="'Drag to reorder'" />
+                                                        <AppIcon :name="child.data.icon || 'link'"
+                                                            class="text-lg text-gray-600" />
+                                                        <div>
+                                                            <div class="text-gray-800 font-medium">{{ child.data.name }}
+                                                            </div>
+                                                            <div v-if="child.data.route" class="text-xs text-gray-500">
+                                                                {{ child.data.route }}
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                    <div class="flex gap-1" @click.stop>
+                                                        <AppButton icon="unlink" rounded text severity="warning"
+                                                            size="small" @click="removeFromGroup(child)"
+                                                            v-tooltip.bottom="'Remove from this group'" />
+                                                        <AppButton icon="pencil" rounded text severity="info"
+                                                            size="small" @click="editMenuItem(child)" />
+                                                        <AppButton icon="trash" rounded text severity="danger"
+                                                            size="small" @click="deleteMenuItem(child)" />
+                                                    </div>
                                                 </div>
-                                                <div class="flex gap-1" @click.stop>
-                                                    <AppButton icon="unlink" rounded text severity="warning"
-                                                        size="small" @click="removeFromGroup(child)"
-                                                        v-tooltip.bottom="'Remove from this group'" />
-                                                    <AppButton icon="pencil" rounded text severity="info" size="small"
-                                                        @click="editMenuItem(child)" />
-                                                    <AppButton icon="trash" rounded text severity="danger" size="small"
-                                                        @click="deleteMenuItem(child)" />
+                                            </template>
+                                            <template #header v-if="!node.children || node.children.length === 0">
+                                                <div
+                                                    class="bg-gray-50 border border-dashed border-gray-300 rounded p-3 text-center text-gray-500 text-sm">
+                                                    No items in this group. Click the + button to add items.
                                                 </div>
-                                            </div>
-                                        </template>
-                                        <template #header v-if="!node.children || node.children.length === 0">
-                                            <div
-                                                class="bg-gray-50 border border-dashed border-gray-300 rounded p-3 text-center text-gray-500 text-sm">
-                                                No items in this group. Click the + button to add items.
-                                            </div>
-                                        </template>
-                                    </draggable>
+                                            </template>
+                                        </draggable>
 
-                                    <!-- Top-level items (not in a group) -->
-                                    <div v-if="!node.data.is_group"
-                                        class="bg-gray-50 border-l-4 border-blue-200 p-3 rounded flex items-center justify-between hover:bg-gray-100 transition cursor-pointer">
-                                        <div class="flex items-center gap-3 flex-1">
-                                            <AppIcon name="grip-vertical"
-                                                class="drag-handle text-blue-400 cursor-grab hover:text-blue-600"
-                                                v-tooltip.bottom="'Drag to reorder'" />
-                                            <AppIcon :name="node.data.icon || 'file'" class="text-lg text-gray-600" />
-                                            <div>
-                                                <div class="text-gray-800 font-medium">{{ node.data.name }}</div>
-                                                <span
-                                                    class="inline-flex items-center gap-1 px-2 py-0.5 mt-1 text-xs text-gray-600 bg-gray-200 rounded">
-                                                    Ungrouped
-                                                </span>
-                                                <div v-if="node.data.route" class="text-xs text-gray-500">
-                                                    {{ node.data.route }}
+                                        <!-- Top-level items (not in a group) -->
+                                        <div v-if="!node.data.is_group"
+                                            class="bg-gray-50 border-l-4 border-blue-200 p-3 rounded flex items-center justify-between hover:bg-gray-100 transition cursor-pointer">
+                                            <div class="flex items-center gap-3 flex-1">
+                                                <AppIcon name="grip-vertical"
+                                                    class="drag-handle text-blue-400 cursor-grab hover:text-blue-600"
+                                                    v-tooltip.bottom="'Drag to reorder'" />
+                                                <AppIcon :name="node.data.icon || 'file'"
+                                                    class="text-lg text-gray-600" />
+                                                <div>
+                                                    <div class="text-gray-800 font-medium">{{ node.data.name }}</div>
+                                                    <span
+                                                        class="inline-flex items-center gap-1 px-2 py-0.5 mt-1 text-xs text-gray-600 bg-gray-200 rounded">
+                                                        Ungrouped
+                                                    </span>
+                                                    <div v-if="node.data.route" class="text-xs text-gray-500">
+                                                        {{ node.data.route }}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="flex gap-1" @click.stop>
-                                            <AppButton icon="pencil" rounded text severity="info" size="small"
-                                                @click="editMenuItem(node)" />
-                                            <AppButton icon="trash" rounded text severity="danger" size="small"
-                                                @click="deleteMenuItem(node)" />
+                                            <div class="flex gap-1" @click.stop>
+                                                <AppButton icon="pencil" rounded text severity="info" size="small"
+                                                    @click="editMenuItem(node)" />
+                                                <AppButton icon="trash" rounded text severity="danger" size="small"
+                                                    @click="deleteMenuItem(node)" />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </template>
-                            <template #header v-if="allTreeNodes.length === 0">
-                                <div class="text-center py-12">
-                                    <AppIcon name="inbox" class="text-4xl short:text-2xl text-gray-300 mb-4" />
-                                    <p class="text-gray-500">No menu items yet. Create a group to get started!</p>
-                                </div>
-                            </template>
-                        </draggable>
-                    </div>
-                </template>
+                                </template>
+                                <template #header v-if="allTreeNodes.length === 0">
+                                    <div class="text-center py-12">
+                                        <AppIcon name="inbox" class="text-4xl short:text-2xl text-gray-300 mb-4" />
+                                        <p class="text-gray-500">No menu items yet. Create a group to get started!</p>
+                                    </div>
+                                </template>
+                            </draggable>
+                        </div>
+                    </template>
                 </Card>
             </section>
         </AdminPageShell>

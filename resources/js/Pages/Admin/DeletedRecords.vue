@@ -12,152 +12,154 @@
 
             <div class="space-y-4 short:space-y-2">
 
-            <!-- Search Filter -->
-            <section class="ios-section">
-                <div class="ios-section-label">Search</div>
-                <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-3">
-                    <AppIcon name="search" class="text-gray-500" />
-                    <InputText v-model="searchQuery" type="text" placeholder="Search by name..." class="flex-1" />
-                    <AppButton v-if="searchQuery" @click="searchQuery = ''" icon="times" severity="secondary"
-                        variant="text" size="small" />
+                <!-- Search Filter -->
+                <section class="ios-section">
+                    <div class="ios-section-label">Search</div>
+                    <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-3">
+                        <AppIcon name="search" class="text-gray-500" />
+                        <InputText v-model="searchQuery" type="text" placeholder="Search by name..." class="flex-1" />
+                        <AppButton v-if="searchQuery" @click="searchQuery = ''" icon="times" severity="secondary"
+                            variant="text" size="small" />
+                    </div>
+                </section>
+
+                <!-- Tabs for switching between deleted profiles and records -->
+                <section class="ios-section">
+                    <div class="ios-section-label">Record Types</div>
+                    <div class="border-b border-gray-200">
+                        <nav class="flex gap-4">
+                            <button @click="activeTab = 'profiles'" :class="[
+                                'px-4 py-2 font-medium text-sm border-b-2 transition-colors',
+                                activeTab === 'profiles'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                            ]">
+                                <AppIcon name="user" class="mr-2" />Deleted Profiles ({{ filteredProfiles.length }})
+                            </button>
+                            <button @click="activeTab = 'records'" :class="[
+                                'px-4 py-2 font-medium text-sm border-b-2 transition-colors',
+                                activeTab === 'records'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                            ]">
+                                <AppIcon name="award" class="mr-2" />Deleted Scholarship Grants ({{
+                                filteredRecords.length }})
+                            </button>
+                        </nav>
+                    </div>
+                </section>
+
+                <!-- Info banner -->
+                <div v-if="activeTab === 'profiles'"
+                    class="mb-4 short:mb-2 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-sm text-blue-800"><strong>✓ Tip:</strong> Restoring a profile will restore the entire
+                        profile AND all their deleted scholarship grants.</p>
                 </div>
-            </section>
-
-            <!-- Tabs for switching between deleted profiles and records -->
-            <section class="ios-section">
-                <div class="ios-section-label">Record Types</div>
-                <div class="border-b border-gray-200">
-                <nav class="flex gap-4">
-                    <button @click="activeTab = 'profiles'" :class="[
-                        'px-4 py-2 font-medium text-sm border-b-2 transition-colors',
-                        activeTab === 'profiles'
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-gray-600 hover:text-gray-900'
-                    ]">
-                        <AppIcon name="user" class="mr-2" />Deleted Profiles ({{ filteredProfiles.length }})
-                    </button>
-                    <button @click="activeTab = 'records'" :class="[
-                        'px-4 py-2 font-medium text-sm border-b-2 transition-colors',
-                        activeTab === 'records'
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-gray-600 hover:text-gray-900'
-                    ]">
-                        <AppIcon name="award" class="mr-2" />Deleted Scholarship Grants ({{ filteredRecords.length }})
-                    </button>
-                </nav>
-                </div>
-            </section>
-
-            <!-- Info banner -->
-            <div v-if="activeTab === 'profiles'"
-                class="mb-4 short:mb-2 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p class="text-sm text-blue-800"><strong>✓ Tip:</strong> Restoring a profile will restore the entire
-                    profile AND all their deleted scholarship grants.</p>
-            </div>
-            <div v-if="activeTab === 'records'"
-                class="mb-4 short:mb-2 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p class="text-sm text-blue-800"><strong>✓ Tip:</strong> Restoring a scholarship grant will restore
-                    only that individual grant record. The applicant profile must exist to restore this.</p>
-            </div>
-
-            <!-- Deleted Applicant Profiles Tab -->
-            <div v-if="activeTab === 'profiles'" class="space-y-4">
-                <div v-if="filteredProfiles.length === 0"
-                    class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <AppIcon name="info-circle" class="text-2xl text-blue-500 mb-2" />
-                    <p class="text-gray-700">No deleted profiles found</p>
+                <div v-if="activeTab === 'records'"
+                    class="mb-4 short:mb-2 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-sm text-blue-800"><strong>✓ Tip:</strong> Restoring a scholarship grant will restore
+                        only that individual grant record. The applicant profile must exist to restore this.</p>
                 </div>
 
-                <div v-for="profile in filteredProfiles" :key="profile.profile_id"
-                    class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <h3 class="text-lg font-semibold text-gray-900">
-                                {{ profile.last_name }}, {{ profile.first_name }}{{ profile.middle_name ? ' ' +
-                                    profile.middle_name : '' }}
-                            </h3>
-                            <div class="mt-2 grid grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-sm text-gray-600">Profile ID</p>
-                                    <p class="text-sm font-medium text-gray-900">{{ profile.profile_id }}</p>
+                <!-- Deleted Applicant Profiles Tab -->
+                <div v-if="activeTab === 'profiles'" class="space-y-4">
+                    <div v-if="filteredProfiles.length === 0"
+                        class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                        <AppIcon name="info-circle" class="text-2xl text-blue-500 mb-2" />
+                        <p class="text-gray-700">No deleted profiles found</p>
+                    </div>
+
+                    <div v-for="profile in filteredProfiles" :key="profile.profile_id"
+                        class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900">
+                                    {{ profile.last_name }}, {{ profile.first_name }}{{ profile.middle_name ? ' ' +
+                                        profile.middle_name : '' }}
+                                </h3>
+                                <div class="mt-2 grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Profile ID</p>
+                                        <p class="text-sm font-medium text-gray-900">{{ profile.profile_id }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Contact</p>
+                                        <p class="text-sm font-medium text-gray-900">{{ profile.contact_no }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Email</p>
+                                        <p class="text-sm font-medium text-gray-900">{{ profile.email || 'N/A' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Scholarship Records</p>
+                                        <p class="text-sm font-medium text-gray-900">{{ profile.records_count }}
+                                            record(s)
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Contact</p>
-                                    <p class="text-sm font-medium text-gray-900">{{ profile.contact_no }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Email</p>
-                                    <p class="text-sm font-medium text-gray-900">{{ profile.email || 'N/A' }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Scholarship Records</p>
-                                    <p class="text-sm font-medium text-gray-900">{{ profile.records_count }} record(s)
+                                <div class="mt-3">
+                                    <p class="text-xs text-gray-500">
+                                        <AppIcon name="trash" class="text-red-500 mr-1" />
+                                        Deleted {{ formatDate(profile.deleted_at) }}
                                     </p>
                                 </div>
                             </div>
-                            <div class="mt-3">
-                                <p class="text-xs text-gray-500">
-                                    <AppIcon name="trash" class="text-red-500 mr-1" />
-                                    Deleted {{ formatDate(profile.deleted_at) }}
-                                </p>
-                            </div>
-                        </div>
 
-                        <div class="flex gap-2 ml-4">
-                            <AppButton icon="undo" severity="success" rounded
-                                @click="restoreProfile(profile.profile_id)"
-                                title="Restore this applicant and their records" />
-                            <AppButton icon="trash" severity="danger" rounded
-                                @click="confirmPermanentlyDeleteProfile(profile)"
-                                title="Permanently delete (cannot be undone)" />
+                            <div class="flex gap-2 ml-4">
+                                <AppButton icon="undo" severity="success" rounded
+                                    @click="restoreProfile(profile.profile_id)"
+                                    title="Restore this applicant and their records" />
+                                <AppButton icon="trash" severity="danger" rounded
+                                    @click="confirmPermanentlyDeleteProfile(profile)"
+                                    title="Permanently delete (cannot be undone)" />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Deleted Scholarship Grants Tab -->
-            <div v-if="activeTab === 'records'" class="space-y-4">
-                <div v-if="filteredRecords.length === 0"
-                    class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <AppIcon name="info-circle" class="text-2xl text-blue-500 mb-2" />
-                    <p class="text-gray-700">No deleted scholarship grants found</p>
-                </div>
+                <!-- Deleted Scholarship Grants Tab -->
+                <div v-if="activeTab === 'records'" class="space-y-4">
+                    <div v-if="filteredRecords.length === 0"
+                        class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                        <AppIcon name="info-circle" class="text-2xl text-blue-500 mb-2" />
+                        <p class="text-gray-700">No deleted scholarship grants found</p>
+                    </div>
 
-                <div v-for="record in filteredRecords" :key="record.id"
-                    class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <h3 class="text-lg font-semibold text-gray-900">
-                                {{ record.profile_name }}
-                            </h3>
-                            <div class="mt-2 grid grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-sm text-gray-600">Program</p>
-                                    <p class="text-sm font-medium text-gray-900">{{ record.program_name }}</p>
+                    <div v-for="record in filteredRecords" :key="record.id"
+                        class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900">
+                                    {{ record.profile_name }}
+                                </h3>
+                                <div class="mt-2 grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Program</p>
+                                        <p class="text-sm font-medium text-gray-900">{{ record.program_name }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Status</p>
+                                        <p class="text-sm font-medium text-gray-900">{{ record.status }}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Status</p>
-                                    <p class="text-sm font-medium text-gray-900">{{ record.status }}</p>
+                                <div class="mt-3">
+                                    <p class="text-xs text-gray-500">
+                                        <AppIcon name="trash" class="text-red-500 mr-1" />
+                                        Deleted {{ formatDate(record.deleted_at) }}
+                                    </p>
                                 </div>
                             </div>
-                            <div class="mt-3">
-                                <p class="text-xs text-gray-500">
-                                    <AppIcon name="trash" class="text-red-500 mr-1" />
-                                    Deleted {{ formatDate(record.deleted_at) }}
-                                </p>
-                            </div>
-                        </div>
 
-                        <div class="flex gap-2 ml-4">
-                            <AppButton icon="undo" severity="success" rounded @click="restoreRecord(record.id)"
-                                title="Restore this record" />
-                            <AppButton icon="trash" severity="danger" rounded
-                                @click="confirmPermanentlyDeleteRecord(record)"
-                                title="Permanently delete (cannot be undone)" />
+                            <div class="flex gap-2 ml-4">
+                                <AppButton icon="undo" severity="success" rounded @click="restoreRecord(record.id)"
+                                    title="Restore this record" />
+                                <AppButton icon="trash" severity="danger" rounded
+                                    @click="confirmPermanentlyDeleteRecord(record)"
+                                    title="Permanently delete (cannot be undone)" />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             </div>
         </AdminPageShell>
 

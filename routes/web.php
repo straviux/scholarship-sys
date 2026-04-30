@@ -103,9 +103,9 @@ Route::middleware(['auth', 'check.role:users,access-control', 'maintenance'])->g
     Route::get('/access-control', [AccessControlController::class, 'index'])->name('access-control.index');
 
     // Retire legacy standalone user pages in favor of the unified access control page.
-    Route::get('/users', fn () => to_route('access-control.index'))->name('users.index');
-    Route::get('/users/create', fn () => to_route('access-control.index'))->name('users.create');
-    Route::get('/users/{user}/edit', fn ($user) => to_route('access-control.index'))->name('users.edit');
+    Route::get('/users', fn() => to_route('access-control.index'))->name('users.index');
+    Route::get('/users/create', fn() => to_route('access-control.index'))->name('users.create');
+    Route::get('/users/{user}/edit', fn($user) => to_route('access-control.index'))->name('users.edit');
 
     // User management write routes still back the access control modals.
     Route::post('/users', [UserController::class, 'store'])->name('users.store');

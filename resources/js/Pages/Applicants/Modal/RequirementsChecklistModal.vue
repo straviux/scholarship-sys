@@ -424,7 +424,7 @@ function onQrDragEnd() {
                                     <div style="flex: 1; min-width: 0; margin-left: 10px;">
                                         <div class="req-name" style="font-size: 14px; font-weight: 500;">{{
                                             requirement.name
-                                        }}</div>
+                                            }}</div>
                                         <!-- File status -->
                                         <div v-if="requirement.is_submitted && requirement.file_name"
                                             style="font-size: 11px; color: #34C759; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
@@ -518,7 +518,7 @@ function onQrDragEnd() {
                             </div>
                             <div style="font-size: 12px; color: #6D6D72; margin-top: 4px;">
                                 Scan this QR code on your mobile device to upload <strong>{{ qrModalRequirement?.name
-                                    }}</strong>.
+                                }}</strong>.
                             </div>
                         </div>
                     </div>
