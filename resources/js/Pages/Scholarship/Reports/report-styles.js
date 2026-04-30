@@ -1,14 +1,74 @@
+import { PAPER_SIZES } from '@/Pages/FundTransactions/Pdf/pdf-styles';
+
+const REPORT_MARGINS_MM = {
+	top: 10,
+	right: 10,
+	bottom: 14,
+	left: 10,
+};
+
+const REPORT_PAPER_KEYS = {
+	A4: {
+		portrait: 'a4',
+		landscape: 'a4-landscape',
+	},
+	Letter: {
+		portrait: 'letter',
+		landscape: 'letter-landscape',
+	},
+	Legal: {
+		portrait: 'long',
+		landscape: 'landscape',
+	},
+};
+
+const PX_TO_MM = 25.4 / 96;
+
+export function getReportPaperConfig(paperSize = 'A4', orientation = 'landscape') {
+	const paperKey = REPORT_PAPER_KEYS[paperSize]?.[orientation] || 'a4-landscape';
+	const paper = PAPER_SIZES[paperKey] || PAPER_SIZES['a4-landscape'];
+	const widthMm = Number((paper.w * PX_TO_MM).toFixed(2));
+	const heightMm = Number((paper.h * PX_TO_MM).toFixed(2));
+	const printableHeightMm = Number(
+		(heightMm - REPORT_MARGINS_MM.top - REPORT_MARGINS_MM.bottom).toFixed(2),
+	);
+
+	return {
+		key: paperKey,
+		cssPageSize: paper.cssSize,
+		widthPx: paper.w,
+		heightPx: paper.h,
+		widthMm,
+		heightMm,
+		printableHeightMm,
+		marginsMm: REPORT_MARGINS_MM,
+	};
+}
+
 /**
  * Report Print CSS
  * ─────────────────────────────────────────────────
  * Minimal, clean CSS for scholarship report templates.
  * Designed for client-side rendering via renderVueTemplate → iframe/print.
- *
- * @param {string} pageSize — CSS @page size value, e.g. '210mm 297mm' or '297mm 210mm'
- * @returns {string} — complete CSS string
  */
-export function getReportCss(pageSize = '297mm 210mm') {
-	return CSS_TEMPLATE.replace(/\{\{PAGE_SIZE\}\}/g, pageSize);
+export function getReportCss(pageConfig = getReportPaperConfig()) {
+	const config =
+		typeof pageConfig === 'string'
+			? {
+					cssPageSize: pageConfig,
+					heightMm: 210,
+					printableHeightMm: 186,
+					marginsMm: REPORT_MARGINS_MM,
+			  }
+			: pageConfig;
+
+	return CSS_TEMPLATE.replace(/\{\{PAGE_SIZE\}\}/g, config.cssPageSize)
+		.replace(/\{\{PAGE_HEIGHT_MM\}\}/g, String(config.heightMm))
+		.replace(/\{\{PRINTABLE_HEIGHT_MM\}\}/g, String(config.printableHeightMm))
+		.replace(/\{\{MARGIN_TOP_MM\}\}/g, String(config.marginsMm.top))
+		.replace(/\{\{MARGIN_RIGHT_MM\}\}/g, String(config.marginsMm.right))
+		.replace(/\{\{MARGIN_BOTTOM_MM\}\}/g, String(config.marginsMm.bottom))
+		.replace(/\{\{MARGIN_LEFT_MM\}\}/g, String(config.marginsMm.left));
 }
 
 const CSS_TEMPLATE = `
@@ -20,14 +80,13 @@ body {
   font-size: 9pt;
   color: #000;
   background: #fff;
-  padding: 8mm 10mm;
   line-height: 1.4;
   counter-reset: page;
 }
 
 @page {
   size: {{PAGE_SIZE}};
-  margin: 10mm 10mm 14mm 10mm;
+  margin: {{MARGIN_TOP_MM}}mm {{MARGIN_RIGHT_MM}}mm {{MARGIN_BOTTOM_MM}}mm {{MARGIN_LEFT_MM}}mm;
   @bottom-right {
     content: "Page " counter(page) " of " counter(pages);
     font-family: Arial, Helvetica, sans-serif;
@@ -40,6 +99,17 @@ body {
   body { padding: 0; }
   .no-print { display: none !important; }
   .page-break { page-break-before: always; }
+  .report-page {
+    min-height: {{PRINTABLE_HEIGHT_MM}}mm;
+    padding: 0;
+  }
+}
+
+.report-page {
+  min-height: {{PAGE_HEIGHT_MM}}mm;
+  padding: {{MARGIN_TOP_MM}}mm {{MARGIN_RIGHT_MM}}mm {{MARGIN_BOTTOM_MM}}mm {{MARGIN_LEFT_MM}}mm;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Report Header ─────────────────────────── */
@@ -223,7 +293,7 @@ body {
   color: #888;
   border-top: 0.5pt solid #ccc;
   padding-top: 4pt;
-  margin-top: 8pt;
+  margin-top: auto;
 }
 
 /* ── JPM Highlight ─────────────────────────── */
@@ -243,6 +313,8 @@ body {
 
 .status-pending     { background: #FEF3C7; color: #92400E; border-color: #F59E0B; }
 .status-interviewed { background: #EEF2FF; color: #3730A3; border-color: #6366F1; }
+.status-approved_history { background: #DBEAFE; color: #1E40AF; border-color: #3B82F6; }
+.status-denied_history   { background: #FEE2E2; color: #991B1B; border-color: #EF4444; }
 .status-approved    { background: #DBEAFE; color: #1E40AF; border-color: #3B82F6; }
 .status-denied      { background: #FEE2E2; color: #991B1B; border-color: #EF4444; }
 .status-active      { background: #D1FAE5; color: #065F46; border-color: #10B981; }
@@ -364,6 +436,8 @@ body {
 
 .sum-dot-pending     { background: #F59E0B; }
 .sum-dot-interviewed { background: #6366F1; }
+.sum-dot-approved_history { background: #3B82F6; }
+.sum-dot-denied_history   { background: #EF4444; }
 .sum-dot-approved    { background: #3B82F6; }
 .sum-dot-denied      { background: #EF4444; }
 .sum-dot-active      { background: #10B981; }
@@ -412,6 +486,8 @@ body {
 
 .sum-bar-pending     { background: #F59E0B; }
 .sum-bar-interviewed { background: #6366F1; }
+.sum-bar-approved_history { background: #3B82F6; }
+.sum-bar-denied_history   { background: #EF4444; }
 .sum-bar-approved    { background: #3B82F6; }
 .sum-bar-denied      { background: #EF4444; }
 .sum-bar-active      { background: #10B981; }

@@ -79,7 +79,7 @@
                                 <span class="text-sm text-gray-600">Approved:</span>
                                 <div class="font-medium text-green-600">{{ getStatusCount('approved') +
                                     getStatusCount('active')
-                                    }}</div>
+                                }}</div>
                             </div>
                             <div>
                                 <span class="text-sm text-gray-600">Pending:</span>
@@ -118,12 +118,12 @@
                                 </div>
                                 <div>
                                     <h5 class="font-semibold text-gray-800">{{ record.program?.name || 'Unknown Program'
-                                        }}</h5>
+                                    }}</h5>
                                     <p class="text-sm text-gray-600">{{ record.program?.shortname || '' }}</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-3">
-                                <Chip :label="record.unified_status"
+                                <Chip :label="formatStatusLabel(record.unified_status)"
                                     :severity="getStatusSeverity(record.unified_status)" />
                                 <AppButton icon="clipboard-check" severity="success" size="small" rounded outlined
                                     v-tooltip.top="'Review Application'" @click="reviewApplication(record)" />
@@ -263,6 +263,10 @@ const getStatusSeverity = (unifiedStatus) => {
         default:
             return 'secondary';
     }
+};
+
+const formatStatusLabel = (unifiedStatus) => {
+    return unifiedStatus === 'approved' ? 'Active' : unifiedStatus;
 };
 
 const formatDate = (date) => {

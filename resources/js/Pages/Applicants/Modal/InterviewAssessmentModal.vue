@@ -2,8 +2,8 @@
 import { ref, watch, computed, onBeforeUnmount } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
+import InterviewAssessmentForm from '@/Components/forms/InterviewAssessmentForm.vue';
 import { toast } from 'vue3-toastify';
-import { useSystemOptions } from '@/composables/useSystemOptions';
 
 const props = defineProps({
     modelValue: Boolean,
@@ -31,8 +31,31 @@ const submitting = ref(false);
 const errors = ref({});
 const page = usePage();
 const currentUser = computed(() => page.props.auth?.user ?? null);
+const applicantScholarshipGrant = computed(() => props.applicant?.scholarship_grant?.[0] ?? null);
+const applicantDisplayName = computed(() => {
+    if (!props.applicant) {
+        return 'N/A';
+    }
+
+    return `${props.applicant.last_name || 'N/A'}, ${props.applicant.first_name || 'N/A'}`;
+});
+
+const applicantDisplaySubtitle = computed(() => {
+    const program = form.value?.program || applicantScholarshipGrant.value?.program || props.applicant?.program || null;
+    const course = form.value?.course || applicantScholarshipGrant.value?.course || props.applicant?.course || null;
+    const programLabel = program?.shortname || program?.name || 'N/A';
+    const courseLabel = course?.shortname || course?.name || 'N/A';
+
+    return `${programLabel} - ${courseLabel}`;
+});
 
 const form = ref({
+    program: null,
+    course: null,
+    school: null,
+    year_level: null,
+    term: null,
+    academic_year: null,
     academic_potential: null,
     financial_need_level: null,
     communication_skills: null,
@@ -43,8 +66,6 @@ const form = ref({
     endorsed_by: '',
     interview_remarks: '',
 });
-
-const grantProvisionRaw = useSystemOptions('grant_provision');
 
 const formatDateForPicker = (value) => {
     if (!value) return null;
@@ -98,29 +119,21 @@ const resolveInterviewerId = (...candidateIds) => {
     return candidateIds.find((candidateId) => interviewerOptions.value.some((option) => option.id === candidateId)) || null;
 };
 
-const academicPotentialOptions = [
-    { label: 'Excellent', value: 'excellent' },
-    { label: 'Good', value: 'good' },
-    { label: 'Fair', value: 'fair' },
-];
+const extractOptionId = (value) => {
+    if (value && typeof value === 'object') {
+        return value.id ?? null;
+    }
 
-const financialNeedOptions = [
-    { label: 'High', value: 'high' },
-    { label: 'Moderate', value: 'moderate' },
-    { label: 'Low', value: 'low' },
-];
+    return value || null;
+};
 
-const communicationSkillsOptions = [
-    { label: 'Excellent', value: 'excellent' },
-    { label: 'Good', value: 'good' },
-    { label: 'Fair', value: 'fair' },
-];
+const extractOptionValue = (value) => {
+    if (value && typeof value === 'object') {
+        return value.value ?? value.label ?? null;
+    }
 
-const recommendationOptions = [
-    { label: 'For Approval', value: 'recommended' },
-    { label: 'For Further Evaluation', value: 'further_evaluation' },
-    { label: 'Not Recommended', value: 'not_recommended' },
-];
+    return value || null;
+};
 
 watch(() => props.modelValue, (val) => {
     visible.value = val;
@@ -132,11 +145,17 @@ watch(visible, (val) => {
 });
 
 const createFormState = () => ({
+    program: props.initialValues?.program || applicantScholarshipGrant.value?.program || props.applicant?.program || null,
+    course: props.initialValues?.course || applicantScholarshipGrant.value?.course || props.applicant?.course || null,
+    school: props.initialValues?.school || applicantScholarshipGrant.value?.school || props.applicant?.school || null,
+    year_level: props.initialValues?.year_level || applicantScholarshipGrant.value?.year_level || props.applicant?.year_level || null,
+    term: props.initialValues?.term || applicantScholarshipGrant.value?.term || props.applicant?.term || null,
+    academic_year: props.initialValues?.academic_year || applicantScholarshipGrant.value?.academic_year || props.applicant?.academic_year || null,
     academic_potential: props.initialValues?.academic_potential || null,
     financial_need_level: props.initialValues?.financial_need_level || null,
     communication_skills: props.initialValues?.communication_skills || null,
     recommendation: props.initialValues?.recommendation || null,
-    grant_provision: props.initialValues?.grant_provision || null,
+    grant_provision: props.initialValues?.grant_provision || applicantScholarshipGrant.value?.grant_provision || null,
     interview_date: formatDateForPicker(props.initialValues?.interview_date || props.initialValues?.interviewed_at)
         || new Date(),
     interviewer_id: resolveInterviewerId(
@@ -163,6 +182,12 @@ const close = () => {
 
 const validate = () => {
     const errs = {};
+    if (!extractOptionId(form.value.program)) errs.program_id = 'Please select program.';
+    if (!extractOptionId(form.value.course)) errs.course_id = 'Please select course.';
+    if (!extractOptionId(form.value.school)) errs.school_id = 'Please select school.';
+    if (!extractOptionValue(form.value.year_level)) errs.year_level = 'Please select year level.';
+    if (!extractOptionValue(form.value.term)) errs.term = 'Please select term.';
+    if (!extractOptionValue(form.value.academic_year)) errs.academic_year = 'Please select academic year.';
     if (!form.value.academic_potential) errs.academic_potential = 'Please select academic potential.';
     if (!form.value.financial_need_level) errs.financial_need_level = 'Please select financial need level.';
     if (!form.value.communication_skills) errs.communication_skills = 'Please select communication skills.';
@@ -173,69 +198,45 @@ const validate = () => {
     return Object.keys(errs).length === 0;
 };
 
-const selectedProgramCode = computed(() => {
-    return props.applicant?.scholarship_grant?.[0]?.program?.shortname
-        || props.applicant?.program?.shortname
-        || null;
-});
-
-const grantProvisionOptions = computed(() => {
-    if (!selectedProgramCode.value) {
-        return [];
-    }
-
-    return grantProvisionRaw.value
-        .filter((option) => !option.program || option.program === selectedProgramCode.value)
-        .map((option) => ({
-            ...option,
-            label: option.label || option.value,
-        }));
-});
-
-const grantProvisionPlaceholder = computed(() => {
-    if (!selectedProgramCode.value) {
-        return 'Program not available';
-    }
-
-    if (!grantProvisionOptions.value.length) {
-        return 'No grant provision available';
-    }
-
-    return 'Select grant provision';
-});
-
-const grantProvisionHint = computed(() => {
-    if (!selectedProgramCode.value) {
-        return 'Grant provision options require a program on the scholarship record.';
-    }
-
-    if (!grantProvisionOptions.value.length) {
-        return `No grant provision options are configured for ${selectedProgramCode.value}.`;
-    }
-
-    return `Grant provision options are filtered for ${selectedProgramCode.value}.`;
-});
-
-watch(
-    () => [selectedProgramCode.value, grantProvisionOptions.value.map((option) => option.value).join('|')],
-    () => {
-        const currentGrantProvision = form.value.grant_provision;
-
-        if (!selectedProgramCode.value) {
-            form.value.grant_provision = null;
-            delete errors.value.grant_provision;
-            return;
-        }
-
-        if (currentGrantProvision && !grantProvisionOptions.value.some((option) => option.value === currentGrantProvision)) {
-            form.value.grant_provision = null;
-        }
-    }
-);
-
 watch(() => form.value.grant_provision, () => {
     if (errors.value.grant_provision) {
         delete errors.value.grant_provision;
+    }
+});
+
+watch(() => extractOptionId(form.value.program), (value) => {
+    if (value && errors.value.program_id) {
+        delete errors.value.program_id;
+    }
+});
+
+watch(() => extractOptionId(form.value.course), (value) => {
+    if (value && errors.value.course_id) {
+        delete errors.value.course_id;
+    }
+});
+
+watch(() => extractOptionId(form.value.school), (value) => {
+    if (value && errors.value.school_id) {
+        delete errors.value.school_id;
+    }
+});
+
+watch(() => extractOptionValue(form.value.year_level), (value) => {
+    if (value && errors.value.year_level) {
+        delete errors.value.year_level;
+    }
+});
+
+watch(() => extractOptionValue(form.value.term), (value) => {
+    if (value && errors.value.term) {
+        delete errors.value.term;
+    }
+});
+
+watch(() => extractOptionValue(form.value.academic_year), (value) => {
+    if (value && errors.value.academic_year) {
+        delete errors.value.academic_year;
     }
 });
 
@@ -278,6 +279,12 @@ const submitAssessment = async () => {
         : `/api/scholarship/${props.recordId}/interview`;
     const payload = {
         ...form.value,
+        program_id: extractOptionId(form.value.program),
+        course_id: extractOptionId(form.value.course),
+        school_id: extractOptionId(form.value.school),
+        year_level: extractOptionValue(form.value.year_level),
+        term: extractOptionValue(form.value.term),
+        academic_year: extractOptionValue(form.value.academic_year),
         interview_date: formatDateForBackend(form.value.interview_date),
         endorsed_by: form.value.endorsed_by?.trim() || null,
     };
@@ -305,7 +312,7 @@ const submitAssessment = async () => {
 const dragOffset = ref({ x: 0, y: 0 });
 const dragStart = ref(null);
 const modalStyle = computed(() => ({
-    width: '600px',
+    width: 'min(680px, 96vw)',
     transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
 }));
 
@@ -349,198 +356,9 @@ onBeforeUnmount(() => {
 
                 <!-- Body -->
                 <div class="ios-body" v-if="applicant">
-                    <!-- Applicant Info -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">
-                            <AppIcon name="user" :size="16" style="color: #007AFF; margin-right: 8px;" />
-                            Applicant Information
-                        </div>
-                        <div class="ios-card">
-                            <div class="ios-row">
-                                <span class="ios-row-label applicant-name">{{ applicant.last_name }}, {{
-                                    applicant.first_name }}</span>
-                            </div>
-                            <div class="ios-row ios-row-last">
-                                <span class="ios-row-label applicant-sub">
-                                    {{ applicant.scholarship_grant?.[0]?.program?.shortname }} — {{
-                                        applicant.scholarship_grant?.[0]?.course?.shortname }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="ios-section">
-                        <div class="ios-section-label">
-                            <AppIcon name="calendar-days" :size="16" style="color: #8E8E93; margin-right: 8px;" />
-                            Interview Details
-                        </div>
-                        <div class="ios-card" style="overflow: visible;">
-                            <div class="ios-row">
-                                <span class="ios-row-label">Interview Date</span>
-                                <div class="ios-row-control ios-select">
-                                    <DatePicker v-model="form.interview_date" showIcon showButtonBar class="w-full"
-                                        dateFormat="M dd, yy" placeholder="Select date" />
-                                </div>
-                            </div>
-                            <div class="ios-row ios-row-stacked" style="gap: 8px; align-items: stretch;">
-                                <span class="ios-row-label">Interviewer</span>
-                                <Select v-model="form.interviewer_id" :options="interviewerOptions" optionLabel="name"
-                                    class="w-[200px]" optionValue="id" placeholder="Select interviewer" filter
-                                    autoFilterFocus :filterFields="['name']" :disabled="!interviewerOptions.length" />
-                            </div>
-                            <div class="ios-row ios-row-stacked ios-row-last" style="gap: 8px; align-items: stretch;">
-                                <span class="ios-row-label">Endorsed By</span>
-                                <InputText v-model="form.endorsed_by" class="w-[200px]"
-                                    placeholder="Enter endorser name" maxlength="255" />
-                            </div>
-                        </div>
-                        <div v-if="errors.interview_date" class="ios-section-footer ios-error">{{
-                            errors.interview_date }}</div>
-                        <div v-if="errors.interviewer_id" class="ios-section-footer ios-error">{{
-                            errors.interviewer_id }}</div>
-                        <div v-if="errors.endorsed_by" class="ios-section-footer ios-error">{{
-                            errors.endorsed_by }}</div>
-                    </div>
-
-                    <!-- Academic Potential -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">
-                            <AppIcon name="graduation-cap" :size="16" style="color: #007AFF; margin-right: 8px;" />
-                            Academic Potential
-                        </div>
-                        <div class="ios-segmented-control">
-                            <button v-for="option in academicPotentialOptions" :key="option.value" type="button"
-                                :class="['ios-segment', form.academic_potential === option.value && 'ios-segment-active']"
-                                @click="form.academic_potential = option.value">
-                                <span>{{ option.label }}</span>
-                                <span
-                                    style="width: 16px; height: 13px; display: inline-flex; align-items: center; justify-content: center;">
-                                    <transition name="fade-scale">
-                                        <AppIcon v-if="form.academic_potential === option.value" name="check"
-                                            :size="14" />
-                                    </transition>
-                                </span>
-                            </button>
-                        </div>
-                        <div v-if="errors.academic_potential" class="ios-section-footer ios-error">{{
-                            errors.academic_potential }}</div>
-                    </div>
-
-                    <!-- Financial Need -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">
-                            <AppIcon name="wallet" :size="16" style="color: #34C759; margin-right: 8px;" />
-                            Financial Need
-                        </div>
-                        <div class="ios-segmented-control">
-                            <button v-for="option in financialNeedOptions" :key="option.value" type="button"
-                                :class="['ios-segment', form.financial_need_level === option.value && 'ios-segment-active']"
-                                @click="form.financial_need_level = option.value">
-                                <span>{{ option.label }}</span>
-                                <span
-                                    style="width: 16px; height: 13px; display: inline-flex; align-items: center; justify-content: center;">
-                                    <transition name="fade-scale">
-                                        <AppIcon v-if="form.financial_need_level === option.value" name="check"
-                                            :size="14" />
-                                    </transition>
-                                </span>
-                            </button>
-                        </div>
-                        <div v-if="errors.financial_need_level" class="ios-section-footer ios-error">{{
-                            errors.financial_need_level }}</div>
-                    </div>
-
-                    <!-- Communication Skills -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">
-                            <AppIcon name="comments" :size="16" style="color: #FF9500; margin-right: 8px;" />
-                            Communication Skills
-                        </div>
-                        <div class="ios-segmented-control">
-                            <button v-for="option in communicationSkillsOptions" :key="option.value" type="button"
-                                :class="['ios-segment', form.communication_skills === option.value && 'ios-segment-active']"
-                                @click="form.communication_skills = option.value">
-                                <span>{{ option.label }}</span>
-                                <span
-                                    style="width: 16px; height: 13px; display: inline-flex; align-items: center; justify-content: center;">
-                                    <transition name="fade-scale">
-                                        <AppIcon v-if="form.communication_skills === option.value" name="check"
-                                            :size="14" />
-                                    </transition>
-                                </span>
-                            </button>
-                        </div>
-                        <div v-if="errors.communication_skills" class="ios-section-footer ios-error">{{
-                            errors.communication_skills }}</div>
-                    </div>
-
-                    <!-- Recommendation -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">
-                            <AppIcon name="thumbs-up" :size="16" style="color: #5856D6; margin-right: 8px;" />
-                            Recommendation
-                        </div>
-                        <div class="ios-segmented-control">
-                            <button v-for="option in recommendationOptions" :key="option.value" type="button"
-                                :class="['ios-segment', form.recommendation === option.value && 'ios-segment-active']"
-                                @click="form.recommendation = option.value">
-                                <span>{{ option.label }}</span>
-                                <span
-                                    style="width: 16px; height: 13px; display: inline-flex; align-items: center; justify-content: center;">
-                                    <transition name="fade-scale">
-                                        <AppIcon v-if="form.recommendation === option.value" name="check" :size="14" />
-                                    </transition>
-                                </span>
-                            </button>
-                        </div>
-                        <div v-if="errors.recommendation" class="ios-section-footer ios-error">{{ errors.recommendation
-                        }}</div>
-                    </div>
-
-                    <!-- Grant Provision -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">
-                            <AppIcon name="wallet" :size="16" style="color: #007AFF; margin-right: 8px;" />
-                            Grant Provision
-                        </div>
-                        <div class="ios-card" style="padding: 10px 16px; overflow: visible;">
-                            <Select v-model="form.grant_provision" :options="grantProvisionOptions" optionLabel="label"
-                                optionValue="value" :placeholder="grantProvisionPlaceholder" class="w-full"
-                                :disabled="!selectedProgramCode || !grantProvisionOptions.length" showClear />
-                        </div>
-                        <div v-if="grantProvisionHint && !errors.grant_provision" class="ios-section-footer">
-                            {{ grantProvisionHint }}
-                        </div>
-                        <div v-if="errors.grant_provision" class="ios-section-footer ios-error">
-                            {{ errors.grant_provision }}
-                        </div>
-                    </div>
-
-                    <!-- Remarks -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">
-                            <AppIcon name="pencil" :size="16" style="color: #FF3B30; margin-right: 8px;" />
-                            Remarks
-                        </div>
-                        <div class="ios-card">
-                            <Editor v-model="form.interview_remarks" editorStyle="height: 120px">
-                                <template #toolbar>
-                                    <span class="ql-formats">
-                                        <button type="button" class="ql-bold"></button>
-                                        <button type="button" class="ql-italic"></button>
-                                        <button type="button" class="ql-underline"></button>
-                                    </span>
-                                    <span class="ql-formats">
-                                        <button type="button" class="ql-list" value="ordered"></button>
-                                        <button type="button" class="ql-list" value="bullet"></button>
-                                    </span>
-                                    <span class="ql-formats">
-                                        <button type="button" class="ql-clean"></button>
-                                    </span>
-                                </template>
-                            </Editor>
-                        </div>
-                    </div>
+                    <InterviewAssessmentForm :subject-name="applicantDisplayName"
+                        :subject-subtitle="applicantDisplaySubtitle" :form="form" :errors="errors"
+                        :interviewers="props.interviewers" />
 
                     <div style="height: 20px;"></div>
                 </div>

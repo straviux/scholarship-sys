@@ -7,13 +7,12 @@
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
                     <button class="ios-nav-btn ios-nav-cancel" @click="step > 1 ? step-- : close()">
                         <AppIcon :name="step > 1 ? 'chevron-left' : 'x'" :size="16" />
-                        {{ step > 1 ? 'Back' : '' }}
                     </button>
                     <span class="ios-nav-title">
                         {{ stepTitles[step - 1] }}
                     </span>
                     <button v-if="step < 3" class="ios-nav-btn ios-nav-action" @click="step++" :disabled="!canProceed">
-                        Next
+                        <AppIcon name="chevron-right" :size="16" />
                     </button>
                     <button v-else class="ios-nav-btn ios-nav-action" @click="generateReport" :disabled="generating"
                         v-tooltip.bottom="'Generate Report'">
@@ -65,9 +64,7 @@
                                 </div>
                             </div>
                             <div class="ios-section-footer">
-                                Choose a status to generate a report specific to that category, or "All Statuses" for a
-                                comprehensive
-                                report.
+                                Choose a status, or "All Statuses" for a comprehensive report.
                             </div>
                         </div>
                     </div>
@@ -211,6 +208,20 @@
                                             optionValue="value" class="ios-select" />
                                     </div>
                                 </div>
+
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <AppIcon name="user" :size="13" style="color: #34C759;" />
+                                        Prepared By
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <InputText v-model="preparedBy" class="ios-select"
+                                            placeholder="Enter preparer name" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ios-section-footer">
+                                The prepared-by line defaults to the logged in user.
                             </div>
                         </div>
 
@@ -257,119 +268,25 @@
                             </div>
                         </div>
 
-                        <div class="ios-section" v-if="reportType === 'list'">
-                            <div class="ios-section-label">Display Options</div>
-                            <div class="ios-card">
-                                <!-- Sequence Numbers -->
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="hashtag" :size="13" style="color: #007AFF;" />
-                                        Sequence Numbers
-                                    </div>
-                                    <div>
-                                        <ToggleSwitch v-model="showSequenceNumbers" size="small" />
-                                    </div>
-                                </div>
-
-                                <!-- Include Remarks -->
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="comment" :size="13" style="color: #FF9500;" />
-                                        Include Remarks
-                                    </div>
-                                    <div>
-                                        <ToggleSwitch v-model="includeRemarks" size="small" />
-                                    </div>
-                                </div>
-
-                                <!-- Include Grant Provision -->
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="wallet" :size="13" style="color: #34C759;" />
-                                        Grant Provision
-                                    </div>
-                                    <div>
-                                        <ToggleSwitch v-model="includeGrantProvision" size="small" />
-                                    </div>
-                                </div>
-
-                                <!-- JPM Highlighting -->
-                                <div class="ios-row" v-if="canEnableJpmHighlighting">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="highlight" :size="13" style="color: #34C759;" />
-                                        JPM Highlighting
-                                    </div>
-                                    <div>
-                                        <ToggleSwitch v-model="enableJpmHighlighting" size="small" />
-                                    </div>
-                                </div>
-
-                                <!-- JPM Filter -->
-                                <div class="ios-row" v-if="canEnableJpmHighlighting && enableJpmHighlighting">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="filter" :size="13" style="color: #8E8E93;" />
-                                        JPM Filter
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <Select v-model="jpmFilter" :options="jpmFilterOptions" optionLabel="label"
-                                            optionValue="value" class="ios-select" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="ios-section-footer">
-                                Configure what details to include in the report.
-                            </div>
-                        </div>
-
-                        <!-- Summary: Breakdown Axes -->
                         <div class="ios-section" v-if="reportType === 'summary'">
-                            <div class="ios-section-label">Summary Breakdown</div>
+                            <div class="ios-section-label">Summary Layout</div>
                             <div class="ios-card">
-                                <!-- Primary Axis -->
                                 <div class="ios-row">
                                     <div class="ios-row-label">
                                         <AppIcon name="bar-chart-3" :size="13" style="color: #5856D6;" />
-                                        Primary Axis
+                                        Fixed Summary Blocks
                                     </div>
-                                    <div class="ios-row-control">
-                                        <Select v-model="groupBy" :options="groupByOptions" optionLabel="label"
-                                            optionValue="value" class="ios-select" />
-                                    </div>
-                                </div>
-
-                                <!-- Secondary Axis -->
-                                <div class="ios-row" v-if="groupBy && groupBy !== 'none'">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="objects-column" :size="13" style="color: #8E8E93;" />
-                                        Secondary Axis
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <Select v-model="groupBySecondary" :options="secondaryGroupByOptions"
-                                            optionLabel="label" optionValue="value" placeholder="None" showClear
-                                            class="ios-select" />
-                                    </div>
-                                </div>
-
-                                <!-- Tertiary Axis -->
-                                <div class="ios-row" v-if="groupBySecondary && groupBySecondary !== 'none'">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="objects-column" :size="13" style="color: #C7C7CC;" />
-                                        3rd Axis
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <Select v-model="groupByTertiary" :options="tertiaryGroupByOptions"
-                                            optionLabel="label" optionValue="value" placeholder="None" showClear
-                                            class="ios-select" />
+                                    <div class="ios-row-control" style="justify-content: flex-end; color: #8E8E93;">
+                                        By Status · By Program
                                     </div>
                                 </div>
                             </div>
                             <div class="ios-section-footer">
-                                Choose how to break down the summary counts.
+                                Summary mode follows the interviewed-applicants layout with fixed side-by-side
+                                breakdowns.
                             </div>
                         </div>
                     </div>
-
-                    <!-- Bottom spacer -->
                     <div style="height: 24px;"></div>
                 </div>
 
@@ -449,7 +366,7 @@ import AppIcon from '@/Components/ui/AppIcon.vue';
 import { useSystemOptions } from '@/composables/useSystemOptions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { renderVueTemplate } from '@/composables/usePdfPrint';
-import { getReportCss } from '@/Pages/Scholarship/Reports/report-styles';
+import { getReportCss, getReportPaperConfig } from '@/Pages/Scholarship/Reports/report-styles';
 
 // Custom Select Components
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
@@ -458,18 +375,7 @@ import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 
-// Report Templates
-import AllStatusReport from '@/Pages/Scholarship/Reports/AllStatusReport.vue';
-import PendingReport from '@/Pages/Scholarship/Reports/PendingReport.vue';
-import InterviewedReport from '@/Pages/Scholarship/Reports/InterviewedReport.vue';
-import ApprovedReport from '@/Pages/Scholarship/Reports/ApprovedReport.vue';
-import DeniedReport from '@/Pages/Scholarship/Reports/DeniedReport.vue';
-import ActiveReport from '@/Pages/Scholarship/Reports/ActiveReport.vue';
-import CompletedReport from '@/Pages/Scholarship/Reports/CompletedReport.vue';
-import WithdrawnReport from '@/Pages/Scholarship/Reports/WithdrawnReport.vue';
-import LoaReport from '@/Pages/Scholarship/Reports/LoaReport.vue';
-import SuspendedReport from '@/Pages/Scholarship/Reports/SuspendedReport.vue';
-import SummaryReport from '@/Pages/Scholarship/Reports/SummaryReport.vue';
+import ProfileReportTemplate from '@/Pages/Scholarship/Reports/ProfileReportTemplate.vue';
 
 const props = defineProps({
     show: Boolean,
@@ -482,7 +388,7 @@ const step = ref(1);
 const generating = ref(false);
 const showPreview = ref(false);
 const previewHtml = ref('');
-const zoomLevel = ref(80);
+const zoomLevel = ref(130);
 
 // Step 1
 const reportType = ref('list');
@@ -513,6 +419,7 @@ const jpmFilter = ref('all');
 // ─── Composables ───
 const page = usePage();
 const currentUser = computed(() => page.props.auth.user);
+const preparedBy = ref(currentUser.value?.name || '');
 const { statusOptions, getStatusConfig } = useScholarshipStatus();
 
 const canEnableJpmHighlighting = computed(() => {
@@ -531,8 +438,8 @@ const statusChoices = computed(() => {
         { value: null, label: 'All Statuses', color: null },
         { value: 'pending', label: 'Pending', color: '#F59E0B' },
         { value: 'interviewed', label: 'Interviewed', color: '#6366F1' },
-        { value: 'approved', label: 'Approved', color: '#3B82F6' },
-        { value: 'denied', label: 'Denied', color: '#EF4444' },
+        { value: 'approved_history', label: 'Approved', color: '#3B82F6' },
+        { value: 'denied_history', label: 'Denied', color: '#EF4444' },
         { value: 'active', label: 'Active', color: '#10B981' },
         { value: 'completed', label: 'Completed', color: '#6B7280' },
         { value: 'withdrawn', label: 'Withdrawn', color: '#8B5CF6' },
@@ -610,33 +517,9 @@ const activeFiltersCount = computed(() => {
     return count;
 });
 
-// Paper dimensions for preview (in px @ 96 dpi)
-const pageDimensions = computed(() => {
-    const sizes = {
-        A4: { w: 794, h: 1123 },
-        Letter: { w: 816, h: 1056 },
-        Legal: { w: 816, h: 1344 },
-    };
-    const s = sizes[paperSize.value] || sizes.A4;
-    return orientation.value === 'landscape' ? { w: s.h, h: s.w } : s;
-});
-
-const iframeWidth = computed(() => pageDimensions.value.w);
-const iframeHeight = computed(() => pageDimensions.value.h);
-
-// ─── Template map ───
-const templateMap = {
-    null: AllStatusReport,
-    pending: PendingReport,
-    interviewed: InterviewedReport,
-    approved: ApprovedReport,
-    denied: DeniedReport,
-    active: ActiveReport,
-    completed: CompletedReport,
-    withdrawn: WithdrawnReport,
-    loa: LoaReport,
-    suspended: SuspendedReport,
-};
+const paperConfig = computed(() => getReportPaperConfig(paperSize.value, orientation.value));
+const iframeWidth = computed(() => paperConfig.value.widthPx);
+const iframeHeight = computed(() => paperConfig.value.heightPx);
 
 // ─── Methods ───
 function close() {
@@ -706,6 +589,8 @@ async function generateReport() {
                 includeGrantProvision: includeGrantProvision.value,
                 enableJpmHighlighting: enableJpmHighlighting.value,
                 jpmFilter: jpmFilter.value,
+                selectedStatus: selectedStatus.value,
+                preparedBy: preparedBy.value?.trim() || currentUser.value?.name || '',
                 groupBy: groupBy.value,
                 groupBySecondary: groupBySecondary.value !== 'none' ? groupBySecondary.value : null,
                 groupByTertiary: groupByTertiary.value !== 'none' ? groupByTertiary.value : null,
@@ -714,19 +599,13 @@ async function generateReport() {
         };
 
         // Pick template
-        let TemplateComponent;
-        if (reportType.value === 'summary') {
-            TemplateComponent = SummaryReport;
-        } else {
-            TemplateComponent = templateMap[selectedStatus.value] || AllStatusReport;
-        }
+        const TemplateComponent = ProfileReportTemplate;
 
         // Render to HTML
         const bodyHtml = renderVueTemplate(TemplateComponent, templateProps);
 
         // Build full document
-        const cssSize = getCssPageSize();
-        const fullHtml = buildReportDoc(bodyHtml, getReportTitle(), cssSize);
+        const fullHtml = buildReportDoc(bodyHtml, getReportTitle(), paperConfig.value);
 
         previewHtml.value = fullHtml;
         showPreview.value = true;
@@ -763,23 +642,13 @@ function getReportTitle() {
     return `${statusLabel} — Detailed List`;
 }
 
-function getCssPageSize() {
-    const sizes = { A4: '210mm 297mm', Letter: '8.5in 11in', Legal: '8.5in 14in' };
-    const size = sizes[paperSize.value] || sizes.A4;
-    if (orientation.value === 'landscape') {
-        const [w, h] = size.split(' ');
-        return `${h} ${w}`;
-    }
-    return size;
-}
-
-function buildReportDoc(bodyHtml, title, cssPageSize) {
+function buildReportDoc(bodyHtml, title, paperSettings) {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>${title}</title>
-  <style>${getReportCss(cssPageSize)}</style>
+    <style>${getReportCss(paperSettings)}</style>
 </head>
 <body>${bodyHtml}</body>
 </html>`;
@@ -804,7 +673,12 @@ watch(groupBy, v => { if (v === 'none' || v === groupBySecondary.value) { groupB
 watch(groupBySecondary, v => { if (v === 'none' || v === groupByTertiary.value) groupByTertiary.value = 'none'; });
 
 // Reset step when modal opens
-watch(() => props.show, v => { if (v) step.value = 1; });
+watch(() => props.show, v => {
+    if (v) {
+        step.value = 1;
+        preparedBy.value = currentUser.value?.name || '';
+    }
+});
 
 // ─── Drag logic (main modal) ───
 const dragOffset = ref({ x: 0, y: 0 });

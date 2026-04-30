@@ -7,7 +7,7 @@
                 <tr>
                     <th class="text-xs font-normal text-gray-500  w-[25%]">Status</th>
                     <td><span class="text-xs font-bold mb-4 uppercase"
-                            :class="profile.unified_status === 'pending' ? 'text-orange-500' : profile.unified_status === 'active' ? 'text-green-500' : profile.unified_status === 'approved' ? 'text-blue-500' : profile.unified_status === 'completed' ? 'text-yellow-500' : profile.unified_status === 'denied' ? 'text-red-500' : 'text-gray-500'">
+                            :class="profile.unified_status === 'pending' ? 'text-orange-500' : profile.unified_status === 'active' || profile.unified_status === 'approved' ? 'text-green-500' : profile.unified_status === 'completed' ? 'text-yellow-500' : profile.unified_status === 'denied' ? 'text-red-500' : 'text-gray-500'">
                             {{
                                 checkStatus(profile.unified_status)
                             }}
@@ -143,6 +143,17 @@ const checkStatus = (status) => {
             return 'Suspended';
         case 4:
             return 'Cancelled';
+        case 'pending':
+            return 'Pending';
+        case 'interviewed':
+            return 'Interviewed';
+        case 'approved':
+        case 'active':
+            return 'Active';
+        case 'completed':
+            return 'Completed';
+        case 'denied':
+            return 'Denied';
         default:
             return 'Unknown';
     }

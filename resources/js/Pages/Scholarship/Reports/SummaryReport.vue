@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { formatStatus, getGroupValue } from './report-helpers';
+import { formatStatus, getGroupValue, getReportStatus, normalizeStatus } from './report-helpers';
 
 const props = defineProps({
     records: { type: Array, default: () => [] },
@@ -13,14 +13,14 @@ const props = defineProps({
 const statusCounts = computed(() => {
     const counts = {};
     for (const rec of props.records) {
-        const s = rec.approval_status || rec.unified_status || 'unknown';
+        const s = normalizeStatus(getReportStatus(rec));
         counts[s] = (counts[s] || 0) + 1;
     }
     return counts;
 });
 
 const summaryCards = computed(() => {
-    const order = ['pending', 'interviewed', 'approved', 'denied', 'active', 'completed', 'withdrawn', 'loa', 'suspended'];
+    const order = ['pending', 'interviewed', 'approved_history', 'denied_history', 'active', 'denied', 'completed', 'withdrawn', 'loa', 'suspended'];
     return order.filter(s => statusCounts.value[s]).map(s => ({
         label: formatStatus(s), count: statusCounts.value[s], status: s,
     }));
@@ -51,7 +51,7 @@ const breakdownData = computed(() => {
         const key = getGroupValue(rec, primaryAxis.value);
         if (!grouped[key]) grouped[key] = { total: 0, byStatus: {} };
         grouped[key].total++;
-        const s = rec.approval_status || rec.unified_status || 'unknown';
+        const s = normalizeStatus(getReportStatus(rec));
         grouped[key].byStatus[s] = (grouped[key].byStatus[s] || 0) + 1;
     }
     return Object.entries(grouped)
@@ -63,7 +63,7 @@ const breakdownData = computed(() => {
 const hierarchyRows = computed(() => {
     const rows = [];
 
-    function statusOf(rec) { return rec.approval_status || rec.unified_status || 'unknown'; }
+    function statusOf(rec) { return normalizeStatus(getReportStatus(rec)); }
 
     function buildLevel(items, axis) {
         const g = {};
@@ -103,7 +103,7 @@ const activeStatuses = computed(() => {
     for (const row of hierarchyRows.value) {
         for (const s of Object.keys(row.byStatus)) all.add(s);
     }
-    const order = ['pending', 'interviewed', 'approved', 'denied', 'active', 'completed', 'withdrawn', 'loa', 'suspended'];
+    const order = ['pending', 'interviewed', 'approved_history', 'denied_history', 'approved', 'denied', 'active', 'completed', 'withdrawn', 'loa', 'suspended'];
     return order.filter(s => all.has(s));
 });
 
@@ -224,7 +224,7 @@ const maxBreakdownTotal = computed(() => {
                     <td><strong>Grand Total</strong></td>
                     <td v-for="s in activeStatuses" :key="s" class="count-col">
                         <strong>{{hierarchyRows.filter(r => r.depth === (tertiaryAxis ? 2 : secondaryAxis ? 1 :
-                            0)).reduce((sum, r) => sum + (r.byStatus[s] || 0), 0) }}</strong>
+                            0)).reduce((sum, r) => sum + (r.byStatus[s] || 0), 0)}}</strong>
                     </td>
                     <td class="count-col"><strong>{{ records.length }}</strong></td>
                 </tr>

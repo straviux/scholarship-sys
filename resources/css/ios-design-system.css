@@ -1007,21 +1007,21 @@
 }
 
 /* ── PrimeVue overrides inside iOS card ── */
-.ios-select .p-select {
-	border: none !important;
+.ios-select .p-select,
+.ios-input.p-inputtext {
+	/* border: none !important; */
 	background: transparent !important;
 	box-shadow: none !important;
 	font-size: 13px;
-	color: #8e8e93;
+	color: #555;
 	text-align: left;
-	padding: 0;
 	width: 100%;
 	max-width: 100%;
 	min-height: unset;
 }
 
 .ios-select .p-select-label {
-	color: #8e8e93 !important;
+	color: #555 !important;
 	text-align: left;
 	padding: 4px 2px 4px 8px;
 	font-size: 13px;
@@ -1035,19 +1035,26 @@
 }
 
 .ios-datepicker .p-datepicker {
-	border: none !important;
+	/* border: none !important; */
 	background: transparent !important;
 	box-shadow: none !important;
 }
 
 .ios-datepicker .p-inputtext {
-	border: none !important;
+	/* border: none !important; */
 	background: transparent !important;
 	box-shadow: none !important;
 	text-align: right;
-	color: #8e8e93;
+	color: #555;
 	font-size: 13px;
 	padding: 4px 24px 4px 8px;
+}
+
+.ios-input.p-inputtext {
+	padding: 4px 8px;
+}
+.ios-input.p-inputtext::placeholder {
+	color: #aaa;
 }
 
 .ios-modal .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {

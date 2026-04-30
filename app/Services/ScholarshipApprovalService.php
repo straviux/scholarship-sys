@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Log;
 
 class ScholarshipApprovalService
 {
+    public function __construct(
+        private readonly AcademicRecordSyncService $academicRecordSyncService
+    ) {}
+
     public function approve(ScholarshipRecord $record, User $approver, array $data = [])
     {
         $this->validateCanModify($record);
@@ -18,10 +22,10 @@ class ScholarshipApprovalService
             $oldStatus = $record->unified_status;
 
             $updateData = [
-                'unified_status' => 'approved',
+                'unified_status' => 'active',
             ];
 
-            foreach (['date_approved', 'program_id', 'course_id', 'school_id', 'year_level', 'term', 'grant_provision'] as $field) {
+            foreach (['date_approved', 'program_id', 'course_id', 'school_id', 'year_level', 'term', 'academic_year', 'grant_provision'] as $field) {
                 if (array_key_exists($field, $data)) {
                     $updateData[$field] = $data[$field];
                 }
@@ -30,6 +34,8 @@ class ScholarshipApprovalService
             $record->update($updateData);
 
             $this->createStatusHistory($record, 'approved', $oldStatus, $approver, $data['remarks'] ?? null);
+
+            $this->academicRecordSyncService->syncScholarshipRecord($record->fresh());
 
             Log::info('Scholarship approved', [
                 'record_id' => $record->id,
@@ -43,15 +49,18 @@ class ScholarshipApprovalService
     {
         $this->validateCanModify($record);
         $this->validateDeclineReason($data['reason']);
+        $historyRemarks = $this->buildDeclineHistoryRemarks($data['reason'], $data['details'] ?? null);
 
-        DB::transaction(function () use ($record, $decliner, $data) {
+        DB::transaction(function () use ($record, $decliner, $data, $historyRemarks) {
             $oldStatus = $record->unified_status;
 
             $record->update([
                 'unified_status' => 'denied',
             ]);
 
-            $this->createStatusHistory($record, 'declined', $oldStatus, $decliner, $data['details'] ?? null);
+            $this->createStatusHistory($record, 'declined', $oldStatus, $decliner, $historyRemarks);
+
+            $this->academicRecordSyncService->syncScholarshipRecord($record->fresh());
 
             Log::info('Scholarship declined', [
                 'record_id' => $record->id,
@@ -257,6 +266,17 @@ class ScholarshipApprovalService
         if (!in_array($reason, $validReasons)) {
             throw new \InvalidArgumentException("Invalid decline reason: {$reason}");
         }
+    }
+
+    private function buildDeclineHistoryRemarks(string $reason, ?string $details): string
+    {
+        $reasonLabel = config("scholarship.decline_reasons.{$reason}", $reason);
+
+        if ($details) {
+            return "{$reasonLabel}: {$details}";
+        }
+
+        return $reasonLabel;
     }
 
     private function createStatusHistory(ScholarshipRecord $record, string $action, string $oldStatus, ?User $user, ?string $remarks)

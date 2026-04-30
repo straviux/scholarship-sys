@@ -68,7 +68,7 @@ class ReportController extends Controller
 
         switch ($groupBy) {
             case 'unified_status':
-                return ($grant && $grant->unified_status) ? ucwords(str_replace('_', ' ', $grant->unified_status)) : 'No Status';
+                return ($grant && $grant->unified_status) ? $this->formatUnifiedStatusLabel($grant->unified_status) : 'No Status';
             case 'grant_provision':
                 return $grant
                     ? SystemOption::formatGrantProvisionLabel($grant->grant_provision, 'No Provision')
@@ -554,6 +554,8 @@ class ReportController extends Controller
                 ? $request->unified_status
                 : explode(',', $request->unified_status);
 
+            $statuses = $this->expandUnifiedStatuses($statuses);
+
             $query->whereHas('scholarshipGrant', function ($q) use ($statuses) {
                 $q->whereIn('unified_status', $statuses);
             });
@@ -674,7 +676,7 @@ class ReportController extends Controller
             if (!$request->filled('unified_status')) {
                 $summary['by_unified_status'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
-                    return ($grant && $grant->unified_status) ? ucwords(str_replace('_', ' ', $grant->unified_status)) : 'No Status';
+                    return ($grant && $grant->unified_status) ? $this->formatUnifiedStatusLabel($grant->unified_status) : 'No Status';
                 })->map(function ($group) use ($groupBy, $groupBySecondary, $groupByTertiary) {
                     if ($groupBy === 'unified_status' && $groupBySecondary !== 'none' && $groupBySecondary !== $groupBy) {
                         $subgroups = $group->groupBy(function ($p) use ($groupBySecondary) {
@@ -1073,6 +1075,8 @@ class ReportController extends Controller
                 ? $request->unified_status
                 : explode(',', $request->unified_status);
 
+            $statuses = $this->expandUnifiedStatuses($statuses);
+
             $query->whereHas('scholarshipGrant', function ($q) use ($statuses) {
                 $q->whereIn('unified_status', $statuses);
             });
@@ -1190,7 +1194,7 @@ class ReportController extends Controller
             if (!$request->filled('unified_status')) {
                 $summary['by_unified_status'] = $profiles->groupBy(function ($p) {
                     $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
-                    return ($grant && $grant->unified_status) ? ucwords(str_replace('_', ' ', $grant->unified_status)) : 'No Status';
+                    return ($grant && $grant->unified_status) ? $this->formatUnifiedStatusLabel($grant->unified_status) : 'No Status';
                 })->map(fn($group) => $group->count());
             }
 
@@ -1644,6 +1648,28 @@ class ReportController extends Controller
         );
 
         return $record;
+    }
+
+    private function expandUnifiedStatuses(array $statuses): array
+    {
+        $normalized = array_values(array_filter(array_map('trim', $statuses)));
+
+        if (in_array('active', $normalized, true) && !in_array('approved', $normalized, true)) {
+            $normalized[] = 'approved';
+        }
+
+        return array_values(array_unique($normalized));
+    }
+
+    private function formatUnifiedStatusLabel(?string $status): string
+    {
+        if (!$status) {
+            return 'No Status';
+        }
+
+        $normalizedStatus = $status === 'approved' ? 'active' : $status;
+
+        return ucwords(str_replace('_', ' ', $normalizedStatus));
     }
 
     /**

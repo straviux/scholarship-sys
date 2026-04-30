@@ -11,6 +11,7 @@ const props = defineProps({
 
 const grouped = computed(() => groupRecords(props.records, props.options.groupBy, props.options.groupBySecondary, props.options.groupByTertiary));
 const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', course: 'Course', municipality: 'Municipality', year_level: 'Year Level' }[col]];
+const isHistoryReport = computed(() => props.options.historyMode === 'denied');
 </script>
 
 <template>
@@ -20,7 +21,7 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
                 <img src="/images/pgp-logo.png" alt="PGP Logo" class="report-logo" />
             </div>
             <div class="report-header-text">
-                <h1>DENIED APPLICANTS</h1>
+                <h1>{{ isHistoryReport ? 'DENIAL HISTORY' : 'DENIED APPLICANTS' }}</h1>
                 <h2>Detailed List</h2>
             </div>
             <div class="report-header-logos">
@@ -47,7 +48,7 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
                         <th v-if="showCol('school')">School</th>
                         <th v-if="showCol('course')">Course</th>
                         <th v-if="showCol('year_level')">Year Level</th>
-                        <th class="nowrap">Date Filed</th>
+                        <th class="nowrap">{{ isHistoryReport ? 'Date Denied' : 'Date Filed' }}</th>
                         <th>Reason / Remarks</th>
                     </tr>
                 </thead>
@@ -62,12 +63,13 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
                         <td v-if="showCol('school')">{{ rec.school_name || '—' }}</td>
                         <td v-if="showCol('course')">{{ rec.course_name || '—' }}</td>
                         <td v-if="showCol('year_level')">{{ rec.year_level || '—' }}</td>
-                        <td class="nowrap">{{ formatDate(rec.date_filed) }}</td>
+                        <td class="nowrap">{{ formatDate(rec.date_denied || rec.performed_at || rec.date_filed) }}</td>
                         <td v-safe-html="rec.decline_reason || rec.remarks || '—'"></td>
                     </tr>
                 </tbody>
             </table>
-            <div class="group-total">Total Denied: {{ records.length }}</div>
+            <div class="group-total">{{ isHistoryReport ? 'Total Denial History Entries' : 'Total Denied' }}: {{
+                records.length }}</div>
         </template>
 
         <template v-else>
@@ -84,7 +86,7 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
                                 <th v-if="showCol('school')">School</th>
                                 <th v-if="showCol('course')">Course</th>
                                 <th v-if="showCol('year_level')">Year Level</th>
-                                <th class="nowrap">Date Filed</th>
+                                <th class="nowrap">{{ isHistoryReport ? 'Date Denied' : 'Date Filed' }}</th>
                                 <th>Reason / Remarks</th>
                             </tr>
                         </thead>
@@ -97,7 +99,8 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
                                 <td v-if="showCol('school')">{{ rec.school_name || '—' }}</td>
                                 <td v-if="showCol('course')">{{ rec.course_name || '—' }}</td>
                                 <td v-if="showCol('year_level')">{{ rec.year_level || '—' }}</td>
-                                <td class="nowrap">{{ formatDate(rec.date_filed) }}</td>
+                                <td class="nowrap">{{ formatDate(rec.date_denied || rec.performed_at || rec.date_filed)
+                                    }}</td>
                                 <td v-safe-html="rec.decline_reason || rec.remarks || '—'"></td>
                             </tr>
                         </tbody>
@@ -113,7 +116,7 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
                                     <th>Name</th>
                                     <th v-if="showCol('program')">Program</th>
                                     <th v-if="showCol('school')">School</th>
-                                    <th class="nowrap">Date Filed</th>
+                                    <th class="nowrap">{{ isHistoryReport ? 'Date Denied' : 'Date Filed' }}</th>
                                     <th>Reason</th>
                                 </tr>
                             </thead>
@@ -123,7 +126,8 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
                                     <td class="nowrap">{{ formatName(rec) }}</td>
                                     <td v-if="showCol('program')">{{ rec.program_name || '—' }}</td>
                                     <td v-if="showCol('school')">{{ rec.school_name || '—' }}</td>
-                                    <td class="nowrap">{{ formatDate(rec.date_filed) }}</td>
+                                    <td class="nowrap">{{ formatDate(rec.date_denied || rec.performed_at ||
+                                        rec.date_filed) }}</td>
                                     <td v-safe-html="rec.decline_reason || rec.remarks || '—'"></td>
                                 </tr>
                             </tbody>
@@ -135,7 +139,8 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
 
         <div class="report-footer">
             <span>Generated: {{ generatedAt }}</span>
-            <span>Total: {{ records.length }} denied applicants</span>
+            <span>Total: {{ records.length }} {{ isHistoryReport ? 'denial history entries' : 'denied applicants'
+                }}</span>
         </div>
     </div>
 </template>

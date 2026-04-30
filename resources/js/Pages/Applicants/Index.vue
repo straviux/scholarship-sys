@@ -759,16 +759,6 @@ const selectedApplicantForReview = ref(null);
 // Interview assessment modal state
 const showInterviewModal = ref(false);
 const interviewRecordId = ref(null);
-const showAcademicInfoIncompleteDialog = ref(false);
-const missingAcademicInfoFields = ref([]);
-const academicInfoDialogOffset = ref({ x: 0, y: 0 });
-const academicInfoDialogDragStart = ref(null);
-
-const academicInfoDialogStyle = computed(() => ({
-    width: 'calc(100vw - 24px)',
-    maxWidth: '460px',
-    transform: `translate(${academicInfoDialogOffset.value.x}px, ${academicInfoDialogOffset.value.y}px)`,
-}));
 
 // Profile menu items for dropdown
 const profileMenuItems = ref([
@@ -831,92 +821,6 @@ const closeProfileReviewModal = () => {
     selectedApplicantForReview.value = null;
 };
 
-const hasAcademicFieldValue = (value) => {
-    if (value === null || value === undefined) {
-        return false;
-    }
-
-    if (typeof value === 'string') {
-        return value.trim().length > 0;
-    }
-
-    return true;
-};
-
-const getMissingAcademicInfoFields = (applicant) => {
-    const scholarshipGrant = applicant?.scholarship_grant?.[0] ?? null;
-
-    return [
-        {
-            label: 'Program',
-            value: scholarshipGrant?.program_id ?? scholarshipGrant?.program?.id ?? scholarshipGrant?.program?.shortname ?? scholarshipGrant?.program?.name,
-        },
-        {
-            label: 'School',
-            value: scholarshipGrant?.school_id ?? scholarshipGrant?.school?.id ?? scholarshipGrant?.school?.shortname ?? scholarshipGrant?.school?.name,
-        },
-        {
-            label: 'Course',
-            value: scholarshipGrant?.course_id ?? scholarshipGrant?.course?.id ?? scholarshipGrant?.course?.shortname ?? scholarshipGrant?.course?.name,
-        },
-        {
-            label: 'Year Level',
-            value: scholarshipGrant?.year_level,
-        },
-        {
-            label: 'Term',
-            value: scholarshipGrant?.term,
-        },
-        {
-            label: 'Academic Year',
-            value: scholarshipGrant?.academic_year,
-        },
-    ]
-        .filter(({ value }) => !hasAcademicFieldValue(value))
-        .map(({ label }) => label);
-};
-
-const closeAcademicInfoIncompleteDialog = () => {
-    showAcademicInfoIncompleteDialog.value = false;
-    missingAcademicInfoFields.value = [];
-};
-
-const onAcademicInfoDialogDragStart = (event) => {
-    if (event.target.closest('button, a')) {
-        return;
-    }
-
-    academicInfoDialogDragStart.value = {
-        x: event.clientX - academicInfoDialogOffset.value.x,
-        y: event.clientY - academicInfoDialogOffset.value.y,
-    };
-
-    document.addEventListener('pointermove', onAcademicInfoDialogDragMove);
-    document.addEventListener('pointerup', onAcademicInfoDialogDragEnd);
-};
-
-const onAcademicInfoDialogDragMove = (event) => {
-    if (!academicInfoDialogDragStart.value) {
-        return;
-    }
-
-    academicInfoDialogOffset.value = {
-        x: event.clientX - academicInfoDialogDragStart.value.x,
-        y: event.clientY - academicInfoDialogDragStart.value.y,
-    };
-};
-
-const onAcademicInfoDialogDragEnd = () => {
-    academicInfoDialogDragStart.value = null;
-    document.removeEventListener('pointermove', onAcademicInfoDialogDragMove);
-    document.removeEventListener('pointerup', onAcademicInfoDialogDragEnd);
-};
-
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onAcademicInfoDialogDragMove);
-    document.removeEventListener('pointerup', onAcademicInfoDialogDragEnd);
-});
-
 const resolveInterviewRecordId = (applicant) => {
     if (!applicant) {
         return null;
@@ -930,14 +834,6 @@ const resolveInterviewRecordId = (applicant) => {
 };
 
 const handleProfileReviewInterview = (applicant) => {
-    const missingFields = getMissingAcademicInfoFields(applicant);
-
-    if (missingFields.length > 0) {
-        missingAcademicInfoFields.value = missingFields;
-        showAcademicInfoIncompleteDialog.value = true;
-        return;
-    }
-
     selectedApplicantForReview.value = applicant;
     interviewRecordId.value = resolveInterviewRecordId(applicant);
 
@@ -1776,57 +1672,6 @@ const truncateText = (text, maxLength = 80) => {
             :applicants="applicants" @interview="handleProfileReviewInterview" @edit-profile="handleProfileReviewEdit"
             @edit-requirements="openRequirementsModal" @closed="closeProfileReviewModal" />
 
-        <Dialog :visible="showAcademicInfoIncompleteDialog" modal
-            @update:visible="val => !val && closeAcademicInfoIncompleteDialog()"
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal academic-info-ios-modal" :style="academicInfoDialogStyle">
-                    <div class="ios-nav-bar" @pointerdown="onAcademicInfoDialogDragStart">
-                        <button class="ios-nav-btn ios-nav-cancel" @click="closeAcademicInfoIncompleteDialog">
-                            <AppIcon name="times" :size="14" />
-                        </button>
-                        <span class="ios-nav-title">Academic Information</span>
-
-                    </div>
-
-                    <div class="ios-body">
-                        <div class="ios-section" style="margin-top: 16px;">
-                            <div class="ios-card">
-                                <div class="ios-row academic-info-warning-row"
-                                    style="align-items: flex-start; gap: 12px;">
-                                    <div class="academic-info-warning-icon">
-                                        <AppIcon name="exclamation-triangle" :size="20" />
-                                    </div>
-                                    <div class="academic-info-warning-copy">
-                                        <div class="academic-info-warning-title">Interview cannot start yet</div>
-                                        <div class="academic-info-warning-text">
-                                            Complete the applicant's academic information first, then try the interview
-                                            action again.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="ios-section">
-                            <div class="ios-section-label">Missing fields</div>
-                            <div class="ios-card">
-                                <div v-for="(field, index) in missingAcademicInfoFields" :key="field" class="ios-row">
-                                    <span class="text-red-500 mono">{{ field }}</span>
-                                </div>
-                            </div>
-                            <div class="ios-section-footer">
-                                Update the academic record with all required details before opening the interview
-                                assessment.
-                            </div>
-                        </div>
-
-                        <div style="height: 20px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
-
         <!-- YAKAP Category Modal - for selecting category when creating new applicant -->
         <YakapCategoryModal v-model:visible="showYakapCategoryModal" @selected="handleYakapCategorySelected" />
 
@@ -2106,50 +1951,6 @@ const truncateText = (text, maxLength = 80) => {
     flex-shrink: 0;
 }
 
-.academic-info-ios-modal {
-    max-width: calc(100vw - 24px);
-}
-
-.academic-info-warning-row {
-    padding: 12px 16px;
-}
-
-.academic-info-warning-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 9999px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    background: #FEE2E2;
-    color: #DC2626;
-}
-
-.academic-info-warning-copy {
-    min-width: 0;
-}
-
-.academic-info-warning-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #111827;
-    margin-bottom: 4px;
-}
-
-.academic-info-warning-text {
-    font-size: 13px;
-    color: #6B7280;
-    line-height: 1.45;
-}
-
-.academic-info-missing-field {
-    font-size: 14px;
-    color: #111827;
-    font-weight: 600;
-    text-align: right;
-}
-
 .dark .ios-modal {
     background: #111827 !important;
 }
@@ -2173,8 +1974,7 @@ const truncateText = (text, maxLength = 80) => {
 
 .dark .ios-section-label,
 .dark .ios-section-footer,
-.dark .ios-row-label,
-.dark .academic-info-warning-text {
+.dark .ios-row-label {
     color: #9ca3af !important;
 }
 
@@ -2185,16 +1985,6 @@ const truncateText = (text, maxLength = 80) => {
 
 .dark .ios-row {
     border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.dark .academic-info-warning-title,
-.dark .academic-info-missing-field {
-    color: #f3f4f6 !important;
-}
-
-.dark .academic-info-warning-icon {
-    background: rgba(220, 38, 38, 0.18) !important;
-    color: #fca5a5 !important;
 }
 </style>
 

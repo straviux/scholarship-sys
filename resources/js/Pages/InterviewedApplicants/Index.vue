@@ -320,14 +320,7 @@ const selectedRows = ref([]);
 const expandedRows = ref({});
 
 const approvalForm = useForm({
-    program: null,
-    course: null,
-    school: null,
-    year_level: null,
-    term: null,
-    grant_provision: null,
     date_approved: new Date(),
-    remarks: ''
 });
 
 const denyForm = useForm({
@@ -377,22 +370,6 @@ const filteredList = computed(() => {
     return list;
 });
 
-const extractOptionId = (option) => {
-    if (option && typeof option === 'object') {
-        return option.id ?? null;
-    }
-
-    return option || null;
-};
-
-const extractOptionValue = (option) => {
-    if (option && typeof option === 'object') {
-        return option.value ?? option.label ?? null;
-    }
-
-    return option || null;
-};
-
 const formatDateForPayload = (value) => {
     if (!value) {
         return null;
@@ -402,31 +379,6 @@ const formatDateForPayload = (value) => {
 };
 
 const approvalValidationFields = [
-    {
-        key: 'program_id',
-        label: 'Program',
-        hasValue: () => Boolean(extractOptionId(approvalForm.program)),
-    },
-    {
-        key: 'course_id',
-        label: 'Course',
-        hasValue: () => Boolean(extractOptionId(approvalForm.course)),
-    },
-    {
-        key: 'school_id',
-        label: 'School',
-        hasValue: () => Boolean(extractOptionId(approvalForm.school)),
-    },
-    {
-        key: 'year_level',
-        label: 'Year Level',
-        hasValue: () => Boolean(extractOptionValue(approvalForm.year_level)),
-    },
-    {
-        key: 'term',
-        label: 'Term',
-        hasValue: () => Boolean(extractOptionValue(approvalForm.term)),
-    },
     {
         key: 'date_approved',
         label: 'Approval Date',
@@ -462,14 +414,7 @@ const validateApprovalForm = () => {
 };
 
 const populateApprovalForm = (record) => {
-    approvalForm.program = record.program || null;
-    approvalForm.course = record.course || null;
-    approvalForm.school = record.school || null;
-    approvalForm.year_level = record.year_level || null;
-    approvalForm.term = record.term || null;
-    approvalForm.grant_provision = record.grant_provision || null;
     approvalForm.date_approved = record.date_approved ? new Date(record.date_approved) : new Date();
-    approvalForm.remarks = '';
 };
 
 const resetApprovalForm = (record = null) => {
@@ -500,15 +445,6 @@ const openAssessmentDialog = (record, mode = 'view') => {
 
     showAssessmentDialog.value = true;
 };
-
-watch(
-    () => extractOptionId(approvalForm.program),
-    (newProgramId, oldProgramId) => {
-        if (oldProgramId !== undefined && newProgramId !== oldProgramId) {
-            approvalForm.course = null;
-        }
-    }
-);
 
 const stats = computed(() => {
     const all = props.interviewed_applicants || [];
@@ -620,13 +556,6 @@ const confirmApprove = () => {
 
     approvalForm.transform((data) => ({
         date_approved: formatDateForPayload(data.date_approved),
-        remarks: data.remarks,
-        program_id: extractOptionId(data.program),
-        course_id: extractOptionId(data.course),
-        school_id: extractOptionId(data.school),
-        year_level: extractOptionValue(data.year_level),
-        term: extractOptionValue(data.term),
-        grant_provision: data.grant_provision || null,
     })).post(route('scholarship.record.approve', selectedRecord.value.id), {
         onSuccess: () => {
             showAssessmentDialog.value = false;
@@ -634,7 +563,10 @@ const confirmApprove = () => {
             toast.success('Application approved successfully');
         },
         onError: (errors) => {
-            toast.error('Review the highlighted fields and try again.');
+            const hasSummaryOnlyErrors = Object.keys(errors || {}).some((field) => field !== 'date_approved');
+            toast.error(hasSummaryOnlyErrors
+                ? 'Saved assessment details are incomplete. Use Edit Assessment, then try approving again.'
+                : 'Review the approval date and try again.');
             console.error(errors);
         }
     });

@@ -58,7 +58,7 @@
                                         Status
                                     </label>
                                     <Select id="status" v-model="filters.status"
-                                        :options="[{ value: null, label: 'All Statuses' }, { value: 'pending', label: 'Pending' }, { value: 'approved', label: 'Approved' }, { value: 'declined', label: 'Declined' }, { value: 'conditional', label: 'Conditional' }, { value: 'completed', label: 'Completed' }]"
+                                        :options="[{ value: null, label: 'All Statuses' }, { value: 'pending', label: 'Pending' }, { value: 'interviewed', label: 'Interviewed' }, { value: 'active', label: 'Active' }, { value: 'denied', label: 'Denied' }, { value: 'completed', label: 'Completed' }, { value: 'withdrawn', label: 'Withdrawn' }, { value: 'loa', label: 'Leave of Absence' }, { value: 'suspended', label: 'Suspended' }]"
                                         optionLabel="label" optionValue="value" placeholder="All Statuses"
                                         class="w-full" />
                                 </div>

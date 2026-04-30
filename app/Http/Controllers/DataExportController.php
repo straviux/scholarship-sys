@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\ScholarshipProfile;
+use App\Models\ScholarshipApprovalHistory;
 use App\Models\ScholarshipRecord;
 use App\Models\ScholarshipProgram;
 use App\Models\Course;
 use App\Models\School;
+use App\Models\SystemOption;
+use App\Services\ScholarshipExpenseProjectionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -92,12 +95,28 @@ class DataExportController extends Controller
             'date_to'
         ]);
 
+        if ($request->filled('status') && $this->isHistoryStatus($request->status)) {
+            return $this->exportHistoryToJson($request, $validated, $request->status);
+        }
+
         // Get scholarship records (existing scholars)
         $recordsQuery = ScholarshipRecord::with([
             'profile',
             'program',
             'school',
             'course',
+            'interviewer',
+            'approvalHistory' => function ($query) {
+                $query->select([
+                    'id',
+                    'scholarship_record_id',
+                    'action',
+                    'previous_status',
+                    'new_status',
+                    'remarks',
+                    'performed_at',
+                ])->orderByDesc('performed_at');
+            },
         ])->orderBy('created_at');
 
         // Apply filters
@@ -139,12 +158,20 @@ class DataExportController extends Controller
         }
 
         if ($request->filled('status')) {
-            $recordsQuery->where('unified_status', $request->status);
+            $statuses = $request->status === 'active'
+                ? ['active', 'approved']
+                : [$request->status];
+
+            $recordsQuery->whereIn('unified_status', $statuses);
         }
 
         // Filter by unified_status (mapping from report filter)
         if ($request->filled('unified_status')) {
-            $recordsQuery->where('unified_status', $request->unified_status);
+            $statuses = $request->unified_status === 'active'
+                ? ['active', 'approved']
+                : [$request->unified_status];
+
+            $recordsQuery->whereIn('unified_status', $statuses);
         }
 
         // Filter by year_level
@@ -251,34 +278,11 @@ class DataExportController extends Controller
             }
         }
 
-        $scholars = $recordsQuery->get()->map(function ($record) use ($recordQueueMap) {
-            $data = [
-                'profile_id' => $record->profile_id,
-                'full_name' => $record->profile->first_name . ' ' . $record->profile->last_name,
-                'first_name' => $record->profile->first_name,
-                'middle_name' => $record->profile->middle_name,
-                'last_name' => $record->profile->last_name,
-                'extension_name' => $record->profile->extension_name,
-                'birthdate' => $record->profile->birthdate,
-                'gender' => $record->profile->gender,
-                'contact_no' => $record->profile->contact_no,
-                'email' => $record->profile->email,
-                'address' => $record->profile->address,
-                'municipality' => $record->profile->municipality,
-                'barangay' => $record->profile->barangay,
-                'program_name' => $record->program->shortname ?? $record->program->name ?? null,
-                'school_name' => $record->school->name ?? null,
-                'course_name' => $record->course->name ?? null,
-                'approval_status' => $record->unified_status ?? 'unknown',
-                'year_level' => $record->year_level,
-                'term' => $record->term,
-                'grant_provision' => $record->grant_provision ?? '-',
-                'yakap_category' => $record->yakap_category ?? 'yakap-capitol',
-                'yakap_location' => $record->yakap_location,
-                'date_filed' => $record->date_filed,
-                'date_approved' => $record->date_approved,
-                'date_applied' => $record->date_filed,
-            ];
+        $expenseProjectionService = app(ScholarshipExpenseProjectionService::class);
+
+        $scholars = $recordsQuery->get()->map(function (ScholarshipRecord $record) use ($expenseProjectionService, $recordQueueMap) {
+            $record = $this->attachExpenseProjection($record, $expenseProjectionService);
+            $data = $this->transformScholarshipRecordForReport($record);
 
             // Include queue info for pending applications using pre-calculated values (use profile_id)
             $unifiedStatus = $record->unified_status ?? 'unknown';
@@ -409,6 +413,258 @@ class DataExportController extends Controller
         ], JSON_PRETTY_PRINT);
     }
 
+    private function isHistoryStatus(?string $status): bool
+    {
+        return in_array($status, ['approved_history', 'denied_history'], true);
+    }
+
+    private function exportHistoryToJson(Request $request, array $validated, string $status)
+    {
+        $action = $status === 'approved_history' ? 'approved' : 'declined';
+        $expenseProjectionService = app(ScholarshipExpenseProjectionService::class);
+        $historyQuery = ScholarshipApprovalHistory::with([
+            'scholarshipRecord.profile',
+            'scholarshipRecord.program',
+            'scholarshipRecord.school',
+            'scholarshipRecord.course',
+            'scholarshipRecord.interviewer',
+            'performedBy:id,name',
+        ])
+            ->where('action', $action)
+            ->orderBy('performed_at');
+
+        if ($request->filled('program_id')) {
+            $historyQuery->whereHas('scholarshipRecord', function ($q) use ($request) {
+                $q->where('program_id', $request->program_id);
+            });
+        }
+
+        if ($request->filled('program')) {
+            if (is_numeric($request->program)) {
+                $historyQuery->whereHas('scholarshipRecord', function ($q) use ($request) {
+                    $q->where('program_id', $request->program);
+                });
+            } else {
+                $historyQuery->whereHas('scholarshipRecord.program', function ($q) use ($request) {
+                    $q->where('shortname', 'like', '%' . $request->program . '%')
+                        ->orWhere('name', 'like', '%' . $request->program . '%');
+                });
+            }
+        }
+
+        if ($request->filled('school_id')) {
+            $historyQuery->whereHas('scholarshipRecord', function ($q) use ($request) {
+                $q->where('school_id', $request->school_id);
+            });
+        }
+
+        if ($request->filled('school')) {
+            $schools = array_map('trim', explode(',', $request->school));
+
+            $historyQuery->whereHas('scholarshipRecord.school', function ($q) use ($schools) {
+                $q->where(function ($subQuery) use ($schools) {
+                    foreach ($schools as $school) {
+                        $subQuery->orWhere('shortname', 'like', '%' . $school . '%')
+                            ->orWhere('name', 'like', '%' . $school . '%');
+                    }
+                });
+            });
+        }
+
+        if ($request->filled('course')) {
+            $courses = array_map('trim', explode(',', $request->course));
+
+            $historyQuery->whereHas('scholarshipRecord.course', function ($q) use ($courses) {
+                $q->where(function ($subQuery) use ($courses) {
+                    foreach ($courses as $course) {
+                        $subQuery->orWhere('shortname', 'like', '%' . $course . '%')
+                            ->orWhere('name', 'like', '%' . $course . '%');
+                    }
+                });
+            });
+        }
+
+        if ($request->filled('year_level')) {
+            $historyQuery->whereHas('scholarshipRecord', function ($q) use ($request) {
+                $q->where('year_level', $request->year_level);
+            });
+        }
+
+        if ($request->filled('municipality')) {
+            $historyQuery->whereHas('scholarshipRecord.profile', function ($q) use ($request) {
+                $q->where('municipality', 'like', '%' . $request->municipality . '%');
+            });
+        }
+
+        if ($request->filled('grant_provision')) {
+            $historyQuery->whereHas('scholarshipRecord', function ($q) use ($request) {
+                $q->where('grant_provision', $request->grant_provision);
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            $historyQuery->whereDate('performed_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $historyQuery->whereDate('performed_at', '<=', $request->date_to);
+        }
+
+        $historyRows = $historyQuery->get()->map(function ($history) use ($expenseProjectionService, $status) {
+            $record = $history->scholarshipRecord;
+            if (!$record) {
+                return null;
+            }
+
+            $record = $this->attachExpenseProjection($record, $expenseProjectionService);
+
+            return $this->transformScholarshipRecordForReport($record, $status, [
+                'history_action' => $history->action,
+                'performed_at' => $history->performed_at,
+                'performed_by_name' => $history->performedBy?->name,
+                'previous_status' => $history->previous_status,
+                'new_status' => $history->new_status,
+                'remarks' => $history->remarks,
+                'approved_at' => $status === 'approved_history' ? $history->performed_at : null,
+                'denied_at' => $status === 'denied_history' ? $history->performed_at : null,
+            ]);
+        })->filter()->values();
+
+        $exportData = [
+            'metadata' => [
+                'exported_at' => now()->toIso8601String(),
+                'exported_by' => Auth::check() ? Auth::user()->name : 'Unknown',
+                'total_scholars' => $historyRows->count(),
+                'total_applicants' => 0,
+                'filters' => $validated,
+                'history_action' => $action,
+            ],
+            'scholars' => $historyRows,
+            'applicants' => [],
+        ];
+
+        $filename = 'scholarship_history_export_' . now()->format('Y-m-d_His') . '.json';
+
+        return response()->json($exportData, 200, [
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Type' => 'application/json',
+        ], JSON_PRETTY_PRINT);
+    }
+
+    private function attachExpenseProjection(
+        ScholarshipRecord $record,
+        ScholarshipExpenseProjectionService $expenseProjectionService
+    ): ScholarshipRecord {
+        foreach ($expenseProjectionService->projectForRecord($record) as $key => $value) {
+            $record->setAttribute($key, $value);
+        }
+
+        $record->setAttribute(
+            'grant_provision_label',
+            SystemOption::formatGrantProvisionLabel($record->grant_provision, 'N/A')
+        );
+
+        return $record;
+    }
+
+    private function transformScholarshipRecordForReport(
+        ScholarshipRecord $record,
+        ?string $forcedReportStatus = null,
+        array $historyContext = []
+    ): array {
+        $profile = $record->profile;
+        $latestApprovalHistory = $this->findLatestHistoryByAction($record, 'approved');
+        $latestDeclineHistory = $this->findLatestHistoryByAction($record, 'declined');
+        $reportStatus = $this->normalizeReportStatus($forcedReportStatus ?? $record->unified_status ?? 'unknown');
+        $remarks = $historyContext['remarks']
+            ?? ($reportStatus === 'denied' ? ($latestDeclineHistory?->remarks ?? $record->remarks) : $record->remarks);
+
+        return [
+            'id' => $record->id,
+            'profile_id' => $record->profile_id,
+            'scholarship_record_id' => $record->id,
+            'history_action' => $historyContext['history_action'] ?? null,
+            'report_status' => $reportStatus,
+            'approval_status' => $reportStatus,
+            'unified_status' => $this->normalizeReportStatus($record->unified_status ?? 'unknown'),
+            'full_name' => trim(($profile?->first_name ?? '') . ' ' . ($profile?->last_name ?? '')),
+            'first_name' => $profile?->first_name,
+            'middle_name' => $profile?->middle_name,
+            'last_name' => $profile?->last_name,
+            'extension_name' => $profile?->extension_name,
+            'birthdate' => $profile?->birthdate,
+            'gender' => $profile?->gender,
+            'contact_no' => $profile?->contact_no,
+            'email' => $profile?->email,
+            'address' => $profile?->address,
+            'municipality' => $profile?->municipality,
+            'barangay' => $profile?->barangay,
+            'program_name' => $record->program?->shortname ?? $record->program?->name,
+            'school_name' => $record->school?->name ?? $record->school?->shortname,
+            'course_name' => $record->course?->name ?? $record->course?->shortname,
+            'year_level' => $record->year_level,
+            'term' => $record->term,
+            'academic_year' => $record->academic_year,
+            'grant_provision' => $record->grant_provision ?? '-',
+            'grant_provision_label' => $record->grant_provision_label ?? SystemOption::formatGrantProvisionLabel($record->grant_provision, 'N/A'),
+            'yakap_category' => $record->yakap_category ?? 'yakap-capitol',
+            'yakap_location' => $record->yakap_location,
+            'projected_total_expense' => $record->projected_total_expense,
+            'projected_total_expense_formatted' => $record->projected_total_expense_formatted,
+            'projected_term_count' => $record->projected_term_count,
+            'projected_completion_year' => $record->projected_completion_year,
+            'interviewed_at' => $record->interviewed_at,
+            'interviewer_name' => $record->interviewer?->name,
+            'endorsed_by' => $record->endorsed_by,
+            'date_filed' => $record->date_filed,
+            'date_applied' => $record->date_filed,
+            'date_approved' => $historyContext['approved_at'] ?? ($record->date_approved ?? $latestApprovalHistory?->performed_at),
+            'date_denied' => $historyContext['denied_at'] ?? $latestDeclineHistory?->performed_at,
+            'performed_at' => $historyContext['performed_at'] ?? null,
+            'performed_by_name' => $historyContext['performed_by_name'] ?? null,
+            'previous_status' => $this->normalizeReportStatus($historyContext['previous_status'] ?? null),
+            'new_status' => $this->normalizeReportStatus($historyContext['new_status'] ?? null),
+            'remarks' => $remarks,
+            'decline_reason' => in_array($reportStatus, ['denied', 'denied_history'], true) ? $remarks : null,
+            'report_date' => $this->resolveReportDate($reportStatus, $record, $historyContext, $latestApprovalHistory?->performed_at, $latestDeclineHistory?->performed_at),
+        ];
+    }
+
+    private function findLatestHistoryByAction(ScholarshipRecord $record, string $action): ?ScholarshipApprovalHistory
+    {
+        if (!$record->relationLoaded('approvalHistory')) {
+            return null;
+        }
+
+        return $record->approvalHistory->first(fn($entry) => $entry->action === $action);
+    }
+
+    private function normalizeReportStatus(?string $status): ?string
+    {
+        if ($status === null || $status === '') {
+            return $status;
+        }
+
+        return $status === 'approved' ? 'active' : $status;
+    }
+
+    private function resolveReportDate(
+        string $reportStatus,
+        ScholarshipRecord $record,
+        array $historyContext,
+        mixed $approvedAt,
+        mixed $deniedAt
+    ): mixed {
+        return match ($reportStatus) {
+            'approved_history' => $historyContext['approved_at'] ?? $historyContext['performed_at'] ?? $record->date_approved,
+            'denied_history' => $historyContext['denied_at'] ?? $historyContext['performed_at'] ?? $deniedAt ?? $record->date_filed,
+            'interviewed' => $record->interviewed_at ?? $record->date_filed,
+            'active', 'completed', 'withdrawn', 'loa', 'suspended' => $record->date_approved ?? $approvedAt ?? $record->date_filed,
+            'denied' => $deniedAt ?? $record->date_filed,
+            default => $record->date_filed,
+        };
+    }
+
     /**
      * Get export preview/summary
      */
@@ -435,7 +691,11 @@ class DataExportController extends Controller
 
         if ($request->filled('status')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->where('unified_status', $request->status);
+                $statuses = $request->status === 'active'
+                    ? ['active', 'approved']
+                    : [$request->status];
+
+                $q->whereIn('unified_status', $statuses);
             });
         }
 

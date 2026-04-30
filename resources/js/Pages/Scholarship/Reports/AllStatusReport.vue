@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { formatName, formatDate, formatGrantProvision, formatStatus, isJpm, groupRecords, getGroupValue } from './report-helpers';
+import { formatName, formatDate, formatGrantProvision, formatStatus, getReportStatus, isJpm, groupRecords, normalizeStatus } from './report-helpers';
 
 const props = defineProps({
     records: { type: Array, default: () => [] },
@@ -22,6 +22,9 @@ const showCol = (col) => {
     };
     return !props.filters[filterMap[col]];
 };
+
+const statusClass = (rec) => normalizeStatus(getReportStatus(rec));
+const statusLabel = (rec) => formatStatus(getReportStatus(rec));
 </script>
 
 <template>
@@ -75,9 +78,7 @@ const showCol = (col) => {
                         <td class="nowrap">{{ formatName(rec) }}</td>
                         <td>{{ rec.contact_no || '—' }}</td>
                         <td v-if="showCol('municipality')">{{ rec.municipality || '—' }}</td>
-                        <td><span
-                                :class="'status-badge status-' + (rec.approval_status || rec.unified_status || 'unknown')">{{
-                                    formatStatus(rec.approval_status || rec.unified_status) }}</span></td>
+                        <td><span :class="'status-badge status-' + statusClass(rec)">{{ statusLabel(rec) }}</span></td>
                         <td v-if="showCol('program')">{{ rec.program_name || '—' }}</td>
                         <td v-if="showCol('school')">{{ rec.school_name || '—' }}</td>
                         <td v-if="showCol('course')">{{ rec.course_name || '—' }}</td>
@@ -122,9 +123,8 @@ const showCol = (col) => {
                                 <td class="nowrap">{{ formatName(rec) }}</td>
                                 <td>{{ rec.contact_no || '—' }}</td>
                                 <td v-if="showCol('municipality')">{{ rec.municipality || '—' }}</td>
-                                <td><span
-                                        :class="'status-badge status-' + (rec.approval_status || rec.unified_status || 'unknown')">{{
-                                            formatStatus(rec.approval_status || rec.unified_status) }}</span></td>
+                                <td><span :class="'status-badge status-' + statusClass(rec)">{{ statusLabel(rec)
+                                        }}</span></td>
                                 <td v-if="showCol('program')">{{ rec.program_name || '—' }}</td>
                                 <td v-if="showCol('school')">{{ rec.school_name || '—' }}</td>
                                 <td v-if="showCol('course')">{{ rec.course_name || '—' }}</td>
@@ -168,9 +168,8 @@ const showCol = (col) => {
                                         <td class="nowrap">{{ formatName(rec) }}</td>
                                         <td>{{ rec.contact_no || '—' }}</td>
                                         <td v-if="showCol('municipality')">{{ rec.municipality || '—' }}</td>
-                                        <td><span
-                                                :class="'status-badge status-' + (rec.approval_status || rec.unified_status || 'unknown')">{{
-                                                    formatStatus(rec.approval_status || rec.unified_status) }}</span></td>
+                                        <td><span :class="'status-badge status-' + statusClass(rec)">{{ statusLabel(rec)
+                                                }}</span></td>
                                         <td v-if="showCol('program')">{{ rec.program_name || '—' }}</td>
                                         <td v-if="showCol('school')">{{ rec.school_name || '—' }}</td>
                                         <td v-if="showCol('course')">{{ rec.course_name || '—' }}</td>
@@ -207,9 +206,8 @@ const showCol = (col) => {
                                             </td>
                                             <td class="nowrap">{{ formatName(rec) }}</td>
                                             <td>{{ rec.contact_no || '—' }}</td>
-                                            <td><span
-                                                    :class="'status-badge status-' + (rec.approval_status || rec.unified_status || 'unknown')">{{
-                                                        formatStatus(rec.approval_status || rec.unified_status) }}</span>
+                                            <td><span :class="'status-badge status-' + statusClass(rec)">{{
+                                                    statusLabel(rec) }}</span>
                                             </td>
                                             <td v-if="showCol('program')">{{ rec.program_name || '—' }}</td>
                                             <td v-if="showCol('school')">{{ rec.school_name || '—' }}</td>

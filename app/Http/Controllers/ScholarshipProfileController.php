@@ -37,7 +37,7 @@ use Spatie\Browsershot\Browsershot;
 
 class ScholarshipProfileController extends Controller
 {
-    private const CURRENT_SCHOLARSHIP_RECORD_STATUSES = ['pending', 'approved', 'active'];
+    private const CURRENT_SCHOLARSHIP_RECORD_STATUSES = ['pending', 'interviewed', 'approved', 'active'];
 
     use ManagesChromeForPdf;
 
@@ -523,6 +523,11 @@ class ScholarshipProfileController extends Controller
                 ? $request->unified_status
                 : explode(',', $request->unified_status);
 
+            $statuses = array_values(array_unique(array_filter(array_merge(
+                array_map('trim', $statuses),
+                in_array('active', array_map('trim', $statuses), true) ? ['approved'] : []
+            ))));
+
             $query->whereHas('scholarshipGrant', function ($q) use ($statuses) {
                 $q->whereIn('unified_status', $statuses);
             });
@@ -712,7 +717,7 @@ class ScholarshipProfileController extends Controller
         // Get all scholarship profiles with their latest scholarship record and all records
         $with = [
             'latestScholarshipRecord' => function ($q) {
-                $q->with(['program', 'course', 'school', 'attachments']);
+                $q->with(['program', 'course', 'school', 'attachments', 'approvalHistory']);
             },
             'academicEnrollments' => function ($q) {
                 $q->select(['id', 'profile_id', 'graduation_date'])
@@ -750,7 +755,13 @@ class ScholarshipProfileController extends Controller
         // Handle unified_status filter
         if ($request->filled('unified_status')) {
             $query->whereHas('latestScholarshipRecord', function ($q) use ($request) {
-                $q->where('unified_status', $request->unified_status);
+                $statuses = [$request->unified_status];
+
+                if ($request->unified_status === 'active') {
+                    $statuses[] = 'approved';
+                }
+
+                $q->whereIn('unified_status', array_unique($statuses));
             });
         }
 
@@ -892,13 +903,26 @@ class ScholarshipProfileController extends Controller
             $profile->legacy_term_review_open_term_total = $legacyTermReview['conflicting_open_term_total'];
             $profile->legacy_term_review_highest_open_term_count = $legacyTermReview['highest_open_term_count'];
 
-            // Build previous records: all records except the latest, grouped by status with counts
+            // Build previous records from older scholarship rows and prior statuses on the latest row.
             $latestId = $latestRecord?->id;
-            $profile->previous_record_statuses = $profile->scholarshipGrant
+            $previousRecordStatuses = $profile->scholarshipGrant
                 ->filter(fn($r) => $r->id !== $latestId)
                 ->groupBy('unified_status')
-                ->map->count()
-                ->toArray(); // e.g. ['completed' => 2, 'denied' => 1]
+                ->map->count();
+
+            if ($latestRecord?->relationLoaded('approvalHistory')) {
+                foreach ($latestRecord->approvalHistory as $historyEntry) {
+                    $previousStatus = $historyEntry->previous_status;
+
+                    if (!$previousStatus || $previousStatus === $latestRecord->unified_status) {
+                        continue;
+                    }
+
+                    $previousRecordStatuses[$previousStatus] = ($previousRecordStatuses[$previousStatus] ?? 0) + 1;
+                }
+            }
+
+            $profile->previous_record_statuses = $previousRecordStatuses->toArray(); // e.g. ['interviewed' => 1, 'completed' => 2]
 
             // Count contract attachments (scholarship record attachments)
             $contractCount = $latestRecord && $latestRecord->attachments ? $latestRecord->attachments->count() : 0;
@@ -1146,24 +1170,39 @@ class ScholarshipProfileController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $selectedProgramCode = $request->filled('program_id')
-            ? ScholarshipProgram::whereKey($request->input('program_id'))->value('shortname')
+        $approvalData = [
+            'date_approved' => $request->input('date_approved'),
+            'remarks' => $request->input('remarks'),
+            'program_id' => $request->input('program_id', $record->program_id),
+            'course_id' => $request->input('course_id', $record->course_id),
+            'school_id' => $request->input('school_id', $record->school_id),
+            'year_level' => $request->input('year_level', $record->year_level),
+            'term' => $request->input('term', $record->term),
+            'academic_year' => $request->input('academic_year', $record->academic_year),
+            'grant_provision' => $request->has('grant_provision')
+                ? $request->input('grant_provision')
+                : $record->grant_provision,
+        ];
+
+        $selectedProgramCode = !empty($approvalData['program_id'])
+            ? ScholarshipProgram::whereKey($approvalData['program_id'])->value('shortname')
             : null;
 
-        $request->validate([
+        validator($approvalData, [
             'date_approved' => 'required|date|before_or_equal:today',
             'remarks' => 'nullable|string|max:500',
             'program_id' => 'required|integer|exists:scholarship_programs,id',
             'course_id' => [
                 'required',
                 'integer',
-                Rule::exists('courses', 'id')->where(function ($query) use ($request) {
-                    $query->where('scholarship_program_id', $request->program_id);
+                Rule::exists('courses', 'id')->where(function ($query) use ($approvalData) {
+                    $query->where('scholarship_program_id', $approvalData['program_id']);
                 }),
             ],
             'school_id' => 'required|integer|exists:schools,id',
             'year_level' => 'required|string|max:50',
             'term' => 'required|string|max:50',
+            'academic_year' => 'required|string|max:50',
             'grant_provision' => [
                 'nullable',
                 'string',
@@ -1191,22 +1230,14 @@ class ScholarshipProfileController extends Controller
             'school_id.exists' => 'The selected school is invalid.',
             'year_level.required' => 'Year Level is required.',
             'term.required' => 'Term is required.',
+            'academic_year.required' => 'Academic Year is required.',
             'grant_provision.exists' => 'The selected grant provision is invalid for the chosen program.',
-        ]);
+        ])->validate();
 
         try {
             $approvalService = app(ScholarshipApprovalService::class);
 
-            $approvalService->approve($record, Auth::user(), [
-                'date_approved' => $request->date_approved,
-                'remarks' => $request->remarks,
-                'program_id' => $request->program_id,
-                'course_id' => $request->course_id,
-                'school_id' => $request->school_id,
-                'year_level' => $request->year_level,
-                'term' => $request->term,
-                'grant_provision' => $request->grant_provision,
-            ]);
+            $approvalService->approve($record, Auth::user(), $approvalData);
 
             return back()->with('success', 'Application approved successfully.');
         } catch (\Exception $e) {
@@ -1430,6 +1461,7 @@ class ScholarshipProfileController extends Controller
             'school_id' => ['nullable', 'integer', Rule::exists('schools', 'id')],
             'year_level' => 'nullable|string|max:50',
             'term' => 'nullable|string|max:50',
+            'academic_year' => 'nullable|string|max:50',
             'academic_potential' => 'required|string|in:excellent,good,fair',
             'financial_need_level' => 'required|string|in:high,moderate,low',
             'communication_skills' => 'required|string|in:excellent,good,fair',

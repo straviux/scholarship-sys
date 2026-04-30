@@ -344,7 +344,7 @@ class ScholarshipRecord extends Model
 
     public function canBeModified()
     {
-        return in_array($this->unified_status, ['pending', 'approved']);
+        return in_array($this->unified_status, ['pending', 'interviewed', 'approved']);
     }
 
     public function canBeResubmitted()

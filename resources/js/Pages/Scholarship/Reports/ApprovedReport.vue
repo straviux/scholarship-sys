@@ -11,6 +11,7 @@ const props = defineProps({
 
 const grouped = computed(() => groupRecords(props.records, props.options.groupBy, props.options.groupBySecondary, props.options.groupByTertiary));
 const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', course: 'Course', municipality: 'Municipality', year_level: 'Year Level' }[col]];
+const isHistoryReport = computed(() => props.options.historyMode === 'approved');
 </script>
 
 <template>
@@ -20,7 +21,7 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
                 <img src="/images/pgp-logo.png" alt="PGP Logo" class="report-logo" />
             </div>
             <div class="report-header-text">
-                <h1>APPROVED APPLICANTS</h1>
+                <h1>{{ isHistoryReport ? 'APPROVAL HISTORY' : 'APPROVED APPLICANTS' }}</h1>
                 <h2>Detailed List</h2>
             </div>
             <div class="report-header-logos">
@@ -67,7 +68,8 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
                     </tr>
                 </tbody>
             </table>
-            <div class="group-total">Total Approved: {{ records.length }}</div>
+            <div class="group-total">{{ isHistoryReport ? 'Total Approval History Entries' : 'Total Approved' }}: {{
+                records.length }}</div>
         </template>
 
         <template v-else>
@@ -133,7 +135,8 @@ const showCol = (col) => !props.filters[{ program: 'Program', school: 'School', 
 
         <div class="report-footer">
             <span>Generated: {{ generatedAt }}</span>
-            <span>Total: {{ records.length }} approved applicants</span>
+            <span>Total: {{ records.length }} {{ isHistoryReport ? 'approval history entries' : 'approved applicants'
+                }}</span>
         </div>
     </div>
 </template>

@@ -29,9 +29,13 @@ export function isJpm(item) {
 	return item.is_jpm_member || item.is_father_jpm || item.is_mother_jpm || item.is_guardian_jpm;
 }
 
+export function getReportStatus(item) {
+	return item.report_status || item.approval_status || item.unified_status || 'unknown';
+}
+
 export function getGroupValue(item, groupByField) {
 	const map = {
-		unified_status: () => formatStatus(item.approval_status || item.unified_status),
+		unified_status: () => formatStatus(getReportStatus(item)),
 		school: () => item.school_name || '—',
 		program: () => item.program_name || '—',
 		course: () => item.course_name || '—',
@@ -42,19 +46,26 @@ export function getGroupValue(item, groupByField) {
 	return (map[groupByField] || (() => '—'))();
 }
 
+export function normalizeStatus(status) {
+	return status === 'approved' ? 'active' : status;
+}
+
 export function formatStatus(status) {
 	const map = {
 		pending: 'Pending',
 		interviewed: 'Interviewed',
 		approved: 'Approved',
+		approved_history: 'Approved',
 		denied: 'Denied',
+		denied_history: 'Denied',
 		active: 'Active',
 		completed: 'Completed',
 		withdrawn: 'Withdrawn',
 		loa: 'Leave of Absence',
 		suspended: 'Suspended',
 	};
-	return map[status] || status || '—';
+	const normalizedStatus = normalizeStatus(status);
+	return map[status] || map[normalizedStatus] || normalizedStatus || '—';
 }
 
 /**

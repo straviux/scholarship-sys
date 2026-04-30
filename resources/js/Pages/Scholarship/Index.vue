@@ -414,7 +414,7 @@
                                     <Column header="Year" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
                                         <template #body="r">
                                             <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—'
-                                                }}</span>
+                                            }}</span>
                                         </template>
                                     </Column>
                                     <Column header="Academic Year" headerClass="min-w-[110px]"
@@ -546,7 +546,7 @@
                                 </div>
                                 <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'approved'"
                                     :class="getStatusBadgeClass(selectedProfile.latest_scholarship_record.unified_status)"
-                                    v-tooltip="'Complete approval in Interviewed Applicants'"
+                                    v-tooltip="'Enrolled as scholar'"
                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
                                     {{
                                         getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.unified_status)
@@ -1135,7 +1135,7 @@ const getStatusTooltip = (status) => {
     const tooltips = {
         pending: 'Awaiting review',
         interviewed: 'Interviewed, awaiting decision',
-        approved: 'Complete approval in Interviewed Applicants',
+        approved: 'Enrolled as scholar',
         denied: 'Application has been denied',
         active: 'Enrolled as scholar',
         completed: 'Scholarship completed',
@@ -1149,7 +1149,7 @@ const getStatusBadgeClass = (status) => {
     const classes = {
         pending: 'bg-amber-100 text-amber-800 border-amber-500 dark:bg-amber-900/40 dark:text-amber-200 dark:border-amber-600',
         interviewed: 'bg-indigo-100 text-indigo-800 border-indigo-500 dark:bg-indigo-900/40 dark:text-indigo-200 dark:border-indigo-600',
-        approved: 'bg-blue-100 text-blue-800 border-blue-500 dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-600',
+        approved: 'bg-emerald-100 text-emerald-800 border-emerald-500 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-600',
         denied: 'bg-red-100 text-red-800 border-red-500 dark:bg-red-900/40 dark:text-red-200 dark:border-red-600',
         active: 'bg-emerald-100 text-emerald-800 border-emerald-500 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-600',
         completed: 'bg-gray-100 text-gray-800 border-gray-400 dark:bg-gray-700/50 dark:text-gray-200 dark:border-gray-500',
