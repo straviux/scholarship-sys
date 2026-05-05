@@ -262,7 +262,8 @@
                         </div>
 
                         <div class="ios-section">
-                            <div class="ios-section-label">{{ reportType === 'summary' ? 'Summary Grouping' : 'Grouping' }}</div>
+                            <div class="ios-section-label">{{ reportType === 'summary' ? 'Summary Grouping' : 'Grouping'
+                                }}</div>
                             <div class="ios-card">
                                 <!-- Group By -->
                                 <div class="ios-row">
@@ -290,7 +291,8 @@
                                 </div>
 
                                 <!-- Tertiary Group By -->
-                                <div class="ios-row" v-if="reportType === 'list' && groupBySecondary && groupBySecondary !== 'none'">
+                                <div class="ios-row"
+                                    v-if="reportType === 'list' && groupBySecondary && groupBySecondary !== 'none'">
                                     <div class="ios-row-label">
                                         <AppIcon name="objects-column" :size="13" style="color: #C7C7CC;" />
                                         3rd Group
@@ -363,7 +365,7 @@
                             <AppIcon name="minus" :size="10" />
                         </button>
                         <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-center">{{ zoomLevel
-                            }}%</span>
+                        }}%</span>
                         <button @click="zoomLevel = Math.min(200, zoomLevel + 10)"
                             class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
                             :disabled="zoomLevel >= 200">
