@@ -15,6 +15,7 @@ const selectedStatus = computed(() => props.options?.selectedStatus ?? null);
 const showSequenceNumbers = computed(() => props.options?.showSequenceNumbers !== false);
 const useInlinePendingSequence = computed(() => showSequenceNumbers.value && selectedStatus.value === 'pending');
 const includeGrantProvision = computed(() => props.options?.includeGrantProvision !== false);
+const includeProjectedExpense = computed(() => props.options?.includeProjectedExpense !== false);
 const includeRemarks = computed(() => props.options?.includeRemarks !== false);
 const hiddenColumns = computed(() => ({
     program: !!props.filters?.Program,
@@ -23,11 +24,11 @@ const hiddenColumns = computed(() => ({
     year_level: !!props.filters?.['Year Level'],
 }));
 
-const projectedColumns = [
+const projectedColumns = computed(() => [
     { key: 'projected_term_count', label: 'Terms', width: '4%' },
-    { key: 'projected_total_expense', label: 'Expense', width: '8%' },
+    ...(includeProjectedExpense.value ? [{ key: 'projected_total_expense', label: 'Expense', width: '8%' }] : []),
     { key: 'projected_completion_year', label: 'Completion', width: '6%' },
-];
+]);
 
 const singleColumns = computed(() => {
     const columns = [];
@@ -128,7 +129,7 @@ const detailConfig = computed(() => {
 
 const allColumns = computed(() => [
     ...singleColumns.value,
-    ...projectedColumns,
+    ...projectedColumns.value,
     ...detailConfig.value.columns,
 ]);
 

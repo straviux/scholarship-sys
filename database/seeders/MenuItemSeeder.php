@@ -80,6 +80,16 @@ class MenuItemSeeder extends Seeder
         ]);
 
         MenuItem::create([
+            'name' => 'JPM Tagging',
+            'icon' => 'tags',
+            'route' => 'jpm-tagging.index',
+            'permission' => 'jpm.view',
+            'order' => 25,
+            'is_active' => true,
+            'is_group' => false,
+        ]);
+
+        MenuItem::create([
             'name' => 'Fund Transactions',
             'icon' => 'pi pi-credit-card',
             'route' => 'fund_transactions.index',

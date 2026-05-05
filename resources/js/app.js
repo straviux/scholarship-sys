@@ -61,6 +61,7 @@ import TabPanel from 'primevue/tabpanel';
 import Toolbar from 'primevue/toolbar';
 import Popover from 'primevue/popover';
 import DataView from 'primevue/dataview';
+import Paginator from 'primevue/paginator';
 import ConfirmDialog from 'primevue/confirmdialog';
 import FloatLabel from 'primevue/floatlabel';
 
@@ -193,6 +194,7 @@ createInertiaApp({
 		app.component('Toolbar', Toolbar);
 		app.component('Popover', Popover);
 		app.component('DataView', DataView);
+		app.component('Paginator', Paginator);
 		app.component('ConfirmDialog', ConfirmDialog);
 		app.component('FloatLabel', FloatLabel);
 

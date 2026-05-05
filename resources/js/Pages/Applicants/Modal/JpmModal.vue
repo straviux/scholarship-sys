@@ -131,7 +131,7 @@ const saveJpmData = () => {
         jpm_remarks: jpmForm.value.jpm_remarks
     };
 
-    router.put(route('applicants.updateJpmStatus', props.profile.profile_id), payload, {
+    router.put(route('jpm-tagging.update', props.profile.profile_id), payload, {
         preserveScroll: true,
         preserveState: false,
         onSuccess: () => {

@@ -261,8 +261,8 @@
                             </div>
                         </div>
 
-                        <div class="ios-section" v-if="reportType === 'list'">
-                            <div class="ios-section-label">Grouping</div>
+                        <div class="ios-section">
+                            <div class="ios-section-label">{{ reportType === 'summary' ? 'Summary Grouping' : 'Grouping' }}</div>
                             <div class="ios-card">
                                 <!-- Group By -->
                                 <div class="ios-row">
@@ -277,7 +277,7 @@
                                 </div>
 
                                 <!-- Sub-Group By -->
-                                <div class="ios-row" v-if="groupBy && groupBy !== 'none'">
+                                <div class="ios-row" v-if="reportType === 'list' && groupBy && groupBy !== 'none'">
                                     <div class="ios-row-label">
                                         <AppIcon name="objects-column" :size="13" style="color: #8E8E93;" />
                                         Sub-Group
@@ -290,7 +290,7 @@
                                 </div>
 
                                 <!-- Tertiary Group By -->
-                                <div class="ios-row" v-if="groupBySecondary && groupBySecondary !== 'none'">
+                                <div class="ios-row" v-if="reportType === 'list' && groupBySecondary && groupBySecondary !== 'none'">
                                     <div class="ios-row-label">
                                         <AppIcon name="objects-column" :size="13" style="color: #C7C7CC;" />
                                         3rd Group
@@ -302,24 +302,23 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="ios-section-footer" v-if="reportType === 'summary'">
+                                Summary mode uses the selected group for the breakdown table on the report summary page.
+                            </div>
                         </div>
 
-                        <div class="ios-section" v-if="reportType === 'summary'">
-                            <div class="ios-section-label">Summary Layout</div>
+                        <div class="ios-section">
+                            <div class="ios-section-label">Options</div>
                             <div class="ios-card">
                                 <div class="ios-row">
                                     <div class="ios-row-label">
-                                        <AppIcon name="bar-chart-3" :size="13" style="color: #5856D6;" />
-                                        Fixed Summary Blocks
+                                        <AppIcon name="wallet" :size="13" style="color: #34C759;" />
+                                        Include Projected Expense
                                     </div>
-                                    <div class="ios-row-control" style="justify-content: flex-end; color: #8E8E93;">
-                                        By Status · By Program
+                                    <div class="ios-row-control" style="justify-content: flex-end;">
+                                        <InputSwitch v-model="includeProjectedExpense" />
                                     </div>
                                 </div>
-                            </div>
-                            <div class="ios-section-footer">
-                                Summary mode follows the interviewed-applicants layout with fixed side-by-side
-                                breakdowns.
                             </div>
                         </div>
                     </div>
@@ -452,6 +451,7 @@ const groupByTertiary = ref('none');
 const showSequenceNumbers = ref(true);
 const includeRemarks = ref(false);
 const includeGrantProvision = ref(true);
+const includeProjectedExpense = ref(true);
 const enableJpmHighlighting = ref(false);
 const jpmFilter = ref('all');
 
@@ -650,6 +650,7 @@ async function generateReport() {
                 showSequenceNumbers: showSequenceNumbers.value,
                 includeRemarks: includeRemarks.value,
                 includeGrantProvision: includeGrantProvision.value,
+                includeProjectedExpense: includeProjectedExpense.value,
                 enableJpmHighlighting: enableJpmHighlighting.value,
                 jpmFilter: jpmFilter.value,
                 selectedStatus: selectedStatus.value,

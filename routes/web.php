@@ -18,6 +18,7 @@ use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\ScholarshipProfileController;
 use App\Http\Controllers\ScholarController;
 use App\Http\Controllers\ApplicantController;
+use App\Http\Controllers\JpmTaggingController;
 use App\Http\Controllers\SystemReportController;
 use App\Http\Controllers\SystemUpdateController;
 use App\Http\Controllers\SystemOptionController;
@@ -234,6 +235,18 @@ Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->gr
     Route::delete('/profiles/delete-educational-background/{id}', 'deleteEducationBackgroundApi')->name('profile-api.deleteeducation');
 });
 
+Route::middleware(['auth'])->controller(JpmTaggingController::class)->group(function () {
+    Route::get('/jpm-tagging', 'index')
+        ->middleware('check.permission:jpm.view')
+        ->name('jpm-tagging.index');
+    Route::get('/jpm-tagging/report', 'report')
+        ->middleware('check.permission:jpm.view')
+        ->name('jpm-tagging.report');
+    Route::put('/jpm-tagging/{profile}', 'update')
+        ->middleware('check.permission:jpm.manage')
+        ->name('jpm-tagging.update');
+});
+
 // APPLICANT ROUTES - Accessible to all authenticated users
 // Access is controlled via permission gates in the controller
 Route::middleware(['auth'])->group(function () {
@@ -243,8 +256,6 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/applicants/{id}', [ScholarshipProfileController::class, 'updateApplicant'])->middleware('check.permission:applicants.edit')->name('applicants.update');
     Route::delete('/applicants/{id}', [ApplicantController::class, 'destroy'])->middleware('check.permission:applicants.delete')->name('applicants.destroy');
     Route::get('/applicants-export', [ApplicantController::class, 'export'])->middleware('check.permission:applicants.export')->name('applicants.export');
-    Route::put('/applicants/{id}/jpm-status', [ApplicantController::class, 'updateJpmStatus'])->middleware('check.permission:applicants.edit')->name('applicants.updateJpmStatus');
-    Route::put('/applicants/{id}/jpm-remarks', [ApplicantController::class, 'updateJpmRemarks'])->middleware('check.permission:applicants.edit')->name('applicants.updateJpmRemarks');
     Route::post('/applicants/requirement/generate-qr', [ApplicantController::class, 'generateRequirementQrCode'])->middleware('check.permission:applicants.view')->name('applicants.requirement.generate-qr');
     // Generic route MUST come last to catch all remaining /applicants patterns
     Route::get('/applicants/{action?}/{id?}', [ApplicantController::class, 'index'])->middleware('check.permission:applicants.view')->name('applicants.index'); // Accepts filter values via query string: ?applied_course=...&municipality=...&name=...&per_page=...

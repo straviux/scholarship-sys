@@ -2,7 +2,7 @@
 
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import moment from 'moment'
-import { Head, useForm, router, usePage } from '@inertiajs/vue3';
+import { Head, useForm, router } from '@inertiajs/vue3';
 import { ref, onBeforeUnmount, watch, computed, inject } from 'vue';
 import { usePermission } from '@/composable/permissions';
 import { useFilterManager } from '@/composables/useFilterManager';
@@ -14,7 +14,6 @@ import ApplicantFormModal from './Modal/ApplicantFormModal.vue';
 import YakapCategoryModal from './Modal/YakapCategoryModal.vue';
 import ExportSelectedModal from './Modal/ExportSelectedModal.vue';
 import PriorityModal from './Modal/PriorityModal.vue';
-import JpmModal from './Modal/JpmModal.vue';
 import RequirementsChecklistModal from './Modal/RequirementsChecklistModal.vue';
 import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
 import InterviewAssessmentModal from './Modal/InterviewAssessmentModal.vue';
@@ -70,15 +69,6 @@ const props = defineProps({
     }
 });
 
-// Determine initial JPM filter value from props
-const getInitialJpmFilter = () => {
-    const f = props.filter || {};
-    if (f.show_jpm_only === true || f.show_jpm_only === 'true' || f.show_jpm_only === '1') return 'jpm_only';
-    if (f.hide_jpm === true || f.hide_jpm === 'true' || f.hide_jpm === '1') return 'hide_jpm';
-    if (f.hide_all_tagged === true || f.hide_all_tagged === 'true' || f.hide_all_tagged === '1') return 'hide_all_tagged';
-    return 'all';
-};
-
 // Filter management via composable
 const {
     filters: filter,
@@ -114,16 +104,8 @@ const {
         { key: 'encoded_from', type: 'date', default: null },
         { key: 'encoded_to', type: 'date', default: null },
         { key: 'remarks', type: 'text', default: '' },
-        { key: 'jpm_filter', type: 'text', default: getInitialJpmFilter() },
     ],
-    beforeSearch(params, filterValues) {
-        // JPM filter -> convert to special backend params
-        const jpm = filterValues.jpm_filter;
-        delete params.jpm_filter;
-        if (jpm === 'jpm_only') params.show_jpm_only = 1;
-        else if (jpm === 'hide_jpm') params.hide_jpm = 1;
-        else if (jpm === 'hide_all_tagged') params.hide_all_tagged = 1;
-
+    beforeSearch(params) {
         // Include sort params if set
         if (form.sort && Object.values(form.sort).some(v => v)) {
             params.sort = form.sort;
@@ -192,14 +174,6 @@ const form = useForm({
 });
 
 const searchInput = ref(null);
-
-// JPM Filter Options
-const jpmFilterOptions = [
-    { label: 'Show All', value: 'all' },
-    { label: 'Show JPM Only', value: 'jpm_only' },
-    { label: 'Hide JPM', value: 'hide_jpm' },
-    { label: 'Hide All Tagged', value: 'hide_all_tagged' }
-];
 
 // YAKAP Category Filter Options
 const yakapCategoryOptions = [
@@ -458,19 +432,6 @@ onBeforeUnmount(() => {
 
 // triggerSearch and clearFilter are provided by useFilterManager composable
 
-// Combined JPM Tagging & Remarks functionality
-const showJpmModal = ref(false);
-const selectedProfileForJpm = ref(null);
-
-const openJpmModal = (profile) => {
-    if (!hasPermission('jpm.manage')) {
-        toast.error('You do not have permission to manage JPM tagging');
-        return;
-    }
-    selectedProfileForJpm.value = profile;
-    showJpmModal.value = true;
-};
-
 // Remarks Modal functionality
 const showRemarksModal = ref(false);
 const selectedProfileForRemarks = ref(null);
@@ -502,38 +463,6 @@ const submitRemarks = () => {
         }
     });
 };
-
-
-// Persist showJpmColumns state in localStorage
-// Only restore from localStorage if user has jpm.view permission
-const showJpmColumns = ref(hasPermission('jpm.view') && localStorage.getItem('showJpmColumns') === 'true');
-
-// Watch for changes in showJpmColumns and persist to localStorage
-// Only persist if user has jpm.view permission
-watch(showJpmColumns, (newValue) => {
-    if (hasPermission('jpm.view')) {
-        localStorage.setItem('showJpmColumns', newValue.toString());
-    } else {
-        // Clear from localStorage if permission is revoked
-        localStorage.removeItem('showJpmColumns');
-        showJpmColumns.value = false;
-    }
-});
-
-// Add a watcher to reset showJpmColumns if user loses permission during session
-const page = usePage();
-watch(() => page.props.auth?.user?.permissions, (newPermissions) => {
-    if (newPermissions && !newPermissions.includes('jpm.view')) {
-        showJpmColumns.value = false;
-        localStorage.removeItem('showJpmColumns');
-    }
-}, { deep: true });
-
-// Computed property to ensure JPM controls are only shown if user ACTUALLY has permission
-// This acts as a final safeguard against any stale state
-const canShowJpmControls = computed(() => {
-    return hasPermission('jpm.view') && showJpmColumns.value === true;
-});
 
 // Filter drawer state
 const showFilterDrawer = ref(false);
@@ -663,18 +592,6 @@ const buildContextMenu = (rowData) => {
         }
     }
 
-    if (hasPermission('jpm.view') && showJpmColumns.value) {
-        items.push({
-            separator: true
-        });
-        items.push({
-            label: 'Edit JPM Tagging',
-            icon: 'tags',
-            command: () => openJpmModal(rowData),
-            disabled: !hasPermission('jpm.manage')
-        });
-    }
-
     if (hasPermission('applicants.edit')) {
         items.push({
             separator: true
@@ -724,10 +641,8 @@ const batchYakapForm = useForm({
 });
 
 // Memoization cache for expensive computations
-const jpmStatusCache = new Map();
 const formatMemoCache = new Map();
 const applicantMemoCache = new Map();
-const jpmStatusMemoCache = new Map();
 
 // Pass raw data directly - transformations happen only on render
 const applicants = computed(() => {
@@ -849,7 +764,6 @@ const handleApprovalAction = () => {
 const refreshApplicationList = () => {
     // Clear memoization caches before refresh
     applicantMemoCache.clear();
-    jpmStatusMemoCache.clear();
     formatMemoCache.clear();
 
     router.reload({
@@ -996,70 +910,6 @@ const getApplicantFullName = (applicant) => {
     ].filter(Boolean);
 
     const result = parts.join(' ').replace(' ,', ',');
-    formatMemoCache.set(cacheKey, result);
-    return result;
-};
-
-// Get JPM status for tag display with member details (memoized)
-const getJpmStatus = (profile) => {
-    if (!profile) return null;
-
-    // Use profile_id as cache key
-    const cacheKey = profile.profile_id;
-    if (jpmStatusMemoCache.has(cacheKey)) {
-        return jpmStatusMemoCache.get(cacheKey);
-    }
-
-    const members = [];
-    if (profile.is_jpm_member) members.push('Applicant');
-    if (profile.is_father_jpm) members.push('Father');
-    if (profile.is_mother_jpm) members.push('Mother');
-    if (profile.is_guardian_jpm) members.push('Guardian');
-
-    let result = null;
-    if (members.length > 0) {
-        result = {
-            status: 'member',
-            members: members
-        };
-    } else if (profile.is_not_jpm) {
-        result = {
-            status: 'not_member',
-            members: []
-        };
-    } else if (profile.jpm_remarks && profile.jpm_remarks.trim() !== '') {
-        result = {
-            status: 'not_member',
-            members: []
-        };
-    }
-
-    jpmStatusMemoCache.set(cacheKey, result);
-    return result;
-};
-
-// Get tag severity for JPM status
-const getJpmTagSeverity = (statusObj) => {
-    if (!statusObj) return 'secondary';
-    switch (statusObj.status) {
-        case 'member': return 'success';
-        case 'not_member': return 'warn';
-        default: return 'secondary';
-    }
-};
-
-// Get tag label for JPM status
-const getJpmTagLabel = (statusObj) => {
-    if (!statusObj) return '';
-    switch (statusObj.status) {
-        case 'member': return 'Member';
-        case 'not_member': return 'Not Member';
-        default: return '';
-    }
-};
-
-// Get member details text
-const getJpmMemberDetails = (statusObj) => {
     if (!statusObj || statusObj.status !== 'member' || !statusObj.members.length) return '';
     return statusObj.members.join(', ');
 };
@@ -1134,23 +984,6 @@ const truncateText = (text, maxLength = 80) => {
 
                 <template #end>
                     <div class="flex gap-3 items-center">
-                        <!-- JPM Controls -->
-                        <template v-if="hasPermission('jpm.view')">
-                            <div class="flex items-center justify-between gap-4 flex-1">
-                                <label class="text-sm text-gray-600">JPM Tagging</label>
-                                <ToggleSwitch v-model="showJpmColumns"
-                                    style="transform: scale(0.75); transform-origin: right center;" />
-                            </div>
-
-                            <div class="flex items-center gap-2">
-                                <Select v-model="filter.jpm_filter" :options="jpmFilterOptions" optionLabel="label"
-                                    size="small" optionValue="value" placeholder="Select filter" class="w-40"
-                                    inputId="jpmFilter" />
-                            </div>
-
-                            <Divider layout="vertical" class="h-6" />
-                        </template>
-
                         <Button @click="openYakapCategoryModal" v-if="hasPermission('applicants.create')"
                             severity="success" text rounded v-tooltip.bottom="'Add New Applicant'">
                             <template #icon>
@@ -1497,49 +1330,7 @@ const truncateText = (text, maxLength = 80) => {
                         </template>
                     </Column>
 
-                    <!-- Parent/Guardian Column (only visible when showJpmColumns is enabled) -->
-                    <Column header="Parent/Guardian" v-if="hasPermission('jpm.view') && showJpmColumns"
-                        style="min-width: 200px">
-                        <template #body="slotProps">
-                            <div class="text-xs space-y-1">
-                                <div v-if="slotProps.data.father_name">
-                                    <span class="font-medium">{{ slotProps.data.father_name }}</span>
-                                    <span class="text-gray-500 italic"> (father)</span>
-                                </div>
-                                <div v-if="slotProps.data.mother_name">
-                                    <span class="font-medium">{{ slotProps.data.mother_name }}</span>
-                                    <span class="text-gray-500 italic"> (mother)</span>
-                                </div>
-                                <div v-if="slotProps.data.guardian_name">
-                                    <span class="font-medium">{{ slotProps.data.guardian_name }}</span>
-                                    <span class="text-gray-500 italic"> (guardian)</span>
-                                </div>
-                                <span
-                                    v-if="!slotProps.data.father_name && !slotProps.data.mother_name && !slotProps.data.guardian_name"
-                                    class="text-gray-400">-</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <!-- JPM Status Column (only visible when showJpmColumns is enabled) -->
-                    <Column header="JPM" v-if="hasPermission('jpm.view') && showJpmColumns" style="width: 80px">
-                        <template #body="slotProps">
-                            <div class="flex items-center justify-center">
-                                <div v-if="getJpmStatus(slotProps.data)?.status === 'member'"
-                                    v-tooltip.top="'JPM Member: ' + getJpmMemberDetails(getJpmStatus(slotProps.data))">
-                                    <AppIcon name="check-circle" :size="18" class="text-green-500" />
-                                </div>
-                                <div v-else-if="getJpmStatus(slotProps.data)?.status === 'not_member'"
-                                    v-tooltip.top="'Not a JPM Member'">
-                                    <AppIcon name="times-circle" :size="18" class="text-orange-400" />
-                                </div>
-                                <span v-else class="text-gray-300">-</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <!-- Remarks Column (hidden when JPM columns visible) -->
-                    <Column header="Remarks" v-if="!showJpmColumns" style="max-width: 200px">
+                    <Column header="Remarks" style="max-width: 200px">
                         <template #body="slotProps">
                             <div v-if="slotProps.data.remarks" v-safe-html="slotProps.data.remarks"
                                 class="text-xs prose prose-xs max-w-none line-clamp-3"></div>
@@ -1573,23 +1364,6 @@ const truncateText = (text, maxLength = 80) => {
                                 </div>
                                 <span v-if="!slotProps.data.updated_by && !slotProps.data.updated_at"
                                     class="text-gray-400">-</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <!-- JPM Actions Column (visible when JPM columns enabled) -->
-                    <Column header="Tagging" v-if="hasPermission('jpm.view') && showJpmColumns"
-                        style="min-width: 150px">
-                        <template #body="slotProps">
-                            <div class="flex flex-col gap-2 items-center">
-                                <AppButton @click="openJpmModal(slotProps.data)" rounded icon="tags" severity="info"
-                                    size="small" outlined :disabled="!hasPermission('jpm.manage')"
-                                    v-tooltip.top="'Edit JPM tagging and remarks'" />
-
-                                <!-- Quick preview of remarks if exists -->
-                                <div v-if="slotProps.data.jpm_remarks" class="text-xs text-gray-600 italic truncate">
-                                    "{{ slotProps.data.jpm_remarks }}"
-                                </div>
                             </div>
                         </template>
                     </Column>
@@ -1629,10 +1403,6 @@ const truncateText = (text, maxLength = 80) => {
                 </DataTable>
             </Panel>
         </div>
-
-        <!-- Combined JPM Tagging & Remarks Modal -->
-        <!-- JPM Modal -->
-        <JpmModal :show="showJpmModal" :profile="selectedProfileForJpm" @update:show="showJpmModal = $event" />
 
         <!-- Remarks Modal -->
         <RemarksModal :show="showRemarksModal" :profile="selectedProfileForRemarks"

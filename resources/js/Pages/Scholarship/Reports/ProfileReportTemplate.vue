@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import moment from 'moment';
-import { formatName, formatStatus, getReportStatus, groupRecords } from './report-helpers';
+import { formatName, formatStatus, getGroupValue, getReportStatus, groupRecords } from './report-helpers';
 import ProfileReportTable from './ProfileReportTable.vue';
 
 const props = defineProps({
@@ -15,6 +15,15 @@ const props = defineProps({
 const SUMMARY_HDR = 'background:#f0f0f0;font-weight:700;font-size:9pt;padding:5pt 8pt;text-transform:uppercase;border-bottom:0.5pt solid #ccc;';
 const SUMMARY_TH = 'border:0.5pt solid #d9d9d9;padding:4pt 6pt;font-weight:700;font-size:8pt;text-transform:uppercase;background:#f8f8f8;text-align:left;';
 const SUMMARY_TD = 'border:0.5pt solid #e5e5e5;padding:4pt 6pt;font-size:8pt;';
+const SUMMARY_GROUP_LABELS = {
+    unified_status: 'Status',
+    school: 'School',
+    program: 'Program',
+    course: 'Course',
+    year_level: 'Year Level',
+    municipality: 'Municipality',
+    grant_provision: 'Grant Provision',
+};
 
 const selectedStatus = computed(() => props.options?.selectedStatus ?? null);
 const sortedRecords = computed(() => [...props.records].sort((left, right) =>
@@ -30,6 +39,13 @@ const preparedBy = computed(() => props.options?.preparedBy || '');
 const preparedByTitle = computed(() => props.options?.preparedByTitle || '');
 const signatoryName = computed(() => props.options?.signatoryName || '');
 const signatoryTitle = computed(() => props.options?.signatoryTitle || '');
+const includeProjectedExpense = computed(() => props.options?.includeProjectedExpense !== false);
+const summaryGroupBy = computed(() => {
+    const requestedGroup = props.options?.groupBy;
+    return requestedGroup && requestedGroup !== 'none' ? requestedGroup : 'program';
+});
+const summaryGroupColumnLabel = computed(() => SUMMARY_GROUP_LABELS[summaryGroupBy.value] || 'Program');
+const summaryGroupTitle = computed(() => `Breakdown by ${summaryGroupColumnLabel.value}`);
 
 const reportLabel = computed(() => {
     const map = {
@@ -101,11 +117,13 @@ const statusSummaryRows = computed(() => {
     return Object.values(groupedRows).sort((left, right) => left.label.localeCompare(right.label));
 });
 
-const programSummaryRows = computed(() => {
+const showStatusSummary = computed(() => (statusSummaryRows.value.length > 1 || !selectedStatus.value) && summaryGroupBy.value !== 'unified_status');
+
+const summaryGroupRows = computed(() => {
     const groupedRows = {};
 
     for (const record of sortedRecords.value) {
-        const key = record.program_name || 'N/A';
+        const key = getGroupValue(record, summaryGroupBy.value) || '—';
 
         if (!groupedRows[key]) {
             groupedRows[key] = { key, label: key, count: 0, projected: 0 };
@@ -115,7 +133,10 @@ const programSummaryRows = computed(() => {
         groupedRows[key].projected += Number(record?.projected_total_expense || 0);
     }
 
-    return Object.values(groupedRows).sort((left, right) => left.label.localeCompare(right.label));
+    return Object.values(groupedRows).sort((left, right) => left.label.localeCompare(right.label, undefined, {
+        sensitivity: 'base',
+        numeric: true,
+    }));
 });
 
 const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.value));
@@ -137,7 +158,7 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
 
             <div style="text-align:center;padding:8pt 0 4pt;">
                 <p style="font-weight:700;font-size:13pt;">{{ reportTitle }}</p>
-                <p style="font-size:9pt;margin-top:3pt;">As of {{ asOfLabel }}</p>
+                <p v-if="reportType !== 'summary'" style="font-size:9pt;margin-top:3pt;">As of {{ asOfLabel }}</p>
             </div>
 
             <div v-if="records.length === 0"
@@ -153,7 +174,9 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                             <span style="font-weight:700;font-size:10pt;">{{ group.key }}</span>
                             <span style="font-size:8pt;color:#555;">
                                 {{ group.count }} record{{ group.count !== 1 ? 's' : '' }}
-                                | {{ fmtCurrency(groupProjectedExpense(group)) }} projected
+                                <template v-if="includeProjectedExpense">
+                                    | {{ fmtCurrency(groupProjectedExpense(group)) }} projected
+                                </template>
                             </span>
                         </div>
 
@@ -166,7 +189,9 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                                 <span style="font-weight:600;font-size:9pt;">{{ sub.key }}</span>
                                 <span style="font-size:8pt;color:#555;">
                                     {{ sub.count }} record{{ sub.count !== 1 ? 's' : '' }}
-                                    | {{ fmtCurrency(groupProjectedExpense(sub)) }} projected
+                                    <template v-if="includeProjectedExpense">
+                                        | {{ fmtCurrency(groupProjectedExpense(sub)) }} projected
+                                    </template>
                                 </span>
                             </div>
 
@@ -179,7 +204,9 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                                     <span style="font-weight:600;font-size:8pt;">{{ ter.key }}</span>
                                     <span style="font-size:8pt;color:#555;">
                                         {{ ter.count }} record{{ ter.count !== 1 ? 's' : '' }}
-                                        | {{ fmtCurrency(groupProjectedExpense(ter)) }} projected
+                                        <template v-if="includeProjectedExpense">
+                                            | {{ fmtCurrency(groupProjectedExpense(ter)) }} projected
+                                        </template>
                                     </span>
                                 </div>
 
@@ -201,8 +228,10 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
         </div>
 
         <!-- ── Report Summary (last page) ───────────────────────── -->
-        <div v-if="records.length > 0" class="summary-section" style="margin-top:18pt;page-break-inside:avoid;">
-            <div
+        <div v-if="records.length > 0"
+            :class="['summary-section', { 'summary-section-page-break': reportType === 'list' }]"
+            style="margin-top:18pt;">
+            <div v-if="reportType !== 'summary'"
                 style="text-align:center;border-top:1.5pt solid #000;border-bottom:0.5pt solid #000;padding:5pt 0;margin-bottom:10pt;">
                 <p style="font-weight:700;font-size:10pt;letter-spacing:1pt;text-transform:uppercase;">Report Summary
                 </p>
@@ -211,12 +240,12 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
             <!-- Grand Total Banner -->
             <div style="display:flex;gap:0;border:0.5pt solid #000;margin-bottom:8pt;font-size:8pt;">
                 <div
-                    style="flex:1;padding:3pt 6pt;border-right:0.5pt solid #000;display:flex;align-items:center;justify-content:space-between;gap:6pt;">
+                    :style="`flex:1;padding:3pt 6pt;display:flex;align-items:center;justify-content:space-between;gap:6pt;${includeProjectedExpense ? 'border-right:0.5pt solid #000;' : ''}`">
                     <span style="font-size:7pt;text-transform:uppercase;letter-spacing:0.4pt;color:#555;">Total
                         Records</span>
                     <span style="font-size:9pt;font-weight:700;">{{ records.length.toLocaleString() }}</span>
                 </div>
-                <div
+                <div v-if="includeProjectedExpense"
                     style="flex:2;padding:3pt 6pt;display:flex;align-items:center;justify-content:space-between;gap:6pt;">
                     <span style="font-size:7pt;text-transform:uppercase;letter-spacing:0.4pt;color:#555;">Total
                         Projected
@@ -228,14 +257,14 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
             <!-- Breakdown Tables -->
             <div style="display:flex;gap:12pt;">
                 <!-- By Status -->
-                <div v-if="statusSummaryRows.length > 1 || !selectedStatus" style="flex:1;border:0.5pt solid #000;">
+                <div v-if="showStatusSummary" style="flex:1;border:0.5pt solid #000;">
                     <div :style="SUMMARY_HDR">Breakdown by Status</div>
                     <table style="width:100%;border-collapse:collapse;font-size:8pt;table-layout:fixed;">
                         <thead>
                             <tr>
                                 <th :style="SUMMARY_TH">Status</th>
                                 <th :style="SUMMARY_TH + 'text-align:right;width:18%;'">Records</th>
-                                <th :style="SUMMARY_TH + 'text-align:right;width:32%;'">Projected</th>
+                                <th v-if="includeProjectedExpense" :style="SUMMARY_TH + 'text-align:right;width:32%;'">Projected</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -244,7 +273,7 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                                 <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;'">{{
                                     row.count.toLocaleString() }}
                                 </td>
-                                <td :style="SUMMARY_TD + 'text-align:right;'">{{ fmtCurrency(row.projected) }}</td>
+                                <td v-if="includeProjectedExpense" :style="SUMMARY_TD + 'text-align:right;'">{{ fmtCurrency(row.projected) }}</td>
                             </tr>
                         </tbody>
                         <tfoot>
@@ -252,31 +281,31 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                                 <td :style="SUMMARY_TD + 'font-weight:700;background:#f0f0f0;'">TOTAL</td>
                                 <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
                                     records.length.toLocaleString() }}</td>
-                                <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
+                                <td v-if="includeProjectedExpense" :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
                                     fmtCurrency(totalProjectedExpense) }}</td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
 
-                <!-- By Program -->
+                <!-- Configured Breakdown -->
                 <div style="flex:1;border:0.5pt solid #000;">
-                    <div :style="SUMMARY_HDR">Breakdown by Program</div>
+                    <div :style="SUMMARY_HDR">{{ summaryGroupTitle }}</div>
                     <table style="width:100%;border-collapse:collapse;font-size:8pt;table-layout:fixed;">
                         <thead>
                             <tr>
-                                <th :style="SUMMARY_TH">Program</th>
+                                <th :style="SUMMARY_TH">{{ summaryGroupColumnLabel }}</th>
                                 <th :style="SUMMARY_TH + 'text-align:right;width:18%;'">Records</th>
-                                <th :style="SUMMARY_TH + 'text-align:right;width:32%;'">Projected</th>
+                                <th v-if="includeProjectedExpense" :style="SUMMARY_TH + 'text-align:right;width:32%;'">Projected</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="row in programSummaryRows" :key="row.key">
+                            <tr v-for="row in summaryGroupRows" :key="row.key">
                                 <td :style="SUMMARY_TD">{{ row.label }}</td>
                                 <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;'">{{
                                     row.count.toLocaleString() }}
                                 </td>
-                                <td :style="SUMMARY_TD + 'text-align:right;'">{{ fmtCurrency(row.projected) }}</td>
+                                <td v-if="includeProjectedExpense" :style="SUMMARY_TD + 'text-align:right;'">{{ fmtCurrency(row.projected) }}</td>
                             </tr>
                         </tbody>
                         <tfoot>
@@ -284,7 +313,7 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                                 <td :style="SUMMARY_TD + 'font-weight:700;background:#f0f0f0;'">TOTAL</td>
                                 <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
                                     records.length.toLocaleString() }}</td>
-                                <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
+                                <td v-if="includeProjectedExpense" :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
                                     fmtCurrency(totalProjectedExpense) }}</td>
                             </tr>
                         </tfoot>

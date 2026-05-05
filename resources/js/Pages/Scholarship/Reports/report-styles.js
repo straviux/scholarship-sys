@@ -102,13 +102,13 @@ body {
 }
 
 /* ── Paged.js page breaks ────────────────────── */
-.summary-section {
+.summary-section-page-break {
   break-before: page;
+  page-break-before: always;
 }
 
 .report-page {
-  display: flex;
-  flex-direction: column;
+  display: block;
 }
 
 /* ── Report Header ─────────────────────────── */
@@ -292,7 +292,7 @@ body {
   color: #888;
   border-top: 0.5pt solid #ccc;
   padding-top: 4pt;
-  margin-top: auto;
+  margin-top: 12pt;
 }
 
 /* ── JPM Highlight ─────────────────────────── */
