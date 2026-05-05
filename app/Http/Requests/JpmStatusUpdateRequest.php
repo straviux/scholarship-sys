@@ -39,7 +39,8 @@ class JpmStatusUpdateRequest extends FormRequest
         } elseif (($normalized['is_jpm_member'] ?? false)
             || ($normalized['is_mother_jpm'] ?? false)
             || ($normalized['is_father_jpm'] ?? false)
-            || ($normalized['is_guardian_jpm'] ?? false)) {
+            || ($normalized['is_guardian_jpm'] ?? false)
+        ) {
             $normalized['is_not_jpm'] = false;
         }
 

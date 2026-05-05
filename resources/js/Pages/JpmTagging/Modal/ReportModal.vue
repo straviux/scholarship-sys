@@ -7,7 +7,8 @@
                 current page.
             </div>
 
-            <div v-if="totalRecords > 500" class="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div v-if="totalRecords > 500"
+                class="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                 Large report detected: {{ totalRecords }} profiles. Preview generation may take longer than usual.
             </div>
 
@@ -23,7 +24,8 @@
             <div class="space-y-3 rounded-3xl border border-slate-200 px-4 py-4">
                 <div>
                     <div class="text-sm font-semibold text-slate-700">Header</div>
-                    <div class="text-xs text-slate-500">Customize the report title shown at the top of the printed report.</div>
+                    <div class="text-xs text-slate-500">Customize the report title shown at the top of the printed
+                        report.</div>
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-medium text-slate-700">Report Title</label>

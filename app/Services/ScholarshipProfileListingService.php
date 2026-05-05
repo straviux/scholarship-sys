@@ -80,9 +80,9 @@ class ScholarshipProfileListingService
             },
             'scholarshipGrant' => function ($query) {
                 $query->with([
-                    'program' => fn ($relationQuery) => $relationQuery->select('scholarship_programs.id', 'scholarship_programs.name', 'scholarship_programs.shortname'),
-                    'course' => fn ($relationQuery) => $relationQuery->select('courses.id', 'courses.name', 'courses.shortname'),
-                    'school' => fn ($relationQuery) => $relationQuery->select('schools.id', 'schools.name', 'schools.shortname'),
+                    'program' => fn($relationQuery) => $relationQuery->select('scholarship_programs.id', 'scholarship_programs.name', 'scholarship_programs.shortname'),
+                    'course' => fn($relationQuery) => $relationQuery->select('courses.id', 'courses.name', 'courses.shortname'),
+                    'school' => fn($relationQuery) => $relationQuery->select('schools.id', 'schools.name', 'schools.shortname'),
                 ])
                     ->select('id', 'profile_id', 'unified_status', 'created_at', 'program_id', 'course_id', 'school_id', 'year_level', 'date_filed', 'date_approved', 'grant_provision', 'academic_year', 'term')
                     ->orderBy('created_at', 'desc');
@@ -112,9 +112,9 @@ class ScholarshipProfileListingService
         return [
             'latestScholarshipRecord' => function ($query) {
                 $query->with([
-                    'program' => fn ($relationQuery) => $relationQuery->select('scholarship_programs.id', 'scholarship_programs.name', 'scholarship_programs.shortname'),
-                    'course' => fn ($relationQuery) => $relationQuery->select('courses.id', 'courses.name', 'courses.shortname'),
-                    'school' => fn ($relationQuery) => $relationQuery->select('schools.id', 'schools.name', 'schools.shortname'),
+                    'program' => fn($relationQuery) => $relationQuery->select('scholarship_programs.id', 'scholarship_programs.name', 'scholarship_programs.shortname'),
+                    'course' => fn($relationQuery) => $relationQuery->select('courses.id', 'courses.name', 'courses.shortname'),
+                    'school' => fn($relationQuery) => $relationQuery->select('schools.id', 'schools.name', 'schools.shortname'),
                 ])
                     ->select('id', 'profile_id', 'unified_status', 'program_id', 'course_id', 'school_id', 'year_level', 'academic_year', 'term')
                     ->orderBy('created_at', 'desc');
@@ -288,7 +288,7 @@ class ScholarshipProfileListingService
 
             $latestId = $latestRecord?->id;
             $previousRecordStatuses = $profile->scholarshipGrant
-                ->filter(fn ($record) => $record->id !== $latestId)
+                ->filter(fn($record) => $record->id !== $latestId)
                 ->groupBy('unified_status')
                 ->map->count();
 

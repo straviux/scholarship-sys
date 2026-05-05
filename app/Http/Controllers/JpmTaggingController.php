@@ -29,7 +29,7 @@ class JpmTaggingController extends Controller
     public function report(Request $request, ScholarshipProfileListingService $profileListingService): JsonResponse
     {
         $profiles = $profileListingService->collectForReport($request)
-            ->map(fn (ScholarshipProfile $profile) => $this->serializeReportProfile($profile))
+            ->map(fn(ScholarshipProfile $profile) => $this->serializeReportProfile($profile))
             ->values();
 
         return response()->json([
@@ -64,7 +64,8 @@ class JpmTaggingController extends Controller
         } elseif (($validated['is_jpm_member'] ?? false)
             || ($validated['is_father_jpm'] ?? false)
             || ($validated['is_mother_jpm'] ?? false)
-            || ($validated['is_guardian_jpm'] ?? false)) {
+            || ($validated['is_guardian_jpm'] ?? false)
+        ) {
             $validated['is_not_jpm'] = false;
         }
 

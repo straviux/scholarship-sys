@@ -142,7 +142,8 @@ function jpmStatus(profile) {
 
 <template>
     <div class="report-page">
-        <div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:1.5pt solid #000;padding:8pt 4pt;min-height:56pt;text-align:center;">
+        <div
+            style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:1.5pt solid #000;padding:8pt 4pt;min-height:56pt;text-align:center;">
             <img src="/images/pgp-logo.svg" alt="PGP Logo"
                 style="position:absolute;left:4%;top:50%;transform:translateY(-50%);width:48pt;height:auto;" />
             <p style="font-weight:700;font-size:11pt;">Republic of the Philippines</p>
@@ -157,7 +158,8 @@ function jpmStatus(profile) {
             <p style="font-size:9pt;margin-top:3pt;">As of {{ asOfLabel }}</p>
         </div>
 
-        <div style="display:flex;align-items:center;gap:8pt;flex-wrap:wrap;border:0.5pt solid #cbd5e1;border-radius:8pt;padding:6pt 8pt;margin-bottom:10pt;background:#f8fafc;">
+        <div
+            style="display:flex;align-items:center;gap:8pt;flex-wrap:wrap;border:0.5pt solid #cbd5e1;border-radius:8pt;padding:6pt 8pt;margin-bottom:10pt;background:#f8fafc;">
             <span style="font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#475569;">Summary</span>
             <span v-for="item in summaryItems" :key="item.label" style="font-size:8pt;color:#0f172a;">
                 <strong>{{ item.label }}:</strong> {{ item.value }}
@@ -165,7 +167,8 @@ function jpmStatus(profile) {
         </div>
 
         <div v-if="activeFilters.length" style="margin-bottom:10pt;">
-            <div style="font-size:8pt;font-weight:700;text-transform:uppercase;color:#475569;margin-bottom:4pt;">Applied Filters</div>
+            <div style="font-size:8pt;font-weight:700;text-transform:uppercase;color:#475569;margin-bottom:4pt;">Applied
+                Filters</div>
             <div style="display:flex;flex-wrap:wrap;gap:4pt;">
                 <span v-for="tag in activeFilters" :key="tag.key"
                     style="display:inline-flex;align-items:center;gap:3pt;border:0.5pt solid #cbd5e1;border-radius:999pt;padding:3pt 7pt;font-size:7.5pt;background:#f8fafc;color:#334155;">
@@ -182,42 +185,71 @@ function jpmStatus(profile) {
         <table v-else style="width:100%;border-collapse:collapse;table-layout:fixed;">
             <thead>
                 <tr>
-                    <th style="width:4%;border:0.5pt solid #cbd5e1;padding:6pt 4pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;">#</th>
-                    <th style="width:24%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">Scholar</th>
-                    <th style="width:14%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">Mother</th>
-                    <th style="width:14%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">Father</th>
-                    <th style="width:14%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">Guardian</th>
-                    <th style="width:20%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">Remarks</th>
-                    <th style="width:10%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">JPM Status</th>
+                    <th
+                        style="width:4%;border:0.5pt solid #cbd5e1;padding:6pt 4pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;">
+                        #</th>
+                    <th
+                        style="width:24%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        Scholar</th>
+                    <th
+                        style="width:14%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        Mother</th>
+                    <th
+                        style="width:14%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        Father</th>
+                    <th
+                        style="width:14%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        Guardian</th>
+                    <th
+                        style="width:20%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        Remarks</th>
+                    <th
+                        style="width:10%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        JPM Status</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="(profile, index) in sortedProfiles" :key="profile.profile_id">
-                    <td style="border:0.5pt solid #e2e8f0;padding:6pt 4pt;font-size:8pt;text-align:center;vertical-align:top;">{{ index + 1 }}</td>
+                    <td
+                        style="border:0.5pt solid #e2e8f0;padding:6pt 4pt;font-size:8pt;text-align:center;vertical-align:top;">
+                        {{ index + 1 }}</td>
                     <td style="border:0.5pt solid #e2e8f0;padding:6pt;vertical-align:top;">
                         <div style="font-size:8.5pt;font-weight:700;color:#0f172a;">{{ fullName(profile) }}</div>
-                        <div style="font-size:7.5pt;color:#475569;margin-top:2pt;">{{ latestProgramLabel(profile) }}</div>
-                        <div v-if="latestSchoolLabel(profile)" style="font-size:7pt;color:#64748b;">{{ latestSchoolLabel(profile) }}</div>
-                        <div v-if="profile.latest_scholarship_record?.unified_status" style="font-size:7pt;color:#334155;margin-top:3pt;">
+                        <div style="font-size:7.5pt;color:#475569;margin-top:2pt;">{{ latestProgramLabel(profile) }}
+                        </div>
+                        <div v-if="latestSchoolLabel(profile)" style="font-size:7pt;color:#64748b;">{{
+                            latestSchoolLabel(profile) }}</div>
+                        <div v-if="profile.latest_scholarship_record?.unified_status"
+                            style="font-size:7pt;color:#334155;margin-top:3pt;">
                             Status: {{ statusLabel(profile.latest_scholarship_record.unified_status) }}
                         </div>
                     </td>
-                    <td style="border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">{{ plainText(profile.mother_name) }}</td>
-                    <td style="border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">{{ plainText(profile.father_name) }}</td>
-                    <td style="border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">{{ plainText(profile.guardian_name) }}</td>
+                    <td
+                        style="border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">
+                        {{ plainText(profile.mother_name) }}</td>
+                    <td
+                        style="border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">
+                        {{ plainText(profile.father_name) }}</td>
+                    <td
+                        style="border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">
+                        {{ plainText(profile.guardian_name) }}</td>
                     <td style="border:0.5pt solid #e2e8f0;padding:6pt;vertical-align:top;">
                         <div v-if="includeProfileRemarks" style="margin-bottom:4pt;">
-                            <div style="font-size:7pt;font-weight:700;text-transform:uppercase;color:#64748b;">Profile</div>
-                            <div style="font-size:8pt;color:#0f172a;white-space:pre-wrap;word-break:break-word;">{{ plainText(profile.remarks, 'No remarks available.') }}</div>
+                            <div style="font-size:7pt;font-weight:700;text-transform:uppercase;color:#64748b;">Profile
+                            </div>
+                            <div style="font-size:8pt;color:#0f172a;white-space:pre-wrap;word-break:break-word;">{{
+                                plainText(profile.remarks, 'No remarks available.') }}</div>
                         </div>
                         <div v-if="includeJpmRemarks">
                             <div style="font-size:7pt;font-weight:700;text-transform:uppercase;color:#64748b;">JPM</div>
-                            <div style="font-size:8pt;color:#0f172a;white-space:pre-wrap;word-break:break-word;">{{ plainText(profile.jpm_remarks, 'No JPM note available.') }}</div>
+                            <div style="font-size:8pt;color:#0f172a;white-space:pre-wrap;word-break:break-word;">{{
+                                plainText(profile.jpm_remarks, 'No JPM note available.') }}</div>
                         </div>
                     </td>
                     <td style="border:0.5pt solid #e2e8f0;padding:6pt;vertical-align:top;">
                         <div style="font-size:8pt;font-weight:700;color:#0f172a;">{{ jpmStatus(profile).label }}</div>
-                        <div v-if="jpmStatus(profile).detail" style="font-size:7pt;color:#475569;margin-top:2pt;word-break:break-word;">
+                        <div v-if="jpmStatus(profile).detail"
+                            style="font-size:7pt;color:#475569;margin-top:2pt;word-break:break-word;">
                             {{ jpmStatus(profile).detail }}
                         </div>
                     </td>
@@ -232,12 +264,14 @@ function jpmStatus(profile) {
             </div>
             <div style="display:flex;gap:36pt;min-width:50%;justify-content:flex-end;">
                 <div v-if="preparedBy" style="min-width:180pt;text-align:center;">
-                    <div style="border-top:0.8pt solid #1f2937;padding-top:5pt;font-size:8pt;font-weight:700;">{{ preparedBy }}</div>
+                    <div style="border-top:0.8pt solid #1f2937;padding-top:5pt;font-size:8pt;font-weight:700;">{{
+                        preparedBy }}</div>
                     <div v-if="preparedByTitle" style="font-size:7pt;color:#475569;">{{ preparedByTitle }}</div>
                     <div v-else style="font-size:7pt;color:#475569;">Prepared by</div>
                 </div>
                 <div v-if="signatoryName" style="min-width:180pt;text-align:center;">
-                    <div style="border-top:0.8pt solid #1f2937;padding-top:5pt;font-size:8pt;font-weight:700;">{{ signatoryName }}</div>
+                    <div style="border-top:0.8pt solid #1f2937;padding-top:5pt;font-size:8pt;font-weight:700;">{{
+                        signatoryName }}</div>
                     <div v-if="signatoryTitle" style="font-size:7pt;color:#475569;">{{ signatoryTitle }}</div>
                 </div>
             </div>

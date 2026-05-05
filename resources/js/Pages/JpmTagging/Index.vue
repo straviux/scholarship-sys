@@ -211,7 +211,7 @@
                                             <div class="flex flex-wrap items-center gap-2">
                                                 <Tag :severity="jpmStatus(profile).severity" rounded>
                                                     <span class="text-xs font-semibold">{{ jpmStatus(profile).label
-                                                        }}</span>
+                                                    }}</span>
                                                 </Tag>
                                                 <Tag v-if="jpmStatus(profile).detail" severity="contrast" rounded>
                                                     <span class="text-xs">{{ jpmStatus(profile).detail }}</span>
@@ -221,7 +221,7 @@
                                                     rounded>
                                                     <span class="text-xs font-semibold">{{
                                                         statusLabel(profile.latest_scholarship_record.unified_status)
-                                                        }}</span>
+                                                    }}</span>
                                                 </Tag>
                                             </div>
                                         </div>
@@ -273,7 +273,7 @@
                                                     Profile
                                                     Remarks</div>
                                                 <p class="mt-1 leading-6 text-slate-700">{{ previewText(profile.remarks)
-                                                    }}</p>
+                                                }}</p>
                                             </div>
                                             <div>
                                                 <div
