@@ -397,6 +397,7 @@ import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import moment from 'moment';
 import axios from 'axios';
+import pagedjsPolyfillUrl from '../../../../../node_modules/pagedjs/dist/paged.polyfill.js?url';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import { useSystemOptions } from '@/composables/useSystemOptions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
@@ -719,7 +720,7 @@ function buildReportDoc(bodyHtml, title, paperSettings) {
     body { visibility: hidden; margin: 0; padding: 0; }
     ${getReportCss(paperSettings)}
   </style>
-  <script src="/vendor/pagedjs/paged.polyfill.min.js"><\/script>
+    <script src="${pagedjsPolyfillUrl}"><\/script>
   <script>
     window.PagedPolyfill.on('rendered', function () {
       var pages = document.querySelector('.pagedjs_pages');
