@@ -12,7 +12,7 @@ The Q# (queue number) in the waiting list report was not accurate. The requireme
 
 ## Changes Made
 
-### 1. Updated Sorting Logic (`waiting_list_report.blade.php` lines 266-277)
+### 1. Updated Sorting Logic (legacy waiting-list Blade report, later removed)
 
 **Before:**
 
@@ -189,4 +189,4 @@ To verify the fix:
 
 ## Files Modified
 
-- `resources/views/waiting_list_report.blade.php`
+- Legacy waiting-list Blade report template

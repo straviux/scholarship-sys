@@ -124,10 +124,9 @@ This file is now **ready for the database migration**:
 ### Remaining Tasks:
 
 Before running migration, also fix:
-1. ⏳ ScholarshipReportExport.php
-2. ⏳ ReportController.php
-3. ⏳ Vue components (ProfileHistory, ReportView)
-4. ⏳ Blade templates (3 files)
+1. ⏳ Legacy scholarship report/export layer
+2. ⏳ Vue components (ProfileHistory, ReportView)
+3. ⏳ Legacy scholarship report Blade templates
 
 ---
 

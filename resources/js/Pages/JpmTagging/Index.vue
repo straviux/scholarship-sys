@@ -153,6 +153,10 @@
                             size="small" />
                     </div>
                     <div class="flex flex-col">
+                        <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="All Schools"
+                            size="small" :multiple="false" />
+                    </div>
+                    <div class="flex flex-col">
                         <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
                             size="small" />
                     </div>
@@ -177,7 +181,9 @@
                         <Select v-model="filter.jpm_status" :options="jpmStatusOptions" optionLabel="label"
                             optionValue="value" size="small" class="min-w-[160px]" />
                     </div>
-                    <AppButton v-if="activeFilterTags.length" icon="times" severity="danger" text rounded size="small"
+                    <AppButton icon="sparkles" severity="info"   size="small" rounded iconSize="16"
+                        @click="triggerSearch()"  v-tooltip.bottom="'Apply Filters'" />
+                    <AppButton v-if="activeFilterTags.length" severity="danger" rounded size="small" icon="rotate-ccw" iconSize="16" 
                         @click="clearFilters" v-tooltip.bottom="'Clear Filters'" />
                 </div>
 
@@ -188,120 +194,72 @@
                     </Tag>
                 </div>
 
-                <DataView :value="profileRows" dataKey="profile_id" layout="list">
-                    <template #list="{ items }">
-                        <div v-if="items.length" class="space-y-4 pb-4">
-                            <article v-for="profile in items" :key="profile.profile_id"
-                                class="mx-auto max-w-5xl overflow-hidden rounded-[28px] border border-slate-200 bg-gradient-to-br from-white via-white to-slate-50 shadow-sm">
-                                <div class="border-b border-slate-100 bg-white/80 px-5 py-4 backdrop-blur">
-                                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                        <div class="min-w-0 space-y-3">
-                                            <div>
-                                                <h2 class="truncate text-lg font-semibold text-slate-900">
-                                                    {{ fullName(profile) }}
-                                                </h2>
-                                                <p class="mt-1 text-sm text-slate-500">
-                                                    {{ latestProgramLabel(profile) }}
-                                                    <template v-if="latestSchoolLabel(profile)">
-                                                        • {{ latestSchoolLabel(profile) }}
-                                                    </template>
-                                                </p>
-                                            </div>
-
-                                            <div class="flex flex-wrap items-center gap-2">
-                                                <Tag :severity="jpmStatus(profile).severity" rounded>
-                                                    <span class="text-xs font-semibold">{{ jpmStatus(profile).label
-                                                    }}</span>
-                                                </Tag>
-                                                <Tag v-if="jpmStatus(profile).detail" severity="contrast" rounded>
-                                                    <span class="text-xs">{{ jpmStatus(profile).detail }}</span>
-                                                </Tag>
-                                                <Tag v-if="profile.latest_scholarship_record?.unified_status"
-                                                    :severity="statusSeverity(profile.latest_scholarship_record.unified_status)"
-                                                    rounded>
-                                                    <span class="text-xs font-semibold">{{
-                                                        statusLabel(profile.latest_scholarship_record.unified_status)
-                                                    }}</span>
-                                                </Tag>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex shrink-0 flex-col items-stretch gap-2 sm:flex-row lg:flex-col">
-                                            <AppButton icon="tags"
-                                                :label="hasExistingTagging(profile) ? 'Edit Tagging' : 'Tag JPM'"
-                                                severity="info" rounded :outlined="!hasExistingTagging(profile)"
-                                                :disabled="!canManageJpm" @click="openJpmModal(profile)" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="grid gap-4 px-5 py-5 md:grid-cols-2">
-                                    <section class="rounded-3xl border border-slate-100 bg-white px-4 py-4">
-                                        <div
-                                            class="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                                            Family</div>
-                                        <div class="space-y-3 text-sm text-slate-700">
-                                            <div>
-                                                <div
-                                                    class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-                                                    Mother</div>
-                                                <div class="mt-1">{{ presentText(profile.mother_name) }}</div>
-                                            </div>
-                                            <div>
-                                                <div
-                                                    class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-                                                    Father</div>
-                                                <div class="mt-1">{{ presentText(profile.father_name) }}</div>
-                                            </div>
-                                            <div>
-                                                <div
-                                                    class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-                                                    Guardian</div>
-                                                <div class="mt-1">{{ presentText(profile.guardian_name) }}</div>
-                                            </div>
-                                        </div>
-                                    </section>
-
-                                    <section class="rounded-3xl border border-slate-100 bg-white px-4 py-4">
-                                        <div
-                                            class="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                                            Remarks</div>
-                                        <div class="space-y-4 text-sm text-slate-700">
-                                            <div>
-                                                <div
-                                                    class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-                                                    Profile
-                                                    Remarks</div>
-                                                <p class="mt-1 leading-6 text-slate-700">{{ previewText(profile.remarks)
-                                                }}</p>
-                                            </div>
-                                            <div>
-                                                <div
-                                                    class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-                                                    JPM Note</div>
-                                                <p class="mt-1 leading-6 text-slate-700">{{
-                                                    previewText(profile.jpm_remarks) }}</p>
-                                            </div>
-                                        </div>
-                                    </section>
-                                </div>
-                            </article>
-                        </div>
-
-                        <div v-else
-                            class="mx-auto max-w-3xl rounded-[28px] border border-dashed border-slate-300 bg-slate-50 px-8 py-16 text-center">
-                            <div
-                                class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm">
-                                <AppIcon name="tags" :size="26" />
+                <div v-if="profileRows.length" class="grid gap-3 pb-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <div v-for="profile in profileRows" :key="profile.profile_id"
+                        class="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                        
+                        <!-- Tag button (left) + Name + Checkbox (right) -->
+                        <div class="flex items-center gap-2 border-t border-slate-100 pt-2">
+                           
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-semibold text-slate-800">{{ fullName(profile) }}</p>
+                                <p class="truncate text-xs text-slate-500">
+                                    {{ latestProgramLabel(profile) }}<template v-if="latestSchoolLabel(profile)"> · {{ latestSchoolLabel(profile) }}</template>
+                                </p>
                             </div>
-                            <h2 class="mt-5 text-lg font-semibold text-slate-700">No profiles matched this JPM queue
-                            </h2>
-                            <p class="mt-2 text-sm text-slate-500">Adjust the filters or clear them to load more
-                                profiles for tagging.
+                            <AppButton icon="tags" size="small" rounded severity="info"
+                                :outlined="!hasExistingTagging(profile)" :disabled="!canManageJpm"
+                                v-tooltip.right="hasExistingTagging(profile) ? 'Edit Tagging' : 'Tag JPM'"
+                                @click="openJpmModal(profile)" />
+                        </div>
+                        <!-- Badges -->
+                        <div class="flex flex-wrap gap-1">
+                            <Tag :severity="jpmStatus(profile).severity" rounded>
+                                <span class="text-[11px] font-semibold">{{ jpmStatus(profile).label }}</span>
+                            </Tag>
+                            <Tag v-if="jpmStatus(profile).detail" severity="contrast" rounded>
+                                <span class="text-[11px]">{{ jpmStatus(profile).detail }}</span>
+                            </Tag>
+                            <Tag v-if="profile.latest_scholarship_record?.unified_status"
+                                :severity="statusSeverity(profile.latest_scholarship_record.unified_status)" rounded>
+                                <span class="text-[11px] font-semibold">{{ statusLabel(profile.latest_scholarship_record.unified_status) }}</span>
+                            </Tag>
+                        </div>
+                        <!-- Family (above name) -->
+                        <div class="grid grid-cols-1 gap-x-2 text-[11px]">
+                            <div class="flex gap-1">
+                                <span class="font-semibold text-[10px] uppercase tracking-wide text-slate-400">Mother</span>
+                                <p class="truncate text-slate-600">{{ presentText(profile.mother_name) }}</p>
+                            </div>
+                            <div class="flex gap-1">
+                                <span class="font-semibold uppercase tracking-wide text-slate-400">Father</span>
+                                <p class="truncate text-slate-600">{{ presentText(profile.father_name) }}</p>
+                            </div>
+                            <div class="flex gap-1">
+                                <span class="font-semibold text-[10px] uppercase tracking-wide text-slate-400">Guardian</span>
+                                <p class="truncate text-slate-600">{{ presentText(profile.guardian_name) }}</p>
+                            </div>
+                        </div>
+                        <!-- Remarks -->
+                        <div v-if="previewText(profile.remarks) || previewText(profile.jpm_remarks)"
+                            class="border-t border-slate-100 pt-2 text-[11px] text-slate-600">
+                            <p v-if="previewText(profile.remarks)" class="line-clamp-2">
+                                <span class="font-semibold uppercase tracking-wide text-slate-400">Note: </span>{{ previewText(profile.remarks) }}
+                            </p>
+                            <p v-if="previewText(profile.jpm_remarks)" class="line-clamp-1 mt-0.5">
+                                <span class="font-semibold uppercase tracking-wide text-slate-400">JPM: </span>{{ previewText(profile.jpm_remarks) }}
                             </p>
                         </div>
-                    </template>
-                </DataView>
+                    </div>
+                </div>
+
+                <div v-else class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-8 py-14 text-center">
+                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm">
+                        <AppIcon name="tags" :size="24" />
+                    </div>
+                    <h2 class="mt-4 text-base font-semibold text-slate-700">No profiles matched this JPM queue</h2>
+                    <p class="mt-1 text-sm text-slate-500">Adjust the filters or clear them to load more profiles for tagging.</p>
+                </div>
 
                 <Paginator :rows="rows" :first="first" :totalRecords="totalRecords" @page="onPageChange"
                     template="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
@@ -320,6 +278,7 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
+import Checkbox from 'primevue/checkbox';
 import { usePermission } from '@/composable/permissions';
 import { useFilterManager } from '@/composables/useFilterManager';
 import { stripHtml } from '@/utils/sanitize';
@@ -332,7 +291,7 @@ import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
-import JpmModal from '@/Pages/Applicants/Modal/JpmModal.vue';
+import JpmModal from '@/Pages/JpmTagging/Modal/JpmModal.vue';
 import JpmReportModal from '@/Pages/JpmTagging/Modal/ReportModal.vue';
 
 const FILTER_LABELS = {
@@ -599,12 +558,12 @@ const openJpmModal = (profile) => {
 
 const previewText = (value) => {
     const text = normalizedText(value);
-    return text || 'No remarks available.';
+    return text || '-';
 };
 
 const presentText = (value) => {
     const text = normalizedText(value);
-    return text || 'Not provided';
+    return text || '-';
 };
 
 const fullName = (profile) => {
@@ -621,22 +580,34 @@ const hasExistingTagging = (profile) => Boolean(
     || profile.is_mother_jpm
     || profile.is_guardian_jpm
     || profile.is_not_jpm
+    || profile.is_unrenewed_jpm
     || normalizedText(profile.jpm_remarks),
 );
 
 const jpmStatus = (profile) => {
     const members = [];
 
-    if (profile.is_jpm_member) members.push('Applicant');
+    const status = profile.latest_scholarship_record?.unified_status;
+    const applicantLabel = ['active', 'approved', 'completed'].includes(status) ? 'Scholar' : 'Applicant';
+
+    if (profile.is_jpm_member) members.push(applicantLabel);
     if (profile.is_father_jpm) members.push('Father');
     if (profile.is_mother_jpm) members.push('Mother');
     if (profile.is_guardian_jpm) members.push('Guardian');
 
     if (members.length > 0) {
         return {
-            label: 'JPM Member',
+            label: profile.is_unrenewed_jpm ? 'Unrenewed JPM' : 'JPM Member',
             detail: members.join(', '),
-            severity: 'success',
+            severity: profile.is_unrenewed_jpm ? 'warn' : 'success',
+        };
+    }
+
+    if (profile.is_unrenewed_jpm) {
+        return {
+            label: 'Unrenewed JPM',
+            detail: '',
+            severity: 'warn',
         };
     }
 

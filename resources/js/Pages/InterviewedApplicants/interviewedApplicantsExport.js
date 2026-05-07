@@ -1,0 +1,176 @@
+import moment from 'moment';
+import * as XLSX from 'xlsx';
+
+import { renderVueTemplate, usePdfPrint } from '@/composables/usePdfPrint';
+import InterviewedApplicantsTemplate from './Pdf/InterviewedApplicantsTemplate.vue';
+
+const DEFAULT_PREPARED_BY = 'NUR-AINA S. IBRAHIM';
+
+function compareApplicantsByName(left, right) {
+    const leftLastName = left?.profile?.last_name || '';
+    const rightLastName = right?.profile?.last_name || '';
+    const lastNameComparison = leftLastName.localeCompare(rightLastName, undefined, { sensitivity: 'base' });
+
+    if (lastNameComparison !== 0) {
+        return lastNameComparison;
+    }
+
+    const leftFirstName = left?.profile?.first_name || '';
+    const rightFirstName = right?.profile?.first_name || '';
+    return leftFirstName.localeCompare(rightFirstName, undefined, { sensitivity: 'base' });
+}
+
+function normalizeRecords(records = []) {
+    return [...records].sort(compareApplicantsByName);
+}
+
+function formatApplicantName(record) {
+    const lastName = record?.profile?.last_name || '—';
+    const firstName = record?.profile?.first_name || '';
+    return `${lastName}, ${firstName}`.trim();
+}
+
+function formatGrantProvision(value) {
+    if (!value) {
+        return '—';
+    }
+
+    if (typeof value === 'string' && !value.includes('_')) {
+        return value;
+    }
+
+    return value
+        .toString()
+        .split('_')
+        .filter(Boolean)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+}
+
+function formatProjectedTerms(value) {
+    const terms = Number(value);
+    return Number.isFinite(terms) ? `${terms}` : 'Not configured';
+}
+
+function formatProjectedExpense(value) {
+    if (value === null || value === undefined || value === '') {
+        return 'Not configured';
+    }
+
+    return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(Number(value) || 0);
+}
+
+function formatDate(value) {
+    return value ? moment(value).format('MMM DD, YYYY') : '—';
+}
+
+export function printInterviewedApplicantsSelection({ records = [], preparedBy = DEFAULT_PREPARED_BY } = {}) {
+    const normalizedRecords = normalizeRecords(records);
+    const printWindow = window.open('', '_blank');
+
+    if (!printWindow) {
+        return false;
+    }
+
+    const bodyHtml = renderVueTemplate(InterviewedApplicantsTemplate, {
+        records: normalizedRecords,
+        reportType: 'list',
+        groupBy: 'none',
+        today: moment().format('MMMM D, YYYY'),
+        preparedBy,
+        reportTitle: 'Selected Interviewed Applicants Report',
+    });
+
+    const { buildHtmlDoc } = usePdfPrint();
+    const title = 'Selected Interviewed Applicants Report';
+
+    printWindow.document.write(buildHtmlDoc(bodyHtml, title, 'a4-landscape'));
+    printWindow.document.close();
+    printWindow.onload = () => {
+        printWindow.focus();
+        printWindow.print();
+    };
+
+    setTimeout(() => {
+        if (printWindow && !printWindow.closed) {
+            printWindow.focus();
+            printWindow.print();
+        }
+    }, 800);
+
+    return true;
+}
+
+export function exportInterviewedApplicantsExcel({ records = [] } = {}) {
+    const normalizedRecords = normalizeRecords(records);
+    const generatedAt = moment().format('MMMM DD, YYYY h:mm A');
+    const workbook = XLSX.utils.book_new();
+
+    const rows = [
+        ['Interviewed Applicants Report'],
+        [`Generated: ${generatedAt}`],
+        [`Total Records: ${normalizedRecords.length}`],
+        [],
+        [
+            '#',
+            'Name',
+            'Program',
+            'School',
+            'Course',
+            'Year',
+            'Term',
+            'Academic Year',
+            'Grant Provision',
+            'Projected Terms',
+            'Projected Expense',
+            'Completion Year',
+            'Interview Date',
+            'Interviewed By',
+            'Endorsed By',
+        ],
+        ...normalizedRecords.map((record, index) => [
+            index + 1,
+            formatApplicantName(record),
+            record?.program?.shortname || '—',
+            record?.school?.name || record?.school?.shortname || '—',
+            record?.course?.name || record?.course?.shortname || '—',
+            record?.year_level || '—',
+            record?.term || '—',
+            record?.academic_year || '—',
+            formatGrantProvision(record?.grant_provision_label || record?.grant_provision),
+            formatProjectedTerms(record?.projected_term_count),
+            formatProjectedExpense(record?.projected_total_expense),
+            record?.projected_completion_year ?? 'Not configured',
+            formatDate(record?.interviewed_at),
+            record?.interviewer?.name || '—',
+            record?.endorsed_by || '—',
+        ]),
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+    worksheet['!cols'] = [
+        { wch: 6 },
+        { wch: 28 },
+        { wch: 12 },
+        { wch: 20 },
+        { wch: 24 },
+        { wch: 8 },
+        { wch: 10 },
+        { wch: 14 },
+        { wch: 22 },
+        { wch: 14 },
+        { wch: 18 },
+        { wch: 16 },
+        { wch: 16 },
+        { wch: 20 },
+        { wch: 20 },
+    ];
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Interviewed Applicants');
+    XLSX.writeFile(workbook, `interviewed_applicants_${moment().format('YYYY-MM-DD_HH-mm-ss')}.xlsx`);
+}

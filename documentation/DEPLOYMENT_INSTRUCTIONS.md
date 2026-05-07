@@ -1,176 +1,74 @@
-# Quick Deployment Guide - OBR Chrome Fix
+# Quick Deployment Guide - Current Report Stack
 
-## What Was Fixed
-Production OBR PDF generation was failing with:
-```
-Could not find Chrome (ver. 140.0.7339.82)
-```
+## What Changed
 
-The issue was hardcoded Chrome paths in configuration that didn't exist on production servers, especially when running under service accounts (Apache, System).
+The report cleanup in this branch removes the old server-side Chrome and Browsershot setup for legacy applicant and interviewed-applicant reporting.
 
-## ⚠️ CRITICAL FOR PRODUCTION WINDOWS SERVERS
+Current state:
+- Selected applicant export uses the client-side Vue print and Excel flow.
+- Interviewed applicant export and report preview use the client-side Vue print and Excel flow.
+- Legacy report routes and dead report templates tied to the removed flow have been deleted.
+- No Browsershot, Puppeteer, or Chrome path setup is required by the current codebase.
 
-If your application runs under Apache or System service account:
+## Standard Deployment Steps
 
-### You MUST install Google Chrome
-
-1. **Download and Install:**
-   - Visit https://www.google.com/chrome/
-   - Download the installer
-   - Run as Administrator to install to `C:\Program Files\Google\Chrome`
-
-   OR use Chocolatey:
-   ```powershell
-   choco install googlechrome
-   ```
-
-2. **Configure in .env:**
-   ```env
-   CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
-   ```
-
-3. **Automated Setup (Recommended):**
-   ```powershell
-   # Run as Administrator from project directory
-   .\setup-chrome-production.bat
-   ```
-
-4. **Restart Apache:**
-   ```powershell
-   net stop Apache2.4
-   net start Apache2.4
-   ```
-
-## What You Need To Do
-
-### ✅ Option 1: Use Automated Setup Script (EASIEST)
-```powershell
-# Run as Administrator
-cd C:\Apache24\htdocs\scholarship-sys
-.\setup-chrome-production.bat
-```
-
-This script will:
-- Verify Chrome installation
-- Set file permissions
-- Update .env file
-- Install Node dependencies
-- Restart services
-
-### ✅ Option 2: Manual Setup
-1. Install Chrome from https://www.google.com/chrome/
-2. Add to `.env`:
-   ```env
-   CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
-   BROWSERSHOT_TIMEOUT=120
-   BROWSERSHOT_HEADLESS=true
-   ```
-3. Restart Apache service
-4. Test OBR generation
-
-### ✅ Option 3: Puppeteer Setup (Advanced)
-If you prefer using Puppeteer's bundled Chrome:
-```bash
-cd C:\Apache24\htdocs\scholarship-sys
-npm install puppeteer
-npx puppeteer browsers install chrome
-```
-
-Then set in `.env`:
-```env
-PUPPETEER_CACHE_DIR=C:\ProgramData\.cache\puppeteer
-```
-
-## Deployment Steps
-
-1. **Pull latest code** with the fixes:
-   - `config/scholarship.php` (updated)
-   - `app/Http/Controllers/ReportController.php` (updated)
-   - `app/Traits/ManagesChromeForPdf.php` (new)
-   - `setup-chrome-production.bat` (new script)
-
-2. **Run setup script:**
-   ```powershell
-   .\setup-chrome-production.bat
-   ```
-
-3. **Clear application cache:**
+1. Pull the latest code.
+2. Install PHP dependencies:
    ```bash
+   composer install --no-dev --optimize-autoloader
+   ```
+3. Install frontend dependencies and build assets:
+   ```bash
+   npm install
+   npm run build
+   ```
+4. Refresh Laravel caches:
+   ```bash
+   php artisan optimize:clear
    php artisan config:cache
+   php artisan route:cache
    php artisan view:cache
    ```
-
-4. **Restart Apache:**
-   ```powershell
-   net stop Apache2.4
-   net start Apache2.4
-   ```
-
-5. **Test OBR generation:**
-   - Navigate to a voucher record
-   - Try generating OBR PDF
-   - If successful, you're done!
+5. Restart the web server or PHP process manager.
 
 ## Verification Checklist
 
-- [ ] Chrome is installed in `C:\Program Files\Google\Chrome\Application\`
-- [ ] CHROME_PATH is set in `.env`
-- [ ] Service account has permissions on Chrome directory
-- [ ] Apache service has been restarted
-- [ ] OBR PDF generation works without errors
-- [ ] Check `storage/logs/laravel.log` for any errors
+- [ ] Applicant selected export opens a PDF preview/print window.
+- [ ] Applicant selected export creates an Excel file.
+- [ ] Interviewed applicants report preview opens successfully.
+- [ ] Interviewed applicants Excel export completes successfully.
+- [ ] JPM report preview still loads.
+- [ ] OBR and other fund-transaction document flows still open successfully.
+
+## Environment Notes
+
+These legacy variables are no longer part of the current report deployment requirements and can be removed from deployment notes or environment templates if they still exist there:
+
+```env
+CHROME_PATH=
+BROWSERSHOT_TIMEOUT=
+BROWSERSHOT_HEADLESS=
+PUPPETEER_CACHE_DIR=
+```
 
 ## Troubleshooting
 
-### Chrome not found error
-```
-Error: Could not find Chrome
-```
-**Solution:** Install Chrome manually and set `CHROME_PATH` in `.env`
+### Preview window does not open
 
-### Permission denied error
-```
-Access denied to Chrome executable
-```
-**Solution:** Run setup script as Administrator to grant permissions
+- Allow pop-ups for the application host.
+- Confirm the latest built frontend assets are deployed.
 
-### Service account issue
-```
-Cache path: C:\Windows\system32\config\systemprofile\.cache\puppeteer
-```
-**Solution:** This is expected for service accounts. Setting explicit `CHROME_PATH` fixes this.
+### Report UI loads but preview is blank
 
-### Still having issues?
-1. Check `storage/logs/laravel.log`
-2. Enable debug mode: `APP_DEBUG=true`
-3. Review: [documentation/PRODUCTION_CHROME_SERVICE_ACCOUNT_SETUP.md](documentation/PRODUCTION_CHROME_SERVICE_ACCOUNT_SETUP.md)
+- Run `php artisan optimize:clear`.
+- Rebuild assets with `npm run build`.
+- Hard-refresh the browser after deployment.
 
-## Files Changed
+### Excel export fails
 
-| File | Purpose |
-|------|---------|
-| `config/scholarship.php` | Updated fallback paths for service accounts |
-| `app/Http/Controllers/ReportController.php` | Enhanced Chrome path detection |
-| `app/Traits/ManagesChromeForPdf.php` | NEW - Chrome management trait |
-| `setup-chrome-production.bat` | NEW - Automated setup script |
-| `documentation/PRODUCTION_CHROME_SERVICE_ACCOUNT_SETUP.md` | NEW - Detailed service account guide |
+- Check `storage/logs/laravel.log` for export exceptions.
+- Confirm Composer dependencies installed successfully, especially `maatwebsite/excel`.
 
-## Environment Variables Reference
+## Deployment Summary
 
-```env
-# REQUIRED for production service accounts
-CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
-
-# OPTIONAL - Advanced configuration
-BROWSERSHOT_TIMEOUT=120          # PDF generation timeout (seconds)
-BROWSERSHOT_HEADLESS=true        # Run Chrome headless (recommended)
-PUPPETEER_CACHE_DIR=...          # Custom Puppeteer cache location
-
-# For Puppeteer-based Chrome
-NODE_PATH=/usr/bin/node
-NPM_PATH=/usr/local/bin/npm
-```
-
----
-
-**Questions?** See [documentation/PRODUCTION_CHROME_SERVICE_ACCOUNT_SETUP.md](documentation/PRODUCTION_CHROME_SERVICE_ACCOUNT_SETUP.md) for detailed technical information.
+Use the normal Laravel plus Vite deployment flow. Do not add Chrome, Puppeteer, or Browsershot setup steps for this branch.

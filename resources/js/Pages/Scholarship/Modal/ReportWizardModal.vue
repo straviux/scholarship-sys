@@ -399,12 +399,13 @@ import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import moment from 'moment';
 import axios from 'axios';
-import pagedjsPolyfillUrl from '../../../../../node_modules/pagedjs/dist/paged.polyfill.js?url';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import { useSystemOptions } from '@/composables/useSystemOptions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { renderVueTemplate } from '@/composables/usePdfPrint';
 import { getReportCss, getReportPaperConfig } from '@/Pages/Scholarship/Reports/report-styles';
+
+const pagedjsPolyfillUrl = '/vendor/pagedjs/paged.polyfill.min.js';
 
 // Custom Select Components
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';

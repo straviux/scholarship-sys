@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onBeforeUnmount } from 'vue';
 import { toast } from '@/utils/toast';
+import { exportSelectedApplicantsExcel, printSelectedApplicantsReport } from '../Reports/selectedApplicantsExport';
 
 const props = defineProps({
     show: Boolean,
@@ -18,6 +19,7 @@ const paperSize = ref('A4');
 const orientation = ref('landscape');
 const includeRemarks = ref(false);
 const includeGrantProvision = ref(true);
+const generating = ref(false);
 
 // Options
 const paperSizeOptions = [
@@ -41,24 +43,40 @@ const exportAs = (format) => {
         return;
     }
 
-    const profileIds = props.selectedRows.map(row => row.profile_id).join(',');
-    const params = new URLSearchParams({
-        profile_ids: profileIds,
-        report_type: reportType.value,
-        paper_size: paperSize.value,
-        orientation: orientation.value,
-        include_remarks: includeRemarks.value ? 1 : 0,
-        include_grant_provision: includeGrantProvision.value ? 1 : 0
-    });
+    generating.value = true;
 
-    if (format === 'pdf') {
-        window.open(`/api/export-selected/pdf?${params.toString()}`, '_blank');
-    } else if (format === 'excel') {
-        window.open(`/api/export-selected/excel?${params.toString()}`, '_blank');
+    try {
+        if (format === 'pdf') {
+            const opened = printSelectedApplicantsReport({
+                selectedRows: props.selectedRows,
+                reportType: reportType.value,
+                paperSize: paperSize.value,
+                orientation: orientation.value,
+                includeRemarks: includeRemarks.value,
+                includeGrantProvision: includeGrantProvision.value,
+            });
+
+            if (!opened) {
+                toast.error('Pop-up blocked. Please allow pop-ups and try again.');
+                return;
+            }
+        } else if (format === 'excel') {
+            exportSelectedApplicantsExcel({
+                selectedRows: props.selectedRows,
+                reportType: reportType.value,
+                includeRemarks: includeRemarks.value,
+                includeGrantProvision: includeGrantProvision.value,
+            });
+        }
+
+        close();
+        toast.success(`Exported ${props.selectedRows.length} applicant(s) as ${format.toUpperCase()}.`);
+    } catch (error) {
+        console.error('Failed to export selected applicants:', error);
+        toast.error(`Failed to export applicant(s) as ${format.toUpperCase()}.`);
+    } finally {
+        generating.value = false;
     }
-
-    close();
-    toast.success(`Exporting ${props.selectedRows.length} applicant(s) as ${format.toUpperCase()}...`);
 };
 
 /* ── Drag ── */
@@ -190,10 +208,10 @@ onBeforeUnmount(() => {
                     <!-- Export Buttons -->
                     <div class="ios-section">
                         <div class="ios-export-buttons">
-                            <button class="ios-export-btn ios-export-pdf" @click="exportAs('pdf')">
+                            <button class="ios-export-btn ios-export-pdf" @click="exportAs('pdf')" :disabled="generating">
                                 <AppIcon name="file-pdf" :size="16" /> Export as PDF
                             </button>
-                            <button class="ios-export-btn ios-export-excel" @click="exportAs('excel')">
+                            <button class="ios-export-btn ios-export-excel" @click="exportAs('excel')" :disabled="generating">
                                 <AppIcon name="file-excel" :size="16" /> Export as Excel
                             </button>
                         </div>

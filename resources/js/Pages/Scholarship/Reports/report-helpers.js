@@ -35,7 +35,7 @@ export function getReportStatus(item) {
 
 export function getGroupValue(item, groupByField) {
 	const map = {
-		unified_status: () => formatStatus(getReportStatus(item)),
+		unified_status: () => formatStatus(item.approval_status || item.unified_status),
 		school: () => item.school_name || '—',
 		program: () => item.program_name || '—',
 		course: () => item.course_name || '—',
@@ -46,26 +46,19 @@ export function getGroupValue(item, groupByField) {
 	return (map[groupByField] || (() => '—'))();
 }
 
-export function normalizeStatus(status) {
-	return status === 'approved' ? 'active' : status;
-}
-
 export function formatStatus(status) {
 	const map = {
 		pending: 'Pending',
 		interviewed: 'Interviewed',
 		approved: 'Approved',
-		approved_history: 'Approved',
 		denied: 'Denied',
-		denied_history: 'Denied',
 		active: 'Active',
 		completed: 'Completed',
 		withdrawn: 'Withdrawn',
 		loa: 'Leave of Absence',
 		suspended: 'Suspended',
 	};
-	const normalizedStatus = normalizeStatus(status);
-	return map[status] || map[normalizedStatus] || normalizedStatus || '—';
+	return map[status] || status || '—';
 }
 
 /**

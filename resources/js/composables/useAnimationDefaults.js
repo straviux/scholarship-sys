@@ -1,5 +1,7 @@
+import { ref } from 'vue';
+
 // Check for prefers-reduced-motion preference
-const prefersReducedMotion = () => {
+export const prefersReducedMotion = () => {
 	return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 };
 
@@ -22,4 +24,29 @@ export const easings = {
 // Wrapper to skip animations if user prefers reduced motion
 export const shouldAnimate = () => {
 	return !prefersReducedMotion();
+};
+
+// Get delay based on animation preference
+export const getAnimationDuration = (duration) => {
+	return shouldAnimate() ? duration : 0;
+};
+
+// Monitor changes to prefers-reduced-motion
+export const useReducedMotionPreference = () => {
+	const prefersReduced = ref(prefersReducedMotion());
+
+	if (typeof window !== 'undefined') {
+		const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+		const handleChange = (e) => {
+			prefersReduced.value = e.matches;
+		};
+
+		mediaQuery.addEventListener('change', handleChange);
+
+		onBeforeUnmount(() => {
+			mediaQuery.removeEventListener('change', handleChange);
+		});
+	}
+
+	return prefersReduced;
 };

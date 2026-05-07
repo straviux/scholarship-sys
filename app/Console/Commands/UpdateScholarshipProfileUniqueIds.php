@@ -16,12 +16,12 @@ class UpdateScholarshipProfileUniqueIds extends Command
         $updated = 0;
         foreach ($profiles as $profile) {
             $year = date('y', strtotime($profile->created_at));
-            $last = strtoupper(substr($profile->last_name, 0, 1));
-            $first = strtoupper(substr($profile->first_name, 0, 1));
+            $last = mb_strtoupper(mb_substr($profile->last_name, 0, 1, 'UTF-8'), 'UTF-8');
+            $first = mb_strtoupper(mb_substr($profile->first_name, 0, 1, 'UTF-8'), 'UTF-8');
             if (!empty($profile->middle_name)) {
-                $third = strtoupper(substr($profile->middle_name, 0, 1));
+                $third = mb_strtoupper(mb_substr($profile->middle_name, 0, 1, 'UTF-8'), 'UTF-8');
             } else {
-                $third = strtoupper(substr($profile->first_name, 1, 1));
+                $third = mb_strtoupper(mb_substr($profile->first_name, 1, 1, 'UTF-8'), 'UTF-8');
             }
             $initials = $last . $first . $third;
             $created = strtotime($profile->created_at);

@@ -118,7 +118,7 @@ P-Q#1 (correct - only valid records get numbered)
 ## Files Modified
 
 - ✅ `app/Http/Controllers/WaitingListController.php` - Added program_id check before calculating sequence_number
-- ✅ `resources/views/waiting_list_report.blade.php` - Already fixed in PDF report
+- ✅ Legacy waiting-list Blade report - Already fixed in the old PDF report flow
 - ✅ `resources/js/Pages/Applicants/Index.vue` - Already has proper null handling with `|| '-'`
 
 ## Queue Number Display Rules

@@ -714,7 +714,7 @@ const generateDocument = async (docType) => {
     if (!selectedVoucher.value) return;
 
     if (docType === 'OBR') {
-        // Client-side PDF — no Node.js / Browsershot needed
+        // Client-side PDF preview and print flow
         try {
             const html = renderVueTemplate(ObrTemplate, { voucher: selectedVoucher.value, scholarDetails: scholarsDetails.value });
             const title = `OBR-${selectedVoucher.value.transaction_id || selectedVoucher.value.id}`;

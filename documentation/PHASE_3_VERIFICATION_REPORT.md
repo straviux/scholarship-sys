@@ -25,7 +25,7 @@ Phase 3 of the unified_status field migration has been **successfully completed*
 
 ## Detailed File Verification
 
-### File 1: app/Http/Controllers/ReportController.php
+### File 1: Legacy report controller layer
 **Status:** ✅ VERIFIED
 
 | Line(s) | Change | Type | Verified |
@@ -44,7 +44,7 @@ Phase 3 of the unified_status field migration has been **successfully completed*
 
 ---
 
-### File 2: app/Exports/ScholarshipReportExport.php
+### File 2: Legacy scholarship Excel export layer
 **Status:** ✅ VERIFIED
 
 | Line(s) | Change | Type | Verified |
@@ -72,7 +72,7 @@ Phase 3 of the unified_status field migration has been **successfully completed*
 
 ---
 
-### File 4: resources/views/scholarship_report.blade.php
+### File 4: Legacy scholarship report Blade template
 **Status:** ✅ VERIFIED
 
 | Line(s) | Change | Type | Verified |
@@ -86,7 +86,7 @@ Phase 3 of the unified_status field migration has been **successfully completed*
 
 ---
 
-### File 5: resources/views/exports/scholarship_report.blade.php
+### File 5: Legacy scholarship export Blade template
 **Status:** ✅ VERIFIED
 
 | Line(s) | Change | Type | Verified |
@@ -160,10 +160,10 @@ resubmitted        →  (reviewed)      ✅ Legacy method disabled
 
 ### Syntax Validation
 ```
-✅ app/Http/Controllers/ReportController.php
+✅ Legacy report controller layer
    No syntax errors detected
 
-✅ app/Exports/ScholarshipReportExport.php
+✅ Legacy scholarship Excel export layer
    No syntax errors detected
 
 ✅ app/Http/Controllers/DataExportController.php
@@ -185,8 +185,7 @@ resubmitted        →  (reviewed)      ✅ Legacy method disabled
 ### Unified Status Verification
 ```
 ✅ Confirmed: 20+ unified_status references
-   - 11 in ReportController.php
-   - 1 in ScholarshipReportExport.php
+   - 12 in the legacy report/export layer
    - 7 in DataExportController.php
    - 2 in Blade templates
 ```

@@ -24,6 +24,7 @@ function normalizeMessage(detail, options = {}, severity = 'info') {
 		severity,
 		detail,
 		life: typeof options.autoClose === 'number' ? options.autoClose : DEFAULT_LIFE,
+		...options,
 	};
 }
 
@@ -34,6 +35,7 @@ function emitToast(severity, detail, options) {
 const toast = (detail, options) => emitToast('info', detail, options);
 
 toast.POSITION = POSITION;
+toast.add = (message) => ToastEventBus.emit('add', normalizeMessage(message, {}, message?.severity || 'info'));
 toast.success = (detail, options) => emitToast('success', detail, options);
 toast.info = (detail, options) => emitToast('info', detail, options);
 toast.warn = (detail, options) => emitToast('warn', detail, options);

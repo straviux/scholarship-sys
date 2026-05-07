@@ -199,8 +199,8 @@ class DataExportController extends Controller
             $recordsQuery->whereDate('created_at', '<=', $request->date_to);
         }
 
-        // Pre-calculate queue numbers across ALL pending profiles (matching ReportController logic)
-        // This matches the applicants_report.blade.php exact logic
+        // Pre-calculate queue numbers across all pending profiles so client-side reports/export helpers
+        // can preserve the same applicant ordering and queue breakdowns.
         $allPendingProfiles = ScholarshipProfile::with([
             'scholarshipGrant' => function ($query) {
                 $query->where('unified_status', 'pending');

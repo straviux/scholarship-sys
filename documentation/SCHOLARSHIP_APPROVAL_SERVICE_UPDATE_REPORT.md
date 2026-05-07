@@ -252,10 +252,9 @@ No syntax errors detected in app/Services/ScholarshipApprovalService.php
 
 ### Immediate:
 1. ✅ Update ScholarshipApprovalService.php (COMPLETED)
-2. ⏳ Fix `ScholarshipReportExport.php` (accessing approval_status)
-3. ⏳ Fix `ReportController.php` (filtering by approval_status)
-4. ⏳ Fix Vue components (ProfileHistory, ReportView)
-5. ⏳ Fix Blade templates (3 files)
+2. ⏳ Fix the legacy scholarship report/export layer (approval_status usage)
+3. ⏳ Fix Vue components (ProfileHistory, ReportView)
+4. ⏳ Fix legacy scholarship report Blade templates
 
 ### Before Migration:
 - Run full test suite
@@ -308,10 +307,9 @@ No syntax errors detected in app/Services/ScholarshipApprovalService.php
 - Expired approval processing
 
 ### 🔴 What Still Needs Fixing:
-- ScholarshipReportExport.php
-- ReportController.php
+- Legacy scholarship report/export layer
 - Vue components (ProfileHistory, ReportView)
-- Blade templates (3 files)
+- Legacy scholarship report Blade templates
 
 ---
 

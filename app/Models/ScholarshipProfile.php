@@ -58,6 +58,7 @@ class ScholarshipProfile extends Model
         'is_mother_jpm',
         'is_guardian_jpm',
         'is_not_jpm',
+        'is_unrenewed_jpm',
         'jpm_remarks',
         'unique_id',
         'priority_level',
@@ -73,6 +74,7 @@ class ScholarshipProfile extends Model
         'is_mother_jpm' => 'boolean',
         'is_guardian_jpm' => 'boolean',
         'is_not_jpm' => 'boolean',
+        'is_unrenewed_jpm' => 'boolean',
         'date_filed' => 'date',
         'birthdate' => 'date',
         'date_of_birth' => 'date',
@@ -209,12 +211,12 @@ class ScholarshipProfile extends Model
             $model->updated_by = $user?->id;
             // Generate 8-char unique_id: initials + last 5 digits of timestamp
             $year = date('y');
-            $last = strtoupper(substr($model->last_name, 0, 1));
-            $first = strtoupper(substr($model->first_name, 0, 1));
+            $last = mb_strtoupper(mb_substr($model->last_name, 0, 1, 'UTF-8'), 'UTF-8');
+            $first = mb_strtoupper(mb_substr($model->first_name, 0, 1, 'UTF-8'), 'UTF-8');
             if (!empty($model->middle_name)) {
-                $third = strtoupper(substr($model->middle_name, 0, 1));
+                $third = mb_strtoupper(mb_substr($model->middle_name, 0, 1, 'UTF-8'), 'UTF-8');
             } else {
-                $third = strtoupper(substr($model->first_name, 1, 1));
+                $third = mb_strtoupper(mb_substr($model->first_name, 1, 1, 'UTF-8'), 'UTF-8');
             }
             $initials = $last . $first . $third;
             do {

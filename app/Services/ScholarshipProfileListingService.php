@@ -201,7 +201,7 @@ class ScholarshipProfileListingService
 
         if ($request->filled('review_status')) {
             if ($request->review_status === 'needs_review') {
-                $query->whereIn('profile_id', $legacyAcademicTermReviewService->profileIdsNeedingReviewQuery());
+                $this->applyUntaggedFilter($query);
             } elseif ($request->review_status === 'tagged') {
                 $this->applyTaggedFilter($query);
             }
@@ -335,6 +335,36 @@ class ScholarshipProfileListingService
                     $remarksQuery->whereNotNull('jpm_remarks')
                         ->whereRaw("TRIM(jpm_remarks) <> ''");
                 });
+        });
+    }
+
+    private function applyUntaggedFilter(Builder $query): void
+    {
+        $query->where(function ($untaggedQuery) {
+            $untaggedQuery->where(function ($memberQuery) {
+                $memberQuery->where(function ($q) {
+                    $q->where('is_jpm_member', false)->orWhereNull('is_jpm_member');
+                })
+                ->where(function ($q) {
+                    $q->where('is_father_jpm', false)->orWhereNull('is_father_jpm');
+                })
+                ->where(function ($q) {
+                    $q->where('is_mother_jpm', false)->orWhereNull('is_mother_jpm');
+                })
+                ->where(function ($q) {
+                    $q->where('is_guardian_jpm', false)->orWhereNull('is_guardian_jpm');
+                });
+            })
+            ->where(function ($q) {
+                $q->where('is_not_jpm', false)->orWhereNull('is_not_jpm');
+            })
+            ->where(function ($q) {
+                $q->where('is_unrenewed_jpm', false)->orWhereNull('is_unrenewed_jpm');
+            })
+            ->where(function ($remarksQuery) {
+                $remarksQuery->whereNull('jpm_remarks')
+                    ->orWhereRaw("TRIM(jpm_remarks) = ''");
+            });
         });
     }
 

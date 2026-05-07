@@ -19,14 +19,14 @@
    - Will CRASH when migration runs
    - All status queries use old column name
    
-2. **Blade Templates** - 30+ references across 3 files
-   - `scholarship_report.blade.php`
-   - `waiting_list_report.blade.php`
-   - `exports/scholarship_report.blade.php`
+2. **Legacy Scholarship Report Blade Templates** - 30+ references across 3 files
+   - Main scholarship report template
+   - Waiting list report template
+   - Scholarship export report template
    
-3. **Export Classes** - 10+ references
-   - `ScholarshipReportExport.php`
-   - `ReportController.php`
+3. **Legacy Report/Export Layer** - 10+ references
+   - Scholarship Excel export class
+   - Report controller layer
 
 4. **Vue Components** - 6+ references still remain
    - `ProfileHistory.vue` (Line 266)

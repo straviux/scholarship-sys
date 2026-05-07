@@ -22,6 +22,7 @@ class JpmStatusUpdateRequest extends FormRequest
             'is_father_jpm',
             'is_guardian_jpm',
             'is_not_jpm',
+            'is_unrenewed_jpm',
         ];
         $normalized = [];
 
@@ -36,10 +37,12 @@ class JpmStatusUpdateRequest extends FormRequest
             $normalized['is_mother_jpm'] = false;
             $normalized['is_father_jpm'] = false;
             $normalized['is_guardian_jpm'] = false;
+            $normalized['is_unrenewed_jpm'] = false;
         } elseif (($normalized['is_jpm_member'] ?? false)
             || ($normalized['is_mother_jpm'] ?? false)
             || ($normalized['is_father_jpm'] ?? false)
             || ($normalized['is_guardian_jpm'] ?? false)
+            || ($normalized['is_unrenewed_jpm'] ?? false)
         ) {
             $normalized['is_not_jpm'] = false;
         }
@@ -60,6 +63,7 @@ class JpmStatusUpdateRequest extends FormRequest
             'is_father_jpm' => ['nullable', 'boolean'],
             'is_guardian_jpm' => ['nullable', 'boolean'],
             'is_not_jpm' => ['nullable', 'boolean'],
+            'is_unrenewed_jpm' => ['nullable', 'boolean'],
             'jpm_remarks' => ['nullable', 'string', 'max:255'],
         ];
     }

@@ -46,7 +46,7 @@
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-medium text-slate-700">Prepared By</label>
-                    <InputText v-model="preparedBy" class="w-full" />
+                    <InputText v-model="preparedBy" class="w-full" placeholder="Optional" />
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-medium text-slate-700">Prepared By Title</label>
@@ -129,11 +129,12 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import moment from 'moment';
 import axios from 'axios';
-import pagedjsPolyfillUrl from '../../../../../node_modules/pagedjs/dist/paged.polyfill.js?url';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import { renderVueTemplate } from '@/composables/usePdfPrint';
 import { getReportCss, getReportPaperConfig } from '@/Pages/Scholarship/Reports/report-styles';
 import JpmTaggingReportTemplate from '@/Pages/JpmTagging/Reports/JpmTaggingReportTemplate.vue';
+
+const pagedjsPolyfillUrl = '/vendor/pagedjs/paged.polyfill.min.js';
 
 const props = defineProps({
     show: {
@@ -167,7 +168,7 @@ const iframePagedHeight = ref(null);
 
 const paperSize = ref('Legal');
 const orientation = ref('landscape');
-const preparedBy = ref(currentUser.value?.name || '');
+const preparedBy = ref('');
 const preparedByTitle = ref('');
 const signatoryName = ref('');
 const signatoryTitle = ref('');
@@ -227,7 +228,7 @@ async function generateReport() {
                 reportTitle: reportTitle.value?.trim() || 'JPM TAGGING REPORT',
                 includeProfileRemarks: includeProfileRemarks.value,
                 includeJpmRemarks: includeJpmRemarks.value,
-                preparedBy: preparedBy.value?.trim() || currentUser.value?.name || '',
+                preparedBy: preparedBy.value?.trim() || '',
                 preparedByTitle: preparedByTitle.value?.trim() || '',
                 signatoryName: signatoryName.value?.trim() || '',
                 signatoryTitle: signatoryTitle.value?.trim() || '',
@@ -256,6 +257,24 @@ function buildReportDoc(bodyHtml, title, pageSettings) {
     <script src="${pagedjsPolyfillUrl}"><\/script>
   <script>
     window.PagedPolyfill.on('rendered', function () {
+      // Repeat <thead> on split tables (paged.js v0.4.3 doesn't do this automatically)
+      try {
+        var splitTables = document.querySelectorAll('table[data-split-from]');
+        splitTables.forEach(function (tbl) {
+          if (tbl.querySelector(':scope > thead')) return;
+          var ref = tbl.getAttribute('data-ref');
+          if (!ref) return;
+          // Find the original (non-split) table with the same data-ref
+          var originals = document.querySelectorAll('table[data-ref="' + ref + '"]:not([data-split-from])');
+          var original = originals[0];
+          if (!original) return;
+          var origThead = original.querySelector(':scope > thead');
+          if (!origThead) return;
+          var headClone = origThead.cloneNode(true);
+          tbl.insertBefore(headClone, tbl.firstChild);
+        });
+      } catch (e) { console.warn('thead repeat failed', e); }
+
       var pages = document.querySelector('.pagedjs_pages');
       var h = pages ? pages.scrollHeight + 48 : document.documentElement.scrollHeight;
       window.parent.postMessage({ type: 'pagedjs:rendered', height: h }, '*');

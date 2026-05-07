@@ -95,14 +95,12 @@ ScholarshipRecord
 - [ ] Remove approvalStatuses prop from ApprovalWorkflow.vue
 - [ ] Remove approvalStatuses prop from ProfileHistory.vue
 
-### Blade Templates (3 files, ~31 references)
-- [ ] Update scholarship_report.blade.php
-- [ ] Update waiting_list_report.blade.php
-- [ ] Update exports/scholarship_report.blade.php
+### Legacy Scholarship Report Templates (~31 references)
+- [x] Legacy scholarship report templates removed in later cleanup
 
 ## Next Session Action Items
 1. Clean Vue components (4 files)
-2. Update Blade templates (3 files)
+2. Validate remaining non-Blade report flows
 3. Run full application test
 4. Verify report generation
 5. Optional: Archive old migrations

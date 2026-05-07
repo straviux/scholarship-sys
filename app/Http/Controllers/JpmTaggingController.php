@@ -47,6 +47,7 @@ class JpmTaggingController extends Controller
             'is_mother_jpm',
             'is_guardian_jpm',
             'is_not_jpm',
+            'is_unrenewed_jpm',
         ];
         $changes = [];
 
@@ -61,10 +62,12 @@ class JpmTaggingController extends Controller
             $validated['is_father_jpm'] = false;
             $validated['is_mother_jpm'] = false;
             $validated['is_guardian_jpm'] = false;
+            $validated['is_unrenewed_jpm'] = false;
         } elseif (($validated['is_jpm_member'] ?? false)
             || ($validated['is_father_jpm'] ?? false)
             || ($validated['is_mother_jpm'] ?? false)
             || ($validated['is_guardian_jpm'] ?? false)
+            || ($validated['is_unrenewed_jpm'] ?? false)
         ) {
             $validated['is_not_jpm'] = false;
         }
@@ -111,6 +114,9 @@ class JpmTaggingController extends Controller
             'mother_name' => $profile->mother_name,
             'father_name' => $profile->father_name,
             'guardian_name' => $profile->guardian_name,
+            'address' => $profile->address,
+            'barangay' => $profile->barangay,
+            'municipality' => $profile->municipality,
             'remarks' => $profile->remarks,
             'jpm_remarks' => $profile->jpm_remarks,
             'is_jpm_member' => (bool) $profile->is_jpm_member,
@@ -118,6 +124,7 @@ class JpmTaggingController extends Controller
             'is_mother_jpm' => (bool) $profile->is_mother_jpm,
             'is_guardian_jpm' => (bool) $profile->is_guardian_jpm,
             'is_not_jpm' => (bool) $profile->is_not_jpm,
+            'is_unrenewed_jpm' => (bool) $profile->is_unrenewed_jpm,
             'latest_scholarship_record' => $latestRecord ? [
                 'unified_status' => $latestRecord->unified_status,
                 'year_level' => $latestRecord->year_level,

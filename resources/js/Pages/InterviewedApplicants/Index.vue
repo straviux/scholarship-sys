@@ -18,7 +18,7 @@
                 <template #end>
                     <div class="flex gap-2 items-center">
                         <AppButton icon="printer" severity="info" text rounded size="large"
-                            @click="showReportModal = true" v-tooltip.bottom="'Print Report'" />
+                            @click="openReportModal" v-tooltip.bottom="'Print Report'" />
                     </div>
                 </template>
             </Toolbar>
@@ -86,7 +86,7 @@
                         <div>
                             <div class="font-semibold text-yellow-900 text-sm">{{ selectedRows.length }}
                                 applicant(s) selected</div>
-                            <div class="text-xs text-yellow-700">Export selected applicants as PDF or Excel</div>
+                            <div class="text-xs text-yellow-700">Export selected interviewed applicants as PDF or Excel</div>
                         </div>
                     </div>
                     <div class="flex gap-2">
@@ -268,7 +268,7 @@
 
         <!-- Generate Report Modal -->
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event"
-            :interviewed-applicants="filteredList" />
+            :interviewed-applicants="filteredList" :budget-allocations="props.budget_allocations" />
 
         <AssessmentViewModal v-model:show="showAssessmentDialog" :record="selectedRecord"
             :initial-mode="assessmentInitialMode" :can-manage="canManageActions" :can-revert="canManageActions"
@@ -280,7 +280,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { router, useForm, Head } from '@inertiajs/vue3';
+import { router, useForm, Head, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
@@ -293,11 +293,17 @@ import ContextMenu from 'primevue/contextmenu';
 import AssessmentViewModal from './Modal/AssessmentViewModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModalIOS.vue';
 import { getSystemOptionLabel } from '@/composables/useSystemOptions';
+import { exportInterviewedApplicantsExcel, printInterviewedApplicantsSelection } from './interviewedApplicantsExport';
 
 const { hasRole } = usePermission();
+const page = usePage();
 
 const props = defineProps({
     interviewed_applicants: Array,
+    budget_allocations: {
+        type: Array,
+        default: () => [],
+    },
     decline_reasons: Object,
     interviewers: {
         type: Array,
@@ -330,6 +336,7 @@ const denyForm = useForm({
 
 const selectedRecord = ref(null);
 const canManageActions = computed(() => hasRole('administrator') || hasRole('program_manager') || hasRole('screening_officer'));
+const currentUser = computed(() => page.props.auth?.user ?? null);
 
 // Options
 const recommendationOptions = [
@@ -541,9 +548,25 @@ const onAssessmentUpdated = (changes) => {
     }
 
     router.reload({
-        only: ['interviewed_applicants'],
+        only: ['interviewed_applicants', 'budget_allocations'],
         preserveState: true,
         preserveScroll: true,
+    });
+};
+
+const openReportModal = () => {
+    if ((props.budget_allocations || []).length > 0) {
+        showReportModal.value = true;
+        return;
+    }
+
+    router.reload({
+        only: ['interviewed_applicants', 'budget_allocations'],
+        preserveState: true,
+        preserveScroll: true,
+        onFinish: () => {
+            showReportModal.value = true;
+        },
     });
 };
 
@@ -673,15 +696,31 @@ const exportSelected = (format) => {
         toast.warn('Please select at least one applicant');
         return;
     }
-    const ids = selectedRows.value.map(r => r.id).join(',');
-    const params = new URLSearchParams({ ids });
-    window.open(`/api/interviewed-applicants/export/${format}?${params.toString()}`, '_blank');
-    toast.success(`Exporting ${selectedRows.value.length} applicant(s) as ${format.toUpperCase()}...`);
+
+    try {
+        if (format === 'pdf') {
+            const opened = printInterviewedApplicantsSelection({
+                records: selectedRows.value,
+            });
+
+            if (!opened) {
+                toast.error('Pop-up blocked. Please allow pop-ups and try again.');
+                return;
+            }
+        } else if (format === 'excel') {
+            exportInterviewedApplicantsExcel({ records: selectedRows.value });
+        }
+
+        toast.success(`Exported ${selectedRows.value.length} applicant(s) as ${format.toUpperCase()}.`);
+    } catch (error) {
+        console.error('Failed to export interviewed applicants:', error);
+        toast.error(`Failed to export applicant(s) as ${format.toUpperCase()}.`);
+    }
 };
 
 const refreshPage = () => {
     router.reload({
-        only: ['interviewed_applicants'],
+        only: ['interviewed_applicants', 'budget_allocations'],
         preserveState: true,
         preserveScroll: true
     });

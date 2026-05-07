@@ -95,8 +95,8 @@ throw new \InvalidArgumentException('Conditional approval workflow is no longer 
 ## ✅ VERIFIED SAFE REFERENCES
 
 ### Request Parameters (NOT database fields)
-- `$request->approval_status` in ReportController.php - ✅ SAFE (API parameter, not field)
-- `$filters['approval_status']` in Blade templates - ✅ SAFE (filter parameter)
+- `$request->approval_status` in the legacy report request handler - ✅ SAFE (API parameter, not field)
+- `$filters['approval_status']` in legacy Blade templates - ✅ SAFE (filter parameter)
 
 ### Migration Command References
 - `MigrateToUnifiedStatus.php` references old fields - ✅ SAFE (runs BEFORE fields are dropped)
@@ -128,9 +128,7 @@ throw new \InvalidArgumentException('Conditional approval workflow is no longer 
 ✅ app/Models/ScholarshipRecord.php - No syntax errors
 ✅ app/Services/ScholarshipCompletionService.php - No syntax errors
 ✅ app/Services/JasperReportDataService.php - No syntax errors
-✅ resources/views/scholarship_report.blade.php - No syntax errors
-✅ resources/views/waiting_list_report.blade.php - No syntax errors
-✅ resources/views/exports/scholarship_report.blade.php - No syntax errors
+✅ Legacy scholarship report Blade templates - No syntax errors at the time of review
 ```
 
 ## ✅ FINAL CODE ANALYSIS

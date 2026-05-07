@@ -819,25 +819,6 @@ const closeRequirementsModal = () => {
 
 // Export Selected Rows Modal state
 const showExportModal = ref(false);
-const exportPaperSize = ref('A4');
-const exportOrientation = ref('landscape');
-const exportReportType = ref('list');
-
-const paperSizeOptions = [
-    { label: 'A4', value: 'A4' },
-    { label: 'Letter', value: 'Letter' },
-    { label: 'Legal/Long', value: 'Legal' },
-];
-
-const orientationOptions = [
-    { label: 'Portrait', value: 'portrait' },
-    { label: 'Landscape', value: 'landscape' },
-];
-
-const reportTypeOptions = [
-    { label: 'Detailed List', value: 'list' },
-    { label: 'Summary', value: 'summary' }
-];
 
 const openExportModal = () => {
     if (selectedRows.value.length === 0) {
@@ -845,35 +826,6 @@ const openExportModal = () => {
         return;
     }
     showExportModal.value = true;
-};
-
-const closeExportModal = () => {
-    showExportModal.value = false;
-};
-
-const exportSelectedRows = (format) => {
-    if (selectedRows.value.length === 0) {
-        toast.error('No applicants selected');
-        return;
-    }
-
-    // Build query parameters with selected profile IDs
-    const profileIds = selectedRows.value.map(row => row.profile_id).join(',');
-    const params = new URLSearchParams({
-        profile_ids: profileIds,
-        report_type: exportReportType.value,
-        paper_size: exportPaperSize.value,
-        orientation: exportOrientation.value
-    });
-
-    if (format === 'pdf') {
-        window.open(`/api/export-selected/pdf?${params.toString()}`, '_blank');
-    } else if (format === 'excel') {
-        window.open(`/api/export-selected/excel?${params.toString()}`, '_blank');
-    }
-
-    closeExportModal();
-    toast.success(`Exporting ${selectedRows.value.length} applicant(s) as ${format.toUpperCase()}...`);
 };
 
 // Utility functions for applicant data formatting (memoized)

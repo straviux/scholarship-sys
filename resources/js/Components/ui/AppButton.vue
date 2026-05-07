@@ -2,7 +2,7 @@
     <Button v-bind="buttonAttrs" :size="buttonSize">
         <!-- Left icon slot (default) -->
         <template v-if="icon && iconPos !== 'right'" #icon>
-            <AppIcon :name="icon" :size="iconSize" :style="iconStyles" class="p-button-icon p-button-icon-left" />
+            <AppIcon :name="icon" :size="iconSize" :style="[iconStyles, iconSizeStyle]" class="p-button-icon p-button-icon-left" />
         </template>
 
         <!-- Default content slot pass-through -->
@@ -12,7 +12,7 @@
 
         <!-- Right icon slot -->
         <template v-if="icon && iconPos === 'right'" #icon>
-            <AppIcon :name="icon" :size="iconSize" :style="iconStyles" class="p-button-icon p-button-icon-right" />
+            <AppIcon :name="icon" :size="iconSize" :style="[iconStyles, iconSizeStyle]" class="p-button-icon p-button-icon-right" />
         </template>
     </Button>
 </template>
@@ -30,6 +30,8 @@ const props = defineProps({
     // size also controls icon pixel size — maps PrimeVue size variants to px
     size: { type: String, default: null },
     iconColor: { type: String, default: null },
+    iconSize: { type: String, default: null },
+
 });
 
 const attrs = useAttrs();
@@ -50,7 +52,13 @@ const buttonAttrs = computed(() => {
 // Map PrimeVue size prop → pixel size for the icon
 const sizeMap = { xsmall: 12, small: 13, large: 17 };
 const buttonSize = computed(() => (normalizedSize.value === 'xsmall' ? undefined : normalizedSize.value));
-const iconSize = computed(() => sizeMap[normalizedSize.value] ?? 14);
+const iconSize = computed(() => props.iconSize ?? sizeMap[normalizedSize.value] ?? '1em');
+// Force width/height via inline style so PrimeVue CSS cannot override the SVG dimensions
+const iconSizeStyle = computed(() => {
+    const s = iconSize.value;
+    const val = typeof s === 'number' ? `${s}px` : s;
+    return { width: val, height: val, 'min-width': val, 'min-height': val };
+});
 const iconStyles = computed(() => (props.iconColor ? { color: props.iconColor } : undefined));
 </script>
 

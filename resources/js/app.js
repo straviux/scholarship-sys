@@ -13,6 +13,7 @@ import { createApp, h } from 'vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+// import VueDeviceDetect from '@basitcodeenv/vue3-device-detect';
 import PrimeVue from 'primevue/config';
 import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
@@ -20,10 +21,13 @@ import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 import VueDeviceDetect from '@basitcodeenv/vue3-device-detect';
 import 'primeicons/primeicons.css';
+import permissionDirective from './directives/permission';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
+import smoothScrollDirective from './directives/smoothScroll';
 import animateTableRowsDirective from './directives/animateTableRows';
 import safeHtmlDirective from './directives/safeHtml';
+import animationPlugin from './plugins/animationPlugin';
 
 // PrimeVue Components - Global Registration
 import Button from 'primevue/button';
@@ -31,7 +35,7 @@ import Card from 'primevue/card';
 import Panel from 'primevue/panel';
 import Dialog from 'primevue/dialog';
 import Drawer from 'primevue/drawer';
-import DataTable from 'primevue/datatable';
+import DataTable from 'primevue/datatable';								
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
@@ -61,7 +65,6 @@ import TabPanel from 'primevue/tabpanel';
 import Toolbar from 'primevue/toolbar';
 import Popover from 'primevue/popover';
 import DataView from 'primevue/dataview';
-import Paginator from 'primevue/paginator';
 import ConfirmDialog from 'primevue/confirmdialog';
 import FloatLabel from 'primevue/floatlabel';
 
@@ -151,6 +154,9 @@ createInertiaApp({
 			})
 			.use(ToastService)
 			.use(ConfirmationService)
+			.use(animationPlugin)
+			.directive('can', permissionDirective)
+			.directive('smooth-scroll', smoothScrollDirective)
 			.directive('animate-table-rows', animateTableRowsDirective)
 			.directive('safe-html', safeHtmlDirective);
 
@@ -194,7 +200,6 @@ createInertiaApp({
 		app.component('Toolbar', Toolbar);
 		app.component('Popover', Popover);
 		app.component('DataView', DataView);
-		app.component('Paginator', Paginator);
 		app.component('ConfirmDialog', ConfirmDialog);
 		app.component('FloatLabel', FloatLabel);
 

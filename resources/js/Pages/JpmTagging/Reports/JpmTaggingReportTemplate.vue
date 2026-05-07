@@ -73,7 +73,7 @@ function fullName(profile) {
     return parts.join(' ').replace(' ,', ',');
 }
 
-function plainText(value, fallback = 'Not provided') {
+function plainText(value, fallback = '-ñññ¤') {
     const text = stripHtml(value || '').trim();
     return text || fallback;
 }
@@ -85,9 +85,24 @@ function latestProgramLabel(profile) {
 function latestSchoolLabel(profile) {
     return profile.latest_scholarship_record?.school?.shortname
         || profile.latest_scholarship_record?.school?.name
-        || profile.latest_scholarship_record?.course?.shortname
+        || '';
+}
+
+function latestCourseLabel(profile) {
+    return profile.latest_scholarship_record?.course?.shortname
         || profile.latest_scholarship_record?.course?.name
         || '';
+}
+
+function latestYearLevel(profile) {
+    return profile.latest_scholarship_record?.year_level || '';
+}
+
+function fullAddress(profile) {
+    return [profile.address, profile.barangay, profile.municipality]
+        .map(part => (part || '').toString().trim())
+        .filter(Boolean)
+        .join(', ');
 }
 
 function statusLabel(status) {
@@ -104,10 +119,15 @@ function statusLabel(status) {
     return labels[status] || status || 'Unknown';
 }
 
+function applicantLabel(profile) {
+    const status = profile.latest_scholarship_record?.unified_status;
+    return ['active', 'approved', 'completed'].includes(status) ? 'Scholar' : 'Applicant';
+}
+
 function jpmStatus(profile) {
     const members = [];
 
-    if (profile.is_jpm_member) members.push('Applicant');
+    if (profile.is_jpm_member) members.push(applicantLabel(profile));
     if (profile.is_father_jpm) members.push('Father');
     if (profile.is_mother_jpm) members.push('Mother');
     if (profile.is_guardian_jpm) members.push('Guardian');
@@ -158,85 +178,106 @@ function jpmStatus(profile) {
             <p style="font-size:9pt;margin-top:3pt;">As of {{ asOfLabel }}</p>
         </div>
 
-        <div
-            style="display:flex;align-items:center;gap:8pt;flex-wrap:wrap;border:0.5pt solid #cbd5e1;border-radius:8pt;padding:6pt 8pt;margin-bottom:10pt;background:#f8fafc;">
-            <span style="font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#475569;">Summary</span>
-            <span v-for="item in summaryItems" :key="item.label" style="font-size:8pt;color:#0f172a;">
-                <strong>{{ item.label }}:</strong> {{ item.value }}
-            </span>
-        </div>
-
-        <div v-if="activeFilters.length" style="margin-bottom:10pt;">
-            <div style="font-size:8pt;font-weight:700;text-transform:uppercase;color:#475569;margin-bottom:4pt;">Applied
-                Filters</div>
-            <div style="display:flex;flex-wrap:wrap;gap:4pt;">
-                <span v-for="tag in activeFilters" :key="tag.key"
-                    style="display:inline-flex;align-items:center;gap:3pt;border:0.5pt solid #cbd5e1;border-radius:999pt;padding:3pt 7pt;font-size:7.5pt;background:#f8fafc;color:#334155;">
-                    <strong>{{ tag.label }}:</strong> {{ tag.display }}
-                </span>
-            </div>
-        </div>
-
         <div v-if="sortedProfiles.length === 0"
             style="text-align:center;padding:24pt;color:#888;font-size:10pt;font-style:italic;">
             No profiles match the selected JPM filters.
         </div>
 
         <table v-else style="width:100%;border-collapse:collapse;table-layout:fixed;">
-            <thead>
+            <colgroup>
+                <col style="width:3%;" />
+                <col style="width:13%;" />
+                <col style="width:9%;" />
+                <col style="width:9%;" />
+                <col style="width:4%;" />
+                <col style="width:9%;" />
+                <col style="width:9%;" />
+                <col style="width:10%;" />
+                <col style="width:10%;" />
+                <col style="width:10%;" />
+                <col style="width:8%;" />
+                <col style="width:6%;" />
+            </colgroup>
+            <thead style="display:table-header-group;">
                 <tr>
                     <th
-                        style="width:4%;border:0.5pt solid #cbd5e1;padding:6pt 4pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;">
+                        style="width:3%;border:0.5pt solid #cbd5e1;padding:6pt 4pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;">
                         #</th>
                     <th
-                        style="width:24%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        style="width:13%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
                         Scholar</th>
                     <th
-                        style="width:14%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
-                        Mother</th>
+                        style="width:9%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        School</th>
                     <th
-                        style="width:14%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
-                        Father</th>
+                        style="width:9%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        Course</th>
                     <th
-                        style="width:14%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
-                        Guardian</th>
+                        style="width:4%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        Year</th>
                     <th
-                        style="width:20%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
-                        Remarks</th>
+                        style="width:9%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        Municipality</th>
+                    <th
+                        style="width:9%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        Barangay</th>
                     <th
                         style="width:10%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        Mother</th>
+                    <th
+                        style="width:10%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        Father</th>
+                    <th
+                        style="width:10%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        Guardian</th>
+                    <th
+                        style="width:8%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
+                        Remarks</th>
+                    <th
+                        style="width:6%;border:0.5pt solid #cbd5e1;padding:6pt;background:#e2e8f0;font-size:7.5pt;text-transform:uppercase;text-align:left;">
                         JPM Status</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="(profile, index) in sortedProfiles" :key="profile.profile_id">
                     <td
-                        style="border:0.5pt solid #e2e8f0;padding:6pt 4pt;font-size:8pt;text-align:center;vertical-align:top;">
+                        style="width:3%;border:0.5pt solid #e2e8f0;padding:6pt 4pt;font-size:8pt;text-align:center;vertical-align:top;">
                         {{ index + 1 }}</td>
-                    <td style="border:0.5pt solid #e2e8f0;padding:6pt;vertical-align:top;">
-                        <div style="font-size:8.5pt;font-weight:700;color:#0f172a;">{{ fullName(profile) }}</div>
-                        <div style="font-size:7.5pt;color:#475569;margin-top:2pt;">{{ latestProgramLabel(profile) }}
-                        </div>
-                        <div v-if="latestSchoolLabel(profile)" style="font-size:7pt;color:#64748b;">{{
-                            latestSchoolLabel(profile) }}</div>
+                    <td style="width:13%;border:0.5pt solid #e2e8f0;padding:6pt;vertical-align:top;">
+                        <div style="font-size:8.5pt;font-weight:700;color:#0f172a;word-break:break-word;">{{ fullName(profile) }}</div>
+                        <div style="font-size:7.5pt;color:#475569;margin-top:2pt;">{{ latestProgramLabel(profile) }}</div>
                         <div v-if="profile.latest_scholarship_record?.unified_status"
                             style="font-size:7pt;color:#334155;margin-top:3pt;">
                             Status: {{ statusLabel(profile.latest_scholarship_record.unified_status) }}
                         </div>
                     </td>
                     <td
-                        style="border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">
+                        style="width:9%;border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">
+                        {{ latestSchoolLabel(profile) || '—' }}</td>
+                    <td
+                        style="width:9%;border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">
+                        {{ latestCourseLabel(profile) || '—' }}</td>
+                    <td
+                        style="width:4%;border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;text-align:center;word-break:break-word;">
+                        {{ latestYearLevel(profile) || '—' }}</td>
+                    <td
+                        style="width:9%;border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">
+                        {{ plainText(profile.municipality, '—') }}</td>
+                    <td
+                        style="width:9%;border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">
+                        {{ plainText(profile.barangay, '—') }}</td>
+                    <td
+                        style="width:10%;border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">
                         {{ plainText(profile.mother_name) }}</td>
                     <td
-                        style="border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">
+                        style="width:10%;border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">
                         {{ plainText(profile.father_name) }}</td>
                     <td
-                        style="border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">
+                        style="width:10%;border:0.5pt solid #e2e8f0;padding:6pt;font-size:8pt;vertical-align:top;word-break:break-word;">
                         {{ plainText(profile.guardian_name) }}</td>
-                    <td style="border:0.5pt solid #e2e8f0;padding:6pt;vertical-align:top;">
+                    <td style="width:8%;border:0.5pt solid #e2e8f0;padding:6pt;vertical-align:top;">
                         <div v-if="includeProfileRemarks" style="margin-bottom:4pt;">
-                            <div style="font-size:7pt;font-weight:700;text-transform:uppercase;color:#64748b;">Profile
-                            </div>
+                            <div style="font-size:7pt;font-weight:700;text-transform:uppercase;color:#64748b;">Profile</div>
                             <div style="font-size:8pt;color:#0f172a;white-space:pre-wrap;word-break:break-word;">{{
                                 plainText(profile.remarks, 'No remarks available.') }}</div>
                         </div>
@@ -246,7 +287,7 @@ function jpmStatus(profile) {
                                 plainText(profile.jpm_remarks, 'No JPM note available.') }}</div>
                         </div>
                     </td>
-                    <td style="border:0.5pt solid #e2e8f0;padding:6pt;vertical-align:top;">
+                    <td style="width:6%;border:0.5pt solid #e2e8f0;padding:6pt;vertical-align:top;">
                         <div style="font-size:8pt;font-weight:700;color:#0f172a;">{{ jpmStatus(profile).label }}</div>
                         <div v-if="jpmStatus(profile).detail"
                             style="font-size:7pt;color:#475569;margin-top:2pt;word-break:break-word;">
@@ -257,23 +298,23 @@ function jpmStatus(profile) {
             </tbody>
         </table>
 
-        <div style="display:flex;justify-content:space-between;gap:24pt;margin-top:18pt;align-items:flex-end;">
-            <div style="flex:1;">
-                <div style="font-size:7pt;text-transform:uppercase;color:#64748b;">Generated</div>
-                <div style="font-size:8pt;color:#0f172a;">{{ generatedAt }}</div>
-            </div>
-            <div style="display:flex;gap:36pt;min-width:50%;justify-content:flex-end;">
-                <div v-if="preparedBy" style="min-width:180pt;text-align:center;">
+        <div style="margin-top:24pt;">
+            <div style="display:flex;gap:36pt;justify-content:flex-start;align-items:flex-end;">
+                <div v-if="preparedBy" style="min-width:200pt;text-align:center;padding-top:48pt;">
                     <div style="border-top:0.8pt solid #1f2937;padding-top:5pt;font-size:8pt;font-weight:700;">{{
                         preparedBy }}</div>
                     <div v-if="preparedByTitle" style="font-size:7pt;color:#475569;">{{ preparedByTitle }}</div>
                     <div v-else style="font-size:7pt;color:#475569;">Prepared by</div>
                 </div>
-                <div v-if="signatoryName" style="min-width:180pt;text-align:center;">
+                <div v-if="signatoryName" style="min-width:200pt;text-align:center;padding-top:48pt;">
                     <div style="border-top:0.8pt solid #1f2937;padding-top:5pt;font-size:8pt;font-weight:700;">{{
                         signatoryName }}</div>
                     <div v-if="signatoryTitle" style="font-size:7pt;color:#475569;">{{ signatoryTitle }}</div>
                 </div>
+            </div>
+            <div style="margin-top:14pt;">
+                <div style="font-size:7pt;text-transform:uppercase;color:#64748b;">Generated</div>
+                <div style="font-size:8pt;color:#0f172a;">{{ generatedAt }}</div>
             </div>
         </div>
     </div>

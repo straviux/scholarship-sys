@@ -19,6 +19,14 @@ export const useScholarshipStatus = () => {
 			textColor: '#3730A3',
 			description: 'Interviewed, awaiting decision',
 		},
+		approved: {
+			label: 'Approved',
+			severity: 'info',
+			color: '#3B82F6',
+			bgColor: '#DBEAFE',
+			textColor: '#1E3A8A',
+			description: 'Approved, waiting activation',
+		},
 		denied: {
 			label: 'Denied',
 			severity: 'danger',
@@ -77,15 +85,11 @@ export const useScholarshipStatus = () => {
 		},
 	};
 
-	const normalizeStatus = (status) => {
-		return status === 'approved' ? 'active' : status;
-	};
-
 	/**
 	 * Get status configuration by status value
 	 */
 	const getStatusConfig = (status) => {
-		return statusConfig[normalizeStatus(status)] || statusConfig.unknown;
+		return statusConfig[status] || statusConfig.unknown;
 	};
 
 	/**
@@ -155,9 +159,7 @@ export const useScholarshipStatus = () => {
 		// Try new unified_status first
 		if (record.unified_status) {
 			// If it's a valid status, return it; otherwise return 'unknown'
-			return validStatuses.includes(record.unified_status)
-				? normalizeStatus(record.unified_status)
-				: 'unknown';
+			return validStatuses.includes(record.unified_status) ? record.unified_status : 'unknown';
 		}
 
 		// Fallback to legacy fields

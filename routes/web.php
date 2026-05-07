@@ -255,7 +255,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/applicants', [ScholarshipProfileController::class, 'storeApplicant'])->middleware('check.permission:applicants.create')->name('applicants.store');
     Route::put('/applicants/{id}', [ScholarshipProfileController::class, 'updateApplicant'])->middleware('check.permission:applicants.edit')->name('applicants.update');
     Route::delete('/applicants/{id}', [ApplicantController::class, 'destroy'])->middleware('check.permission:applicants.delete')->name('applicants.destroy');
-    Route::get('/applicants-export', [ApplicantController::class, 'export'])->middleware('check.permission:applicants.export')->name('applicants.export');
     Route::post('/applicants/requirement/generate-qr', [ApplicantController::class, 'generateRequirementQrCode'])->middleware('check.permission:applicants.view')->name('applicants.requirement.generate-qr');
     // Generic route MUST come last to catch all remaining /applicants patterns
     Route::get('/applicants/{action?}/{id?}', [ApplicantController::class, 'index'])->middleware('check.permission:applicants.view')->name('applicants.index'); // Accepts filter values via query string: ?applied_course=...&municipality=...&name=...&per_page=...
@@ -569,25 +568,6 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/api/responsibility-centers/{id}/particulars/{particulerId}', [App\Http\Controllers\ResponsibilityCenterController::class, 'updateParticular']);
     Route::delete('/api/responsibility-centers/{id}/particulars/{particulerId}', [App\Http\Controllers\ResponsibilityCenterController::class, 'destroyParticular']);
 });
-
-// Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ScholarshipProfileController::class, 'generateReportPdf']);
-// Report PDF generation route (Applicants)
-Route::middleware(['auth'])->get('/api/report/pdf', [App\Http\Controllers\ReportController::class, 'generateApplicantReport'])->name('report.generatePdf');
-// Report Excel generation route (Applicants)
-Route::middleware(['auth'])->get('/api/report/excel', [App\Http\Controllers\ReportController::class, 'generateExcelApplicants'])->name('report.generateExcelApplicants');
-
-// Export Selected Rows PDF/Excel generation routes
-Route::middleware(['auth'])->get('/api/export-selected/pdf', [App\Http\Controllers\ReportController::class, 'exportSelectedPdf'])->name('export-selected.pdf');
-Route::middleware(['auth'])->get('/api/export-selected/excel', [App\Http\Controllers\ReportController::class, 'exportSelectedExcel'])->name('export-selected.excel');
-
-// Scholarship Report PDF generation route
-Route::middleware(['auth'])->get('/api/report/scholarship/pdf', [App\Http\Controllers\ReportController::class, 'generateScholarshipPdf'])->name('report.scholarship.pdf');
-// Scholarship Report Excel generation route
-Route::middleware(['auth'])->get('/api/report/scholarship/excel', [App\Http\Controllers\ReportController::class, 'generateScholarshipExcel'])->name('report.scholarship.excel');
-
-// Interviewed Applicants Report routes
-Route::middleware(['auth'])->get('/api/interviewed-applicants/export/pdf', [App\Http\Controllers\ReportController::class, 'exportInterviewedPdf'])->name('interviewed.export.pdf');
-Route::middleware(['auth'])->get('/api/interviewed-applicants/export/excel', [App\Http\Controllers\ReportController::class, 'exportInterviewedExcel'])->name('interviewed.export.excel');
 
 // System Updates API Routes
 Route::middleware(['auth'])->group(function () {
