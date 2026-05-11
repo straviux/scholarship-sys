@@ -1,54 +1,44 @@
 <template>
-    <Dialog :visible="visible" modal :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
-        @update:visible="val => emit('update:visible', val)">
-        <template #container>
-            <div class="ios-modal" :style="[{ width: '620px' }, dragStyle]">
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">{{ mode === 'add' ? `Add Academic Enrollment` : `Edit Academic
-                        Enrollment` }}</span>
-                    <button class="ios-nav-btn ios-nav-action" @click.stop="submitEnrollment" :disabled="processing">
-                        <AppIcon name="check" :size="14" />
-                    </button>
+    <IosModal
+        :visible="visible"
+        width="620px"
+        :title="mode === 'add' ? 'Add Academic Enrollment' : 'Edit Academic Enrollment'"
+        :show-action="true"
+        :action-disabled="processing"
+        @update:visible="val => emit('update:visible', val)"
+        @close="close"
+        @action="submitEnrollment"
+    >
+        <div class="flex flex-col gap-4 pt-4 pb-8 px-2">
+            <div class="flex flex-col gap-4 p-2">
+                <div class="ios-form-group">
+                    <label class="ios-label">Program</label>
+                    <ProgramSelect v-model="form.program_id" />
                 </div>
-
-                <div class="ios-body">
-                    <div class="flex flex-col gap-4 pt-4 pb-8 px-2">
-                        <div class="flex flex-col gap-4 p-2">
-                            <div class="ios-form-group">
-                                <label class="ios-label">Program</label>
-                                <ProgramSelect v-model="form.program_id" />
-                            </div>
-                            <div class="ios-form-group">
-                                <label class="ios-label">Course</label>
-                                <CourseSelect v-model="form.course_id" :scholarship-program-id="selectedProgramId" />
-                            </div>
-                            <div class="ios-form-group">
-                                <label class="ios-label">School *</label>
-                                <SchoolSelect v-model="form.school_id" />
-                            </div>
-                        </div>
-
-                        <div class="ios-info-card">
-                            <p class="text-sm font-medium text-gray-900">Enrollment-level details group multiple
-                                academic terms under the same school and course.</p>
-                            <p class="mt-1 text-xs text-gray-500">Use the enrollment actions to add terms or record
-                                graduation details after saving this group.</p>
-                        </div>
-                    </div>
+                <div class="ios-form-group">
+                    <label class="ios-label">Course</label>
+                    <CourseSelect v-model="form.course_id" :scholarship-program-id="selectedProgramId" />
+                </div>
+                <div class="ios-form-group">
+                    <label class="ios-label">School *</label>
+                    <SchoolSelect v-model="form.school_id" />
                 </div>
             </div>
-        </template>
-    </Dialog>
+
+            <div class="ios-info-card">
+                <p class="text-sm font-medium text-gray-900">Enrollment-level details group multiple
+                    academic terms under the same school and course.</p>
+                <p class="mt-1 text-xs text-gray-500">Use the enrollment actions to add terms or record
+                    graduation details after saving this group.</p>
+            </div>
+        </div>
+    </IosModal>
 </template>
 
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue';
 import axios from 'axios';
 import { toast } from '@/utils/toast';
-import { useDraggableModal } from '@/composables/useDraggableModal';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
@@ -61,8 +51,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:visible', 'success']);
-
-const { dragStyle, onDragStart, resetDrag } = useDraggableModal();
 
 const processing = ref(false);
 const form = ref(getDefaultForm());
@@ -128,7 +116,6 @@ const loadEnrollment = async (enrollmentId) => {
 };
 
 const close = () => {
-    resetDrag();
     emit('update:visible', false);
     form.value = getDefaultForm();
 };

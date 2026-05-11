@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use GuzzleHttp\Client;
 
@@ -83,7 +84,15 @@ class FundTransactionController extends Controller
             }
 
             if ($type = $request->get('obr_type')) {
-                $query->where('obr_type', $type);
+                $normalizedType = (string) Str::of((string) $type)
+                    ->trim()
+                    ->lower()
+                    ->replaceMatches('/[\s-]+/', '_');
+
+                $query->whereRaw(
+                    "LOWER(REPLACE(REPLACE(COALESCE(obr_type, ''), ' ', '_'), '-', '_')) = ?",
+                    [$normalizedType]
+                );
             }
 
             if ($disbType = $request->get('disbursement_type')) {

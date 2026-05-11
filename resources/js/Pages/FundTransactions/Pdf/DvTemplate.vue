@@ -347,6 +347,10 @@ const isEfa = computed(() =>
     (props.voucher.particulars_name || '').toLowerCase().includes('efa')
 );
 
+const normalizedObrType = computed(() =>
+    String(props.voucher.obr_type ?? '').trim().toLowerCase().replace(/[\s-]+/g, '_')
+);
+
 const scholarIds = computed(() =>
     Array.isArray(props.voucher.scholar_ids) ? props.voucher.scholar_ids : []
 );
@@ -375,8 +379,8 @@ const scholarName = computed(() => {
 
 /* Mirrors blade @if condition exactly */
 const showScholarName = computed(() =>
-    props.voucher.obr_type !== 'REIMBURSEMENT'
-    && !(props.voucher.obr_type === 'FINANCIAL ASSISTANCE' && !isEfa.value)
+    normalizedObrType.value !== 'reimbursement'
+    && !(normalizedObrType.value === 'financial_assistance' && !isEfa.value)
     && scholarIds.value.length > 0
     && scholarName.value !== ''
 );

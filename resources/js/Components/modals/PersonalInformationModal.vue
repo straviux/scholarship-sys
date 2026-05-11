@@ -1,49 +1,40 @@
 <template>
-    <Dialog :visible="visible" modal :style="{ width: '90vw', maxWidth: '800px' }"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
-        @update:visible="val => emit('update:visible', val)">
-        <template #container>
-            <div class="ios-modal" :style="dragStyle">
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal">
-                        <AppIcon name="times" />
-                    </button>
-                    <span class="ios-nav-title">Edit Personal Information</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="submitForm" :disabled="saving">
-                        <AppIcon name="check" />
-                    </button>
-                </div>
-                <div class="ios-body" style="padding: 16px;">
-                    <PersonalInformationFields v-model:first_name="form.first_name"
-                        v-model:middle_name="form.middle_name" v-model:last_name="form.last_name"
-                        v-model:extension_name="form.extension_name" v-model:contact_no="form.contact_no"
-                        v-model:contact_no_2="form.contact_no_2" v-model:email="form.email"
-                        v-model:date_of_birth="form.date_of_birth" v-model:gender="form.gender"
-                        v-model:place_of_birth="form.place_of_birth" v-model:civil_status="form.civil_status"
-                        v-model:religion="form.religion" v-model:indigenous_group="form.indigenous_group"
-                        v-model:municipality="form.municipality" v-model:barangay="form.barangay"
-                        v-model:address="form.address" v-model:temporary_municipality="form.temporary_municipality"
-                        v-model:temporary_barangay="form.temporary_barangay"
-                        v-model:temporary_address="form.temporary_address" :show-header="false" />
+    <IosModal
+        :visible="visible"
+        width="90vw"
+        max-width="800px"
+        title="Edit Personal Information"
+        :show-action="true"
+        :action-disabled="saving"
+        body-style="padding: 16px;"
+        @update:visible="val => emit('update:visible', val)"
+        @close="closeModal"
+        @action="submitForm"
+    >
+        <PersonalInformationFields v-model:first_name="form.first_name"
+            v-model:middle_name="form.middle_name" v-model:last_name="form.last_name"
+            v-model:extension_name="form.extension_name" v-model:contact_no="form.contact_no"
+            v-model:contact_no_2="form.contact_no_2" v-model:email="form.email"
+            v-model:date_of_birth="form.date_of_birth" v-model:gender="form.gender"
+            v-model:place_of_birth="form.place_of_birth" v-model:civil_status="form.civil_status"
+            v-model:religion="form.religion" v-model:indigenous_group="form.indigenous_group"
+            v-model:municipality="form.municipality" v-model:barangay="form.barangay"
+            v-model:address="form.address" v-model:temporary_municipality="form.temporary_municipality"
+            v-model:temporary_barangay="form.temporary_barangay"
+            v-model:temporary_address="form.temporary_address" :show-header="false" />
 
-                    <!-- Validation Messages -->
-                    <div v-if="validationError"
-                        style="margin-top: 12px; background: #FFF2F2; border: 1px solid #FFD2D2; border-radius: 10px; padding: 12px;">
-                        <p style="font-size: 13px; color: #FF3B30; font-weight: 500;">
-                            <AppIcon name="exclamation-triangle" style="margin-right: 8px;" />
-                            {{ validationError }}
-                        </p>
-                    </div>
-                </div>
-
-            </div>
-        </template>
-    </Dialog>
+        <div v-if="validationError"
+            style="margin-top: 12px; background: #FFF2F2; border: 1px solid #FFD2D2; border-radius: 10px; padding: 12px;">
+            <p style="font-size: 13px; color: #FF3B30; font-weight: 500;">
+                <AppIcon name="exclamation-triangle" style="margin-right: 8px;" />
+                {{ validationError }}
+            </p>
+        </div>
+    </IosModal>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
-import { useDraggableModal } from '@/composables/useDraggableModal';
 import PersonalInformationFields from '@/Components/forms/fields/PersonalInformationFields.vue';
 import axios from 'axios';
 import { toast } from '@/utils/toast';
@@ -57,8 +48,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:visible', 'success']);
-
-const { dragStyle, onDragStart, resetDrag } = useDraggableModal();
 
 const saving = ref(false);
 const validationError = ref('');
@@ -112,7 +101,6 @@ watch(() => props.profile, (newProfile) => {
 }, { immediate: true, deep: true });
 
 const closeModal = () => {
-    resetDrag();
     emit('update:visible', false);
     validationError.value = '';
     form.value = {

@@ -1648,7 +1648,7 @@ const canOpenAcademicTermActions = (term) => {
 };
 
 const isCompletedAcademicTerm = (term) => {
-    return String(term?.unified_status ?? '').toLowerCase() === 'completed';
+    return ['completed', 'completed-transferred'].includes(String(term?.unified_status ?? '').toLowerCase());
 };
 
 const academicTermContextMenuItems = computed(() => {
@@ -1798,6 +1798,7 @@ const getHistoryActionLabel = (action) => {
         'pending': 'Pending',
         'active': 'Active',
         'completed': 'Completed',
+        'completed-transferred': 'Completed - Transferred',
         'withdrawn': 'Withdrawn',
         'loa': 'Leave of Absence',
         'suspended': 'Suspended',
@@ -1818,6 +1819,7 @@ const getHistoryIcon = (action) => {
         'pending': 'clock',
         'active': 'circle-fill',
         'completed': 'check-circle',
+        'completed-transferred': 'arrow-right-arrow-left',
         'withdrawn': 'times-circle',
         'loa': 'pause',
         'suspended': 'ban',
@@ -1838,6 +1840,7 @@ const getHistoryStatusClass = (action) => {
         'pending': 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20',
         'active': 'border-blue-400 bg-blue-50 dark:bg-blue-900/20',
         'completed': 'border-gray-400 bg-gray-50 dark:bg-[#2a3040]',
+        'completed-transferred': 'border-slate-400 bg-slate-50 dark:bg-slate-900/20',
         'withdrawn': 'border-purple-400 bg-purple-50 dark:bg-purple-900/20',
         'loa': 'border-orange-400 bg-orange-50 dark:bg-orange-900/20',
         'suspended': 'border-red-900 bg-red-50 dark:bg-red-900/20',

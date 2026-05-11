@@ -29,7 +29,7 @@
         <div style="padding:14pt 0 0 0;text-align:center;">
             <p v-if="schoolName" class="bold t-12">{{ schoolName }}</p>
             <p class="bold t-12" style="padding-top:4pt;">LIST OF SCHOLARS</p>
-            <p v-if="voucher.obr_type === 'REIMBURSEMENT'" class="bold t-12" style="padding-top:2pt;">FOR REIMBURSEMENT
+            <p v-if="isReimbursementVoucher" class="bold t-12" style="padding-top:2pt;">FOR REIMBURSEMENT
             </p>
             <p v-if="termAcademic" class="bold t-12" style="padding-top:2pt;">{{ termAcademic }}</p>
             <p v-if="courseName" class="bold t-12" style="padding-top:20pt;">{{ courseName }}</p>
@@ -150,6 +150,10 @@ const termAcademic = computed(() => {
     if (term && ay) return `${term} ${ay}`;
     return term || ay || '';
 });
+
+const isReimbursementVoucher = computed(() =>
+    String(props.voucher.obr_type ?? '').trim().toLowerCase().replace(/[\s-]+/g, '_') === 'reimbursement'
+);
 
 /* ── scholar data ────────────────────────────────── */
 const scholarIds = computed(() =>

@@ -412,7 +412,12 @@ class ReturnOfServiceController extends Controller
         // If status is provided, filter by scholarship record status
         if ($status) {
             $query->whereHas('scholarshipRecords', function ($q) use ($status, $program) {
-                $q->where('scholarship_records.unified_status', $status);
+                if ($status === 'ros-eligible') {
+                    $q->whereIn('scholarship_records.unified_status', ['completed', 'completed-transferred']);
+                } else {
+                    $q->where('scholarship_records.unified_status', $status);
+                }
+
                 if ($program) {
                     // Filter by program name through the program relationship
                     $q->whereHas('program', function ($programQuery) use ($program) {

@@ -5,254 +5,517 @@
 
         <div>
             <!-- Toolbar -->
-            <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+            <Toolbar class="mb-4 -mt-2 short:mb-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
-                        <AppIcon name="message-square-more" class="text-blue-600 w-8 h-8 short:w-6 short:h-6" />
+                        <AppIcon name="message-square-more" class="text-blue-600 text-[2rem] short:text-[1.5rem]" />
                         <div>
                             <h1 class="text-2xl short:text-xl font-bold text-gray-700">Interviewed Applicants</h1>
-                            <p class="text-sm text-gray-600">Review interview assessments and manage approvals</p>
+                            <p class="text-sm text-gray-600 short:text-xs">Review interview assessments and manage approvals</p>
                         </div>
                     </div>
                 </template>
                 <template #end>
-                    <div class="flex gap-2 items-center">
-                        <AppButton icon="printer" severity="info" text rounded size="large"
+                    <div class="flex flex-wrap items-center justify-end gap-3">
+                        <div class="flex flex-wrap gap-3" role="tablist" aria-label="Interviewed applicant views">
+                            <button type="button" role="tab" :aria-selected="activeTab === 'interviewed'"
+                                class="cursor-pointer rounded-full  px-4 py-[0.65rem] text-slate-700 transition-colors"
+                                :class="activeTab === 'interviewed'
+                                    ? ' bg-blue-400 !text-slate-50'
+                                    : ' bg-white hover:border-blue-200'"
+                                @click="activeTab = 'interviewed'">
+                                <div class="flex items-center gap-2">
+                                    <AppIcon name="clipboard-list" :size="14" />
+                                    <span>Interviewed Applicants</span>
+                                    <span class="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
+                                        {{ filteredList.length }}
+                                    </span>
+                                </div>
+                            </button>
+                            <button type="button" role="tab" :aria-selected="activeTab === 'recommendation-lists'"
+                                class="cursor-pointer rounded-full  px-4 py-[0.65rem] text-slate-700 transition-colors"
+                                :class="activeTab === 'recommendation-lists'
+                                    ? 'bg-blue-400 !text-slate-50'
+                                    : ' bg-white hover:border-blue-200'"
+                                @click="activeTab = 'recommendation-lists'">
+                                <div class="flex items-center gap-2">
+                                    <AppIcon name="list-checks" :size="14" />
+                                    <span>Recommendation Lists</span>
+                                    <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                                        {{ recommendationLists.length }}
+                                    </span>
+                                </div>
+                            </button>
+                        </div>
+                        <AppButton v-if="activeTab === 'interviewed'" icon="printer" severity="info" text rounded size="large"
                             @click="openReportModal" v-tooltip.bottom="'Print Report'" />
                     </div>
                 </template>
             </Toolbar>
 
-            <!-- Filters Panel -->
-            <Panel class="mb-4 short:mb-2 !rounded-4xl overflow-hidden">
-                <div class="flex items-end gap-3 -mt-6 flex-wrap">
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Recommendation</label>
-                        <Select v-model="filters.recommendation" :options="recommendationOptions" optionLabel="label"
-                            optionValue="value" placeholder="All Recommendations" size="small" class="w-full" />
-                    </div>
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
-                        <ProgramSelect v-model="filters.program" size="small" class="w-full" />
-                    </div>
-                    <AppButton severity="secondary" text rounded size="small" icon="history"
-                        @click="filters.recommendation = null; filters.name = ''; filters.program = ''"
-                        v-tooltip.bottom="'Clear Filters'" />
-                </div>
-            </Panel>
-
-            <!-- Stats Summary -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 short:mb-2">
-                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl short:text-xl font-bold text-blue-600">{{ stats.total }}</div>
-                    <div class="text-xs text-gray-500">Total Interviewed</div>
-                </div>
-                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl short:text-xl font-bold text-green-600">{{ stats.recommended }}</div>
-                    <div class="text-xs text-gray-500">Recommended</div>
-                </div>
-                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl short:text-xl font-bold text-yellow-600">{{ stats.furtherEval }}</div>
-                    <div class="text-xs text-gray-500">For Further Evaluation</div>
-                </div>
-                <div class="bg-white border rounded-4xl p-4 text-center shadow-sm">
-                    <div class="text-2xl short:text-xl font-bold text-red-600">{{ stats.notRecommended }}</div>
-                    <div class="text-xs text-gray-500">Not Recommended</div>
-                </div>
-            </div>
-
-            <!-- Interviewed Applicants Table -->
-            <Panel class="!rounded-4xl overflow-hidden shadow-sm">
-                <!-- Info Bar -->
-                <div
-                    class="md:flex hidden items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
-                    <div class="flex-1 max-w-md">
-                        <IconField iconPosition="left">
-                            <InputIcon>
-                                <AppIcon name="search" :size="16" class="text-gray-400" />
-                            </InputIcon>
-                            <InputText v-model="filters.name" placeholder="Search by name..." class="w-full"
-                                size="small" />
-                        </IconField>
-                    </div>
-                    <span class="text-sm text-gray-500">{{ filteredList.length }} result(s)</span>
-                </div>
-
-                <!-- Selection Bar -->
-                <div v-if="selectedRows.length > 0"
-                    class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-2xl flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <AppIcon name="check-circle" :size="18" class="text-yellow-600" />
-                        <div>
-                            <div class="font-semibold text-yellow-900 text-sm">{{ selectedRows.length }}
-                                applicant(s) selected</div>
-                            <div class="text-xs text-yellow-700">Export selected interviewed applicants as PDF or Excel</div>
+            <Tabs v-model:value="activeTab">
+                <Panel class="mb-6 short:mb-3 !rounded-4xl overflow-hidden">
+                    <div v-if="activeTab === 'interviewed'" class="flex items-end gap-3 short:gap-2 -mt-6 short:-mt-3 flex-wrap">
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Applicant Name</label>
+                            <IconField iconPosition="left">
+                                <InputIcon>
+                                    <AppIcon name="search" :size="14" class="text-gray-400" />
+                                </InputIcon>
+                                <InputText v-model="filters.name" placeholder="Search by name..." size="small" />
+                            </IconField>
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Recommendation</label>
+                            <Select v-model="filters.recommendation" :options="recommendationOptions" optionLabel="label"
+                                optionValue="value" placeholder="All Recommendations" size="small" class="w-full" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
+                            <ProgramSelect v-model="filters.program" size="small" class="w-full" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Recommendation List</label>
+                            <Select v-model="filters.listStatus" :options="recommendationListStatusOptions"
+                                optionLabel="label" optionValue="value" placeholder="All Recommendation List Status"
+                                size="small" class="min-w-[220px] w-full" />
+                        </div>
+                        <div class="ml-auto flex flex-wrap justify-end gap-2">
+                            <AppButton icon="filter" label="Show Eligible Applicants" severity="secondary" rounded
+                                size="xsmall" @click="presetRecommendationCreationFilters" />
+                            <AppButton icon="history" label="Reset Filters" severity="secondary" outlined rounded
+                                size="xsmall" @click="clearInterviewedFilters" />
                         </div>
                     </div>
-                    <div class="flex gap-2">
-                        <AppButton icon="file-type" label="Export PDF" severity="danger" outlined rounded size="small"
-                            @click="exportSelected('pdf')" />
-                        <AppButton icon="file-spreadsheet" label="Export Excel" severity="success" outlined rounded
-                            size="small" @click="exportSelected('excel')" />
-                    </div>
-                </div>
 
-                <div v-if="filteredList.length === 0" class="text-center py-8 text-gray-500">
-                    No interviewed applicants found
-                </div>
-                <DataTable v-else v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredList"
-                    responsiveLayout="scroll" class="text-sm" dataKey="id" v-model:selection="selectedRows"
-                    v-model:expandedRows="expandedRows" showGridlines stripedRows scrollable
-                    :rowClass="(row) => Object.keys(expandedRows).length > 0 && !expandedRows[row.id] ? 'row-blurred' : ''"
-                    @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu>
-                    <Column selectionMode="multiple" :exportable="false" style="width: 3rem"></Column>
-                    <Column expander :exportable="false" headerClass="w-12" bodyClass="w-12" />
-                    <Column field="profile.last_name" header="Name" sortable>
-                        <template #body="slotProps">
-                            <div class="font-medium">
-                                {{ slotProps.data.profile.last_name }}, {{ slotProps.data.profile.first_name }}
-                            </div>
-                            <div class="text-[11px] mono text-gray-500">{{ slotProps.data.profile.contact_no }}</div>
-                        </template>
-                    </Column>
-                    <Column field="program.shortname" header="Program" sortable>
-                        <template #body="slotProps">
-                            <span class="text-xs"> {{ slotProps.data.program?.shortname || 'N/A' }}</span>
-                        </template>
-                    </Column>
-                    <Column field="school.shortname" header="School" sortable>
-                        <template #body="slotProps">
-                            <span class="text-xs"> {{ slotProps.data.school?.shortname ||
-                                slotProps.data.school?.name || 'N/A' }}</span>
-                        </template>
-                    </Column>
-                    <Column field="course.shortname" header="Course" sortable>
-                        <template #body="slotProps">
-                            <span class="text-[10px] font-semibold"> {{ slotProps.data.course?.name || 'N/A' }}</span>
-                        </template>
-                    </Column>
-                    <Column header="Year Level" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
-                        <template #body="slotProps">
-                            <span class="text-xs"> {{ getSystemOptionLabel('year_level', slotProps.data.year_level,
-                                'N/A') }}</span>
-                        </template>
-                    </Column>
-                    <Column header="Term" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
-                        <template #body="slotProps">
-                            <span class="text-xs"> {{ getSystemOptionLabel('term', slotProps.data.term, 'N/A') }}</span>
-                        </template>
-                    </Column>
-                    <Column header="Academic Year" headerClass="min-w-[140px]" bodyClass="min-w-[140px]">
-                        <template #body="slotProps">
-                            <span class="text-xs"> {{ slotProps.data.academic_year || 'N/A' }}</span>
-                        </template>
-                    </Column>
-                    <Column header="Grant Provision" headerClass="min-w-[200px]" bodyClass="min-w-[200px]">
-                        <template #body="slotProps">
-                            <div class="text-xs leading-snug">
-                                {{ slotProps.data.grant_provision_label || getSystemOptionLabel('grant_provision',
-                                    slotProps.data.grant_provision, 'N/A') }}
-                            </div>
-                        </template>
-                    </Column>
-                    <Column header="Recommendation" sortable sortField="recommendation">
-                        <template #body="slotProps">
-                            <span
-                                :class="['text-[11px] font-semibold', getRecommendationTextClass(slotProps.data.recommendation)]">
-                                {{ formatRecommendation(slotProps.data.recommendation) }}
-                            </span>
-                        </template>
-                    </Column>
-                    <Column header="Endorsed By" headerClass="min-w-[180px]" bodyClass="min-w-[180px]">
-                        <template #body="slotProps">
-                            <div class="text-sm leading-snug uppercase">
-                                {{ slotProps.data.endorsed_by || '-' }}
-                            </div>
-                        </template>
-                    </Column>
-                    <Column header="Actions" :style="{ width: '80px' }">
-                        <template #body="slotProps">
-                            <AppButton icon="ellipsis-vertical" @click="openContextMenu($event, slotProps.data)" text
-                                rounded size="small" v-tooltip.top="'Actions'" />
-                        </template>
-                    </Column>
-
-                    <template #expansion="slotProps">
-                        <div class="px-4 pb-4">
-                            <div class="overflow-hidden rounded border border-slate-200 bg-slate-50">
-                                <table class="w-full table-fixed border-collapse text-sm">
-                                    <thead>
-                                        <tr class="bg-slate-100">
-                                            <th colspan="3"
-                                                class="border-b border-slate-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                                Projected Detail
-                                            </th>
-                                            <th colspan="2"
-                                                class="border-b border-l border-slate-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                                Interview Detail
-                                            </th>
-                                        </tr>
-                                        <tr class="bg-white">
-                                            <th
-                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                                                Terms</th>
-                                            <th
-                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                                                Expense</th>
-                                            <th
-                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                                                Completion</th>
-                                            <th
-                                                class="border-b border-l border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                                                Interview Date</th>
-                                            <th
-                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                                                Interviewed By</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="bg-white align-top">
-                                            <td class="px-3 py-3 text-sm font-semibold text-slate-700">
-                                                <span v-if="slotProps.data.projected_term_count !== null">
-                                                    {{ formatProjectedTerms(slotProps.data.projected_term_count) }}
-                                                </span>
-                                                <span v-else class="text-amber-700">Not configured</span>
-                                            </td>
-                                            <td class="px-3 py-3 text-sm font-semibold text-emerald-700">
-                                                <span v-if="slotProps.data.projected_total_expense !== null">
-                                                    {{ formatCurrency(slotProps.data.projected_total_expense) }}
-                                                </span>
-                                                <span v-else class="text-amber-700">Not configured</span>
-                                            </td>
-                                            <td class="px-3 py-3 text-sm text-slate-700">
-                                                <div v-if="slotProps.data.projected_completion_year !== null"
-                                                    class="font-semibold">
-                                                    {{ slotProps.data.projected_completion_year }}
-                                                </div>
-                                                <div v-if="slotProps.data.projected_completion_academic_year"
-                                                    class="text-xs text-gray-500">
-                                                    AY {{ slotProps.data.projected_completion_academic_year }}
-                                                </div>
-                                                <div v-else-if="slotProps.data.projected_completion_year === null"
-                                                    class="text-amber-700">
-                                                    Not configured
-                                                </div>
-                                            </td>
-                                            <td
-                                                class="border-l border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700">
-                                                {{ formatDate(slotProps.data.interviewed_at) }}
-                                            </td>
-                                            <td class="px-3 py-3 text-sm font-semibold text-slate-700 uppercase">
-                                                {{ slotProps.data.interviewer?.name || 'N/A' }}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                    <div v-else class="flex items-end gap-3 short:gap-2 -mt-6 short:-mt-3 flex-wrap">
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Applicant Name</label>
+                            <IconField iconPosition="left">
+                                <InputIcon>
+                                    <AppIcon name="search" :size="14" class="text-gray-400" />
+                                </InputIcon>
+                                <InputText v-model="filters.name" placeholder="Search by name..." size="small" />
+                            </IconField>
                         </div>
-                    </template>
-                </DataTable>
-            </Panel>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Recommendation</label>
+                            <Select v-model="filters.recommendation" :options="recommendationOptions" optionLabel="label"
+                                optionValue="value" placeholder="All Recommendations" size="small" class="w-full" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
+                            <ProgramSelect v-model="filters.program" size="small" class="w-full" />
+                        </div>
+                        <div class="ml-auto flex flex-wrap justify-end gap-2">
+                            <AppButton icon="history" label="Reset Filters" severity="secondary" outlined rounded
+                                size="xsmall" @click="clearInterviewedFilters" />
+                        </div>
+                    </div>
+
+                </Panel>
+
+                <div v-if="activeFilterTags.length" class="mb-4 flex flex-wrap items-center gap-2">
+                    <span class="text-xs text-gray-500">Active Filters:</span>
+                    <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded>
+                        <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
+                    </Tag>
+                </div>
+
+                <TabPanels>
+                    <TabPanel value="interviewed">
+
+                            <Panel class="mb-4 short:mb-2 !rounded-4xl overflow-hidden border border-sky-100 bg-sky-50/70 shadow-sm">
+                                <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                                    <div class="flex items-start gap-3">
+                                        <AppIcon name="info-circle" :size="18" class="mt-0.5 text-sky-600" />
+                                        <div>
+                                            <div class="text-sm font-semibold text-sky-900">How to create a recommendation list</div>
+                                            <div class="mt-2 flex flex-wrap gap-2 text-xs text-sky-800">
+                                                <span class="rounded-full bg-white px-3 py-1 shadow-sm">1. Filter to Recommended for Approval</span>
+                                                <span class="rounded-full bg-white px-3 py-1 shadow-sm">2. Show applicants not yet in a recommendation list</span>
+                                                <span class="rounded-full bg-white px-3 py-1 shadow-sm">3. Select applicants</span>
+                                                <span class="rounded-full bg-white px-3 py-1 shadow-sm">4. Click Create Recommendation List</span>
+                                            </div>
+                                            <div class="mt-2 text-xs text-sky-700">
+                                                Applicants already saved in a recommendation list are flagged in the table and excluded by the eligible filter.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Panel>
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 short:gap-2 mb-6 short:mb-3">
+                                <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
+                                    <div class="text-2xl short:text-xl font-bold text-blue-600">{{ stats.total }}</div>
+                                    <div class="text-xs text-gray-500">Total Interviewed</div>
+                                </div>
+                                <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
+                                    <div class="text-2xl short:text-xl font-bold text-green-600">{{ stats.recommended }}</div>
+                                    <div class="text-xs text-gray-500">Recommended</div>
+                                </div>
+                                <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
+                                    <div class="text-2xl short:text-xl font-bold text-yellow-600">{{ stats.furtherEval }}</div>
+                                    <div class="text-xs text-gray-500">For Further Evaluation</div>
+                                </div>
+                                <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
+                                    <div class="text-2xl short:text-xl font-bold text-red-600">{{ stats.notRecommended }}</div>
+                                    <div class="text-xs text-gray-500">Not Recommended</div>
+                                </div>
+                            </div>
+
+                            <Panel class="!rounded-4xl overflow-hidden shadow-sm">
+                                <div class="flex items-center justify-between mb-4 short:mb-2 -mt-2">
+                                    <span class="text-sm text-gray-500">
+                                        {{ filteredList.length }} applicant(s)
+                                        <span v-if="selectedRows.length">&middot; {{ selectedRows.length }} selected</span>
+                                    </span>
+                                </div>
+
+                                <div v-if="selectedRows.length > 0"
+                                    class="mb-4 rounded-3xl border border-yellow-200 bg-yellow-50 p-3">
+                                    <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <AppIcon name="check-circle" :size="18" class="text-yellow-600" />
+                                            <div>
+                                                <div class="font-semibold text-yellow-900 text-sm">{{ selectedRows.length }}
+                                                    applicant(s) selected</div>
+                                                <div class="text-xs text-yellow-700">
+                                                    Create a saved recommendation list or export the current selection.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-wrap gap-2">
+                                            <AppButton icon="list-checks" label="Create Recommendation List" severity="info"
+                                                rounded size="small" :disabled="!canCreateRecommendationListFromSelection"
+                                                @click="openCreateRecommendationListModal" />
+                                            <AppButton icon="file-type" label="Export PDF" severity="danger" outlined rounded size="small"
+                                                @click="exportSelected('pdf')" />
+                                            <AppButton icon="file-spreadsheet" label="Export Excel" severity="success" outlined rounded
+                                                size="small" @click="exportSelected('excel')" />
+                                        </div>
+                                    </div>
+                                    <div v-if="selectionHasNonRecommended" class="mt-2 text-xs font-medium text-amber-700">
+                                        Only applicants already marked Recommended for Approval can be saved in a recommendation list.
+                                    </div>
+                                    <div v-if="selectionHasExistingRecommendationList" class="mt-2 text-xs font-medium text-amber-700">
+                                        Remove applicants already in a recommendation list before creating a new recommendation list.
+                                    </div>
+                                </div>
+
+                                <div v-if="filteredList.length === 0" class="text-center py-8 text-gray-500">
+                                    No interviewed applicants found
+                                </div>
+                                <DataTable v-else v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredList"
+                                    responsiveLayout="scroll" class="text-sm" dataKey="id"
+                                    v-model:expandedRows="expandedRows" showGridlines stripedRows scrollable
+                                    :rowClass="(row) => Object.keys(expandedRows).length > 0 && !expandedRows[row.id] ? 'row-blurred' : ''"
+                                    @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu>
+                                    <Column :exportable="false" headerClass="w-12" bodyClass="w-12">
+                                        <template #header>
+                                            <div class="flex justify-center">
+                                                <Checkbox :modelValue="allSelectableFilteredRowsSelected" binary
+                                                    :indeterminate="someSelectableFilteredRowsSelected"
+                                                    :disabled="selectableFilteredRows.length === 0"
+                                                    @update:modelValue="toggleSelectAllFilteredRows" />
+                                            </div>
+                                        </template>
+                                        <template #body="slotProps">
+                                            <div class="flex justify-center"
+                                                v-tooltip.top="slotProps.data.is_in_recommendation_list ? 'Already included in a recommendation list' : 'Select applicant'">
+                                                <Checkbox :modelValue="isRowSelected(slotProps.data)" binary
+                                                    :disabled="!isRowSelectable(slotProps.data)"
+                                                    @update:modelValue="(checked) => toggleRowSelection(slotProps.data, checked)" />
+                                            </div>
+                                        </template>
+                                    </Column>
+                                    <Column expander :exportable="false" headerClass="w-12" bodyClass="w-12" />
+                                    <Column field="profile.last_name" header="Name" sortable>
+                                        <template #body="slotProps">
+                                            <div class="font-medium">
+                                                {{ slotProps.data.profile.last_name }}, {{ slotProps.data.profile.first_name }}
+                                            </div>
+                                            <div class="text-[11px] mono text-gray-500">{{ slotProps.data.profile.contact_no }}</div>
+                                        
+                                        </template>
+                                    </Column>
+                                    <Column field="program.shortname" header="Program" sortable>
+                                        <template #body="slotProps">
+                                            <span class="text-xs"> {{ slotProps.data.program?.shortname || 'N/A' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column field="school.shortname" header="School" sortable>
+                                        <template #body="slotProps">
+                                            <span class="text-xs"> {{ slotProps.data.school?.shortname ||
+                                                slotProps.data.school?.name || 'N/A' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column field="course.shortname" header="Course" sortable>
+                                        <template #body="slotProps">
+                                            <span class="text-[10px] font-semibold"> {{ slotProps.data.course?.name || 'N/A' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Year Level" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                                        <template #body="slotProps">
+                                            <span class="text-xs"> {{ getSystemOptionLabel('year_level', slotProps.data.year_level,
+                                                'N/A') }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Term" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                                        <template #body="slotProps">
+                                            <span class="text-xs"> {{ getSystemOptionLabel('term', slotProps.data.term, 'N/A') }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Academic Year" headerClass="min-w-[140px]" bodyClass="min-w-[140px]">
+                                        <template #body="slotProps">
+                                            <span class="text-xs"> {{ slotProps.data.academic_year || 'N/A' }}</span>
+                                        </template>
+                                    </Column>
+                                    <Column header="Grant Provision" headerClass="min-w-[200px]" bodyClass="min-w-[200px]">
+                                        <template #body="slotProps">
+                                            <div class="text-xs leading-snug">
+                                                {{ slotProps.data.grant_provision_label || getSystemOptionLabel('grant_provision',
+                                                    slotProps.data.grant_provision, 'N/A') }}
+                                            </div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Recommendation" sortable sortField="recommendation" headerClass="min-w-[220px]"
+                                        bodyClass="min-w-[220px]">
+                                        <template #body="slotProps">
+                                            <div class="flex flex-col gap-1">
+                                                <span
+                                                    :class="['text-[11px] font-semibold', getRecommendationTextClass(slotProps.data.recommendation)]">
+                                                    {{ formatRecommendation(slotProps.data.recommendation) }}
+                                                </span>
+                                                <span v-if="slotProps.data.is_in_recommendation_list"
+                                                    class="inline-flex w-fit items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                                                    Already in Recommendation List
+                                                </span>
+                                            </div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Endorsed By" headerClass="min-w-[180px]" bodyClass="min-w-[180px]">
+                                        <template #body="slotProps">
+                                            <div class="text-sm leading-snug uppercase">
+                                                {{ slotProps.data.endorsed_by || '-' }}
+                                            </div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Actions" :style="{ width: '80px' }">
+                                        <template #body="slotProps">
+                                            <AppButton icon="ellipsis-vertical" @click="openContextMenu($event, slotProps.data)" text
+                                                rounded size="small" v-tooltip.top="'Actions'" />
+                                        </template>
+                                    </Column>
+
+                                    <template #expansion="slotProps">
+                                        <div class="px-4 pb-4">
+                                            <div class="overflow-hidden rounded border border-slate-200 bg-slate-50">
+                                                <table class="w-full table-fixed border-collapse text-sm">
+                                                    <thead>
+                                                        <tr class="bg-slate-100">
+                                                            <th colspan="3"
+                                                                class="border-b border-slate-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                                                Projected Detail
+                                                            </th>
+                                                            <th colspan="2"
+                                                                class="border-b border-l border-slate-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                                                Interview Detail
+                                                            </th>
+                                                        </tr>
+                                                        <tr class="bg-white">
+                                                            <th
+                                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                                Terms</th>
+                                                            <th
+                                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                                Expense</th>
+                                                            <th
+                                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                                Completion</th>
+                                                            <th
+                                                                class="border-b border-l border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                                Interview Date</th>
+                                                            <th
+                                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                                Interviewed By</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="bg-white align-top">
+                                                            <td class="px-3 py-3 text-sm font-semibold text-slate-700">
+                                                                <span v-if="slotProps.data.projected_term_count !== null">
+                                                                    {{ formatProjectedTerms(slotProps.data.projected_term_count) }}
+                                                                </span>
+                                                                <span v-else class="text-amber-700">Not configured</span>
+                                                            </td>
+                                                            <td class="px-3 py-3 text-sm font-semibold text-emerald-700">
+                                                                <span v-if="slotProps.data.projected_total_expense !== null">
+                                                                    {{ formatCurrency(slotProps.data.projected_total_expense) }}
+                                                                </span>
+                                                                <span v-else class="text-amber-700">Not configured</span>
+                                                            </td>
+                                                            <td class="px-3 py-3 text-sm text-slate-700">
+                                                                <div v-if="slotProps.data.projected_completion_year !== null"
+                                                                    class="font-semibold">
+                                                                    {{ slotProps.data.projected_completion_year }}
+                                                                </div>
+                                                                <div v-if="slotProps.data.projected_completion_academic_year"
+                                                                    class="text-xs text-gray-500">
+                                                                    AY {{ slotProps.data.projected_completion_academic_year }}
+                                                                </div>
+                                                                <div v-else-if="slotProps.data.projected_completion_year === null"
+                                                                    class="text-amber-700">
+                                                                    Not configured
+                                                                </div>
+                                                            </td>
+                                                            <td
+                                                                class="border-l border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700">
+                                                                {{ formatDate(slotProps.data.interviewed_at) }}
+                                                            </td>
+                                                            <td class="px-3 py-3 text-sm font-semibold text-slate-700 uppercase">
+                                                                {{ slotProps.data.interviewer?.name || 'N/A' }}
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </DataTable>
+                            </Panel>
+                        </TabPanel>
+
+                        <TabPanel value="recommendation-lists">
+                            <Panel class="!rounded-4xl overflow-hidden shadow-sm">
+                                <div class="flex items-center justify-between mb-4 short:mb-2 -mt-2">
+                                    <span class="text-sm text-gray-500">
+                                        {{ filteredRecommendationLists.length }} saved transaction(s)
+                                    </span>
+                                </div>
+
+                                <div v-if="filteredRecommendationLists.length === 0" class="py-10 text-center text-gray-500">
+                                    No saved recommendation lists yet
+                                </div>
+
+                                <DataTable v-else :value="filteredRecommendationLists" dataKey="id"
+                                    v-model:expandedRows="recommendationListExpandedRows" showGridlines stripedRows scrollable
+                                    responsiveLayout="scroll" class="text-sm">
+                                    <Column expander :exportable="false" headerClass="w-12" bodyClass="w-12" />
+                                    <Column field="list_number" header="List No." sortable headerClass="min-w-[160px]"
+                                        bodyClass="min-w-[160px]">
+                                        <template #body="slotProps">
+                                            <div class="font-semibold text-slate-800">{{ slotProps.data.list_number }}</div>
+                                            <div class="text-[11px] text-slate-500">{{ slotProps.data.report_title }}</div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Applicants" sortable field="record_count" headerClass="min-w-[110px]"
+                                        bodyClass="min-w-[110px]">
+                                        <template #body="slotProps">
+                                            <div class="font-semibold text-slate-800">{{ slotProps.data.record_count }}</div>
+                                            <div class="text-[11px] text-green-700 font-semibold">Recommended for Approval</div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Projected Grant" sortable field="total_projected_expense"
+                                        headerClass="min-w-[170px]" bodyClass="min-w-[170px]">
+                                        <template #body="slotProps">
+                                            <div class="font-semibold text-emerald-700">
+                                                {{ formatCurrency(slotProps.data.total_projected_expense) }}
+                                            </div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Budget Allocation" headerClass="min-w-[260px]" bodyClass="min-w-[260px]">
+                                        <template #body="slotProps">
+                                            <div class="text-xs leading-relaxed text-slate-700">
+                                                {{ formatRecommendationListBudget(slotProps.data) }}
+                                            </div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Prepared By" headerClass="min-w-[180px]" bodyClass="min-w-[180px]">
+                                        <template #body="slotProps">
+                                            <div class="font-semibold text-slate-800">{{ slotProps.data.prepared_by || 'N/A' }}</div>
+                                            <div class="text-[11px] text-slate-500">{{ slotProps.data.prepared_by_position || 'Position not set' }}</div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Created" sortable field="created_at" headerClass="min-w-[170px]"
+                                        bodyClass="min-w-[170px]">
+                                        <template #body="slotProps">
+                                            <div class="font-semibold text-slate-800">{{ formatDateTime(slotProps.data.created_at) }}</div>
+                                            <div class="text-[11px] text-slate-500">{{ slotProps.data.creator?.name || 'Unknown user' }}</div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Actions" :style="{ width: '200px' }">
+                                        <template #body="slotProps">
+                                            <div class="flex flex-wrap gap-2">
+                                                <AppButton icon="pencil" label="Edit" severity="secondary" outlined rounded
+                                                    size="small" @click="openEditRecommendationListModal(slotProps.data)" />
+                                                <AppButton icon="printer" label="Print" severity="info" rounded size="small"
+                                                    @click="printSavedRecommendationList(slotProps.data)" />
+                                            </div>
+                                        </template>
+                                    </Column>
+
+                                    <template #expansion="slotProps">
+                                        <div class="grid gap-4 px-4 pb-4 xl:grid-cols-[280px,1fr]">
+                                            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                                                <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Transaction Summary</div>
+                                                <dl class="mt-3 space-y-3 text-sm">
+                                                    <div>
+                                                        <dt class="text-xs uppercase tracking-wide text-slate-500">Status</dt>
+                                                        <dd class="mt-1 font-semibold text-green-700">Recommended for Approval</dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt class="text-xs uppercase tracking-wide text-slate-500">Prepared By</dt>
+                                                        <dd class="mt-1 font-semibold text-slate-800">{{ slotProps.data.prepared_by || 'N/A' }}</dd>
+                                                        <dd class="text-xs text-slate-500">{{ slotProps.data.prepared_by_position || 'Position not set' }}</dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt class="text-xs uppercase tracking-wide text-slate-500">Approved By</dt>
+                                                        <dd class="mt-1 font-semibold text-slate-800">{{ slotProps.data.approved_by || 'N/A' }}</dd>
+                                                        <dd class="text-xs text-slate-500">{{ slotProps.data.approved_by_position || 'Position not set' }}</dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt class="text-xs uppercase tracking-wide text-slate-500">Budget Allocation</dt>
+                                                        <dd class="mt-1 text-xs leading-relaxed text-slate-700">{{ formatRecommendationListBudget(slotProps.data) }}</dd>
+                                                    </div>
+                                                </dl>
+                                            </div>
+
+                                            <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white">
+                                                <div class="border-b border-slate-200 bg-slate-50 px-4 py-3">
+                                                    <div class="text-sm font-semibold text-slate-800">Saved Applicants Snapshot</div>
+                                                    <div class="text-xs text-slate-500">The printed report uses this stored selection.</div>
+                                                </div>
+                                                <div class="overflow-x-auto">
+                                                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                                        <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                                                            <tr>
+                                                                <th class="px-4 py-3 text-left">Name</th>
+                                                                <th class="px-4 py-3 text-left">Program</th>
+                                                                <th class="px-4 py-3 text-left">School</th>
+                                                                <th class="px-4 py-3 text-left">Projected Terms</th>
+                                                                <th class="px-4 py-3 text-left">Projected Grant</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="divide-y divide-slate-100">
+                                                            <tr v-for="record in slotProps.data.records" :key="`recommendation-record-${slotProps.data.id}-${record.id}`">
+                                                                <td class="px-4 py-3 font-semibold text-slate-800">{{ formatApplicantName(record) }}</td>
+                                                                <td class="px-4 py-3 text-slate-600">{{ record.program?.shortname || 'N/A' }}</td>
+                                                                <td class="px-4 py-3 text-slate-600">{{ record.school?.shortname || record.school?.name || 'N/A' }}</td>
+                                                                <td class="px-4 py-3 text-slate-600">{{ formatProjectedTerms(record.projected_term_count) }}</td>
+                                                                <td class="px-4 py-3 font-semibold text-emerald-700">{{ formatCurrency(record.projected_total_expense) }}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </DataTable>
+                            </Panel>
+                        </TabPanel>
+                    </TabPanels>
+                </Tabs>
         </div>
 
         <!-- Context Menu -->
@@ -270,6 +533,14 @@
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event"
             :interviewed-applicants="filteredList" :budget-allocations="props.budget_allocations" />
 
+        <CreateRecommendationListModal :show="showCreateRecommendationListModal"
+            @update:show="handleRecommendationListModalVisibility"
+            :selected-count="recommendationListModalSelectedCount" :budget-allocations="props.budget_allocations"
+            :default-prepared-by="currentUser?.name || ''" :loading="isCreatingRecommendationList"
+            :mode="recommendationListModalMode" :initial-data="editingRecommendationList"
+            :submit-intent="recommendationListSubmitIntent"
+            @submit="submitRecommendationList" />
+
         <AssessmentViewModal v-model:show="showAssessmentDialog" :record="selectedRecord"
             :initial-mode="assessmentInitialMode" :can-manage="canManageActions" :can-revert="canManageActions"
             :approval-form="approvalForm" :deny-form="denyForm" :decline-reasons="declineReasons"
@@ -279,10 +550,11 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { router, useForm, Head, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
+import axios from 'axios';
 import AppButton from '@/Components/ui/AppButton.vue';
 import moment from 'moment';
 import { toast } from '@/utils/toast';
@@ -291,9 +563,11 @@ import { usePermission } from '@/composable/permissions';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import ContextMenu from 'primevue/contextmenu';
 import AssessmentViewModal from './Modal/AssessmentViewModal.vue';
+import CreateRecommendationListModal from './Modal/CreateRecommendationListModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModalIOS.vue';
 import { getSystemOptionLabel } from '@/composables/useSystemOptions';
 import { exportInterviewedApplicantsExcel, printInterviewedApplicantsSelection } from './interviewedApplicantsExport';
+import { printRecommendationList } from './recommendationListPrint';
 
 const { hasRole } = usePermission();
 const page = usePage();
@@ -309,21 +583,34 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    recommendation_lists: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 // State
+const activeTab = ref('interviewed');
 const filters = ref({
     recommendation: null,
     name: '',
-    program: ''
+    program: null,
+    listStatus: null,
 });
 
 const contextMenu = ref();
 const showAssessmentDialog = ref(false);
 const assessmentInitialMode = ref('view');
 const showReportModal = ref(false);
+const showCreateRecommendationListModal = ref(false);
+const isCreatingRecommendationList = ref(false);
+const recommendationListModalMode = ref('create');
+const recommendationListSubmitIntent = ref('save');
+const editingRecommendationList = ref(null);
 const selectedRows = ref([]);
 const expandedRows = ref({});
+const recommendationLists = ref([...(props.recommendation_lists || [])]);
+const recommendationListExpandedRows = ref({});
 
 const approvalForm = useForm({
     date_approved: new Date(),
@@ -346,6 +633,16 @@ const recommendationOptions = [
     { label: 'Not Recommended', value: 'not_recommended' }
 ];
 
+const recommendationListStatusOptions = [
+    { label: 'All Applicants', value: null },
+    { label: 'Not Yet in Recommendation List', value: 'available' },
+    { label: 'Already in Recommendation List', value: 'included' },
+];
+
+const getRecommendationListStatusLabel = (value) => {
+    return recommendationListStatusOptions.find((option) => option.value === value)?.label || 'All Applicants';
+};
+
 const declineReasons = computed(() => {
     if (!props.decline_reasons) return [];
     return Object.entries(props.decline_reasons).map(([value, label]) => ({
@@ -354,24 +651,214 @@ const declineReasons = computed(() => {
     }));
 });
 
+const normalizedNameFilter = computed(() => filters.value.name?.trim().toLowerCase() || '');
+
+const selectedProgramId = computed(() => {
+    return typeof filters.value.program === 'object'
+        ? filters.value.program?.id
+        : filters.value.program;
+});
+
+const recordMatchesName = (record, query) => {
+    if (!query) {
+        return true;
+    }
+
+    const firstName = record?.profile?.first_name ?? '';
+    const lastName = record?.profile?.last_name ?? '';
+    const middleName = record?.profile?.middle_name ?? '';
+    const haystack = [
+        firstName,
+        lastName,
+        `${firstName} ${lastName}`,
+        `${lastName}, ${firstName}`,
+        `${lastName}, ${firstName} ${middleName}`,
+    ]
+        .join(' ')
+        .toLowerCase();
+
+    return haystack.includes(query);
+};
+
+const recordMatchesProgram = (record, programId) => {
+    if (!programId) {
+        return true;
+    }
+
+    return String(record?.program?.id ?? '') === String(programId);
+};
+
 // Computed
+const recommendationRecordIndex = computed(() => {
+    const recordIndex = new Map();
+
+    recommendationLists.value.forEach((recommendationList) => {
+        const listNumber = recommendationList?.list_number;
+        const sourceRecordIds = Array.isArray(recommendationList?.selected_record_ids) && recommendationList.selected_record_ids.length > 0
+            ? recommendationList.selected_record_ids
+            : (recommendationList?.records || []).map((record) => record.id);
+
+        sourceRecordIds.forEach((recordId) => {
+            const normalizedRecordId = Number(recordId);
+
+            if (!Number.isFinite(normalizedRecordId)) {
+                return;
+            }
+
+            if (!recordIndex.has(normalizedRecordId)) {
+                recordIndex.set(normalizedRecordId, new Set());
+            }
+
+            if (listNumber) {
+                recordIndex.get(normalizedRecordId).add(listNumber);
+            }
+        });
+    });
+
+    return recordIndex;
+});
+
+const interviewedApplicantsWithRecommendationFlags = computed(() => {
+    return (props.interviewed_applicants || []).map((record) => {
+        const recommendationListNumbers = Array.from(recommendationRecordIndex.value.get(Number(record.id)) || []);
+
+        return {
+            ...record,
+            is_in_recommendation_list: recommendationListNumbers.length > 0,
+            recommendation_list_numbers: recommendationListNumbers,
+        };
+    });
+});
+
+const activeFilterTags = computed(() => {
+    const tags = [];
+
+    if (filters.value.name?.trim()) {
+        tags.push({
+            key: 'name',
+            label: 'Search',
+            display: filters.value.name.trim(),
+        });
+    }
+
+    if (filters.value.recommendation) {
+        tags.push({
+            key: 'recommendation',
+            label: 'Recommendation',
+            display: formatRecommendation(filters.value.recommendation),
+        });
+    }
+
+    if (filters.value.program) {
+        tags.push({
+            key: 'program',
+            label: 'Program',
+            display: filters.value.program?.shortname || filters.value.program?.name || 'N/A',
+        });
+    }
+
+    if (activeTab.value === 'interviewed' && filters.value.listStatus) {
+        tags.push({
+            key: 'listStatus',
+            label: 'Recommendation List',
+            display: getRecommendationListStatusLabel(filters.value.listStatus),
+        });
+    }
+
+    return tags;
+});
+
 const filteredList = computed(() => {
-    let list = props.interviewed_applicants || [];
+    let list = interviewedApplicantsWithRecommendationFlags.value;
+    const nameQuery = normalizedNameFilter.value;
+    const programId = selectedProgramId.value;
 
     if (filters.value.recommendation) {
         list = list.filter(r => r.recommendation === filters.value.recommendation);
     }
 
-    if (filters.value.name) {
-        const name = filters.value.name.toLowerCase();
-        list = list.filter(r => {
-            const fullName = `${r.profile.first_name} ${r.profile.last_name}`.toLowerCase();
-            return fullName.includes(name);
+    if (nameQuery) {
+        list = list.filter((record) => recordMatchesName(record, nameQuery));
+    }
+
+    if (programId) {
+        list = list.filter((record) => recordMatchesProgram(record, programId));
+    }
+
+    if (filters.value.listStatus === 'available') {
+        list = list.filter((record) => !record.is_in_recommendation_list);
+    }
+
+    if (filters.value.listStatus === 'included') {
+        list = list.filter((record) => record.is_in_recommendation_list);
+    }
+
+    return list;
+});
+
+const selectionHasNonRecommended = computed(() => {
+    return selectedRows.value.some((record) => record.recommendation !== 'recommended');
+});
+
+const selectionHasExistingRecommendationList = computed(() => {
+    return selectedRows.value.some((record) => record.is_in_recommendation_list);
+});
+
+const canCreateRecommendationListFromSelection = computed(() => {
+    return selectedRows.value.length > 0
+        && !selectionHasNonRecommended.value
+        && !selectionHasExistingRecommendationList.value;
+});
+
+const recommendationListModalSelectedCount = computed(() => {
+    if (recommendationListModalMode.value === 'edit') {
+        return Number(editingRecommendationList.value?.record_count || editingRecommendationList.value?.records?.length || 0);
+    }
+
+    return selectedRows.value.length;
+});
+
+const selectedRowIds = computed(() => new Set(selectedRows.value.map((record) => Number(record.id))));
+
+const selectableFilteredRows = computed(() => {
+    return filteredList.value.filter((record) => !record.is_in_recommendation_list);
+});
+
+const allSelectableFilteredRowsSelected = computed(() => {
+    return selectableFilteredRows.value.length > 0
+        && selectableFilteredRows.value.every((record) => selectedRowIds.value.has(Number(record.id)));
+});
+
+const someSelectableFilteredRowsSelected = computed(() => {
+    return !allSelectableFilteredRowsSelected.value
+        && selectableFilteredRows.value.some((record) => selectedRowIds.value.has(Number(record.id)));
+});
+
+const filteredRecommendationLists = computed(() => {
+    let list = recommendationLists.value;
+    const nameQuery = normalizedNameFilter.value;
+    const programId = selectedProgramId.value;
+
+    if (filters.value.recommendation) {
+        list = list.filter((recommendationList) => {
+            if (recommendationList.recommendation_status) {
+                return recommendationList.recommendation_status === filters.value.recommendation;
+            }
+
+            return (recommendationList.records || []).some((record) => record.recommendation === filters.value.recommendation);
         });
     }
 
-    if (filters.value.program) {
-        list = list.filter(r => r.program && r.program.id == filters.value.program);
+    if (nameQuery) {
+        list = list.filter((recommendationList) => {
+            return (recommendationList.records || []).some((record) => recordMatchesName(record, nameQuery));
+        });
+    }
+
+    if (programId) {
+        list = list.filter((recommendationList) => {
+            return (recommendationList.records || []).some((record) => recordMatchesProgram(record, programId));
+        });
     }
 
     return list;
@@ -538,6 +1025,55 @@ const openContextMenu = (event, record) => {
     contextMenu.value.show(event);
 };
 
+const isRowSelectable = (record) => !record?.is_in_recommendation_list;
+
+const isRowSelected = (record) => selectedRowIds.value.has(Number(record?.id));
+
+const toggleRowSelection = (record, checked) => {
+    if (!isRowSelectable(record)) {
+        return;
+    }
+
+    const recordId = Number(record.id);
+
+    if (checked) {
+        if (!selectedRowIds.value.has(recordId)) {
+            selectedRows.value = [...selectedRows.value, record];
+        }
+
+        return;
+    }
+
+    selectedRows.value = selectedRows.value.filter((selectedRecord) => Number(selectedRecord.id) !== recordId);
+};
+
+const toggleSelectAllFilteredRows = (checked) => {
+    const selectableIds = new Set(selectableFilteredRows.value.map((record) => Number(record.id)));
+
+    if (checked) {
+        const selectedById = new Map(selectedRows.value.map((record) => [Number(record.id), record]));
+
+        selectableFilteredRows.value.forEach((record) => {
+            selectedById.set(Number(record.id), record);
+        });
+
+        selectedRows.value = Array.from(selectedById.values());
+        return;
+    }
+
+    selectedRows.value = selectedRows.value.filter((record) => !selectableIds.has(Number(record.id)));
+};
+
+const syncSelectedRows = () => {
+    const currentRecordsById = new Map(
+        interviewedApplicantsWithRecommendationFlags.value.map((record) => [Number(record.id), record]),
+    );
+
+    selectedRows.value = selectedRows.value
+        .map((record) => currentRecordsById.get(Number(record.id)))
+        .filter((record) => Boolean(record) && isRowSelectable(record));
+};
+
 // Methods
 const onAssessmentUpdated = (changes) => {
     if (selectedRecord.value) {
@@ -548,7 +1084,7 @@ const onAssessmentUpdated = (changes) => {
     }
 
     router.reload({
-        only: ['interviewed_applicants', 'budget_allocations'],
+        only: ['interviewed_applicants', 'budget_allocations', 'recommendation_lists'],
         preserveState: true,
         preserveScroll: true,
     });
@@ -561,13 +1097,83 @@ const openReportModal = () => {
     }
 
     router.reload({
-        only: ['interviewed_applicants', 'budget_allocations'],
+        only: ['interviewed_applicants', 'budget_allocations', 'recommendation_lists'],
         preserveState: true,
         preserveScroll: true,
         onFinish: () => {
             showReportModal.value = true;
         },
     });
+};
+
+const clearInterviewedFilters = () => {
+    filters.value.recommendation = null;
+    filters.value.name = '';
+    filters.value.program = null;
+    filters.value.listStatus = null;
+};
+
+const presetRecommendationCreationFilters = () => {
+    filters.value.recommendation = 'recommended';
+    filters.value.listStatus = 'available';
+};
+
+const handleRecommendationListModalVisibility = (value) => {
+    showCreateRecommendationListModal.value = value;
+
+    if (!value) {
+        recommendationListModalMode.value = 'create';
+        recommendationListSubmitIntent.value = 'save';
+        editingRecommendationList.value = null;
+    }
+};
+
+const openCreateRecommendationListModal = () => {
+    if (selectedRows.value.length === 0) {
+        toast.warn('Please select at least one applicant.');
+        return;
+    }
+
+    if (selectionHasNonRecommended.value) {
+        toast.warn('Only applicants marked Recommended for Approval can be saved in a recommendation list.');
+        return;
+    }
+
+    if (selectionHasExistingRecommendationList.value) {
+        toast.warn('Remove applicants already in a recommendation list before creating a new recommendation list.');
+        return;
+    }
+
+    recommendationListModalMode.value = 'create';
+    recommendationListSubmitIntent.value = 'save';
+    editingRecommendationList.value = null;
+    showCreateRecommendationListModal.value = true;
+};
+
+const openEditRecommendationListModal = (recommendationList) => {
+    editingRecommendationList.value = recommendationList;
+    recommendationListModalMode.value = 'edit';
+    recommendationListSubmitIntent.value = 'save';
+    showCreateRecommendationListModal.value = true;
+};
+
+const openPrintRecommendationListModal = (recommendationList) => {
+    if (!recommendationList?.id) {
+        toast.error('Recommendation list is unavailable for printing.');
+        return;
+    }
+
+    editingRecommendationList.value = recommendationList;
+    recommendationListModalMode.value = 'edit';
+    recommendationListSubmitIntent.value = 'print';
+    showCreateRecommendationListModal.value = true;
+};
+
+const upsertRecommendationList = (recommendationList) => {
+    recommendationLists.value = [
+        recommendationList,
+        ...recommendationLists.value.filter((existingRecommendationList) => existingRecommendationList.id !== recommendationList.id),
+    ];
 };
 
 const confirmApprove = () => {
@@ -718,13 +1324,201 @@ const exportSelected = (format) => {
     }
 };
 
+const createRecommendationList = async (payload) => {
+    if (isCreatingRecommendationList.value) {
+        return;
+    }
+
+    if (selectedRows.value.length === 0) {
+        toast.warn('Please select at least one applicant.');
+        return;
+    }
+
+    if (selectionHasNonRecommended.value) {
+        toast.warn('Only applicants marked Recommended for Approval can be saved in a recommendation list.');
+        return;
+    }
+
+    if (selectionHasExistingRecommendationList.value) {
+        toast.warn('Remove applicants already in a recommendation list before creating a new recommendation list.');
+        return;
+    }
+
+    isCreatingRecommendationList.value = true;
+
+    try {
+        const response = await axios.post(route('scholarship.recommendation-lists.store'), {
+            record_ids: selectedRows.value.map((record) => record.id),
+            ...payload,
+        });
+
+        const savedRecommendationList = response.data?.data;
+
+        if (!savedRecommendationList) {
+            throw new Error('Recommendation list payload was not returned.');
+        }
+
+        upsertRecommendationList(savedRecommendationList);
+        recommendationListExpandedRows.value = { [savedRecommendationList.id]: true };
+        selectedRows.value = [];
+        handleRecommendationListModalVisibility(false);
+        activeTab.value = 'recommendation-lists';
+        toast.success(response.data?.message || 'Recommendation list created successfully.');
+    } catch (error) {
+        console.error('Failed to create recommendation list:', error);
+
+        const message = error?.response?.data?.errors?.record_ids?.[0]
+            || error?.response?.data?.message
+            || 'Failed to create recommendation list.';
+
+        toast.error(message);
+    } finally {
+        isCreatingRecommendationList.value = false;
+    }
+};
+
+const generateRecommendationListPrint = (recommendationList, successMessage = null) => {
+    try {
+        const opened = printRecommendationList({ recommendationList });
+
+        if (!opened) {
+            toast.error('Pop-up blocked. Please allow pop-ups and try again.');
+            return false;
+        }
+
+        if (successMessage) {
+            toast.success(successMessage);
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Failed to print recommendation list:', error);
+        toast.error('Failed to print recommendation list.');
+        return false;
+    }
+};
+
+const updateRecommendationList = async (payload, { shouldPrintAfterSave = false } = {}) => {
+    if (isCreatingRecommendationList.value) {
+        return;
+    }
+
+    if (!editingRecommendationList.value?.id) {
+        toast.error('Recommendation list is unavailable for editing.');
+        return;
+    }
+
+    isCreatingRecommendationList.value = true;
+
+    try {
+        const response = await axios.patch(
+            route('scholarship.recommendation-lists.update', editingRecommendationList.value.id),
+            payload,
+        );
+
+        const savedRecommendationList = response.data?.data;
+
+        if (!savedRecommendationList) {
+            throw new Error('Recommendation list payload was not returned.');
+        }
+
+        upsertRecommendationList(savedRecommendationList);
+        recommendationListExpandedRows.value = {
+            ...recommendationListExpandedRows.value,
+            [savedRecommendationList.id]: true,
+        };
+        handleRecommendationListModalVisibility(false);
+        activeTab.value = 'recommendation-lists';
+
+        const successMessage = response.data?.message || 'Recommendation list updated successfully.';
+
+        if (shouldPrintAfterSave) {
+            const printed = generateRecommendationListPrint(
+                savedRecommendationList,
+                `Updated ${savedRecommendationList.list_number}. Printing recommendation list.`,
+            );
+
+            if (!printed) {
+                toast.success(successMessage);
+            }
+
+            return;
+        }
+
+        toast.success(successMessage);
+    } catch (error) {
+        console.error('Failed to update recommendation list:', error);
+
+        const message = error?.response?.data?.message
+            || 'Failed to update recommendation list.';
+
+        toast.error(message);
+    } finally {
+        isCreatingRecommendationList.value = false;
+    }
+};
+
+const submitRecommendationList = async (payload) => {
+    if (recommendationListModalMode.value === 'edit') {
+        await updateRecommendationList(payload, {
+            shouldPrintAfterSave: recommendationListSubmitIntent.value === 'print',
+        });
+        return;
+    }
+
+    await createRecommendationList(payload);
+};
+
+const printSavedRecommendationList = (recommendationList) => {
+    openPrintRecommendationListModal(recommendationList);
+};
+
+const formatApplicantName = (record) => {
+    const lastName = record?.profile?.last_name || 'N/A';
+    const firstName = record?.profile?.first_name || '';
+    const middleName = record?.profile?.middle_name?.trim();
+    const middleInitial = middleName ? `${middleName.charAt(0).toUpperCase()}.` : '';
+
+    return [lastName + ',', firstName, middleInitial].filter(Boolean).join(' ').trim();
+};
+
+const formatDateTime = (value) => {
+    return value ? moment(value).format('MMM DD, YYYY h:mm A') : 'N/A';
+};
+
+const formatRecommendationListBudget = (recommendationList) => {
+    const budgetAllocation = recommendationList?.budget_allocation;
+
+    if (!budgetAllocation) {
+        return 'No saved budget allocation';
+    }
+
+    return `${budgetAllocation.program || 'N/A'} · ${budgetAllocation.rc_name || budgetAllocation.rc_code || 'N/A'} · FY ${budgetAllocation.fiscal_year || 'N/A'}`;
+};
+
 const refreshPage = () => {
     router.reload({
-        only: ['interviewed_applicants', 'budget_allocations'],
+        only: ['interviewed_applicants', 'budget_allocations', 'recommendation_lists'],
         preserveState: true,
         preserveScroll: true
     });
 };
+
+watch(() => props.recommendation_lists, (value) => {
+    recommendationLists.value = [...(value || [])];
+}, { deep: true });
+
+watch(interviewedApplicantsWithRecommendationFlags, () => {
+    syncSelectedRows();
+});
+
+onMounted(() => {
+    document.body.classList.add('ios-admin-page');
+});
+
+onBeforeUnmount(() => {
+    document.body.classList.remove('ios-admin-page');
+});
 </script>
 
 <style scoped>
@@ -774,9 +1568,9 @@ const refreshPage = () => {
 
 /* Rounded DataTable */
 :deep(.p-datatable) {
-    border-radius: 1.5rem;
+    border-radius: 0;
     overflow: hidden;
-    border: 1px solid var(--p-datatable-border-color, #e2e8f0);
+    border: none;
 }
 
 :deep(.p-datatable .p-datatable-table-container) {

@@ -1,26 +1,28 @@
 <template>
-    <Dialog :visible="visible" modal :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
-        @update:visible="val => emit('update:visible', val)">
-        <template #container>
-            <div class="ios-modal" :class="{ 'ios-modal-maximized': isMaximized }" :style="dragStyle">
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title ios-nav-title--truncate">{{ attachment?.file_name }}</span>
-                    <div class="ios-nav-actions">
-                        <button class="ios-nav-btn ios-nav-action ios-nav-btn--inline"
-                            @click="isMaximized = !isMaximized" v-tooltip.bottom="isMaximized ? 'Restore' : 'Maximize'">
-                            <AppIcon :name="isMaximized ? 'window-minimize' : 'window-maximize'" :size="14" />
-                        </button>
-                        <button class="ios-nav-btn ios-nav-action ios-nav-btn--inline"
-                            @click="downloadAttachment(attachment)">
-                            <AppIcon name="download" :size="14" />
-                        </button>
-                    </div>
-                </div>
-                <div class="ios-body"
-                    style="padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+    <IosModal
+        :visible="visible"
+        width="min(900px, 92vw)"
+        :title="attachment?.file_name || ''"
+        title-class="ios-nav-title--truncate"
+        :modal-class="{ 'ios-modal-maximized': isMaximized }"
+        :modal-content-style="{ height: '85vh' }"
+        body-style="padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden;"
+        @update:visible="val => emit('update:visible', val)"
+        @close="close"
+    >
+        <template #header-right>
+            <div class="ios-nav-actions">
+                <button class="ios-nav-btn ios-nav-action ios-nav-btn--inline"
+                    @click="isMaximized = !isMaximized" v-tooltip.bottom="isMaximized ? 'Restore' : 'Maximize'">
+                    <AppIcon :name="isMaximized ? 'window-minimize' : 'window-maximize'" :size="14" />
+                </button>
+                <button class="ios-nav-btn ios-nav-action ios-nav-btn--inline"
+                    @click="downloadAttachment(attachment)">
+                    <AppIcon name="download" :size="14" />
+                </button>
+            </div>
+        </template>
+
                     <div class="flex items-center justify-center bg-gray-100 dark:bg-gray-900 relative overflow-hidden"
                         style="flex: 1;">
                         <!-- PDF Viewer -->
@@ -68,15 +70,11 @@
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
-import { useDraggableModal } from '@/composables/useDraggableModal';
 
 const props = defineProps({
     visible: { type: Boolean, default: false },
@@ -84,8 +82,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:visible']);
-
-const { dragStyle, onDragStart, resetDrag } = useDraggableModal();
 
 const isMaximized = ref(false);
 
@@ -104,7 +100,6 @@ watch(() => props.visible, (val) => {
 });
 
 const close = () => {
-    resetDrag();
     emit('update:visible', false);
 };
 
@@ -185,33 +180,6 @@ const formatFileSize = (bytes) => {
 </script>
 
 <style scoped>
-.ios-modal {
-    background: #F2F2F7;
-    border-radius: 14px;
-    width: min(900px, 92vw);
-    height: 85vh;
-    transition: background 0.2s;
-}
-
-.ios-nav-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-.ios-nav-cancel {
-    left: 16px;
-    color: #8E8E93;
-    font-size: 20px;
-}
-
-
-.ios-body {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 0 16px;
-}
-
-
 .ios-icon-btn {
     background: none;
     border: none;
@@ -228,23 +196,5 @@ const formatFileSize = (bytes) => {
 
 .ios-icon-btn:hover {
     background: rgba(0, 122, 255, 0.1);
-}
-</style>
-
-<style>
-.ios-dialog-root.p-dialog {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-}
-
-.ios-dialog-root .p-dialog-content {
-    padding: 0 !important;
-    background: transparent !important;
-}
-
-.ios-dialog-mask {
-    background: rgba(0, 0, 0, 0.4);
 }
 </style>

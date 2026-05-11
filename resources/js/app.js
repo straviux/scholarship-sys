@@ -24,6 +24,7 @@ import 'primeicons/primeicons.css';
 import permissionDirective from './directives/permission';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 import smoothScrollDirective from './directives/smoothScroll';
 import animateTableRowsDirective from './directives/animateTableRows';
 import safeHtmlDirective from './directives/safeHtml';
@@ -163,6 +164,7 @@ createInertiaApp({
 		// Register global UI components
 		app.component('AppIcon', AppIcon);
 		app.component('AppButton', AppButton);
+		app.component('IosModal', IosModal);
 
 		// Register PrimeVue components globally
 		app.component('Button', Button);

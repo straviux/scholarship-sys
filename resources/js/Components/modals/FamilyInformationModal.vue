@@ -1,48 +1,39 @@
 <template>
-    <Dialog :visible="visible" modal :style="{ width: '90vw', maxWidth: '800px' }"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
-        @update:visible="val => emit('update:visible', val)">
-        <template #container>
-            <div class="ios-modal" :style="dragStyle">
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal">
-                        <AppIcon name="times" />
-                    </button>
-                    <span class="ios-nav-title">Edit Family Information</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="submitForm" :disabled="saving">
-                        <AppIcon name="check" />
-                    </button>
-                </div>
-                <div class="ios-body" style="padding: 16px;">
-                    <FamilyInformationFields v-model:father_name="form.father_name"
-                        v-model:father_occupation="form.father_occupation"
-                        v-model:father_contact_no="form.father_contact_no" v-model:mother_name="form.mother_name"
-                        v-model:mother_occupation="form.mother_occupation"
-                        v-model:mother_contact_no="form.mother_contact_no" v-model:guardian_name="form.guardian_name"
-                        v-model:guardian_occupation="form.guardian_occupation"
-                        v-model:guardian_relationship="form.guardian_relationship"
-                        v-model:guardian_contact_no="form.guardian_contact_no"
-                        v-model:parents_guardian_gross_monthly_income="form.parents_guardian_gross_monthly_income"
-                        :show-header="false" />
+    <IosModal
+        :visible="visible"
+        width="90vw"
+        max-width="800px"
+        title="Edit Family Information"
+        :show-action="true"
+        :action-disabled="saving"
+        body-style="padding: 16px;"
+        @update:visible="val => emit('update:visible', val)"
+        @close="closeModal"
+        @action="submitForm"
+    >
+        <FamilyInformationFields v-model:father_name="form.father_name"
+            v-model:father_occupation="form.father_occupation"
+            v-model:father_contact_no="form.father_contact_no" v-model:mother_name="form.mother_name"
+            v-model:mother_occupation="form.mother_occupation"
+            v-model:mother_contact_no="form.mother_contact_no" v-model:guardian_name="form.guardian_name"
+            v-model:guardian_occupation="form.guardian_occupation"
+            v-model:guardian_relationship="form.guardian_relationship"
+            v-model:guardian_contact_no="form.guardian_contact_no"
+            v-model:parents_guardian_gross_monthly_income="form.parents_guardian_gross_monthly_income"
+            :show-header="false" />
 
-                    <!-- Validation Messages -->
-                    <div v-if="validationError"
-                        style="margin-top: 12px; background: #FFF2F2; border: 1px solid #FFD2D2; border-radius: 10px; padding: 12px;">
-                        <p style="font-size: 13px; color: #FF3B30; font-weight: 500;">
-                            <AppIcon name="exclamation-triangle" style="margin-right: 8px;" />
-                            {{ validationError }}
-                        </p>
-                    </div>
-                </div>
-
-            </div>
-        </template>
-    </Dialog>
+        <div v-if="validationError"
+            style="margin-top: 12px; background: #FFF2F2; border: 1px solid #FFD2D2; border-radius: 10px; padding: 12px;">
+            <p style="font-size: 13px; color: #FF3B30; font-weight: 500;">
+                <AppIcon name="exclamation-triangle" style="margin-right: 8px;" />
+                {{ validationError }}
+            </p>
+        </div>
+    </IosModal>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
-import { useDraggableModal } from '@/composables/useDraggableModal';
 import FamilyInformationFields from '@/Components/forms/fields/FamilyInformationFields.vue';
 import axios from 'axios';
 import { toast } from '@/utils/toast';
@@ -56,8 +47,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:visible', 'success']);
-
-const { dragStyle, onDragStart, resetDrag } = useDraggableModal();
 
 const saving = ref(false);
 const validationError = ref('');

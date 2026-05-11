@@ -1,95 +1,86 @@
 <template>
-    <Dialog :visible="visible" modal :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
-        @update:visible="val => emit('update:visible', val)">
-        <template #container>
-            <div class="ios-modal" :style="[{ width: '720px' }, dragStyle]">
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">{{ mode === 'add' ? 'Add Academic Term' : 'Edit Academic Term' }}</span>
-                    <button class="ios-nav-btn ios-nav-action" @click.stop="submitTerm" :disabled="processing">
-                        <AppIcon name="check" :size="14" />
-                    </button>
+    <IosModal
+        :visible="visible"
+        width="720px"
+        :title="mode === 'add' ? 'Add Academic Term' : 'Edit Academic Term'"
+        :show-action="true"
+        :action-disabled="processing"
+        @update:visible="val => emit('update:visible', val)"
+        @close="close"
+        @action="submitTerm"
+    >
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 0;">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="ios-form-group">
+                    <label class="ios-label">Year Level *</label>
+                    <YearLevelSelect v-model="form.year_level" />
                 </div>
-
-                <div class="ios-body">
-                    <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 0;">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="ios-form-group">
-                                <label class="ios-label">Year Level *</label>
-                                <YearLevelSelect v-model="form.year_level" />
-                            </div>
-                            <div class="ios-form-group">
-                                <label class="ios-label">Status</label>
-                                <Select v-model="form.unified_status" :options="statusOptions" optionLabel="label"
-                                    optionValue="value" placeholder="Select Status" fluid />
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="ios-form-group">
-                                <label class="ios-label">Academic Year <span v-if="isG12Term"
-                                        class="text-xs text-gray-500 dark:text-gray-400">(Optional for G12)</span><span
-                                        v-else>*</span></label>
-                                <AcademicYearSelect v-model="form.academic_year" />
-                            </div>
-                            <div class="ios-form-group">
-                                <label class="ios-label">Term <span v-if="isG12Term"
-                                        class="text-xs text-gray-500 dark:text-gray-400">(Optional for G12)</span><span
-                                        v-else>*</span></label>
-                                <TermSelect v-model="form.term" />
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="ios-form-group">
-                                <label class="ios-label">Date Filed</label>
-                                <DatePicker v-model="form.date_filed" dateFormat="yy-mm-dd" showIcon fluid />
-                            </div>
-                            <div class="ios-form-group">
-                                <label class="ios-label">Date Approved</label>
-                                <DatePicker v-model="form.date_approved" dateFormat="yy-mm-dd" showIcon fluid />
-                            </div>
-                        </div>
-
-                        <div class="ios-form-group">
-                            <label class="ios-label">Grant Provision</label>
-                            <Select v-model="form.grant_provision" :options="grantProvisionOptions" optionLabel="label"
-                                optionValue="value" placeholder="Select Grant Provision" fluid showClear />
-                        </div>
-
-                        <div class="ios-form-group">
-                            <label class="ios-label">Remarks</label>
-                            <Editor v-model="form.remarks" editorStyle="height: 120px">
-                                <template #toolbar>
-                                    <span class="ql-formats">
-                                        <button class="ql-bold"></button>
-                                        <button class="ql-italic"></button>
-                                        <button class="ql-underline"></button>
-                                    </span>
-                                    <span class="ql-formats">
-                                        <button class="ql-list" value="ordered"></button>
-                                        <button class="ql-list" value="bullet"></button>
-                                    </span>
-                                    <span class="ql-formats">
-                                        <button class="ql-clean"></button>
-                                    </span>
-                                </template>
-                            </Editor>
-                        </div>
-                    </div>
+                <div class="ios-form-group">
+                    <label class="ios-label">Status</label>
+                    <Select v-model="form.unified_status" :options="statusOptions" optionLabel="label"
+                        optionValue="value" placeholder="Select Status" fluid />
                 </div>
             </div>
-        </template>
-    </Dialog>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="ios-form-group">
+                    <label class="ios-label">Academic Year <span v-if="isG12Term"
+                            class="text-xs text-gray-500 dark:text-gray-400">(Optional for G12)</span><span
+                            v-else>*</span></label>
+                    <AcademicYearSelect v-model="form.academic_year" />
+                </div>
+                <div class="ios-form-group">
+                    <label class="ios-label">Term <span v-if="isG12Term"
+                            class="text-xs text-gray-500 dark:text-gray-400">(Optional for G12)</span><span
+                            v-else>*</span></label>
+                    <TermSelect v-model="form.term" />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="ios-form-group">
+                    <label class="ios-label">Date Filed</label>
+                    <DatePicker v-model="form.date_filed" dateFormat="yy-mm-dd" showIcon fluid />
+                </div>
+                <div class="ios-form-group">
+                    <label class="ios-label">Date Approved</label>
+                    <DatePicker v-model="form.date_approved" dateFormat="yy-mm-dd" showIcon fluid />
+                </div>
+            </div>
+
+            <div class="ios-form-group">
+                <label class="ios-label">Grant Provision</label>
+                <Select v-model="form.grant_provision" :options="grantProvisionOptions" optionLabel="label"
+                    optionValue="value" placeholder="Select Grant Provision" fluid showClear />
+            </div>
+
+            <div class="ios-form-group">
+                <label class="ios-label">Remarks</label>
+                <Editor v-model="form.remarks" editorStyle="height: 120px">
+                    <template #toolbar>
+                        <span class="ql-formats">
+                            <button class="ql-bold"></button>
+                            <button class="ql-italic"></button>
+                            <button class="ql-underline"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-list" value="ordered"></button>
+                            <button class="ql-list" value="bullet"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-clean"></button>
+                        </span>
+                    </template>
+                </Editor>
+            </div>
+        </div>
+    </IosModal>
 </template>
 
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue';
 import axios from 'axios';
 import { toast } from '@/utils/toast';
-import { useDraggableModal } from '@/composables/useDraggableModal';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { useSystemOptions } from '@/composables/useSystemOptions';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
@@ -104,10 +95,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:visible', 'success']);
-
-const { dragStyle, onDragStart, resetDrag } = useDraggableModal();
 const { statusOptions: rawStatusOptions } = useScholarshipStatus();
-const allowedTermStatuses = new Set(['pending', 'approved', 'active', 'completed', 'denied', 'withdrawn', 'loa', 'suspended', 'unknown']);
+const allowedTermStatuses = new Set(['pending', 'approved', 'active', 'completed', 'completed-transferred', 'denied', 'withdrawn', 'loa', 'suspended', 'unknown']);
 
 const processing = ref(false);
 const grantProvisionOptions = useSystemOptions('grant_provision');
@@ -222,7 +211,6 @@ const loadTerm = async (termId) => {
 };
 
 const close = () => {
-    resetDrag();
     emit('update:visible', false);
     form.value = getDefaultForm();
 };

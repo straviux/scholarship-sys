@@ -1,47 +1,38 @@
 <template>
-    <Dialog :visible="visible" modal :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
-        @update:visible="val => emit('update:visible', val)">
-        <template #container>
-            <div class="ios-modal" :style="[{ width: '520px' }, dragStyle]">
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">{{ dialogTitle }}</span>
-                    <button class="ios-nav-btn ios-nav-action" @click.stop="submitCompletion" :disabled="processing">
-                        <AppIcon name="check" :size="14" />
-                    </button>
-                </div>
-
-                <div class="ios-body">
-                    <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 0;">
-                        <div v-if="term" class="ios-info-card">
-                            <p class="text-sm font-semibold text-gray-900">{{ term.year_level || 'Year level not set' }}</p>
-                            <p class="mt-1 text-xs text-gray-500">{{ term.academic_year || 'No academic year' }}<span v-if="term.term"> · {{ term.term }}</span></p>
-                        </div>
-
-                        <div class="ios-form-group">
-                            <label class="ios-label">Completion Date</label>
-                            <DatePicker v-model="form.completion_date" dateFormat="yy-mm-dd" showIcon fluid />
-                        </div>
-
-                        <div class="ios-form-group">
-                            <label class="ios-label">Completion Remarks</label>
-                            <Textarea v-model="form.completion_remarks" rows="4" autoResize fluid
-                                placeholder="Add completion notes for the semester" />
-                        </div>
-                    </div>
-                </div>
+    <IosModal
+        :visible="visible"
+        width="520px"
+        :title="dialogTitle"
+        :show-action="true"
+        :action-disabled="processing"
+        @update:visible="val => emit('update:visible', val)"
+        @close="close"
+        @action="submitCompletion"
+    >
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 0;">
+            <div v-if="term" class="ios-info-card">
+                <p class="text-sm font-semibold text-gray-900">{{ term.year_level || 'Year level not set' }}</p>
+                <p class="mt-1 text-xs text-gray-500">{{ term.academic_year || 'No academic year' }}<span v-if="term.term"> · {{ term.term }}</span></p>
             </div>
-        </template>
-    </Dialog>
+
+            <div class="ios-form-group">
+                <label class="ios-label">Completion Date</label>
+                <DatePicker v-model="form.completion_date" dateFormat="yy-mm-dd" showIcon fluid />
+            </div>
+
+            <div class="ios-form-group">
+                <label class="ios-label">Completion Remarks</label>
+                <Textarea v-model="form.completion_remarks" rows="4" autoResize fluid
+                    placeholder="Add completion notes for the semester" />
+            </div>
+        </div>
+    </IosModal>
 </template>
 
 <script setup>
 import { computed, ref, watch } from 'vue';
 import axios from 'axios';
 import { toast } from '@/utils/toast';
-import { useDraggableModal } from '@/composables/useDraggableModal';
 
 const props = defineProps({
     visible: { type: Boolean, default: false },
@@ -49,8 +40,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:visible', 'success']);
-
-const { dragStyle, onDragStart, resetDrag } = useDraggableModal();
 
 const processing = ref(false);
 const form = ref(getDefaultForm());
@@ -63,7 +52,7 @@ function getDefaultForm() {
 }
 
 const dialogTitle = computed(() => {
-    return props.term?.unified_status === 'completed'
+    return ['completed', 'completed-transferred'].includes(props.term?.unified_status)
         ? 'Update Semester Completion'
         : 'Complete Semester';
 });
@@ -92,7 +81,6 @@ const formatDateForApi = (value) => {
 };
 
 const close = () => {
-    resetDrag();
     emit('update:visible', false);
     form.value = getDefaultForm();
 };

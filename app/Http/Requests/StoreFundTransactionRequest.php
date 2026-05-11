@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\SystemOption;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class StoreFundTransactionRequest extends FormRequest
 {
@@ -28,7 +31,7 @@ class StoreFundTransactionRequest extends FormRequest
             'particulars_name' => ['nullable', 'string'],
             'particulars_description' => ['nullable', 'string'],
             'amount' => ['required', 'numeric', 'min:0'],
-            'obr_type' => ['nullable', 'in:REGULAR,FINANCIAL ASSISTANCE,REIMBURSEMENT'],
+            'obr_type' => ['nullable', 'string', Rule::in($this->validObrTypes())],
             'scholar_ids' => ['nullable', 'array'],
             'scholar_ids.*.profile_id' => ['nullable'],
             'scholar_ids.*.scholarship_record_id' => ['nullable'],
@@ -52,6 +55,29 @@ class StoreFundTransactionRequest extends FormRequest
     {
         $this->merge([
             'created_by' => Auth::id(),
+            'obr_type' => $this->normalizeObrType($this->input('obr_type')),
         ]);
+    }
+
+    private function validObrTypes(): array
+    {
+        return SystemOption::getByCategory('disbursement_type', false)
+            ->pluck('value')
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    private function normalizeObrType(mixed $value): ?string
+    {
+        $text = trim((string) $value);
+
+        if ($text === '') {
+            return null;
+        }
+
+        return (string) Str::of($text)
+            ->lower()
+            ->replaceMatches('/[\s-]+/', '_');
     }
 }

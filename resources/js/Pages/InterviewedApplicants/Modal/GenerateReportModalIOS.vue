@@ -1,22 +1,24 @@
 <template>
-    <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="modalStyle">
-                <!-- iOS Navigation Bar (drag handle) -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="handleLeadingAction"
-                        v-tooltip.bottom="leadingActionTooltip">
-                        <AppIcon :name="leadingActionIcon" :size="16" />
-                    </button>
-                    <span class="ios-nav-title">{{ currentPageTitle }}</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="handlePrimaryAction"
-                        :disabled="isPrimaryActionDisabled" v-tooltip.bottom="primaryActionTooltip">
-                        <AppIcon :name="primaryActionIcon" :size="16" />
-                    </button>
-                </div>
+    <IosModal
+        :visible="show"
+        width="520px"
+        :title="currentPageTitle"
+        :show-action="true"
+        :action-disabled="isPrimaryActionDisabled"
+        :action-icon="primaryActionIcon"
+        close-icon="x"
+        icon-size="16"
+        @update:visible="val => emit('update:show', val)"
+        @close="handleLeadingAction"
+        @action="handlePrimaryAction"
+    >
+        <template #header-left>
+            <button class="ios-nav-btn ios-nav-cancel" @click="handleLeadingAction"
+                v-tooltip.bottom="leadingActionTooltip">
+                <AppIcon :name="leadingActionIcon" :size="16" />
+            </button>
+        </template>
 
-                <div class="ios-body">
                     <template v-if="isSetupPage">
                     <!-- REPORT TYPE — iOS Segmented Control -->
                     <div class="ios-section">
@@ -383,17 +385,14 @@
 
                         <div style="height: 24px;"></div>
                     </template>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 
     <PdfPreviewModal v-model:show="showPdfPreview" :htmlDoc="pdfPreviewHtml" :title="pdfPreviewTitle"
         :paperSize="pdfPaperSize" />
 </template>
 
 <script setup>
-import { ref, computed, onBeforeUnmount, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import moment from 'moment';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 
@@ -804,37 +803,6 @@ function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// ─── Drag logic (main modal) ───
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-
-const modalStyle = computed(() => ({
-    width: '520px',
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-}));
-
-function onDragStart(e) {
-    if (e.target.closest('button')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-});
 </script>
 
 <style scoped>

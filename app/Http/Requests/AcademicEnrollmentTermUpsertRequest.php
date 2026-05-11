@@ -25,7 +25,7 @@ class AcademicEnrollmentTermUpsertRequest extends FormRequest
             'term' => $isG12 ? ['nullable', 'string', 'max:50'] : ['required', 'string', 'max:50'],
             'date_filed' => ['nullable', 'date'],
             'date_approved' => ['nullable', 'date'],
-            'unified_status' => ['nullable', 'string', 'max:50', 'in:pending,approved,active,completed,denied,withdrawn,loa,suspended,unknown'],
+            'unified_status' => ['nullable', 'string', 'max:50', 'in:pending,approved,active,completed,completed-transferred,denied,withdrawn,loa,suspended,unknown'],
             'grant_provision' => ['nullable', 'string', 'max:50'],
             'remarks' => ['nullable', 'string', 'max:1000'],
         ];

@@ -16,7 +16,7 @@ import ObrTrackingModal from '@/Pages/FundTransactions/Modal/ObrTrackingModal.vu
 import RecordsSelect from '@/Components/selects/RecordsSelect.vue';
 import axios from 'axios';
 import { usePdfPrint, renderVueTemplate } from '@/composables/usePdfPrint';
-import { useSystemOptions } from '@/composables/useSystemOptions';
+import { useSystemOptions, getSystemOptionLabel } from '@/composables/useSystemOptions';
 import ObrTemplate from '@/Pages/FundTransactions/Pdf/ObrTemplate.vue';
 import DvTemplate from '@/Pages/FundTransactions/Pdf/DvTemplate.vue';
 import PayrollTemplate from '@/Pages/FundTransactions/Pdf/PayrollTemplate.vue';
@@ -39,6 +39,57 @@ const ftDrawerPt = {
 
 const page = usePage();
 const _url = new URLSearchParams(window.location.search);
+
+const normalizeObrTypeValue = (value) => {
+    const text = String(value ?? '').trim();
+    if (!text) return '';
+
+    return text.toLowerCase().replace(/[\s-]+/g, '_');
+};
+
+const humanizeObrTypeValue = (value) => {
+    const normalized = normalizeObrTypeValue(value);
+    if (!normalized) return '';
+
+    return normalized
+        .split('_')
+        .map(segment => segment.charAt(0).toUpperCase() + segment.slice(1))
+        .join(' ');
+};
+
+const formatObrTypeLabel = (value, fallback = '---') => {
+    const normalized = normalizeObrTypeValue(value);
+    if (!normalized) return fallback;
+
+    const label = getSystemOptionLabel('disbursement_type', normalized, '');
+    return label || humanizeObrTypeValue(normalized);
+};
+
+const getObrTypeTextClass = (value) => {
+    switch (normalizeObrTypeValue(value)) {
+        case 'regular':
+            return 'text-gray-800 dark:text-gray-200';
+        case 'financial_assistance':
+            return 'text-yellow-800 dark:text-yellow-200';
+        case 'reimbursement':
+            return 'text-purple-800 dark:text-purple-200';
+        default:
+            return 'text-gray-700 dark:text-gray-300';
+    }
+};
+
+const formatVoucherDocumentType = (value) => {
+    if (value === 'disbursements') {
+        return 'Disbursement Voucher';
+    }
+
+    if (value === 'payroll') {
+        return 'Payroll';
+    }
+
+    return value || '---';
+};
+
 const showWizard = ref(false);
 const currentStep = ref(1);
 const voucherType = ref('obligations');
@@ -80,7 +131,7 @@ const showOBRTrackingDialog = ref(false);
 const selectedVoucherForOBRTracking = ref(null);
 const statusFilter = ref(_url.get('status') || '');
 const obrNoFilter = ref(_url.get('obr_no_mode') || '');
-const obrTypeFilter = ref(_url.get('type') || '');
+const obrTypeFilter = ref(normalizeObrTypeValue(_url.get('type')));
 const disbursementTypeFilter = ref(_url.get('dv_type') || '');
 const userFilter = ref(_url.get('user') || 'all');
 const currentPage = ref(parseInt(_url.get('page') || '1'));
@@ -150,7 +201,7 @@ const obrNoFilterOptions = [
 const _obrTypeRaw = useSystemOptions('disbursement_type');
 const obrTypeFilterOptions = computed(() => _obrTypeRaw.value.map(o => ({
     label: o.label,
-    value: o.value.replace(/_/g, ' ').toUpperCase(),
+    value: o.value,
 })));
 
 const disbursementTypeFilterOptions = [
@@ -1492,13 +1543,8 @@ onMounted(() => {
 
                     <Column header="OBR Type" :headerStyle="{ minWidth: '130px' }" :bodyStyle="{ minWidth: '130px' }">
                         <template #body="slotProps">
-                            <span :class="{
-                                'px-3 py-1 rounded-full text-xs font-medium': true,
-                                'text-gray-800 dark:text-gray-200': slotProps.data.obr_type === 'REGULAR',
-                                'text-yellow-800 dark:text-yellow-200': slotProps.data.obr_type === 'FINANCIAL ASSISTANCE',
-                                'text-purple-800 dark:text-purple-200': slotProps.data.obr_type === 'REIMBURSEMENT'
-                            }">
-                                {{ slotProps.data.obr_type || '---' }}
+                            <span :class="['px-3 py-1 rounded-full text-xs font-medium', getObrTypeTextClass(slotProps.data.obr_type)]">
+                                {{ formatObrTypeLabel(slotProps.data.obr_type) }}
                             </span>
                         </template>
                     </Column>
@@ -1507,9 +1553,7 @@ onMounted(() => {
                         :bodyStyle="{ minWidth: '150px' }">
                         <template #body="slotProps">
                             <span class="text-xs font-medium uppercase">
-                                {{ slotProps.data.disbursement_type === 'disbursements' ? 'DV' :
-                                    (slotProps.data.disbursement_type === 'payroll' ? 'Payroll' :
-                                        slotProps.data.disbursement_type) }}
+                                {{ formatVoucherDocumentType(slotProps.data.disbursement_type) }}
                             </span>
                         </template>
                     </Column>
@@ -1603,11 +1647,7 @@ onMounted(() => {
                                         </div>
                                         <div class="ios-row">
                                             <span class="ios-row-label">Disbursement Type</span>
-                                            <span>{{ selectedVoucher.disbursement_type === 'disbursements' ?
-                                                `Disbursement
-                                                Voucher` : (selectedVoucher.disbursement_type === 'payroll' ? 'Payroll'
-                                                    :
-                                                    selectedVoucher.disbursement_type) }}</span>
+                                            <span>{{ formatVoucherDocumentType(selectedVoucher.disbursement_type) }}</span>
                                         </div>
                                         <div class="ios-row">
                                             <span class="ios-row-label">Payee</span>
@@ -1633,7 +1673,7 @@ onMounted(() => {
                                         </div>
                                         <div class="ios-row">
                                             <span class="ios-row-label">OBR Type</span>
-                                            <span>{{ selectedVoucher.obr_type || '---' }}</span>
+                                            <span>{{ formatObrTypeLabel(selectedVoucher.obr_type) }}</span>
                                         </div>
                                         <div class="ios-row [border-bottom:none]">
                                             <span class="ios-row-label">OBR Status</span>

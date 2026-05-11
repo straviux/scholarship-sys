@@ -29,7 +29,7 @@
                                 <p class="flex justify-between"><span class="text-xs">OBR Type:</span> <span
                                         class="font-medium text-gray-700 dark:text-gray-100">
                                         {{
-                                            modelValue.obr_type }}</span></p>
+                                            formatObrTypeLabel(modelValue.obr_type) }}</span></p>
                                 <p class="flex justify-between"><span class="text-xs">OBR Status:</span> <span
                                         class="font-medium text-gray-700 dark:text-gray-100">
                                         {{
@@ -94,6 +94,7 @@ import { ref, reactive, computed, watch, onBeforeUnmount } from 'vue';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import { useToast } from 'primevue/usetoast';
+import { getSystemOptionLabel } from '@/composables/useSystemOptions';
 
 const props = defineProps({
     show: {
@@ -123,6 +124,27 @@ const formData = reactive({
     obr_no: '',
     date_obligated: null
 });
+
+const normalizeObrTypeValue = (value) => {
+    const text = String(value ?? '').trim();
+    if (!text) return '';
+
+    return text.toLowerCase().replace(/[\s-]+/g, '_');
+};
+
+const formatObrTypeLabel = (value, fallback = '---') => {
+    const normalized = normalizeObrTypeValue(value);
+    if (!normalized) return fallback;
+
+    return getSystemOptionLabel(
+        'disbursement_type',
+        normalized,
+        normalized
+            .split('_')
+            .map(segment => segment.charAt(0).toUpperCase() + segment.slice(1))
+            .join(' ')
+    );
+};
 
 // Pre-populate form when dialog opens with voucher data
 watch(() => props.show, (visible) => {

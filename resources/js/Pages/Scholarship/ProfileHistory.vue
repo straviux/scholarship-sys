@@ -251,6 +251,7 @@ const getStatusSeverity = (unifiedStatus) => {
         case 'denied':
             return 'danger';
         case 'completed':
+        case 'completed-transferred':
             return 'secondary';
         case 'withdrawn':
             return 'secondary';
@@ -266,6 +267,10 @@ const getStatusSeverity = (unifiedStatus) => {
 };
 
 const formatStatusLabel = (unifiedStatus) => {
+    if (unifiedStatus === 'completed-transferred') {
+        return 'Completed - Transferred';
+    }
+
     return unifiedStatus === 'approved' ? 'Active' : unifiedStatus;
 };
 

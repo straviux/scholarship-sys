@@ -295,6 +295,7 @@ class ScholarshipRecord extends Model
             'denied' => ['label' => 'Denied', 'color' => 'danger'],
             'active' => ['label' => 'Active', 'color' => 'success'],
             'completed' => ['label' => 'Completed', 'color' => 'secondary'],
+            'completed-transferred' => ['label' => 'Completed - Transferred', 'color' => 'secondary'],
             'unknown' => ['label' => 'Unknown', 'color' => 'secondary'],
         ];
         return $statusConfig[$this->unified_status] ?? null;
@@ -333,7 +334,7 @@ class ScholarshipRecord extends Model
 
     public function isCompleted()
     {
-        return $this->unified_status === 'completed';
+        return in_array($this->unified_status, ['completed', 'completed-transferred'], true);
     }
 
     public function isDiscontinued()

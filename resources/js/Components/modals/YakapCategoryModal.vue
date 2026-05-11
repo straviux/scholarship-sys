@@ -57,8 +57,16 @@ const resetForm = () => {
 </script>
 
 <template>
-    <Dialog :visible="visible" modal header="Select YAKAP Category" :style="{ width: '50vw' }"
-        @update:visible="emit('update:visible', $event)" @hide="handleCancel">
+    <IosModal
+        :visible="visible"
+        width="50vw"
+        title="Select YAKAP Category"
+        :show-action="true"
+        body-style="padding: 16px;"
+        @update:visible="emit('update:visible', $event)"
+        @close="handleCancel"
+        @action="handleConfirm"
+    >
         <div class="space-y-6">
             <p class="text-gray-700 dark:text-gray-300">Please select a YAKAP category for this new applicant:</p>
 
@@ -68,7 +76,6 @@ const resetForm = () => {
                     optionValue="value" placeholder="Select YAKAP Category" class="w-full" inputId="yakap-select" />
             </div>
 
-            <!-- Municipality Selection for YAKAP Field -->
             <div v-if="selectedCategory === 'yakap-field'" class="flex flex-col gap-3">
                 <label for="yakap-municipality"
                     class="font-medium text-gray-700 dark:text-gray-300">Municipality:</label>
@@ -76,17 +83,11 @@ const resetForm = () => {
                     :clearable="false" inputId="yakap-municipality" />
             </div>
 
-            <!-- School Selection for YAKAP School -->
             <div v-if="selectedCategory === 'yakap-school'" class="flex flex-col gap-3">
                 <label for="yakap-school" class="font-medium text-gray-700 dark:text-gray-300">School:</label>
                 <SchoolSelect v-model="selectedLocation" placeholder="Select School" class="w-full" :clearable="false"
                     inputId="yakap-school" />
             </div>
         </div>
-
-        <template #footer>
-            <AppButton label="Cancel" icon="times" @click="handleCancel" class="p-button-text" />
-            <AppButton label="Continue" icon="check" @click="handleConfirm" severity="success" />
-        </template>
-    </Dialog>
+    </IosModal>
 </template>

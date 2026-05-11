@@ -564,9 +564,11 @@
                                         getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.unified_status)
                                     }}
                                 </div>
-                                <div v-else-if="selectedProfile.latest_scholarship_record.unified_status === 'completed'"
+                                <div v-else-if="['completed', 'completed-transferred'].includes(selectedProfile.latest_scholarship_record.unified_status)"
                                     :class="getStatusBadgeClass(selectedProfile.latest_scholarship_record.unified_status)"
-                                    v-tooltip="'Scholarship completed'"
+                                    v-tooltip="selectedProfile.latest_scholarship_record.unified_status === 'completed-transferred'
+                                        ? 'Scholarship completed and transferred'
+                                        : 'Scholarship completed'"
                                     class="px-2 py-0.5 rounded-full text-xs font-semibold border cursor-help inline-block">
                                     {{
                                         getScholarshipStatusLabel(selectedProfile.latest_scholarship_record.unified_status)
@@ -1132,6 +1134,7 @@ const getStatusTooltip = (status) => {
         denied: 'Application has been denied',
         active: 'Enrolled as scholar',
         completed: 'Scholarship completed',
+        'completed-transferred': 'Scholarship completed and transferred',
         unknown: 'Status unknown',
     };
     return tooltips[status] || 'Unrecognized status';
@@ -1146,6 +1149,7 @@ const getStatusBadgeClass = (status) => {
         denied: 'bg-red-100 text-red-800 border-red-500 dark:bg-red-900/40 dark:text-red-200 dark:border-red-600',
         active: 'bg-emerald-100 text-emerald-800 border-emerald-500 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-600',
         completed: 'bg-gray-100 text-gray-800 border-gray-400 dark:bg-gray-700/50 dark:text-gray-200 dark:border-gray-500',
+        'completed-transferred': 'bg-slate-100 text-slate-800 border-slate-400 dark:bg-slate-700/50 dark:text-slate-200 dark:border-slate-500',
         withdrawn: 'bg-violet-100 text-violet-800 border-violet-500 dark:bg-violet-900/40 dark:text-violet-200 dark:border-violet-600',
         loa: 'bg-yellow-100 text-yellow-800 border-yellow-500 dark:bg-yellow-900/40 dark:text-yellow-200 dark:border-yellow-600',
         suspended: 'bg-rose-100 text-rose-800 border-rose-500 dark:bg-rose-900/40 dark:text-rose-200 dark:border-rose-600',

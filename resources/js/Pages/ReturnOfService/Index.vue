@@ -975,7 +975,7 @@ const searchProfiles = async (query) => {
         const response = await axios.get(route('return-of-service.search-records'), {
             params: {
                 q: query,
-                status: 'completed',
+                status: 'ros-eligible',
                 program: 'MEDICINE AND MEDICAL ALLIED COURSES'
             }
         });

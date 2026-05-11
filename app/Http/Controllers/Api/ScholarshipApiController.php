@@ -89,7 +89,7 @@ class ScholarshipApiController extends Controller
     public function getScholarshipsByStatus(string $status): JsonResponse
     {
         try {
-            $validStatuses = ['pending', 'interviewed', 'approved', 'active', 'denied', 'completed', 'withdrawn', 'loa', 'suspended', 'unknown'];
+            $validStatuses = ['pending', 'interviewed', 'approved', 'active', 'denied', 'completed', 'completed-transferred', 'withdrawn', 'loa', 'suspended', 'unknown'];
 
             if (!in_array(strtolower($status), $validStatuses)) {
                 return response()->json([

@@ -120,7 +120,8 @@ class AcademicEnrollmentTermService
             }
 
             $oldStatus = $record->unified_status;
-            $record->unified_status = 'completed';
+            $completionStatus = $oldStatus === 'completed-transferred' ? 'completed-transferred' : 'completed';
+            $record->unified_status = $completionStatus;
             $record->date_approved = $data['completion_date'] ?? $record->date_approved ?? now()->toDateString();
             $record->remarks = $data['completion_remarks'] ?? $record->remarks;
             $record->save();
@@ -130,9 +131,9 @@ class AcademicEnrollmentTermService
 
             $historyPayload = [
                 'scholarship_record_id' => $record->id,
-                'action' => 'completed',
+                'action' => $completionStatus,
                 'previous_status' => $oldStatus,
-                'new_status' => 'completed',
+                'new_status' => $completionStatus,
                 'performed_by' => Auth::id(),
                 'remarks' => $data['completion_remarks'] ?? null,
                 'performed_at' => now(),
@@ -147,7 +148,7 @@ class AcademicEnrollmentTermService
             ActivityLogService::logStatusChange(
                 profileId: $record->profile_id,
                 oldStatus: $oldStatus,
-                newStatus: 'completed',
+                newStatus: $completionStatus,
                 remarks: $data['completion_remarks'] ?? 'Completed academic semester.',
             );
 

@@ -1,15 +1,13 @@
 <template>
-    <Dialog :visible="visible" modal :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
-        @update:visible="val => emit('update:visible', val)">
-        <template #container>
-            <div class="ios-modal" :style="[{ width: '30vw', minWidth: '400px' }, dragStyle]">
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
-                        <AppIcon name="times" />
-                    </button>
-                    <span class="ios-nav-title">Mobile Upload</span>
-                </div>
-                <div class="ios-body" style="padding: 16px;">
+    <IosModal
+        :visible="visible"
+        width="30vw"
+        min-width="400px"
+        title="Mobile Upload"
+        body-style="padding: 16px;"
+        @update:visible="val => emit('update:visible', val)"
+        @close="close"
+    >
                     <div v-if="qrData" class="text-center" style="display: flex; flex-direction: column; gap: 16px;">
                         <!-- QR Code -->
                         <div
@@ -59,16 +57,11 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 </template>
 
 <script setup>
 import { ref, watch, onUnmounted } from 'vue';
-import { useDraggableModal } from '@/composables/useDraggableModal';
 import { toast } from '@/utils/toast';
 
 const props = defineProps({
@@ -78,13 +71,10 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible']);
 
-const { dragStyle, onDragStart, resetDrag } = useDraggableModal();
-
 const countdown = ref('');
 const countdownInterval = ref(null);
 
 const close = () => {
-    resetDrag();
     emit('update:visible', false);
 };
 

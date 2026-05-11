@@ -666,9 +666,11 @@ class DisbursementController extends Controller
 
     private function fromObrType(?string $obrType): string
     {
-        return match (strtoupper((string) $obrType)) {
-            'REIMBURSEMENT'        => 'reimbursement',
-            'FINANCIAL ASSISTANCE' => 'financial_assistance',
+        $normalized = str_replace(['-', ' '], '_', strtolower((string) $obrType));
+
+        return match ($normalized) {
+            'reimbursement'        => 'reimbursement',
+            'financial_assistance' => 'financial_assistance',
             default                => 'regular',
         };
     }

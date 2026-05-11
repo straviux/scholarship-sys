@@ -1,19 +1,16 @@
 <template>
-    <Dialog :visible="visible" modal :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
-        @update:visible="val => emit('update:visible', val)">
-        <template #container>
-            <div class="ios-modal" :style="[{ width: '60vw', minWidth: '500px' }, dragStyle]">
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
-                        <AppIcon name="times" />
-                    </button>
-                    <span class="ios-nav-title">Manage Attachments</span>
-                    <button v-if="hasEditPermission" class="ios-nav-btn ios-nav-action" @click="uploadAttachment"
-                        :disabled="uploading || !attachmentForm.file || !attachmentForm.attachment_name || (attachmentForm.attachment_name === 'others' && !attachmentForm.custom_attachment_name)">
-                        <AppIcon name="check" />
-                    </button>
-                </div>
-                <div class="ios-body" style="padding: 16px;">
+    <IosModal
+        :visible="visible"
+        width="60vw"
+        min-width="500px"
+        title="Manage Attachments"
+        :show-action="hasEditPermission"
+        :action-disabled="uploading || !attachmentForm.file || !attachmentForm.attachment_name || (attachmentForm.attachment_name === 'others' && !attachmentForm.custom_attachment_name)"
+        body-style="padding: 16px;"
+        @update:visible="val => emit('update:visible', val)"
+        @close="close"
+        @action="uploadAttachment"
+    >
                     <!-- Record Info -->
                     <div v-if="record" class="ios-info-card" style="margin-bottom: 16px;">
                         <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ record.program?.name ||
@@ -89,18 +86,14 @@
                                 attachmentForm.file.name }}</span></p>
                         </div>
                     </div>
-                </div>
 
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 
     <ViewAttachmentModal v-model:visible="showViewerModal" :attachment="viewerAttachment" />
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { useDraggableModal } from '@/composables/useDraggableModal';
 import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
 import axios from 'axios';
 import { toast } from '@/utils/toast';
@@ -112,8 +105,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:visible', 'success']);
-
-const { dragStyle, onDragStart, resetDrag } = useDraggableModal();
 
 const showViewerModal = ref(false);
 const viewerAttachment = ref(null);
@@ -141,7 +132,6 @@ const attachmentTypeOptions = [
 ];
 
 const close = () => {
-    resetDrag();
     emit('update:visible', false);
     attachmentForm.value = { attachment_name: '', custom_attachment_name: '', page_number: null, file: null };
     if (fileInput.value) fileInput.value.value = '';

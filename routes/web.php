@@ -444,6 +444,14 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('check.permission:scholarships.view')
         ->name('scholarship.interviewed-applicants');
 
+    Route::post('/interviewed-applicants/recommendation-lists', [ScholarshipProfileController::class, 'storeRecommendationList'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.recommendation-lists.store');
+
+    Route::patch('/interviewed-applicants/recommendation-lists/{recommendationList}', [ScholarshipProfileController::class, 'updateRecommendationList'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.recommendation-lists.update');
+
     // Approval history and statistics
     Route::get('/scholarship/{record}/history', [ScholarshipProfileController::class, 'getApprovalHistory'])
         ->name('scholarship.history');

@@ -1,36 +1,43 @@
 <template>
-    <Dialog :visible="show" @update:visible="value => { if (!value) close(); }" modal
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal assessment-modal" :style="[drag.dragStyle.value, { width: modalWidth }]">
-                <div class="ios-nav-bar" @pointerdown="drag.onDragStart">
-                    <button type="button" class="ios-nav-btn ios-nav-cancel" @click="backOrClose"
-                        v-tooltip.bottom="activeMode === 'view' ? `Close` : `Back`">
-                        <AppIcon :name="activeMode === 'view' ? 'x' : 'arrow-left'" :size="16" />
-                    </button>
-                    <span class="ios-nav-title">{{ modalTitle }}</span>
-                    <button v-if="activeMode === 'edit'" type="button"
-                        class="ios-nav-btn ios-nav-action assessment-nav-action" @click="submitEdit"
-                        :disabled="editSubmitting" v-tooltip.bottom="'Save Changes'">
-                        <AppIcon v-if="editSubmitting" name="spinner" :size="16" />
-                        <AppIcon v-else name="check" :size="16" style="color: #2563eb;" />
-                    </button>
-                    <button v-else-if="activeMode === 'approve'" type="button"
-                        class="ios-nav-btn ios-nav-action assessment-nav-action" @click="$emit('confirm-approve')"
-                        :disabled="approvalForm?.processing" v-tooltip.bottom="'Approve Application'">
-                        <AppIcon v-if="approvalForm?.processing" name="spinner" :size="16" />
-                        <AppIcon v-else name="check" :size="16" style="color: #16a34a;" />
-                    </button>
-                    <button v-else-if="activeMode === 'deny'" type="button"
-                        class="ios-nav-btn ios-nav-action assessment-nav-action" @click="$emit('confirm-deny')"
-                        :disabled="denyForm?.processing" v-tooltip.bottom="'Confirm Deny'">
-                        <AppIcon v-if="denyForm?.processing" name="spinner" :size="16" />
-                        <AppIcon v-else name="x" :size="16" style="color: #dc2626;" />
-                    </button>
-                    <div v-else style="width: 48px;"></div>
-                </div>
+    <IosModal
+        :visible="show"
+        :width="modalWidth"
+        :title="modalTitle"
+        :show-close="false"
+        modal-class="assessment-modal"
+        body-class="assessment-body"
+        @update:visible="value => { if (!value) close(); }"
+    >
+        <template #header-left>
+            <button type="button" class="ios-nav-btn ios-nav-cancel" @click="backOrClose"
+                v-tooltip.bottom="activeMode === 'view' ? `Close` : `Back`">
+                <AppIcon :name="activeMode === 'view' ? 'x' : 'arrow-left'" :size="16" />
+            </button>
+        </template>
 
-                <div class="ios-body assessment-body" v-if="localRecord">
+        <template #header-right>
+            <button v-if="activeMode === 'edit'" type="button"
+                class="ios-nav-btn ios-nav-action assessment-nav-action" @click="submitEdit"
+                :disabled="editSubmitting" v-tooltip.bottom="'Save Changes'">
+                <AppIcon v-if="editSubmitting" name="spinner" :size="16" />
+                <AppIcon v-else name="check" :size="16" style="color: #2563eb;" />
+            </button>
+            <button v-else-if="activeMode === 'approve'" type="button"
+                class="ios-nav-btn ios-nav-action assessment-nav-action" @click="$emit('confirm-approve')"
+                :disabled="approvalForm?.processing" v-tooltip.bottom="'Approve Application'">
+                <AppIcon v-if="approvalForm?.processing" name="spinner" :size="16" />
+                <AppIcon v-else name="check" :size="16" style="color: #16a34a;" />
+            </button>
+            <button v-else-if="activeMode === 'deny'" type="button"
+                class="ios-nav-btn ios-nav-action assessment-nav-action" @click="$emit('confirm-deny')"
+                :disabled="denyForm?.processing" v-tooltip.bottom="'Confirm Deny'">
+                <AppIcon v-if="denyForm?.processing" name="spinner" :size="16" />
+                <AppIcon v-else name="x" :size="16" style="color: #dc2626;" />
+            </button>
+            <div v-else style="width: 48px;"></div>
+        </template>
+
+        <div v-if="localRecord">
                     <div class="assessment-content">
                         <template v-if="activeMode === 'view'">
                             <div class="assessment-grid  py-6">
@@ -404,10 +411,8 @@
 
                         </div>
                     </div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+        </div>
+    </IosModal>
 </template>
 
 <script setup>
@@ -419,7 +424,6 @@ import { toast } from '@/utils/toast';
 import AppButton from '@/Components/ui/AppButton.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import InterviewAssessmentForm from '@/Components/forms/InterviewAssessmentForm.vue';
-import { useDraggableModal } from '@/composables/useDraggableModal';
 import { getSystemOptionLabel } from '@/composables/useSystemOptions';
 
 const props = defineProps({
@@ -469,7 +473,6 @@ const initialMode = toRef(props, 'initialMode');
 const approvalForm = toRef(props, 'approvalForm');
 const denyForm = toRef(props, 'denyForm');
 const declineReasons = toRef(props, 'declineReasons');
-const drag = useDraggableModal();
 const page = usePage();
 const currentUser = computed(() => page.props.auth?.user ?? null);
 

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateScholarshipProfileRequest;
 use App\Http\Requests\CreateEducationalBackgroundRequest;
+use App\Http\Requests\StoreRecommendationListRequest;
+use App\Http\Requests\UpdateRecommendationListRequest;
 use App\Http\Requests\UpsertScholarLedgerRequest;
 use App\Http\Requests\UpdateScholarshipProfileRequest;
 use App\Http\Resources\ScholarshipProfileResource;
@@ -15,6 +17,7 @@ use App\Models\ScholarshipRecord;
 use App\Models\SystemOption;
 use App\Models\Particular;
 use App\Models\FundTransaction;
+use App\Models\RecommendationList;
 use App\Models\Course;
 use App\Models\School;
 use App\Models\User;
@@ -23,6 +26,7 @@ use App\Services\LegacyAcademicTermReviewService;
 use App\Services\ScholarshipProfileListingService;
 use Illuminate\Support\Facades\Auth;
 use App\Services\ActivityLogService;
+use App\Services\RecommendationListService;
 use App\Services\ScholarshipExpenseProjectionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -1014,7 +1018,7 @@ class ScholarshipProfileController extends Controller
         }
 
         $request->validate([
-            'unified_status' => 'required|string|in:pending,interviewed,approved,denied,active,completed,withdrawn,loa,suspended,unknown',
+            'unified_status' => 'required|string|in:pending,interviewed,approved,denied,active,completed,completed-transferred,withdrawn,loa,suspended,unknown',
         ]);
 
         try {
@@ -1142,7 +1146,87 @@ class ScholarshipProfileController extends Controller
             'decline_reasons' => config('scholarship.decline_reasons'),
             'interviewers' => User::query()->select('id', 'name')->orderBy('name')->get(),
             'budget_allocations' => $this->getInterviewedApplicantsBudgetAllocations(),
+            'recommendation_lists' => $this->getRecommendationLists(),
         ]);
+    }
+
+    public function storeRecommendationList(
+        StoreRecommendationListRequest $request,
+        RecommendationListService $recommendationListService
+    ): JsonResponse {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'You do not have permission to create recommendation lists.');
+        }
+
+        $recommendationList = $recommendationListService->create($request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Recommendation list created successfully.',
+            'data' => $this->transformRecommendationList($recommendationList),
+        ], 201);
+    }
+
+    public function updateRecommendationList(
+        UpdateRecommendationListRequest $request,
+        RecommendationList $recommendationList,
+        RecommendationListService $recommendationListService
+    ): JsonResponse {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'You do not have permission to update recommendation lists.');
+        }
+
+        $recommendationList = $recommendationListService->update($recommendationList, $request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Recommendation list updated successfully.',
+            'data' => $this->transformRecommendationList($recommendationList),
+        ]);
+    }
+
+    private function getRecommendationLists(): array
+    {
+        return RecommendationList::query()
+            ->with('creator')
+            ->latest()
+            ->get()
+            ->map(fn (RecommendationList $recommendationList) => $this->transformRecommendationList($recommendationList))
+            ->values()
+            ->all();
+    }
+
+    private function transformRecommendationList(RecommendationList $recommendationList): array
+    {
+        return [
+            'id' => $recommendationList->id,
+            'list_number' => $recommendationList->list_number,
+            'report_title' => $recommendationList->report_title,
+            'recommendation_status' => $recommendationList->recommendation_status,
+            'paper_size' => $recommendationList->paper_size,
+            'orientation' => $recommendationList->orientation,
+            'record_count' => $recommendationList->record_count,
+            'total_projected_expense' => (float) $recommendationList->total_projected_expense,
+            'selected_record_ids' => $recommendationList->selected_record_ids ?? [],
+            'records' => $recommendationList->records_snapshot ?? [],
+            'budget_allocation_key' => $recommendationList->budget_allocation_key,
+            'budget_program' => $recommendationList->budget_program,
+            'budget_fiscal_year' => $recommendationList->budget_fiscal_year,
+            'budget_rc_code' => $recommendationList->budget_rc_code,
+            'budget_rc_name' => $recommendationList->budget_rc_name,
+            'budget_allocation' => $recommendationList->budget_allocation,
+            'prepared_by' => $recommendationList->prepared_by,
+            'prepared_by_position' => $recommendationList->prepared_by_position,
+            'prepared_by_office' => $recommendationList->prepared_by_office,
+            'approved_by' => $recommendationList->approved_by,
+            'approved_by_position' => $recommendationList->approved_by_position,
+            'creator' => $recommendationList->creator ? [
+                'id' => $recommendationList->creator->id,
+                'name' => $recommendationList->creator->name,
+            ] : null,
+            'created_at' => $recommendationList->created_at?->toIso8601String(),
+            'updated_at' => $recommendationList->updated_at?->toIso8601String(),
+        ];
     }
 
     private function attachExpenseProjection(

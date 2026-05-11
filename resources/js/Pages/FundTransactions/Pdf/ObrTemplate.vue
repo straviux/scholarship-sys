@@ -298,6 +298,7 @@ const props = defineProps({
 
 /* ── helpers ─────────────────────────────────────── */
 const ph = '___________';  // empty field placeholder
+const normalizeObrTypeValue = (value) => String(value ?? '').trim().toLowerCase().replace(/[\s-]+/g, '_');
 
 /** Format as ₱ 1,234.56 */
 const money = (n) =>
@@ -313,6 +314,8 @@ const isEfa = computed(() =>
 const scholarIds = computed(() =>
     Array.isArray(props.voucher.scholar_ids) ? props.voucher.scholar_ids : []
 );
+
+const normalizedObrType = computed(() => normalizeObrTypeValue(props.voucher.obr_type));
 
 const scholars = computed(() =>
     scholarIds.value.map((s) => {
@@ -331,9 +334,11 @@ const scholars = computed(() =>
                 || `SCHOLAR [${profileId}]`;
         }
 
+        const year = props.voucher.year_level || detail?.year_level || '';
+
         return {
             name,
-            year: (detail?.year_level || '').toUpperCase(),
+            year: String(year).toUpperCase(),
             amount: parseFloat(rawAmount) || 0,
         };
     })
@@ -342,14 +347,14 @@ const scholars = computed(() =>
 /* ── visibility flags ────────────────────────────── */
 // Mirrors blade @if conditions exactly
 const showScholars = computed(() =>
-    props.voucher.obr_type !== 'REIMBURSEMENT'
-    && !(props.voucher.obr_type === 'FINANCIAL ASSISTANCE' && !isEfa.value)
+    normalizedObrType.value !== 'reimbursement'
+    && !(normalizedObrType.value === 'financial_assistance' && !isEfa.value)
     && scholars.value.length > 0
 );
 
 const showTopAmount = computed(() =>
-    props.voucher.obr_type === 'REIMBURSEMENT'
-    || (props.voucher.obr_type === 'FINANCIAL ASSISTANCE' && !isEfa.value)
+    normalizedObrType.value === 'reimbursement'
+    || (normalizedObrType.value === 'financial_assistance' && !isEfa.value)
 );
 
 const totalAmount = computed(() => {

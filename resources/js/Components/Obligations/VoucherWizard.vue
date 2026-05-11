@@ -11,7 +11,7 @@ import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import logger from '@/utils/logger';
 import { quickAnimateFrom } from '@/composables/useGSAPAnimation';
 import { shouldAnimate } from '@/composables/useAnimationDefaults';
-import { useSystemOptions } from '@/composables/useSystemOptions';
+import { useSystemOptions, getSystemOptionLabel } from '@/composables/useSystemOptions';
 
 const toast = useToast(); const emit = defineEmits(['close', 'scholar-selected']);
 
@@ -88,8 +88,67 @@ const voucherData = reactive({
 const _transactionStatusRaw = useSystemOptions('obr_status');
 const transactionStatusOptions = computed(() => ['No OBR', ..._transactionStatusRaw.value.map(o => o.label)]);
 
+const _obrTypeRaw = useSystemOptions('disbursement_type');
 const _grantProvisionRaw = useSystemOptions('grant_provision');
 const grantProvisionOptions = computed(() => _grantProvisionRaw.value);
+const selectedParticularId = ref(null);
+
+const normalizeObrTypeValue = (value) => {
+    const text = String(value ?? '').trim();
+    if (!text) return '';
+
+    return text.toLowerCase().replace(/[\s-]+/g, '_');
+};
+
+const humanizeObrTypeValue = (value) => {
+    const normalized = normalizeObrTypeValue(value);
+    if (!normalized) return '';
+
+    return normalized
+        .split('_')
+        .map(segment => segment.charAt(0).toUpperCase() + segment.slice(1))
+        .join(' ');
+};
+
+const getObrTypeLabel = (value, fallback = '---') => {
+    const normalized = normalizeObrTypeValue(value);
+    if (!normalized) return fallback;
+
+    const label = getSystemOptionLabel('disbursement_type', normalized, '');
+    return label || humanizeObrTypeValue(normalized);
+};
+
+const getVoucherDocumentTypeLabel = (value) => {
+    if (value === 'disbursements') {
+        return 'Disbursement Voucher';
+    }
+
+    if (value === 'payroll') {
+        return 'Payroll';
+    }
+
+    return value || '---';
+};
+
+const normalizedObrType = computed(() => normalizeObrTypeValue(voucherData.obligations.obr_type));
+const isReimbursementObrType = computed(() => normalizedObrType.value === 'reimbursement');
+
+const obrTypeOptions = computed(() => {
+    const options = _obrTypeRaw.value.map(option => ({
+        label: option.label,
+        value: option.value,
+    }));
+
+    const currentValue = normalizedObrType.value;
+    if (currentValue && !options.some(option => option.value === currentValue)) {
+        options.unshift({
+            label: humanizeObrTypeValue(currentValue),
+            value: currentValue,
+        });
+    }
+
+    return options;
+});
 
 // Available schools for payee selection
 const schools = ref([
@@ -447,7 +506,7 @@ const loadEditData = async () => {
         voucherData.obligations.particulars_name = data.particulars_name || '';
         voucherData.obligations.particulars_description = data.particulars_description || '';
         voucherData.obligations.amount = data.amount || '';
-        voucherData.obligations.obr_type = data.obr_type || '';
+        voucherData.obligations.obr_type = normalizeObrTypeValue(data.obr_type);
 
         voucherData.disbursements.type = data.disbursement_type || 'disbursements';
         voucherData.disbursements.explanation = data.explanation || '';
@@ -458,6 +517,7 @@ const loadEditData = async () => {
         voucherData.disbursements.year_level = data.year_level || '';
         voucherData.disbursements.school = data.school || '';
         voucherData.disbursements.grant_provision = data.grant_provision || '';
+        selectedParticularId.value = null;
 
         voucherData.summary.notes = data.notes || '';
         voucherData.summary.transaction_status = data.transaction_status || 'On Process';
@@ -486,7 +546,7 @@ const handleSubmit = async () => {
     try {
         // Build payee_name based on payee_type
         let payeeName = voucherData.obligations.payee_name;
-        const useMiddleInitial = voucherData.obligations.obr_type === 'REIMBURSEMENT';
+        const useMiddleInitial = isReimbursementObrType.value;
 
         if (voucherData.obligations.payee_type === 'scholar') {
             const selectedScholar = voucherData.scholars.find(s => idsEqual(s.profile_id, voucherData.obligations.payee_id));
@@ -528,7 +588,7 @@ const handleSubmit = async () => {
             particulars_name: voucherData.obligations.particulars_name,
             particulars_description: voucherData.obligations.particulars_description,
             amount: selectedScholars.length > 0 ? computedScholarTotal : fallbackAmount,
-            obr_type: voucherData.obligations.obr_type,
+            obr_type: normalizedObrType.value || null,
             transaction_status: voucherData.summary.transaction_status,
             scholarship_program_id: programFilter.value?.id ?? (selectedScholars.length > 0 ? (selectedScholars[0].program_id ?? null) : null),
             fiscal_year: selectedRC.value?.fiscal_year ?? null,
@@ -621,11 +681,47 @@ const currentParticulars = computed(() => {
     return selectedRC.value?.particulars || [];
 });
 
+const resolveSelectedParticular = () => {
+    const particulars = currentParticulars.value;
+    if (!particulars.length) {
+        return null;
+    }
+
+    const matchedById = particulars.find(particular => idsEqual(particular.id, selectedParticularId.value));
+    if (matchedById) {
+        return matchedById;
+    }
+
+    const accountCode = String(voucherData.obligations.account_code ?? '').trim();
+    const particularName = String(voucherData.obligations.particulars_name ?? '').trim();
+
+    if (accountCode && particularName) {
+        const matchedByNameAndCode = particulars.find(particular =>
+            String(particular.account_code ?? '').trim() === accountCode
+            && String(particular.name ?? '').trim() === particularName
+        );
+
+        if (matchedByNameAndCode) {
+            return matchedByNameAndCode;
+        }
+    }
+
+    if (particularName) {
+        const matchedByName = particulars.find(particular => String(particular.name ?? '').trim() === particularName);
+        if (matchedByName) {
+            return matchedByName;
+        }
+    }
+
+    if (accountCode) {
+        return particulars.find(particular => String(particular.account_code ?? '').trim() === accountCode) || null;
+    }
+
+    return null;
+};
+
 // Get selected particular (memoized via computed)
-const selectedParticular = computed(() => {
-    if (!voucherData.obligations.account_code) return null;
-    return currentParticulars.value.find(p => p.account_code === voucherData.obligations.account_code);
-});
+const selectedParticular = computed(() => resolveSelectedParticular());
 
 const autoGeneratedParticularsDescription = ref('');
 const autoGeneratedExplanation = ref('');
@@ -732,10 +828,10 @@ const scholarsParticularSeed = computed(() => {
 });
 
 const buildParticularsDescriptionByObrType = () => {
-    const obrType = (voucherData.obligations.obr_type || '').toUpperCase();
+    const obrType = normalizedObrType.value;
     if (!obrType) return '';
 
-    if (obrType === 'REIMBURSEMENT') {
+    if (obrType === 'reimbursement') {
         const yearLevel = toUpperOrFallback(particularsYearLevel.value);
         const course = toUpperOrFallback(particularsCourse.value);
         const termAcadYear = toUpperOrFallback(joinNonEmpty(particularsSemester.value, particularsAcademicYear.value));
@@ -743,7 +839,7 @@ const buildParticularsDescriptionByObrType = () => {
         return `<p>(REIMBURSEMENT FOR ${yearLevel}, ${course} STUDENT, ${termAcadYear})</p><p>(${schoolLine})</p>`;
     }
 
-    if (obrType === 'REGULAR') {
+    if (obrType === 'regular') {
         const detailsLine = joinNonEmpty(
             `EDUCATIONAL ASSISTANCE FOR ${toUpperOrFallback(particularsCourse.value)} STUDENT,`,
             toUpperOrFallback(particularsSemester.value),
@@ -753,7 +849,7 @@ const buildParticularsDescriptionByObrType = () => {
         return `<p>(${detailsLine})</p><p>(${grantLine})</p>`;
     }
 
-    if (obrType === 'FINANCIAL ASSISTANCE') {
+    if (obrType === 'financial_assistance') {
         const lineOne = joinNonEmpty(
             `FINANCIAL ASSISTANCE FOR ${toUpperOrFallback(particularsYearLevel.value)}`,
             toUpperOrFallback(particularsAcademicYear.value)
@@ -768,7 +864,7 @@ const buildParticularsDescriptionByObrType = () => {
 
 const buildExplanationByObrType = () => {
     const disbursementType = (voucherData.disbursements.type || '').toLowerCase();
-    const obrType = (voucherData.obligations.obr_type || '').toUpperCase();
+    const obrType = normalizedObrType.value;
     const course = toUpperOrFallback(particularsCourse.value);
     const school = toUpperOrFallback(particularsSchool.value);
 
@@ -782,15 +878,15 @@ const buildExplanationByObrType = () => {
     const yearLevel = toUpperOrFallback(particularsYearLevel.value);
     const semesterAcademicYear = toUpperOrFallback(joinNonEmpty(particularsSemester.value, particularsAcademicYear.value));
 
-    if (obrType === 'REIMBURSEMENT') {
+    if (obrType === 'reimbursement') {
         return `<p>To obligate the payment for the REIMBURSEMENT OF ${grantProvision} OF ${course} STUDENT, ${yearLevel}, ${semesterAcademicYear} at ${school} as per supporting papers hereto attached in the amount of...</p>`;
     }
 
-    if (obrType === 'REGULAR') {
+    if (obrType === 'regular') {
         return `<p>To obligate the payment for the ${grantProvision} OF THE ${course} STUDENT, ${yearLevel}, ${semesterAcademicYear} as per supporting papers hereto attached in the amount of...</p>`;
     }
 
-    if (obrType === 'FINANCIAL ASSISTANCE') {
+    if (obrType === 'financial_assistance') {
         return `<p>To obligate the payment for the FINANCIAL ASSISTANCE OF THE ${course} as per supporting papers hereto attached in the amount of...</p>`;
     }
 
@@ -808,11 +904,53 @@ watch(
 );
 
 watch(
-    () => selectedParticular.value?.name,
-    (newName) => {
-        if (newName) {
-            voucherData.obligations.particulars_name = newName;
+    () => voucherData.obligations.responsibility_center,
+    (newValue, oldValue) => {
+        if (!newValue) {
+            selectedParticularId.value = null;
+            voucherData.obligations.account_code = '';
+            voucherData.obligations.particulars_name = '';
+            return;
         }
+
+        if (oldValue && newValue !== oldValue) {
+            selectedParticularId.value = null;
+            voucherData.obligations.account_code = '';
+            voucherData.obligations.particulars_name = '';
+        }
+    }
+);
+
+watch(
+    [currentParticulars, () => voucherData.obligations.account_code, () => voucherData.obligations.particulars_name],
+    () => {
+        const matchedParticular = resolveSelectedParticular();
+
+        if (!matchedParticular) {
+            if (!voucherData.obligations.account_code && !voucherData.obligations.particulars_name) {
+                selectedParticularId.value = null;
+            }
+
+            return;
+        }
+
+        if (!idsEqual(selectedParticularId.value, matchedParticular.id)) {
+            selectedParticularId.value = matchedParticular.id;
+        }
+    },
+    { immediate: true }
+);
+
+watch(
+    () => selectedParticularId.value,
+    (newValue) => {
+        const matchedParticular = currentParticulars.value.find(particular => idsEqual(particular.id, newValue));
+        if (!matchedParticular) {
+            return;
+        }
+
+        voucherData.obligations.account_code = matchedParticular.account_code || '';
+        voucherData.obligations.particulars_name = matchedParticular.name || '';
     }
 );
 
@@ -952,7 +1090,7 @@ watch(
 const getPayeeDisplay = () => {
     if (voucherData.obligations.payee_type === 'scholar') {
         if (selectedPayeeScholar.value) {
-            const useMiddleInitial = voucherData.obligations.obr_type === 'REIMBURSEMENT';
+            const useMiddleInitial = isReimbursementObrType.value;
             const name = formatScholarNameForPayee(selectedPayeeScholar.value, useMiddleInitial);
             return voucherData.scholars.length > 1 ? `${name} & CO.` : name;
         }
@@ -986,7 +1124,7 @@ const getRCDisplay = () => {
 
 // Get selected particular name
 const getSelectedParticularName = () => {
-    return selectedParticular.value?.name || 'N/A';
+    return selectedParticular.value?.name || voucherData.obligations.particulars_name || 'N/A';
 };
 
 // Apply the same amount to all scholars
@@ -1029,6 +1167,7 @@ const resetVoucherData = () => {
         notes: '',
         transaction_status: 'On Process'
     };
+    selectedParticularId.value = null;
     autoGeneratedParticularsDescription.value = '';
     autoGeneratedExplanation.value = '';
     // Deselect all scholars
@@ -1306,7 +1445,7 @@ onBeforeUnmount(() => {
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">OBR Type</label>
                                     <Select v-model="voucherData.obligations.obr_type"
-                                        :options="[{ value: 'REGULAR', label: 'REGULAR' }, { value: 'FINANCIAL ASSISTANCE', label: 'FINANCIAL ASSISTANCE' }, { value: 'REIMBURSEMENT', label: 'REIMBURSEMENT' }]"
+                                        :options="obrTypeOptions"
                                         optionLabel="label" optionValue="value" placeholder="Select OBR Type"
                                         class="w-full" />
                                 </div>
@@ -1382,9 +1521,9 @@ onBeforeUnmount(() => {
                                     <!-- Particular Selection -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Particulars</label>
-                                        <Select v-model="voucherData.obligations.account_code"
+                                        <Select v-model="selectedParticularId"
                                             :disabled="!voucherData.obligations.responsibility_center"
-                                            :options="currentParticulars" optionLabel="name" optionValue="account_code"
+                                            :options="currentParticulars" optionLabel="name" optionValue="id"
                                             placeholder="Select Particular" class="w-full">
                                             <template #option="{ option }">
                                                 <span>{{ option.name }}<span v-if="option.program?.shortname"
@@ -1398,7 +1537,7 @@ onBeforeUnmount(() => {
                                                             class="text-gray-400"> - {{
                                                                 selectedParticular.program.shortname }}</span></span>
                                                 </template>
-                                                <template v-else>{{ value || 'Select Particular' }}</template>
+                                                <template v-else>{{ voucherData.obligations.particulars_name || 'Select Particular' }}</template>
                                             </template>
                                         </Select>
                                     </div>
@@ -1615,8 +1754,8 @@ onBeforeUnmount(() => {
                                 <div class="space-y-2 text-sm">
                                     <div class="flex justify-between">
                                         <span class="text-gray-600">OBR Type:</span>
-                                        <span class="font-medium text-gray-900">{{ voucherData.obligations.obr_type ||
-                                            '---' }}</span>
+                                        <span class="font-medium text-gray-900">{{
+                                            getObrTypeLabel(voucherData.obligations.obr_type) }}</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-gray-600">Payee Type:</span>
@@ -1647,8 +1786,8 @@ onBeforeUnmount(() => {
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-gray-600">Disbursement Type:</span>
-                                        <span class="font-medium text-gray-900">{{ voucherData.disbursements.type ||
-                                            '---' }}</span>
+                                        <span class="font-medium text-gray-900">{{
+                                            getVoucherDocumentTypeLabel(voucherData.disbursements.type) }}</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-gray-600">Course:</span>
