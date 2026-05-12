@@ -11,7 +11,7 @@
         :approved-by-position="approvedByPosition"
         :budget-allocation="budgetAllocation"
         :report-title="resolvedReportTitle"
-        :include-interview-columns="includeInterviewColumns" />
+        :include-interview-columns="false" />
 </template>
 
 <script setup>
@@ -55,10 +55,6 @@ const props = defineProps({
     reportTitle: {
         type: String,
         default: 'RECOMMENDATION LIST FOR APPROVAL',
-    },
-    includeInterviewColumns: {
-        type: Boolean,
-        default: true,
     },
 });
 

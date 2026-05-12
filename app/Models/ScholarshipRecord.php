@@ -31,6 +31,8 @@ class ScholarshipRecord extends Model
         'company_name',
         'start_date',
         'end_date',
+        'no_of_hours',
+        'no_of_days',
         'remarks',
         'academic_status',
         'unified_status',
@@ -59,6 +61,8 @@ class ScholarshipRecord extends Model
         'date_approved' => 'date',
         'start_date' => 'date',
         'end_date' => 'date',
+        'no_of_hours' => 'integer',
+        'no_of_days' => 'integer',
         'upload_token_expires_at' => 'datetime',
         'interviewed_at' => 'datetime',
     ];

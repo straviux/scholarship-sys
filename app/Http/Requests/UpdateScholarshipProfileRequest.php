@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Course;
+use App\Models\ScholarshipProgram;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateScholarshipProfileRequest extends FormRequest
 {
@@ -170,6 +173,10 @@ class UpdateScholarshipProfileRequest extends FormRequest
                 'nullable',
                 'date',
             ],
+            "date_approved" => [
+                'nullable',
+                'date',
+            ],
             "is_active" => [
                 'boolean',
             ],
@@ -235,6 +242,75 @@ class UpdateScholarshipProfileRequest extends FormRequest
                 'string',
                 'max:255'
             ],
+            "scholarship_grant_id" => [
+                'nullable',
+                'integer',
+                'exists:scholarship_records,id',
+            ],
+            "course_id" => [
+                'nullable',
+                'integer',
+                'exists:courses,id'
+            ],
+            "school_id" => [
+                'nullable',
+                'integer',
+                'exists:schools,id'
+            ],
+            "program_id" => [
+                'nullable',
+                'integer',
+                'exists:scholarship_programs,id'
+            ],
+            "course" => [
+                'nullable',
+                'string',
+                'max:255'
+            ],
+            "school" => [
+                'nullable',
+                'string',
+                'max:255'
+            ],
+            "program" => [
+                'nullable',
+                'string',
+                'max:255'
+            ],
+            "year_level" => [
+                'nullable',
+                'string',
+                'max:50'
+            ],
+            "term" => [
+                'nullable',
+                'string',
+                'max:50'
+            ],
+            "academic_year" => [
+                'nullable',
+                'string',
+                'max:50'
+            ],
+            "start_date" => [
+                'nullable',
+                'date',
+            ],
+            "end_date" => [
+                'nullable',
+                'date',
+                'after_or_equal:start_date',
+            ],
+            "no_of_hours" => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
+            "no_of_days" => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
         ];
     }
 
@@ -252,6 +328,101 @@ class UpdateScholarshipProfileRequest extends FormRequest
         $this->merge([
             'updated_by' => $this->user() ? $this->user()->id : null,
         ]);
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $this->validateScholarAcademicFields($validator);
+        });
+    }
+
+    private function validateScholarAcademicFields(Validator $validator): void
+    {
+        if (!$this->routeIs('scholars.store', 'scholars.update')) {
+            return;
+        }
+
+        $missingAcademicFields = [];
+
+        if (!$this->hasAcademicValue('program_id', 'program')) {
+            $missingAcademicFields['program'] = 'Program is required for scholars.';
+        }
+
+        if (!$this->hasAcademicValue('course_id', 'course')) {
+            $missingAcademicFields['course'] = 'Course is required for scholars.';
+        }
+
+        if (!$this->hasAcademicValue('school_id', 'school')) {
+            $missingAcademicFields['school'] = 'School is required for scholars.';
+        }
+
+        if (!$this->filled('academic_year')) {
+            $missingAcademicFields['academic_year'] = 'Academic Year is required for scholars.';
+        }
+
+        if (!$this->isTechVocProgram()) {
+            if (!$this->filled('year_level')) {
+                $missingAcademicFields['year_level'] = 'Year Level is required for non-Tech-Voc scholars.';
+            }
+
+            if (!$this->filled('term')) {
+                $missingAcademicFields['term'] = 'Term is required for non-Tech-Voc scholars.';
+            }
+        }
+
+        foreach ($missingAcademicFields as $field => $message) {
+            $validator->errors()->add($field, $message);
+        }
+    }
+
+    private function hasAcademicValue(string $idField, string $textField): bool
+    {
+        return $this->filled($idField) || $this->filled($textField);
+    }
+
+    private function isTechVocProgram(): bool
+    {
+        $programId = $this->input('program_id');
+
+        if ($programId) {
+            $program = ScholarshipProgram::query()
+                ->select(['name', 'shortname'])
+                ->find($programId);
+
+            if ($program && ($this->matchesTechVocProgram($program->shortname) || $this->matchesTechVocProgram($program->name))) {
+                return true;
+            }
+        }
+
+        if ($this->filled('course_id')) {
+            $course = Course::query()
+                ->select(['scholarship_program_id'])
+                ->find($this->input('course_id'));
+
+            if ($course?->scholarship_program_id) {
+                $program = ScholarshipProgram::query()
+                    ->select(['name', 'shortname'])
+                    ->find($course->scholarship_program_id);
+
+                if ($program && ($this->matchesTechVocProgram($program->shortname) || $this->matchesTechVocProgram($program->name))) {
+                    return true;
+                }
+            }
+        }
+
+        return $this->matchesTechVocProgram($this->input('program'));
+    }
+
+    private function matchesTechVocProgram(mixed $value): bool
+    {
+        $normalizedValue = strtolower(preg_replace('/[^a-z0-9]+/', '', (string) $value));
+
+        if ($normalizedValue === '') {
+            return false;
+        }
+
+        return str_contains($normalizedValue, 'techvoc') || str_contains($normalizedValue, 'technicalvoc');
     }
 
     // public function withValidator($validator)

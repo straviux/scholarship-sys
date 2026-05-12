@@ -43,15 +43,14 @@ use Illuminate\Support\Facades\Gate;
 class ScholarshipProfileController extends Controller
 {
     private const CURRENT_SCHOLARSHIP_RECORD_STATUSES = ['pending', 'interviewed', 'approved', 'active'];
-    private const APPROVED_SCHOLARSHIP_RECORD_STATUSES = [
-        'approved',
+    private const ALLOCATION_COUNTED_SCHOLARSHIP_RECORD_STATUSES = [
         'active',
         'completed',
         'completed-transferred',
-        'withdrawn',
-        'loa',
-        'suspended',
     ];
+
+    private ?array $interviewedApplicantsBudgetAllocationCache = null;
+    private ?array $interviewedApplicantsBudgetAllocationLookupCache = null;
 
     /**
      * Store a newly created resource in storage.
@@ -1207,6 +1206,14 @@ class ScholarshipProfileController extends Controller
 
     private function transformRecommendationList(RecommendationList $recommendationList): array
     {
+        $currentBudgetAllocation = $recommendationList->budget_allocation_key
+            ? ($this->getInterviewedApplicantsBudgetAllocationLookup()[$recommendationList->budget_allocation_key] ?? null)
+            : null;
+
+        $budgetAllocation = is_array($currentBudgetAllocation)
+            ? $currentBudgetAllocation
+            : $recommendationList->budget_allocation;
+
         return [
             'id' => $recommendationList->id,
             'list_number' => $recommendationList->list_number,
@@ -1219,11 +1226,11 @@ class ScholarshipProfileController extends Controller
             'selected_record_ids' => $recommendationList->selected_record_ids ?? [],
             'records' => $recommendationList->records_snapshot ?? [],
             'budget_allocation_key' => $recommendationList->budget_allocation_key,
-            'budget_program' => $recommendationList->budget_program,
-            'budget_fiscal_year' => $recommendationList->budget_fiscal_year,
-            'budget_rc_code' => $recommendationList->budget_rc_code,
-            'budget_rc_name' => $recommendationList->budget_rc_name,
-            'budget_allocation' => $recommendationList->budget_allocation,
+            'budget_program' => $budgetAllocation['program'] ?? $recommendationList->budget_program,
+            'budget_fiscal_year' => $budgetAllocation['fiscal_year'] ?? $recommendationList->budget_fiscal_year,
+            'budget_rc_code' => $budgetAllocation['rc_code'] ?? $recommendationList->budget_rc_code,
+            'budget_rc_name' => $budgetAllocation['rc_name'] ?? $recommendationList->budget_rc_name,
+            'budget_allocation' => $budgetAllocation,
             'prepared_by' => $recommendationList->prepared_by,
             'prepared_by_position' => $recommendationList->prepared_by_position,
             'prepared_by_office' => $recommendationList->prepared_by_office,
@@ -1256,6 +1263,10 @@ class ScholarshipProfileController extends Controller
 
     private function getInterviewedApplicantsBudgetAllocations(): array
     {
+        if ($this->interviewedApplicantsBudgetAllocationCache !== null) {
+            return $this->interviewedApplicantsBudgetAllocationCache;
+        }
+
         $allParticulars = Particular::with(['program', 'programs', 'responsibilityCenter'])
             ->whereNotNull('allotment')
             ->get();
@@ -1399,70 +1410,58 @@ class ScholarshipProfileController extends Controller
                     ($disbursedByAllocation[$program][$fiscalYear][$responsibilityCenterCode] ?? 0.0) + (float) ($transaction->amount ?? 0);
             });
 
-        $approvedScholarsToDateByAllocation = [];
-        ScholarshipRecord::query()
+        $approvedScholarRecords = ScholarshipRecord::query()
             ->with('program')
             ->select('profile_id', 'program_id', 'course_id', 'date_approved', 'unified_status')
             ->whereNotNull('profile_id')
             ->whereNotNull('date_approved')
-            ->whereIn('unified_status', self::APPROVED_SCHOLARSHIP_RECORD_STATUSES)
-            ->get()
-            ->each(function (ScholarshipRecord $record) use ($budgetBuckets, &$approvedScholarsToDateByAllocation) {
-                $programId = (int) ($record->program_id ?: $record->program?->id ?: 0);
-                $approvalDate = $record->date_approved?->format('Y-m-d');
+            ->whereIn('unified_status', self::ALLOCATION_COUNTED_SCHOLARSHIP_RECORD_STATUSES)
+            ->get();
 
-                if (! $programId || ! $approvalDate) {
-                    return;
-                }
-
-                $matches = $budgetBuckets->filter(function ($bucket) use ($programId, $approvalDate) {
-                    if (! in_array($programId, array_map('intval', $bucket['program_ids'] ?? []), true)) {
-                        return false;
-                    }
-
-                    if (filled($bucket['fiscal_year'] ?? null) && substr($approvalDate, 0, 4) !== (string) $bucket['fiscal_year']) {
-                        return false;
-                    }
-
-                    $windows = collect($bucket['approval_windows'] ?? [])
-                        ->filter(fn($window) => filled($window['date_start'] ?? null) || filled($window['date_end'] ?? null));
-
-                    if ($windows->isEmpty()) {
-                        return true;
-                    }
-
-                    return $windows->contains(function ($window) use ($approvalDate) {
-                        $dateStart = $window['date_start'] ?? null;
-                        $dateEnd = $window['date_end'] ?? null;
-
-                        if ($dateStart && $approvalDate < $dateStart) {
-                            return false;
-                        }
-
-                        if ($dateEnd && $approvalDate > $dateEnd) {
-                            return false;
-                        }
-
-                        return true;
-                    });
-                });
-
-                if ($matches->count() !== 1) {
-                    return;
-                }
-
-                $allocationKey = $matches->first()['key'] ?? null;
-
-                if (! $allocationKey) {
-                    return;
-                }
-
-                $approvedScholarsToDateByAllocation[$allocationKey][$record->profile_id] = true;
-            });
-
-        return $budgetBuckets
-            ->map(function ($bucket) use ($approvedScholarsToDateByAllocation, $disbursedByAllocation) {
+        return $this->interviewedApplicantsBudgetAllocationCache = $budgetBuckets
+            ->map(function ($bucket) use ($approvedScholarRecords, $disbursedByAllocation) {
                 $disbursed = (float) ($disbursedByAllocation[$bucket['program']][$bucket['fiscal_year']][$bucket['rc_code']] ?? 0);
+                $programIds = array_map('intval', $bucket['program_ids'] ?? []);
+                $windows = collect($bucket['approval_windows'] ?? [])
+                    ->filter(fn($window) => filled($window['date_start'] ?? null) || filled($window['date_end'] ?? null))
+                    ->values();
+
+                $approvedScholarsToDate = $approvedScholarRecords
+                    ->filter(function (ScholarshipRecord $record) use ($bucket, $programIds, $windows) {
+                        $programId = (int) ($record->program_id ?: $record->program?->id ?: 0);
+                        $approvalDate = $record->date_approved?->format('Y-m-d');
+
+                        if (! $programId || ! $approvalDate || ! in_array($programId, $programIds, true)) {
+                            return false;
+                        }
+
+                        if ($windows->isNotEmpty()) {
+                            return $windows->contains(function ($window) use ($approvalDate) {
+                                $dateStart = $window['date_start'] ?? null;
+                                $dateEnd = $window['date_end'] ?? null;
+
+                                if ($dateStart && $approvalDate < $dateStart) {
+                                    return false;
+                                }
+
+                                if ($dateEnd && $approvalDate > $dateEnd) {
+                                    return false;
+                                }
+
+                                return true;
+                            });
+                        }
+
+                        if (filled($bucket['fiscal_year'] ?? null)) {
+                            return substr($approvalDate, 0, 4) === (string) $bucket['fiscal_year'];
+                        }
+
+                        return true;
+                    })
+                    ->pluck('profile_id')
+                    ->filter()
+                    ->unique()
+                    ->count();
 
                 return [
                     'key' => $bucket['key'],
@@ -1472,7 +1471,7 @@ class ScholarshipProfileController extends Controller
                     'rc_code' => $bucket['rc_code'],
                     'total_allotment' => $bucket['total_allotment'],
                     'disbursed' => $disbursed,
-                    'approved_scholars_to_date' => count($approvedScholarsToDateByAllocation[$bucket['key']] ?? []),
+                    'approved_scholars_to_date' => $approvedScholarsToDate,
                 ];
             })
             ->sortBy([
@@ -1481,6 +1480,18 @@ class ScholarshipProfileController extends Controller
                 ['rc_name', 'asc'],
             ])
             ->values()
+            ->all();
+    }
+
+    private function getInterviewedApplicantsBudgetAllocationLookup(): array
+    {
+        if ($this->interviewedApplicantsBudgetAllocationLookupCache !== null) {
+            return $this->interviewedApplicantsBudgetAllocationLookupCache;
+        }
+
+        return $this->interviewedApplicantsBudgetAllocationLookupCache = collect($this->getInterviewedApplicantsBudgetAllocations())
+            ->filter(fn($budgetAllocation) => filled($budgetAllocation['key'] ?? null))
+            ->keyBy('key')
             ->all();
     }
 

@@ -61,6 +61,11 @@ p  { display: block !important; margin: 0 !important; padding: 0 !important; lin
 ol, ul { padding-left: 14pt; margin: 0; }
 strong { font-weight: bold; }
 em     { font-style: italic; }
+a,
+a:visited {
+  color: inherit;
+  text-decoration-color: currentColor;
+}
 
 /* ── Typography ─────────────────────────────── */
 .t-5   { font-size:  5pt; }

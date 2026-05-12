@@ -317,6 +317,10 @@
                                                 <p class="text-normal font-semibold text-gray-900 dark:text-gray-100">
                                                     {{ enrollment.program?.name || 'N/A' }}
                                                 </p>
+                                                <p v-if="isTechVocProgram(enrollment.program)"
+                                                    class="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
+                                                    Tech-Voc
+                                                </p>
                                                 <p class="text-lg font-medium text-gray-700 dark:text-gray-300">
                                                     {{ enrollment.course?.name || 'N/A' }}
                                                 </p>
@@ -420,6 +424,15 @@
                                                             <span class="text-sm text-gray-700 dark:text-gray-300">
                                                                 {{ slotProps.data.term || 'N/A' }}
                                                             </span>
+                                                            <div v-if="hasTechVocAcademicRecord(slotProps.data)"
+                                                                class="space-y-0.5 text-xs text-sky-700 dark:text-sky-300">
+                                                                <p v-if="getTechVocHoursLabel(slotProps.data)">
+                                                                    Hours: {{ getTechVocHoursLabel(slotProps.data) }}
+                                                                </p>
+                                                                <p v-if="getTechVocDaysLabel(slotProps.data)">
+                                                                    Days: {{ getTechVocDaysLabel(slotProps.data) }}
+                                                                </p>
+                                                            </div>
                                                             <div v-if="slotProps.data.linkedRecordCount > 1"
                                                                 class="text-xs font-medium text-amber-700 dark:text-amber-300">
                                                                 Linked scholarship record {{
@@ -443,6 +456,14 @@
                                                                 {{
                                                                     formatDateShort(slotProps.data.date_approved)
                                                                 }}</p>
+                                                            <p v-if="getTechVocStartDate(slotProps.data)" class="text-sm">
+                                                                <span class="font-medium">Start:</span>
+                                                                {{ getTechVocStartDate(slotProps.data) }}
+                                                            </p>
+                                                            <p v-if="getTechVocEndDate(slotProps.data)" class="text-sm">
+                                                                <span class="font-medium">End:</span>
+                                                                {{ getTechVocEndDate(slotProps.data) }}
+                                                            </p>
                                                         </div>
                                                     </template>
                                                 </Column>
@@ -1741,6 +1762,69 @@ const resolveAcademicRecord = (termOrRecord) => {
     }
 
     return termOrRecord.legacyRecord || termOrRecord;
+};
+
+const normalizeProgramToken = (value) => String(value ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+
+const matchesTechVocProgram = (value) => {
+    const normalizedValue = normalizeProgramToken(value);
+    return normalizedValue.includes('techvoc') || normalizedValue.includes('technicalvoc');
+};
+
+const isTechVocProgram = (program) => {
+    if (!program) {
+        return false;
+    }
+
+    if (typeof program === 'string') {
+        return matchesTechVocProgram(program);
+    }
+
+    return matchesTechVocProgram(program.shortname) || matchesTechVocProgram(program.name);
+};
+
+const getTechVocAcademicRecord = (termOrRecord) => {
+    const record = resolveAcademicRecord(termOrRecord);
+
+    if (!record || !isTechVocProgram(record.program)) {
+        return null;
+    }
+
+    return record;
+};
+
+const hasTechVocAcademicRecord = (termOrRecord) => Boolean(getTechVocAcademicRecord(termOrRecord));
+
+const hasDisplayValue = (value) => value !== null && value !== undefined && value !== '';
+
+const getTechVocHoursLabel = (termOrRecord) => {
+    const hours = getTechVocAcademicRecord(termOrRecord)?.no_of_hours;
+    if (!hasDisplayValue(hours)) {
+        return null;
+    }
+
+    const numericHours = Number(hours);
+    return Number.isNaN(numericHours) ? String(hours) : `${numericHours} hr${numericHours === 1 ? '' : 's'}`;
+};
+
+const getTechVocDaysLabel = (termOrRecord) => {
+    const days = getTechVocAcademicRecord(termOrRecord)?.no_of_days;
+    if (!hasDisplayValue(days)) {
+        return null;
+    }
+
+    const numericDays = Number(days);
+    return Number.isNaN(numericDays) ? String(days) : `${numericDays} day${numericDays === 1 ? '' : 's'}`;
+};
+
+const getTechVocStartDate = (termOrRecord) => {
+    const startDate = getTechVocAcademicRecord(termOrRecord)?.start_date;
+    return hasDisplayValue(startDate) ? formatDateShort(startDate) : null;
+};
+
+const getTechVocEndDate = (termOrRecord) => {
+    const endDate = getTechVocAcademicRecord(termOrRecord)?.end_date;
+    return hasDisplayValue(endDate) ? formatDateShort(endDate) : null;
 };
 
 // Methods

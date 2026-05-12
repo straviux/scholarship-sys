@@ -30,13 +30,13 @@
                 <FloatLabel>
                     <YearLevelSelect :modelValue="year_level" placeholder="&nbsp;"
                         @update:modelValue="$emit('update:year_level', $event)" inputId="year_level" />
-                    <label class="text-sm" for="year_level">Year/Grade Level</label>
+                    <label class="text-sm" for="year_level">{{ yearLevelLabel }}</label>
                 </FloatLabel>
 
                 <FloatLabel>
                     <TermSelect :modelValue="term" @update:modelValue="$emit('update:term', $event)"
                         placeholder="&nbsp;" inputId="term" />
-                    <label class="text-sm" for="term">Term</label>
+                    <label class="text-sm" for="term">{{ termLabel }}</label>
                 </FloatLabel>
 
                 <FloatLabel>
@@ -44,6 +44,34 @@
                         @update:modelValue="$emit('update:academic_year', $event)" inputId="academic_year"
                         placeholder="&nbsp;" />
                     <label class="text-sm" for="academic_year">Academic Year</label>
+                </FloatLabel>
+            </div>
+
+            <div v-if="showTechVocFields && isTechVocProgram" class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-10">
+                <FloatLabel>
+                    <InputNumber :modelValue="no_of_hours" @update:modelValue="$emit('update:no_of_hours', $event)"
+                        inputId="no_of_hours" :useGrouping="false" :min="1" class="w-full" />
+                    <label class="text-sm" for="no_of_hours">No. of Hours</label>
+                </FloatLabel>
+
+                <FloatLabel>
+                    <InputNumber :modelValue="no_of_days" @update:modelValue="$emit('update:no_of_days', $event)"
+                        inputId="no_of_days" :useGrouping="false" :min="1" class="w-full" />
+                    <label class="text-sm" for="no_of_days">No. of Days</label>
+                </FloatLabel>
+
+                <FloatLabel>
+                    <DatePicker :modelValue="start_date" @update:modelValue="$emit('update:start_date', $event)"
+                        inputId="start_date" variant="filled" placeholder="mm/dd/yyyy" showIcon fluid
+                        iconDisplay="input" :manualInput="true" />
+                    <label class="text-sm" for="start_date">Start Date</label>
+                </FloatLabel>
+
+                <FloatLabel>
+                    <DatePicker :modelValue="end_date" @update:modelValue="$emit('update:end_date', $event)"
+                        inputId="end_date" variant="filled" placeholder="mm/dd/yyyy" showIcon fluid
+                        iconDisplay="input" :manualInput="true" />
+                    <label class="text-sm" for="end_date">End Date</label>
                 </FloatLabel>
             </div>
 
@@ -88,9 +116,21 @@ const props = defineProps({
     year_level: [String, Object],
     term: [String, Object],
     academic_year: [String, Object],
+    no_of_hours: Number,
+    no_of_days: Number,
+    start_date: [String, Date, Object],
+    end_date: [String, Date, Object],
     remarks: String,
     yakap_category: String,
     yakap_location: [String, Object],
+    isTechVocProgram: {
+        type: Boolean,
+        default: false,
+    },
+    showTechVocFields: {
+        type: Boolean,
+        default: false,
+    },
     showHeader: {
         type: Boolean,
         default: true
@@ -104,10 +144,16 @@ const emit = defineEmits([
     'update:year_level',
     'update:term',
     'update:academic_year',
+    'update:no_of_hours',
+    'update:no_of_days',
+    'update:start_date',
+    'update:end_date',
     'update:remarks',
     'update:yakap_category',
     'update:yakap_location'
 ]);
 
+const yearLevelLabel = computed(() => props.isTechVocProgram ? 'Year/Grade Level (Optional)' : 'Year/Grade Level');
+const termLabel = computed(() => props.isTechVocProgram ? 'Term (Optional)' : 'Term');
 
 </script>

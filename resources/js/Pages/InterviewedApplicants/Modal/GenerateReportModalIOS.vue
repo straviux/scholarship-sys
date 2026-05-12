@@ -780,8 +780,12 @@ function generateReport() {
     });
 
     const { buildHtmlDoc } = usePdfPrint();
+    const generatedAt = moment().format('MMMM D, YYYY h:mm A');
     pdfPreviewTitle.value = reportTitle;
-    pdfPreviewHtml.value = buildHtmlDoc(bodyHtml, pdfPreviewTitle.value, ps);
+    pdfPreviewHtml.value = buildHtmlDoc(bodyHtml, pdfPreviewTitle.value, ps, '', {
+        generatedAt,
+        showPageNumbers: true,
+    });
     showPdfPreview.value = true;
 }
 

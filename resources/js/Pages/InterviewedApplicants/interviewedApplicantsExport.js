@@ -77,6 +77,7 @@ export function printInterviewedApplicantsSelection({ records = [], preparedBy =
         return false;
     }
 
+    const generatedAt = moment().format('MMMM D, YYYY h:mm A');
     const bodyHtml = renderVueTemplate(InterviewedApplicantsTemplate, {
         records: normalizedRecords,
         reportType: 'list',
@@ -89,7 +90,10 @@ export function printInterviewedApplicantsSelection({ records = [], preparedBy =
     const { buildHtmlDoc } = usePdfPrint();
     const title = 'Selected Interviewed Applicants Report';
 
-    printWindow.document.write(buildHtmlDoc(bodyHtml, title, 'a4-landscape'));
+    printWindow.document.write(buildHtmlDoc(bodyHtml, title, 'a4-landscape', '', {
+        generatedAt,
+        showPageNumbers: true,
+    }));
     printWindow.document.close();
     printWindow.onload = () => {
         printWindow.focus();

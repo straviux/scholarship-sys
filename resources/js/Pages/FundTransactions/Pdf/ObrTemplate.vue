@@ -290,6 +290,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { normalizeDocumentHtml } from '@/utils/sanitize';
 
 const props = defineProps({
     voucher: { type: Object, required: true },
@@ -366,5 +367,5 @@ const totalAmount = computed(() => {
 const showTotal = computed(() => showScholars.value || showTopAmount.value);
 
 /* ── description (Quill HTML) ────────────────────── */
-const desc = computed(() => (props.voucher.particulars_description || '').trim());
+const desc = computed(() => normalizeDocumentHtml((props.voucher.particulars_description || '').trim()));
 </script>

@@ -33,6 +33,7 @@ export function printRecommendationList({ recommendationList }) {
     }
 
     const title = recommendationList?.report_title || 'RECOMMENDATION LIST FOR APPROVAL';
+    const generatedAt = moment().format('MMMM D, YYYY h:mm A');
     const bodyHtml = renderVueTemplate(RecommendationListTemplate, {
         records: recommendationList?.records || [],
         today: moment().format('MMMM D, YYYY'),
@@ -43,13 +44,15 @@ export function printRecommendationList({ recommendationList }) {
         approvedByPosition: recommendationList?.approved_by_position || '',
         budgetAllocation: recommendationList?.budget_allocation || null,
         reportTitle: title,
-        includeInterviewColumns: true,
     });
 
     const { buildHtmlDoc } = usePdfPrint();
     const paperSize = resolvePaperSize(recommendationList);
 
-    printWindow.document.write(buildHtmlDoc(bodyHtml, title, paperSize));
+    printWindow.document.write(buildHtmlDoc(bodyHtml, title, paperSize, '', {
+        generatedAt,
+        showPageNumbers: true,
+    }));
     printWindow.document.close();
     printWindow.onload = () => {
         printWindow.focus();

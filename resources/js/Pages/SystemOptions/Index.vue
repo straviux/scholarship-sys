@@ -232,14 +232,16 @@
 
                     <div class="flex flex-col">
                         <label class="text-sm font-medium text-gray-700 mb-2">Particulars</label>
-                        <Editor v-model="form.particulars_template" editorStyle="height: 180px" />
+                        <Editor v-model="form.particulars_template" editorStyle="height: 180px"
+                            class="disbursement-template-editor" />
                         <small v-if="form.errors.particulars_template" class="text-red-500 mt-1">{{
                             form.errors.particulars_template }}</small>
                     </div>
 
                     <div class="flex flex-col">
                         <label class="text-sm font-medium text-gray-700 mb-2">Explanation</label>
-                        <Editor v-model="form.explanation_template" editorStyle="height: 180px" />
+                        <Editor v-model="form.explanation_template" editorStyle="height: 180px"
+                            class="disbursement-template-editor" />
                         <small v-if="form.errors.explanation_template" class="text-red-500 mt-1">{{
                             form.errors.explanation_template }}</small>
                     </div>
@@ -517,3 +519,22 @@ watch(() => form.category, (category) => {
     }
 });
 </script>
+
+<style scoped>
+.disbursement-template-editor :deep(.p-editor-content .ql-editor) {
+    color: #111827;
+}
+
+.disbursement-template-editor :deep(.p-editor-content .ql-editor a) {
+    color: inherit;
+    text-decoration-color: currentColor;
+}
+
+.dark .disbursement-template-editor :deep(.p-editor-content .ql-editor) {
+    color: #d1d5db;
+}
+
+.dark .disbursement-template-editor :deep(.p-editor-content .ql-editor a) {
+    color: inherit;
+}
+</style>

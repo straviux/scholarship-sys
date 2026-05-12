@@ -169,7 +169,14 @@
                                                     v-model:school="form.school" v-model:course="form.course"
                                                     v-model:year_level="form.year_level" v-model:term="form.term"
                                                     v-model:academic_year="form.academic_year"
-                                                    v-model:remarks="form.remarks" :show-header="false" />
+                                                    v-model:no_of_hours="form.no_of_hours"
+                                                    v-model:no_of_days="form.no_of_days"
+                                                    v-model:start_date="form.start_date"
+                                                    v-model:end_date="form.end_date"
+                                                    v-model:remarks="form.remarks"
+                                                    :is-tech-voc-program="isTechVocProgram"
+                                                    :show-tech-voc-fields="true"
+                                                    :show-header="false" />
 
                                                 <!-- Date Fields (for backlog encoding) -->
                                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-6">
@@ -193,8 +200,14 @@
                                                     class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
                                                     <p class="text-sm text-blue-800 dark:text-blue-300">
                                                         <AppIcon name="info-circle" :size="14" class="mr-2" />
-                                                        <strong>Note:</strong> All academic fields are required for
-                                                        scholars.
+                                                        <strong>Note:</strong>
+                                                        <span v-if="isTechVocProgram">
+                                                            Program, course, school, and academic year are required.
+                                                            Year level and term are optional for Tech-Voc scholars.
+                                                        </span>
+                                                        <span v-else>
+                                                            All academic fields are required for scholars.
+                                                        </span>
                                                     </p>
                                                 </div>
 
@@ -270,6 +283,23 @@ const academicValidationError = ref('');
 const showDuplicateDialog = ref(false);
 const duplicateMatches = ref([]);
 
+const normalizeProgramToken = (value) => String(value ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+
+const matchesTechVocProgram = (program) => {
+    const valuesToCheck = [];
+
+    if (typeof program === 'string') {
+        valuesToCheck.push(program);
+    } else if (program && typeof program === 'object') {
+        valuesToCheck.push(program.name, program.shortname);
+    }
+
+    return valuesToCheck.some((value) => {
+        const normalizedValue = normalizeProgramToken(value);
+        return normalizedValue.includes('techvoc') || normalizedValue.includes('technicalvoc');
+    });
+};
+
 // Helper function to format date for DatePicker
 const formatDateForPicker = (dateString) => {
     if (!dateString) return null;
@@ -292,6 +322,8 @@ const formatDateInput = (event) => {
 
     input.value = value;
 };
+
+const isTechVocProgram = computed(() => matchesTechVocProgram(form.program));
 
 // Get profile data if in edit mode
 const p = props.profile;
@@ -340,6 +372,10 @@ const form = useForm({
     year_level: grant?.year_level || null,
     term: grant?.term || null,
     academic_year: grant?.academic_year || null,
+    no_of_hours: grant?.no_of_hours || null,
+    no_of_days: grant?.no_of_days || null,
+    start_date: formatDateForPicker(grant?.start_date) || null,
+    end_date: formatDateForPicker(grant?.end_date) || null,
     date_filed: formatDateForPicker(grant?.date_filed) || null,
     date_approved: formatDateForPicker(grant?.date_approved) || null,
     remarks: grant?.remarks || p?.remarks || '',
@@ -416,8 +452,8 @@ const proceedDespiteDuplicate = () => {
 
 // Step 3 validation - ALL academic fields required for scholars
 const canSubmit = computed(() => {
-    return form.program && form.course && form.school &&
-        form.year_level && form.term && form.academic_year;
+    return form.program && form.course && form.school && form.academic_year &&
+        (isTechVocProgram.value || (form.year_level && form.term));
 });
 
 const submitTooltipMessage = computed(() => {
@@ -425,9 +461,12 @@ const submitTooltipMessage = computed(() => {
     if (!form.program) missingAcademicFields.push('Program');
     if (!form.school) missingAcademicFields.push('School');
     if (!form.course) missingAcademicFields.push('Course');
-    if (!form.year_level) missingAcademicFields.push('Year Level');
-    if (!form.term) missingAcademicFields.push('Term');
     if (!form.academic_year) missingAcademicFields.push('Academic Year');
+
+    if (!isTechVocProgram.value) {
+        if (!form.year_level) missingAcademicFields.push('Year Level');
+        if (!form.term) missingAcademicFields.push('Term');
+    }
 
     if (missingAcademicFields.length > 0) {
         return `Missing required academic fields: ${missingAcademicFields.join(', ')}`;
@@ -495,6 +534,10 @@ watch(() => props.visible, async (newValue) => {
         form.year_level = grant?.year_level || null;
         form.term = grant?.term || null;
         form.academic_year = grant?.academic_year || null;
+        form.no_of_hours = grant?.no_of_hours || null;
+        form.no_of_days = grant?.no_of_days || null;
+        form.start_date = formatDateForPicker(grant?.start_date) || null;
+        form.end_date = formatDateForPicker(grant?.end_date) || null;
         form.date_filed = formatDateForPicker(grant?.date_filed) || new Date();
         form.date_approved = formatDateForPicker(grant?.date_approved) || null;
         form.remarks = grant?.remarks || p?.remarks || '';
@@ -508,6 +551,10 @@ watch(() => props.visible, async (newValue) => {
     } else if (newValue && props.mode === 'create') {
         // In create mode, reset to empty form
         form.reset();
+        form.no_of_hours = null;
+        form.no_of_days = null;
+        form.start_date = null;
+        form.end_date = null;
         form.date_filed = null;
         form.date_approved = null;
         form.clearErrors();
@@ -529,9 +576,12 @@ const handleSubmit = () => {
     if (!form.program) missingAcademicFields.push('Program');
     if (!form.school) missingAcademicFields.push('School');
     if (!form.course) missingAcademicFields.push('Course');
-    if (!form.year_level) missingAcademicFields.push('Year Level');
-    if (!form.term) missingAcademicFields.push('Term');
     if (!form.academic_year) missingAcademicFields.push('Academic Year');
+
+    if (!isTechVocProgram.value) {
+        if (!form.year_level) missingAcademicFields.push('Year Level');
+        if (!form.term) missingAcademicFields.push('Term');
+    }
 
     if (missingAcademicFields.length > 0) {
         academicValidationError.value = `Please fill in all required academic fields: ${missingAcademicFields.join(', ')}.`;
@@ -544,6 +594,10 @@ const handleSubmit = () => {
     // Transform data before submitting
     const submitData = {
         ...form.data(),
+        no_of_hours: isTechVocProgram.value ? form.no_of_hours : null,
+        no_of_days: isTechVocProgram.value ? form.no_of_days : null,
+        start_date: isTechVocProgram.value ? form.start_date : null,
+        end_date: isTechVocProgram.value ? form.end_date : null,
         // Extract value from academic_year object if it exists
         academic_year: form.academic_year?.value || form.academic_year || null,
         // Extract name from municipality object if it exists
@@ -602,6 +656,10 @@ const handleSubmit = () => {
                 });
                 // Reset form after successful creation
                 form.reset();
+                form.no_of_hours = null;
+                form.no_of_days = null;
+                form.start_date = null;
+                form.end_date = null;
                 form.date_filed = null;
                 form.date_approved = null;
                 form.clearErrors();

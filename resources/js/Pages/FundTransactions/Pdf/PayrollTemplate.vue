@@ -169,6 +169,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { normalizeDocumentHtml } from '@/utils/sanitize';
 
 const props = defineProps({
     voucher: { type: Object, required: true },
@@ -181,7 +182,7 @@ const money = (n) =>
         .toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 /* ── explanation (Quill HTML) ────────────────────── */
-const explanation = computed(() => (props.voucher.explanation || '').trim());
+const explanation = computed(() => normalizeDocumentHtml((props.voucher.explanation || '').trim()));
 
 /* ── term label ──────────────────────────────────── */
 const termLabel = computed(() => {

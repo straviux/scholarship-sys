@@ -6,9 +6,11 @@ use App\Http\Requests\CreateScholarshipProfileRequest;
 use App\Http\Requests\UpdateScholarshipProfileRequest;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipRecord;
+use App\Models\ScholarshipProgram;
 use App\Models\Course;
 use App\Models\School;
 use App\Services\ActivityLogService;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -33,23 +35,6 @@ class ScholarController extends Controller
             abort(403, 'You do not have permission to create scholar profiles.');
         }
 
-        // Validate that all required academic fields are present
-        $request->validate([
-            'program' => 'nullable',
-            'program_id' => 'nullable|exists:scholarship_programs,id',
-            'course' => 'nullable',
-            'course_id' => 'nullable|exists:courses,id',
-            'school' => 'nullable',
-            'school_id' => 'nullable|exists:schools,id',
-            'year_level' => 'required|string',
-            'term' => 'required|string',
-            'academic_year' => 'required|string',
-        ], [
-            'year_level.required' => 'Year Level is required for scholars.',
-            'term.required' => 'Term is required for scholars.',
-            'academic_year.required' => 'Academic Year is required for scholars.',
-        ]);
-
         DB::beginTransaction();
 
         try {
@@ -65,42 +50,20 @@ class ScholarController extends Controller
             }
 
             // For scholars, ALWAYS create scholarship record with academic information
-            // Get course - prefer ID, fallback to name lookup
-            $course = null;
-            if ($request->course_id) {
-                $course = Course::find($request->course_id);
-            } elseif ($request->course) {
-                $course = Course::where('name', $request->course)
-                    ->orWhere('shortname', $request->course)
-                    ->first();
-            }
+            $course = $this->resolveCourseFromRequest($request);
+            $school = $this->resolveSchoolFromRequest($request);
+            $programId = $this->resolveProgramId($request, $course);
+            $recordPayload = $this->buildScholarshipRecordPayload($request, $course, $school, $programId);
 
-            // Get school - prefer ID, fallback to name lookup
-            $school = null;
-            if ($request->school_id) {
-                $school = School::find($request->school_id);
-            } elseif ($request->school) {
-                $school = School::where('name', $request->school)
-                    ->orWhere('shortname', $request->school)
-                    ->first();
-            }
-
-            // Get program_id - prefer direct ID, fallback to course's program
-            $program_id = $request->program_id ?? ($course ? $course->scholarship_program_id : null);
+            $recordPayload['date_filed'] = $recordPayload['date_filed'] ?? now();
+            $recordPayload['date_approved'] = $recordPayload['date_approved'] ?? $recordPayload['date_filed'] ?? now();
 
             // Create scholarship record with approved/active status
             ScholarshipRecord::create([
                 'profile_id' => $new_profile->profile_id,
-                'course_id' => $course->id ?? null,
-                'term' => $request->term,
-                'academic_year' => $request->academic_year,
-                'year_level' => $request->year_level,
-                'program_id' => $program_id,
-                'school_id' => $school->id ?? null,
+                ...$recordPayload,
                 'unified_status' => 'active', // Active scholars
                 'is_active' => 1,
-                'date_filed' => $request->date_filed ?? now(),
-                'date_approved' => $request->date_approved ?? $request->date_filed ?? now(), // Use provided date_approved, fallback to date_filed, then now
             ]);
 
             DB::commit();
@@ -129,23 +92,6 @@ class ScholarController extends Controller
             abort(403, 'You do not have permission to edit scholar profiles.');
         }
 
-        // Validate that all required academic fields are present
-        $request->validate([
-            'program' => 'nullable',
-            'program_id' => 'nullable|exists:scholarship_programs,id',
-            'course' => 'nullable',
-            'course_id' => 'nullable|exists:courses,id',
-            'school' => 'nullable',
-            'school_id' => 'nullable|exists:schools,id',
-            'year_level' => 'required|string',
-            'term' => 'required|string',
-            'academic_year' => 'required|string',
-        ], [
-            'year_level.required' => 'Year Level is required for scholars.',
-            'term.required' => 'Term is required for scholars.',
-            'academic_year.required' => 'Academic Year is required for scholars.',
-        ]);
-
         DB::beginTransaction();
 
         try {
@@ -156,28 +102,10 @@ class ScholarController extends Controller
             // is_on_waiting_list is now managed through scholarship_records.application_status (pending status)
             $profile->update($validated);
 
-            // Get course - prefer ID, fallback to name lookup
-            $course = null;
-            if ($request->course_id) {
-                $course = Course::find($request->course_id);
-            } elseif ($request->course) {
-                $course = Course::where('name', $request->course)
-                    ->orWhere('shortname', $request->course)
-                    ->first();
-            }
-
-            // Get school - prefer ID, fallback to name lookup
-            $school = null;
-            if ($request->school_id) {
-                $school = School::find($request->school_id);
-            } elseif ($request->school) {
-                $school = School::where('name', $request->school)
-                    ->orWhere('shortname', $request->school)
-                    ->first();
-            }
-
-            // Get program_id - prefer direct ID, fallback to course's program
-            $program_id = $request->program_id ?? ($course ? $course->scholarship_program_id : null);
+            $course = $this->resolveCourseFromRequest($request);
+            $school = $this->resolveSchoolFromRequest($request);
+            $programId = $this->resolveProgramId($request, $course);
+            $recordPayload = $this->buildScholarshipRecordPayload($request, $course, $school, $programId);
 
             // Find the scholarship record to update
             $record = null;
@@ -198,14 +126,9 @@ class ScholarController extends Controller
                 // Update existing scholarship record
                 $oldData = $record->getAttributes();
                 $record->update([
-                    'course_id' => $course->id ?? null,
-                    'term' => $request->term,
-                    'academic_year' => $request->academic_year,
-                    'year_level' => $request->year_level,
-                    'program_id' => $program_id,
-                    'school_id' => $school->id ?? null,
-                    'date_filed' => $request->date_filed ?? $record->date_filed,
-                    'date_approved' => $request->date_approved ?? $record->date_approved,
+                    ...$recordPayload,
+                    'date_filed' => $recordPayload['date_filed'] ?? $record->date_filed,
+                    'date_approved' => $recordPayload['date_approved'] ?? $record->date_approved,
                 ]);
 
                 // Log the update activity
@@ -216,18 +139,14 @@ class ScholarController extends Controller
                 );
             } else {
                 // If no active record exists, create a new one
+                $recordPayload['date_filed'] = $recordPayload['date_filed'] ?? now();
+                $recordPayload['date_approved'] = $recordPayload['date_approved'] ?? $recordPayload['date_filed'] ?? now();
+
                 ScholarshipRecord::create([
                     'profile_id' => $profile->profile_id,
-                    'course_id' => $course->id ?? null,
-                    'term' => $request->term,
-                    'academic_year' => $request->academic_year,
-                    'year_level' => $request->year_level,
-                    'program_id' => $program_id,
-                    'school_id' => $school->id ?? null,
+                    ...$recordPayload,
                     'unified_status' => 'active', // Active
                     'is_active' => 1,
-                    'date_filed' => $request->date_filed ?? now(),
-                    'date_approved' => $request->date_approved ?? $request->date_filed ?? now(),
                 ]);
             }
 
@@ -246,5 +165,101 @@ class ScholarController extends Controller
                 'error' => 'Failed to update scholar: ' . $e->getMessage()
             ])->withInput();
         }
+    }
+
+    private function resolveCourseFromRequest(FormRequest $request): ?Course
+    {
+        if ($request->course_id) {
+            return Course::find($request->course_id);
+        }
+
+        if ($request->course) {
+            return Course::where('name', $request->course)
+                ->orWhere('shortname', $request->course)
+                ->first();
+        }
+
+        return null;
+    }
+
+    private function resolveSchoolFromRequest(FormRequest $request): ?School
+    {
+        if ($request->school_id) {
+            return School::find($request->school_id);
+        }
+
+        if ($request->school) {
+            return School::where('name', $request->school)
+                ->orWhere('shortname', $request->school)
+                ->first();
+        }
+
+        return null;
+    }
+
+    private function resolveProgramId(FormRequest $request, ?Course $course): ?int
+    {
+        if ($request->program_id) {
+            return (int) $request->program_id;
+        }
+
+        if ($course?->scholarship_program_id) {
+            return (int) $course->scholarship_program_id;
+        }
+
+        if ($request->program) {
+            return ScholarshipProgram::query()
+                ->where('name', $request->program)
+                ->orWhere('shortname', $request->program)
+                ->value('id');
+        }
+
+        return null;
+    }
+
+    private function buildScholarshipRecordPayload(FormRequest $request, ?Course $course, ?School $school, ?int $programId): array
+    {
+        $isTechVocProgram = $this->isTechVocProgram($programId, $request->program);
+
+        return [
+            'course_id' => $course->id ?? null,
+            'term' => $request->term,
+            'academic_year' => $request->academic_year,
+            'year_level' => $request->year_level,
+            'program_id' => $programId,
+            'school_id' => $school->id ?? null,
+            'start_date' => $isTechVocProgram ? $request->start_date : null,
+            'end_date' => $isTechVocProgram ? $request->end_date : null,
+            'no_of_hours' => $isTechVocProgram ? $request->no_of_hours : null,
+            'no_of_days' => $isTechVocProgram ? $request->no_of_days : null,
+            'date_filed' => $request->date_filed,
+            'date_approved' => $request->date_approved,
+        ];
+    }
+
+    private function isTechVocProgram(?int $programId, mixed $programValue = null): bool
+    {
+        if ($programId) {
+            $program = ScholarshipProgram::query()
+                ->select(['name', 'shortname'])
+                ->find($programId);
+
+            if ($program && ($this->matchesTechVocProgram($program->shortname) || $this->matchesTechVocProgram($program->name))) {
+                return true;
+            }
+        }
+
+        return $this->matchesTechVocProgram($programValue);
+    }
+
+    private function matchesTechVocProgram(mixed $value): bool
+    {
+        $normalizedValue = strtolower(preg_replace('/[^a-z0-9]+/', '', (string) $value));
+
+        if ($normalizedValue === '') {
+            return false;
+        }
+
+        return str_contains($normalizedValue, 'techvoc') || str_contains($normalizedValue, 'technicalvoc');
     }
 }
