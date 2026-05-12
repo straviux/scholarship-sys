@@ -26,6 +26,8 @@ class SystemOption extends Model
         'sort_order',
         'is_active',
         'description',
+        'particulars_template',
+        'explanation_template',
     ];
 
     protected $casts = [

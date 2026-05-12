@@ -121,6 +121,22 @@
                                             </template>
                                         </Column>
 
+                                        <Column v-if="category === 'disbursement_type'" field="particulars_template"
+                                            header="Particulars" style="min-width: 260px">
+                                            <template #body="slotProps">
+                                                <span class="text-sm text-gray-600">{{
+                                                    formatTemplatePreview(slotProps.data.particulars_template) }}</span>
+                                            </template>
+                                        </Column>
+
+                                        <Column v-if="category === 'disbursement_type'" field="explanation_template"
+                                            header="Explanation" style="min-width: 260px">
+                                            <template #body="slotProps">
+                                                <span class="text-sm text-gray-600">{{
+                                                    formatTemplatePreview(slotProps.data.explanation_template) }}</span>
+                                            </template>
+                                        </Column>
+
                                         <Column header="Actions" style="width: 180px">
                                             <template #body="slotProps">
                                                 <div class="flex gap-2">
@@ -199,6 +215,36 @@
                     still use the grant provision option value as-is.
                 </div>
 
+                <div v-if="isDisbursementTypeForm" class="space-y-4">
+                    <div class="text-xs text-gray-500 bg-gray-50 border rounded-lg p-3 space-y-2">
+                        <p>
+                            Disbursement type templates are used by Fund Transactions to auto-generate particulars and explanation content.
+                            HTML is allowed. Tokens use uppercase formatted values; add <span class="font-mono">_raw</span>
+                            if you need the original source text.
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <span v-for="token in disbursementTemplateTokens" :key="token"
+                                class="rounded-full bg-white border px-2 py-1 font-mono text-[11px] text-gray-700">
+                                {{ token }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-sm font-medium text-gray-700 mb-2">Particulars</label>
+                        <Editor v-model="form.particulars_template" editorStyle="height: 180px" />
+                        <small v-if="form.errors.particulars_template" class="text-red-500 mt-1">{{
+                            form.errors.particulars_template }}</small>
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-sm font-medium text-gray-700 mb-2">Explanation</label>
+                        <Editor v-model="form.explanation_template" editorStyle="height: 180px" />
+                        <small v-if="form.errors.explanation_template" class="text-red-500 mt-1">{{
+                            form.errors.explanation_template }}</small>
+                    </div>
+                </div>
+
                 <div class="flex flex-col">
                     <label class="text-sm font-medium text-gray-700 mb-2">Color</label>
                     <div class="flex gap-2">
@@ -257,6 +303,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
+import Editor from 'primevue/editor';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
@@ -285,20 +332,42 @@ const form = useForm({
     sort_order: 0,
     is_active: true,
     description: '',
+    particulars_template: '',
+    explanation_template: '',
 });
 
 const deleteForm = useForm({});
 const isGrantProvisionForm = computed(() => form.category === 'grant_provision');
+const isDisbursementTypeForm = computed(() => form.category === 'disbursement_type');
 const grantProvisionProgramOptions = computed(() =>
     (props.grantProvisionPrograms || []).map((program) => ({ label: program, value: program }))
 );
+const disbursementTemplateTokens = [
+    '{{course}}',
+    '{{course_raw}}',
+    '{{school}}',
+    '{{school_raw}}',
+    '{{year_level}}',
+    '{{year_level_raw}}',
+    '{{semester}}',
+    '{{semester_raw}}',
+    '{{academic_year}}',
+    '{{academic_year_raw}}',
+    '{{semester_academic_year}}',
+    '{{grant_provision}}',
+    '{{grant_provision_raw}}',
+    '{{payee}}',
+    '{{payee_raw}}',
+    '{{particulars_name}}',
+    '{{particulars_name_raw}}',
+];
 
 const getCategoryDescription = (category) => {
     const descriptions = {
         attachment_type: 'Types of attachments that can be uploaded for disbursements (e.g., voucher, cheque, receipt)',
         grant_provision: 'Types of grants that can be provided to scholars, with optional program and amount metadata for future use.',
         obr_status: 'Status options for OBR (Obligation Request) processing',
-        disbursement_type: 'Categories of disbursements (e.g., regular, reimbursement, financial assistance)',
+        disbursement_type: 'Categories of disbursements used by Fund Transactions. Each type can define default particulars and explanation templates with placeholder tokens.',
         priority_level: 'Priority levels for scholarship applications (e.g., low, normal, high, urgent)',
         term: 'Academic terms or semesters (e.g., 1st Semester, 2nd Semester, Summer)',
         year_level: 'Student year levels (e.g., 1st Year, 2nd Year, 3rd Year, 4th Year)',
@@ -322,6 +391,19 @@ const formatAmount = (amount) => {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     });
+};
+
+const formatTemplatePreview = (value) => {
+    const plainText = String(value || '')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    if (!plainText) {
+        return '-';
+    }
+
+    return plainText.length > 96 ? `${plainText.slice(0, 93)}...` : plainText;
 };
 
 const openAddDialog = (category = null) => {
@@ -351,6 +433,8 @@ const openEditDialog = (option) => {
     form.sort_order = option.sort_order;
     form.is_active = option.is_active;
     form.description = option.description;
+    form.particulars_template = option.particulars_template || '';
+    form.explanation_template = option.explanation_template || '';
     form.id = option.id;
     showDialog.value = true;
 };
@@ -425,6 +509,11 @@ watch(() => form.category, (category) => {
     if (category !== 'grant_provision') {
         form.program = null;
         form.amount = null;
+    }
+
+    if (category !== 'disbursement_type') {
+        form.particulars_template = '';
+        form.explanation_template = '';
     }
 });
 </script>

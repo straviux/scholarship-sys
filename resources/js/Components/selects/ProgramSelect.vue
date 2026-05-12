@@ -33,6 +33,14 @@ const { data, error, fetchData } = useApi(route('scholarshipprograms.getactiveli
 const programs = ref([]);
 const loading = ref(false);
 
+const getProgramDisplayText = (program) => {
+    if (!program || typeof program !== 'object') {
+        return program || '';
+    }
+
+    return program.shortname || program.name || '';
+};
+
 const normalizeProgramToken = (value) => {
     if (value === null || value === undefined || value === '') {
         return null;
@@ -149,12 +157,28 @@ onMounted(fetchData);
 </script>
 
 <template>
-    <Select v-model="localValue" :options="programs" filter :filterFields="['name', 'shortname']" autoFilterFocus
+    <MultiSelect v-if="multiple" v-model="localValue" :options="programs" filter
+        :filterFields="['name', 'shortname']" autoFilterFocus showSelectAll showClear optionLabel="name"
+        :placeholder="customPlaceholder" class="w-full" display="chip" :maxSelectedLabels="3"
+        :selectedItemsLabel="'{0} programs selected'" :size="iosCompact ? 'small' : undefined" :pt="selectPt">
+        <template #option="slotProps">
+            <div class="flex items-start uppercase">
+                <div>{{ getProgramDisplayText(slotProps.option) }}</div>
+            </div>
+        </template>
+        <template #chip="slotProps">
+            <div class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded uppercase mr-1">
+                {{ getProgramDisplayText(slotProps.value) }}
+            </div>
+        </template>
+    </MultiSelect>
+
+    <Select v-else v-model="localValue" :options="programs" filter :filterFields="['name', 'shortname']" autoFilterFocus
         showClear optionLabel="name" :placeholder="customPlaceholder" class="w-full"
         :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
-                <div>{{ slotProps.value.shortname }}</div>
+                <div>{{ getProgramDisplayText(slotProps.value) }}</div>
             </div>
             <span v-else>
                 <div class="flex w-full" :class="customPlaceholderClass">{{
@@ -163,7 +187,7 @@ onMounted(fetchData);
         </template>
         <template #option="slotProps">
             <div class="flex items-start uppercase">
-                <div>{{ slotProps.option.shortname }}</div>
+                <div>{{ getProgramDisplayText(slotProps.option) }}</div>
             </div>
         </template>
     </Select>

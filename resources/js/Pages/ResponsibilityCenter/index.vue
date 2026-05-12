@@ -38,12 +38,23 @@ const formData = ref({
 
 const particularFormData = ref({
     name: '',
+    description: '',
     account_code: '',
     allotment: '',
-    program: null,
+    programs: [],
     date_approved: null,
     date_expired: null,
 });
+
+const getParticularPrograms = (particular) => {
+    if (Array.isArray(particular?.programs) && particular.programs.length > 0) {
+        return particular.programs;
+    }
+
+    return particular?.program ? [particular.program] : [];
+};
+
+const formatProgramLabel = (program) => program?.shortname || program?.name || program || '';
 
 // Fetch responsibility centers
 const fetchResponsibilityCenters = async () => {
@@ -172,24 +183,25 @@ const openParticularsModal = (rc, particular = null) => {
         editingParticular.value = particular;
         particularFormData.value = {
             name: particular.name,
+            description: particular.description || '',
             account_code: particular.account_code,
             allotment: particular.allotment ?? '',
-            program: particular.program ?? null,
+            programs: getParticularPrograms(particular),
             date_approved: particular.date_approved ? new Date(particular.date_approved) : null,
             date_expired: particular.date_expired ? new Date(particular.date_expired) : null,
         };
     } else {
         editingParticular.value = null;
-        particularFormData.value = { name: '', account_code: '', allotment: '', program: null, date_approved: null, date_expired: null };
+        particularFormData.value = { name: '', description: '', account_code: '', allotment: '', programs: [], date_approved: null, date_expired: null };
     }
     showParticularsModal.value = true;
 };
 
 // Save particular
 const saveParticular = async () => {
-    if (!particularFormData.value.name || !particularFormData.value.account_code || !particularFormData.value.allotment || !particularFormData.value.program) {
-        error.value = 'Please fill in all required particular fields (name, account code, allotment, program)';
-        toast.add({ severity: 'warn', summary: 'Validation', detail: 'Name, account code, allotment, and program are required', life: 3000 });
+    if (!particularFormData.value.name || !particularFormData.value.account_code || !particularFormData.value.allotment || !particularFormData.value.programs?.length) {
+        error.value = 'Please fill in all required particular fields (name, account code, allotment, programs)';
+        toast.add({ severity: 'warn', summary: 'Validation', detail: 'Name, account code, allotment, and at least one program are required', life: 3000 });
         return;
     }
 
@@ -201,8 +213,11 @@ const saveParticular = async () => {
 
         const payload = {
             name: particularFormData.value.name,
+            description: particularFormData.value.description || null,
             account_code: particularFormData.value.account_code,
-            scholarship_program_id: particularFormData.value.program?.id ?? particularFormData.value.program,
+            scholarship_program_ids: particularFormData.value.programs
+                .map((program) => program?.id ?? program)
+                .filter(Boolean),
             allotment: particularFormData.value.allotment,
             date_approved: particularFormData.value.date_approved
                 ? new Date(particularFormData.value.date_approved).toISOString().slice(0, 10)
@@ -343,7 +358,10 @@ onMounted(() => {
                     stripedRows scrollable class="text-sm">
                     <Column field="name" header="Particular" style="min-width: 180px">
                         <template #body="{ data }">
-                            <span class="font-medium text-gray-800 dark:text-gray-100">{{ data.name }}</span>
+                            <div>
+                                <div class="font-medium text-gray-800 dark:text-gray-100">{{ data.name }}</div>
+                                <div v-if="data.description" class="text-xs text-gray-500 mt-1 whitespace-pre-line">{{ data.description }}</div>
+                            </div>
                         </template>
                     </Column>
                     <Column field="account_code" header="Account Code" style="min-width: 130px">
@@ -352,10 +370,13 @@ onMounted(() => {
                                 data.account_code }}</span>
                         </template>
                     </Column>
-                    <Column header="Program" style="min-width: 130px">
+                    <Column header="Programs" style="min-width: 180px">
                         <template #body="{ data }">
-                            <Tag v-if="data.program" :value="data.program.shortname ?? data.program" severity="info"
-                                rounded />
+                            <div v-if="getParticularPrograms(data).length" class="flex flex-wrap gap-1.5">
+                                <Tag v-for="program in getParticularPrograms(data)"
+                                    :key="program.id ?? formatProgramLabel(program)"
+                                    :value="formatProgramLabel(program)" severity="info" rounded />
+                            </div>
                             <span v-else class="text-xs text-gray-400">—</span>
                         </template>
                     </Column>
@@ -436,14 +457,19 @@ onMounted(() => {
                     <InputText v-model="particularFormData.name" placeholder="e.g., Tuition Fee" class="w-full" />
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <Textarea v-model="particularFormData.description" rows="3"
+                        placeholder="Optional description for this particular" class="w-full" />
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Account Code <span
                             class="text-red-500">*</span></label>
                     <InputText v-model="particularFormData.account_code" placeholder="e.g., 5010-001" class="w-full" />
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Program <span
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Programs <span
                             class="text-red-500">*</span></label>
-                    <ProgramSelect v-model="particularFormData.program" class="w-full" />
+                        <ProgramSelect v-model="particularFormData.programs" :multiple="true" class="w-full" />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Allotment <span
@@ -511,6 +537,7 @@ onMounted(() => {
 
 :deep(.p-inputtext),
 :deep(.p-select),
+:deep(.p-multiselect),
 :deep(.p-datepicker .p-inputtext) {
     border-radius: 1rem;
 }

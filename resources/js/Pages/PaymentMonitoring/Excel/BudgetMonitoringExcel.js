@@ -1,7 +1,7 @@
 ﻿import * as XLSXStyle from 'xlsx';
 
-// Columns: # | Program | Fiscal Year | Allotment | Disbursed | Remaining | Usage %
-const NC = 7;
+// Columns: # | Program | Description / Account Code / R. Center | Fiscal Year | Allotment | Disbursed | Remaining | Usage %
+const NC = 8;
 
 const thin = { style: 'thin' };
 const med = { style: 'medium' };
@@ -66,7 +66,7 @@ export function exportBudgetMonitoringExcel({
 	let r = 0;
 
 	// ── Column headers ─────────────────────────────────────────────
-	const headers = ['#', 'Program', 'Fiscal Year', 'Allotment', 'Disbursed', 'Remaining', 'Usage %'];
+	const headers = ['#', 'Program', 'Description / Account Code / R. Center', 'Fiscal Year', 'Allotment', 'Disbursed', 'Remaining', 'Usage %'];
 	headers.forEach((h, c) => {
 		ws[`${String.fromCharCode(65 + c)}${r + 1}`] = cell(h, ST.colHeader);
 	});
@@ -78,16 +78,22 @@ export function exportBudgetMonitoringExcel({
 			row.total_allotment > 0
 				? ((row.disbursed / row.total_allotment) * 100).toFixed(2) + '%'
 				: '0.00%';
+		const descriptionWithRc = [
+			row.description || '',
+			row.account_code ? `Account Code: ${row.account_code}` : '',
+			row.rc_name || row.rc_code ? `${row.rc_name || 'N/A'}${row.rc_code ? ` (${row.rc_code})` : ''}` : '',
+		].filter(Boolean).join('\n');
 		ws[`A${r + 1}`] = cell(i + 1, ST.dataCenter);
 		ws[`B${r + 1}`] = cell(row.program || '', ST.data);
-		ws[`C${r + 1}`] = cell(row.fiscal_year || '—', ST.dataCenter);
-		ws[`D${r + 1}`] = cell(parseFloat(row.total_allotment) || 0, ST.dataAmt);
-		ws[`E${r + 1}`] = cell(parseFloat(row.disbursed) || 0, ST.dataAmt);
-		ws[`F${r + 1}`] = cell(
+		ws[`C${r + 1}`] = cell(descriptionWithRc, ST.data);
+		ws[`D${r + 1}`] = cell(row.fiscal_year || '—', ST.dataCenter);
+		ws[`E${r + 1}`] = cell(parseFloat(row.total_allotment) || 0, ST.dataAmt);
+		ws[`F${r + 1}`] = cell(parseFloat(row.disbursed) || 0, ST.dataAmt);
+		ws[`G${r + 1}`] = cell(
 			parseFloat(row.remaining) || 0,
 			row.overBudget ? ST.dataAmtOver : ST.dataAmt,
 		);
-		ws[`G${r + 1}`] = cell(pct, ST.dataCenter);
+		ws[`H${r + 1}`] = cell(pct, ST.dataCenter);
 		r++;
 	});
 
@@ -97,18 +103,20 @@ export function exportBudgetMonitoringExcel({
 	ws[`A${r + 1}`] = cell('GRAND TOTAL', ST.grandLabel);
 	ws[`B${r + 1}`] = cell('', ST.grandLabel);
 	ws[`C${r + 1}`] = cell('', ST.grandLabel);
-	mg(ws, 0, 2, r, r);
-	ws[`D${r + 1}`] = cell(parseFloat(totals.allotment) || 0, ST.grandAmt);
-	ws[`E${r + 1}`] = cell(parseFloat(totals.disbursed) || 0, ST.grandAmt);
-	ws[`F${r + 1}`] = cell(parseFloat(totals.remaining) || 0, ST.grandAmt);
-	ws[`G${r + 1}`] = cell(totalPct, ST.grandLabel);
+	ws[`D${r + 1}`] = cell('', ST.grandLabel);
+	mg(ws, 0, 3, r, r);
+	ws[`E${r + 1}`] = cell(parseFloat(totals.allotment) || 0, ST.grandAmt);
+	ws[`F${r + 1}`] = cell(parseFloat(totals.disbursed) || 0, ST.grandAmt);
+	ws[`G${r + 1}`] = cell(parseFloat(totals.remaining) || 0, ST.grandAmt);
+	ws[`H${r + 1}`] = cell(totalPct, ST.grandLabel);
 	r++;
 
 	// ── Sheet range and column widths ─────────────────────────────
 	ws['!ref'] = `A1:${String.fromCharCode(65 + NC - 1)}${r}`;
 	ws['!cols'] = [
 		{ wch: 5 }, // #
-		{ wch: 30 }, // Program
+		{ wch: 24 }, // Program
+		{ wch: 42 }, // Description / Account Code / R. Center
 		{ wch: 14 }, // Fiscal Year
 		{ wch: 16 }, // Allotment
 		{ wch: 16 }, // Disbursed

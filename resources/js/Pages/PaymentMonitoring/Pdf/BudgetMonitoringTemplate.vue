@@ -1,7 +1,7 @@
 <template>
     <!--
         Budget Monitoring Report  –  Portrait A4
-        Columns: # | Program | Fiscal Year | Allotment | Disbursed | Remaining | Usage %
+        Columns: # | Program | Description / Account Code / R. Center | Fiscal Year | Allotment | Disbursed | Remaining | Usage %
     -->
     <div>
 
@@ -43,18 +43,28 @@
             <thead>
                 <tr>
                     <th class="b-all center bold" style="padding:5pt;width:22pt;">#</th>
-                    <th class="b-all center bold" style="padding:5pt;">Program</th>
-                    <th class="b-all center bold" style="padding:5pt;width:66pt;">Fiscal Year</th>
-                    <th class="b-all right bold" style="padding:5pt;width:88pt;">Allotment</th>
-                    <th class="b-all right bold" style="padding:5pt;width:88pt;">Disbursed</th>
-                    <th class="b-all right bold" style="padding:5pt;width:88pt;">Remaining</th>
-                    <th class="b-all center bold" style="padding:5pt;width:52pt;">Usage %</th>
+                    <th class="b-all center bold" style="padding:5pt;width:92pt;">Program</th>
+                    <th class="b-all center bold" style="padding:5pt;">Description / Account Code / R. Center</th>
+                    <th class="b-all center bold" style="padding:5pt;width:56pt;">Fiscal Year</th>
+                    <th class="b-all right bold" style="padding:5pt;width:74pt;">Allotment</th>
+                    <th class="b-all right bold" style="padding:5pt;width:74pt;">Disbursed</th>
+                    <th class="b-all right bold" style="padding:5pt;width:74pt;">Remaining</th>
+                    <th class="b-all center bold" style="padding:5pt;width:46pt;">Usage %</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="(row, i) in rows" :key="i">
                     <td class="b-all center" style="padding:3pt 5pt;">{{ i + 1 }}</td>
                     <td class="b-all bold" style="padding:3pt 5pt;">{{ row.program }}</td>
+                    <td class="b-all" style="padding:3pt 5pt;">
+                        <div>{{ row.description || '—' }}</div>
+                        <div v-if="row.account_code" class="t-7" style="color:#666; margin-top:2pt;">
+                            Account Code: {{ row.account_code }}
+                        </div>
+                        <div class="t-7" style="color:#666; margin-top:2pt;">
+                            {{ row.rc_name || 'N/A' }}<span v-if="row.rc_code"> ({{ row.rc_code }})</span>
+                        </div>
+                    </td>
                     <td class="b-all center" style="padding:3pt 5pt;">{{ row.fiscal_year || '—' }}</td>
                     <td class="b-all right nowrap" style="padding:3pt 5pt;">{{ money(row.total_allotment) }}</td>
                     <td class="b-all right nowrap" style="padding:3pt 5pt;">{{ money(row.disbursed) }}</td>
@@ -73,7 +83,7 @@
 
                 <!-- Totals row -->
                 <tr style="border-top:1.5pt solid #000;">
-                    <td colspan="3" class="b-all right bold t-9" style="padding:5pt 8pt;">GRAND TOTAL</td>
+                    <td colspan="4" class="b-all right bold t-9" style="padding:5pt 8pt;">GRAND TOTAL</td>
                     <td class="b-all right bold nowrap t-9" style="padding:5pt 8pt;">{{ money(totals.allotment) }}</td>
                     <td class="b-all right bold nowrap t-9" style="padding:5pt 8pt;">{{ money(totals.disbursed) }}</td>
                     <td class="b-all right bold nowrap t-9"

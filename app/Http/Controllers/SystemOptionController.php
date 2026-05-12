@@ -161,6 +161,8 @@ class SystemOptionController extends Controller
             'sort_order' => ['nullable', 'integer'],
             'is_active' => ['boolean'],
             'description' => ['nullable', 'string'],
+            'particulars_template' => ['nullable', 'string'],
+            'explanation_template' => ['nullable', 'string'],
         ];
 
         if ($includeCategory) {
@@ -179,13 +181,37 @@ class SystemOptionController extends Controller
         if ($category !== 'grant_provision') {
             $validated['program'] = null;
             $validated['amount'] = null;
+        } else {
+            $validated['program'] = $validated['program'] ?: null;
+            $validated['amount'] = $validated['amount'] === '' ? null : ($validated['amount'] ?? null);
+        }
+
+        if ($category !== 'disbursement_type') {
+            $validated['particulars_template'] = null;
+            $validated['explanation_template'] = null;
 
             return $validated;
         }
 
-        $validated['program'] = $validated['program'] ?: null;
-        $validated['amount'] = $validated['amount'] === '' ? null : ($validated['amount'] ?? null);
+        $validated['particulars_template'] = $this->normalizeRichText($validated['particulars_template'] ?? null);
+        $validated['explanation_template'] = $this->normalizeRichText($validated['explanation_template'] ?? null);
 
         return $validated;
+    }
+
+    private function normalizeRichText(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = trim($value);
+        if ($normalized === '') {
+            return null;
+        }
+
+        $plainText = trim(html_entity_decode(strip_tags($normalized), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+
+        return $plainText === '' ? null : $normalized;
     }
 }

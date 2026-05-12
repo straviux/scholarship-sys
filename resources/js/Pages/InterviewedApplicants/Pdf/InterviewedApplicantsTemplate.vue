@@ -250,19 +250,23 @@
                         </td>
                     </tr>
                     <tr>
-                         <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;">Initial Budget</td>
+                         <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;">Allocated Fund</td>
                         <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{ fmtCurrency(budgetAllocation.total_allotment) }}</td>
+                        <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;">To Date</td>
+                        <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{ approvedScholarsToDate }}</td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;">Running Balance</td>
+                        <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{ fmtCurrency(budgetAllocationRunningBalance) }}</td>
                         <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;">No. of Scholars</td>
                         <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{ totalScholars }}</td>
                     </tr>
-                      <tr>
-                        <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;">Running Balance</td>
-                        <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{ fmtCurrency(budgetAllocationRunningBalance) }}</td>
-                        <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;">TOTAL GRANT FOR THE PERIOD</td>
-                        <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{ fmtCurrency(totalCurrentAcademicYearGrant) }}</td>
+                    <tr>
+                        <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;">Total Grant for the Period</td>
+                        <td colspan="3" style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono bold">{{ fmtCurrency(totalCurrentAcademicYearGrant) }}</td>
                     </tr>
                     <tr>
-                        <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;">Remaining Balance</td>
+                        <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;">Ending Balance</td>
                         <td colspan="3" :style="'border:0.5pt solid #d9d9d9;padding:5pt 6pt;font-weight:700;' + (budgetAllocationProjectedBalance < 0 ? 'color:#b91c1c;' : 'color:#166534;')" class="mono">
                             {{ fmtCurrency(budgetAllocationProjectedBalance) }}
                         </td>
@@ -270,6 +274,10 @@
                   
                 </tbody>
             </table>
+            <div style="margin-top:12pt;font-size:7pt;color:#555;display:flex;gap:16pt;">
+                <p>___APPROVED</p>
+                <p>___DISAPPROVED</p>
+            </div>
         </div>
 
         
@@ -575,6 +583,7 @@ const groupedData = computed(() => {
 });
 
 const totalScholars = computed(() => props.records.length);
+const approvedScholarsToDate = computed(() => Number(props.budgetAllocation?.approved_scholars_to_date ?? totalScholars.value) || 0);
 const totalCurrentAcademicYearGrant = computed(() => sumCurrentAcademicYearEstimatedGrant(props.records));
 const budgetAllocationRunningBalance = computed(() => {
     if (!props.budgetAllocation) {

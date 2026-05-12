@@ -2,7 +2,7 @@
     <Dialog :visible="visible" modal :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
         @update:visible="val => emit('update:visible', val)">
         <template #container>
-            <div class="ios-modal" :style="[{ width: '95vw', maxWidth: '1100px' }, dragStyle]">
+            <div class="ios-modal" :style="[{ width: '99vw', maxWidth: '1520px' }, dragStyle]">
 
                 <!-- Nav Bar -->
                 <div class="ios-nav-bar" @pointerdown="onDragStart">
@@ -65,10 +65,34 @@
                                 <span class="font-semibold text-gray-800 dark:text-gray-100">{{ data.program }}</span>
                             </template>
                         </Column>
+                        <Column header="Description / Account Code / R. Center" style="min-width: 280px">
+                            <template #body="{ data }">
+                                <div>
+                                    <div class="font-medium text-gray-800 dark:text-gray-100 whitespace-pre-line">{{ data.description || '—' }}</div>
+                                    <div v-if="data.account_code" class="text-xs text-gray-500 mt-1">
+                                        Account Code: {{ data.account_code }}
+                                    </div>
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        {{ data.rc_name || 'N/A' }}
+                                        <span v-if="data.rc_code">({{ data.rc_code }})</span>
+                                    </div>
+                                </div>
+                            </template>
+                        </Column>
                         <Column field="fiscal_year" header="Fiscal Year" style="min-width: 120px">
                             <template #body="{ data }">
                                 <span class="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-lg">{{
                                     data.fiscal_year || '—' }}</span>
+                            </template>
+                        </Column>
+                        <Column header="Date Start" style="min-width: 130px">
+                            <template #body="{ data }">
+                                <span class="text-sm text-gray-700 dark:text-gray-200">{{ formatDate(data.date_start) }}</span>
+                            </template>
+                        </Column>
+                        <Column header="Date End" style="min-width: 130px">
+                            <template #body="{ data }">
+                                <span class="text-sm text-gray-700 dark:text-gray-200">{{ formatDate(data.date_end) }}</span>
                             </template>
                         </Column>
                         <Column header="Allotment" style="min-width: 150px">
@@ -154,7 +178,7 @@ import Tag from 'primevue/tag';
 const props = defineProps({
     visible: { type: Boolean, default: false },
     budgetParticulars: { type: Array, default: () => [] },
-    disbursedByProgramYear: { type: Object, default: () => ({}) },
+    disbursedByAllocation: { type: Object, default: () => ({}) },
     fiscalYears: { type: Array, default: () => [] },
 });
 
@@ -167,7 +191,9 @@ const activeFiscalYear = ref(null);
 const activeProgram = ref(null);
 
 const programOptions = computed(() =>
-    [...new Set(props.budgetParticulars.map(bp => bp.program))].filter(Boolean).sort()
+    [...new Set(props.budgetParticulars.flatMap(bp => Array.isArray(bp.programs) ? bp.programs : (bp.program ? [bp.program] : [])))]
+        .filter(Boolean)
+        .sort()
 );
 
 const close = () => {
@@ -211,13 +237,27 @@ const generateReport = () => {
 const fmt = (val) =>
     parseFloat(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+const formatDate = (value) => {
+    if (!value) return '—';
+
+    const [year, month, day] = String(value).split('-').map(Number);
+    if (!year || !month || !day) {
+        return value;
+    }
+
+    return new Date(year, month - 1, day).toLocaleDateString('en-PH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    });
+};
+
 const summary = computed(() => {
     return props.budgetParticulars
         .filter(bp => !activeFiscalYear.value || bp.fiscal_year === activeFiscalYear.value)
-        .filter(bp => !activeProgram.value || bp.program === activeProgram.value)
+        .filter(bp => !activeProgram.value || (Array.isArray(bp.programs) ? bp.programs.includes(activeProgram.value) : bp.program === activeProgram.value))
         .map(bp => {
-            const programDisbursed = props.disbursedByProgramYear[bp.program] ?? {};
-            const disbursed = programDisbursed[bp.fiscal_year] ?? 0;
+            const disbursed = props.disbursedByAllocation[bp.key] ?? 0;
             const remaining = bp.total_allotment - disbursed;
             const pct = bp.total_allotment > 0
                 ? Math.round((disbursed / bp.total_allotment) * 100)

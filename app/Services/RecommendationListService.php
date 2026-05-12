@@ -304,6 +304,9 @@ class RecommendationListService
             'total_allotment' => $this->normalizeDecimal($budgetAllocation['total_allotment'] ?? null),
             'disbursed' => $this->normalizeDecimal($budgetAllocation['disbursed'] ?? null),
             'remaining' => $this->normalizeDecimal($budgetAllocation['remaining'] ?? null),
+            'approved_scholars_to_date' => isset($budgetAllocation['approved_scholars_to_date'])
+                ? (int) $budgetAllocation['approved_scholars_to_date']
+                : null,
         ];
     }
 

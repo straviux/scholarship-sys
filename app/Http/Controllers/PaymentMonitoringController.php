@@ -140,54 +140,117 @@ class PaymentMonitoringController extends Controller
         $paymentData = collect($paymentData);
 
         // ── Budget monitoring (computed before any page filters) ──────────────
-        $allParticulars = Particular::with(['program', 'responsibilityCenter'])
-            ->whereNotNull('scholarship_program_id')
+        $allParticulars = Particular::with(['program', 'programs', 'responsibilityCenter'])
             ->whereNotNull('allotment')
             ->get();
 
         $budgetParticulars = $allParticulars
-            ->groupBy(fn($p) => ($p->program?->name ?? '') . '||' . ($p->responsibilityCenter?->fiscal_year ?? ''))
-            ->filter(fn($items, $key) => $key !== '||' && explode('||', $key, 2)[0] !== '')
-            ->map(function ($items, $key) {
-                [$prog, $fy] = explode('||', $key, 2);
+            ->map(function ($particular) {
+                $responsibilityCenter = $particular->responsibilityCenter;
+                $programs = $particular->resolvedPrograms()
+                    ->filter(fn($program) => filled($program?->id))
+                    ->unique('id')
+                    ->sortBy(fn($program) => $program->shortname ?? $program->name ?? '');
+
+                if ($programs->isEmpty()) {
+                    return null;
+                }
+
+                $fiscalYear = $responsibilityCenter?->fiscal_year;
+                $rcCode = $responsibilityCenter?->code;
+                $particularName = $particular->name;
+                $accountCode = $particular->account_code;
+                $dateStart = $particular->date_approved?->format('Y-m-d');
+                $dateEnd = $particular->date_expired?->format('Y-m-d');
+                $programLabels = $programs
+                    ->map(fn($program) => $program->shortname ?: $program->name)
+                    ->filter()
+                    ->values();
+
                 return [
-                    'program' => $prog,
-                    'fiscal_year' => $fy,
-                    'total_allotment' => (float) $items->sum('allotment'),
+                    'key' => implode('||', [
+                        $fiscalYear ?? '',
+                        $rcCode ?? '',
+                        $accountCode ?? '',
+                        $particularName ?? '',
+                        $dateStart ?? '',
+                        $dateEnd ?? '',
+                    ]),
+                    'program' => $programLabels->implode(', '),
+                    'programs' => $programLabels->all(),
+                    'program_ids' => $programs->pluck('id')->map(fn($id) => (int) $id)->values()->all(),
+                    'fiscal_year' => $fiscalYear,
+                    'date_start' => $dateStart,
+                    'date_end' => $dateEnd,
+                    'rc_name' => $responsibilityCenter?->name,
+                    'rc_code' => $rcCode,
+                    'account_code' => $accountCode,
+                    'particular_name' => $particularName,
+                    'description' => trim((string) ($particular->description ?: $particular->name)),
+                    'total_allotment' => (float) ($particular->allotment ?? 0),
                 ];
             })
+            ->filter()
+            ->groupBy(fn($row) => $row['key'] ?? '')
+            ->filter(fn($items, $key) => $key !== '|||' && !empty($items->first()['program_ids'] ?? []))
+            ->map(function ($items, $key) {
+                $first = $items->first();
+                $programs = collect($items)
+                    ->flatMap(fn($item) => $item['programs'] ?? [])
+                    ->filter()
+                    ->unique()
+                    ->sort()
+                    ->values();
+                $programIds = collect($items)
+                    ->flatMap(fn($item) => $item['program_ids'] ?? [])
+                    ->filter()
+                    ->unique()
+                    ->values();
+
+                return [
+                    'key' => $key,
+                    'program' => $programs->implode(', '),
+                    'programs' => $programs->all(),
+                    'program_ids' => $programIds->all(),
+                    'fiscal_year' => $first['fiscal_year'] ?? '',
+                    'date_start' => $first['date_start'] ?? null,
+                    'date_end' => $first['date_end'] ?? null,
+                    'rc_name' => $first['rc_name'] ?? '',
+                    'rc_code' => $first['rc_code'] ?? '',
+                    'account_code' => $first['account_code'] ?? '',
+                    'particular_name' => $first['particular_name'] ?? '',
+                    'description' => $first['description'] ?? '',
+                    'total_allotment' => (float) collect($items)->sum('total_allotment'),
+                ];
+            })
+            ->sortBy([
+                ['rc_name', 'asc'],
+                ['account_code', 'asc'],
+                ['description', 'asc'],
+                ['date_start', 'asc'],
+                ['date_end', 'asc'],
+                ['fiscal_year', 'desc'],
+            ])
             ->values();
 
         $fiscalYears = $budgetParticulars->pluck('fiscal_year')->unique()->filter()->sort()->values();
 
-        // Build a lookup: program_id → program_name (for transactions that have scholarship_program_id)
-        $programIdToName = $allParticulars
-            ->filter(fn($p) => $p->scholarship_program_id && $p->program?->name)
-            ->mapWithKeys(fn($p) => [$p->scholarship_program_id => $p->program->name])
-            ->all();
-
-        // Build a lookup: rc_code + particular_name → [program_name, fiscal_year]
-        // (fallback for older transactions without scholarship_program_id)
-        $particularsLookup = $allParticulars
-            ->map(fn($p) => [
-                'rc_code'         => $p->responsibilityCenter?->code,
-                'particular_name' => $p->name,
-                'program_name'    => $p->program?->name,
-                'program_id'      => $p->scholarship_program_id,
-                'fiscal_year'     => $p->responsibilityCenter?->fiscal_year,
-            ])
-            ->filter(fn($p) => $p['rc_code'] && $p['program_name'])
+        // Build a lookup for matching paid/claimed transactions back to the originating
+        // RC/account allocation. Program assignments stay on the same allocation row.
+        $particularsLookup = $budgetParticulars
+            ->filter(fn($row) => $row['rc_code'] && $row['particular_name'])
             ->values();
 
         // Build a lookup: [program_id][rc_code] → fiscal_year
         // Scoped to program so we don't cross-contaminate fiscal years between programs
         $programRcFiscalYears = [];
-        foreach ($allParticulars as $p) {
-            $pid = $p->scholarship_program_id;
-            $rc  = $p->responsibilityCenter?->code;
-            $fy  = $p->responsibilityCenter?->fiscal_year;
-            if ($pid && $rc && $fy !== null) {
-                $programRcFiscalYears[$pid][$rc] = $fy;
+        foreach ($budgetParticulars as $row) {
+            $rc = $row['rc_code'];
+            $fy = $row['fiscal_year'];
+            foreach ($row['program_ids'] ?? [] as $pid) {
+                if ($pid && $rc && $fy !== null) {
+                    $programRcFiscalYears[$pid][$rc] = $fy;
+                }
             }
         }
 
@@ -198,59 +261,98 @@ class PaymentMonitoringController extends Controller
             ->whereNotNull('course_id')
             ->select('profile_id', 'course_id')
             ->get()
-            ->mapWithKeys(fn($r) => [$r->profile_id => $r->program?->name])
+            ->mapWithKeys(fn($r) => [$r->profile_id => $r->program?->id])
             ->filter()
             ->all();
 
         // Sum Paid/Claimed FundTransaction amounts directly — avoids active-scholar-only
         // limitation and the scholar_ids NULL issue from paymentData-based computation.
-        $disbursedByProgramYear = [];
+        $disbursedByAllocation = [];
         FundTransaction::whereIn('transaction_status', ['Paid', 'Claimed'])
-            ->select('responsibility_center', 'particulars_name', 'fiscal_year', 'amount', 'scholarship_program_id', 'scholar_ids')
+            ->select('responsibility_center', 'particulars_name', 'account_code', 'fiscal_year', 'date_obligated', 'created_at', 'amount', 'scholarship_program_id', 'scholar_ids')
             ->get()
-            ->each(function ($tx) use ($particularsLookup, $programIdToName, $programRcFiscalYears, $profileProgramMap, &$disbursedByProgramYear) {
-                // Prefer direct program ID match (new transactions)
-                if ($tx->scholarship_program_id && isset($programIdToName[$tx->scholarship_program_id])) {
-                    $prog = $programIdToName[$tx->scholarship_program_id];
-                    // Infer fiscal_year from the program's own RC, not from any RC in the system
+            ->each(function ($tx) use ($particularsLookup, $programRcFiscalYears, $profileProgramMap, &$disbursedByAllocation) {
+                $matches = $particularsLookup->filter(function ($particular) use ($tx) {
+                    $accountCodeMatches = blank($tx->account_code)
+                        || blank($particular['account_code'] ?? null)
+                        || $particular['account_code'] === $tx->account_code;
+
+                    return $particular['rc_code'] === $tx->responsibility_center
+                        && $particular['particular_name'] === $tx->particulars_name
+                        && $accountCodeMatches;
+                });
+
+                if ($tx->scholarship_program_id) {
+                    $matches = $matches->filter(function ($particular) use ($tx) {
+                        return in_array(
+                            (int) $tx->scholarship_program_id,
+                            array_map('intval', $particular['program_ids'] ?? []),
+                            true
+                        );
+                    });
+
                     $fy = $tx->fiscal_year
-                        ?? ($programRcFiscalYears[$tx->scholarship_program_id][$tx->responsibility_center] ?? '');
+                        ?? ($programRcFiscalYears[$tx->scholarship_program_id][$tx->responsibility_center] ?? null);
                 } else {
-                    // Legacy transactions without scholarship_program_id:
-                    // 1st choice — infer program from the scholars stored in the voucher.
-                    // This is the most accurate source because the scholars are always tied to a program.
-                    $prog = null;
                     $scholarArr = is_array($tx->scholar_ids)
                         ? $tx->scholar_ids
                         : json_decode($tx->scholar_ids ?? '[]', true);
-                    if (is_array($scholarArr)) {
-                        foreach ($scholarArr as $s) {
-                            $pid = is_array($s) ? ($s['profile_id'] ?? null) : $s;
-                            if ($pid && isset($profileProgramMap[$pid])) {
-                                $prog = $profileProgramMap[$pid];
-                                break;
-                            }
-                        }
+
+                    $inferredProgramIds = collect(is_array($scholarArr) ? $scholarArr : [])
+                        ->map(fn($scholar) => is_array($scholar) ? ($scholar['profile_id'] ?? null) : $scholar)
+                        ->filter()
+                        ->map(fn($profileId) => $profileProgramMap[$profileId] ?? null)
+                        ->filter()
+                        ->unique()
+                        ->values();
+
+                    if ($inferredProgramIds->isNotEmpty()) {
+                        $matches = $matches->filter(function ($particular) use ($inferredProgramIds) {
+                            return collect($particular['program_ids'] ?? [])
+                                ->map(fn($id) => (int) $id)
+                                ->intersect($inferredProgramIds)
+                                ->isNotEmpty();
+                        });
                     }
 
-                    // 2nd choice — fall back to rc_code + particular_name match
-                    if (!$prog) {
-                        $match = $particularsLookup->first(
-                            fn($p) => $p['rc_code'] === $tx->responsibility_center
-                                && $p['particular_name'] === $tx->particulars_name
-                        );
-                        if (!$match) return;
-                        $prog = $match['program_name'];
-                        $fy   = $tx->fiscal_year ?? ($match['fiscal_year'] ?? '');
-                    } else {
-                        // Infer fiscal_year scoped to the inferred program's RC
-                        $progId = array_search($prog, $programIdToName);
-                        $fy = $tx->fiscal_year
-                            ?? ($progId ? ($programRcFiscalYears[$progId][$tx->responsibility_center] ?? '') : '');
-                    }
+                    $fy = $tx->fiscal_year;
                 }
-                $disbursedByProgramYear[$prog][$fy] =
-                    ($disbursedByProgramYear[$prog][$fy] ?? 0.0) + (float) ($tx->amount ?? 0);
+
+                if (filled($fy)) {
+                    $matches = $matches->filter(
+                        fn($particular) => (string) ($particular['fiscal_year'] ?? '') === (string) $fy
+                    );
+                }
+
+                $transactionDate = substr((string) ($tx->date_obligated ?: $tx->created_at ?: ''), 0, 10);
+                if ($transactionDate) {
+                    $matches = $matches->filter(function ($particular) use ($transactionDate) {
+                        $dateStart = $particular['date_start'] ?? null;
+                        $dateEnd = $particular['date_end'] ?? null;
+
+                        if ($dateStart && $transactionDate < $dateStart) {
+                            return false;
+                        }
+
+                        if ($dateEnd && $transactionDate > $dateEnd) {
+                            return false;
+                        }
+
+                        return true;
+                    });
+                }
+
+                if (!isset($matches) || $matches->count() !== 1) {
+                    return;
+                }
+
+                $allocationKey = $matches->first()['key'] ?? null;
+                if (!$allocationKey) {
+                    return;
+                }
+
+                $disbursedByAllocation[$allocationKey] =
+                    ($disbursedByAllocation[$allocationKey] ?? 0.0) + (float) ($tx->amount ?? 0);
             });
 
         // Apply search filter
@@ -327,7 +429,7 @@ class PaymentMonitoringController extends Controller
             'paymentData' => $paymentData->values(),
             'availableStatuses' => $statuses,
             'budgetParticulars' => $budgetParticulars,
-            'disbursedByProgramYear' => $disbursedByProgramYear,
+            'disbursedByAllocation' => $disbursedByAllocation,
             'fiscalYears' => $fiscalYears,
             'filters' => [
                 'search' => $searchQuery,

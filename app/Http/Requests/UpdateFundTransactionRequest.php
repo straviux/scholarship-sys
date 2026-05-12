@@ -62,6 +62,9 @@ class UpdateFundTransactionRequest extends FormRequest
         return SystemOption::getByCategory('disbursement_type', false)
             ->pluck('value')
             ->filter()
+            ->map(fn($value) => $this->normalizeObrType($value))
+            ->filter()
+            ->unique()
             ->values()
             ->all();
     }

@@ -43,6 +43,15 @@ use Illuminate\Support\Facades\Gate;
 class ScholarshipProfileController extends Controller
 {
     private const CURRENT_SCHOLARSHIP_RECORD_STATUSES = ['pending', 'interviewed', 'approved', 'active'];
+    private const APPROVED_SCHOLARSHIP_RECORD_STATUSES = [
+        'approved',
+        'active',
+        'completed',
+        'completed-transferred',
+        'withdrawn',
+        'loa',
+        'suspended',
+    ];
 
     /**
      * Store a newly created resource in storage.
@@ -1247,8 +1256,7 @@ class ScholarshipProfileController extends Controller
 
     private function getInterviewedApplicantsBudgetAllocations(): array
     {
-        $allParticulars = Particular::with(['program', 'responsibilityCenter'])
-            ->whereNotNull('scholarship_program_id')
+        $allParticulars = Particular::with(['program', 'programs', 'responsibilityCenter'])
             ->whereNotNull('allotment')
             ->get();
 
@@ -1256,50 +1264,73 @@ class ScholarshipProfileController extends Controller
             return [];
         }
 
-        $budgetBuckets = $allParticulars
-            ->groupBy(fn($particular) => ($particular->program?->name ?? '') . '||' . ($particular->responsibilityCenter?->fiscal_year ?? '') . '||' . ($particular->responsibilityCenter?->code ?? ''))
-            ->filter(function ($items) {
-                $firstParticular = $items->first();
+        $particularProgramRows = $allParticulars
+            ->flatMap(function ($particular) {
+                $responsibilityCenter = $particular->responsibilityCenter;
 
-                return filled($firstParticular?->program?->name)
-                    && filled($firstParticular?->responsibilityCenter?->code);
+                return $particular->resolvedPrograms()->map(function ($program) use ($particular, $responsibilityCenter) {
+                    return [
+                        'program_id' => $program->id,
+                        'program_name' => $program->name,
+                        'rc_name' => $responsibilityCenter?->name,
+                        'rc_code' => $responsibilityCenter?->code,
+                        'particular_name' => $particular->name,
+                        'fiscal_year' => $responsibilityCenter?->fiscal_year,
+                        'allotment' => (float) ($particular->allotment ?? 0),
+                        'date_start' => $particular->date_approved?->format('Y-m-d'),
+                        'date_end' => $particular->date_expired?->format('Y-m-d'),
+                    ];
+                });
             })
+            ->filter(fn($row) => filled($row['program_id']) && filled($row['program_name']))
+            ->values();
+
+        $budgetBuckets = $particularProgramRows
+            ->groupBy(fn($row) => ($row['program_name'] ?? '') . '||' . ($row['fiscal_year'] ?? '') . '||' . ($row['rc_code'] ?? ''))
+            ->filter(fn($items) => filled($items[0]['program_name'] ?? null) && filled($items[0]['rc_code'] ?? null))
             ->map(function ($items, $key) {
                 [$program, $fiscalYear, $responsibilityCenterCode] = explode('||', $key, 3);
-                $firstParticular = $items->first();
+                $firstParticular = $items[0] ?? null;
 
                 return [
                     'key' => $key,
                     'program' => $program,
                     'fiscal_year' => $fiscalYear,
-                    'rc_name' => $firstParticular?->responsibilityCenter?->name,
+                    'rc_name' => $firstParticular['rc_name'] ?? null,
                     'rc_code' => $responsibilityCenterCode,
-                    'total_allotment' => (float) $items->sum('allotment'),
+                    'total_allotment' => (float) collect($items)->sum('allotment'),
+                    'program_ids' => collect($items)
+                        ->pluck('program_id')
+                        ->filter()
+                        ->map(fn($programId) => (int) $programId)
+                        ->unique()
+                        ->values()
+                        ->all(),
+                    'approval_windows' => collect($items)
+                        ->map(fn($item) => [
+                            'date_start' => $item['date_start'] ?? null,
+                            'date_end' => $item['date_end'] ?? null,
+                        ])
+                        ->unique(fn($window) => ($window['date_start'] ?? '') . '||' . ($window['date_end'] ?? ''))
+                        ->values()
+                        ->all(),
                 ];
             })
             ->values();
 
-        $programIdToName = $allParticulars
-            ->filter(fn($particular) => $particular->scholarship_program_id && $particular->program?->name)
-            ->mapWithKeys(fn($particular) => [$particular->scholarship_program_id => $particular->program->name])
+        $programIdToName = $particularProgramRows
+            ->mapWithKeys(fn($particular) => [$particular['program_id'] => $particular['program_name']])
             ->all();
 
-        $particularsLookup = $allParticulars
-            ->map(fn($particular) => [
-                'rc_code' => $particular->responsibilityCenter?->code,
-                'particular_name' => $particular->name,
-                'program_name' => $particular->program?->name,
-                'program_id' => $particular->scholarship_program_id,
-                'fiscal_year' => $particular->responsibilityCenter?->fiscal_year,
-            ])
+        $particularsLookup = $particularProgramRows
             ->filter(fn($particular) => $particular['rc_code'] && $particular['program_name'])
             ->values();
 
         $programRcFiscalYears = [];
-        foreach ($allParticulars as $particular) {
-            $programId = $particular->scholarship_program_id;
-            $responsibilityCenterCode = $particular->responsibilityCenter?->code;
-            $fiscalYear = $particular->responsibilityCenter?->fiscal_year;
+        foreach ($particularProgramRows as $particular) {
+            $programId = $particular['program_id'];
+            $responsibilityCenterCode = $particular['rc_code'];
+            $fiscalYear = $particular['fiscal_year'];
 
             if ($programId && $responsibilityCenterCode && $fiscalYear !== null) {
                 $programRcFiscalYears[$programId][$responsibilityCenterCode] = $fiscalYear;
@@ -1342,14 +1373,16 @@ class ScholarshipProfileController extends Controller
                     }
 
                     if (!$program) {
-                        $match = $particularsLookup->first(
+                        $matches = $particularsLookup->filter(
                             fn($particular) => $particular['rc_code'] === $transaction->responsibility_center
                                 && $particular['particular_name'] === $transaction->particulars_name
                         );
 
-                        if (!$match) {
+                        if ($matches->count() !== 1) {
                             return;
                         }
+
+                        $match = $matches->first();
 
                         $program = $match['program_name'];
                         $fiscalYear = $transaction->fiscal_year ?? ($match['fiscal_year'] ?? '');
@@ -1366,8 +1399,69 @@ class ScholarshipProfileController extends Controller
                     ($disbursedByAllocation[$program][$fiscalYear][$responsibilityCenterCode] ?? 0.0) + (float) ($transaction->amount ?? 0);
             });
 
+        $approvedScholarsToDateByAllocation = [];
+        ScholarshipRecord::query()
+            ->with('program')
+            ->select('profile_id', 'program_id', 'course_id', 'date_approved', 'unified_status')
+            ->whereNotNull('profile_id')
+            ->whereNotNull('date_approved')
+            ->whereIn('unified_status', self::APPROVED_SCHOLARSHIP_RECORD_STATUSES)
+            ->get()
+            ->each(function (ScholarshipRecord $record) use ($budgetBuckets, &$approvedScholarsToDateByAllocation) {
+                $programId = (int) ($record->program_id ?: $record->program?->id ?: 0);
+                $approvalDate = $record->date_approved?->format('Y-m-d');
+
+                if (! $programId || ! $approvalDate) {
+                    return;
+                }
+
+                $matches = $budgetBuckets->filter(function ($bucket) use ($programId, $approvalDate) {
+                    if (! in_array($programId, array_map('intval', $bucket['program_ids'] ?? []), true)) {
+                        return false;
+                    }
+
+                    if (filled($bucket['fiscal_year'] ?? null) && substr($approvalDate, 0, 4) !== (string) $bucket['fiscal_year']) {
+                        return false;
+                    }
+
+                    $windows = collect($bucket['approval_windows'] ?? [])
+                        ->filter(fn($window) => filled($window['date_start'] ?? null) || filled($window['date_end'] ?? null));
+
+                    if ($windows->isEmpty()) {
+                        return true;
+                    }
+
+                    return $windows->contains(function ($window) use ($approvalDate) {
+                        $dateStart = $window['date_start'] ?? null;
+                        $dateEnd = $window['date_end'] ?? null;
+
+                        if ($dateStart && $approvalDate < $dateStart) {
+                            return false;
+                        }
+
+                        if ($dateEnd && $approvalDate > $dateEnd) {
+                            return false;
+                        }
+
+                        return true;
+                    });
+                });
+
+                if ($matches->count() !== 1) {
+                    return;
+                }
+
+                $allocationKey = $matches->first()['key'] ?? null;
+
+                if (! $allocationKey) {
+                    return;
+                }
+
+                $approvedScholarsToDateByAllocation[$allocationKey][$record->profile_id] = true;
+            });
+
         return $budgetBuckets
-            ->map(function ($bucket) use ($disbursedByAllocation) {
+            ->map(function ($bucket) use ($approvedScholarsToDateByAllocation, $disbursedByAllocation) {
                 $disbursed = (float) ($disbursedByAllocation[$bucket['program']][$bucket['fiscal_year']][$bucket['rc_code']] ?? 0);
 
                 return [
@@ -1378,6 +1472,7 @@ class ScholarshipProfileController extends Controller
                     'rc_code' => $bucket['rc_code'],
                     'total_allotment' => $bucket['total_allotment'],
                     'disbursed' => $disbursed,
+                    'approved_scholars_to_date' => count($approvedScholarsToDateByAllocation[$bucket['key']] ?? []),
                 ];
             })
             ->sortBy([

@@ -154,6 +154,8 @@ class SystemOptionSeeder extends Seeder
                 'sort_order' => 1,
                 'is_active' => true,
                 'description' => 'Regular scholarship disbursement',
+                'particulars_template' => '<p>(EDUCATIONAL ASSISTANCE FOR {{course}} STUDENT, {{semester}}, {{academic_year}})</p><p>({{grant_provision}})</p>',
+                'explanation_template' => '<p>To obligate the payment for the {{grant_provision}} OF THE {{course}} STUDENT, {{year_level}}, {{semester_academic_year}} as per supporting papers hereto attached in the amount of...</p>',
             ],
             [
                 'category' => 'disbursement_type',
@@ -163,6 +165,8 @@ class SystemOptionSeeder extends Seeder
                 'sort_order' => 2,
                 'is_active' => true,
                 'description' => 'Reimbursement of expenses',
+                'particulars_template' => '<p>(REIMBURSEMENT FOR {{year_level}}, {{course}} STUDENT, {{semester_academic_year}})</p><p>({{school}})</p>',
+                'explanation_template' => '<p>To obligate the payment for the REIMBURSEMENT OF {{grant_provision}} OF {{course}} STUDENT, {{year_level}}, {{semester_academic_year}} at {{school}} as per supporting papers hereto attached in the amount of...</p>',
             ],
             [
                 'category' => 'disbursement_type',
@@ -172,6 +176,8 @@ class SystemOptionSeeder extends Seeder
                 'sort_order' => 3,
                 'is_active' => true,
                 'description' => 'Additional financial support',
+                'particulars_template' => '<p>(FINANCIAL ASSISTANCE FOR {{year_level}} {{academic_year}})</p><p>({{course}})</p><p>({{school}})</p>',
+                'explanation_template' => '<p>To obligate the payment for the FINANCIAL ASSISTANCE OF THE {{course}} as per supporting papers hereto attached in the amount of...</p>',
             ],
 
             // Priority Levels

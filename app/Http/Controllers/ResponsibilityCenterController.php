@@ -15,7 +15,7 @@ class ResponsibilityCenterController extends Controller
     public function index()
     {
         try {
-            $responsibilityCenters = ResponsibilityCenter::with(['particulars.program'])
+            $responsibilityCenters = ResponsibilityCenter::with(['particulars.program', 'particulars.programs'])
                 ->orderBy('code')
                 ->get();
 
@@ -155,20 +155,38 @@ class ResponsibilityCenterController extends Controller
             $responsibilityCenter = ResponsibilityCenter::findOrFail($id);
 
             $validated = $request->validate([
-                'name'                  => 'required|string',
-                'account_code'          => 'required|string',
-                'scholarship_program_id' => 'required|exists:scholarship_programs,id',
-                'allotment'             => 'required|numeric|min:0',
-                'date_approved'         => 'nullable|date',
-                'date_expired'          => 'nullable|date',
+                'name' => ['required', 'string'],
+                'description' => ['nullable', 'string'],
+                'account_code' => ['required', 'string'],
+                'scholarship_program_ids' => ['required', 'array', 'min:1'],
+                'scholarship_program_ids.*' => ['required', 'integer', 'exists:scholarship_programs,id'],
+                'allotment' => ['required', 'numeric', 'min:0'],
+                'date_approved' => ['nullable', 'date'],
+                'date_expired' => ['nullable', 'date'],
             ]);
 
-            $particular = $responsibilityCenter->particulars()->create($validated);
+            $programIds = $this->normalizeProgramIds($validated['scholarship_program_ids'] ?? []);
+
+            $particular = DB::transaction(function () use ($responsibilityCenter, $validated, $programIds) {
+                $particular = $responsibilityCenter->particulars()->create([
+                    'name' => $validated['name'],
+                    'description' => $validated['description'] ?? null,
+                    'account_code' => $validated['account_code'],
+                    'scholarship_program_id' => $programIds[0] ?? null,
+                    'allotment' => $validated['allotment'],
+                    'date_approved' => $validated['date_approved'] ?? null,
+                    'date_expired' => $validated['date_expired'] ?? null,
+                ]);
+
+                $particular->programs()->sync($programIds);
+
+                return $particular;
+            });
 
             return response()->json([
                 'success' => true,
                 'message' => 'Particular created successfully',
-                'data' => $particular->load('program')
+                'data' => $particular->load(['program', 'programs'])
             ], 201);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
@@ -200,20 +218,36 @@ class ResponsibilityCenterController extends Controller
             $particular = $responsibilityCenter->particulars()->findOrFail($particulerId);
 
             $validated = $request->validate([
-                'name'                  => 'required|string',
-                'account_code'          => 'required|string',
-                'scholarship_program_id' => 'required|exists:scholarship_programs,id',
-                'allotment'             => 'required|numeric|min:0',
-                'date_approved'         => 'nullable|date',
-                'date_expired'          => 'nullable|date',
+                'name' => ['required', 'string'],
+                'description' => ['nullable', 'string'],
+                'account_code' => ['required', 'string'],
+                'scholarship_program_ids' => ['required', 'array', 'min:1'],
+                'scholarship_program_ids.*' => ['required', 'integer', 'exists:scholarship_programs,id'],
+                'allotment' => ['required', 'numeric', 'min:0'],
+                'date_approved' => ['nullable', 'date'],
+                'date_expired' => ['nullable', 'date'],
             ]);
 
-            $particular->update($validated);
+            $programIds = $this->normalizeProgramIds($validated['scholarship_program_ids'] ?? []);
+
+            DB::transaction(function () use ($particular, $validated, $programIds) {
+                $particular->update([
+                    'name' => $validated['name'],
+                    'description' => $validated['description'] ?? null,
+                    'account_code' => $validated['account_code'],
+                    'scholarship_program_id' => $programIds[0] ?? null,
+                    'allotment' => $validated['allotment'],
+                    'date_approved' => $validated['date_approved'] ?? null,
+                    'date_expired' => $validated['date_expired'] ?? null,
+                ]);
+
+                $particular->programs()->sync($programIds);
+            });
 
             return response()->json([
                 'success' => true,
                 'message' => 'Particular updated successfully',
-                'data' => $particular->load('program')
+                'data' => $particular->load(['program', 'programs'])
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
@@ -262,5 +296,15 @@ class ResponsibilityCenterController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    private function normalizeProgramIds(array $programIds): array
+    {
+        return collect($programIds)
+            ->map(fn($programId) => (int) $programId)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 }

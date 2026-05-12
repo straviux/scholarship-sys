@@ -39,7 +39,7 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
-    disbursedByProgramYear: {
+    disbursedByAllocation: {
         type: Object,
         default: () => ({}),
     },
@@ -641,7 +641,7 @@ const groupedData = computed(() => {
 
         <!-- Budget Monitoring Modal -->
         <BudgetMonitoringModal v-if="showBudgetModal" v-model:visible="showBudgetModal"
-            :budgetParticulars="props.budgetParticulars" :disbursedByProgramYear="props.disbursedByProgramYear"
+            :budgetParticulars="props.budgetParticulars" :disbursedByAllocation="props.disbursedByAllocation"
             :fiscalYears="props.fiscalYears" @preview="onBudgetReportPreview" />
 
         <!-- OBR Allotment Report Modal -->

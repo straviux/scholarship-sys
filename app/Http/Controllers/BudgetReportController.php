@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FundTransaction;
+use App\Models\ScholarshipRecord;
 use App\Models\ScholarshipProgram;
 use App\Models\ResponsibilityCenter;
 use App\Models\Particular;
@@ -38,7 +39,9 @@ class BudgetReportController extends Controller
             ->whereIn('transaction_status', self::STATUSES)
             ->orderBy('date_obligated')
             ->orderBy('created_at')
-            ->get();
+            ->get()
+            ->filter(fn($transaction) => $this->transactionMatchesProgram($transaction, $request->integer('program_id')))
+            ->values();
 
         $rows = $transactions->map(function ($ft) {
             return [
@@ -78,7 +81,7 @@ class BudgetReportController extends Controller
             'fiscal_year' => 'required|string',
         ]);
 
-        $rcIds = Particular::where('scholarship_program_id', $request->integer('program_id'))
+        $rcIds = Particular::forScholarshipProgram($request->integer('program_id'))
             ->whereHas('responsibilityCenter', fn($q) => $q->where('fiscal_year', $request->get('fiscal_year')))
             ->pluck('responsibility_center_id')
             ->unique();
@@ -101,10 +104,55 @@ class BudgetReportController extends Controller
         ]);
 
         $particulars = Particular::where('responsibility_center_id', $request->integer('rc_id'))
-            ->where('scholarship_program_id', $request->integer('program_id'))
+            ->forScholarshipProgram($request->integer('program_id'))
             ->orderBy('name')
             ->get(['id', 'name', 'account_code', 'allotment']);
 
         return response()->json($particulars);
+    }
+
+    private function transactionMatchesProgram(FundTransaction $transaction, int $programId): bool
+    {
+        if ((int) ($transaction->scholarship_program_id ?? 0) === $programId) {
+            return true;
+        }
+
+        $scholarIds = is_array($transaction->scholar_ids)
+            ? $transaction->scholar_ids
+            : json_decode($transaction->scholar_ids ?? '[]', true);
+
+        if (!is_array($scholarIds) || empty($scholarIds)) {
+            return false;
+        }
+
+        $profileIds = collect($scholarIds)
+            ->map(fn($scholarId) => is_array($scholarId) ? ($scholarId['profile_id'] ?? null) : $scholarId)
+            ->filter()
+            ->values();
+
+        if ($profileIds->isEmpty()) {
+            return false;
+        }
+
+        $matchedProfileIds = ScholarshipRecord::query()
+            ->whereIn('profile_id', $profileIds)
+            ->whereNotNull('course_id')
+            ->pluck('course_id', 'profile_id');
+
+        if ($matchedProfileIds->isEmpty()) {
+            return false;
+        }
+
+        $programIds = \App\Models\Course::query()
+            ->whereIn('id', $matchedProfileIds->values())
+            ->pluck('scholarship_program_id', 'id');
+
+        foreach ($matchedProfileIds as $courseId) {
+            if ((int) ($programIds[$courseId] ?? 0) === $programId) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
