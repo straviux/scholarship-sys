@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, watch, onBeforeUnmount } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { toast } from '@/utils/toast';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     show: {
@@ -176,52 +177,13 @@ const saveJpmData = () => {
         }
     });
 };
-
-/* ── Drag ── */
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-const modalStyle = computed(() => ({
-    width: '560px',
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-}));
-
-function onDragStart(e) {
-    if (e.target.closest('button, input, textarea, select, a, .p-select, .p-checkbox, .p-editor')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-});
 </script>
 
 <template>
-    <Dialog :visible="show" modal @update:visible="val => !val && closeModal()"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="modalStyle">
-                <!-- Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">JPM Tagging</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="saveJpmData">Save</button>
-                </div>
-
-                <!-- Body -->
-                <div class="ios-body" v-if="profile">
+    <IosModal :visible="show" title="JPM Tagging" width="560px" max-width="95vw"
+        body-style="padding: 0 16px;" :show-action="true" action-label="Save" @action="saveJpmData"
+        @update:visible="val => !val && closeModal()">
+        <div v-if="profile">
                     <!-- Applicant Info -->
                     <div class="ios-section">
                         <div class="ios-section-label" style="display: flex; align-items: center; justify-content: space-between;">
@@ -329,10 +291,8 @@ onBeforeUnmount(() => {
                     </div>
 
                     <div style="height: 20px;"></div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+        </div>
+    </IosModal>
 </template>
 
 <style scoped>
@@ -357,19 +317,5 @@ onBeforeUnmount(() => {
 /* Dark override for JpmModal-unique .ios-copy-btn */
 .dark .ios-copy-btn {
     color: #9ca3af !important;
-}
-
-.ios-dialog-root.p-dialog {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-    width: auto !important;
-}
-
-.ios-dialog-mask {
-    background: rgba(0, 0, 0, 0.4);
 }
 </style>

@@ -304,8 +304,9 @@
 
 
         <!-- Add/Edit Disbursement Modal -->
-        <Dialog v-model:visible="showAddModal" modal :header="editMode ? 'Edit Disbursement' : 'Add Disbursement'"
-            :style="{ width: '50vw' }">
+        <IosModal :visible="showAddModal" :title="editMode ? 'Edit Disbursement' : 'Add Disbursement'" width="50vw"
+            max-width="95vw" :show-action="true" :action-label="editMode ? 'Update' : 'Create'" :loading="saving"
+            @action="saveDisbursement" @close="closeModal" @update:visible="showAddModal = $event">
             <div class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -389,17 +390,12 @@
                     </Editor>
                 </div>
             </div>
-
-            <template #footer>
-                <AppButton label="Cancel" severity="secondary" @click="closeModal" outlined size="small" />
-                <AppButton :label="editMode ? 'Update' : 'Create'" @click="saveDisbursement" :loading="saving"
-                    size="small" />
-            </template>
-        </Dialog>
+        </IosModal>
 
         <!-- Manage Cheque Modal -->
-        <Dialog v-model:visible="showChequeModal" header="Manage Cheque" :style="{ width: '40vw', zIndex: 1100 }"
-            appendTo="body">
+        <IosModal v-model:visible="showChequeModal" title="Manage Cheque" width="40vw" max-width="95vw"
+            :show-action="true" :action-label="chequeEditMode ? 'Update' : 'Add Cheque'" :loading="saving"
+            :dialog-style="{ zIndex: 1100 }" appendTo="body" @action="saveCheque">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cheque No. *</label>
@@ -433,27 +429,21 @@
                     </Editor>
                 </div>
             </div>
-
-            <template #footer>
-                <AppButton label="Cancel" severity="secondary" @click="showChequeModal = false" outlined size="small" />
-                <AppButton :label="chequeEditMode ? 'Update' : 'Add Cheque'" @click="saveCheque" :loading="saving"
-                    size="small" />
-            </template>
-        </Dialog>
+        </IosModal>
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showDeleteDialog" modal header="Confirm Delete" :style="{ width: '30vw' }">
+        <IosModal v-model:visible="showDeleteDialog" title="Confirm Delete" width="30vw" max-width="95vw"
+            :show-action="true" action-label="Delete" action-class="ios-nav-destructive" :loading="deleting"
+            @action="deleteDisbursement">
             <p>Are you sure you want to delete this disbursement?</p>
-            <template #footer>
-                <AppButton label="Cancel" severity="secondary" @click="showDeleteDialog = false" outlined
-                    size="small" />
-                <AppButton label="Delete" severity="danger" @click="deleteDisbursement" :loading="deleting"
-                    size="small" />
-            </template>
-        </Dialog>
+        </IosModal>
 
         <!-- Manage Attachments Modal -->
-        <Dialog v-model:visible="showAttachmentsModal" modal header="Manage Attachments" :style="{ width: '50vw' }">
+        <IosModal :visible="showAttachmentsModal" title="Manage Attachments" width="50vw" max-width="95vw"
+            :show-action="hasPermission('applicants.edit')"
+            action-label="Upload" :loading="uploading"
+            :action-disabled="!attachmentForm.file || !attachmentForm.attachment_type" @action="uploadAttachment"
+            @close="closeAttachmentsModal" @update:visible="showAttachmentsModal = $event">
             <div class="space-y-4">
                 <!-- Existing Attachments -->
                 <div
@@ -514,21 +504,14 @@
                     </div>
                 </div>
             </div>
-
-            <template #footer>
-                <AppButton label="Cancel" severity="secondary" @click="closeAttachmentsModal" outlined size="small" />
-                <AppButton v-if="hasPermission('applicants.edit')" label="Upload" @click="uploadAttachment"
-                    :loading="uploading" :disabled="!attachmentForm.file || !attachmentForm.attachment_type"
-                    size="small" />
-            </template>
-        </Dialog>
+        </IosModal>
 
         <!-- View Attachment Modal -->
         <ViewAttachmentModal v-model:visible="showViewerModal" :attachment="viewerAttachment" />
 
         <!-- QR Code Modal -->
-        <Dialog v-model:visible="showQrModal" modal header="Mobile Upload QR Code"
-            :style="{ width: '30vw', minWidth: '400px' }">
+        <IosModal v-model:visible="showQrModal" title="Mobile Upload QR Code" width="30vw" min-width="400px"
+            max-width="95vw">
             <div v-if="qrCodeData" class="text-center space-y-4">
                 <!-- QR Code -->
                 <div
@@ -575,11 +558,7 @@
                     </div>
                 </div>
             </div>
-
-            <template #footer>
-                <AppButton label="Close" severity="secondary" @click="showQrModal = false" />
-            </template>
-        </Dialog>
+        </IosModal>
     </div>
 </template>
 
@@ -590,6 +569,7 @@ import { toast } from '@/utils/toast';
 import { usePermission } from '@/composable/permissions';
 import { useSystemOptions } from '@/composables/useSystemOptions';
 import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';

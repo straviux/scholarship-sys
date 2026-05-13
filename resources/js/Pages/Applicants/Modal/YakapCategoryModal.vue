@@ -1,7 +1,8 @@
 <script setup>
-import { ref, watch, computed, onBeforeUnmount } from 'vue';
+import { ref, watch, computed } from 'vue';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     visible: {
@@ -58,62 +59,12 @@ const resetForm = () => {
     selectedCategory.value = 'yakap-capitol';
     selectedLocation.value = null;
 };
-
-/* ── Drag ── */
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-const modalStyle = computed(() => ({
-    width: 'calc(100vw - 24px)',
-    maxWidth: '460px',
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-}));
-
-function onDragStart(e) {
-    if (e.target.closest('button, input, textarea, select, a, .p-select, .p-checkbox, .p-autocomplete')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-});
-
-// Reset drag position when modal opens
-watch(() => props.visible, (val) => {
-    if (val) {
-        dragOffset.value = { x: 0, y: 0 };
-    }
-});
 </script>
 
 <template>
-    <Dialog :visible="visible" modal @update:visible="val => !val && handleCancel()"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="modalStyle">
-                <!-- Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="handleCancel">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">YAKAP Category</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="handleConfirm" :disabled="!canConfirm">
-                        <AppIcon name="arrow-right" :size="14" />
-                    </button>
-                </div>
-
-                <!-- Body -->
-                <div class="ios-body">
+    <IosModal :visible="visible" title="YAKAP Category" width="460px" max-width="calc(100vw - 24px)"
+        body-style="padding: 0 16px;" :show-action="true" action-icon="arrow-right"
+        :action-disabled="!canConfirm" @action="handleConfirm" @update:visible="val => !val && handleCancel()">
                     <!-- Description -->
                     <div class="ios-section">
                         <div class="ios-section-footer" style="padding: 0 16px;">
@@ -163,8 +114,5 @@ watch(() => props.visible, (val) => {
                     </div>
 
                     <div style="height: 20px;"></div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 </template>

@@ -1,7 +1,8 @@
 <script setup>
-import { watch, ref, reactive, inject, computed, onBeforeUnmount } from "vue";
+import { watch, ref, reactive, inject } from "vue";
 import { toast } from '@/utils/toast';
 import axios from 'axios';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     show: Boolean,
@@ -151,54 +152,13 @@ const formatPriorityName = (priority) => {
 const formatDate = (date) => {
     return new Date(date).toLocaleDateString();
 };
-
-/* ── Drag ── */
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-const modalStyle = computed(() => ({
-    width: '500px',
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-}));
-
-function onDragStart(e) {
-    if (e.target.closest('button, input, textarea, select, a, .p-select, .p-checkbox')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-});
 </script>
 
 <template>
-    <Dialog :visible="show" modal @update:visible="val => !val && closeModal()"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="modalStyle">
-                <!-- Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal" :disabled="isSubmitting">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">Priority Level</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="submit" :disabled="isSubmitting">
-                        {{ isSubmitting ? 'Saving...' : 'Assign' }}
-                    </button>
-                </div>
-
-                <!-- Body -->
-                <div class="ios-body" v-if="applicant">
+    <IosModal :visible="show" title="Priority Level" width="500px" max-width="95vw"
+        body-style="padding: 0 16px;" :show-action="true" action-label="Assign" :loading="isSubmitting"
+        @action="submit" @update:visible="val => !val && closeModal()">
+        <div v-if="applicant">
                     <!-- Applicant Info -->
                     <div class="ios-section">
                         <div class="ios-section-label">Applicant</div>
@@ -274,10 +234,8 @@ onBeforeUnmount(() => {
                     </div>
 
                     <div style="height: 20px;"></div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+        </div>
+    </IosModal>
 </template>
 
 <style scoped>

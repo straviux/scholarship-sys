@@ -145,6 +145,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
 import AppIcon from '@/Components/ui/AppIcon.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const DEFAULT_PREPARED_BY = 'NUR-AINA S. IBRAHIM';
 const DEFAULT_PREPARED_BY_POSITION = 'Program Manager';

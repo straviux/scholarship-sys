@@ -59,7 +59,7 @@
                 </button>
 
                 <!-- Theme Item -->
-                <button @click="showThemeDialog = true"
+                <button @click="openThemeDialog"
                     class="w-full bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4 flex items-center justify-between cursor-pointer">
                     <div class="flex items-center space-x-4">
                         <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -75,8 +75,8 @@
             </div>
 
             <!-- Profile Photo Dialog -->
-            <Dialog v-model:visible="showPhotoDialog" header="Change Profile Photo" :modal="true"
-                class="w-full md:w-[550px]" @hide="closePhotoDialog">
+            <IosModal :visible="showPhotoDialog" title="Change Profile Photo" width="550px" max-width="95vw"
+                body-style="padding: 16px;" @update:visible="showPhotoDialog = $event" @close="closePhotoDialog">
                 <div class="space-y-4">
                     <!-- Current Profile Photo Display -->
                     <div class="text-center">
@@ -164,11 +164,12 @@
                             @click="submitPhotoForm" />
                     </div>
                 </div>
-            </Dialog>
+            </IosModal>
 
             <!-- Change Password Dialog -->
-            <Dialog v-model:visible="showPasswordDialog" header="Change Password" :modal="true" class="w-full md:w-96"
-                @hide="passwordForm.reset()">
+            <IosModal :visible="showPasswordDialog" title="Change Password" width="420px" max-width="95vw"
+                body-style="padding: 16px;" @update:visible="showPasswordDialog = $event"
+                @close="passwordForm.reset()">
                 <form @submit.prevent="submitPasswordForm" class="space-y-4">
                     <!-- Current Password -->
                     <div>
@@ -216,11 +217,11 @@
                             class="flex-1" />
                     </div>
                 </form>
-            </Dialog>
+            </IosModal>
 
             <!-- Profile Dialog -->
-            <Dialog v-model:visible="showProfileDialog" header="Profile Information" :modal="true"
-                class="w-full md:w-96">
+            <IosModal :visible="showProfileDialog" title="Profile Information" width="420px" max-width="95vw"
+                body-style="padding: 16px;" @update:visible="showProfileDialog = $event">
                 <form @submit.prevent="submitProfileForm" class="space-y-4">
                     <!-- Name -->
                     <div>
@@ -267,11 +268,11 @@
                             :loading="profileForm.processing" class="flex-1" />
                     </div>
                 </form>
-            </Dialog>
+            </IosModal>
 
             <!-- Theme Dialog -->
-            <Dialog v-model:visible="showThemeDialog" header="Theme Preference" :modal="true" class="w-full md:w-96"
-                @show="selectedTheme = theme">
+            <IosModal :visible="showThemeDialog" title="Theme Preference" width="420px" max-width="95vw"
+                body-style="padding: 16px;" @update:visible="showThemeDialog = $event">
                 <div class="space-y-4">
                     <p class="text-gray-700 text-sm">Select your preferred theme</p>
 
@@ -319,11 +320,11 @@
                             @click="showThemeDialog = false" />
                     </div>
                 </div>
-            </Dialog>
+            </IosModal>
 
             <!-- QR Code Modal -->
-            <Dialog v-model:visible="showQrModal" header="Upload Photo via QR Code" :modal="true"
-                class="w-full md:w-[550px]">
+            <IosModal :visible="showQrModal" title="Upload Photo via QR Code" width="550px" max-width="95vw"
+                body-style="padding: 16px;" @update:visible="showQrModal = $event">
                 <div v-if="qrCodeData" class="space-y-4">
                     <!-- QR Code Display -->
                     <div class="flex justify-center">
@@ -362,7 +363,7 @@
                     <Button type="button" label="Close" severity="secondary" outlined class="w-full"
                         @click="showQrModal = false" />
                 </div>
-            </Dialog>
+            </IosModal>
         </div>
     </AdminLayout>
 </template>
@@ -374,6 +375,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import axios from 'axios';
 import { toast } from '@/utils/toast';
 import { useTheme } from '@/composables/useTheme';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const page = usePage();
 
@@ -430,6 +432,11 @@ const { theme, setTheme } = useTheme();
 // Local copy for dialog — reflects live changes; closes on Apply
 const selectedTheme = ref(theme.value);
 watch(selectedTheme, (val) => setTheme(val));
+
+const openThemeDialog = () => {
+    selectedTheme.value = theme.value;
+    showThemeDialog.value = true;
+};
 
 // QR code state
 const showQrModal = ref(false);

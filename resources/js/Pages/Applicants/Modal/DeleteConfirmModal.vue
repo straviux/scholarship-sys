@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed, onBeforeUnmount } from 'vue';
+import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { usePermission } from '@/composable/permissions';
 import { toast } from '@/utils/toast';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     show: Boolean,
@@ -40,56 +41,13 @@ const deleteApplicant = () => {
         }
     });
 };
-
-/* ── Drag ── */
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-const modalStyle = computed(() => ({
-    width: 'calc(100vw - 24px)',
-    maxWidth: '460px',
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-}));
-
-function onDragStart(e) {
-    if (e.target.closest('button, a')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-});
 </script>
 
 <template>
-    <Dialog :visible="show" modal @update:visible="val => !val && close()"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="modalStyle">
-                <!-- Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">Confirm Deletion</span>
-                    <button class="ios-nav-btn ios-nav-action ios-nav-destructive" @click="deleteApplicant"
-                        :disabled="deleting">
-                        {{ deleting ? 'Deleting...' : 'Delete' }}
-                    </button>
-                </div>
-
-                <!-- Body -->
-                <div class="ios-body" v-if="applicant">
+    <IosModal :visible="show" title="Confirm Deletion" width="460px" max-width="calc(100vw - 24px)"
+        body-style="padding: 0 16px;" :show-action="true" action-label="Delete" :loading="deleting"
+        action-class="ios-nav-destructive" @action="deleteApplicant" @update:visible="val => !val && close()">
+        <div v-if="applicant">
                     <!-- Warning Section -->
                     <div class="ios-section">
                         <div class="ios-card">
@@ -132,10 +90,8 @@ onBeforeUnmount(() => {
 
                     <!-- Bottom spacing -->
                     <div style="height: 20px;"></div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+        </div>
+    </IosModal>
 </template>
 
 <style scoped>

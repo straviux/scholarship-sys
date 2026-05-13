@@ -1,5 +1,5 @@
 ﻿<script setup>
-import { ref, reactive, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
@@ -8,6 +8,7 @@ import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 import logger from '@/utils/logger';
 import { normalizeDocumentHtml } from '@/utils/sanitize';
 import { quickAnimateFrom } from '@/composables/useGSAPAnimation';
@@ -1335,68 +1336,38 @@ watch(step, (newStep, oldStep) => {
 });
 
 
-// â”€â”€â”€ Drag logic â”€â”€â”€
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-
 const wizardModalStyle = computed(() => ({
     width: '90vw',
     maxWidth: step.value === 1 ? '900px' : step.value === 2 ? '1040px' : step.value === 4 ? '1200px' : '640px',
     height: step.value === 1 ? '85vh' : 'auto',
     minHeight: step.value === 1 ? '600px' : 'auto',
     maxHeight: 'calc(100vh - 2rem)',
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
 }));
-
-function onDragStart(e) {
-    if (e.target.closest('button')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-});
 </script>
 
 <template>
-    <Dialog v-model:visible="isOpen" :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
-        @hide="closeWizard">
-        <template #container>
-            <div class="ios-modal" :style="wizardModalStyle">
-                <!-- iOS Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button v-if="step === 1" class="ios-nav-btn ios-nav-cancel" @click="closeWizard">
-                        <AppIcon name="times" />
-                    </button>
-                    <button v-else class="ios-nav-btn ios-nav-cancel" @click="previousStep">
-                        <AppIcon name="arrow-left" :size="13" />
-                    </button>
-                    <span class="ios-nav-title">{{ getStepTitle() }}</span>
-                    <button v-if="step < 5" class="ios-nav-btn ios-nav-action" @click="nextStep"
-                        :disabled="step === 1 && selectedCount === 0">
-                        <AppIcon name="arrow-right" :size="13" />
-                    </button>
-                    <button v-else class="ios-nav-btn ios-nav-action" @click="handleSubmit" :disabled="loading">
-                        <AppIcon v-if="loading" name="spinner" :size="12" style="margin-right: 3px;" />
-                        <AppIcon v-else-if="props.mode === 'edit'" name="save" :size="13" />
-                        <AppIcon v-else name="check" :size="13" />
-                    </button>
-                </div>
-                <div ref="wizardContentRef" class="ios-body">
+    <IosModal v-model:visible="isOpen" :title="getStepTitle()" :modal-content-style="wizardModalStyle"
+        body-style="padding: 0;" @close="closeWizard">
+        <template #header-left>
+            <button v-if="step === 1" class="ios-nav-btn ios-nav-cancel" @click="closeWizard">
+                <AppIcon name="times" />
+            </button>
+            <button v-else class="ios-nav-btn ios-nav-cancel" @click="previousStep">
+                <AppIcon name="arrow-left" :size="13" />
+            </button>
+        </template>
+        <template #header-right>
+            <button v-if="step < 5" class="ios-nav-btn ios-nav-action" @click="nextStep"
+                :disabled="step === 1 && selectedCount === 0">
+                <AppIcon name="arrow-right" :size="13" />
+            </button>
+            <button v-else class="ios-nav-btn ios-nav-action" @click="handleSubmit" :disabled="loading">
+                <AppIcon v-if="loading" name="spinner" :size="12" style="margin-right: 3px;" />
+                <AppIcon v-else-if="props.mode === 'edit'" name="save" :size="13" />
+                <AppIcon v-else name="check" :size="13" />
+            </button>
+        </template>
+        <div ref="wizardContentRef" class="ios-body">
                     <div class="space-y-4 short:space-y-2" style="padding-top: 12px; padding-bottom: 24px;">
                         <!-- Progress Bar -->
                         <div class="space-y-2">
@@ -1947,9 +1918,7 @@ onBeforeUnmount(() => {
 
                     </div><!-- end space-y-6 -->
                 </div><!-- end ios-body / wizardContentRef -->
-            </div><!-- end ios-modal -->
-        </template>
-    </Dialog>
+    </IosModal>
 </template>
 
 <style scoped>

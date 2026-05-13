@@ -1,11 +1,10 @@
 ﻿<script setup>
 import { ref, computed, watch } from 'vue';
-import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
 import ProgressSpinner from 'primevue/progressspinner';
 import AppIcon from '@/Components/ui/AppIcon.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
-import { useDraggableModal } from '@/composables/useDraggableModal';
 import { usePdfPrint, renderVueTemplate } from '@/composables/usePdfPrint';
 import BudgetReportTemplate from '@/Pages/PaymentMonitoring/Pdf/BudgetReportTemplate.vue';
 import { exportBudgetReportExcel } from '@/Pages/PaymentMonitoring/Excel/BudgetReportExcel.js';
@@ -18,9 +17,6 @@ const props = defineProps({
 const emit = defineEmits(['update:visible', 'preview']);
 
 function close() { emit('update:visible', false); }
-
-/* Draggable  */
-const { dragStyle, onDragStart, resetDrag } = useDraggableModal();
 
 /*  PDF builder  */
 const { buildHtmlDoc } = usePdfPrint();
@@ -96,6 +92,12 @@ watch(chosenRc, () => {
     if (chosenRc.value) loadParticulars();
 });
 
+watch(() => props.visible, (visible) => {
+    if (visible) {
+        handleOpen();
+    }
+});
+
 /*  Generate Excel  */
 async function generateExcel() {
     if (!canGenerate.value) return;
@@ -163,7 +165,6 @@ async function generateReport() {
 }
 
 function handleOpen() {
-    resetDrag();
     chosenProgram.value = null;
     chosenFiscalYear.value = null;
     chosenRc.value = null;
@@ -175,25 +176,10 @@ function handleOpen() {
 </script>
 
 <template>
-    <Dialog :visible="visible" @update:visible="emit('update:visible', $event)" modal @show="handleOpen"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal budget-report-modal" :style="dragStyle">
-
-                <!-- iOS Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close" v-tooltip.bottom="'Close'">
-                        <AppIcon name="times" />
-                    </button>
-                    <span class="ios-nav-title">Budget / Allotment Report</span>
-                    <button class="ios-nav-btn ios-nav-action" :disabled="!canGenerate || loading || loadingExcel"
-                        @click="generateReport" v-tooltip.bottom="'Generate & Preview PDF'">
-                        <AppIcon :name="loading ? 'spinner' : 'check'" />
-                    </button>
-                </div>
-
-                <!-- Body -->
-                <div class="ios-body budget-report-body">
+    <IosModal :visible="visible" title="Budget / Allotment Report" modal-class="budget-report-modal"
+        body-class="budget-report-body" min-width="460px" max-width="92vw" :show-action="true"
+        :loading="loading" :action-disabled="!canGenerate || loading || loadingExcel" @action="generateReport"
+        @update:visible="emit('update:visible', $event)">
 
                     <!-- Loading -->
                     <div v-if="loading" class="flex flex-col items-center justify-center py-16 gap-4">
@@ -285,10 +271,7 @@ function handleOpen() {
                         </div>
                     </template>
 
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 </template>
 
 <style scoped>

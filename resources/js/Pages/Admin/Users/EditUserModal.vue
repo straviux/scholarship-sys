@@ -1,6 +1,6 @@
 <template>
-    <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal header="Edit User"
-        :style="{ width: 'calc(100vw - 2rem)', maxWidth: '500px' }" :closable="true">
+    <IosModal :visible="show" title="Edit User" width="500px" max-width="calc(100vw - 2rem)"
+        body-style="padding: 16px;" @update:visible="val => emit('update:show', val)">
         <form @submit.prevent="submit" class="space-y-6" v-if="user">
             <!-- Name Field -->
             <div class="field">
@@ -68,22 +68,21 @@
                     </div>
                 </div>
             </div>
-        </form>
 
-        <template #footer>
-            <div class="flex justify-end gap-2">
+            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
                 <Button label="Cancel" severity="secondary" @click="closeModal" outlined />
                 <AppButton label="Update User" severity="info" @click="submit" :loading="form.processing"
                     icon="pen-to-square" />
             </div>
-        </template>
-    </Dialog>
+        </form>
+    </IosModal>
 </template>
 
 <script setup>
 import { useForm } from "@inertiajs/vue3";
 import { computed, watch } from "vue";
 import { toast } from '@/utils/toast';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     show: Boolean,

@@ -172,8 +172,8 @@
         </div>
 
         <!-- Add/Edit Dialog -->
-        <Dialog v-model:visible="showDialog" :header="dialogMode === 'add' ? 'Add New Option' : 'Edit Option'"
-            :modal="true" :style="{ width: '600px' }">
+        <IosModal :visible="showDialog" :title="dialogMode === 'add' ? 'Add New Option' : 'Edit Option'"
+            width="600px" max-width="95vw" body-style="padding: 16px;" @update:visible="showDialog = $event">
             <form @submit.prevent="submitForm" class="space-y-4">
                 <div v-if="dialogMode === 'add'" class="flex flex-col">
                     <label class="text-sm font-medium text-gray-700 mb-2">Category *</label>
@@ -276,10 +276,11 @@
                         type="submit" :loading="form.processing" />
                 </div>
             </form>
-        </Dialog>
+        </IosModal>
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showDeleteDialog" header="Confirm Delete" :modal="true" :style="{ width: '450px' }">
+        <IosModal :visible="showDeleteDialog" title="Confirm Delete" width="450px" max-width="95vw"
+            body-style="padding: 16px;" @update:visible="showDeleteDialog = $event">
             <div class="flex items-start gap-3">
                 <AppIcon name="exclamation-triangle" class="text-orange-500 text-2xl" />
                 <div>
@@ -294,11 +295,11 @@
                     </p>
                 </div>
             </div>
-            <template #footer>
+            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
                 <Button label="Cancel" severity="secondary" outlined @click="showDeleteDialog = false" />
                 <Button label="Delete" severity="danger" @click="deleteOption" :loading="deleteForm.processing" />
-            </template>
-        </Dialog>
+            </div>
+        </IosModal>
     </AdminLayout>
 </template>
 
@@ -309,6 +310,7 @@ import Editor from 'primevue/editor';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     options: Object,

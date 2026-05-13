@@ -1,27 +1,16 @@
 <template>
-    <Dialog :visible="visible" modal :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }"
-        @update:visible="val => emit('update:visible', val)">
-        <template #container>
-            <div class="ios-modal" :style="[{ width: '99vw', maxWidth: '1520px' }, dragStyle]">
-
-                <!-- Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
-                        <AppIcon name="times" />
-                    </button>
-                    <span class="ios-nav-title">Budget Monitoring</span>
-                    <button class="ios-nav-btn" style="right:58px;color:#34C759" @click="exportExcel"
-                        :disabled="summary.length === 0" v-tooltip.bottom="'Download Excel'">
-                        <AppIcon name="file-excel" />
-                    </button>
-                    <button class="ios-nav-btn ios-nav-action" @click="generateReport" :disabled="summary.length === 0"
-                        v-tooltip.bottom="'Print Report'">
-                        <AppIcon name="print" />
-                    </button>
-                </div>
-
-                <!-- Body -->
-                <div class="ios-body" style="padding: 20px;">
+    <IosModal :visible="visible" title="Budget Monitoring" width="99vw" max-width="1520px"
+        body-style="padding: 20px;" @update:visible="val => emit('update:visible', val)">
+        <template #header-right>
+            <button class="ios-nav-btn" style="right:58px;color:#34C759" @click="exportExcel"
+                :disabled="summary.length === 0" v-tooltip.bottom="'Download Excel'">
+                <AppIcon name="file-excel" />
+            </button>
+            <button class="ios-nav-btn ios-nav-action" @click="generateReport" :disabled="summary.length === 0"
+                v-tooltip.bottom="'Print Report'">
+                <AppIcon name="print" />
+            </button>
+        </template>
 
                     <!-- Fiscal Year Filter row -->
                     <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-5">
@@ -156,20 +145,16 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 </template>
 
 <script setup>
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import { ref, computed } from 'vue';
-import { useDraggableModal } from '@/composables/useDraggableModal';
 import { usePdfPrint, renderVueTemplate } from '@/composables/usePdfPrint';
 import BudgetMonitoringTemplate from '@/Pages/PaymentMonitoring/Pdf/BudgetMonitoringTemplate.vue';
 import { exportBudgetMonitoringExcel } from '@/Pages/PaymentMonitoring/Excel/BudgetMonitoringExcel.js';
-import Dialog from 'primevue/dialog';
+import IosModal from '@/Components/ui/IosModal.vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Select from 'primevue/select';
@@ -183,8 +168,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:visible', 'preview']);
-
-const { dragStyle, onDragStart, resetDrag } = useDraggableModal();
 const { buildHtmlDoc } = usePdfPrint();
 
 const activeFiscalYear = ref(null);
@@ -195,11 +178,6 @@ const programOptions = computed(() =>
         .filter(Boolean)
         .sort()
 );
-
-const close = () => {
-    resetDrag();
-    emit('update:visible', false);
-};
 
 const exportExcel = () => {
     const today = new Date().toLocaleDateString('en-PH', {

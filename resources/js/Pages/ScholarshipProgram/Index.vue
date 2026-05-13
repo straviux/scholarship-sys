@@ -7,6 +7,7 @@ import { ref, watch } from "vue";
 import moment from "moment";
 import ProgramModal from "@/Pages/ScholarshipProgram/Modal/ProgramModal.vue";
 import RequirementModal from "./Modal/RequirementModal.vue";
+import IosModal from '@/Components/ui/IosModal.vue';
 import { usePermission } from '@/composable/permissions';
 
 const props = defineProps({
@@ -195,23 +196,11 @@ const closeDeleteModal = () => {
         </div>
 
         <!-- iOS Delete Confirmation Dialog -->
-        <Dialog :visible="showConfirmDeleteModal" modal @update:visible="val => !val && closeDeleteModal()"
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal" style="width: 460px;">
-                    <!-- Nav Bar -->
-                    <div class="ios-nav-bar">
-                        <button class="ios-nav-btn ios-nav-cancel" @click="closeDeleteModal">
-                            <AppIcon name="times" />
-                        </button>
-                        <span class="ios-nav-title">Confirm Deletion</span>
-                        <button class="ios-nav-btn ios-nav-action ios-nav-destructive" @click="deleteProgram">
-                            Delete
-                        </button>
-                    </div>
-
-                    <!-- Body -->
-                    <div class="ios-body" v-if="selectedProgram">
+        <IosModal :visible="showConfirmDeleteModal" title="Confirm Deletion" width="460px" max-width="95vw"
+            body-style="padding: 0 16px;" :show-action="true" action-label="Delete"
+            action-class="ios-nav-destructive" @action="deleteProgram"
+            @update:visible="val => !val && closeDeleteModal()">
+            <div v-if="selectedProgram">
                         <!-- Warning -->
                         <div class="ios-section">
                             <div class="ios-card">
@@ -251,10 +240,8 @@ const closeDeleteModal = () => {
                         </div>
 
                         <div style="height: 20px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
+            </div>
+        </IosModal>
 
         <!-- Program Create/Edit Modal -->
         <ProgramModal v-model:visible="showModal" :program="editingProgram" @saved="handleSaved" />

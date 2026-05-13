@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 
 const props = defineProps({
@@ -208,9 +209,10 @@ const closeModal = () => {
             </div>
 
             <!-- Details Dialog -->
-            <Dialog v-model:visible="isDialogVisible"
-                :header="`Records for ${selectedDate ? new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}`"
-                :modal="true" :maximizable="true" class="w-full md:w-3xl lg:w-4xl" @hide="closeModal">
+            <IosModal :visible="isDialogVisible"
+                :title="`Records for ${selectedDate ? new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}`"
+                width="1200px" max-width="96vw" body-style="padding: 16px;"
+                @update:visible="isDialogVisible = $event" @close="closeModal">
                 <!-- Profiles Section -->
                 <div class="mb-8">
                     <h4 class="text-md font-semibold text-gray-700 mb-4 flex items-center gap-2">
@@ -289,7 +291,7 @@ const closeModal = () => {
                     </div>
                     <div v-else class="text-gray-500 text-sm">No vouchers created on this date</div>
                 </div>
-            </Dialog>
+            </IosModal>
         </div>
     </AdminLayout>
 </template>

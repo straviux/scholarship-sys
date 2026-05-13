@@ -96,7 +96,7 @@
                     <div class="ios-section">
                         <div class="ios-section-label">Interview Date Range</div>
                         <div class="ios-card">
-                            <div class="ios-row">
+                            <div class="ios-row ios-row-dates">
                                 <div class="ios-row-label">
                                     <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     From
@@ -105,8 +105,7 @@
                                     <DatePicker v-model="dateFrom" placeholder="Any" showButtonBar dateFormat="M dd, yy"
                                         class="ios-datepicker" showIcon iconDisplay="input" />
                                 </div>
-                            </div>
-                            <div class="ios-row ios-row-last">
+                                <span class="ios-date-separator">—</span>
                                 <div class="ios-row-label">
                                     <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     To
@@ -189,11 +188,15 @@
                         <div class="ios-section">
                             <div class="ios-section-label">Search Profiles</div>
                             <div class="ios-card">
-                                <div class="ios-rows px-2 py-4">
-                                
-                                    <InputText v-model="profileSearchQuery" class="ios-input"
+                                <div class="ios-row ios-row-last">
+                                    <div class="ios-row-label">
+                                        <AppIcon name="search" :size="13" style="color: #007AFF;" />
+                                        Search
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <InputText v-model="profileSearchQuery" class="ios-input"
                                             placeholder="Name, program, school, or course" maxlength="255" />
-                                
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -258,13 +261,16 @@
                         <div class="ios-section">
                             <div class="ios-section-label">Report Details</div>
                             <div class="ios-card">
-                                
-                               <div class="p-4">
-                                <div class="flex gap-2 items-center"><AppIcon name="type-outline" :size="13" style="color: #007AFF;" />
-                                     Report Title</div>
-                                 <InputText v-model="reportTitleInput" class="ios-input p-2 mt-2"
+                                <div class="ios-row" :class="{ 'ios-row-last': reportType !== 'list' }">
+                                    <div class="ios-row-label">
+                                        <AppIcon name="type-outline" :size="13" style="color: #007AFF;" />
+                                        Report Title
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <InputText v-model="reportTitleInput" class="ios-input"
                                             placeholder="INTERVIEWED APPLICANTS REPORT" maxlength="255" />
-                               </div>
+                                    </div>
+                                </div>
 
                                 <div v-if="reportType === 'list'" class="ios-row ios-row-last">
                                     <div class="ios-row-label">
@@ -272,7 +278,7 @@
                                         Show Interview Columns
                                     </div>
                                     <div class="ios-row-control" style="display:flex;justify-content:flex-end;">
-                                        <Checkbox v-model="includeInterviewColumns" binary />
+                                        <ToggleSwitch v-model="includeInterviewColumns" />
                                     </div>
                                 </div>
 
@@ -395,6 +401,7 @@
 import { ref, computed, watch } from 'vue';
 import moment from 'moment';
 import AppIcon from '@/Components/ui/AppIcon.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
@@ -1113,6 +1120,7 @@ function capitalize(str) {
    STYLE OVERRIDES FOR PRIMEVUE INSIDE iOS CARD
    ═══════════════════════════════════════════════ */
 
+:deep(.ios-select.p-select),
 :deep(.ios-select .p-select) {
     border: none !important;
     background: transparent !important;

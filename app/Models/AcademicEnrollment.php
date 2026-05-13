@@ -67,7 +67,7 @@ class AcademicEnrollment extends Model
 
     public function program(): BelongsTo
     {
-        return $this->belongsTo(ScholarshipProgram::class, 'program_id')->select(['id', 'name']);
+        return $this->belongsTo(ScholarshipProgram::class, 'program_id')->select(['id', 'name', 'shortname']);
     }
 
     public function school(): BelongsTo

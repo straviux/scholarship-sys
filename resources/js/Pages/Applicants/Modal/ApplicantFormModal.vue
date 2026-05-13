@@ -1,25 +1,23 @@
 <template>
-    <Dialog :visible="visible" modal @update:visible="val => !val && closeModal()"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :class="{ 'ios-modal-maximized': isMaximized }" :style="modalStyle">
-                <!-- Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">{{ mode === 'edit' ? 'Edit Application' : 'Application Form' }}</span>
-                    <div class="ios-nav-right">
-                        <span class="ios-nav-step-text">{{ activeStep }} of 3</span>
-                        <button class="ios-nav-maximize" @click="isMaximized = !isMaximized"
-                            v-tooltip.bottom="isMaximized ? 'Restore' : 'Maximize'">
-                            <AppIcon :name="isMaximized ? 'window-minimize' : 'window-maximize'" :size="14" />
-                        </button>
-                    </div>
-                </div>
+    <IosModal :visible="visible" :title="mode === 'edit' ? 'Edit Application' : 'Application Form'"
+        width="calc(100vw - 24px)" max-width="900px" :draggable="!isMaximized"
+        :modal-content-style="isMaximized
+            ? { width: '100vw', maxWidth: '100vw', height: '100vh', borderRadius: '0', transform: 'none' }
+            : { maxHeight: '90vh' }"
+        :body-style="{ padding: '0', display: 'flex', flexDirection: 'column', minHeight: 0 }"
+        @update:visible="val => !val && closeModal()">
+        <template #header-right>
+            <div class="ios-nav-right">
+                <span class="ios-nav-step-text">{{ activeStep }} of 3</span>
+                <button class="ios-nav-maximize" @click="isMaximized = !isMaximized"
+                    v-tooltip.bottom="isMaximized ? 'Restore' : 'Maximize'">
+                    <AppIcon :name="isMaximized ? 'window-minimize' : 'window-maximize'" :size="14" />
+                </button>
+            </div>
+        </template>
 
-                <!-- Body -->
-                <div class="ios-body">
+        <!-- Body -->
+        <div class="ios-body">
 
 
                     <div class="mt-8">
@@ -89,71 +87,46 @@
                                             </div>
 
                                             <!-- Duplicate Name Confirmation Dialog -->
-                                            <Dialog v-model:visible="showDuplicateDialog" modal
-                                                :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-                                                <template #container>
-                                                    <div class="ios-dup-modal" :style="dupModalStyle">
-                                                        <div class="ios-dup-nav" @pointerdown="onDupDragStart">
-                                                            <button class="ios-nav-btn ios-nav-cancel"
-                                                                @click="showDuplicateDialog = false">
-                                                                <AppIcon name="times" :size="14" />
-                                                            </button>
-                                                            <span class="ios-nav-title"
-                                                                style="font-size: 15px;">Possible Duplicate</span>
-                                                            <button class="ios-nav-btn ios-dup-proceed"
-                                                                @click="proceedDespiteDuplicate">Proceed</button>
-                                                        </div>
-                                                        <div class="ios-dup-body">
-                                                            <div class="ios-section" style="margin-top: 12px;">
-                                                                <div class="ios-section-footer" style="padding: 0;">
-                                                                    <AppIcon name="exclamation-triangle" :size="16"
-                                                                        style="color: #FF9500;" />
-                                                                    The following record(s) match
-                                                                    <strong>{{ form.first_name }} {{ form.last_name
-                                                                        }}</strong>:
-                                                                </div>
-                                                            </div>
-                                                            <div class="ios-section">
-                                                                <div class="ios-section-label">Matches Found</div>
-                                                                <div class="ios-card">
-                                                                    <div v-for="(match, idx) in duplicateMatches"
-                                                                        :key="match.profile_id" class="ios-row"
-                                                                        :class="{ 'ios-row-last': idx === duplicateMatches.length - 1 }">
-                                                                        <div
-                                                                            style="display: flex; align-items: center; gap: 10px;">
-                                                                            <AppIcon name="user" :size="16"
-                                                                                style="color: #8E8E93;" />
-                                                                            <div>
-                                                                                <div class="ios-row-label">
-                                                                                    {{ match.last_name }}, {{
-                                                                                        match.first_name }}
-                                                                                    {{ match.middle_name || '' }} {{
-                                                                                        match.extension_name || '' }}
-                                                                                </div>
-                                                                                <div
-                                                                                    style="font-size: 12px; color: #8E8E93;">
-                                                                                    {{ match.municipality || `No
-                                                                                    address` }}{{ match.barangay ? `,
-                                                                                    ${match.barangay}` : '' }}
-                                                                                    <span v-if="match.contact_no"> · {{
-                                                                                        match.contact_no }}</span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
+                                            <IosModal v-model:visible="showDuplicateDialog" title="Possible Duplicate"
+                                                width="520px" max-width="95vw" :show-action="true"
+                                                action-label="Proceed" @action="proceedDespiteDuplicate">
+                                                <div class="ios-section" style="margin-top: 12px;">
+                                                    <div class="ios-section-footer" style="padding: 0;">
+                                                        <AppIcon name="exclamation-triangle" :size="16"
+                                                            style="color: #FF9500;" />
+                                                        The following record(s) match
+                                                        <strong>{{ form.first_name }} {{ form.last_name }}</strong>:
+                                                    </div>
+                                                </div>
+                                                <div class="ios-section">
+                                                    <div class="ios-section-label">Matches Found</div>
+                                                    <div class="ios-card">
+                                                        <div v-for="(match, idx) in duplicateMatches" :key="match.profile_id"
+                                                            class="ios-row"
+                                                            :class="{ 'ios-row-last': idx === duplicateMatches.length - 1 }">
+                                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                                <AppIcon name="user" :size="16" style="color: #8E8E93;" />
+                                                                <div>
+                                                                    <div class="ios-row-label">
+                                                                        {{ match.last_name }}, {{ match.first_name }}
+                                                                        {{ match.middle_name || '' }} {{ match.extension_name || '' }}
+                                                                    </div>
+                                                                    <div style="font-size: 12px; color: #8E8E93;">
+                                                                        {{ match.municipality || `No address` }}{{ match.barangay ? `, ${match.barangay}` : '' }}
+                                                                        <span v-if="match.contact_no"> · {{ match.contact_no }}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div class="ios-section">
-                                                                <div class="ios-section-footer" style="padding: 0;">
-                                                                    Are you sure this is a different person? You may
-                                                                    proceed or close to review.
-                                                                </div>
-                                                            </div>
-                                                            <div style="height: 16px;"></div>
                                                         </div>
                                                     </div>
-                                                </template>
-                                            </Dialog>
+                                                </div>
+                                                <div class="ios-section">
+                                                    <div class="ios-section-footer" style="padding: 0;">
+                                                        Are you sure this is a different person? You may proceed or close to review.
+                                                    </div>
+                                                </div>
+                                                <div style="height: 16px;"></div>
+                                            </IosModal>
                                         </div>
                                     </div>
                                 </StepPanel>
@@ -187,6 +160,7 @@
                                                         v-model:remarks="form.remarks"
                                                         v-model:yakap_category="form.yakap_category"
                                                         v-model:yakap_location="form.yakap_location"
+                                                        :is-tech-voc-program="isTechVocProgram"
                                                         :show-header="false" />
 
                                                     <!-- Date Filed -->
@@ -219,41 +193,38 @@
                     </div>
                 </div>
 
-                <!-- Footer -->
-                <div class="ios-footer">
-                    <button v-if="activeStep !== '1'" class="ios-footer-btn ios-footer-back"
-                        @click="activeStep = String(Number(activeStep) - 1)">
-                        <AppIcon name="arrow-left" :size="12" /> Back
-                    </button>
-                    <span v-else></span>
-                    <button v-if="activeStep === '1'" class="ios-footer-btn ios-footer-next" @click="handleNextStep1"
-                        :disabled="!canProceedStep1 || isValidating" v-tooltip.top="step1TooltipMessage">
-                        {{ isValidating ? 'Checking...' : 'Next' }}
-                        <AppIcon name="arrow-right" :size="12" />
-                    </button>
-                    <button v-else-if="activeStep === '2'" class="ios-footer-btn ios-footer-next"
-                        @click="activeStep = '3'">
-                        Next
-                        <AppIcon name="arrow-right" :size="12" />
-                    </button>
-                    <button v-else class="ios-footer-btn ios-footer-submit" @click="handleSubmit"
-                        :disabled="form.processing">
-                        <AppIcon name="check" :size="12" />
-                        {{ form.processing ? 'Saving...' : (mode === 'edit' ? 'Update' : 'Submit') }}
-                    </button>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+        <!-- Footer -->
+        <div class="ios-footer">
+            <button v-if="activeStep !== '1'" class="ios-footer-btn ios-footer-back"
+                @click="activeStep = String(Number(activeStep) - 1)">
+                <AppIcon name="arrow-left" :size="12" /> Back
+            </button>
+            <span v-else></span>
+            <button v-if="activeStep === '1'" class="ios-footer-btn ios-footer-next" @click="handleNextStep1"
+                :disabled="!canProceedStep1 || isValidating" v-tooltip.top="step1TooltipMessage">
+                {{ isValidating ? 'Checking...' : 'Next' }}
+                <AppIcon name="arrow-right" :size="12" />
+            </button>
+            <button v-else-if="activeStep === '2'" class="ios-footer-btn ios-footer-next" @click="activeStep = '3'">
+                Next
+                <AppIcon name="arrow-right" :size="12" />
+            </button>
+            <button v-else class="ios-footer-btn ios-footer-submit" @click="handleSubmit" :disabled="form.processing">
+                <AppIcon name="check" :size="12" />
+                {{ form.processing ? 'Saving...' : (mode === 'edit' ? 'Update' : 'Submit') }}
+            </button>
+        </div>
+    </IosModal>
 </template>
 
 <script setup>
-import { computed, ref, watch, onBeforeUnmount } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 import PersonalInformationFields from '@/Components/forms/fields/PersonalInformationFields.vue';
 import FamilyInformationFields from '@/Components/forms/fields/FamilyInformationFields.vue';
 import AcademicInformationFields from '@/Components/forms/fields/AcademicInformationFields.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 import { toast } from '@/utils/toast';
 
 const props = defineProps({
@@ -441,6 +412,25 @@ const canProceedStep1 = computed(() => {
     return form.first_name && form.last_name;
 });
 
+const matchesTechVocProgram = (value) => {
+    if (value === null || value === undefined) {
+        return false;
+    }
+
+    if (typeof value === 'object') {
+        return matchesTechVocProgram(value.shortname) || matchesTechVocProgram(value.name);
+    }
+
+    const normalized = String(value).toLowerCase().replace(/[^a-z0-9]+/g, '');
+    if (!normalized) {
+        return false;
+    }
+
+    return normalized.includes('techvoc') || normalized.includes('technicalvoc');
+};
+
+const isTechVocProgram = computed(() => matchesTechVocProgram(form.program));
+
 // Tooltip message for missing fields in step 1
 const step1TooltipMessage = computed(() => {
     const missingFields = [];
@@ -571,9 +561,6 @@ watch(() => props.visible, async (newValue) => {
     }
 
     // Reset drag position when modal opens
-    if (newValue) {
-        dragOffset.value = { x: 0, y: 0 };
-    }
 });
 
 const handleSubmit = () => {
@@ -729,67 +716,7 @@ const resetForm = () => {
     dupDragOffset.value = { x: 0, y: 0 };
 };
 
-/* ── Drag ── */
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
 const isMaximized = ref(false);
-
-/* ── Duplicate Dialog Drag ── */
-const dupDragOffset = ref({ x: 0, y: 0 });
-const dupDragStart = ref(null);
-const dupModalStyle = computed(() => ({
-    transform: `translate(${dupDragOffset.value.x}px, ${dupDragOffset.value.y}px)`,
-}));
-function onDupDragStart(e) {
-    if (e.target.closest('button')) return;
-    dupDragStart.value = { x: e.clientX - dupDragOffset.value.x, y: e.clientY - dupDragOffset.value.y };
-    document.addEventListener('pointermove', onDupDragMove);
-    document.addEventListener('pointerup', onDupDragEnd);
-}
-function onDupDragMove(e) {
-    if (!dupDragStart.value) return;
-    dupDragOffset.value = { x: e.clientX - dupDragStart.value.x, y: e.clientY - dupDragStart.value.y };
-}
-function onDupDragEnd() {
-    dupDragStart.value = null;
-    document.removeEventListener('pointermove', onDupDragMove);
-    document.removeEventListener('pointerup', onDupDragEnd);
-}
-const modalStyle = computed(() => {
-    if (isMaximized.value) {
-        return {
-            width: '100vw',
-            height: '100vh',
-            transform: 'none',
-        };
-    }
-    return {
-        width: 'calc(100vw - 24px)',
-        maxWidth: '900px',
-        transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-    };
-});
-
-function onDragStart(e) {
-    if (isMaximized.value) return;
-    if (e.target.closest('button, input, textarea, select, a, .p-select, .p-checkbox, .p-autocomplete, .p-stepper, .p-datepicker, .p-editor')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-});
 </script>
 
 <style scoped>

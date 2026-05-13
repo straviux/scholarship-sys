@@ -1,19 +1,8 @@
 <template>
-    <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div ref="elModal" class="ios-modal" style="width: 90vw; max-width: 500px;" :style="modalStyle">
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">Add/Edit Remarks</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="saveRemarks" :disabled="isSaving">
-                        <AppIcon v-if="isSaving" name="spinner" :size="12" style="margin-right: 3px;" />Save
-                    </button>
-                </div>
-                <div class="ios-body">
-                    <div v-if="modelValue" style="padding-top: 16px;">
+    <IosModal :visible="show" title="Add/Edit Remarks" width="500px" max-width="90vw"
+        body-style="padding: 16px;" :show-action="true" action-label="Save" :loading="isSaving"
+        @action="saveRemarks" @update:visible="val => emit('update:show', val)">
+        <div v-if="modelValue">
                         <div class="ios-section">
                             <div class="ios-card" style="padding: 12px 16px;">
                                 <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Transaction ID: {{
@@ -43,17 +32,14 @@
                                 </template>
                             </Editor>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+        </div>
+    </IosModal>
 </template>
 
 <script setup>
-import { ref, watch, computed, onBeforeUnmount } from 'vue';
-import Dialog from 'primevue/dialog';
+import { ref, watch } from 'vue';
 import Editor from 'primevue/editor';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     show: {
@@ -72,38 +58,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:show', 'save']);
 
-const elModal = ref(null);
 const remarks = ref('');
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-
-const modalStyle = computed(() => ({
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`
-}));
-
-function onDragStart(e) {
-    if (e.target.closest('button')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-});
-
 watch(() => props.modelValue, (newVal) => {
     if (newVal?.remarks) {
         remarks.value = newVal.remarks;

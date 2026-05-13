@@ -545,7 +545,7 @@ const buildContextMenu = (rowData) => {
                 command: () => viewFullProfile(rowData)
             });
         }
-        if (hasRole('administrator') || hasRole('program_manager') || hasRole('screening-officer')) {
+        if (hasRole('administrator') || hasRole('program_manager') || hasRole('screening_officer')) {
             items.push({
                 label: 'Interview',
                 icon: 'comments',

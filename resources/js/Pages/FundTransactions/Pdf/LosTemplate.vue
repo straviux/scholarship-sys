@@ -129,8 +129,11 @@ const money = (n) =>
 
 /* ── derived display fields ──────────────────────── */
 
-/** School name: payee_name if payee_type is school, otherwise from first scholar detail */
+/** School name: prefer voucher's optional school field, then payee_name (if payee is school), then first scholar detail */
 const schoolName = computed(() => {
+    if (props.voucher.school && String(props.voucher.school).trim()) {
+        return props.voucher.school;
+    }
     if (props.voucher.payee_type === 'school' && props.voucher.payee_name) {
         return props.voucher.payee_name;
     }

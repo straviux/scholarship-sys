@@ -72,8 +72,8 @@
         </AdminPageShell>
 
         <!-- Create Update Dialog -->
-        <Dialog v-model:visible="showCreateModal" modal header="Create System Update" :style="{ width: '56rem' }"
-            :breakpoints="{ '960px': '90vw', '640px': '95vw' }" class="create-update-dialog">
+        <IosModal :visible="showCreateModal" title="Create System Update" width="56rem" max-width="95vw"
+            body-style="padding: 16px;" @update:visible="showCreateModal = $event">
 
             <form @submit.prevent="createUpdate">
                 <div class="space-y-4">
@@ -135,19 +135,17 @@
                 </div>
             </form>
 
-            <template #footer>
-                <div class="flex justify-end space-x-2">
-                    <Button @click="showCreateModal = false" label="Cancel" severity="secondary" outlined
-                        size="small" />
-                    <Button @click="createUpdate" :label="isCreating ? 'Creating...' : 'Create Update'" severity="info"
-                        :disabled="isCreating" size="small" />
-                </div>
-            </template>
-        </Dialog>
+            <div class="flex justify-end space-x-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
+                <Button @click="showCreateModal = false" label="Cancel" severity="secondary" outlined
+                    size="small" />
+                <Button @click="createUpdate" :label="isCreating ? 'Creating...' : 'Create Update'" severity="info"
+                    :disabled="isCreating" size="small" />
+            </div>
+        </IosModal>
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showDeleteDialog" modal header="Confirm Deletion" :style="{ width: '28rem' }"
-            :breakpoints="{ '960px': '90vw', '640px': '95vw' }" class="delete-confirmation-dialog">
+        <IosModal :visible="showDeleteDialog" title="Confirm Deletion" width="28rem" max-width="95vw"
+            body-style="padding: 16px;" @update:visible="showDeleteDialog = $event">
 
             <div class="flex items-start space-x-3">
                 <AppIcon name="exclamation-triangle" :size="28" class="text-red-500 mt-1 shrink-0" />
@@ -165,18 +163,16 @@
                 </div>
             </div>
 
-            <template #footer>
-                <div class="flex justify-end space-x-2">
-                    <Button @click="cancelDelete" label="Cancel" severity="secondary" outlined size="small" />
-                    <AppButton @click="confirmDelete" :label="isDeleting ? 'Deleting...' : 'Delete'" severity="danger"
-                        icon="trash" :disabled="isDeleting" size="small" />
-                </div>
-            </template>
-        </Dialog>
+            <div class="flex justify-end space-x-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
+                <Button @click="cancelDelete" label="Cancel" severity="secondary" outlined size="small" />
+                <AppButton @click="confirmDelete" :label="isDeleting ? 'Deleting...' : 'Delete'" severity="danger"
+                    icon="trash" :disabled="isDeleting" size="small" />
+            </div>
+        </IosModal>
 
         <!-- Deactivate Confirmation Dialog -->
-        <Dialog v-model:visible="showDeactivateDialog" modal header="Confirm Deactivation" :style="{ width: '28rem' }"
-            :breakpoints="{ '960px': '90vw', '640px': '95vw' }" class="deactivate-confirmation-dialog">
+        <IosModal :visible="showDeactivateDialog" title="Confirm Deactivation" width="28rem" max-width="95vw"
+            body-style="padding: 16px;" @update:visible="showDeactivateDialog = $event">
 
             <div class="flex items-start space-x-3">
                 <AppIcon name="exclamation-triangle" :size="28" class="text-orange-500 mt-1 shrink-0" />
@@ -194,14 +190,12 @@
                 </div>
             </div>
 
-            <template #footer>
-                <div class="flex justify-end space-x-2">
-                    <Button @click="cancelDeactivate" label="Cancel" severity="secondary" outlined size="small" />
-                    <AppButton @click="confirmDeactivate" :label="isDeactivating ? 'Deactivating...' : 'Deactivate'"
-                        severity="warning" icon="eye-slash" :disabled="isDeactivating" size="small" />
-                </div>
-            </template>
-        </Dialog>
+            <div class="flex justify-end space-x-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
+                <Button @click="cancelDeactivate" label="Cancel" severity="secondary" outlined size="small" />
+                <AppButton @click="confirmDeactivate" :label="isDeactivating ? 'Deactivating...' : 'Deactivate'"
+                    severity="warning" icon="eye-slash" :disabled="isDeactivating" size="small" />
+            </div>
+        </IosModal>
     </AdminLayout>
 </template>
 
@@ -211,6 +205,7 @@ import { router } from '@inertiajs/vue3'
 import { usePermission } from '@/composable/permissions'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import AdminPageShell from '@/Components/admin/AdminPageShell.vue'
+import IosModal from '@/Components/ui/IosModal.vue'
 import axios from 'axios'
 
 

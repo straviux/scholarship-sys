@@ -9,6 +9,7 @@ import axios from "axios";
 import ChangePasswordModal from "@/Pages/Admin/Users/ChangePasswordModal.vue";
 import CreateUserModal from "@/Pages/Admin/Users/CreateUserModal.vue";
 import EditUserModal from "@/Pages/Admin/Users/EditUserModal.vue";
+import IosModal from "@/Components/ui/IosModal.vue";
 import { toast } from '@/utils/toast';
 
 const props = defineProps({
@@ -938,8 +939,9 @@ const runCleanup = async () => {
         <!-- ============================================ -->
 
         <!-- Delete User Confirmation Dialog -->
-        <Dialog v-model:visible="showConfirmDeleteUserModal" :style="{ width: 'calc(100vw - 2rem)', maxWidth: '450px' }"
-            header="Confirm Deletion" :modal="true" :closable="false">
+        <IosModal v-model:visible="showConfirmDeleteUserModal" title="Confirm Deletion" width="calc(100vw - 2rem)"
+            max-width="450px" :show-action="true" action-label="Delete User" action-class="ios-nav-destructive"
+            :loading="userForm.processing" @action="deleteUser(modalUserData.id)">
             <div class="flex items-start gap-4">
                 <AppIcon name="exclamation-triangle" class="text-3xl text-red-500 mt-1" />
                 <div class="flex-1">
@@ -968,16 +970,7 @@ const runCleanup = async () => {
                     </div>
                 </div>
             </div>
-
-            <template #footer>
-                <div class="flex justify-end gap-3">
-                    <Button label="Cancel" severity="secondary" @click="closeUserModal" outlined
-                        :disabled="userForm.processing" />
-                    <AppButton label="Delete User" severity="danger" @click="deleteUser(modalUserData.id)"
-                        :loading="userForm.processing" icon="trash" />
-                </div>
-            </template>
-        </Dialog>
+        </IosModal>
 
         <!-- Change Password Modal -->
         <ChangePasswordModal :show="showChangePasswordModal" :user="selectedUser" @close="closeChangePasswordModal"
@@ -996,9 +989,12 @@ const runCleanup = async () => {
         <!-- ============================================ -->
 
         <!-- Permission Assignment Modal -->
-        <Dialog v-model:visible="showPermissionAssignmentModal" modal
-            :header="selectedRole ? `Assign Permissions · ${formatRoleName(selectedRole.name)}` : 'Assign Permissions'"
-            :style="{ width: 'min(1200px, 96vw)' }" @hide="closePermissionAssignmentModal">
+        <IosModal :visible="showPermissionAssignmentModal"
+            :title="selectedRole ? `Assign Permissions · ${formatRoleName(selectedRole.name)}` : 'Assign Permissions'"
+            width="min(1200px, 96vw)" :show-action="true" action-label="Save Changes"
+            :loading="savingPermissionAssignments" :action-disabled="!hasPendingPermissionChanges"
+            @action="savePermissionAssignments" @close="closePermissionAssignmentModal"
+            @update:visible="showPermissionAssignmentModal = $event">
             <div v-if="selectedRole && rolePermissions[selectedRole.id]"
                 class="space-y-4 max-h-[76vh] overflow-y-auto pr-1">
                 <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
@@ -1187,18 +1183,14 @@ const runCleanup = async () => {
                 <AppIcon name="circle" class="text-2xl mb-2" />
                 <p class="text-sm">Loading permissions...</p>
             </div>
-
-            <template #footer>
-                <Button label="Close" severity="secondary" outlined @click="closePermissionAssignmentModal"
-                    :disabled="savingPermissionAssignments" />
-                <Button label="Save Changes" severity="success" @click="savePermissionAssignments"
-                    :loading="savingPermissionAssignments" :disabled="!hasPendingPermissionChanges" />
-            </template>
-        </Dialog>
+        </IosModal>
 
         <!-- Create/Edit Role Modal -->
-        <Dialog v-model:visible="showRoleModal" modal :header="isEditingRole ? 'Edit Role' : 'Create New Role'"
-            :style="{ width: 'calc(100vw - 2rem)', maxWidth: '450px' }" :closable="false">
+        <IosModal :visible="showRoleModal" :title="isEditingRole ? 'Edit Role' : 'Create New Role'"
+            width="calc(100vw - 2rem)" max-width="450px" :show-action="true"
+            :action-label="isEditingRole ? 'Update Role' : 'Create Role'" :loading="roleForm.processing"
+            :action-disabled="!roleForm.name.trim()" @action="saveRole" @close="closeRoleEditorModal"
+            @update:visible="showRoleModal = $event">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -1213,18 +1205,12 @@ const runCleanup = async () => {
                     </p>
                 </div>
             </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeRoleEditorModal" outlined
-                    :disabled="roleForm.processing" />
-                <Button :label="isEditingRole ? 'Update Role' : 'Create Role'" severity="success" @click="saveRole"
-                    :loading="roleForm.processing" :disabled="!roleForm.name.trim()" />
-            </template>
-        </Dialog>
+        </IosModal>
 
         <!-- Delete Role Confirmation Dialog -->
-        <Dialog v-model:visible="showConfirmDeleteRoleModal" :style="{ width: 'calc(100vw - 2rem)', maxWidth: '450px' }"
-            header="Confirm Deletion" :modal="true">
+        <IosModal v-model:visible="showConfirmDeleteRoleModal" title="Confirm Deletion" width="calc(100vw - 2rem)"
+            max-width="450px" :show-action="true" action-label="Delete Role" action-class="ios-nav-destructive"
+            @action="deleteRole">
             <div class="flex items-center gap-4">
                 <AppIcon name="exclamation-triangle" class="text-3xl text-red-500" />
                 <div>
@@ -1239,21 +1225,17 @@ const runCleanup = async () => {
                     </p>
                 </div>
             </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeRoleModal" outlined />
-                <Button label="Delete Role" severity="danger" @click="deleteRole" />
-            </template>
-        </Dialog>
+        </IosModal>
 
         <!-- ============================================ -->
         <!-- PERMISSION MODALS -->
         <!-- ============================================ -->
 
         <!-- Create/Edit Permission Modal -->
-        <Dialog v-model:visible="showPermissionModal"
-            :header="isEditingPermission ? 'Edit Permission' : 'Create Permission'" :modal="true"
-            @hide="closePermissionModal">
+        <IosModal :visible="showPermissionModal" :title="isEditingPermission ? 'Edit Permission' : 'Create Permission'"
+            :show-action="true" :action-label="isEditingPermission ? 'Update' : 'Create'"
+            :action-disabled="!permissionForm.name" @action="savePermission" @close="closePermissionModal"
+            @update:visible="showPermissionModal = $event">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Permission Name *</label>
@@ -1266,17 +1248,12 @@ const runCleanup = async () => {
                     <InputText v-model="permissionForm.description" placeholder="Optional description" class="w-full" />
                 </div>
             </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closePermissionModal" outlined />
-                <Button :label="isEditingPermission ? 'Update' : 'Create'" severity="success" @click="savePermission"
-                    :disabled="!permissionForm.name" />
-            </template>
-        </Dialog>
+        </IosModal>
 
         <!-- Delete Permission Confirmation Modal -->
-        <Dialog v-model:visible="showConfirmDeletePermissionModal" header="Delete Permission" :modal="true"
-            @hide="closeDeletePermissionModal">
+        <IosModal :visible="showConfirmDeletePermissionModal" title="Delete Permission" :show-action="true"
+            action-label="Delete Permission" action-class="ios-nav-destructive" @action="deletePermission"
+            @close="closeDeletePermissionModal" @update:visible="showConfirmDeletePermissionModal = $event">
             <div v-if="permissionToDelete" class="space-y-4">
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                     <h4 class="font-semibold text-red-900 mb-2">
@@ -1290,20 +1267,16 @@ const runCleanup = async () => {
                     </p>
                 </div>
             </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeDeletePermissionModal" outlined />
-                <AppButton label="Delete Permission" severity="danger" @click="deletePermission" icon="trash" />
-            </template>
-        </Dialog>
+        </IosModal>
 
         <!-- ============================================ -->
         <!-- PERMISSION CLEANUP DIALOGS -->
         <!-- ============================================ -->
 
         <!-- Confirm Cleanup Dialog -->
-        <Dialog v-model:visible="showConfirmCleanupModal" :style="{ width: 'calc(100vw - 2rem)', maxWidth: '500px' }"
-            header="Confirm Permission Cleanup" :modal="true" :closable="false">
+        <IosModal v-model:visible="showConfirmCleanupModal" title="Confirm Permission Cleanup"
+            width="calc(100vw - 2rem)" max-width="500px" :show-action="true" action-label="Run Cleanup"
+            :loading="isCleaningUp" @action="runCleanup">
             <div class="flex items-start gap-4">
                 <AppIcon name="wrench" class="text-3xl text-amber-500 mt-1" />
                 <div class="flex-1">
@@ -1342,18 +1315,12 @@ const runCleanup = async () => {
                     </div>
                 </div>
             </div>
-
-            <template #footer>
-                <Button label="Cancel" severity="secondary" @click="closeConfirmCleanupModal" outlined
-                    :disabled="isCleaningUp" />
-                <AppButton label="Run Cleanup" severity="warning" icon="wrench" @click="runCleanup"
-                    :loading="isCleaningUp" />
-            </template>
-        </Dialog>
+        </IosModal>
 
         <!-- Cleanup Results Dialog -->
-        <Dialog v-model:visible="showCleanupResults" :style="{ width: 'calc(100vw - 2rem)', maxWidth: '500px' }"
-            header="Permission Cleanup Results" :modal="true">
+        <IosModal :visible="showCleanupResults" title="Permission Cleanup Results" width="calc(100vw - 2rem)"
+            max-width="500px" :show-action="true" action-label="Close" @action="closeCleanupResultsModal"
+            @update:visible="showCleanupResults = $event">
             <div v-if="cleanupResults" class="space-y-4">
                 <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                     <AppIcon name="check-circle" class="text-2xl text-green-600" />
@@ -1428,11 +1395,7 @@ const runCleanup = async () => {
                     </p>
                 </div>
             </div>
-
-            <template #footer>
-                <Button label="Close" severity="success" @click="closeCleanupResultsModal" />
-            </template>
-        </Dialog>
+        </IosModal>
     </AdminLayout>
 </template>
 

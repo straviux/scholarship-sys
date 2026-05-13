@@ -3,11 +3,11 @@ import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
 import ProgressSpinner from 'primevue/progressspinner';
-import Dialog from 'primevue/dialog';
 import { useConfirm } from 'primevue/useconfirm';
 import { toast } from '@/utils/toast';
 import axios from 'axios';
 import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     visible: {
@@ -319,89 +319,40 @@ watch(visibleDialog, (newValue) => {
     }
 });
 
+watch(() => props.visible, (newValue) => {
+    if (newValue) {
+        loadRequirements();
+    }
+});
+
 onMounted(() => {
     if (props.visible && requirementsData.value.length === 0) {
         loadRequirements();
     }
 });
 
-/* ── iOS Modal Drag ── */
-const iosDragOffset = ref({ x: 0, y: 0 });
-const iosDragStart = ref(null);
-const modalStyle = computed(() => ({
-    width: '600px',
-    transform: `translate(${iosDragOffset.value.x}px, ${iosDragOffset.value.y}px)`,
-}));
-
-function onModalDragStart(e) {
-    if (e.target.closest('button, input, textarea, select, a, .p-checkbox, .p-progressspinner')) return;
-    iosDragStart.value = { x: e.clientX - iosDragOffset.value.x, y: e.clientY - iosDragOffset.value.y };
-    document.addEventListener('pointermove', onModalDragMove);
-    document.addEventListener('pointerup', onModalDragEnd);
-}
-function onModalDragMove(e) {
-    if (!iosDragStart.value) return;
-    iosDragOffset.value = { x: e.clientX - iosDragStart.value.x, y: e.clientY - iosDragStart.value.y };
-}
-function onModalDragEnd() {
-    iosDragStart.value = null;
-    document.removeEventListener('pointermove', onModalDragMove);
-    document.removeEventListener('pointerup', onModalDragEnd);
-}
 onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onModalDragMove);
-    document.removeEventListener('pointerup', onModalDragEnd);
     if (qrCountdownInterval.value) clearInterval(qrCountdownInterval.value);
 });
-
-/* ── QR Modal Drag ── */
-const qrDragOffset = ref({ x: 0, y: 0 });
-const qrDragStart = ref(null);
-const qrModalStyle = computed(() => ({
-    width: '500px',
-    transform: `translate(${qrDragOffset.value.x}px, ${qrDragOffset.value.y}px)`,
-}));
-
-function onQrDragStart(e) {
-    if (e.target.closest('button, input, textarea, select, a')) return;
-    qrDragStart.value = { x: e.clientX - qrDragOffset.value.x, y: e.clientY - qrDragOffset.value.y };
-    document.addEventListener('pointermove', onQrDragMove);
-    document.addEventListener('pointerup', onQrDragEnd);
-}
-function onQrDragMove(e) {
-    if (!qrDragStart.value) return;
-    qrDragOffset.value = { x: e.clientX - qrDragStart.value.x, y: e.clientY - qrDragStart.value.y };
-}
-function onQrDragEnd() {
-    qrDragStart.value = null;
-    document.removeEventListener('pointermove', onQrDragMove);
-    document.removeEventListener('pointerup', onQrDragEnd);
-}
 
 </script>
 
 <template>
     <!-- Main Requirements Dialog -->
-    <Dialog :visible="visibleDialog" modal @update:visible="val => { if (!val) closeMain(); }"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }" @show="loadRequirements">
-        <template #container>
-            <div class="ios-modal" :style="modalStyle">
-                <!-- Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onModalDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeMain">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title ios-nav-title--truncate">Requirements</span>
-                    <span class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
-                </div>
+    <IosModal :visible="visibleDialog" title="Requirements" width="600px" max-width="95vw"
+        :body-style="{ padding: '0', display: 'flex', flexDirection: 'column', minHeight: 0 }"
+        @update:visible="val => { if (!val) closeMain(); }">
+        <template #header-right>
+            <span class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
+        </template>
 
-                <!-- Applicant name subtitle -->
-                <div class="ios-subtitle font-semibold" v-if="applicant">
-                    {{ applicant?.last_name }}, {{ applicant?.first_name }}
-                </div>
+        <!-- Applicant name subtitle -->
+        <div class="ios-subtitle font-semibold" v-if="applicant">
+            {{ applicant?.last_name }}, {{ applicant?.first_name }}
+        </div>
 
-                <!-- Body -->
-                <div class="ios-body">
+        <!-- Body -->
+        <div class="ios-body">
                     <!-- Loading -->
                     <div v-if="isLoading" style="display: flex; justify-content: center; padding: 40px 0;">
                         <ProgressSpinner style="width: 36px; height: 36px;" strokeWidth="4" />
@@ -476,31 +427,17 @@ function onQrDragEnd() {
                     <div style="height: 10px;"></div>
                 </div>
 
-                <!-- Footer -->
-                <div class="ios-footer">
-                    <span style="font-size: 13px; color: #8E8E93;">{{ checkedCount }}/{{ totalCount }} checked</span>
-                    <button class="ios-footer-close" @click="closeMain">Close</button>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+        <!-- Footer -->
+        <div class="ios-footer">
+            <span style="font-size: 13px; color: #8E8E93;">{{ checkedCount }}/{{ totalCount }} checked</span>
+            <button class="ios-footer-close" @click="closeMain">Close</button>
+        </div>
+    </IosModal>
 
     <!-- QR Code Modal -->
-    <Dialog :visible="showQrModal" modal @update:visible="val => { if (!val) showQrModal = false; }"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="qrModalStyle">
-                <div class="ios-nav-bar" @pointerdown="onQrDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="showQrModal = false">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title ios-nav-title--truncate">QR Upload</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="loadRequirements()">
-                        <AppIcon name="refresh" :size="13" />
-                    </button>
-                </div>
-
-                <div class="ios-body" v-if="qrCodeData">
+    <IosModal :visible="showQrModal" title="QR Upload" width="500px" max-width="95vw" :show-action="true"
+        action-icon="refresh" @action="loadRequirements()" @update:visible="val => { if (!val) showQrModal = false; }">
+        <div class="ios-body" v-if="qrCodeData">
                     <!-- QR Code -->
                     <div class="ios-section" style="margin-top: 16px; ">
                         <div class="ios-card"
@@ -550,9 +487,7 @@ function onQrDragEnd() {
 
                     <div style="height: 16px;"></div>
                 </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 
     <!-- File Preview Modal -->
     <ViewAttachmentModal v-model:visible="showPreviewModal" :attachment="previewFile" />

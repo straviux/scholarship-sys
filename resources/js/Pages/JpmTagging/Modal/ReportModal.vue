@@ -1,5 +1,6 @@
 <template>
-    <Dialog :visible="show" modal header="Generate JPM Report" :style="{ width: 'min(720px, calc(100vw - 2rem))' }"
+    <IosModal :visible="show" title="Generate JPM Report" width="min(720px, calc(100vw - 2rem))"
+        :show-action="true" action-label="Preview" :loading="generating" @action="generateReport"
         @update:visible="value => { if (!value) close(); }">
         <div class="space-y-5">
             <div class="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
@@ -80,36 +81,31 @@
             </div>
         </div>
 
-        <template #footer>
-            <div class="flex items-center justify-end gap-2">
-                <AppButton label="Close" severity="secondary" outlined @click="close" />
-                <AppButton label="Generate Preview" icon="printer" :loading="generating" @click="generateReport" />
+    </IosModal>
+
+    <IosModal :visible="showPreview" width="min(98vw, 1600px)" body-style="padding: 0;"
+        :modal-content-style="{ height: '95vh', display: 'flex', flexDirection: 'column' }"
+        @update:visible="value => { showPreview = value; if (!value) resetPreviewState(); }">
+        <template #title>
+            <div>
+                <div class="text-base font-semibold text-slate-800">JPM Report Preview</div>
+                <div class="text-xs text-slate-500">{{ orientation }} · {{ paperSize }}</div>
             </div>
         </template>
-    </Dialog>
-
-    <Dialog :visible="showPreview" modal :style="{ width: 'min(98vw, 1600px)', height: '95vh' }"
-        @update:visible="value => { showPreview = value; if (!value) resetPreviewState(); }">
-        <template #header>
-            <div class="flex w-full items-center justify-between gap-4 pr-2">
-                <div>
-                    <div class="text-base font-semibold text-slate-800">JPM Report Preview</div>
-                    <div class="text-xs text-slate-500">{{ orientation }} · {{ paperSize }}</div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button @click="zoomLevel = Math.max(40, zoomLevel - 10)"
-                        class="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600"
-                        :disabled="zoomLevel <= 40">
-                        <AppIcon name="minus" :size="10" />
-                    </button>
-                    <span class="w-12 text-center text-xs font-medium text-slate-500">{{ zoomLevel }}%</span>
-                    <button @click="zoomLevel = Math.min(200, zoomLevel + 10)"
-                        class="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600"
-                        :disabled="zoomLevel >= 200">
-                        <AppIcon name="plus" :size="10" />
-                    </button>
-                    <AppButton icon="printer" label="Print" severity="secondary" @click="doPrint" />
-                </div>
+        <template #header-right>
+            <div class="flex items-center gap-2 pr-2">
+                <button @click="zoomLevel = Math.max(40, zoomLevel - 10)"
+                    class="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600"
+                    :disabled="zoomLevel <= 40">
+                    <AppIcon name="minus" :size="10" />
+                </button>
+                <span class="w-12 text-center text-xs font-medium text-slate-500">{{ zoomLevel }}%</span>
+                <button @click="zoomLevel = Math.min(200, zoomLevel + 10)"
+                    class="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600"
+                    :disabled="zoomLevel >= 200">
+                    <AppIcon name="plus" :size="10" />
+                </button>
+                <AppButton icon="printer" label="Print" severity="secondary" @click="doPrint" />
             </div>
         </template>
 
@@ -121,7 +117,7 @@
                 <div v-else class="flex items-center justify-center py-20 text-slate-500">Generating report...</div>
             </div>
         </div>
-    </Dialog>
+    </IosModal>
 </template>
 
 <script setup>
@@ -130,6 +126,7 @@ import { usePage } from '@inertiajs/vue3';
 import moment from 'moment';
 import axios from 'axios';
 import AppIcon from '@/Components/ui/AppIcon.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 import { renderVueTemplate } from '@/composables/usePdfPrint';
 import { getReportCss, getReportPaperConfig } from '@/Pages/Scholarship/Reports/report-styles';
 import JpmTaggingReportTemplate from '@/Pages/JpmTagging/Reports/JpmTaggingReportTemplate.vue';

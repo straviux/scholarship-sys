@@ -187,24 +187,24 @@
         </div>
 
         <!-- Approval Workflow Dialog -->
-        <Dialog v-model:visible="showApprovalDialog" modal header="Application Review & Approval"
-            :style="{ width: '90vw', maxWidth: '1200px' }" class="p-fluid" :closable="true" :dismissableMask="false">
-            <template #header>
-                <div class="flex items-center justify-between w-full">
-                    <div class="flex items-center gap-2">
-                        <AppIcon name="clipboard-check" :size="18" class="text-blue-600" />
-                        <span class="font-semibold">Application Review & Approval</span>
-                    </div>
-                    <div v-if="selectedApplication" class="text-sm text-gray-600">
-                        {{ getFullName(profile) }} - {{ selectedApplication.program?.shortname }}
-                    </div>
+        <IosModal v-model:visible="showApprovalDialog" width="90vw" max-width="1200px" :dismissable-mask="false"
+            body-style="padding: 0;" modal-class="p-fluid">
+            <template #title>
+                <div class="flex items-center gap-2">
+                    <AppIcon name="clipboard-check" :size="18" class="text-blue-600" />
+                    <span class="font-semibold">Application Review & Approval</span>
+                </div>
+            </template>
+            <template #header-right>
+                <div v-if="selectedApplication" class="pr-2 text-sm text-gray-600">
+                    {{ getFullName(profile) }} - {{ selectedApplication.program?.shortname }}
                 </div>
             </template>
 
             <ApprovalWorkflow v-if="selectedApplication" :application="selectedApplication"
                 :decline-reasons="declineReasons || {}" :show-applicant-name="true" @approved="handleApprovalAction"
                 @declined="handleApprovalAction" @conditionalApproval="handleApprovalAction" @refresh="refreshData" />
-        </Dialog>
+        </IosModal>
     </AdminLayout>
 </template>
 
@@ -213,6 +213,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 import moment from 'moment';
 
 // PrimeVue Components

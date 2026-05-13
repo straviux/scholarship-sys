@@ -105,12 +105,9 @@
         </Popover>
 
         <!-- Notification Detail Dialog -->
-        <Dialog v-model:visible="showModal" modal :header="selectedNotification?.title"
-            :style="{ width: 'auto', minWidth: '28rem', maxWidth: '56rem' }"
-            :breakpoints="{ '1200px': '75vw', '960px': '85vw', '640px': '95vw' }"
-            :contentStyle="{ maxHeight: '70vh', overflow: 'auto' }" class="notification-dialog" :maximizable="true">
-
-            <template #header>
+        <IosModal :visible="showModal" width="56rem" min-width="28rem" max-width="95vw"
+            body-style="padding: 16px; max-height: 70vh; overflow: auto;" @update:visible="showModal = $event">
+            <template #title>
                 <div class="flex items-center space-x-3 w-full">
                     <AppIcon :name="getTypeIcon(selectedNotification?.type)"
                         :class="getTypeIconClass(selectedNotification?.type)" :size="24" />
@@ -158,13 +155,12 @@
                 </div>
             </div>
 
-            <template #footer>
-                <div class="flex justify-end space-x-2">
-                    <AppButton v-if="!selectedNotification?.is_read" @click="markAsReadAndClose(selectedNotification)"
-                        label="Mark as Read" severity="info" icon="check" size="small" />
-                </div>
-            </template>
-        </Dialog>
+            <div v-if="!selectedNotification?.is_read"
+                class="flex justify-end space-x-2 pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                <AppButton @click="markAsReadAndClose(selectedNotification)" label="Mark as Read" severity="info"
+                    icon="check" size="small" />
+            </div>
+        </IosModal>
     </div>
 </template>
 
@@ -173,6 +169,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import { useMarkdown } from '@/composable/useMarkdown'
+import IosModal from '@/Components/ui/IosModal.vue'
 
 // Markdown composable
 const { renderMarkdown } = useMarkdown()

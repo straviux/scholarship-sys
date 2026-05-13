@@ -5,6 +5,7 @@ import AppButton from '@/Components/ui/AppButton.vue';
 import { Head, router } from "@inertiajs/vue3";
 import { ref, watch } from "vue";
 import RequirementModal from "./Modal/RequirementModal.vue";
+import IosModal from '@/Components/ui/IosModal.vue';
 import { usePermission } from '@/composable/permissions';
 
 const props = defineProps({
@@ -144,7 +145,9 @@ const deleteRequirement = () => {
         </div>
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showDeleteModal" modal header="Delete Requirement" :style="{ width: '420px' }">
+        <IosModal :visible="showDeleteModal" title="Delete Requirement" width="420px" max-width="95vw"
+            body-style="padding: 16px;" @update:visible="showDeleteModal = $event"
+            @close="selectedRequirement = null">
             <div class="flex items-start gap-4 py-2">
                 <div class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
                     <AppIcon name="trash" class="text-red-600 text-sm" />
@@ -161,13 +164,13 @@ const deleteRequirement = () => {
                     </div>
                 </div>
             </div>
-            <template #footer>
+            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
                 <Button label="Cancel" severity="secondary" outlined rounded size="small"
                     @click="showDeleteModal = false; selectedRequirement = null" />
                 <Button label="Delete" severity="danger" rounded size="small" :loading="deleting"
                     @click="deleteRequirement" />
-            </template>
-        </Dialog>
+            </div>
+        </IosModal>
 
         <!-- Requirement Modal -->
         <RequirementModal v-model:visible="showModal" :requirement="editingRequirement" @saved="handleSaved" />

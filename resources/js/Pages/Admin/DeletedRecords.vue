@@ -164,8 +164,9 @@
         </AdminPageShell>
 
         <!-- Delete Profile Confirmation Modal -->
-        <Dialog v-model:visible="showDeleteProfileConfirmDialog" modal header="Confirm Permanent Deletion"
-            :style="{ width: 'calc(100vw - 2rem)', maxWidth: '500px' }">
+        <IosModal :visible="showDeleteProfileConfirmDialog" title="Confirm Permanent Deletion" width="500px"
+            max-width="calc(100vw - 2rem)" body-style="padding: 16px;"
+            @update:visible="showDeleteProfileConfirmDialog = $event" @close="profileToDelete = null">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
                     <AppIcon name="exclamation-triangle" class="text-2xl text-red-500" />
@@ -182,15 +183,16 @@
                     </p>
                 </div>
             </div>
-            <template #footer>
+            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
                 <Button label="Cancel" severity="secondary" @click="showDeleteProfileConfirmDialog = false" outlined />
                 <Button label="Permanently Delete" severity="danger" @click="permanentlyDeleteProfile" />
-            </template>
-        </Dialog>
+            </div>
+        </IosModal>
 
         <!-- Delete Record Confirmation Modal -->
-        <Dialog v-model:visible="showDeleteRecordConfirmDialog" modal header="Confirm Permanent Deletion"
-            :style="{ width: 'calc(100vw - 2rem)', maxWidth: '500px' }">
+        <IosModal :visible="showDeleteRecordConfirmDialog" title="Confirm Permanent Deletion" width="500px"
+            max-width="calc(100vw - 2rem)" body-style="padding: 16px;"
+            @update:visible="showDeleteRecordConfirmDialog = $event" @close="recordToDelete = null">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
                     <AppIcon name="exclamation-triangle" class="text-2xl text-red-500" />
@@ -205,11 +207,11 @@
                     </p>
                 </div>
             </div>
-            <template #footer>
+            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
                 <Button label="Cancel" severity="secondary" @click="showDeleteRecordConfirmDialog = false" outlined />
                 <Button label="Permanently Delete" severity="danger" @click="permanentlyDeleteRecord" />
-            </template>
-        </Dialog>
+            </div>
+        </IosModal>
     </AdminLayout>
 </template>
 
@@ -218,6 +220,7 @@ import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AdminPageShell from '@/Components/admin/AdminPageShell.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 import axios from 'axios';
 import { toast } from '@/utils/toast';
 

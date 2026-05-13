@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\AcademicEnrollment;
 use App\Models\AcademicEnrollmentTerm;
+use App\Models\ScholarshipProgram;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AcademicEnrollmentTermUpsertRequest extends FormRequest
@@ -18,11 +19,13 @@ class AcademicEnrollmentTermUpsertRequest extends FormRequest
     public function rules(): array
     {
         $isG12 = strtoupper((string) $this->input('year_level')) === 'G12';
+        $isTechVoc = $this->isTechVocEnrollment();
+        $optional = $isG12 || $isTechVoc;
 
         return [
-            'year_level' => ['required', 'string', 'max:20'],
-            'academic_year' => $isG12 ? ['nullable', 'string', 'max:20'] : ['required', 'string', 'max:20'],
-            'term' => $isG12 ? ['nullable', 'string', 'max:50'] : ['required', 'string', 'max:50'],
+            'year_level' => $isTechVoc ? ['nullable', 'string', 'max:20'] : ['required', 'string', 'max:20'],
+            'academic_year' => $optional ? ['nullable', 'string', 'max:20'] : ['required', 'string', 'max:20'],
+            'term' => $optional ? ['nullable', 'string', 'max:50'] : ['required', 'string', 'max:50'],
             'date_filed' => ['nullable', 'date'],
             'date_approved' => ['nullable', 'date'],
             'unified_status' => ['nullable', 'string', 'max:50', 'in:pending,approved,active,completed,completed-transferred,denied,withdrawn,loa,suspended,unknown'],
@@ -115,5 +118,36 @@ class AcademicEnrollmentTermUpsertRequest extends FormRequest
         }
 
         return null;
+    }
+
+    private function isTechVocEnrollment(): bool
+    {
+        $enrollment = $this->resolveEnrollment();
+        if (!$enrollment || !$enrollment->program_id) {
+            return false;
+        }
+
+        $program = ScholarshipProgram::query()
+            ->select(['name', 'shortname'])
+            ->find($enrollment->program_id);
+
+        if (!$program) {
+            return false;
+        }
+
+        return $this->matchesTechVocProgram($program->shortname)
+            || $this->matchesTechVocProgram($program->name);
+    }
+
+    private function matchesTechVocProgram(mixed $value): bool
+    {
+        $normalizedValue = strtolower(preg_replace('/[^a-z0-9]+/', '', (string) $value));
+
+        if ($normalizedValue === '') {
+            return false;
+        }
+
+        return str_contains($normalizedValue, 'techvoc')
+            || str_contains($normalizedValue, 'technicalvoc');
     }
 }

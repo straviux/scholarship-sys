@@ -1,9 +1,10 @@
 <script setup>
-import { ref, watch, computed, onBeforeUnmount } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import InterviewAssessmentForm from '@/Components/forms/InterviewAssessmentForm.vue';
 import { toast } from '@/utils/toast';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     modelValue: Boolean,
@@ -307,64 +308,19 @@ const submitAssessment = async () => {
         submitting.value = false;
     }
 };
-
-/* ── Drag ── */
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-const modalStyle = computed(() => ({
-    width: 'min(680px, 96vw)',
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-}));
-
-function onDragStart(e) {
-    if (e.target.closest('button, input, textarea, select, a, .p-select, .p-radiobutton, .p-editor, .p-datepicker')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-});
 </script>
 
 <template>
-    <Dialog :visible="visible" modal @update:visible="val => { if (!val) close(); }"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="modalStyle">
-                <!-- Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button type="button" class="ios-nav-btn ios-nav-cancel" @click="close">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">Interview Assessment</span>
-                    <button type="button" class="ios-nav-btn ios-nav-action" @click="submitAssessment"
-                        :disabled="submitting">
-                        <AppIcon name="check" :size="18" style="color: #34C759;" />
-                    </button>
-                </div>
-
-                <!-- Body -->
-                <div class="ios-body" v-if="applicant">
+    <IosModal :visible="visible" title="Interview Assessment" width="min(680px, 96vw)" :show-action="true"
+        :loading="submitting" @action="submitAssessment" @update:visible="val => { if (!val) close(); }">
+        <div class="ios-body" v-if="applicant">
                     <InterviewAssessmentForm :subject-name="applicantDisplayName"
                         :subject-subtitle="applicantDisplaySubtitle" :form="form" :errors="errors"
                         :interviewers="props.interviewers" />
 
                     <div style="height: 20px;"></div>
                 </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 </template>
 
 <style>

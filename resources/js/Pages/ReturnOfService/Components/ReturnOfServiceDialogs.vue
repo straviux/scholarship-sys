@@ -1,19 +1,8 @@
 <template>
-    <Dialog :visible="showBatchDialog" @update:visible="(visible) => { if (!visible) closeBatchDialog(); }" modal
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="batchDrag.modalStyle.value">
-                <div class="ios-nav-bar" @pointerdown="batchDrag.onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeBatchDialog" v-tooltip.bottom="`Cancel`">
-                        <AppIcon name="x" :size="16" />
-                    </button>
-                    <span class="ios-nav-title">{{ batchMode === 'add' ? 'New Batch' : 'Edit Batch' }}</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="emit('submit-batch')"
-                        :disabled="batchForm.processing" v-tooltip.bottom="`Save`">
-                        <AppIcon name="check" :size="16" />
-                    </button>
-                </div>
-                <div class="ios-body">
+    <IosModal :visible="showBatchDialog" :title="batchMode === 'add' ? 'New Batch' : 'Edit Batch'" width="520px"
+        close-icon="x" :icon-size="16" :show-action="true" :loading="batchForm.processing"
+        body-style="padding: 16px 16px 24px;" @action="emit('submit-batch')"
+        @update:visible="(visible) => { if (!visible) closeBatchDialog(); }">
                     <div class="ios-section">
                         <div class="ios-section-label">Basic Info</div>
                         <div class="ios-card">
@@ -95,26 +84,13 @@
                     </div>
 
                     <div style="height: 24px;"></div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 
-    <Dialog :visible="showScholarDialog" @update:visible="(visible) => { if (!visible) closeScholarDialog(); }" modal
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="scholarDrag.modalStyle.value">
-                <div class="ios-nav-bar" @pointerdown="scholarDrag.onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeScholarDialog" v-tooltip.bottom="`Cancel`">
-                        <AppIcon name="x" :size="16" />
-                    </button>
-                    <span class="ios-nav-title">{{ scholarMode === 'add' ? 'Add Scholar' : 'Edit Scholar' }}</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="emit('submit-scholar')"
-                        :disabled="scholarForm.processing || isEndDateInvalid" v-tooltip.bottom="`Save`">
-                        <AppIcon name="check" :size="16" />
-                    </button>
-                </div>
-                <div class="ios-body">
+    <IosModal :visible="showScholarDialog" :title="scholarMode === 'add' ? 'Add Scholar' : 'Edit Scholar'"
+        width="600px" close-icon="x" :icon-size="16" :show-action="true"
+        :action-disabled="scholarForm.processing || isEndDateInvalid" :loading="scholarForm.processing"
+        body-style="padding: 16px 16px 24px;" @action="emit('submit-scholar')"
+        @update:visible="(visible) => { if (!visible) closeScholarDialog(); }">
                     <div class="ios-section">
                         <div class="ios-section-label">Scholar</div>
                         <div class="ios-card">
@@ -229,25 +205,15 @@
                     </div>
 
                     <div style="height: 24px;"></div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 
-    <Dialog :visible="showViewScholarDialog"
-        @update:visible="(visible) => { if (!visible) emit('close-view-scholar'); }" modal
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="viewScholarDrag.modalStyle.value">
-                <div class="ios-nav-bar" @pointerdown="viewScholarDrag.onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="emit('close-view-scholar')"
-                        v-tooltip.bottom="`Close`">
-                        <AppIcon name="x" :size="16" />
-                    </button>
-                    <span class="ios-nav-title">Scholar Details</span>
-                    <div style="width: 48px;"></div>
-                </div>
-                <div class="ios-body" v-if="viewingScholar">
+    <IosModal :visible="showViewScholarDialog" title="Scholar Details" width="480px" close-icon="x"
+        :icon-size="16" body-style="padding: 16px 16px 24px;"
+        @update:visible="(visible) => { if (!visible) emit('close-view-scholar'); }">
+        <template #header-right>
+            <div style="width: 48px;"></div>
+        </template>
+        <div v-if="viewingScholar">
                     <div class="ios-section">
                         <div class="ios-card scholar-banner-card">
                             <div class="ios-row scholar-banner-row">
@@ -307,36 +273,32 @@
                     </div>
 
                     <div style="height: 24px;"></div>
-                </div>
+        </div>
+    </IosModal>
+
+    <IosModal :visible="showViewBatchDialog" width="90vw" close-icon="x" :icon-size="16"
+        :modal-content-style="{ height: '85vh' }" body-style="padding: 16px 16px 24px;"
+        @update:visible="(visible) => { if (!visible) emit('close-view-batch'); }">
+        <template #title>
+            <span v-if="viewingBatch" class="ios-nav-title ios-nav-title--truncate"
+                style="max-width: min(52vw, 560px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                {{ viewingBatch.batch_name }}
+            </span>
+        </template>
+        <template #header-right>
+            <div class="ios-nav-actions">
+                <button v-if="canExport" class="ios-nav-btn ios-nav-action ios-nav-btn--inline"
+                    @click="emit('open-report', viewingBatch)" v-tooltip.bottom="`Generate Report`">
+                    <AppIcon name="file-text" :size="16" />
+                </button>
+                <button v-if="canCreate" class="ios-nav-btn ios-nav-action ios-nav-btn--inline"
+                    @click="emit('open-add-scholar')" v-tooltip.bottom="`Add Scholar`">
+                    <AppIcon name="plus" :size="16" />
+                </button>
+                <div v-if="!canExport && !canCreate" style="width: 48px;"></div>
             </div>
         </template>
-    </Dialog>
-
-    <Dialog :visible="showViewBatchDialog" @update:visible="(visible) => { if (!visible) emit('close-view-batch'); }"
-        modal :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal ios-modal-wide" :style="viewBatchDrag.modalStyle.value" v-if="viewingBatch">
-                <div class="ios-nav-bar" @pointerdown="viewBatchDrag.onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="emit('close-view-batch')"
-                        v-tooltip.bottom="`Close`">
-                        <AppIcon name="x" :size="16" />
-                    </button>
-                    <span class="ios-nav-title ios-nav-title--truncate">
-                        {{ viewingBatch.batch_name }}
-                    </span>
-                    <div class="ios-nav-actions">
-                        <button v-if="canExport" class="ios-nav-btn ios-nav-action ios-nav-btn--inline"
-                            @click="emit('open-report', viewingBatch)" v-tooltip.bottom="`Generate Report`">
-                            <AppIcon name="file-text" :size="16" />
-                        </button>
-                        <button v-if="canCreate" class="ios-nav-btn ios-nav-action ios-nav-btn--inline"
-                            @click="emit('open-add-scholar')" v-tooltip.bottom="`Add Scholar`">
-                            <AppIcon name="plus" :size="16" />
-                        </button>
-                        <div v-if="!canExport && !canCreate" style="width: 48px;"></div>
-                    </div>
-                </div>
-                <div class="ios-body">
+        <div v-if="viewingBatch">
                     <div class="ios-section">
                         <div class="ios-section-label">Batch Info</div>
                         <div class="ios-card">
@@ -449,25 +411,15 @@
                     </div>
 
                     <div style="height: 24px;"></div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+        </div>
+    </IosModal>
 
-    <Dialog :visible="showDeleteBatchDialog"
-        @update:visible="(visible) => { if (!visible) emit('close-delete-batch'); }" modal
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="deleteBatchDrag.modalStyle.value">
-                <div class="ios-nav-bar" @pointerdown="deleteBatchDrag.onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="emit('close-delete-batch')"
-                        v-tooltip.bottom="`Cancel`">
-                        <AppIcon name="x" :size="16" />
-                    </button>
-                    <span class="ios-nav-title">Delete Batch</span>
-                    <div style="width: 48px;"></div>
-                </div>
-                <div class="ios-body">
+    <IosModal :visible="showDeleteBatchDialog" title="Delete Batch" width="420px" close-icon="x"
+        :icon-size="16" body-style="padding: 16px 16px 24px;"
+        @update:visible="(visible) => { if (!visible) emit('close-delete-batch'); }">
+        <template #header-right>
+            <div style="width: 48px;"></div>
+        </template>
                     <div class="ios-section">
                         <div class="ios-card destructive-card">
                             <div class="ios-row destructive-row">
@@ -488,25 +440,14 @@
                         <button class="ios-destructive-btn" @click="emit('delete-batch')">Delete Batch</button>
                     </div>
                     <div style="height: 24px;"></div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 
-    <Dialog :visible="showDeleteScholarDialog"
-        @update:visible="(visible) => { if (!visible) emit('close-delete-scholar'); }" modal
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="deleteScholarDrag.modalStyle.value">
-                <div class="ios-nav-bar" @pointerdown="deleteScholarDrag.onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="emit('close-delete-scholar')"
-                        v-tooltip.bottom="`Cancel`">
-                        <AppIcon name="x" :size="16" />
-                    </button>
-                    <span class="ios-nav-title">Remove Scholar</span>
-                    <div style="width: 48px;"></div>
-                </div>
-                <div class="ios-body">
+    <IosModal :visible="showDeleteScholarDialog" title="Remove Scholar" width="420px" close-icon="x"
+        :icon-size="16" body-style="padding: 16px 16px 24px;"
+        @update:visible="(visible) => { if (!visible) emit('close-delete-scholar'); }">
+        <template #header-right>
+            <div style="width: 48px;"></div>
+        </template>
                     <div class="ios-section">
                         <div class="ios-card destructive-card">
                             <div class="ios-row destructive-row">
@@ -525,26 +466,12 @@
                         <button class="ios-destructive-btn" @click="emit('delete-scholar')">Remove from Batch</button>
                     </div>
                     <div style="height: 24px;"></div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 
-    <Dialog :visible="showReportDialog" @update:visible="(visible) => { if (!visible) closeReportDialog(); }" modal
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="reportDrag.modalStyle.value">
-                <div class="ios-nav-bar" @pointerdown="reportDrag.onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeReportDialog" v-tooltip.bottom="`Cancel`">
-                        <AppIcon name="x" :size="16" />
-                    </button>
-                    <span class="ios-nav-title">Generate Report</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="submitReport" :disabled="!canSubmitReport"
-                        v-tooltip.bottom="`Generate`">
-                        <AppIcon name="file-text" :size="16" />
-                    </button>
-                </div>
-                <div class="ios-body">
+    <IosModal :visible="showReportDialog" title="Generate Report" width="480px" close-icon="x"
+        :icon-size="16" :show-action="true" action-icon="file-text" :action-disabled="!canSubmitReport"
+        body-style="padding: 16px 16px 24px;" @action="submitReport"
+        @update:visible="(visible) => { if (!visible) closeReportDialog(); }">
                     <div class="ios-section">
                         <div class="ios-section-label">Output Format</div>
                         <div class="ios-card">
@@ -612,10 +539,7 @@
                     </div>
 
                     <div style="height: 24px;"></div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 
     <div v-if="showPreviewScholarDialog && Array.isArray(scholarForm.selectedProfile) && scholarForm.selectedProfile.length > 0"
         class="preview-drawer">
@@ -637,10 +561,11 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     showBatchDialog: { type: Boolean, default: false },
@@ -698,61 +623,6 @@ const emit = defineEmits([
     'close-report',
     'generate-report',
 ]);
-
-function useDraggable(width) {
-    const dragOffset = ref({ x: 0, y: 0 });
-    const dragStart = ref(null);
-    const modalStyle = computed(() => ({
-        width,
-        transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-    }));
-
-    function onDragStart(event) {
-        if (event.target.closest('button, .p-editor')) {
-            return;
-        }
-
-        dragStart.value = {
-            x: event.clientX - dragOffset.value.x,
-            y: event.clientY - dragOffset.value.y,
-        };
-
-        document.addEventListener('pointermove', onDragMove);
-        document.addEventListener('pointerup', onDragEnd);
-    }
-
-    function onDragMove(event) {
-        if (!dragStart.value) {
-            return;
-        }
-
-        dragOffset.value = {
-            x: event.clientX - dragStart.value.x,
-            y: event.clientY - dragStart.value.y,
-        };
-    }
-
-    function onDragEnd() {
-        dragStart.value = null;
-        document.removeEventListener('pointermove', onDragMove);
-        document.removeEventListener('pointerup', onDragEnd);
-    }
-
-    function cleanup() {
-        document.removeEventListener('pointermove', onDragMove);
-        document.removeEventListener('pointerup', onDragEnd);
-    }
-
-    return { modalStyle, onDragStart, cleanup };
-}
-
-const batchDrag = useDraggable('520px');
-const scholarDrag = useDraggable('600px');
-const viewScholarDrag = useDraggable('480px');
-const viewBatchDrag = useDraggable('90vw');
-const deleteBatchDrag = useDraggable('420px');
-const deleteScholarDrag = useDraggable('420px');
-const reportDrag = useDraggable('480px');
 
 const scholarSearchModel = computed({
     get: () => props.scholarSearch,
@@ -852,16 +722,6 @@ const submitReport = () => {
         batchId: props.reportContextBatch?.id ?? reportBatchId.value,
     });
 };
-
-onBeforeUnmount(() => {
-    batchDrag.cleanup();
-    scholarDrag.cleanup();
-    viewScholarDrag.cleanup();
-    viewBatchDrag.cleanup();
-    deleteBatchDrag.cleanup();
-    deleteScholarDrag.cleanup();
-    reportDrag.cleanup();
-});
 </script>
 
 <style scoped>

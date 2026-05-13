@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, onBeforeUnmount } from 'vue';
+import { ref } from 'vue';
 import { toast } from '@/utils/toast';
 import { exportSelectedApplicantsExcel, printSelectedApplicantsReport } from '../Reports/selectedApplicantsExport';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     show: Boolean,
@@ -78,52 +79,11 @@ const exportAs = (format) => {
         generating.value = false;
     }
 };
-
-/* ── Drag ── */
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-const modalStyle = computed(() => ({
-    width: '680px',
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-}));
-
-function onDragStart(e) {
-    if (e.target.closest('button, input, textarea, select, a, .p-select, .p-toggleswitch')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-});
 </script>
 
 <template>
-    <Dialog :visible="show" modal @update:visible="val => !val && close()"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="modalStyle">
-                <!-- Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">Export Selected</span>
-                    <span class="ios-nav-btn" style="right: 16px; visibility: hidden;">.</span>
-                </div>
-
-                <!-- Body -->
-                <div class="ios-body">
+    <IosModal :visible="show" title="Export Selected" width="680px" max-width="95vw"
+        body-style="padding: 0 16px;" @update:visible="val => !val && close()">
                     <!-- Selection Summary -->
                     <div class="ios-section">
                         <div class="ios-section-label">Selection</div>
@@ -218,10 +178,7 @@ onBeforeUnmount(() => {
                     </div>
 
                     <div style="height: 20px;"></div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 </template>
 
 <style scoped>

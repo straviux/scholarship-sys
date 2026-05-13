@@ -16,6 +16,7 @@ import InputError from '@/Components/ui/inputs/InputError.vue';
 import InputLabel from '@/Components/ui/inputs/InputLabel.vue';
 import TextInput from '@/Components/ui/inputs/TextInput.vue';
 import TextArea from '@/Components/ui/inputs/TextArea.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 // PrimeVue
 
@@ -626,7 +627,8 @@ const debouncedSaveOrder = () => {
         <ConfirmDialog></ConfirmDialog>
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="showDeleteConfirm" :header="'Confirm Delete'" :modal="true" class="w-full md:w-1/3">
+        <IosModal :visible="showDeleteConfirm" title="Confirm Delete" width="520px" max-width="95vw"
+            body-style="padding: 16px;" @update:visible="showDeleteConfirm = $event" @close="cancelDelete">
             <div class="space-y-4">
                 <p class="text-gray-700">
                     Are you sure you want to delete <strong>"{{ menuToDelete?.name }}"</strong>?
@@ -640,13 +642,11 @@ const debouncedSaveOrder = () => {
                     This will permanently delete this menu item. This action cannot be undone.
                 </p>
             </div>
-            <template #footer>
-                <div class="flex gap-2 justify-end">
-                    <SecondaryButton @click="cancelDelete">Cancel</SecondaryButton>
-                    <DangerButton @click="confirmDelete">Delete</DangerButton>
-                </div>
-            </template>
-        </Dialog>
+            <div class="flex gap-2 justify-end pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
+                <SecondaryButton @click="cancelDelete">Cancel</SecondaryButton>
+                <DangerButton @click="confirmDelete">Delete</DangerButton>
+            </div>
+        </IosModal>
 
         <AdminPageShell title="Menu Management"
             description="Create menu groups, add standalone links, assign grouped items, and reorder the full navigation tree from the iOS-styled menu workspace."
@@ -813,7 +813,8 @@ const debouncedSaveOrder = () => {
         </AdminPageShell>
 
         <!-- Dialog for Creating/Editing Groups and Items -->
-        <Dialog v-model:visible="showDialog" :header="dialogHeader" :modal="true" class="w-full md:w-1/2">
+        <IosModal :visible="showDialog" :title="dialogHeader" width="760px" max-width="95vw"
+            body-style="padding: 16px;" @update:visible="showDialog = $event" @close="closeDialog">
             <form @submit.prevent="submit" class="space-y-4">
                 <!-- Name -->
                 <div>
@@ -897,10 +898,11 @@ const debouncedSaveOrder = () => {
                     </PrimaryButton>
                 </div>
             </form>
-        </Dialog>
+        </IosModal>
 
         <!-- Assign Items to Group Dialog -->
-        <Dialog v-model:visible="showAssignDialog" :header="assignDialogHeader" :modal="true" class="w-full md:w-1/2">
+        <IosModal :visible="showAssignDialog" :title="assignDialogHeader" width="760px" max-width="95vw"
+            body-style="padding: 16px;" @update:visible="showAssignDialog = $event" @close="closeAssignDialog">
             <form @submit.prevent="submitAssignToGroup" class="space-y-4">
                 <!-- Items Checkboxes -->
                 <div>
@@ -929,7 +931,7 @@ const debouncedSaveOrder = () => {
                         Items</PrimaryButton>
                 </div>
             </form>
-        </Dialog>
+        </IosModal>
     </AdminLayout>
 </template>
 

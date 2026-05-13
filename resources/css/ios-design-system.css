@@ -627,7 +627,7 @@ body.ios-admin-page .p-dialog-mask {
 	backdrop-filter: blur(12px);
 }
 
-body.ios-admin-page .p-dialog {
+body.ios-admin-page .p-dialog:not(.ios-dialog-root) {
 	border-radius: 28px !important;
 	border: 1px solid rgba(255, 255, 255, 0.7);
 	background: linear-gradient(
@@ -639,7 +639,7 @@ body.ios-admin-page .p-dialog {
 	overflow: hidden;
 }
 
-body.ios-admin-page .p-dialog .p-dialog-header {
+body.ios-admin-page .p-dialog:not(.ios-dialog-root) .p-dialog-header {
 	position: relative;
 	justify-content: center;
 	padding: 1rem 1.35rem;
@@ -649,7 +649,7 @@ body.ios-admin-page .p-dialog .p-dialog-header {
 	backdrop-filter: blur(18px);
 }
 
-body.ios-admin-page .p-dialog .p-dialog-title {
+body.ios-admin-page .p-dialog:not(.ios-dialog-root) .p-dialog-title {
 	font-size: 17px;
 	font-weight: 700;
 	letter-spacing: -0.02em;
@@ -657,16 +657,16 @@ body.ios-admin-page .p-dialog .p-dialog-title {
 	text-align: center;
 }
 
-body.ios-admin-page .p-dialog .p-dialog-header-actions {
+body.ios-admin-page .p-dialog:not(.ios-dialog-root) .p-dialog-header-actions {
 	position: absolute;
 	right: 1rem;
 	top: 50%;
 	transform: translateY(-50%);
 }
 
-body.ios-admin-page .p-dialog .p-button.p-dialog-close-button,
-body.ios-admin-page .p-dialog .p-dialog-close-button,
-body.ios-admin-page .p-dialog .p-dialog-header-close-button {
+body.ios-admin-page .p-dialog:not(.ios-dialog-root) .p-button.p-dialog-close-button,
+body.ios-admin-page .p-dialog:not(.ios-dialog-root) .p-dialog-close-button,
+body.ios-admin-page .p-dialog:not(.ios-dialog-root) .p-dialog-header-close-button {
 	width: 2rem;
 	height: 2rem;
 	border-radius: 999px;
@@ -679,26 +679,26 @@ body.ios-admin-page .p-dialog .p-dialog-header-close-button {
 		color 0.18s ease;
 }
 
-body.ios-admin-page .p-dialog .p-dialog-close-button .p-button-icon,
-body.ios-admin-page .p-dialog .p-dialog-header-close-button .p-button-icon {
+body.ios-admin-page .p-dialog:not(.ios-dialog-root) .p-dialog-close-button .p-button-icon,
+body.ios-admin-page .p-dialog:not(.ios-dialog-root) .p-dialog-header-close-button .p-button-icon {
 	width: 16px !important;
 	height: 16px !important;
 	font-size: 16px !important;
 }
 
-body.ios-admin-page .p-dialog .p-button.p-dialog-close-button:hover,
-body.ios-admin-page .p-dialog .p-dialog-close-button:hover,
-body.ios-admin-page .p-dialog .p-dialog-header-close-button:hover {
+body.ios-admin-page .p-dialog:not(.ios-dialog-root) .p-button.p-dialog-close-button:hover,
+body.ios-admin-page .p-dialog:not(.ios-dialog-root) .p-dialog-close-button:hover,
+body.ios-admin-page .p-dialog:not(.ios-dialog-root) .p-dialog-header-close-button:hover {
 	background: rgba(99, 102, 241, 0.14) !important;
 	color: #1f2937;
 }
 
-body.ios-admin-page .p-dialog .p-dialog-content {
+body.ios-admin-page .p-dialog:not(.ios-dialog-root) .p-dialog-content {
 	padding: 1.25rem 1.35rem;
 	background: transparent;
 }
 
-body.ios-admin-page .p-dialog .p-dialog-footer {
+body.ios-admin-page .p-dialog:not(.ios-dialog-root) .p-dialog-footer {
 	padding: 1rem 1.35rem 1.25rem;
 	background: rgba(248, 250, 252, 0.82);
 	border-top: 0.5px solid #e5e7eb;
@@ -1666,6 +1666,7 @@ body.ios-admin-page .p-dialog .p-dialog-footer .p-button {
 }
 
 /* ── PrimeVue overrides inside iOS card ── */
+.ios-select.p-select,
 .ios-select .p-select,
 .ios-input.p-inputtext {
 	/* border: none !important; */

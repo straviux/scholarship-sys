@@ -1,89 +1,75 @@
 <template>
-    <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div ref="elModal" class="ios-modal"
-                :style="[modalDragStyle, { width: '95vw', maxWidth: modalMaxWidth, maxHeight: '97vh', display: 'flex', flexDirection: 'column' }]">
+    <IosModal :visible="show" :title="title" width="95vw" :max-width="modalMaxWidth" body-style="padding: 0;"
+        :modal-content-style="{ maxHeight: '97vh', display: 'flex', flexDirection: 'column' }"
+        @update:visible="val => emit('update:show', val)">
+        <template #header-right>
+            <button v-if="onExcel" @click="onExcel" class="ios-nav-btn" style="right:58px;"
+                v-tooltip.bottom="'Export Excel'">
+                <AppIcon name="file-excel" :size="20" class="text-purple-400" />
+            </button>
+            <button class="ios-nav-btn ios-nav-action" @click="doPrint" v-tooltip.right="'Print or Save Document'">
+                <AppIcon name="print" :size="20" class="text-emerald-400" />
+            </button>
+        </template>
 
-                <!-- Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="emit('update:show', false)">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">{{ title }}</span>
-                    <button v-if="onExcel" @click="onExcel" class="ios-nav-btn" style="right:58px;"
-                        v-tooltip.bottom="'Export Excel'">
-                        <AppIcon name="file-excel" :size="20" class="text-purple-400" />
-                    </button>
-                    <button class="ios-nav-btn ios-nav-action" @click="doPrint"
-                        v-tooltip.right="'Print or Save Document'">
-                        <AppIcon name="print" :size="20" class="text-emerald-400" />
-                    </button>
-                </div>
-
-                <!-- Toolbar strip -->
-                <div class="flex items-center justify-between px-4 py-2
+        <!-- Toolbar strip -->
+        <div class="flex items-center justify-between px-4 py-2
                             bg-[#f2f2f7] dark:bg-[#1e242b]
                             border-b border-[#e5e5ea] dark:border-white/10">
-                    <div class="flex items-center gap-1.5">
-                        <!-- Zoom out -->
-                        <button @click="zoomOut" class="w-7 h-7 rounded-full flex items-center justify-center
+            <div class="flex items-center gap-1.5">
+                <!-- Zoom out -->
+                <button @click="zoomOut" class="w-7 h-7 rounded-full flex items-center justify-center
                                    bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10
                                    text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e]
                                    transition-colors disabled:opacity-40" :disabled="zoomLevel <= 40">
-                            <AppIcon name="minus" :size="10" />
-                        </button>
-                        <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-center">
-                            {{ zoomLevel }}%
-                        </span>
-                        <!-- Zoom in -->
-                        <button @click="zoomIn" class="w-7 h-7 rounded-full flex items-center justify-center
+                    <AppIcon name="minus" :size="10" />
+                </button>
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-center">
+                    {{ zoomLevel }}%
+                </span>
+                <!-- Zoom in -->
+                <button @click="zoomIn" class="w-7 h-7 rounded-full flex items-center justify-center
                                    bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10
                                    text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e]
                                    transition-colors disabled:opacity-40" :disabled="zoomLevel >= 150">
-                            <AppIcon name="plus" :size="10" />
-                        </button>
-                        <!-- Fit to width -->
-                        <button @click="fitToWidth" class="ml-1 px-2 h-7 rounded-full flex items-center justify-center gap-1
+                    <AppIcon name="plus" :size="10" />
+                </button>
+                <!-- Fit to width -->
+                <button @click="fitToWidth" class="ml-1 px-2 h-7 rounded-full flex items-center justify-center gap-1
                                    bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10
                                    text-xs text-gray-600 dark:text-gray-300
                                    hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors">
-                            <AppIcon name="expand" :size="10" />
-                            Fit
-                        </button>
-                    </div>
+                    <AppIcon name="expand" :size="10" />
+                    Fit
+                </button>
+            </div>
 
-                    <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2">
 
-                        <span class="text-xs text-gray-400 dark:text-gray-500 hidden sm:block">{{ paperLabel }}</span>
-                    </div>
-                </div>
+                <span class="text-xs text-gray-400 dark:text-gray-500 hidden sm:block">{{ paperLabel }}</span>
+            </div>
+        </div>
 
-                <!-- Paper Preview Area -->
-                <div ref="scrollArea" class="overflow-auto bg-[#d1d1d6] dark:bg-[#1c1c1e]"
-                    style="flex: 1; min-height: 0; padding: 16px 0;">
+        <!-- Paper Preview Area -->
+        <div ref="scrollArea" class="overflow-auto bg-[#d1d1d6] dark:bg-[#1c1c1e]"
+            style="flex: 1; min-height: 0; padding: 16px 0;">
 
-                    <!--
+            <!--
                         Paper wrapper: fixes the outer container size so scroll works correctly
                         when the iframe is scaled with transform.
                         A4 at 96 dpi = 794 × 1123 px
                     -->
-                    <div :style="paperWrapperStyle" class="mx-auto">
-                        <iframe ref="iframeEl" :srcdoc="htmlDoc" scrolling="no" style="border: none; display: block;"
-                            :style="iframeStyle" @load="onIframeLoad" />
-                    </div>
-                </div>
-
+            <div :style="paperWrapperStyle" class="mx-auto">
+                <iframe ref="iframeEl" :srcdoc="htmlDoc" scrolling="no" style="border: none; display: block;"
+                    :style="iframeStyle" @load="onIframeLoad" />
             </div>
-        </template>
-    </Dialog>
+        </div>
+    </IosModal>
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
-import { useDraggableModal } from '@/composables/useDraggableModal';
+import IosModal from '@/Components/ui/IosModal.vue';
 import { PAPER_SIZES } from '@/Pages/FundTransactions/Pdf/pdf-styles.js';
 
 // ── Paper size dimensions ──────────────────────────────────────────────
@@ -133,11 +119,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:show']);
 
-// ── Draggable modal ────────────────────────────────────────────────────
-const { dragStyle: modalDragStyle, onDragStart, resetDrag } = useDraggableModal();
-
 // ── Refs ───────────────────────────────────────────────────────────────
-const elModal = ref(null);
 const scrollArea = ref(null);
 const iframeEl = ref(null);
 const iframeReady = ref(false);
@@ -191,7 +173,6 @@ const fitToWidth = () => {
 watch(() => props.show, (val) => {
     if (val) {
         iframeReady.value = false;
-        resetDrag();
         nextTick(() => fitToWidth());
     }
 });
@@ -222,17 +203,3 @@ const doPrint = () => {
     win.print();
 };
 </script>
-
-<style>
-/* Unscoped — Dialog PT classes are teleported to <body> */
-.ios-dialog-root {
-    background: transparent !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-}
-
-.ios-dialog-mask {
-    background: rgba(0, 0, 0, 0.45) !important;
-    backdrop-filter: blur(4px);
-}
-</style>

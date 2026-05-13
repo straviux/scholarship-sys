@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed, watch, onBeforeUnmount } from 'vue';
+import { computed, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import { toast } from '@/utils/toast';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     visible: Boolean,
@@ -23,7 +24,6 @@ const form = useForm({
 
 watch(() => props.visible, (val) => {
     if (val) {
-        dragOffset.value = { x: 0, y: 0 };
         form.clearErrors();
         form.name = props.requirement?.name ?? '';
         form.description = props.requirement?.description ?? '';
@@ -49,56 +49,12 @@ const submit = () => {
 };
 
 const closeModal = () => emit('update:visible', false);
-
-/* ── Drag ── */
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-const modalStyle = computed(() => ({
-    width: '520px',
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-}));
-
-function onDragStart(e) {
-    if (e.target.closest('button, input, textarea, select, a, .p-select, .p-checkbox, .p-editor')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-});
 </script>
 
 <template>
-    <Dialog :visible="visible" modal @update:visible="val => !val && closeModal()"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="modalStyle">
-
-                <!-- iOS Navigation Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="closeModal" v-tooltip.bottom="'Close'">
-                        <AppIcon name="times" />
-                    </button>
-                    <span class="ios-nav-title">{{ modalTitle }}</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="submit" :disabled="form.processing"
-                        v-tooltip.bottom="isEdit ? 'Save' : 'Add'">
-                        <AppIcon v-if="form.processing" name="spinner" />
-                        <template v-else>{{ isEdit ? 'Save' : 'Add' }}</template>
-                    </button>
-                </div>
-
-                <div class="ios-body">
+    <IosModal :visible="visible" :title="modalTitle" width="520px" max-width="95vw"
+        body-style="padding: 0 16px;" :show-action="true" :action-label="isEdit ? 'Save' : 'Add'"
+        :loading="form.processing" @action="submit" @update:visible="val => !val && closeModal()">
 
                     <!-- REQUIREMENT DETAILS SECTION -->
                     <div class="ios-section">
@@ -166,10 +122,7 @@ onBeforeUnmount(() => {
                     </div>
 
                     <div style="height: 20px;"></div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 </template>
 
 <style scoped>

@@ -1,34 +1,37 @@
 <template>
-    <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="modalStyle">
-                <!-- iOS Navigation Bar (drag handle) -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="step > 1 ? step-- : close()">
-                        <AppIcon :name="step > 1 ? 'chevron-left' : 'x'" :size="16" />
-                    </button>
-                    <span class="ios-nav-title">
-                        {{ stepTitles[step - 1] }}
-                    </span>
-                    <button v-if="step < 3" class="ios-nav-btn ios-nav-action" @click="step++" :disabled="!canProceed">
-                        <AppIcon name="chevron-right" :size="16" />
-                    </button>
-                    <button v-else class="ios-nav-btn ios-nav-action" @click="generateReport" :disabled="generating"
-                        v-tooltip.bottom="'Generate Report'">
-                        <AppIcon v-if="generating" name="spinner" :size="16" />
-                        <template v-else>Generate</template>
-                    </button>
-                </div>
+    <IosModal :visible="show" width="520px" body-style="padding: 0;" @update:visible="handleWizardVisibleUpdate">
+        <template #header-left>
+            <button class="ios-nav-btn ios-nav-cancel" @click="handleWizardBack">
+                <AppIcon :name="step > 1 ? 'chevron-left' : 'x'" :size="16" />
+            </button>
+        </template>
 
-                <!-- Step Indicator -->
-                <div class="step-indicator">
-                    <div v-for="s in 3" :key="s"
-                        :class="['step-dot', s === step && 'step-dot-active', s < step && 'step-dot-done']">
-                    </div>
-                </div>
+        <template #title>
+            <span class="ios-nav-title">
+                {{ stepTitles[step - 1] }}
+            </span>
+        </template>
 
-                <div class="ios-body">
+        <template #header-right>
+            <button v-if="step < 3" class="ios-nav-btn ios-nav-action" @click="handleWizardAdvance"
+                :disabled="!canProceed">
+                <AppIcon name="chevron-right" :size="16" />
+            </button>
+            <button v-else class="ios-nav-btn ios-nav-action" @click="generateReport" :disabled="generating"
+                v-tooltip.bottom="'Generate Report'">
+                <AppIcon v-if="generating" name="spinner" :size="16" class="animate-spin" />
+                <template v-else>Generate</template>
+            </button>
+        </template>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div v-for="s in 3" :key="s"
+                :class="['step-dot', s === step && 'step-dot-active', s < step && 'step-dot-done']">
+            </div>
+        </div>
+
+        <div class="report-wizard-content">
                     <!-- STEP 1: Report Type & Status -->
                     <div v-show="step === 1">
                         <div class="ios-section">
@@ -327,71 +330,71 @@
                     <div style="height: 24px;"></div>
                 </div>
 
-                <!-- Sticky Footer -->
-                <div v-if="activeFiltersCount > 0" class="ios-footer">
-                    <button class="ios-destructive-btn" @click="clearAllFilters">
-                        Clear All Filters ({{ activeFiltersCount }})
-                    </button>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+        <!-- Sticky Footer -->
+        <div v-if="activeFiltersCount > 0" class="ios-footer">
+            <button class="ios-destructive-btn" @click="clearAllFilters">
+                Clear All Filters ({{ activeFiltersCount }})
+            </button>
+        </div>
+    </IosModal>
 
     <!-- Report Preview Modal -->
-    <Dialog :visible="showPreview" @update:visible="val => showPreview = val" modal
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal ios-modal-full" :style="previewModalStyle">
-                <div class="ios-nav-bar" @pointerdown="onPreviewDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="showPreview = false">
-                        <AppIcon name="chevron-left" :size="13" /> Back
-                    </button>
-                    <span class="ios-nav-title">Report Preview</span>
-                    <div class="ios-nav-actions">
-                        <button class="ios-icon-btn" @click="doPrint" title="Print / Save as PDF">
-                            <AppIcon name="printer" :size="16" style="color: #007AFF;" />
-                        </button>
-                    </div>
-                </div>
+    <IosModal :visible="showPreview" width="95vw" max-width="95vw" :modal-content-style="{ height: '90vh' }"
+        body-style="padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden;"
+        @update:visible="showPreview = $event">
+        <template #header-left>
+            <button class="ios-nav-btn ios-nav-cancel" @click="showPreview = false">
+                <AppIcon name="chevron-left" :size="13" /> Back
+            </button>
+        </template>
 
-                <!-- Zoom Toolbar -->
-                <div class="flex items-center justify-between px-4 py-2
-                            bg-[#f2f2f7] dark:bg-[#1e242b]
-                            border-b border-[#e5e5ea] dark:border-white/10">
-                    <div class="flex items-center gap-1.5">
-                        <button @click="zoomLevel = Math.max(40, zoomLevel - 10)"
-                            class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
-                            :disabled="zoomLevel <= 40">
-                            <AppIcon name="minus" :size="10" />
-                        </button>
-                        <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-center">{{ zoomLevel
-                        }}%</span>
-                        <button @click="zoomLevel = Math.min(200, zoomLevel + 10)"
-                            class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
-                            :disabled="zoomLevel >= 200">
-                            <AppIcon name="plus" :size="10" />
-                        </button>
-                    </div>
-                    <span class="text-xs text-gray-400">{{ orientation === 'landscape' ? 'Landscape' : 'Portrait' }} ·
-                        {{ paperSize }}</span>
-                </div>
+        <template #title>
+            <span class="ios-nav-title">Report Preview</span>
+        </template>
 
-                <!-- Preview Body -->
-                <div class="overflow-auto bg-[#d1d1d6] dark:bg-[#1c1c1e]"
-                    style="flex: 1; min-height: 0; padding: 16px 0;">
-                    <div style="display: flex; justify-content: center;">
-                        <iframe v-if="previewHtml" :srcdoc="previewHtml"
-                            :style="{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center', border: 'none', background: '#fff', boxShadow: '0 2px 20px rgba(0,0,0,0.15)', width: iframeWidth + 'px', height: iframeHeight + 'px' }"
-                            frameborder="0"></iframe>
-                        <div v-else class="flex flex-col items-center justify-center py-20 text-gray-400">
-                            <AppIcon name="spinner" class="w-8 h-8 mb-3" />
-                            <p>Generating report...</p>
-                        </div>
-                    </div>
-                </div>
+        <template #header-right>
+            <div class="ios-nav-actions">
+                <button class="ios-icon-btn" @click="doPrint" title="Print / Save as PDF">
+                    <AppIcon name="printer" :size="16" style="color: #007AFF;" />
+                </button>
             </div>
         </template>
-    </Dialog>
+
+        <!-- Zoom Toolbar -->
+        <div class="flex items-center justify-between px-4 py-2
+                    bg-[#f2f2f7] dark:bg-[#1e242b]
+                    border-b border-[#e5e5ea] dark:border-white/10">
+            <div class="flex items-center gap-1.5">
+                <button @click="zoomLevel = Math.max(40, zoomLevel - 10)"
+                    class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
+                    :disabled="zoomLevel <= 40">
+                    <AppIcon name="minus" :size="10" />
+                </button>
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-center">{{ zoomLevel
+                }}%</span>
+                <button @click="zoomLevel = Math.min(200, zoomLevel + 10)"
+                    class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
+                    :disabled="zoomLevel >= 200">
+                    <AppIcon name="plus" :size="10" />
+                </button>
+            </div>
+            <span class="text-xs text-gray-400">{{ orientation === 'landscape' ? 'Landscape' : 'Portrait' }} ·
+                {{ paperSize }}</span>
+        </div>
+
+        <!-- Preview Body -->
+        <div class="overflow-auto bg-[#d1d1d6] dark:bg-[#1c1c1e]" style="flex: 1; min-height: 0; padding: 16px 0;">
+            <div style="display: flex; justify-content: center;">
+                <iframe v-if="previewHtml" :srcdoc="previewHtml"
+                    :style="{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center', border: 'none', background: '#fff', boxShadow: '0 2px 20px rgba(0,0,0,0.15)', width: iframeWidth + 'px', height: iframeHeight + 'px' }"
+                    frameborder="0"></iframe>
+                <div v-else class="flex flex-col items-center justify-center py-20 text-gray-400">
+                    <AppIcon name="spinner" class="w-8 h-8 mb-3" />
+                    <p>Generating report...</p>
+                </div>
+            </div>
+        </div>
+    </IosModal>
 </template>
 
 <script setup>
@@ -588,6 +591,32 @@ watch(showPreview, (v) => {
 });
 
 // ─── Methods ───
+function handleWizardVisibleUpdate(value) {
+    if (!value) {
+        close();
+        return;
+    }
+
+    emit('update:show', value);
+}
+
+function handleWizardBack() {
+    if (step.value > 1) {
+        step.value -= 1;
+        return;
+    }
+
+    close();
+}
+
+function handleWizardAdvance() {
+    if (!canProceed.value || step.value >= 3) {
+        return;
+    }
+
+    step.value += 1;
+}
+
 function close() {
     resetPreviewState();
     emit('update:show', false);
@@ -771,60 +800,7 @@ watch(() => props.show, v => {
     }
 });
 
-// ─── Drag logic (main modal) ───
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-const modalStyle = computed(() => ({
-    width: '520px',
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-}));
-
-function onDragStart(e) {
-    if (e.target.closest('button')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-
-// ─── Drag logic (preview modal) ───
-const previewDragOffset = ref({ x: 0, y: 0 });
-const previewDragStart = ref(null);
-const previewModalStyle = computed(() => ({
-    width: '95vw',
-    height: '90vh',
-    transform: `translate(${previewDragOffset.value.x}px, ${previewDragOffset.value.y}px)`,
-}));
-
-function onPreviewDragStart(e) {
-    if (e.target.closest('button')) return;
-    previewDragStart.value = { x: e.clientX - previewDragOffset.value.x, y: e.clientY - previewDragOffset.value.y };
-    document.addEventListener('pointermove', onPreviewDragMove);
-    document.addEventListener('pointerup', onPreviewDragEnd);
-}
-function onPreviewDragMove(e) {
-    if (!previewDragStart.value) return;
-    previewDragOffset.value = { x: e.clientX - previewDragStart.value.x, y: e.clientY - previewDragStart.value.y };
-}
-function onPreviewDragEnd() {
-    previewDragStart.value = null;
-    document.removeEventListener('pointermove', onPreviewDragMove);
-    document.removeEventListener('pointerup', onPreviewDragEnd);
-}
-
 onBeforeUnmount(() => {
     resetPreviewState();
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-    document.removeEventListener('pointermove', onPreviewDragMove);
-    document.removeEventListener('pointerup', onPreviewDragEnd);
 });
 </script>

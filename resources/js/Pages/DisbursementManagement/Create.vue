@@ -224,18 +224,18 @@
         </div>
 
         <!-- Attachment Preview Modal -->
-        <Dialog v-model:visible="showAttachmentModal" modal :style="{ width: '90vw' }" :maximizable="true"
-            class="p-fluid">
-            <template #header>
-                <div class="flex items-center justify-between w-full gap-3">
-                    <span>{{ selectedAttachment?.name }}</span>
-                    <a v-if="selectedAttachment?.path" :href="getAttachmentUrl(selectedAttachment)" target="_blank"
-                        rel="noopener noreferrer"
-                        class="flex items-center gap-2 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
-                        v-tooltip.bottom="'Download'">
-                        <AppIcon name="download" :size="14" />
-                    </a>
-                </div>
+        <IosModal v-model:visible="showAttachmentModal" width="90vw" max-width="95vw" body-style="padding: 16px;"
+            modal-class="p-fluid">
+            <template #title>
+                <span>{{ selectedAttachment?.name }}</span>
+            </template>
+            <template #header-right>
+                <a v-if="selectedAttachment?.path" :href="getAttachmentUrl(selectedAttachment)" target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-center gap-2 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                    v-tooltip.bottom="'Download'">
+                    <AppIcon name="download" :size="14" />
+                </a>
             </template>
             <div v-if="selectedAttachment" class="flex flex-col">
                 <!-- Zoom Controls -->
@@ -278,7 +278,7 @@
                     </div>
                 </div>
             </div>
-        </Dialog>
+        </IosModal>
     </AdminLayout>
 </template>
 
@@ -293,7 +293,7 @@ import Dropdown from 'primevue/dropdown';
 import Checkbox from 'primevue/checkbox';
 import Button from 'primevue/button';
 import Badge from 'primevue/badge';
-import Dialog from 'primevue/dialog';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const page = usePage();
 const props = defineProps({

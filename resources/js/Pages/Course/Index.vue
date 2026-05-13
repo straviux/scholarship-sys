@@ -3,11 +3,12 @@ import AdminLayout from "@/Layouts/AdminLayout.vue";
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import { Head } from "@inertiajs/vue3";
-import { onMounted, ref, watch, computed, onBeforeUnmount } from "vue";
+import { onMounted, ref, watch, computed } from "vue";
 import CourseModal from "@/Pages/Course/Modal/CourseModal.vue";
 import axios from 'axios';
 import { usePermission } from '@/composable/permissions';
 import { toast } from '@/utils/toast';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     courses: Object,
@@ -114,34 +115,6 @@ const closeDeleteModal = () => {
     showDeleteModal.value = false;
     selectedCourse.value = null;
 };
-
-/* ── Delete modal drag ── */
-const deleteDragOffset = ref({ x: 0, y: 0 });
-const deleteDragStart = ref(null);
-const deleteModalStyle = computed(() => ({
-    width: '460px',
-    transform: `translate(${deleteDragOffset.value.x}px, ${deleteDragOffset.value.y}px)`,
-}));
-
-function onDeleteDragStart(e) {
-    if (e.target.closest('button, a')) return;
-    deleteDragStart.value = { x: e.clientX - deleteDragOffset.value.x, y: e.clientY - deleteDragOffset.value.y };
-    document.addEventListener('pointermove', onDeleteDragMove);
-    document.addEventListener('pointerup', onDeleteDragEnd);
-}
-function onDeleteDragMove(e) {
-    if (!deleteDragStart.value) return;
-    deleteDragOffset.value = { x: e.clientX - deleteDragStart.value.x, y: e.clientY - deleteDragStart.value.y };
-}
-function onDeleteDragEnd() {
-    deleteDragStart.value = null;
-    document.removeEventListener('pointermove', onDeleteDragMove);
-    document.removeEventListener('pointerup', onDeleteDragEnd);
-}
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDeleteDragMove);
-    document.removeEventListener('pointerup', onDeleteDragEnd);
-});
 </script>
 
 <template>
@@ -245,24 +218,10 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- iOS Delete Confirmation Dialog -->
-        <Dialog :visible="showDeleteModal" modal @update:visible="val => !val && closeDeleteModal()"
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal" :style="deleteModalStyle">
-                    <!-- Nav Bar -->
-                    <div class="ios-nav-bar" @pointerdown="onDeleteDragStart">
-                        <button class="ios-nav-btn ios-nav-cancel" @click="closeDeleteModal">
-                            <AppIcon name="times" />
-                        </button>
-                        <span class="ios-nav-title">Confirm Deletion</span>
-                        <button class="ios-nav-btn ios-nav-action ios-nav-destructive" @click="deleteCourse"
-                            :disabled="deleting">
-                            {{ deleting ? 'Deleting...' : 'Delete' }}
-                        </button>
-                    </div>
-
-                    <!-- Body -->
-                    <div class="ios-body" v-if="selectedCourse">
+        <IosModal :visible="showDeleteModal" title="Confirm Deletion" width="460px" max-width="95vw"
+            body-style="padding: 0 16px;" :show-action="true" action-label="Delete" :loading="deleting"
+            action-class="ios-nav-destructive" @action="deleteCourse" @update:visible="val => !val && closeDeleteModal()">
+            <div v-if="selectedCourse">
                         <!-- Warning -->
                         <div class="ios-section">
                             <div class="ios-card">
@@ -304,10 +263,8 @@ onBeforeUnmount(() => {
                         </div>
 
                         <div style="height: 20px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
+            </div>
+        </IosModal>
 
         <!-- Course Create/Edit Modal -->
         <CourseModal v-model:visible="showCourseModal" :course="editingCourse"

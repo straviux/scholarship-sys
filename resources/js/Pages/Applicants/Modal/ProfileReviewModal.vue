@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed, watch, onBeforeUnmount } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import moment from 'moment';
 import { usePermission } from '@/composable/permissions';
 import { Tag } from 'primevue';
 import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const { hasRole, hasPermission } = usePermission();
 
@@ -28,7 +29,7 @@ const hasPreviousProfile = computed(() => currentProfileIndex.value > 0);
 const hasNextProfile = computed(() => currentProfileIndex.value < (props.applicants?.length || 0) - 1);
 const canViewFullProfile = computed(() => hasPermission('scholarships.view'));
 const canEditRequirements = computed(() => hasPermission('applicants.view'));
-const canInterview = computed(() => hasRole('administrator') || hasRole('program_manager') || hasRole('screening-officer'));
+const canInterview = computed(() => hasRole('administrator') || hasRole('program_manager') || hasRole('screening_officer'));
 const canEditProfile = computed(() => hasPermission('applicants.edit'));
 const hasActionMenu = computed(() => canViewFullProfile.value || canEditRequirements.value || canInterview.value || canEditProfile.value);
 
@@ -160,82 +161,43 @@ const visitProfile = () => {
     if (!currentApplicant.value) return;
     router.visit(route('scholarship.profile.show', currentApplicant.value.profile_id));
 };
-
-/* ── Drag ── */
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-const modalStyle = computed(() => ({
-    width: '720px',
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-}));
-
-function onDragStart(e) {
-    if (e.target.closest('button, input, textarea, select, a, .p-select, .p-tag, .p-avatar, .p-tabs')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-});
 </script>
 
 <template>
-    <Dialog :visible="visible" modal @update:visible="val => { if (!val) close(); }"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="modalStyle">
-                <!-- Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">Profile Review</span>
-                    <template v-if="hasActionMenu">
-                        <button class="ios-nav-btn ios-nav-action ios-nav-dropdown"
-                            @click="toggleActionPopover($event)">
-                            Actions
-                            <AppIcon name="chevron-down" :size="11" />
+    <IosModal :visible="visible" title="Profile Review" width="720px" max-width="95vw"
+        :body-style="{ padding: '0', display: 'flex', flexDirection: 'column', minHeight: 0 }"
+        @update:visible="val => { if (!val) close(); }">
+        <template #header-right>
+            <template v-if="hasActionMenu">
+                <button class="ios-nav-btn ios-nav-action ios-nav-dropdown" @click="toggleActionPopover($event)">
+                    Actions
+                    <AppIcon name="chevron-down" :size="11" />
+                </button>
+                <Popover ref="actionPopover">
+                    <div class="profile-review-action-menu">
+                        <button v-if="canViewFullProfile" class="profile-review-action-item" @click="visitProfile">
+                            <AppIcon name="eye" :size="14" class="profile-review-action-icon" />
+                            <span>View Full Profile</span>
                         </button>
-                        <Popover ref="actionPopover">
-                            <div class="profile-review-action-menu">
-                                <button v-if="canViewFullProfile" class="profile-review-action-item"
-                                    @click="visitProfile">
-                                    <AppIcon name="eye" :size="14" class="profile-review-action-icon" />
-                                    <span>View Full Profile</span>
-                                </button>
-                                <button v-if="canEditRequirements" class="profile-review-action-item"
-                                    @click="editRequirements">
-                                    <AppIcon name="book-check" :size="14" class="profile-review-action-icon" />
-                                    <span>Edit Requirements</span>
-                                </button>
-                                <button v-if="canInterview" class="profile-review-action-item"
-                                    @click="markAsInterviewed">
-                                    <AppIcon name="comments" :size="14" class="profile-review-action-icon" />
-                                    <span>Interview</span>
-                                </button>
-                                <button v-if="canEditProfile" class="profile-review-action-item" @click="editProfile">
-                                    <AppIcon name="pencil" :size="14" class="profile-review-action-icon" />
-                                    <span>Edit Profile</span>
-                                </button>
-                            </div>
-                        </Popover>
-                    </template>
-                    <span v-else class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
-                </div>
+                        <button v-if="canEditRequirements" class="profile-review-action-item" @click="editRequirements">
+                            <AppIcon name="book-check" :size="14" class="profile-review-action-icon" />
+                            <span>Edit Requirements</span>
+                        </button>
+                        <button v-if="canInterview" class="profile-review-action-item" @click="markAsInterviewed">
+                            <AppIcon name="comments" :size="14" class="profile-review-action-icon" />
+                            <span>Interview</span>
+                        </button>
+                        <button v-if="canEditProfile" class="profile-review-action-item" @click="editProfile">
+                            <AppIcon name="pencil" :size="14" class="profile-review-action-icon" />
+                            <span>Edit Profile</span>
+                        </button>
+                    </div>
+                </Popover>
+            </template>
+            <span v-else class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
+        </template>
 
-                <!-- Body -->
-                <div class="ios-body" v-if="currentApplicant">
+        <div class="ios-body" v-if="currentApplicant">
                     <!-- Applicant Header Card -->
                     <div class="ios-section" style="margin-top: 16px;">
                         <div class="ios-card" style="padding: 14px 16px;">
@@ -515,21 +477,19 @@ onBeforeUnmount(() => {
                     <div style="height: 10px;"></div>
                 </div>
 
-                <!-- Footer Navigation -->
-                <div class="ios-footer" v-if="currentApplicant">
-                    <button class="ios-footer-btn" @click="goToPreviousProfile" :disabled="!hasPreviousProfile">
-                        <AppIcon name="chevron-left" :size="12" style="margin-right: 4px;" />Previous
-                    </button>
-                    <span class="ios-footer-counter">{{ currentProfileIndex + 1 }} / {{ applicants?.length || 0
-                        }}</span>
-                    <button class="ios-footer-btn" @click="goToNextProfile" :disabled="!hasNextProfile">
-                        Next
-                        <AppIcon name="chevron-right" :size="12" style="margin-left: 4px;" />
-                    </button>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+        <!-- Footer Navigation -->
+        <div class="ios-footer" v-if="currentApplicant">
+            <button class="ios-footer-btn" @click="goToPreviousProfile" :disabled="!hasPreviousProfile">
+                <AppIcon name="chevron-left" :size="12" style="margin-right: 4px;" />Previous
+            </button>
+            <span class="ios-footer-counter">{{ currentProfileIndex + 1 }} / {{ applicants?.length || 0
+                }}</span>
+            <button class="ios-footer-btn" @click="goToNextProfile" :disabled="!hasNextProfile">
+                Next
+                <AppIcon name="chevron-right" :size="12" style="margin-left: 4px;" />
+            </button>
+        </div>
+    </IosModal>
 
     <ViewAttachmentModal v-model:visible="showPreviewModal" :attachment="previewFile" />
 </template>

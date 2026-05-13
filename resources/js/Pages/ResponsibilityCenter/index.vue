@@ -8,6 +8,7 @@ import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import logger from '@/utils/logger';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 defineOptions({
     layout: AdminLayout,
@@ -422,9 +423,8 @@ onMounted(() => {
         </div>
 
         <!-- RC Modal -->
-        <Dialog v-model:visible="showModal" :modal="true" :closable="true"
-            :header="editingRC ? 'Edit Responsibility Center' : 'Add Responsibility Center'"
-            :style="{ width: '90%', maxWidth: '500px' }" @hide="showModal = false">
+        <IosModal :visible="showModal" :title="editingRC ? 'Edit Responsibility Center' : 'Add Responsibility Center'"
+            width="500px" max-width="90vw" body-style="padding: 16px;" @update:visible="showModal = $event">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Code</label>
@@ -439,17 +439,17 @@ onMounted(() => {
                     <InputText v-model="formData.fiscal_year" placeholder="e.g., 2024-2025" class="w-full" />
                 </div>
             </div>
-            <template #footer>
+            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
                 <Button label="Cancel" severity="secondary" @click="showModal = false" :disabled="processing" />
                 <AppButton :label="processing ? 'Saving...' : 'Save'" icon="check" @click="saveRC"
                     :disabled="processing" />
-            </template>
-        </Dialog>
+            </div>
+        </IosModal>
 
         <!-- Particulars Modal -->
-        <Dialog v-model:visible="showParticularsModal" :modal="true" :closable="true"
-            :header="editingParticular ? 'Edit Particular' : 'Add Particular'"
-            :style="{ width: '90%', maxWidth: '560px' }" @hide="showParticularsModal = false">
+        <IosModal :visible="showParticularsModal" :title="editingParticular ? 'Edit Particular' : 'Add Particular'"
+            width="560px" max-width="90vw" body-style="padding: 16px;"
+            @update:visible="showParticularsModal = $event">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Particulars Name <span
@@ -491,30 +491,30 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
-            <template #footer>
+            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
                 <Button label="Cancel" severity="secondary" @click="showParticularsModal = false"
                     :disabled="processing" />
                 <AppButton :label="processing ? 'Saving...' : 'Save'" icon="check" @click="saveParticular"
                     :disabled="processing" />
-            </template>
-        </Dialog>
+            </div>
+        </IosModal>
 
         <!-- Delete Confirmation Modal -->
-        <Dialog v-model:visible="showDeleteConfirmModal" :modal="true" :closable="true" header="Confirm Delete"
-            :style="{ width: '90%', maxWidth: '400px' }" @hide="showDeleteConfirmModal = false">
+        <IosModal :visible="showDeleteConfirmModal" title="Confirm Delete" width="400px" max-width="90vw"
+            body-style="padding: 16px;" @update:visible="showDeleteConfirmModal = $event">
             <p class="text-gray-700">
                 {{ deleteConfirmType === 'rc'
                     ? 'Are you sure you want to delete this responsibility center? This action cannot be undone.'
                     : 'Are you sure you want to delete this particular? This action cannot be undone.' }}
             </p>
-            <template #footer>
+            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
                 <Button label="Cancel" severity="secondary" @click="showDeleteConfirmModal = false"
                     :disabled="processing" />
                 <AppButton :label="processing ? 'Deleting...' : 'Delete'" severity="danger" icon="trash"
                     @click="deleteConfirmType === 'rc' ? confirmDeleteRC() : executeDeleteParticular()"
                     :disabled="processing" />
-            </template>
-        </Dialog>
+            </div>
+        </IosModal>
     </div>
 </template>
 

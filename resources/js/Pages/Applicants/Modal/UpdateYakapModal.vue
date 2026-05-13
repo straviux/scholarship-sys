@@ -1,10 +1,11 @@
 <script setup>
-import { ref, computed, onBeforeUnmount } from 'vue';
+import { ref, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 import { toast } from '@/utils/toast';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     show: Boolean,
@@ -59,6 +60,12 @@ const handleCategoryChange = () => {
     updateYakapForm.yakap_location = null;
 };
 
+watch(() => props.show, (visible) => {
+    if (visible) {
+        onShow();
+    }
+});
+
 const submit = () => {
     if (!props.profile) return;
     const grants = Array.isArray(props.profile.scholarshipGrant) ? props.profile.scholarshipGrant : [];
@@ -89,54 +96,13 @@ const submit = () => {
         console.error(error.response?.data || error);
     });
 };
-
-/* ── Drag ── */
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-const modalStyle = computed(() => ({
-    width: '520px',
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-}));
-
-function onDragStart(e) {
-    if (e.target.closest('button, input, select, a, .p-select')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-});
 </script>
 
 <template>
-    <Dialog :visible="show" modal @update:visible="val => !val && close()" @show="onShow"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="modalStyle">
-                <!-- Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="close">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">YAKAP Category</span>
-                    <button class="ios-nav-btn ios-nav-action" @click="submit" :disabled="updateYakapForm.processing">
-                        {{ updateYakapForm.processing ? 'Updating...' : 'Update' }}
-                    </button>
-                </div>
-
-                <!-- Body -->
-                <div class="ios-body" v-if="profile">
+    <IosModal :visible="show" title="YAKAP Category" width="520px" max-width="95vw"
+        body-style="padding: 0 16px;" :show-action="true" action-label="Update"
+        :loading="updateYakapForm.processing" @action="submit" @update:visible="val => !val && close()">
+        <div v-if="profile">
                     <!-- Applicant Info -->
                     <div class="ios-section">
                         <div class="ios-section-label">Applicant</div>
@@ -193,10 +159,8 @@ onBeforeUnmount(() => {
 
                     <!-- Bottom spacing -->
                     <div style="height: 20px;"></div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+        </div>
+    </IosModal>
 </template>
 
 <style scoped>

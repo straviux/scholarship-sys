@@ -462,13 +462,13 @@
         </div>
 
         <!-- Full Profile View Dialog -->
-        <Dialog v-model:visible="showProfileDialog" modal header="Profile Details" class="w-[90vw] max-w-[900px]"
-            :closable="true">
-            <template #header>
-                <div class="flex items-center gap-2">
+        <IosModal :visible="showProfileDialog" width="900px" max-width="90vw" body-style="padding: 16px;"
+            @update:visible="showProfileDialog = $event">
+            <template #title>
+                <span class="ios-nav-title flex items-center gap-2">
                     <AppIcon name="user" :size="18" class="text-blue-600" />
                     <span class="font-semibold">Profile Details</span>
-                </div>
+                </span>
             </template>
 
             <div v-if="selectedProfile" class="space-y-6">
@@ -629,21 +629,20 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <template #footer>
-                <div class="flex justify-end gap-2">
-                    <AppButton label="Close" icon="times" severity="secondary" @click="showProfileDialog = false" />
+                <div class="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-white/10">
+                    <AppButton label="Close" icon="times" severity="secondary"
+                        @click="showProfileDialog = false" />
                 </div>
-            </template>
-        </Dialog>
+            </div>
+        </IosModal>
 
         <!-- Generate Report Modal -->
         <ReportWizardModal :show="showReportWizard" @update:show="showReportWizard = $event" />
 
         <!-- Grant Provision Update Dialog -->
-        <Dialog v-model:visible="showGrantProvisionDialog" modal header="Update Grant Provision"
-            class="w-[calc(100vw-2rem)] sm:w-[min(500px,calc(100vw-2rem))]">
+        <IosModal :visible="showGrantProvisionDialog" title="Update Grant Provision" width="calc(100vw - 2rem)"
+            max-width="500px" body-style="padding: 16px;" @update:visible="showGrantProvisionDialog = $event">
             <div class="space-y-4" v-if="selectedProfileForGrant">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Scholar Name</label>
@@ -664,16 +663,17 @@
                         showClear />
                 </div>
             </div>
-            <template #footer>
-                <Button label="Cancel" severity="secondary" @click="showGrantProvisionDialog = false" outlined />
-                <Button label="Update" @click="updateGrantProvision" :loading="grantProvisionForm.processing"
-                    :disabled="!grantProvisionForm.scholarship_record_id" />
-            </template>
-        </Dialog>
+            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
+                <AppButton label="Cancel" severity="secondary" outlined
+                    @click="showGrantProvisionDialog = false" />
+                <AppButton label="Update" icon="check" severity="info" @click="updateGrantProvision"
+                    :loading="grantProvisionForm.processing" :disabled="!grantProvisionForm.scholarship_record_id" />
+            </div>
+        </IosModal>
 
         <!-- Delete Confirmation Modal -->
-        <Dialog v-model:visible="showDeleteConfirmDialog" modal header="Confirm Soft Delete"
-            class="w-[calc(100vw-2rem)] sm:w-[min(500px,calc(100vw-2rem))]">
+        <IosModal :visible="showDeleteConfirmDialog" title="Confirm Soft Delete" width="calc(100vw - 2rem)"
+            max-width="500px" body-style="padding: 16px;" @update:visible="showDeleteConfirmDialog = $event">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
                     <AppIcon name="exclamation-triangle" :size="24" class="text-orange-500" />
@@ -690,11 +690,11 @@
                     </p>
                 </div>
             </div>
-            <template #footer>
-                <Button label="Cancel" severity="secondary" @click="showDeleteConfirmDialog = false" outlined />
-                <Button label="Soft Delete" severity="danger" @click="deleteProfile" />
-            </template>
-        </Dialog>
+            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
+                <AppButton label="Cancel" severity="secondary" outlined @click="showDeleteConfirmDialog = false" />
+                <AppButton label="Soft Delete" icon="trash" severity="danger" @click="deleteProfile" />
+            </div>
+        </IosModal>
 
         <!-- Scholar Form Modal (Create) -->
         <ScholarFormModal v-model:visible="showAddActiveModal" mode="create" @success="refreshData" />

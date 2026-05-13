@@ -1,21 +1,8 @@
 <template>
-    <Dialog :visible="show" @update:visible="val => emit('update:show', val)" modal
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div ref="elModal" class="ios-modal" style="width: 90vw; max-width: 500px;" :style="modalStyle">
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" @click="$emit('update:show', false)">
-                        <AppIcon name="times" :size="14" />
-                    </button>
-                    <span class="ios-nav-title">Update OBR Info</span>
-                    <button v-if="!isComplete" class="ios-nav-btn ios-nav-action" @click="saveOBRTracking"
-                        :disabled="isSaving">
-                        <AppIcon v-if="isSaving" name="spinner" :size="12" style="margin-right: 3px;" />Save
-                    </button>
-                    <span v-else class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
-                </div>
-                <div class="ios-body">
-                    <div class="p-4">
+    <IosModal :visible="show" title="Update OBR Info" width="500px" max-width="90vw"
+        body-style="padding: 16px;" :show-action="!isComplete" action-label="Save" :loading="isSaving"
+        @action="saveOBRTracking" @update:visible="val => emit('update:show', val)">
+        <div class="p-4">
                         <!-- Voucher Header -->
                         <div v-if="modelValue" class="ios-section">
                             <div class="ios-card px-4 py-2">
@@ -82,18 +69,15 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+        </div>
+    </IosModal>
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onBeforeUnmount } from 'vue';
-import Dialog from 'primevue/dialog';
+import { reactive, watch } from 'vue';
 import InputText from 'primevue/inputtext';
 import { useToast } from 'primevue/usetoast';
+import IosModal from '@/Components/ui/IosModal.vue';
 import { getSystemOptionLabel } from '@/composables/useSystemOptions';
 
 const props = defineProps({
@@ -118,7 +102,6 @@ const props = defineProps({
 const emit = defineEmits(['update:show', 'save']);
 
 const toast = useToast();
-const elModal = ref(null);
 const formData = reactive({
     fiscal_year: new Date().getFullYear(),
     obr_no: '',
@@ -154,35 +137,6 @@ watch(() => props.show, (visible) => {
         formData.obr_no = v.obr_no || '';
         formData.date_obligated = v.date_obligated ? v.date_obligated.substring(0, 10) : null;
     }
-});
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-
-const modalStyle = computed(() => ({
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`
-}));
-
-function onDragStart(e) {
-    if (e.target.closest('button')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
 });
 
 const saveOBRTracking = () => {

@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, watch, onBeforeUnmount } from "vue";
+import { ref, watch } from "vue";
 import axios from 'axios';
 import { toast } from '@/utils/toast';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const props = defineProps({
     visible: Boolean,
@@ -16,7 +17,6 @@ const selectedIds = ref([]);
 watch(() => props.visible, (val) => {
     if (val && props.program) {
         selectedIds.value = [...(props.program.requirements || [])].map(r => r.id);
-        dragOffset.value = { x: 0, y: 0 };
     }
 });
 
@@ -45,55 +45,12 @@ const submit = async () => {
         processing.value = false;
     }
 };
-
-/* Drag */
-const dragOffset = ref({ x: 0, y: 0 });
-const dragStart = ref(null);
-const modalStyle = computed(() => ({
-    width: '500px',
-    transform: `translate(${dragOffset.value.x}px, ${dragOffset.value.y}px)`,
-}));
-
-function onDragStart(e) {
-    if (e.target.closest('button, a, .p-checkbox')) return;
-    dragStart.value = { x: e.clientX - dragOffset.value.x, y: e.clientY - dragOffset.value.y };
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-}
-function onDragMove(e) {
-    if (!dragStart.value) return;
-    dragOffset.value = { x: e.clientX - dragStart.value.x, y: e.clientY - dragStart.value.y };
-}
-function onDragEnd() {
-    dragStart.value = null;
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-}
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-});
 </script>
 
 <template>
-    <Dialog :visible="visible" modal @update:visible="val => !val && close()"
-        :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-        <template #container>
-            <div class="ios-modal" :style="modalStyle">
-
-                <!-- Nav Bar -->
-                <div class="ios-nav-bar" @pointerdown="onDragStart">
-                    <button class="ios-nav-btn ios-nav-cancel" type="button" @click="close">
-                        <AppIcon name="times" :size="18" />
-                    </button>
-                    <span class="ios-nav-title">Program Requirements</span>
-                    <button class="ios-nav-btn ios-nav-action" type="button" @click="submit" :disabled="processing">
-                        {{ processing ? 'Saving...' : 'Save' }}
-                    </button>
-                </div>
-
-                <!-- Body -->
-                <div class="ios-body">
+    <IosModal :visible="visible" title="Program Requirements" width="500px" max-width="95vw"
+        body-style="padding: 0 16px;" :show-action="true" action-label="Save" :loading="processing"
+        @action="submit" @update:visible="val => !val && close()">
 
                     <!-- Program Info -->
                     <div class="ios-section">
@@ -138,8 +95,5 @@ onBeforeUnmount(() => {
                     </div>
 
                     <div style="height: 20px;"></div>
-                </div>
-            </div>
-        </template>
-    </Dialog>
+    </IosModal>
 </template>

@@ -12,7 +12,9 @@
         <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 0;">
             <div class="grid grid-cols-2 gap-4">
                 <div class="ios-form-group">
-                    <label class="ios-label">Year Level *</label>
+                    <label class="ios-label">Year Level <span v-if="isTechVocProgram"
+                            class="text-xs text-gray-500 dark:text-gray-400">(Optional for Tech-Voc)</span><span
+                            v-else>*</span></label>
                     <YearLevelSelect v-model="form.year_level" />
                 </div>
                 <div class="ios-form-group">
@@ -24,14 +26,14 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div class="ios-form-group">
-                    <label class="ios-label">Academic Year <span v-if="isG12Term"
-                            class="text-xs text-gray-500 dark:text-gray-400">(Optional for G12)</span><span
+                    <label class="ios-label">Academic Year <span v-if="isOptionalTerm"
+                            class="text-xs text-gray-500 dark:text-gray-400">{{ isTechVocProgram ? '(Optional for Tech-Voc)' : '(Optional for G12)' }}</span><span
                             v-else>*</span></label>
                     <AcademicYearSelect v-model="form.academic_year" />
                 </div>
                 <div class="ios-form-group">
-                    <label class="ios-label">Term <span v-if="isG12Term"
-                            class="text-xs text-gray-500 dark:text-gray-400">(Optional for G12)</span><span
+                    <label class="ios-label">Term <span v-if="isOptionalTerm"
+                            class="text-xs text-gray-500 dark:text-gray-400">{{ isTechVocProgram ? '(Optional for Tech-Voc)' : '(Optional for G12)' }}</span><span
                             v-else>*</span></label>
                     <TermSelect v-model="form.term" />
                 </div>
@@ -92,6 +94,7 @@ const props = defineProps({
     mode: { type: String, default: 'add' },
     term: { type: Object, default: null },
     enrollmentId: { type: [Number, String], default: null },
+    program: { type: [Object, String], default: null },
 });
 
 const emit = defineEmits(['update:visible', 'success']);
@@ -123,6 +126,26 @@ const isG12Term = computed(() => {
 
     return yearLevel === 'G12';
 });
+
+const matchesTechVocProgram = (value) => {
+    if (value === null || value === undefined) {
+        return false;
+    }
+
+    if (typeof value === 'object') {
+        return matchesTechVocProgram(value.shortname) || matchesTechVocProgram(value.name);
+    }
+
+    const normalized = String(value).toLowerCase().replace(/[^a-z0-9]+/g, '');
+    if (!normalized) {
+        return false;
+    }
+
+    return normalized.includes('techvoc') || normalized.includes('technicalvoc');
+};
+
+const isTechVocProgram = computed(() => matchesTechVocProgram(props.program));
+const isOptionalTerm = computed(() => isG12Term.value || isTechVocProgram.value);
 
 watch(() => props.visible, async (val) => {
     if (!val) {
@@ -232,17 +255,17 @@ const submitTerm = async () => {
     const academicYear = normalizeOptionValue(form.value.academic_year);
     const termValue = normalizeOptionValue(form.value.term);
 
-    if (!yearLevel) {
+    if (!yearLevel && !isTechVocProgram.value) {
         toast.error('Year level is required.');
         return;
     }
 
-    if (!isG12Term.value && !academicYear) {
+    if (!isOptionalTerm.value && !academicYear) {
         toast.error('Academic year is required.');
         return;
     }
 
-    if (!isG12Term.value && !termValue) {
+    if (!isOptionalTerm.value && !termValue) {
         toast.error('Term is required.');
         return;
     }

@@ -856,7 +856,8 @@
             :enrollment="editingEnrollment" :profile-id="profile.profile_id" @success="handleModalSuccess" />
 
         <AcademicEnrollmentTermModal v-model:visible="showTermModal" :mode="termModalMode" :term="editingTerm"
-            :enrollment-id="activeEnrollmentForTerm?.id ?? null" @success="handleModalSuccess" />
+            :enrollment-id="activeEnrollmentForTerm?.id ?? null"
+            :program="activeEnrollmentForTerm?.program ?? null" @success="handleModalSuccess" />
 
         <AcademicEnrollmentGraduationModal v-model:visible="showGraduationModal" :enrollment="enrollmentForGraduation"
             @success="handleModalSuccess" />
@@ -872,26 +873,15 @@
             :title="pdfPreviewTitle" :paperSize="pdfPreviewSize" />
 
         <!-- Ledger Options Modal (iOS style) -->
-        <Dialog v-model:visible="showLedgerModal" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal ledger-ios-modal" :style="ledgerModalStyle">
-                    <!-- Nav Bar -->
-                    <div class="ios-nav-bar ledger-ios-nav" @pointerdown="onLedgerDragStart">
-                        <AppButton icon="times" text rounded class="ios-nav-btn ios-nav-cancel ledger-nav-button"
-                            @click="showLedgerModal = false" v-tooltip.top="'Close'" />
-                        <span class="ios-nav-title">Generate Scholar Ledger</span>
-                        <div class="ios-nav-actions ledger-nav-actions">
-                            <AppButton v-if="hasPermission('scholarships.edit')" label="Save" text
-                                class="ios-nav-btn ios-nav-action ledger-nav-button" :loading="ledgerSaving"
-                                @click="saveLedger" />
-                            <AppButton label="Generate" text class="ios-nav-btn ios-nav-action ledger-nav-button"
-                                :disabled="ledgerSaving" @click="generateLedger" />
-                        </div>
-                    </div>
-
-                    <!-- Body -->
-                    <div class="ios-body">
+        <IosModal v-model:visible="showLedgerModal" title="Generate Scholar Ledger" width="1360px"
+            max-width="calc(100vw - 24px)">
+            <template #header-right>
+                <div class="flex items-center gap-2 pr-2">
+                    <AppButton v-if="hasPermission('scholarships.edit')" label="Save" text :loading="ledgerSaving"
+                        @click="saveLedger" />
+                    <AppButton label="Generate" text :disabled="ledgerSaving" @click="generateLedger" />
+                </div>
+            </template>
                         <div class="ios-section">
                             <div class="ios-section-footer">Year levels are fixed, including PGI and Review. Encode
                                 the academic year, term, date obligated, OBR no., type of payment, amount, and ROS.
@@ -1054,27 +1044,14 @@
                             </div>
                         </div>
                         <div style="height: 20px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
+        </IosModal>
 
         <!-- Certification Type Picker -->
-        <Dialog v-model:visible="showCertPicker" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal" :style="certModalStyle">
-                    <!-- Nav Bar -->
-                    <div class="ios-nav-bar" @pointerdown="onCertDragStart">
-                        <AppButton icon="times" text rounded
-                            class="ios-nav-btn ios-nav-cancel !bg-transparent !border-0 !shadow-none"
-                            @click="showCertPicker = false" v-tooltip.top="'Close'" />
-                        <span class="ios-nav-title">Generate Certification</span>
-                        <div style="width: 60px;"></div>
-                    </div>
-
-                    <!-- Body -->
-                    <div class="ios-body">
+        <IosModal v-model:visible="showCertPicker" title="Generate Certification" width="380px"
+            max-width="calc(100vw - 24px)">
+            <template #header-right>
+                <div style="width: 60px;"></div>
+            </template>
                         <div class="ios-section">
                             <div class="ios-section-label">Course Name <span
                                     style="color: #8e8e93; font-weight: 400;">(optional)</span></div>
@@ -1112,10 +1089,7 @@
                         </div>
 
                         <div style="height: 20px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
+        </IosModal>
 
     </AdminLayout>
 </template>
@@ -1123,13 +1097,14 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue';
+import { ref, computed, watch, onMounted, inject } from 'vue';
 import axios from 'axios';
 import { toast } from '@/utils/toast';
 import { usePermission } from '@/composable/permissions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { useSystemOptions } from '@/composables/useSystemOptions';
 import { usePdfPrint, renderVueTemplate } from '@/composables/usePdfPrint';
+import IosModal from '@/Components/ui/IosModal.vue';
 import ScholarLedgerTemplate from '@/Pages/Scholarship/Pdf/ScholarLedgerTemplate.vue';
 import ScholarCertificationTemplate from '@/Pages/Scholarship/Pdf/ScholarCertificationTemplate.vue';
 import PdfPreviewModal from '@/Pages/FundTransactions/Modal/PdfPreviewModal.vue';
@@ -1167,60 +1142,6 @@ const ledgerRosOptions = [
     { label: '6M', value: '6' },
     { label: '12M', value: '12' },
 ];
-
-// Ledger modal drag
-const ledgerDragOffset = ref({ x: 0, y: 0 });
-const ledgerDragStart = ref(null);
-const ledgerModalStyle = computed(() => ({
-    width: '1360px',
-    maxWidth: 'calc(100vw - 24px)',
-    transform: `translate(${ledgerDragOffset.value.x}px, ${ledgerDragOffset.value.y}px)`,
-}));
-function onLedgerDragStart(e) {
-    if (e.target.closest('button, input, select, a, .p-select')) return;
-    ledgerDragStart.value = { x: e.clientX - ledgerDragOffset.value.x, y: e.clientY - ledgerDragOffset.value.y };
-    document.addEventListener('pointermove', onLedgerDragMove);
-    document.addEventListener('pointerup', onLedgerDragEnd);
-}
-function onLedgerDragMove(e) {
-    if (!ledgerDragStart.value) return;
-    ledgerDragOffset.value = { x: e.clientX - ledgerDragStart.value.x, y: e.clientY - ledgerDragStart.value.y };
-}
-function onLedgerDragEnd() {
-    ledgerDragStart.value = null;
-    document.removeEventListener('pointermove', onLedgerDragMove);
-    document.removeEventListener('pointerup', onLedgerDragEnd);
-}
-
-const certDragOffset = ref({ x: 0, y: 0 });
-const certDragStart = ref(null);
-const certModalStyle = computed(() => ({
-    width: '380px',
-    maxWidth: 'calc(100vw - 24px)',
-    transform: `translate(${certDragOffset.value.x}px, ${certDragOffset.value.y}px)`,
-}));
-function onCertDragStart(e) {
-    if (e.target.closest('button, input, select, a, .p-inputtext')) return;
-    certDragStart.value = { x: e.clientX - certDragOffset.value.x, y: e.clientY - certDragOffset.value.y };
-    document.addEventListener('pointermove', onCertDragMove);
-    document.addEventListener('pointerup', onCertDragEnd);
-}
-function onCertDragMove(e) {
-    if (!certDragStart.value) return;
-    certDragOffset.value = { x: e.clientX - certDragStart.value.x, y: e.clientY - certDragStart.value.y };
-}
-function onCertDragEnd() {
-    certDragStart.value = null;
-    document.removeEventListener('pointermove', onCertDragMove);
-    document.removeEventListener('pointerup', onCertDragEnd);
-}
-
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onLedgerDragMove);
-    document.removeEventListener('pointerup', onLedgerDragEnd);
-    document.removeEventListener('pointermove', onCertDragMove);
-    document.removeEventListener('pointerup', onCertDragEnd);
-});
 
 const LEDGER_YEAR_LEVELS = ['1ST YEAR', '2ND YEAR', '3RD YEAR', '4TH YEAR', '5TH YEAR', 'PGI', 'REVIEW'];
 const LEDGER_STANDARD_TERMS = ['1ST SEMESTER', '2ND SEMESTER'];

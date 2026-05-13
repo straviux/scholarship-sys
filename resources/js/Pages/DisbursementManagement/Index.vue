@@ -144,8 +144,9 @@
         </div>
 
         <!-- Details Modal -->
-        <Dialog v-model:visible="showDetailsFlag" :header="`OBR: ${selectedDisbursement?.obr_no}`" :modal="true"
-            :style="{ width: '100%', maxWidth: '600px' }" class="text-xs sm:text-sm">
+        <IosModal :visible="showDetailsFlag" :title="`OBR: ${selectedDisbursement?.obr_no}`" width="600px"
+            max-width="100%" body-style="padding: 16px;" class="text-xs sm:text-sm"
+            @update:visible="showDetailsFlag = $event">
             <div v-if="selectedDisbursement" class="space-y-4">
                 <!-- Summary -->
                 <div class="grid grid-cols-2 gap-4 pb-4 border-b border-slate-200">
@@ -191,7 +192,7 @@
                     </div>
                 </div>
             </div>
-        </Dialog>
+        </IosModal>
     </AdminLayout>
 </template>
 
@@ -204,10 +205,10 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Badge from 'primevue/badge';
-import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 import Checkbox from 'primevue/checkbox';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const page = usePage();
 const props = defineProps({

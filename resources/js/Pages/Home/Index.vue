@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { ref, computed, onMounted } from 'vue';
 import { usePermission } from '@/composable/permissions';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 const { hasPermission, hasRole } = usePermission();
 
@@ -272,21 +273,10 @@ const getSystemUpdateIconColor = (type) => ({
         </div>
 
         <!-- Help Dialog — iOS style -->
-        <Dialog v-model:visible="showHelpDialog" modal
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-help-modal">
-                    <!-- Nav bar -->
-                    <div class="ios-help-nav">
-                        <button class="text-[#8E8E93] text-xl leading-none" @click="showHelpDialog = false">
-                            <AppIcon name="times" :size="18" />
-                        </button>
-                        <span class="ios-help-title">Help & Support</span>
-                        <div class="w-5"></div>
-                    </div>
-
-                    <!-- Body -->
-                    <div class="ios-help-body">
+        <IosModal :visible="showHelpDialog" title="Help & Support" width="640px" max-width="95vw"
+            body-style="padding: 0;" @update:visible="showHelpDialog = $event">
+            <div class="ios-help-modal">
+                <div class="ios-help-body">
                         <div class="ios-section">
                             <div class="ios-section-label">CONTACT</div>
                             <div class="ios-card">
@@ -331,10 +321,9 @@ const getSystemUpdateIconColor = (type) => ({
                                 </div>
                             </div>
                         </div>
-                    </div>
                 </div>
-            </template>
-        </Dialog>
+            </div>
+        </IosModal>
     </AdminLayout>
 </template>
 

@@ -171,26 +171,10 @@
         </div>
 
         <!-- ── Upload / Edit iOS Modal ── -->
-        <Dialog :visible="showDialog" modal @update:visible="val => !val && (showDialog = false)"
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal" :style="formModalStyle">
-
-                    <!-- Nav Bar -->
-                    <div class="ios-nav-bar" @pointerdown="onFormDragStart">
-                        <button class="ios-nav-btn ios-nav-cancel" type="button" @click="showDialog = false">
-                            <AppIcon name="x" :size="16" />
-                        </button>
-                        <span class="ios-nav-title">{{ dialogMode === 'upload' ? 'Upload File' : 'Edit Document'
-                        }}</span>
-                        <button class="ios-nav-btn ios-nav-action" type="button" @click="submitForm"
-                            :disabled="form.processing">
-                            {{ form.processing ? 'Saving...' : (dialogMode === 'upload' ? 'Upload' : 'Save') }}
-                        </button>
-                    </div>
-
-                    <!-- Body -->
-                    <div class="ios-body">
+        <IosModal :visible="showDialog" :title="dialogMode === 'upload' ? 'Upload File' : 'Edit Document'"
+            width="560px" max-width="95vw" body-style="padding: 0 16px;" :show-action="true"
+            :action-label="dialogMode === 'upload' ? 'Upload' : 'Save'" :loading="form.processing"
+            @action="submitForm" @update:visible="val => !val && (showDialog = false)">
 
                         <!-- File Details -->
                         <div class="ios-section">
@@ -297,27 +281,14 @@
                         </div>
 
                         <div style="height: 20px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
+        </IosModal>
 
         <!-- ── Delete Confirmation iOS Modal ── -->
-        <Dialog :visible="showDeleteDialog" modal @update:visible="val => !val && (showDeleteDialog = false)"
-            :pt="{ root: { class: 'ios-dialog-root' }, mask: { class: 'ios-dialog-mask' } }">
-            <template #container>
-                <div class="ios-modal" style="width: 460px;">
-                    <div class="ios-nav-bar">
-                        <button class="ios-nav-btn ios-nav-cancel" type="button" @click="showDeleteDialog = false">
-                            <AppIcon name="x" :size="16" />
-                        </button>
-                        <span class="ios-nav-title">Confirm Deletion</span>
-                        <button class="ios-nav-btn ios-nav-action ios-nav-destructive" type="button"
-                            @click="deleteDocument" :disabled="deleteForm.processing">
-                            {{ deleteForm.processing ? 'Deleting...' : 'Delete' }}
-                        </button>
-                    </div>
-                    <div class="ios-body" v-if="documentToDelete">
+        <IosModal :visible="showDeleteDialog" title="Confirm Deletion" width="460px" max-width="95vw"
+            body-style="padding: 0 16px;" :show-action="true" action-label="Delete"
+            :loading="deleteForm.processing" action-class="ios-nav-destructive" @action="deleteDocument"
+            @update:visible="val => !val && (showDeleteDialog = false)">
+            <div v-if="documentToDelete">
                         <div class="ios-section">
                             <div class="ios-card">
                                 <div class="ios-row" style="padding: 12px 16px; gap: 12px;">
@@ -353,15 +324,12 @@
                             </div>
                         </div>
                         <div style="height: 20px;"></div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
+            </div>
+        </IosModal>
 
-        <!-- ── View Dialog (kept as standard Dialog — full screen previewer) ── -->
-        <Dialog v-model:visible="showViewDialog" header="View File" :modal="true"
-            :style="{ width: '90vw', maxHeight: '90vh' }" :maximizable="true"
-            :contentStyle="{ height: '75vh', overflow: 'hidden' }">
+        <!-- ── View Dialog ── -->
+        <IosModal :visible="showViewDialog" title="View File" width="90vw" max-width="90vw"
+            body-style="padding: 16px; height: 75vh; overflow: hidden;" @update:visible="showViewDialog = $event">
             <div v-if="viewingDocument" class="h-full flex flex-col overflow-hidden">
                 <!-- File Info Header -->
                 <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 flex-shrink-0">
@@ -438,20 +406,22 @@
                             @click="downloadDocument(viewingDocument)" />
                     </div>
                 </div>
+
+                <div class="flex justify-end pt-4 mt-4 border-t border-gray-200 dark:border-white/10 flex-shrink-0">
+                    <Button label="Close" severity="secondary" @click="showViewDialog = false" />
+                </div>
             </div>
-            <template #footer>
-                <Button label="Close" severity="secondary" @click="showViewDialog = false" />
-            </template>
-        </Dialog>
+        </IosModal>
     </AdminLayout>
 </template>
 
 <script setup>
-import { ref, computed, watch, onBeforeUnmount } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 import { usePermission } from '@/composable/permissions';
 
 const props = defineProps({
@@ -473,33 +443,6 @@ const editingDocumentId = ref(null);
 const globalFilter = ref('');
 const filters = ref({ global: { value: null, matchMode: 'contains' } });
 watch(globalFilter, (v) => { filters.value.global.value = v; });
-
-// Form modal drag
-const formDragOffset = ref({ x: 0, y: 0 });
-const formDragStart = ref(null);
-const formModalStyle = computed(() => ({
-    width: '560px',
-    transform: `translate(${formDragOffset.value.x}px, ${formDragOffset.value.y}px)`,
-}));
-function onFormDragStart(e) {
-    if (e.target.closest('button, a, input, textarea, .p-select, .p-inputnumber')) return;
-    formDragStart.value = { x: e.clientX - formDragOffset.value.x, y: e.clientY - formDragOffset.value.y };
-    document.addEventListener('pointermove', onFormDragMove);
-    document.addEventListener('pointerup', onFormDragEnd);
-}
-function onFormDragMove(e) {
-    if (!formDragStart.value) return;
-    formDragOffset.value = { x: e.clientX - formDragStart.value.x, y: e.clientY - formDragStart.value.y };
-}
-function onFormDragEnd() {
-    formDragStart.value = null;
-    document.removeEventListener('pointermove', onFormDragMove);
-    document.removeEventListener('pointerup', onFormDragEnd);
-}
-onBeforeUnmount(() => {
-    document.removeEventListener('pointermove', onFormDragMove);
-    document.removeEventListener('pointerup', onFormDragEnd);
-});
 
 // Image zoom state (same as disbursement viewer)
 const imageZoom = ref(1);
@@ -536,7 +479,6 @@ const openUploadDialog = () => {
     form.reset();
     form.clearErrors();
     form.is_active = true;
-    formDragOffset.value = { x: 0, y: 0 };
     showDialog.value = true;
 };
 
@@ -551,7 +493,6 @@ const openEditDialog = (document) => {
     form.sort_order = document.sort_order;
     form.is_active = document.is_active;
     form.file = null;
-    formDragOffset.value = { x: 0, y: 0 };
     showDialog.value = true;
 };
 
