@@ -32,7 +32,6 @@
             <p v-if="isReimbursementVoucher" class="bold t-12" style="padding-top:2pt;">FOR REIMBURSEMENT
             </p>
             <p v-if="termAcademic" class="bold t-12" style="padding-top:2pt;">{{ termAcademic }}</p>
-            <p v-if="courseName" class="bold t-12" style="padding-top:20pt;">{{ courseName }}</p>
         </div>
 
         <!-- TABLE -->

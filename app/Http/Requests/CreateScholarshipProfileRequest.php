@@ -397,7 +397,7 @@ class CreateScholarshipProfileRequest extends FormRequest
 
     private function matchesTechVocProgram(mixed $value): bool
     {
-        $normalizedValue = strtolower(preg_replace('/[^a-z0-9]+/', '', (string) $value));
+        $normalizedValue = preg_replace('/[^a-z0-9]+/', '', strtolower((string) $value));
 
         if ($normalizedValue === '') {
             return false;
