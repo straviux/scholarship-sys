@@ -154,7 +154,7 @@ const activeFilterTags = computed(() => {
 
 // Auto-trigger search when basic filters change
 watch(
-    () => [filter.value.program, filter.value.course, filter.value.year_level, filter.value.date_from, filter.value.date_to],
+    () => [filter.value.program, filter.value.course, filter.value.school, filter.value.year_level, filter.value.date_from, filter.value.date_to],
     () => { triggerSearch(); },
 );
 
@@ -1083,6 +1083,10 @@ const truncateText = (text, maxLength = 80) => {
                     <div class="flex flex-col">
                         <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses" size="small"
                             :scholarship-program-id="filter.program?.id" />
+                    </div>
+                    <div class="flex flex-col">
+                        <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="All Schools"
+                            size="small" :multiple="false" />
                     </div>
                     <div class="flex flex-col">
                         <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
