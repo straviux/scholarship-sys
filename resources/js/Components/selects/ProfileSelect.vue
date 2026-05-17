@@ -80,18 +80,3 @@ const selectPt = computed(() => {
 });
 </script>
 
-<style scoped>
-.w-full {
-    width: 100%;
-}
-</style>
-
-<style>
-.profile-select-overlay {
-    border-radius: 12px;
-}
-
-.profile-select-root--compact {
-    border-radius: 0.875rem;
-}
-</style>

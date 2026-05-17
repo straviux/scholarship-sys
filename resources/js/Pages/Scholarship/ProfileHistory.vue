@@ -313,18 +313,3 @@ const refreshData = () => {
 };
 </script>
 
-<style scoped>
-.timeline-item {
-    position: relative;
-}
-
-.timeline-item:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    left: 15px;
-    top: 50px;
-    bottom: -30px;
-    width: 2px;
-    background: #e5e7eb;
-}
-</style>

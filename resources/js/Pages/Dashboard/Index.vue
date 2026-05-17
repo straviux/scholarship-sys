@@ -509,16 +509,3 @@ onMounted(() => {
     </AdminLayout>
 </template>
 
-<style scoped>
-/* Custom styles for the dashboard */
-.card {
-    background: white;
-    border-radius: 0.5rem;
-    border: 1px solid #e5e7eb;
-}
-
-.chart-container {
-    position: relative;
-    height: 300px;
-}
-</style>

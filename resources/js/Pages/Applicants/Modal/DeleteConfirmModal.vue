@@ -55,7 +55,7 @@ const deleteApplicant = () => {
                                 <AppIcon name="exclamation-triangle" :size="24"
                                     style="color: #FF3B30; flex-shrink: 0;" />
                                 <div>
-                                    <div class="del-warn-title"
+                                    <div class="text-gray-800 dark:text-gray-300"
                                         style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">
                                         {{ hasRole('administrator') ? `Permanently delete this applicant?` : `Delete
                                         this applicant ? ` }}
@@ -94,30 +94,3 @@ const deleteApplicant = () => {
     </IosModal>
 </template>
 
-<style scoped>
-/* Component-unique: warning dialog title text */
-.del-warn-title {
-    color: #1f2937;
-}
-</style>
-
-<style>
-/* Dark override for DeleteConfirmModal-unique .del-warn-title */
-.dark .del-warn-title {
-    color: #d1d5db !important;
-}
-
-.ios-dialog-root.p-dialog {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-    width: auto !important;
-}
-
-.ios-dialog-mask {
-    background: rgba(0, 0, 0, 0.4);
-}
-</style>

@@ -58,7 +58,7 @@
 
         <div class="mx-auto max-w-[1600px] p-4 short:p-3 space-y-5 short:space-y-3">
 
-            <section id="attention-center" class="report-section">
+            <section id="attention-center" class="scroll-mt-28">
                 <Card class="border border-slate-200 shadow-sm">
                     <template #title>
                         <div class="flex items-center gap-2">
@@ -100,7 +100,7 @@
             </section>
 
             <!-- Data Integrity Section -->
-            <section id="data-integrity" class="report-section">
+            <section id="data-integrity" class="scroll-mt-28">
                 <Card>
                     <template #title>
                         <div class="flex items-center gap-2">
@@ -205,7 +205,7 @@
             </section>
 
             <!-- Application Status Charts -->
-            <section id="status-trends" class="report-section grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
+            <section id="status-trends" class="scroll-mt-28 grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-2">
                 <Card>
                     <template #title>Application Status Distribution</template>
                     <template #content>
@@ -222,7 +222,7 @@
             </section>
 
             <!-- Performance Metrics -->
-            <section id="performance" class="report-section">
+            <section id="performance" class="scroll-mt-28">
                 <Card>
                     <template #title>
                         <div class="flex items-center gap-2">
@@ -253,7 +253,7 @@
             </section>
 
             <!-- Geographic Distribution -->
-            <section id="geography" class="report-section">
+            <section id="geography" class="scroll-mt-28">
                 <Card>
                     <template #title>
                         <div class="flex items-center gap-2">
@@ -293,7 +293,7 @@
             </section>
 
             <!-- Academic Analysis -->
-            <section id="academics" class="report-section">
+            <section id="academics" class="scroll-mt-28">
                 <Card>
                     <template #title>
                         <div class="flex items-center gap-2">
@@ -328,7 +328,7 @@
             </section>
 
             <!-- System Health -->
-            <section id="system-health" class="report-section">
+            <section id="system-health" class="scroll-mt-28">
                 <Card>
                     <template #title>
                         <div class="flex items-center gap-2">
@@ -368,7 +368,7 @@
             </section>
 
             <!-- User Activity -->
-            <section id="user-activity" class="report-section">
+            <section id="user-activity" class="scroll-mt-28">
                 <Card>
                     <template #title>
                         <div class="flex items-center gap-2">
@@ -673,12 +673,3 @@ const exportReport = () => {
 }
 </script>
 
-<style scoped>
-.grid {
-    display: grid;
-}
-
-.report-section {
-    scroll-margin-top: 7rem;
-}
-</style>

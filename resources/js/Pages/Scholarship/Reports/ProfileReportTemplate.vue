@@ -74,6 +74,24 @@ const asOfLabel = computed(() => {
 
     return props.generatedAt.split(' — ')[0] || props.generatedAt;
 });
+const dateRangeText = computed(() => {
+    const dateFrom = props.filters?.['Date From'];
+    const dateTo = props.filters?.['Date To'];
+
+    if (dateFrom && dateTo) {
+        return `Date of Filing: ${dateFrom} - ${dateTo}`;
+    }
+
+    if (dateFrom) {
+        return `Date of Filing From: ${dateFrom}`;
+    }
+
+    if (dateTo) {
+        return `Date of Filing To: ${dateTo}`;
+    }
+
+    return '';
+});
 
 function fmtCurrency(value) {
     return new Intl.NumberFormat('en-PH', {
@@ -158,7 +176,11 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
 
             <div style="text-align:center;padding:8pt 0 4pt;">
                 <p style="font-weight:700;font-size:13pt;">{{ reportTitle }}</p>
-                <p v-if="reportType !== 'summary'" style="font-size:9pt;margin-top:3pt;">As of {{ asOfLabel }}</p>
+                <div v-if="reportType !== 'summary' || !dateRangeText"
+                    style="display:flex;flex-direction:column;align-items:center;gap:3pt;margin-top:3pt;">
+                    <p v-if="reportType !== 'summary'" style="font-size:9pt;">As of {{ asOfLabel }}</p>
+                    <p v-if="reportType !== 'summary' && dateRangeText" style="font-size:9pt;">{{ dateRangeText }}</p>
+                </div>
             </div>
 
             <div v-if="records.length === 0"
@@ -231,6 +253,10 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
         <div v-if="records.length > 0"
             :class="['summary-section', { 'summary-section-page-break': reportType === 'list' }]"
             style="margin-top:18pt;">
+            <div v-if="reportType === 'summary' && dateRangeText"
+                style="text-align:center;border:0.5pt solid #000;padding:5pt 8pt;margin-bottom:8pt;font-size:8.5pt;font-weight:600;">
+                {{ dateRangeText }}
+            </div>
             <div v-if="reportType !== 'summary'"
                 style="text-align:center;border-top:1.5pt solid #000;border-bottom:0.5pt solid #000;padding:5pt 0;margin-bottom:10pt;">
                 <p style="font-weight:700;font-size:10pt;letter-spacing:1pt;text-transform:uppercase;">Report Summary

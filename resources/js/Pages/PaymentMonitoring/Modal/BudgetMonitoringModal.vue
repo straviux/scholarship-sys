@@ -251,19 +251,3 @@ const totals = computed(() => ({
 }));
 </script>
 
-<style scoped>
-:deep(.budget-table .p-datatable) {
-    border-radius: 1rem;
-    overflow: hidden;
-    border: 1px solid var(--p-datatable-border-color);
-}
-
-:deep(.budget-table .p-datatable-table-container) {
-    border-radius: 0;
-}
-
-:deep(.budget-table .p-paginator) {
-    border: none;
-    border-top: 1px solid var(--p-datatable-border-color);
-}
-</style>

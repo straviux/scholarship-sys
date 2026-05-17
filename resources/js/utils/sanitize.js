@@ -11,54 +11,8 @@ export function sanitizeHtml(dirty) {
 	});
 }
 
-/**
- * Normalize rich-text HTML for printable government documents.
- * Keeps structure/formatting but removes link and text-color styling so
- * rendered output falls back to the document's default text color.
- */
-export function normalizeDocumentHtml(html) {
-	if (!html) return '';
-
-	const sanitizedHtml = sanitizeHtml(html);
-
-	if (typeof document === 'undefined') {
-		return sanitizedHtml;
-	}
-
-	const container = document.createElement('div');
-	container.innerHTML = sanitizedHtml;
-
-	container.querySelectorAll('*').forEach((element) => {
-		if (element.tagName === 'A') {
-			element.removeAttribute('href');
-			element.removeAttribute('target');
-			element.removeAttribute('rel');
-		}
-
-		element.removeAttribute('color');
-
-		if (element instanceof HTMLElement) {
-			element.style.removeProperty('color');
-			element.style.removeProperty('text-decoration-color');
-			element.style.removeProperty('caret-color');
-
-			if (!element.getAttribute('style')?.trim()) {
-				element.removeAttribute('style');
-			}
-		}
-
-		Array.from(element.classList).forEach((className) => {
-			if (/^ql-color-/i.test(className)) {
-				element.classList.remove(className);
-			}
-		});
-
-		if (!element.getAttribute('class')?.trim()) {
-			element.removeAttribute('class');
-		}
-	});
-
-	return container.innerHTML;
+export function normalizeDocumentHtml(dirty) {
+	return sanitizeHtml(dirty);
 }
 
 /**

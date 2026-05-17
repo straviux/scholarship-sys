@@ -14,7 +14,7 @@
 
             <section class="ios-section">
                 <div class="ios-section-label">Configuration</div>
-                <Card class="ios-page-panel">
+                <Card class="ios-page-panel ios-settings-form">
                     <template #content>
                         <Tabs v-model:value="activeTab">
                             <TabList>
@@ -221,7 +221,7 @@
                                             <div class="flex items-center gap-4">
                                                 <span class="text-xs text-gray-400 w-8">10%</span>
                                                 <input v-model.number="form.image.jpeg_quality" type="range" min="10"
-                                                    max="100" step="5" class="flex-1 accent-indigo-600" />
+                                                    max="100" step="5" class="ios-range-slider flex-1 accent-indigo-600" />
                                                 <span class="text-xs text-gray-400 w-10">100%</span>
                                             </div>
                                             <div class="flex justify-between mt-2 px-8">
@@ -351,19 +351,3 @@ async function saveSettings() {
 }
 </script>
 
-<style scoped>
-:deep(.p-inputtext),
-:deep(.p-select) {
-    border-radius: 1rem;
-}
-
-:deep(.p-checkbox .p-checkbox-box) {
-    border-radius: 0.5rem;
-}
-
-input[type="range"] {
-    height: 6px;
-    border-radius: 9999px;
-    cursor: pointer;
-}
-</style>

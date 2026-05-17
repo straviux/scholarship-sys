@@ -378,29 +378,3 @@ const formatDateInput = (event) => {
 
 </script>
 
-<style scoped>
-.dob-hide-label label {
-    opacity: 0 !important;
-    pointer-events: none;
-}
-
-.dob-hide-label .p-datepicker-input::placeholder {
-    font-weight: 600;
-    font-size: 0.875rem;
-}
-
-.slide-address-enter-active,
-.slide-address-leave-active {
-    transition: all 0.3s ease;
-    overflow: hidden;
-    max-height: 200px;
-    opacity: 1;
-}
-
-.slide-address-enter-from,
-.slide-address-leave-to {
-    max-height: 0;
-    opacity: 0;
-    margin-top: 0 !important;
-}
-</style>

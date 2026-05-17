@@ -295,27 +295,3 @@ const saveJpmData = () => {
     </IosModal>
 </template>
 
-<style scoped>
-/* Component-unique: copy-to-clipboard button */
-.ios-copy-btn {
-    background: none;
-    border: none;
-    color: #8E8E93;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 6px;
-    font-size: 13px;
-    transition: opacity 0.15s;
-}
-
-.ios-copy-btn:hover {
-    opacity: 0.6;
-}
-</style>
-
-<style>
-/* Dark override for JpmModal-unique .ios-copy-btn */
-.dark .ios-copy-btn {
-    color: #9ca3af !important;
-}
-</style>

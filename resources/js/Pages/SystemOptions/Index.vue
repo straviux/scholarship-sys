@@ -522,21 +522,3 @@ watch(() => form.category, (category) => {
 });
 </script>
 
-<style scoped>
-.disbursement-template-editor :deep(.p-editor-content .ql-editor) {
-    color: #111827;
-}
-
-.disbursement-template-editor :deep(.p-editor-content .ql-editor a) {
-    color: inherit;
-    text-decoration-color: currentColor;
-}
-
-.dark .disbursement-template-editor :deep(.p-editor-content .ql-editor) {
-    color: #d1d5db;
-}
-
-.dark .disbursement-template-editor :deep(.p-editor-content .ql-editor a) {
-    color: inherit;
-}
-</style>

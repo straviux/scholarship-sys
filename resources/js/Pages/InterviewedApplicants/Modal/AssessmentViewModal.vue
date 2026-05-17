@@ -37,7 +37,7 @@
             <div v-else style="width: 48px;"></div>
         </template>
 
-        <div v-if="localRecord">
+        <div v-if="localRecord" class="assessment-shell">
                     <div class="assessment-content">
                         <template v-if="activeMode === 'view'">
                             <div class="assessment-grid  py-6">
@@ -46,7 +46,7 @@
                                         <div class="ios-section-label">Applicant</div>
                                         <div class="ios-card" style="background: #EFF6FF; border-color: #BFDBFE;">
                                             <div class="ios-row">
-                                                <div class="ios-row-label assessment-name">
+                                                <div class="ios-row-label interview-assessment-form__name">
                                                     {{ localRecord.profile.last_name }}, {{
                                                         localRecord.profile.first_name
                                                     }}
@@ -155,8 +155,8 @@
                                     <div class="ios-section">
                                         <div class="ios-section-label">Remarks</div>
                                         <div class="ios-card assessment-remarks-card">
-                                            <p v-if="localRecord.interview_remarks" class="text-sm text-gray-700">
-                                                {{ localRecord.interview_remarks }}
+                                            <p v-if="localRecord.interview_remarks" class="text-sm text-gray-700" v-safe-html="localRecord.interview_remarks.replace(/\n/g, '<br>')">
+                                                
                                             </p>
                                             <p v-else class="text-sm text-gray-400 italic">No remarks provided.</p>
                                         </div>
@@ -198,7 +198,7 @@
                                 <div class="ios-section-label">Applicant Summary</div>
                                 <div class="ios-card" style="background: #EFF6FF; border-color: #BFDBFE;">
                                     <div class="ios-row">
-                                        <div class="ios-row-label assessment-name">
+                                        <div class="ios-row-label interview-assessment-form__name">
                                             {{ localRecord.profile.last_name }}, {{ localRecord.profile.first_name }}
                                         </div>
                                     </div>
@@ -720,11 +720,7 @@ const modalWidth = computed(() => {
 });
 
 const showDialogFooter = computed(() => {
-    if (activeMode.value === 'view') {
-        return props.canManage || props.canRevert;
-    }
-
-    return true;
+    return activeMode.value === 'view' && (props.canManage || props.canRevert);
 });
 
 const editSubjectName = computed(() => {
@@ -914,256 +910,3 @@ const submitEdit = async () => {
 };
 </script>
 
-<style scoped>
-.assessment-modal {
-    display: flex;
-    flex-direction: column;
-    max-height: min(88vh, 920px);
-    overflow: hidden;
-}
-
-.assessment-body {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    padding: 0 !important;
-    overflow: hidden;
-}
-
-.assessment-content {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    padding: 0 16px 8px;
-}
-
-.assessment-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-    align-items: start;
-}
-
-.assessment-column {
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-    min-width: 0;
-}
-
-.assessment-column .ios-section {
-    margin-top: 0;
-}
-
-.assessment-name {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1d4ed8;
-}
-
-.assessment-row-tall {
-    min-height: 52px;
-}
-
-.assessment-remarks-card {
-    padding: 10px 16px;
-    min-height: 96px;
-}
-
-.assessment-nav-action {
-    right: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    padding: 0;
-}
-
-.assessment-nav-action:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-}
-
-.assessment-dialog-footer {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    padding: 12px 18px calc(14px + env(safe-area-inset-bottom, 0px));
-    border-top: 1px solid rgba(203, 213, 225, 0.72);
-    background: rgba(255, 255, 255, 0.86);
-    backdrop-filter: blur(22px) saturate(180%);
-    box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.06);
-}
-
-.assessment-dialog-footer-actions {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 1fr);
-    align-items: stretch;
-    gap: 8px;
-    width: 100%;
-    max-width: 100%;
-}
-
-.assessment-dialog-footer-actions :deep(.p-button) {
-    width: 100%;
-    min-width: 0;
-    border-radius: 9999px;
-    justify-content: center;
-}
-
-.assessment-dialog-footer-actions :deep(.p-button-label) {
-    white-space: nowrap;
-}
-
-.assessment-warning-row {
-    gap: 12px;
-    padding: 14px 16px;
-    min-height: 60px;
-    align-items: flex-start;
-}
-
-.assessment-warning-icon {
-    flex-shrink: 0;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 9999px;
-    background: #fee2e2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 2px;
-}
-
-.assessment-warning-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.assessment-check-slot {
-    width: 16px;
-    height: 13px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.ios-section-tight {
-    margin-top: 16px;
-}
-
-.ios-validation-summary {
-    display: flex;
-    gap: 12px;
-    padding: 14px 16px;
-    background: #fff7ed;
-    border-color: #fed7aa;
-}
-
-.ios-validation-summary-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 9999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #c2410c;
-    background: #ffedd5;
-    flex-shrink: 0;
-}
-
-.ios-validation-summary-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: #9a3412;
-    letter-spacing: -0.15px;
-}
-
-.ios-validation-summary-text {
-    margin: 2px 0 0;
-    font-size: 12px;
-    line-height: 1.4;
-    color: #9a3412;
-}
-
-.ios-row-control-validation {
-    overflow: visible;
-}
-
-.ios-input-stack {
-    width: 100%;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-}
-
-.assessment-editor {
-    width: 100%;
-    min-width: 0;
-    display: block;
-}
-
-.ios-required-mark {
-    color: #ff3b30;
-    margin-left: 2px;
-}
-
-.ios-field-hint {
-    margin-top: 4px;
-    font-size: 12px;
-    line-height: 1.25;
-    color: #8e8e93;
-    letter-spacing: -0.2px;
-}
-
-.ios-field-error {
-    margin-top: 4px;
-    font-size: 12px;
-    line-height: 1.25;
-    color: #ff3b30;
-    letter-spacing: -0.2px;
-}
-
-:deep(.ios-input-stack.has-error .p-inputtext),
-:deep(.ios-input-stack.has-error .p-select),
-:deep(.ios-input-stack.has-error .p-datepicker),
-:deep(.ios-input-stack.has-error .p-editor-container) {
-    border-color: #ff3b30 !important;
-    box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.08);
-}
-
-:deep(.assessment-editor.p-editor),
-:deep(.assessment-editor .p-editor-container) {
-    width: 100%;
-}
-
-@media (max-width: 720px) {
-
-    .assessment-grid {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .assessment-grid {
-        gap: 22px;
-    }
-
-    .assessment-dialog-footer {
-        padding: 10px 12px calc(14px + env(safe-area-inset-bottom, 0px));
-    }
-
-    .assessment-dialog-footer-actions {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-auto-flow: row;
-        grid-auto-columns: unset;
-        gap: 8px;
-    }
-
-    .assessment-dialog-footer-actions :deep(.p-button) {
-        width: 100%;
-        justify-content: center;
-    }
-}
-</style>

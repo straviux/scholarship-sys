@@ -179,22 +179,3 @@ const formatFileSize = (bytes) => {
 };
 </script>
 
-<style scoped>
-.ios-icon-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 8px;
-    color: #007AFF;
-    font-size: 14px;
-    transition: background 0.2s;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.ios-icon-btn:hover {
-    background: rgba(0, 122, 255, 0.1);
-}
-</style>

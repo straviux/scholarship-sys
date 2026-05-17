@@ -1,7 +1,7 @@
 <template>
     <IosModal :visible="show" title="Create New User" width="500px" max-width="calc(100vw - 2rem)"
         body-style="padding: 16px;" @update:visible="val => emit('update:show', val)">
-        <form @submit.prevent="submit" class="space-y-6">
+        <form @submit.prevent="submit" class="space-y-6 ios-admin-user-form">
             <!-- Name Field -->
             <div class="field">
                 <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full
@@ -153,83 +153,3 @@ const formatRoleName = (roleName) => {
 };
 </script>
 
-<style scoped>
-.field {
-    margin-bottom: 1rem;
-}
-
-.p-error {
-    color: var(--red-500);
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-}
-
-.p-invalid {
-    border-color: var(--red-500);
-}
-
-.custom-dialog :deep(.p-dialog-header) {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-bottom: 1px solid #e5e7eb;
-    padding: 1.5rem;
-}
-
-.custom-dialog :deep(.p-dialog-content) {
-    padding: 2rem;
-}
-
-.custom-dialog :deep(.p-dialog-footer) {
-    background: #f9fafb;
-    border-top: 1px solid #e5e7eb;
-    padding: 1.5rem;
-}
-
-/* Enhanced form styling */
-:deep(.p-inputtext) {
-    border-radius: 8px;
-    padding: 0.75rem;
-    font-size: 0.875rem;
-    border: 2px solid #e5e7eb;
-    transition: all 0.2s ease;
-}
-
-:deep(.p-inputtext:focus) {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-:deep(.p-password) {
-    border-radius: 8px;
-}
-
-:deep(.p-password input) {
-    border-radius: 8px;
-    padding: 0.75rem;
-    font-size: 0.875rem;
-    border: 2px solid #e5e7eb;
-    transition: all 0.2s ease;
-}
-
-:deep(.p-select) {
-    border-radius: 8px;
-    border: 2px solid #e5e7eb;
-    transition: all 0.2s ease;
-}
-
-:deep(.p-select:focus) {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-:deep(.p-button) {
-    border-radius: 8px;
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-}
-
-:deep(.p-button:hover) {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-</style>

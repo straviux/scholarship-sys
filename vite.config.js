@@ -28,6 +28,9 @@ export default defineConfig({
 			host: localIP,
 		},
 	},
+	optimizeDeps: {
+		include: ['primevue/divider'],
+	},
 	build: {
 		ssrManifest: false,
 		modulePreload: { polyfill: true },

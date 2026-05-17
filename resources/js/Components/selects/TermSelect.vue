@@ -18,6 +18,10 @@ const props = defineProps({
     multiple: {
         type: Boolean,
         default: false,
+    },
+    showClear: {
+        type: Boolean,
+        default: true,
     }
 });
 
@@ -170,7 +174,7 @@ const selectPt = computed(() => {
 </script>
 
 <template>
-    <Select v-model="localValue" :options="terms" filter :filterFields="['label', 'value']" autoFilterFocus showClear
+    <Select v-model="localValue" :options="terms" filter :filterFields="['label', 'value']" autoFilterFocus :showClear="showClear"
         optionLabel="label" placeholder="Select Term" class="w-full" :loading="loading"
         :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">

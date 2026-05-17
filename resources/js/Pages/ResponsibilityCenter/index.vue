@@ -356,7 +356,7 @@ onMounted(() => {
 
                 <!-- Particulars DataTable -->
                 <DataTable v-if="rc.particulars && rc.particulars.length > 0" :value="rc.particulars" showGridlines
-                    stripedRows scrollable class="text-sm">
+                    stripedRows scrollable class="text-sm ios-datatable-rounded">
                     <Column field="name" header="Particular" style="min-width: 180px">
                         <template #body="{ data }">
                             <div>
@@ -425,7 +425,7 @@ onMounted(() => {
         <!-- RC Modal -->
         <IosModal :visible="showModal" :title="editingRC ? 'Edit Responsibility Center' : 'Add Responsibility Center'"
             width="500px" max-width="90vw" body-style="padding: 16px;" @update:visible="showModal = $event">
-            <div class="space-y-4">
+            <div class="space-y-4 ios-settings-form">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Code</label>
                     <InputText v-model="formData.code" placeholder="e.g., CC001" class="w-full" />
@@ -450,7 +450,7 @@ onMounted(() => {
         <IosModal :visible="showParticularsModal" :title="editingParticular ? 'Edit Particular' : 'Add Particular'"
             width="560px" max-width="90vw" body-style="padding: 16px;"
             @update:visible="showParticularsModal = $event">
-            <div class="space-y-4">
+            <div class="space-y-4 ios-settings-form">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Particulars Name <span
                             class="text-red-500">*</span></label>
@@ -518,27 +518,3 @@ onMounted(() => {
     </div>
 </template>
 
-<style scoped>
-:deep(.p-datatable) {
-    border-radius: 1.5rem;
-    overflow: hidden;
-    border: 1px solid var(--p-datatable-border-color);
-}
-
-:deep(.p-datatable-table-container) {
-    border-radius: 0;
-    overflow: hidden;
-}
-
-:deep(.p-paginator) {
-    border: none;
-    border-top: 1px solid var(--p-datatable-border-color);
-}
-
-:deep(.p-inputtext),
-:deep(.p-select),
-:deep(.p-multiselect),
-:deep(.p-datepicker .p-inputtext) {
-    border-radius: 1rem;
-}
-</style>

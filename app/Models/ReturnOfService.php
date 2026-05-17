@@ -28,6 +28,7 @@ class ReturnOfService extends Model
 
     protected $casts = [
         'graduation_date' => 'date',
+        'years_of_service' => 'float',
         'service_start_date' => 'date',
         'service_end_date' => 'date',
         'created_at' => 'datetime',

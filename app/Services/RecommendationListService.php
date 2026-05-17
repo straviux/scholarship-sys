@@ -27,11 +27,13 @@ class RecommendationListService
                 'paper_size' => $data['paper_size'] ?? $recommendationList->paper_size ?? 'A4',
                 'orientation' => $data['orientation'] ?? $recommendationList->orientation ?? 'landscape',
                 'budget_allocation_key' => $budgetAllocation['key'] ?? null,
-                'budget_program' => $budgetAllocation['program'] ?? null,
+                'budget_program' => $this->cleanString($data['budget_program'] ?? null)
+                    ?? ($budgetAllocation['program'] ?? $recommendationList->budget_program),
                 'budget_fiscal_year' => $budgetAllocation['fiscal_year'] ?? null,
                 'budget_rc_code' => $budgetAllocation['rc_code'] ?? null,
                 'budget_rc_name' => $budgetAllocation['rc_name'] ?? null,
                 'budget_allocation' => $budgetAllocation,
+                'highlight_jpm_members' => (bool) ($data['highlight_jpm_members'] ?? $recommendationList->highlight_jpm_members ?? false),
                 'prepared_by' => $this->cleanString($data['prepared_by'] ?? null),
                 'prepared_by_position' => $this->cleanString($data['prepared_by_position'] ?? null),
                 'prepared_by_office' => $this->cleanString($data['prepared_by_office'] ?? null),
@@ -88,11 +90,13 @@ class RecommendationListService
                         'selected_record_ids' => $recordIds,
                         'records_snapshot' => $recordsSnapshot,
                         'budget_allocation_key' => $budgetAllocation['key'] ?? null,
-                        'budget_program' => $budgetAllocation['program'] ?? null,
+                        'budget_program' => $this->cleanString($data['budget_program'] ?? null)
+                            ?? ($budgetAllocation['program'] ?? null),
                         'budget_fiscal_year' => $budgetAllocation['fiscal_year'] ?? null,
                         'budget_rc_code' => $budgetAllocation['rc_code'] ?? null,
                         'budget_rc_name' => $budgetAllocation['rc_name'] ?? null,
                         'budget_allocation' => $budgetAllocation,
+                        'highlight_jpm_members' => (bool) ($data['highlight_jpm_members'] ?? false),
                         'prepared_by' => $this->cleanString($data['prepared_by'] ?? null),
                         'prepared_by_position' => $this->cleanString($data['prepared_by_position'] ?? null),
                         'prepared_by_office' => $this->cleanString($data['prepared_by_office'] ?? null),
@@ -138,7 +142,17 @@ class RecommendationListService
             ->where('recommendation', 'recommended')
             ->with([
                 'profile' => function ($query) {
-                    $query->select('profile_id', 'first_name', 'last_name', 'middle_name', 'contact_no');
+                    $query->select(
+                        'profile_id',
+                        'first_name',
+                        'last_name',
+                        'middle_name',
+                        'contact_no',
+                        'is_jpm_member',
+                        'is_father_jpm',
+                        'is_mother_jpm',
+                        'is_guardian_jpm'
+                    );
                 },
                 'program' => function ($query) {
                     $query->select('scholarship_programs.id', 'scholarship_programs.name', 'scholarship_programs.shortname');
@@ -252,6 +266,10 @@ class RecommendationListService
                 'last_name' => $record->profile?->last_name,
                 'middle_name' => $record->profile?->middle_name,
                 'contact_no' => $record->profile?->contact_no,
+                'is_jpm_member' => (bool) $record->profile?->is_jpm_member,
+                'is_father_jpm' => (bool) $record->profile?->is_father_jpm,
+                'is_mother_jpm' => (bool) $record->profile?->is_mother_jpm,
+                'is_guardian_jpm' => (bool) $record->profile?->is_guardian_jpm,
             ],
             'program' => [
                 'id' => $record->program?->id,
@@ -295,6 +313,14 @@ class RecommendationListService
 
         return [
             'key' => $this->cleanString($budgetAllocation['key'] ?? null),
+            'particular_id' => isset($budgetAllocation['particular_id']) && $budgetAllocation['particular_id'] !== ''
+                ? (int) $budgetAllocation['particular_id']
+                : null,
+            'particular_name' => $this->cleanString($budgetAllocation['particular_name'] ?? null),
+            'description' => $this->cleanString($budgetAllocation['description'] ?? null),
+            'program_id' => isset($budgetAllocation['program_id']) && $budgetAllocation['program_id'] !== ''
+                ? (int) $budgetAllocation['program_id']
+                : null,
             'program' => $this->cleanString($budgetAllocation['program'] ?? null),
             'rc_code' => $this->cleanString($budgetAllocation['rc_code'] ?? null),
             'rc_name' => $this->cleanString($budgetAllocation['rc_name'] ?? null),
@@ -304,6 +330,8 @@ class RecommendationListService
             'total_allotment' => $this->normalizeDecimal($budgetAllocation['total_allotment'] ?? null),
             'disbursed' => $this->normalizeDecimal($budgetAllocation['disbursed'] ?? null),
             'remaining' => $this->normalizeDecimal($budgetAllocation['remaining'] ?? null),
+            'date_start' => $this->cleanString($budgetAllocation['date_start'] ?? null),
+            'date_end' => $this->cleanString($budgetAllocation['date_end'] ?? null),
             'approved_scholars_to_date' => isset($budgetAllocation['approved_scholars_to_date'])
                 ? (int) $budgetAllocation['approved_scholars_to_date']
                 : null,

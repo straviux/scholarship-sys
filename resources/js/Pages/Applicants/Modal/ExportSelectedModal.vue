@@ -118,14 +118,14 @@ const exportAs = (format) => {
                         <div class="ios-card">
                             <div class="ios-row">
                                 <span class="ios-row-label">Paper Size</span>
-                                <div class="ios-row-control ios-select">
+                                <div class="ios-row-control ios-row-control--compact ios-select">
                                     <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label"
                                         optionValue="value" class="w-full" />
                                 </div>
                             </div>
                             <div class="ios-row ios-row-last">
                                 <span class="ios-row-label">Orientation</span>
-                                <div class="ios-row-control ios-select">
+                                <div class="ios-row-control ios-row-control--compact ios-select">
                                     <Select v-model="orientation" :options="orientationOptions" optionLabel="label"
                                         optionValue="value" class="w-full" />
                                 </div>
@@ -181,134 +181,3 @@ const exportAs = (format) => {
     </IosModal>
 </template>
 
-<style scoped>
-.ios-modal {
-    background: #F2F2F7;
-    border-radius: 14px;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-    overflow: hidden;
-    margin: 0 auto;
-}
-
-.ios-body {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 0 16px;
-}
-
-.ios-section {
-    margin-top: 22px;
-}
-
-.ios-section:first-child {
-    margin-top: 16px;
-}
-
-.ios-section-label {
-    font-size: 13px;
-    font-weight: 400;
-    color: #6D6D72;
-    text-transform: uppercase;
-    letter-spacing: -0.08px;
-    padding: 0 16px 6px;
-}
-
-.ios-card {
-    background: #FFFFFF;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 0.5px solid #E5E5EA;
-}
-
-.ios-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 4px 16px;
-    min-height: 36px;
-    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
-}
-
-.ios-row-last {
-    border-bottom: none;
-}
-
-.ios-row:last-child {
-    border-bottom: none;
-}
-
-.ios-row-label {
-    font-size: 14px;
-    color: #8E8E93;
-    letter-spacing: -0.4px;
-    font-weight: 500;
-}
-
-.ios-row-control.ios-select {
-    width: 140px;
-}
-
-.ios-row-control.ios-select :deep(.p-select) {
-    border: none;
-    background: transparent;
-    box-shadow: none;
-    font-size: 13px;
-    color: #8E8E93;
-    text-align: right;
-    padding: 0;
-}
-
-.ios-export-buttons {
-    display: flex;
-    gap: 10px;
-}
-
-.ios-export-btn {
-    flex: 1;
-    padding: 12px 16px;
-    border-radius: 10px;
-    border: none;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: opacity 0.15s;
-}
-
-.ios-export-btn:hover {
-    opacity: 0.8;
-}
-
-.ios-export-pdf {
-    background: #FF3B30;
-    color: #FFFFFF;
-}
-
-.ios-export-excel {
-    background: #34C759;
-    color: #FFFFFF;
-}
-</style>
-
-<style>
-.ios-dialog-root.p-dialog {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-    width: auto !important;
-}
-
-.ios-dialog-mask {
-    background: rgba(0, 0, 0, 0.4);
-}
-</style>

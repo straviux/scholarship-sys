@@ -3,8 +3,13 @@ import * as XLSX from 'xlsx';
 
 import { renderVueTemplate, usePdfPrint } from '@/composables/usePdfPrint';
 import InterviewedApplicantsTemplate from './Pdf/InterviewedApplicantsTemplate.vue';
+import RecommendationListTemplate from './Pdf/RecommendationListTemplate.vue';
 
 const DEFAULT_PREPARED_BY = 'NUR-AINA S. IBRAHIM';
+const DEFAULT_PREPARED_BY_POSITION = 'Program Manager';
+const DEFAULT_PREPARED_BY_OFFICE = 'YAKAP sa Edukasyon';
+const DEFAULT_APPROVED_BY = 'AMY ROA ALVAREZ';
+const DEFAULT_APPROVED_BY_POSITION = 'Governor';
 
 function compareApplicantsByName(left, right) {
     const leftLastName = left?.profile?.last_name || '';
@@ -77,7 +82,6 @@ export function printInterviewedApplicantsSelection({ records = [], preparedBy =
         return false;
     }
 
-    const generatedAt = moment().format('MMMM D, YYYY h:mm A');
     const bodyHtml = renderVueTemplate(InterviewedApplicantsTemplate, {
         records: normalizedRecords,
         reportType: 'list',
@@ -90,10 +94,51 @@ export function printInterviewedApplicantsSelection({ records = [], preparedBy =
     const { buildHtmlDoc } = usePdfPrint();
     const title = 'Selected Interviewed Applicants Report';
 
-    printWindow.document.write(buildHtmlDoc(bodyHtml, title, 'a4-landscape', '', {
-        generatedAt,
-        showPageNumbers: true,
-    }));
+    printWindow.document.write(buildHtmlDoc(bodyHtml, title, 'a4-landscape'));
+    printWindow.document.close();
+    printWindow.onload = () => {
+        printWindow.focus();
+        printWindow.print();
+    };
+
+    setTimeout(() => {
+        if (printWindow && !printWindow.closed) {
+            printWindow.focus();
+            printWindow.print();
+        }
+    }, 800);
+
+    return true;
+}
+
+export function printRecommendationList({ recommendationList = null } = {}) {
+    const printWindow = window.open('', '_blank');
+
+    if (!printWindow) {
+        return false;
+    }
+
+    const normalizedRecords = normalizeRecords(recommendationList?.records || []);
+    const bodyHtml = renderVueTemplate(RecommendationListTemplate, {
+        records: normalizedRecords,
+        today: moment().format('MMMM D, YYYY'),
+        preparedBy: recommendationList?.prepared_by || DEFAULT_PREPARED_BY,
+        preparedByPosition: recommendationList?.prepared_by_position || DEFAULT_PREPARED_BY_POSITION,
+        preparedByOffice: recommendationList?.prepared_by_office || DEFAULT_PREPARED_BY_OFFICE,
+        approvedBy: recommendationList?.approved_by || DEFAULT_APPROVED_BY,
+        approvedByPosition: recommendationList?.approved_by_position || DEFAULT_APPROVED_BY_POSITION,
+        budgetProgram: recommendationList?.budget_program || '',
+        budgetAllocation: recommendationList?.budget_allocation || null,
+        highlightJpmMembers: Boolean(recommendationList?.highlight_jpm_members),
+        reportTitle: recommendationList?.report_title || 'RECOMMENDATION LIST FOR APPROVAL',
+    });
+
+    const { buildHtmlDoc } = usePdfPrint();
+    const title = recommendationList?.list_number
+        ? `Recommendation List ${recommendationList.list_number}`
+        : 'Recommendation List';
+
+    printWindow.document.write(buildHtmlDoc(bodyHtml, title, 'a4-landscape'));
     printWindow.document.close();
     printWindow.onload = () => {
         printWindow.focus();

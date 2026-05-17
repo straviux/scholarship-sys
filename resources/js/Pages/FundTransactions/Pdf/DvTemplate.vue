@@ -326,7 +326,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { normalizeDocumentHtml } from '@/utils/sanitize';
+import { sanitizeHtml as normalizeDocumentHtml } from '@/utils/sanitize';
 
 const props = defineProps({
     voucher: { type: Object, required: true },

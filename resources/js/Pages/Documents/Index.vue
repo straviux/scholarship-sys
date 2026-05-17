@@ -31,17 +31,18 @@
                     <InputIcon>
                         <AppIcon name="search" :size="16" class="text-gray-400" />
                     </InputIcon>
-                    <InputText v-model="globalFilter" placeholder="Search documents..." class="w-full" />
+                    <InputText v-model="globalFilter" placeholder="Search documents..."
+                        class="w-full ios-search-input-rounded" />
                 </IconField>
                 <Tag :value="`${getAllDocuments().length} file${getAllDocuments().length !== 1 ? 's' : ''}`"
                     severity="secondary" />
             </div>
 
             <!-- Tabs + DataTable -->
-            <TabView v-model:activeIndex="activeTabIndex">
+            <TabView v-model:activeIndex="activeTabIndex" class="ios-tabview-rounded">
                 <!-- All Files -->
                 <TabPanel header="All Files">
-                    <DataTable :value="getAllDocuments()" v-model:filters="filters"
+                    <DataTable :value="getAllDocuments()" v-model:filters="filters" class="ios-datatable-clean"
                         :globalFilterFields="['title', 'description', 'category']" :rows="10"
                         :rowsPerPageOptions="[5, 10, 20, 50]" paginator :rowHover="true" stripedRows showGridlines
                         scrollable>
@@ -110,6 +111,7 @@
                 <!-- Per-category tabs -->
                 <TabPanel v-for="category in categories" :key="category.value" :header="category.label">
                     <DataTable :value="getDocumentsByCategory(category.value)" v-model:filters="filters"
+                        class="ios-datatable-clean"
                         :globalFilterFields="['title', 'description']" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]"
                         paginator :rowHover="true" stripedRows showGridlines scrollable>
                         <Column field="title" header="Title" sortable style="min-width: 200px">
@@ -631,229 +633,3 @@ const getFileUrl = (document) => {
     return `/storage/${document.file_path}`;
 };
 </script>
-
-<style scoped>
-/* ── TabView ── */
-:deep(.p-tabview) {
-    border-radius: 1.5rem;
-    overflow: hidden;
-    border: 1px solid var(--p-content-border-color, #e5e7eb);
-}
-
-:deep(.p-tabview-tablist-container) {
-    border-radius: 1.5rem 1.5rem 0 0;
-}
-
-:deep(.p-tabview-panels) {
-    border-radius: 0 0 1.5rem 1.5rem;
-    overflow: hidden;
-}
-
-/* ── DataTable ── */
-:deep(.p-datatable) {
-    border-radius: 0;
-    overflow: hidden;
-    border: none;
-}
-
-:deep(.p-datatable-table-container) {
-    border-radius: 0;
-    overflow: hidden;
-}
-
-:deep(.p-datatable thead tr:first-child th:first-child) {
-    border-left: none;
-}
-
-:deep(.p-datatable thead tr:first-child th:last-child) {
-    border-right: none;
-}
-
-:deep(.p-datatable thead tr:first-child th) {
-    border-top: none;
-}
-
-:deep(.p-datatable tbody tr:last-child td) {
-    border-bottom: none;
-}
-
-:deep(.p-datatable tbody tr:last-child td:first-child) {
-    border-left: none;
-}
-
-:deep(.p-datatable tbody tr:last-child td:last-child) {
-    border-right: none;
-}
-
-:deep(.p-paginator) {
-    border: none;
-    border-top: 1px solid var(--p-datatable-border-color);
-}
-
-:deep(.p-iconfield .p-inputtext) {
-    border-radius: 1rem;
-}
-
-/* ═══════════════════════════════════════════════
-   iOS Modal Shell
-   ═══════════════════════════════════════════════ */
-.ios-modal {
-    background: #F2F2F7;
-    border-radius: 14px;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-    overflow: hidden;
-    margin: 0 auto;
-}
-
-.ios-body {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-    padding: 0 16px;
-}
-
-.ios-section {
-    margin-top: 22px;
-}
-
-.ios-section:first-child {
-    margin-top: 16px;
-}
-
-.ios-section-label {
-    font-size: 13px;
-    font-weight: 400;
-    color: #6D6D72;
-    text-transform: uppercase;
-    letter-spacing: -0.08px;
-    padding: 0 16px 6px;
-}
-
-.ios-card {
-    background: #FFFFFF;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 0.5px solid #E5E5EA;
-}
-
-.ios-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 4px 16px;
-    min-height: 36px;
-    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
-}
-
-.ios-row-last {
-    border-bottom: none;
-}
-
-.ios-row:last-child {
-    border-bottom: none;
-}
-
-.ios-row-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: #8E8E93;
-    letter-spacing: -0.4px;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.ios-row-control {
-    flex: 0 0 200px;
-    width: 200px;
-    display: flex;
-    justify-content: flex-end;
-    overflow: hidden;
-}
-
-.ios-row-control>* {
-    width: 100%;
-    min-width: 0;
-}
-
-/* ── PrimeVue tweaks inside ios-card ── */
-:deep(.ios-row-input.p-inputtext),
-:deep(.ios-row-input) {
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    text-align: right;
-    color: #1c1c1e !important;
-    font-size: 13px;
-    padding: 4px 2px 4px 8px;
-    width: 100%;
-}
-
-:deep(.ios-row-input.p-inputtext:focus),
-:deep(.ios-row-input:focus) {
-    outline: none !important;
-    box-shadow: none !important;
-}
-
-:deep(.ios-row-input .p-inputnumber-input) {
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    text-align: right;
-    color: #1c1c1e !important;
-    font-size: 13px;
-    width: 100%;
-}
-
-:deep(.ios-select .p-select) {
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    font-size: 13px;
-    color: #8E8E93;
-    padding: 0;
-    width: 100%;
-    min-height: unset;
-}
-
-:deep(.ios-select .p-select-label) {
-    color: #1c1c1e !important;
-    text-align: right;
-    padding: 4px 2px 4px 8px;
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-:deep(.ios-select .p-select-dropdown) {
-    color: #C7C7CC !important;
-}
-
-:deep(.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider) {
-    background: #34C759 !important;
-}
-</style>
-
-<!-- Unscoped: targets teleported Dialog elements at body level -->
-<style>
-.ios-dialog-root.p-dialog {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-    width: auto !important;
-}
-
-.ios-dialog-mask {
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
-}
-</style>

@@ -238,28 +238,3 @@ const formatDate = (date) => {
     </IosModal>
 </template>
 
-<style scoped>
-/* Component-unique: priority selection dot indicator */
-.ios-priority-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-</style>
-
-<style>
-.ios-dialog-root.p-dialog {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-    width: auto !important;
-}
-
-.ios-dialog-mask {
-    background: rgba(0, 0, 0, 0.4);
-}
-</style>

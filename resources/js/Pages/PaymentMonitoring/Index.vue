@@ -338,7 +338,7 @@ const groupedData = computed(() => {
 
             <!-- Filters Panel -->
             <Panel class="mb-6 short:mb-3 !rounded-4xl overflow-hidden">
-                <div class="flex items-end gap-3 short:gap-2 -mt-6 short:-mt-3 flex-wrap">
+                <div class="flex items-end gap-3 short:gap-2 -mt-6 short:-mt-3 flex-wrap ios-settings-form">
                     <!-- Search -->
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Scholar Name</label>
@@ -435,9 +435,9 @@ const groupedData = computed(() => {
                 </div>
 
                 <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="groupedData"
-                    :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]" class="text-sm" showGridlines
+                    :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]" class="text-sm ios-pm-table" showGridlines
                     stripedRows scrollable dataKey="profile_id" v-model:expandedRows="expandedRows"
-                    :rowClass="(row) => activeExpandedProfileId && activeExpandedProfileId !== row.profile_id ? 'row-blurred' : ''"
+                    :rowClass="(row) => activeExpandedProfileId && activeExpandedProfileId !== row.profile_id ? 'ios-pm-row-blurred' : ''"
                     @rowExpand="handleRowExpand" @rowCollapse="handleRowCollapse">
 
                     <Column expander headerClass="w-12" bodyClass="w-12" />
@@ -655,44 +655,3 @@ const groupedData = computed(() => {
     </AdminLayout>
 </template>
 
-<style scoped>
-:deep(.p-datatable) {
-    border-radius: 0;
-    overflow: hidden;
-    border: none;
-}
-
-:deep(.p-datatable-table-container) {
-    border-radius: 0;
-    overflow: hidden;
-}
-
-:deep(.p-paginator) {
-    border: none;
-    border-top: 1px solid var(--p-datatable-border-color);
-}
-
-:deep(.p-inputtext),
-:deep(.p-select),
-:deep(.p-multiselect) {
-    border-radius: 1rem;
-}
-
-:deep(.p-datatable-tbody > tr.row-blurred > td) {
-    opacity: 0.4;
-    filter: blur(1.5px);
-    transition: opacity 0.2s, filter 0.2s;
-    pointer-events: none;
-}
-
-:deep(.nested-pm-table .p-datatable) {
-    border-radius: 0.75rem;
-    overflow: hidden;
-    border: 1px solid var(--p-datatable-border-color);
-}
-
-:deep(.nested-pm-table .p-datatable-table-container) {
-    border-radius: 0;
-    overflow: hidden;
-}
-</style>

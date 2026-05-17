@@ -5,6 +5,7 @@
         :draggable="!isMaximized"
         :modal-class="{ 'ios-modal-maximized': isMaximized }"
         :modal-content-style="wizardModalContentStyle"
+        :body-style="{ padding: '0', display: 'flex', flexDirection: 'column', minHeight: 0 }"
         @update:visible="val => emit('update:visible', val)"
     >
         <template #header-right>
@@ -17,7 +18,8 @@
             </div>
         </template>
 
-        <div class="mt-8">
+        <div class="ios-body">
+            <div class="mt-8">
                         <Stepper v-model:value="activeStep" :linear="mode !== 'edit' || !canProceedStep1">
                             <StepList>
                                 <Step value="1" asChild>
@@ -225,6 +227,7 @@
                                 </StepPanel>
                             </StepPanels>
                         </Stepper>
+            </div>
         </div>
 
         <div class="ios-footer">
@@ -259,6 +262,7 @@ import axios from 'axios';
 import PersonalInformationFields from '@/Components/forms/fields/PersonalInformationFields.vue';
 import FamilyInformationFields from '@/Components/forms/fields/FamilyInformationFields.vue';
 import AcademicInformationFields from '@/Components/forms/fields/AcademicInformationFields.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 import { toast } from '@/utils/toast';
 
 const props = defineProps({
@@ -682,201 +686,3 @@ const handleSubmit = () => {
 };
 </script>
 
-<style scoped>
-/* Nav right area (step counter + maximize button) */
-.ios-nav-right {
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.ios-nav-step-text {
-    font-size: 13px;
-    color: #8E8E93;
-    font-weight: 400;
-}
-
-.dark .ios-nav-step-text {
-    color: #6b7280;
-}
-
-.ios-nav-maximize {
-    background: none;
-    border: none;
-    color: #8E8E93;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    transition: opacity 0.15s;
-}
-
-.ios-nav-maximize:hover {
-    opacity: 0.6;
-}
-
-/* Maximized state */
-.ios-modal-maximized {
-    border-radius: 0;
-    max-height: 100vh;
-}
-
-.ios-modal-maximized .ios-nav-bar {
-    cursor: default;
-}
-
-/* Footer */
-.ios-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    background: #FFFFFF;
-    border-top: 0.5px solid #E5E5EA;
-    flex-shrink: 0;
-}
-
-.dark .ios-footer {
-    background: #2a3040;
-    border-top-color: rgba(255, 255, 255, 0.08);
-}
-
-.ios-footer-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: none;
-    border: none;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    padding: 6px 14px;
-    border-radius: 8px;
-    transition: opacity 0.15s, background 0.15s;
-}
-
-.ios-footer-btn:hover {
-    background: rgba(0, 0, 0, 0.04);
-}
-
-.dark .ios-footer-btn:hover {
-    background: rgba(255, 255, 255, 0.06);
-}
-
-.ios-footer-btn:disabled {
-    color: #C7C7CC;
-    cursor: not-allowed;
-    background: none;
-}
-
-.ios-footer-back {
-    color: #6B7280;
-    font-weight: 400;
-}
-
-.dark .ios-footer-back {
-    color: #9ca3af;
-}
-
-.ios-footer-next {
-    color: #007AFF;
-}
-
-.ios-footer-submit {
-    color: #34C759;
-}
-
-.ios-dup-proceed {
-    font-size: 15px;
-    font-weight: 600;
-    color: #FF9500;
-}
-</style>
-
-<style>
-/* Make PrimeVue Stepper internals transparent inside the ios-modal */
-.ios-modal .p-stepper {
-    background: transparent !important;
-}
-
-.ios-modal .p-steppanels {
-    background: transparent !important;
-}
-
-.ios-modal .p-steppanel {
-    background: transparent !important;
-}
-
-.ios-modal .p-steppanel-content {
-    background: transparent !important;
-}
-
-/* Icon-based step buttons — non-scoped to override global ios-design-system.css */
-.ios-step-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 6px 16px;
-    border-radius: 10px;
-    transition: all 0.2s ease;
-    color: #8e8e93;
-    font-size: 0.7rem;
-    font-weight: 500;
-}
-
-.ios-step-btn i {
-    font-size: 1.1rem;
-}
-
-.ios-step-btn:hover {
-    color: #636366;
-    background: rgba(0, 0, 0, 0.05);
-}
-
-.ios-step-btn.ios-step-active {
-    color: #555;
-}
-
-.ios-step-btn.ios-step-active i {
-    font-weight: 700;
-}
-
-.ios-step-btn.ios-step-disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-}
-
-.ios-step-separator {
-    flex: 1;
-    height: 2px;
-    background: #e5e7eb;
-    align-self: center;
-    border-radius: 1px;
-}
-
-.dark .ios-step-btn {
-    color: #6b7280;
-}
-
-.dark .ios-step-btn:hover {
-    color: #9ca3af;
-    background: rgba(255, 255, 255, 0.06);
-}
-
-.dark .ios-step-btn.ios-step-active {
-    color: #d1d5db;
-}
-
-.dark .ios-step-separator {
-    background: rgba(255, 255, 255, 0.1);
-}
-</style>

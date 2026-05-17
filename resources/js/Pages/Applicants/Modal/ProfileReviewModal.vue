@@ -174,21 +174,21 @@ const visitProfile = () => {
                     <AppIcon name="chevron-down" :size="11" />
                 </button>
                 <Popover ref="actionPopover">
-                    <div class="profile-review-action-menu">
-                        <button v-if="canViewFullProfile" class="profile-review-action-item" @click="visitProfile">
-                            <AppIcon name="eye" :size="14" class="profile-review-action-icon" />
+                    <div class="ios-action-menu">
+                        <button v-if="canViewFullProfile" class="ios-action-item" @click="visitProfile">
+                            <AppIcon name="eye" :size="14" class="ios-action-icon" />
                             <span>View Full Profile</span>
                         </button>
-                        <button v-if="canEditRequirements" class="profile-review-action-item" @click="editRequirements">
-                            <AppIcon name="book-check" :size="14" class="profile-review-action-icon" />
+                        <button v-if="canEditRequirements" class="ios-action-item" @click="editRequirements">
+                            <AppIcon name="book-check" :size="14" class="ios-action-icon" />
                             <span>Edit Requirements</span>
                         </button>
-                        <button v-if="canInterview" class="profile-review-action-item" @click="markAsInterviewed">
-                            <AppIcon name="comments" :size="14" class="profile-review-action-icon" />
+                        <button v-if="canInterview" class="ios-action-item" @click="markAsInterviewed">
+                            <AppIcon name="comments" :size="14" class="ios-action-icon" />
                             <span>Interview</span>
                         </button>
-                        <button v-if="canEditProfile" class="profile-review-action-item" @click="editProfile">
-                            <AppIcon name="pencil" :size="14" class="profile-review-action-icon" />
+                        <button v-if="canEditProfile" class="ios-action-item" @click="editProfile">
+                            <AppIcon name="pencil" :size="14" class="ios-action-icon" />
                             <span>Edit Profile</span>
                         </button>
                     </div>
@@ -199,18 +199,18 @@ const visitProfile = () => {
 
         <div class="ios-body" v-if="currentApplicant">
                     <!-- Applicant Header Card -->
-                    <div class="ios-section" style="margin-top: 16px;">
+                    <div class="ios-section ios-section-tight">
                         <div class="ios-card" style="padding: 14px 16px;">
                             <div style="display: flex; align-items: flex-start; gap: 12px;">
                                 <Avatar :label="getApplicantInitials(currentApplicant)" size="large" shape="circle"
                                     style="background: #007AFF; color: white; flex-shrink: 0;" />
                                 <div style="flex: 1; min-width: 0;">
-                                    <div class="profile-name"
+                                    <div class="ios-profile-name"
                                         style="font-size: 16px; font-weight: 600; cursor: pointer; letter-spacing: -0.4px;"
                                         @click="visitProfile">
                                         {{ getApplicantFullName(currentApplicant) }}
                                     </div>
-                                    <div class="profile-meta"
+                                    <div class="ios-profile-meta"
                                         style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; font-size: 12px;">
                                         <span>
                                             <AppIcon name="phone" :size="10" style="margin-right: 3px;" />{{
@@ -248,7 +248,7 @@ const visitProfile = () => {
                     </div>
 
                     <!-- Tabs -->
-                    <div class="ios-section">
+                    <div class="ios-section ios-section-tight">
                         <Tabs value="requirements">
                             <TabList>
                                 <Tab value="requirements">Requirements</Tab>
@@ -257,34 +257,34 @@ const visitProfile = () => {
                             <TabPanels>
                                 <!-- Requirements Tab -->
                                 <TabPanel value="requirements">
-                                    <div v-if="reviewRequirements.length === 0" class="req-empty"
+                                    <div v-if="reviewRequirements.length === 0" class="ios-req-empty"
                                         style="padding: 32px 0; text-align: center;">
                                         <AppIcon name="inbox" :size="28" style="display: block; margin-bottom: 8px;" />
                                         No requirements found
                                     </div>
                                     <div v-else class="ios-card" style="margin-top: 8px;">
-                                        <div v-for="(req, idx) in reviewRequirements" :key="req.id" class="ios-row"
+                                        <div v-for="(req, idx) in reviewRequirements" :key="req.id" class="ios-row ios-row-review"
                                             :class="{ 'ios-row-last': idx === reviewRequirements.length - 1 }"
                                             :style="{ opacity: req.is_checked ? 1 : 0.55 }">
                                             <div
                                                 style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
-                                                <span v-if="req.is_checked" class="req-check-dot"
+                                                <span v-if="req.is_checked" class="ios-req-check-dot"
                                                     style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;">
                                                     <AppIcon name="check" :size="11" style="color: #34C759;" />
                                                 </span>
-                                                <span v-else class="req-uncheck-dot"
+                                                <span v-else class="ios-req-uncheck-dot"
                                                     style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;">
                                                     <AppIcon name="circle" :size="11" style="color: #C7C7CC;" />
                                                 </span>
                                                 <div style="flex: 1; min-width: 0;">
-                                                    <div class="req-item-name"
+                                                    <div class="ios-req-item-name"
                                                         style="font-size: 14px; font-weight: 500;">{{
                                                             req.name }}</div>
                                                     <div v-if="req.file_path"
                                                         style="font-size: 11px; color: #007AFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                         {{ req.file_name }}
                                                     </div>
-                                                    <div v-else class="req-no-file" style="font-size: 11px;">No file
+                                                    <div v-else class="ios-req-no-file" style="font-size: 11px;">No file
                                                         uploaded</div>
                                                 </div>
                                             </div>
@@ -401,7 +401,7 @@ const visitProfile = () => {
                                     </div>
 
                                     <!-- Family -->
-                                    <div class="ios-section" style="margin-top: 12px;">
+                                    <div class="ios-section ios-section-tight">
                                         <div class="ios-section-label">Family Information</div>
                                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
                                             <!-- Father -->
@@ -494,252 +494,3 @@ const visitProfile = () => {
     <ViewAttachmentModal v-model:visible="showPreviewModal" :attachment="previewFile" />
 </template>
 
-<style scoped>
-/* Component-unique styles — standard ios-* classes handled by ios-design-system.css */
-
-/* Override: this modal uses tighter spacing than global 22px */
-.ios-section {
-    margin-top: 16px;
-}
-
-.ios-nav-dropdown {
-    gap: 4px;
-}
-
-/* Override: rows have larger padding than global 4px 16px */
-.ios-row {
-    padding: 8px 16px;
-    min-height: 40px;
-}
-
-/* Component-unique classes */
-.ios-icon-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px 6px;
-    border-radius: 6px;
-    transition: background 0.15s;
-}
-
-.ios-icon-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-.ios-info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-}
-
-.ios-info-item {
-    display: flex;
-    flex-direction: column;
-}
-
-.ios-info-label {
-    font-size: 11px;
-    color: #8E8E93;
-    display: block;
-}
-
-.ios-info-value {
-    font-size: 13px;
-    font-weight: 500;
-    color: #000;
-    display: block;
-}
-
-.ios-family-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.ios-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px;
-    background: #FFFFFF;
-    border-top: 0.5px solid #E5E5EA;
-    flex-shrink: 0;
-}
-
-.ios-footer-btn {
-    display: flex;
-    align-items: center;
-    background: none;
-    border: none;
-    font-size: 14px;
-    color: #007AFF;
-    font-weight: 500;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: opacity 0.15s;
-}
-
-.ios-footer-btn:hover {
-    opacity: 0.6;
-}
-
-.ios-footer-btn:disabled {
-    color: #C7C7CC;
-    cursor: not-allowed;
-}
-
-.ios-footer-counter {
-    font-size: 13px;
-    color: #8E8E93;
-    font-weight: 500;
-}
-
-.profile-review-action-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 168px;
-}
-
-.profile-review-action-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    border: none;
-    background: none;
-    cursor: pointer;
-    padding: 10px 12px;
-    border-radius: 10px;
-    color: #1f2937;
-    font-size: 13px;
-    font-weight: 500;
-    text-align: left;
-    transition: background 0.15s ease;
-}
-
-.profile-review-action-item:hover {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-.profile-review-action-icon {
-    color: #007AFF;
-    flex-shrink: 0;
-}
-</style>
-
-<style>
-.ios-dialog-root.p-dialog {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-    width: auto !important;
-}
-
-.ios-dialog-mask {
-    background: rgba(0, 0, 0, 0.4);
-}
-
-.dark .ios-icon-btn:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
-}
-
-.dark .ios-info-value {
-    color: #d1d5db !important;
-}
-
-.dark .ios-info-label {
-    color: #9ca3af !important;
-}
-
-.dark .ios-footer {
-    background: #2a3040 !important;
-    border-top-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.dark .ios-footer-btn {
-    color: #60a5fa !important;
-}
-
-.dark .profile-review-action-item {
-    color: #d1d5db !important;
-}
-
-.dark .profile-review-action-item:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
-}
-
-.dark .profile-review-action-icon {
-    color: #60a5fa !important;
-}
-
-.dark .ios-footer-btn:disabled {
-    color: #4b5563 !important;
-}
-
-.dark .ios-footer-counter {
-    color: #9ca3af !important;
-}
-
-/* Header card */
-.profile-name {
-    color: #000;
-}
-
-.profile-meta {
-    color: #8E8E93;
-}
-
-.dark .profile-name {
-    color: #d1d5db !important;
-}
-
-.dark .profile-meta {
-    color: #9ca3af !important;
-}
-
-/* Requirements tab */
-.req-empty {
-    color: #8E8E93;
-}
-
-.dark .req-empty {
-    color: #9ca3af !important;
-}
-
-.req-check-dot {
-    background: #E8F5E9;
-}
-
-.dark .req-check-dot {
-    background: rgba(52, 199, 89, 0.15) !important;
-}
-
-.req-uncheck-dot {
-    background: #F2F2F7;
-}
-
-.dark .req-uncheck-dot {
-    background: rgba(255, 255, 255, 0.08) !important;
-}
-
-.req-item-name {
-    color: #000;
-}
-
-.dark .req-item-name {
-    color: #d1d5db !important;
-}
-
-.req-no-file {
-    color: #8E8E93;
-}
-
-.dark .req-no-file {
-    color: #6b7280 !important;
-}
-</style>

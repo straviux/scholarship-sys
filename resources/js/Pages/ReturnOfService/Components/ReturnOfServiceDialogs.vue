@@ -1,7 +1,7 @@
 <template>
     <IosModal :visible="showBatchDialog" :title="batchMode === 'add' ? 'New Batch' : 'Edit Batch'" width="520px"
         close-icon="x" :icon-size="16" :show-action="true" :loading="batchForm.processing"
-        body-style="padding: 16px 16px 24px;" @action="emit('submit-batch')"
+        body-style="padding: 0 16px 24px;" @action="emit('submit-batch')"
         @update:visible="(visible) => { if (!visible) closeBatchDialog(); }">
                     <div class="ios-section">
                         <div class="ios-section-label">Basic Info</div>
@@ -89,7 +89,7 @@
     <IosModal :visible="showScholarDialog" :title="scholarMode === 'add' ? 'Add Scholar' : 'Edit Scholar'"
         width="600px" close-icon="x" :icon-size="16" :show-action="true"
         :action-disabled="scholarForm.processing || isEndDateInvalid" :loading="scholarForm.processing"
-        body-style="padding: 16px 16px 24px;" @action="emit('submit-scholar')"
+        body-style="padding: 0 16px 24px;" @action="emit('submit-scholar')"
         @update:visible="(visible) => { if (!visible) closeScholarDialog(); }">
                     <div class="ios-section">
                         <div class="ios-section-label">Scholar</div>
@@ -149,9 +149,17 @@
                                     <AppIcon name="clock" :size="13" style="color: #5856D6;" />
                                     Years of Service
                                 </div>
-                                <div class="ios-row-control">
-                                    <InputNumber v-model="scholarForm.years_of_service" :min="0" placeholder="Auto"
-                                        class="ios-inputnumber" />
+                                <div class="ios-row-control ios-years-row-control">
+                                    <div class="ios-years-control">
+                                        <button type="button" class="ios-inline-action-btn"
+                                            @click="emit('auto-calculate-years-of-service')">
+                                            Auto Calculate
+                                        </button>
+                                        <InputNumber v-model="scholarForm.years_of_service" :min="0"
+                                            :minFractionDigits="0" :maxFractionDigits="2" :step="0.01"
+                                            :useGrouping="false" mode="decimal" placeholder="Manual"
+                                            class="ios-full-input ios-years-input" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -159,7 +167,7 @@
                             End date cannot be earlier than start date
                         </div>
                         <div v-else class="ios-section-footer">
-                            Auto-calculated from service dates (editable)
+                            Manual by default. Use Auto Calculate to apply completed scholarship terms or service dates.
                         </div>
                     </div>
 
@@ -208,7 +216,7 @@
     </IosModal>
 
     <IosModal :visible="showViewScholarDialog" title="Scholar Details" width="480px" close-icon="x"
-        :icon-size="16" body-style="padding: 16px 16px 24px;"
+        :icon-size="16" body-style="padding: 0 16px 24px;"
         @update:visible="(visible) => { if (!visible) emit('close-view-scholar'); }">
         <template #header-right>
             <div style="width: 48px;"></div>
@@ -277,7 +285,7 @@
     </IosModal>
 
     <IosModal :visible="showViewBatchDialog" width="90vw" close-icon="x" :icon-size="16"
-        :modal-content-style="{ height: '85vh' }" body-style="padding: 16px 16px 24px;"
+        :modal-content-style="{ height: '85vh' }" body-style="padding: 0 16px 24px;"
         @update:visible="(visible) => { if (!visible) emit('close-view-batch'); }">
         <template #title>
             <span v-if="viewingBatch" class="ios-nav-title ios-nav-title--truncate"
@@ -415,7 +423,7 @@
     </IosModal>
 
     <IosModal :visible="showDeleteBatchDialog" title="Delete Batch" width="420px" close-icon="x"
-        :icon-size="16" body-style="padding: 16px 16px 24px;"
+        :icon-size="16" body-style="padding: 0 16px 24px;"
         @update:visible="(visible) => { if (!visible) emit('close-delete-batch'); }">
         <template #header-right>
             <div style="width: 48px;"></div>
@@ -443,7 +451,7 @@
     </IosModal>
 
     <IosModal :visible="showDeleteScholarDialog" title="Remove Scholar" width="420px" close-icon="x"
-        :icon-size="16" body-style="padding: 16px 16px 24px;"
+        :icon-size="16" body-style="padding: 0 16px 24px;"
         @update:visible="(visible) => { if (!visible) emit('close-delete-scholar'); }">
         <template #header-right>
             <div style="width: 48px;"></div>
@@ -470,7 +478,7 @@
 
     <IosModal :visible="showReportDialog" title="Generate Report" width="480px" close-icon="x"
         :icon-size="16" :show-action="true" action-icon="file-text" :action-disabled="!canSubmitReport"
-        body-style="padding: 16px 16px 24px;" @action="submitReport"
+        body-style="padding: 0 16px 24px;" @action="submitReport"
         @update:visible="(visible) => { if (!visible) closeReportDialog(); }">
                     <div class="ios-section">
                         <div class="ios-section-label">Output Format</div>
@@ -518,8 +526,7 @@
                                     Batch
                                 </div>
                                 <Select v-model="reportBatchId" :options="reportBatchOptions" optionLabel="label"
-                                    optionValue="value" placeholder="Select batch"
-                                    class="ios-full-input report-batch-select" />
+                                    optionValue="value" placeholder="Select batch" class="ios-full-input" />
                             </div>
                         </div>
                     </div>
@@ -615,6 +622,7 @@ const emit = defineEmits([
     'close-preview-scholar',
     'update:scholarSearch',
     'profile-filter',
+    'auto-calculate-years-of-service',
     'open-add-scholar',
     'open-edit-scholar',
     'view-scholar',
@@ -724,288 +732,3 @@ const submitReport = () => {
 };
 </script>
 
-<style scoped>
-.ios-modal {
-    background: #F2F2F7;
-    border-radius: 14px;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-    overflow: hidden;
-    margin: 0 auto;
-}
-
-.ios-modal-wide {
-    height: 85vh;
-}
-
-.ios-body {
-    padding: 16px 16px 24px;
-    overflow-y: auto;
-    min-height: 0;
-}
-
-.ios-section {
-    margin-bottom: 14px;
-}
-
-.ios-section-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #8E8E93;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 8px;
-    padding: 0 6px;
-}
-
-.ios-section-footer {
-    margin-top: 8px;
-    padding: 0 6px;
-    font-size: 12px;
-    color: #6B7280;
-}
-
-.ios-error {
-    color: #DC2626;
-}
-
-.ios-card {
-    background: #FFFFFF;
-    border: 0.5px solid #E5E7EB;
-    border-radius: 18px;
-    overflow: hidden;
-}
-
-.ios-row {
-    min-height: 52px;
-    padding: 10px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    border-bottom: 0.5px solid #F3F4F6;
-}
-
-.ios-row:last-child {
-    border-bottom: none;
-}
-
-.ios-row-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-    color: #8E8E93;
-}
-
-.ios-row-control {
-    flex: 0 0 200px;
-    width: 200px;
-    min-width: 0;
-}
-
-.ios-row-control> :deep(*) {
-    width: 100%;
-    min-width: 0;
-}
-
-.ios-row-stacked {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 10px 16px;
-    min-height: auto;
-    gap: 6px;
-}
-
-.ios-full-input {
-    width: 100%;
-}
-
-.scholar-name-text {
-    max-width: 220px;
-    text-align: right;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.scholar-banner-card {
-    background: #EFF6FF;
-    border-color: #BFDBFE;
-}
-
-.scholar-banner-row {
-    min-height: 48px;
-}
-
-.scholar-banner-label {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1D4ED8;
-}
-
-.scholar-stat-value {
-    font-size: 16px;
-}
-
-.remarks-card {
-    padding: 10px 16px;
-}
-
-.destructive-card {
-    background: #FFF5F5;
-    border-color: #FECACA;
-}
-
-.destructive-row {
-    gap: 12px;
-    padding: 14px 16px;
-    min-height: 60px;
-    align-items: flex-start;
-}
-
-.destructive-icon-wrap {
-    flex-shrink: 0;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 9999px;
-    background: #FEE2E2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 0.125rem;
-}
-
-.destructive-copy {
-    flex: 1;
-    min-width: 0;
-}
-
-.ios-destructive-btn {
-    display: block;
-    width: 100%;
-    background: #FFFFFF;
-    border: 0.5px solid #E5E5EA;
-    border-radius: 10px;
-    padding: 12px;
-    text-align: center;
-    font-size: 15px;
-    color: #FF3B30;
-    cursor: pointer;
-    letter-spacing: -0.4px;
-    transition: background 0.15s;
-}
-
-.ios-destructive-btn:hover {
-    background: #F2F2F7;
-}
-
-.report-note-card {
-    background: #EFF6FF;
-    border-color: #BFDBFE;
-}
-
-.report-note-row {
-    align-items: flex-start;
-}
-
-.report-note-icon-wrap {
-    width: 2rem;
-    height: 2rem;
-    border-radius: 9999px;
-    background: #DBEAFE;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.preview-drawer {
-    position: fixed;
-    right: 0;
-    top: 0;
-    height: 100vh;
-    width: 20rem;
-    background: #FFFFFF;
-    border-left: 1px solid #E5E7EB;
-    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.16);
-    overflow-y: auto;
-    border-top-left-radius: 1rem;
-    border-bottom-left-radius: 1rem;
-    z-index: 9999;
-}
-
-:deep(.ios-select .p-select) {
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    font-size: 13px;
-    width: 100%;
-    min-height: unset;
-}
-
-:deep(.ios-select .p-select-label) {
-    color: #8E8E93 !important;
-    text-align: right;
-    padding: 4px 2px 4px 8px;
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-:deep(.ios-select .p-select-dropdown) {
-    color: #C7C7CC !important;
-}
-
-:deep(.ios-datepicker .p-datepicker) {
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-}
-
-:deep(.ios-datepicker .p-inputtext) {
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    text-align: right;
-    color: #8E8E93;
-    font-size: 13px;
-    padding: 4px 40px 4px 8px;
-}
-
-:deep(.ios-inputnumber .p-inputnumber-input) {
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    text-align: right;
-    color: #8E8E93;
-    font-size: 13px;
-    padding: 4px 8px;
-}
-
-:deep(.ios-full-input.p-inputtext),
-:deep(.ios-full-input .p-inputtext) {
-    font-size: 13px;
-    border-radius: 6px;
-    width: 100%;
-}
-
-:deep(.ios-full-input.p-textarea),
-:deep(.ios-full-input .p-textarea) {
-    font-size: 13px;
-    border-radius: 6px;
-    resize: none;
-    width: 100%;
-}
-
-:deep(.ios-full-input .p-multiselect),
-:deep(.ios-full-input.p-multiselect),
-:deep(.report-batch-select .p-select) {
-    font-size: 13px;
-    border-radius: 8px;
-    width: 100%;
-}
-</style>

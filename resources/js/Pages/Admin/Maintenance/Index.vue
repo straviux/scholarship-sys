@@ -8,7 +8,7 @@
                 <span>Last updated {{ lastUpdated }}</span>
             </template>
 
-            <div class="maintenance-panel">
+            <div class="min-h-screen py-8 bg-gradient-to-br from-[#f5f7fa] to-[#c3cfe2]">
                 <!-- Status Overview -->
                 <section class="ios-section">
                     <div class="ios-section-label">Status Overview</div>
@@ -280,7 +280,7 @@
         <!-- Confirmation Dialog -->
         <Teleport to="body">
             <div v-if="showDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in">
+                <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden ios-slide-in-right">
                     <div class="p-6">
                         <div class="flex items-center justify-center w-12 h-12 mx-auto rounded-full mb-4" :class="[
                             dialogType === 'deactivate' ? 'bg-green-100' : 'bg-blue-100'
@@ -306,7 +306,7 @@
         <Teleport to="body">
             <div class="fixed top-4 right-4 space-y-3 z-50 pointer-events-none">
                 <div v-for="toast in toasts" :key="toast.id"
-                    class="pointer-events-auto animate-in slide-in-from-right px-6 py-4 bg-white rounded-lg shadow-lg border-l-4 flex items-start gap-3"
+                    class="pointer-events-auto ios-slide-in-right px-6 py-4 bg-white rounded-lg shadow-lg border-l-4 flex items-start gap-3"
                     :class="[
                         toast.type === 'success' ? 'border-green-500 bg-green-50' : '',
                         toast.type === 'error' ? 'border-red-500 bg-red-50' : '',
@@ -699,49 +699,3 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style scoped>
-.maintenance-panel {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    min-height: 100vh;
-    padding: 2rem 0;
-}
-
-@keyframes slideInFromRight {
-    from {
-        transform: translateX(400px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-.animate-in {
-    animation: slideInFromRight 0.3s ease-out;
-}
-
-.slide-in-from-right {
-    animation: slideInFromRight 0.3s ease-out;
-}
-
-/* Scrollbar styling for activity logs */
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
-}
-</style>

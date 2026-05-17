@@ -238,23 +238,3 @@ const canDecline = (application) => {
 };
 </script>
 
-<style scoped>
-.p-fluid .p-field {
-    margin-bottom: 1rem;
-}
-
-.p-error {
-    color: #e24c4c;
-    font-size: 0.875rem;
-}
-
-.p-invalid {
-    border-color: #e24c4c;
-}
-
-@media print {
-    .no-print {
-        display: none !important;
-    }
-}
-</style>

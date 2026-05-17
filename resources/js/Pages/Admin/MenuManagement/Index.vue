@@ -935,32 +935,3 @@ const debouncedSaveOrder = () => {
     </AdminLayout>
 </template>
 
-<style scoped>
-:deep(.p-tree) {
-    border: 1px solid #e5e7eb;
-    border-radius: 0.375rem;
-    padding: 0.5rem;
-}
-
-:deep(.p-tree .p-tree-container .p-treenode) {
-    padding: 0.25rem 0;
-}
-
-:deep(.p-tree .p-tree-container .p-treenode .p-treenode-content) {
-    border-radius: 0.375rem;
-    transition: all 0.2s;
-}
-
-:deep(.p-tree .p-tree-container .p-treenode .p-treenode-content:hover) {
-    background-color: #f3f4f6;
-}
-
-:deep(.p-tree .p-tree-container .p-treenode .p-treenode-content.p-treenode-selectable:not(.p-highlight):hover) {
-    background-color: #f3f4f6;
-}
-
-:deep(.p-tree .p-treenode-droppoint) {
-    height: 4px;
-    background-color: #3b82f6;
-}
-</style>

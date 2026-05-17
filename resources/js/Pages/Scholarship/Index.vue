@@ -3,7 +3,7 @@
     <Head title="Profiles" />
 
     <AdminLayout>
-        <div>
+        <div class="ios-settings-form">
             <!-- Toolbar -->
             <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-4 sm:!px-6 lg:!px-8 scholarship-toolbar">
                 <template #start>
@@ -734,6 +734,7 @@ import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 
 // Modal Components
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
@@ -1322,84 +1323,3 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style scoped>
-/* Toolbar Grid Layout */
-:deep(.p-toolbar) {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 1rem;
-    align-items: center;
-}
-
-:deep(.p-toolbar-start) {
-    justify-self: start;
-}
-
-:deep(.p-toolbar-center) {
-    justify-self: center;
-}
-
-:deep(.p-toolbar-end) {
-    justify-self: end;
-}
-
-.scholarship-table-wrap {
-    max-width: 100%;
-}
-
-:deep(.compact-table .p-datatable-table-container) {
-    overflow-x: auto;
-}
-
-/* Compact DataTable */
-:deep(.compact-table .p-datatable-tbody > tr > td) {
-    padding: 0.5rem 0.75rem;
-}
-
-:deep(.compact-table .p-datatable-thead > tr > th) {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-}
-
-:deep(.compact-table .p-chip) {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-}
-
-:deep(.compact-table .p-button) {
-    padding: 0.25rem 0.5rem;
-}
-
-:deep(.compact-table .p-datatable-tbody > tr.row-blurred > td) {
-    opacity: 0.35;
-    filter: blur(1.5px);
-    transition: opacity 0.25s ease, filter 0.25s ease;
-    pointer-events: none;
-}
-
-@media (max-width: 1279px) {
-    :deep(.p-toolbar) {
-        grid-template-columns: 1fr;
-        align-items: stretch;
-    }
-
-    :deep(.p-toolbar-start),
-    :deep(.p-toolbar-center),
-    :deep(.p-toolbar-end) {
-        justify-self: stretch;
-    }
-
-    .scholarship-toolbar__brand,
-    .scholarship-toolbar__actions {
-        width: 100%;
-    }
-}
-
-@media (max-width: 767px) {
-
-    :deep(.compact-table .p-datatable-tbody > tr > td),
-    :deep(.compact-table .p-datatable-thead > tr > th) {
-        padding: 0.5rem 0.625rem;
-    }
-}
-</style>

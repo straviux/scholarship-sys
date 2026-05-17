@@ -184,8 +184,8 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <Button label="Cancel" severity="secondary" @click="showDeleteProfileConfirmDialog = false" outlined />
-                <Button label="Permanently Delete" severity="danger" @click="permanentlyDeleteProfile" />
+                <Button label="Cancel" severity="secondary" @click="showDeleteProfileConfirmDialog = false" outlined size="small" />
+                <Button label="Permanently Delete" severity="danger" @click="permanentlyDeleteProfile" size="small" />
             </div>
         </IosModal>
 
@@ -208,8 +208,8 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <Button label="Cancel" severity="secondary" @click="showDeleteRecordConfirmDialog = false" outlined />
-                <Button label="Permanently Delete" severity="danger" @click="permanentlyDeleteRecord" />
+                <Button label="Cancel" severity="secondary" @click="showDeleteRecordConfirmDialog = false" outlined size="small" />
+                <Button label="Permanently Delete" severity="danger" @click="permanentlyDeleteRecord" size="small" />
             </div>
         </IosModal>
     </AdminLayout>
@@ -351,8 +351,3 @@ const permanentlyDeleteRecord = async () => {
 };
 </script>
 
-<style scoped>
-.p-button {
-    padding: 0.5rem 1rem;
-}
-</style>

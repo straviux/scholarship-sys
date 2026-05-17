@@ -274,23 +274,3 @@ function handleOpen() {
     </IosModal>
 </template>
 
-<style scoped>
-.budget-report-modal {
-    width: auto;
-    min-width: 460px;
-    max-width: 92vw;
-}
-
-.budget-report-body {
-    overflow: visible;
-    padding-bottom: 20px;
-}
-
-:deep(.ios-row-control) {
-    flex: 0 0 auto;
-    width: auto;
-    min-width: 200px;
-    max-width: 280px;
-    overflow: visible;
-}
-</style>

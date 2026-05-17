@@ -283,7 +283,7 @@ class ReturnOfServiceController extends Controller
         $validated = $request->validate([
             'batch_id' => 'required|exists:return_of_service_batches,id',
             'profile_id' => 'required|exists:scholarship_profiles,profile_id',
-            'years_of_service' => 'nullable|integer|min:0',
+            'years_of_service' => 'nullable|numeric|min:0',
             'service_start_date' => 'nullable|date',
             'service_end_date' => 'nullable|date',
             'completion_status' => 'required|in:pending,ongoing,suspended,completed',
@@ -329,7 +329,7 @@ class ReturnOfServiceController extends Controller
         }
 
         $validated = $request->validate([
-            'years_of_service' => 'nullable|integer|min:0',
+            'years_of_service' => 'nullable|numeric|min:0',
             'service_start_date' => 'nullable|date',
             'service_end_date' => 'nullable|date',
             'completion_status' => 'required|in:pending,ongoing,suspended,completed',
@@ -401,51 +401,104 @@ class ReturnOfServiceController extends Controller
         $search = $request->get('q', '');
         $status = $request->get('status', null);
         $program = $request->get('program', null);
+        $profileId = $request->get('profile_id', null);
+
+        if (!$profileId && $search === '') {
+            return response()->json([]);
+        }
 
         // Query scholarship profiles with their scholarship records
-        $query = ScholarshipProfile::with('scholarshipRecords')
-            ->where(function ($q) use ($search) {
+        $query = ScholarshipProfile::with([
+            'scholarshipRecords' => function ($scholarshipRecordsQuery) use ($status, $program) {
+                $this->applySearchRecordFilters($scholarshipRecordsQuery, $status, $program);
+                $scholarshipRecordsQuery->select(['id', 'profile_id', 'term', 'unified_status', 'program_id']);
+            }
+        ]);
+
+        if ($profileId) {
+            $query->where('profile_id', $profileId);
+        } else {
+            $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%");
             });
+        }
 
         // If status is provided, filter by scholarship record status
         if ($status) {
-            $query->whereHas('scholarshipRecords', function ($q) use ($status, $program) {
-                if ($status === 'ros-eligible') {
-                    $q->whereIn('scholarship_records.unified_status', ['completed', 'completed-transferred']);
-                } else {
-                    $q->where('scholarship_records.unified_status', $status);
-                }
-
-                if ($program) {
-                    // Filter by program name through the program relationship
-                    $q->whereHas('program', function ($programQuery) use ($program) {
-                        $programQuery->where('scholarship_programs.name', $program);
-                    });
-                }
+            $query->whereHas('scholarshipRecords', function ($scholarshipRecordsQuery) use ($status, $program) {
+                $this->applySearchRecordFilters($scholarshipRecordsQuery, $status, $program);
             });
         } elseif ($program) {
             // If only program is provided
-            $query->whereHas('scholarshipRecords', function ($q) use ($program) {
-                $q->whereHas('program', function ($programQuery) use ($program) {
-                    $programQuery->where('scholarship_programs.name', $program);
-                });
+            $query->whereHas('scholarshipRecords', function ($scholarshipRecordsQuery) use ($program) {
+                $this->applySearchRecordFilters($scholarshipRecordsQuery, null, $program);
             });
         }
 
         $profiles = $query->limit(20)
             ->get()
-            ->map(fn($profile) => [
-                'id' => $profile->profile_id,
-                'label' => trim($profile->last_name . ', ' . $profile->first_name . ($profile->middle_name ? ' ' . $profile->middle_name : '') . ($profile->extension_name ? ' ' . $profile->extension_name : '')),
-                'lastname' => $profile->last_name,
-                'firstname' => $profile->first_name,
-                'middlename' => $profile->middle_name ?? '',
-                'ext' => $profile->extension_name ?? '',
-            ]);
+            ->map(function ($profile) {
+                return [
+                    'id' => $profile->profile_id,
+                    'label' => trim($profile->last_name . ', ' . $profile->first_name . ($profile->middle_name ? ' ' . $profile->middle_name : '') . ($profile->extension_name ? ' ' . $profile->extension_name : '')),
+                    'lastname' => $profile->last_name,
+                    'firstname' => $profile->first_name,
+                    'middlename' => $profile->middle_name ?? '',
+                    'ext' => $profile->extension_name ?? '',
+                    'default_years_of_service' => $this->calculateDefaultYearsOfServiceFromRecords($profile->scholarshipRecords),
+                ];
+            });
 
         return response()->json($profiles);
+    }
+
+    private function applySearchRecordFilters($query, ?string $status, ?string $program): void
+    {
+        if ($status === 'ros-eligible') {
+            $query->whereIn('scholarship_records.unified_status', ['completed', 'completed-transferred']);
+        } elseif ($status) {
+            $query->where('scholarship_records.unified_status', $status);
+        }
+
+        if ($program) {
+            $query->whereHas('program', function ($programQuery) use ($program) {
+                $programQuery->where('scholarship_programs.name', $program);
+            });
+        }
+    }
+
+    private function calculateDefaultYearsOfServiceFromRecords($records): ?float
+    {
+        $totalMonths = $records->reduce(function ($carry, $record) {
+            return $carry + $this->getServiceMonthsForTerm($record->term);
+        }, 0);
+
+        if ($totalMonths <= 0) {
+            return null;
+        }
+
+        return round($totalMonths / 12, 2);
+    }
+
+    private function getServiceMonthsForTerm(?string $term): int
+    {
+        return $this->isTrimesterTerm($term) ? 4 : 6;
+    }
+
+    private function isTrimesterTerm(?string $term): bool
+    {
+        $normalizedTerm = strtolower(trim((string) $term));
+
+        if ($normalizedTerm === '') {
+            return false;
+        }
+
+        return str_contains($normalizedTerm, 'trimester')
+            || str_contains($normalizedTerm, '3rd semester')
+            || str_contains($normalizedTerm, '3rd sem')
+            || str_contains($normalizedTerm, 'summer')
+            || str_contains($normalizedTerm, 'midyear');
     }
 
     /**

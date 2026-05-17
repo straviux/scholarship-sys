@@ -1421,7 +1421,7 @@ onMounted(() => {
 
     <AdminLayout>
 
-        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 ios-settings-form">
             <!-- Header -->
             <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
                 <template #start>
@@ -1519,6 +1519,7 @@ onMounted(() => {
                     v-model:contextMenuSelection="selectedContextVoucher" lazy paginator :rows="perPage"
                     :totalRecords="filteredTotal" :first="(currentPage - 1) * perPage"
                     :rowsPerPageOptions="[10, 15, 25, 50]"
+                    class="ft-table ios-datatable-rounded"
                     paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                     :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
                     @page="onPageChange">
@@ -2136,134 +2137,3 @@ onMounted(() => {
     </AdminLayout>
 </template>
 
-<style scoped>
-/* Rounded inputs, selects, and datepickers to match macOS layout */
-:deep(.p-inputtext) {
-    border-radius: 1rem;
-}
-
-:deep(.p-select) {
-    border-radius: 1rem;
-}
-
-/* Rounded DataTable — covers scrollable wrapper and all inner containers */
-:deep(.p-datatable) {
-    border-radius: 1.5rem;
-    overflow: hidden;
-    border: 1px solid var(--p-datatable-border-color, #e2e8f0);
-}
-
-:deep(.p-datatable .p-datatable-table-container) {
-    border-radius: 0;
-    overflow: hidden;
-}
-
-/* Remove outer-edge cell borders so they don't double up with the container border */
-:deep(.p-datatable .p-datatable-thead > tr > th:first-child),
-:deep(.p-datatable .p-datatable-tbody > tr > td:first-child) {
-    border-left: none;
-}
-
-:deep(.p-datatable .p-datatable-thead > tr > th:last-child),
-:deep(.p-datatable .p-datatable-tbody > tr > td:last-child) {
-    border-right: none;
-}
-
-:deep(.p-datatable .p-datatable-thead > tr:first-child > th) {
-    border-top: none;
-}
-
-:deep(.p-datatable .p-datatable-tbody > tr:last-child > td) {
-    border-bottom: none;
-}
-
-:deep(.p-datatable .p-paginator) {
-    border-radius: 0;
-    border: none;
-    border-top: 1px solid var(--p-datatable-border-color, #e2e8f0);
-}
-
-:deep(.p-datatable .p-datatable-header) {
-    border-radius: 0;
-}
-
-:deep(.p-datatable .p-datatable-footer) {
-    border-radius: 0;
-}
-
-/* Rounded IconField search wrapper */
-:deep(.p-iconfield .p-inputtext) {
-    border-radius: 1rem;
-}
-
-/* Extra cell padding for better readability */
-:deep(.p-datatable .p-datatable-tbody > tr > td) {
-    padding: 0.85rem 1rem;
-}
-
-:deep(.p-datatable .p-datatable-thead > tr > th) {
-    padding: 0.85rem 1rem;
-}
-
-/* Remove highlight border on right-click context menu selection */
-:deep(.p-datatable .p-datatable-tbody > tr.p-datatable-contextmenu-row-selected > td) {
-    outline: none;
-    box-shadow: none;
-    border-color: inherit;
-}
-
-:deep(.p-datatable .p-datatable-tbody > tr.p-datatable-contextmenu-row-selected) {
-    outline: none;
-    box-shadow: none;
-}
-</style>
-
-<style>
-/* Disable PrimeVue built-in drawer enter/leave for this custom floating drawer */
-.ft-floating-drawer.p-drawer-enter-active,
-.ft-floating-drawer.p-drawer-leave-active {
-    transition: none !important;
-}
-
-.ft-floating-drawer.p-drawer-enter-from,
-.ft-floating-drawer.p-drawer-leave-to {
-    transform: none !important;
-    opacity: 1 !important;
-}
-
-.ft-floating-drawer.p-drawer {
-    border-radius: 2rem !important;
-    height: calc(100vh - 2rem) !important;
-    margin: 1rem !important;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-    animation: none !important;
-    transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.ft-floating-drawer .p-drawer-header {
-    border-radius: 2rem 2rem 0 0;
-}
-
-.ft-floating-drawer .p-drawer-content {
-    border-radius: 0 0 2rem 2rem;
-}
-
-.ft-floating-drawer-mask {
-    background: transparent !important;
-    animation: none !important;
-    transition: none !important;
-}
-
-/* Ensure mask animation cannot conflict */
-.ft-floating-drawer-mask.p-overlay-enter-active,
-.ft-floating-drawer-mask.p-overlay-leave-active {
-    transition: none !important;
-    animation: none !important;
-}
-
-/* Keep open smooth, make close instant */
-.ft-floating-drawer.p-drawer-leave-active {
-    transition: none !important;
-}
-</style>

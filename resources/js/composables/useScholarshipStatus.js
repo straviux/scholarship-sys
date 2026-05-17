@@ -51,14 +51,6 @@ export const useScholarshipStatus = () => {
 			textColor: '#1F2937',
 			description: 'Scholarship completed',
 		},
-		'completed-transferred': {
-			label: 'Completed - Transferred',
-			severity: 'secondary',
-			color: '#64748B',
-			bgColor: '#E2E8F0',
-			textColor: '#334155',
-			description: 'Completed term and transferred',
-		},
 		withdrawn: {
 			label: 'Withdrawn',
 			severity: 'secondary',
@@ -157,7 +149,6 @@ export const useScholarshipStatus = () => {
 			'approved',
 			'active',
 			'completed',
-			'completed-transferred',
 			'denied',
 			'withdrawn',
 			'loa',

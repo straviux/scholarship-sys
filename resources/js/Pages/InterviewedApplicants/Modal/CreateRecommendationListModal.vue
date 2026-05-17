@@ -7,7 +7,7 @@
         :action-disabled="isSubmitDisabled || loading"
         :loading="loading"
         close-icon="x"
-        icon-size="16"
+        :icon-size="16"
         @update:visible="value => emit('update:show', value)"
         @close="close"
         @action="submitForm"
@@ -48,6 +48,17 @@
                                 </div>
                             </div>
 
+                            <div class="ios-row">
+                                <div class="ios-row-label">
+                                    <AppIcon name="bookmark-fill" :size="13" style="color: #007AFF;" />
+                                    Program
+                                </div>
+                                <div class="ios-row-control">
+                                    <ProgramSelect v-model="form.budget_program" class="ios-select"
+                                        custom-placeholder="Select program" />
+                                </div>
+                            </div>
+
                             <div v-if="budgetAllocationOptions.length" class="ios-row">
                                 <div class="ios-row-label">
                                     <AppIcon name="wallet" :size="13" style="color: #F59E0B;" />
@@ -56,7 +67,36 @@
                                 <div class="ios-row-control">
                                     <Select v-model="selectedBudgetAllocation" :options="budgetAllocationOptions"
                                         optionLabel="label" optionValue="value" class="ios-select"
-                                        placeholder="Select allocation" :invalid="showBudgetError" />
+                                        placeholder="Select allocation" :invalid="showBudgetError">
+                                        <template #value="{ value, placeholder }">
+                                            <div v-if="value" class="leading-tight">
+                                                <div class="font-medium text-slate-700">{{ formatBudgetAllocationLabel(value) }}</div>
+                                                <div v-if="formatBudgetAllocationDescription(value)" class="text-[11px] text-slate-500">
+                                                    {{ formatBudgetAllocationDescription(value) }}
+                                                </div>
+                                            </div>
+                                            <span v-else class="text-slate-400">{{ placeholder }}</span>
+                                        </template>
+                                        <template #option="{ option }">
+                                            <div class="py-1 leading-tight">
+                                                <div class="font-medium text-slate-700">{{ option.label }}</div>
+                                                <div v-if="option.description" class="text-[11px] text-slate-500">
+                                                    {{ option.description }}
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div class="ios-row">
+                                <div class="ios-row-label">
+                                    <AppIcon name="users" :size="13" style="color: #16A34A;" />
+                                    Highlight JPM Names
+                                </div>
+                                <div class="ios-row-control flex items-center justify-end gap-3">
+                                    <span class="text-xs text-slate-500">Mark JPM-related applicants in print</span>
+                                    <ToggleSwitch v-model="form.highlight_jpm_members" />
                                 </div>
                             </div>
 
@@ -70,8 +110,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div v-if="showBudgetError" class="ios-section-footer ios-error">
-                            {{ budgetErrorMessage }}
+                        <div v-if="showBudgetFooter" class="ios-section-footer" :class="{ 'ios-error': showBudgetError }">
+                            {{ budgetFooterMessage }}
                         </div>
                     </div>
 
@@ -142,9 +182,10 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import AppIcon from '@/Components/ui/AppIcon.vue';
+import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
 
 const DEFAULT_PREPARED_BY = 'NUR-AINA S. IBRAHIM';
@@ -189,6 +230,8 @@ const emit = defineEmits(['update:show', 'submit']);
 
 const form = ref({
     report_title: 'RECOMMENDATION LIST FOR APPROVAL',
+    budget_program: null,
+    highlight_jpm_members: false,
     prepared_by: '',
     prepared_by_position: DEFAULT_PREPARED_BY_POSITION,
     prepared_by_office: DEFAULT_PREPARED_BY_OFFICE,
@@ -218,8 +261,51 @@ const budgetErrorMessage = computed(() => isEditMode.value
     ? 'Select a budget allocation before updating the recommendation list.'
     : 'Select a budget allocation before creating the recommendation list.');
 
+const budgetAllocationCurrencyFormatter = new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
+
+function formatBudgetAllocationAmount(allocation) {
+    const amount = Number(allocation?.total_allotment);
+
+    return Number.isFinite(amount) ? budgetAllocationCurrencyFormatter.format(amount) : null;
+}
+
+function getBudgetAllocationBaseName(allocation) {
+    return allocation?.particular_name?.trim()
+        || allocation?.description?.trim()
+        || 'Unnamed Allocation';
+}
+
 function formatBudgetAllocationLabel(allocation) {
-    return `${allocation?.program || 'N/A'} · ${allocation?.rc_name || allocation?.rc_code || 'N/A'} · FY ${allocation?.fiscal_year || 'N/A'}`;
+    const baseName = getBudgetAllocationBaseName(allocation);
+    const rcCode = allocation?.rc_code?.trim();
+
+    return rcCode ? `${baseName} [${rcCode}]` : baseName;
+}
+
+function formatBudgetAllocationDescription(allocation) {
+    const description = allocation?.description?.trim();
+    const baseName = getBudgetAllocationBaseName(allocation);
+
+    return [
+        description && description !== baseName ? description : null,
+        formatBudgetAllocationAmount(allocation),
+    ].filter(Boolean).join(' - ');
+}
+
+function formatBudgetAllocationSelectionMessage(allocation) {
+    const label = formatBudgetAllocationLabel(allocation);
+    const description = formatBudgetAllocationDescription(allocation);
+
+    if (description && description !== label) {
+        return `Monitoring ${label} · ${description}.`;
+    }
+
+    return `Monitoring ${label}.`;
 }
 
 function sameBudgetAllocation(left, right) {
@@ -231,7 +317,17 @@ function sameBudgetAllocation(left, right) {
         return false;
     }
 
+    const leftKey = String(left.key ?? '');
+    const rightKey = String(right.key ?? '');
+
+    if (leftKey && rightKey) {
+        return leftKey === rightKey;
+    }
+
     return String(left.key ?? '') === String(right.key ?? '')
+        && String(left.particular_id ?? '') === String(right.particular_id ?? '')
+        && String(left.particular_name ?? '') === String(right.particular_name ?? '')
+        && String(left.program_id ?? '') === String(right.program_id ?? '')
         && String(left.program ?? '') === String(right.program ?? '')
         && String(left.rc_code ?? '') === String(right.rc_code ?? '')
         && String(left.rc_name ?? '') === String(right.rc_name ?? '')
@@ -241,6 +337,7 @@ function sameBudgetAllocation(left, right) {
 const budgetAllocationOptions = computed(() => {
     const options = (props.budgetAllocations || []).map((allocation) => ({
         label: formatBudgetAllocationLabel(allocation),
+        description: formatBudgetAllocationDescription(allocation),
         value: allocation,
     }));
 
@@ -249,6 +346,7 @@ const budgetAllocationOptions = computed(() => {
     if (currentBudgetAllocation && !options.some((option) => sameBudgetAllocation(option.value, currentBudgetAllocation))) {
         options.unshift({
             label: formatBudgetAllocationLabel(currentBudgetAllocation),
+            description: formatBudgetAllocationDescription(currentBudgetAllocation),
             value: currentBudgetAllocation,
         });
     }
@@ -258,12 +356,44 @@ const budgetAllocationOptions = computed(() => {
 
 const requiresBudgetAllocationSelection = computed(() => budgetAllocationOptions.value.length > 0);
 const isSubmitDisabled = computed(() => props.selectedCount === 0);
+const budgetFooterMessage = computed(() => {
+    if (showBudgetError.value) {
+        return budgetErrorMessage.value;
+    }
+
+    if (selectedBudgetAllocation.value) {
+        return formatBudgetAllocationSelectionMessage(selectedBudgetAllocation.value);
+    }
+
+    if (budgetAllocationOptions.value.length > 0) {
+        return 'Select the budget allocation where the Current AY Estimated Grant will be monitored.';
+    }
+
+    return null;
+});
+const showBudgetFooter = computed(() => Boolean(budgetFooterMessage.value));
+
+function normalizeBudgetProgram(value) {
+    if (!value) {
+        return null;
+    }
+
+    if (typeof value === 'object') {
+        return value.name || value.shortname || null;
+    }
+
+    const normalized = String(value).trim();
+
+    return normalized || null;
+}
 
 function resetForm() {
     const initialData = props.initialData;
 
     form.value = {
         report_title: initialData?.report_title ?? 'RECOMMENDATION LIST FOR APPROVAL',
+        budget_program: initialData?.budget_program ?? initialData?.budget_allocation?.program ?? null,
+        highlight_jpm_members: Boolean(initialData?.highlight_jpm_members),
         prepared_by: initialData?.prepared_by ?? (props.defaultPreparedBy?.trim() || DEFAULT_PREPARED_BY),
         prepared_by_position: initialData?.prepared_by_position ?? DEFAULT_PREPARED_BY_POSITION,
         prepared_by_office: initialData?.prepared_by_office ?? DEFAULT_PREPARED_BY_OFFICE,
@@ -304,6 +434,8 @@ function submitForm() {
         report_title: form.value.report_title,
         paper_size: 'A4',
         orientation: 'landscape',
+        budget_program: normalizeBudgetProgram(form.value.budget_program),
+        highlight_jpm_members: form.value.highlight_jpm_members,
         prepared_by: form.value.prepared_by,
         prepared_by_position: form.value.prepared_by_position,
         prepared_by_office: form.value.prepared_by_office,
@@ -326,12 +458,3 @@ watch(selectedBudgetAllocation, () => {
 });
 </script>
 
-<style scoped>
-.ios-error {
-    color: #dc2626;
-}
-
-:deep(.ios-select) {
-    width: 100%;
-}
-</style>

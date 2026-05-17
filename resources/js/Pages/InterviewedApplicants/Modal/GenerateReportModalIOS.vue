@@ -7,7 +7,7 @@
         :action-disabled="isPrimaryActionDisabled"
         :action-icon="primaryActionIcon"
         close-icon="x"
-        icon-size="16"
+        :icon-size="16"
         @update:visible="val => emit('update:show', val)"
         @close="handleLeadingAction"
         @action="handlePrimaryAction"
@@ -62,6 +62,7 @@
                                 </div>
                                 <div class="ios-row-control">
                                     <ProgramSelect v-model="selectedProgram" label="shortname" custom-placeholder="All"
+                                        :ios-compact="true"
                                         class="ios-select" />
                                 </div>
                             </div>
@@ -74,7 +75,7 @@
                                 </div>
                                 <div class="ios-row-control">
                                     <SchoolSelect v-model="selectedSchool" label="shortname" custom-placeholder="All"
-                                        class="ios-select" :multiple="false" />
+                                        class="ios-select" :multiple="false" :ios-compact="true" />
                                 </div>
                             </div>
 
@@ -86,7 +87,8 @@
                                 </div>
                                 <div class="ios-row-control">
                                     <CourseSelect v-model="selectedCourse" :scholarship-program-id="selectedProgram?.id"
-                                        label="shortname" custom-placeholder="All" class="ios-select" />
+                                        label="shortname" custom-placeholder="All" class="ios-select"
+                                        :ios-compact="true" />
                                 </div>
                             </div>
                         </div>
@@ -261,7 +263,7 @@
                         <div class="ios-section">
                             <div class="ios-section-label">Report Details</div>
                             <div class="ios-card">
-                                <div class="ios-row" :class="{ 'ios-row-last': reportType !== 'list' }">
+                                    <div class="ios-row">
                                     <div class="ios-row-label">
                                         <AppIcon name="type-outline" :size="13" style="color: #007AFF;" />
                                         Report Title
@@ -272,13 +274,24 @@
                                     </div>
                                 </div>
 
-                                <div v-if="reportType === 'list'" class="ios-row ios-row-last">
+                                <div v-if="reportType === 'list'" class="ios-row">
                                     <div class="ios-row-label">
                                         <AppIcon name="message-square" :size="13" style="color: #007AFF;" />
                                         Show Interview Columns
                                     </div>
                                     <div class="ios-row-control" style="display:flex;justify-content:flex-end;">
                                         <ToggleSwitch v-model="includeInterviewColumns" />
+                                    </div>
+                                </div>
+
+                                <div v-if="reportType === 'list'" class="ios-row ios-row-last">
+                                    <div class="ios-row-label">
+                                        <AppIcon name="users" :size="13" style="color: #16A34A;" />
+                                        Highlight JPM Names
+                                    </div>
+                                    <div class="ios-row-control" style="display:flex;justify-content:flex-end;align-items:center;gap:12px;">
+                                        <span class="text-[11px] text-slate-500">Mark JPM-related applicants in print</span>
+                                        <ToggleSwitch v-model="highlightJpmMembers" />
                                     </div>
                                 </div>
 
@@ -370,15 +383,31 @@
                                             optionLabel="label" optionValue="value"
                                             :placeholder="budgetAllocationOptions.length ? 'Select allocation' : 'No allocation available'"
                                             :disabled="budgetAllocationOptions.length === 0" appendTo="body" class="ios-select"
-                                            showClear />
+                                                showClear>
+                                                <template #value="{ value, placeholder }">
+                                                    <div v-if="findBudgetAllocationOption(value)" class="leading-tight">
+                                                        <div class="font-medium text-slate-700">{{ findBudgetAllocationOption(value)?.label }}</div>
+                                                        <div v-if="findBudgetAllocationOption(value)?.description" class="text-[11px] text-slate-500">
+                                                            {{ findBudgetAllocationOption(value)?.description }}
+                                                        </div>
+                                                    </div>
+                                                    <span v-else class="text-slate-400">{{ placeholder }}</span>
+                                                </template>
+                                                <template #option="{ option }">
+                                                    <div class="py-1 leading-tight">
+                                                        <div class="font-medium text-slate-700">{{ option.label }}</div>
+                                                        <div v-if="option.description" class="text-[11px] text-slate-500">
+                                                            {{ option.description }}
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </Select>
                                     </div>
                                 </div>
                             </div>
                             <div class="ios-section-footer">
                                 <template v-if="selectedBudgetAllocation">
-                                    Monitoring {{ selectedBudgetAllocation.program }} ·
-                                    {{ selectedBudgetAllocation.rc_name || selectedBudgetAllocation.rc_code || 'N/A' }} ·
-                                    FY {{ selectedBudgetAllocation.fiscal_year }}.
+                                        {{ formatBudgetAllocationSelectionMessage(selectedBudgetAllocation) }}
                                 </template>
                                 <template v-else-if="budgetAllocationOptions.length">
                                     Select the budget allocation where the Current AY Estimated Grant will be monitored.
@@ -453,6 +482,7 @@ const groupBy = ref('none');
 const paperSize = ref('A4');
 const orientation = ref('landscape');
 const includeInterviewColumns = ref(true);
+const highlightJpmMembers = ref(false);
 
 // PDF Preview
 const showPdfPreview = ref(false);
@@ -567,15 +597,67 @@ function filterApplicants() {
 
 const filteredApplicants = computed(() => filterApplicants());
 const filteredApplicantIds = computed(() => filteredApplicants.value.map(record => record.id));
+
+const budgetAllocationCurrencyFormatter = new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
+
+function formatBudgetAllocationAmount(allocation) {
+    const amount = Number(allocation?.total_allotment);
+
+    return Number.isFinite(amount) ? budgetAllocationCurrencyFormatter.format(amount) : null;
+}
+
+function getBudgetAllocationBaseName(allocation) {
+    return allocation?.particular_name?.trim()
+        || allocation?.description?.trim()
+        || 'Unnamed Allocation';
+}
+
+function formatBudgetAllocationLabel(allocation) {
+    const baseName = getBudgetAllocationBaseName(allocation);
+    const rcCode = allocation?.rc_code?.trim();
+
+    return rcCode ? `${baseName} [${rcCode}]` : baseName;
+}
+
+function formatBudgetAllocationDescription(allocation) {
+    const description = allocation?.description?.trim();
+    const baseName = getBudgetAllocationBaseName(allocation);
+
+    return [
+        description && description !== baseName ? description : null,
+        formatBudgetAllocationAmount(allocation),
+    ].filter(Boolean).join(' - ');
+}
+
+function formatBudgetAllocationSelectionMessage(allocation) {
+    const label = formatBudgetAllocationLabel(allocation);
+    const description = formatBudgetAllocationDescription(allocation);
+
+    if (description && description !== label) {
+        return `Monitoring ${label} · ${description}.`;
+    }
+
+    return `Monitoring ${label}.`;
+}
+
 const budgetAllocationOptions = computed(() => {
     return (props.budgetAllocations || []).map(allocation => ({
-        label: `${allocation.program} · ${allocation.rc_name || allocation.rc_code || 'N/A'} · FY ${allocation.fiscal_year || 'N/A'}`,
+        label: formatBudgetAllocationLabel(allocation),
+        description: formatBudgetAllocationDescription(allocation),
         value: allocation.key,
     }));
 });
 const selectedBudgetAllocation = computed(() => {
     return (props.budgetAllocations || []).find(allocation => allocation.key === selectedBudgetAllocationKey.value) || null;
 });
+function findBudgetAllocationOption(value) {
+    return budgetAllocationOptions.value.find(option => option.value === value) || null;
+}
 const visibleProfiles = computed(() => {
     const searchTerm = profileSearchQuery.value.trim().toLowerCase();
 
@@ -711,6 +793,7 @@ watch(() => props.show, (value) => {
         preparedByOffice.value = DEFAULT_PREPARED_BY_OFFICE;
         approvedBy.value = DEFAULT_APPROVED_BY;
         approvedByPosition.value = DEFAULT_APPROVED_BY_POSITION;
+        highlightJpmMembers.value = false;
         selectedBudgetAllocationKey.value = props.budgetAllocations.length === 1
             ? props.budgetAllocations[0].key
             : null;
@@ -784,6 +867,7 @@ function generateReport() {
         budgetAllocation: selectedBudgetAllocation.value,
         reportTitle,
         includeInterviewColumns: includeInterviewColumns.value,
+        highlightJpmMembers: reportType.value === 'list' ? highlightJpmMembers.value : false,
     });
 
     const { buildHtmlDoc } = usePdfPrint();
@@ -816,355 +900,3 @@ function capitalize(str) {
 
 </script>
 
-<style scoped>
-/* ═══════════════════════════════════════════════
-   PREVIEW & REPORT STYLES (Component-Specific)
-   iOS Design System classes are in resources/css/ios-design-system.css
-   ═══════════════════════════════════════════════ */
-
-.ios-preview-body {
-    background: #F2F2F7;
-}
-
-.ios-report-container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 24px;
-}
-
-.ios-report-header {
-    margin-bottom: 20px;
-}
-
-.ios-report-header h1 {
-    font-size: 28px;
-    font-weight: 700;
-    color: #000;
-    letter-spacing: -0.6px;
-    margin: 0 0 4px;
-}
-
-.ios-report-header p {
-    font-size: 15px;
-    color: #8E8E93;
-    margin: 0;
-}
-
-.ios-filter-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 20px;
-}
-
-.ios-pill {
-    display: inline-block;
-    background: rgba(0, 122, 255, 0.1);
-    color: #007AFF;
-    font-size: 13px;
-    font-weight: 500;
-    padding: 4px 12px;
-    border-radius: 20px;
-}
-
-.ios-empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #8E8E93;
-}
-
-.ios-empty-state i {
-    font-size: 48px;
-    margin-bottom: 12px;
-    display: block;
-}
-
-.ios-empty-state p {
-    font-size: 17px;
-}
-
-/* Group Header */
-.ios-report-group {
-    margin-bottom: 24px;
-}
-
-.ios-group-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
-    margin-bottom: 8px;
-    border-bottom: 1px solid rgba(60, 60, 67, 0.12);
-    font-size: 20px;
-    font-weight: 600;
-    color: #000;
-    letter-spacing: -0.4px;
-}
-
-.ios-group-count {
-    font-size: 15px;
-    font-weight: 500;
-    color: #8E8E93;
-    background: rgba(118, 118, 128, 0.12);
-    padding: 2px 10px;
-    border-radius: 20px;
-}
-
-/* Table */
-.ios-table-wrap {
-    background: #FFFFFF;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.04);
-}
-
-.ios-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-}
-
-.ios-table thead tr {
-    background: rgba(118, 118, 128, 0.06);
-}
-
-.ios-table th {
-    padding: 10px 12px;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 600;
-    color: #6D6D72;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
-}
-
-.ios-table td {
-    padding: 10px 12px;
-    color: #000;
-    border-bottom: 0.5px solid rgba(60, 60, 67, 0.06);
-    letter-spacing: -0.2px;
-}
-
-.ios-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.ios-cell-name {
-    font-weight: 500;
-}
-
-/* Recommendation colors */
-.ios-rec-recommended {
-    color: #34C759;
-    font-weight: 600;
-}
-
-.ios-rec-further_evaluation {
-    color: #FF9500;
-    font-weight: 600;
-}
-
-.ios-rec-not_recommended {
-    color: #FF3B30;
-    font-weight: 600;
-}
-
-/* Summary */
-.ios-summary-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}
-
-.ios-summary-card {
-    background: #FFFFFF;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.ios-summary-card-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: #6D6D72;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    padding: 12px 16px 8px;
-}
-
-.ios-summary-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px;
-    border-top: 0.5px solid rgba(60, 60, 67, 0.08);
-    font-size: 16px;
-    color: #000;
-}
-
-.ios-summary-count {
-    font-weight: 700;
-    color: #007AFF;
-    background: rgba(0, 122, 255, 0.08);
-    padding: 2px 12px;
-    border-radius: 20px;
-    font-size: 15px;
-}
-
-.ios-total-banner {
-    margin-top: 16px;
-    padding: 16px;
-    text-align: center;
-    background: #FFFFFF;
-    border-radius: 10px;
-    font-size: 17px;
-    color: #000;
-    letter-spacing: -0.4px;
-}
-
-/* Icon Buttons in Preview Nav */
-.ios-icon-btn {
-    background: none;
-    border: none;
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 18px;
-    transition: background 0.15s;
-}
-
-.ios-icon-btn:hover {
-    background: rgba(118, 118, 128, 0.12);
-}
-
-.ios-icon-btn-red {
-    color: #FF3B30;
-}
-
-.ios-icon-btn-green {
-    color: #34C759;
-}
-
-.ios-selection-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-}
-
-.ios-inline-btn {
-    border: none;
-    background: rgba(0, 122, 255, 0.12);
-    color: #007AFF;
-    border-radius: 999px;
-    padding: 5px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.ios-inline-btn:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
-
-.ios-inline-btn-secondary {
-    background: rgba(118, 118, 128, 0.12);
-    color: #6D6D72;
-}
-
-.ios-profile-picker {
-    max-height: 220px;
-    overflow: auto;
-}
-
-.ios-profile-option {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 10px 14px;
-    border-top: 0.5px solid rgba(60, 60, 67, 0.08);
-    cursor: pointer;
-}
-
-.ios-profile-copy {
-    min-width: 0;
-    flex: 1;
-}
-
-.ios-profile-name {
-    color: #000;
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.25;
-}
-
-.ios-profile-meta {
-    color: #8E8E93;
-    font-size: 12px;
-    line-height: 1.25;
-    margin-top: 2px;
-}
-
-.ios-profile-empty {
-    padding: 14px;
-    border-top: 0.5px solid rgba(60, 60, 67, 0.08);
-    color: #8E8E93;
-    font-size: 13px;
-}
-
-/* ═══════════════════════════════════════════════
-   STYLE OVERRIDES FOR PRIMEVUE INSIDE iOS CARD
-   ═══════════════════════════════════════════════ */
-
-:deep(.ios-select.p-select),
-:deep(.ios-select .p-select) {
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    font-size: 13px;
-    color: #8E8E93;
-    text-align: left;
-    padding: 0;
-    width: 100%;
-    max-width: 100%;
-    min-height: unset;
-}
-
-:deep(.ios-select .p-select-label) {
-    color: #8E8E93 !important;
-    text-align: left;
-    padding: 4px 2px 4px 8px;
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-:deep(.ios-select .p-select-dropdown) {
-    color: #C7C7CC !important;
-}
-
-:deep(.ios-datepicker .p-datepicker) {
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-}
-
-:deep(.ios-datepicker .p-inputtext) {
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    text-align: right;
-    color: #8E8E93;
-    font-size: 13px;
-    padding: 4px 40px 4px 8px;
-}
-
-:deep(.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider) {
-    background: #34C759 !important;
-}
-</style>

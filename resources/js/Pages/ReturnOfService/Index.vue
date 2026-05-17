@@ -185,6 +185,7 @@
             :total-batch-count="batches.length" :format-date-long="formatDateLong"
             :get-completion-severity="getCompletionSeverity" @close-batch="closeBatchDialog"
             @submit-batch="submitBatchForm" @close-scholar="closeScholarDialog" @submit-scholar="submitScholarForm"
+            @auto-calculate-years-of-service="autoCalculateYearsOfService"
             @close-view-scholar="closeViewScholarDialog" @close-view-batch="closeViewBatchDialog"
             @close-delete-batch="closeDeleteBatchDialog" @delete-batch="deleteBatch"
             @close-delete-scholar="closeDeleteScholarDialog" @delete-scholar="deleteScholar"
@@ -259,6 +260,10 @@ const batchSearch = ref('');
 const batchCreatedByFilter = ref('');
 const batchDescriptionFilter = ref('');
 const batchYearFilter = ref(null);
+const rosEligibleProfileParams = {
+    status: 'ros-eligible',
+    program: 'MEDICINE AND MEDICAL ALLIED COURSES',
+};
 
 // Watch for changes in props.batches and update local ref
 watch(
@@ -337,6 +342,120 @@ const isEndDateInvalid = computed(() => {
 
     return endDate < startDate;
 });
+
+const hasYearsOfServiceValue = (value) => {
+    return value !== null && value !== undefined && value !== '';
+};
+
+const normalizeYearsOfService = (value) => {
+    if (!hasYearsOfServiceValue(value)) {
+        return null;
+    }
+
+    const parsedValue = Number(value);
+    if (!Number.isFinite(parsedValue) || parsedValue < 0) {
+        return null;
+    }
+
+    return Math.round(parsedValue * 100) / 100;
+};
+
+const normalizeSelectedProfiles = (selected) => {
+    const selectedProfiles = Array.isArray(selected)
+        ? selected.filter(Boolean)
+        : selected
+            ? [selected]
+            : [];
+
+    return selectedProfiles
+        .map((profile) => {
+            const profileId = typeof profile === 'object' ? profile?.id : profile;
+            const matchedProfile = scholarshipRecords.value.find(
+                (record) => String(record.id) === String(profileId)
+            );
+
+            if (!matchedProfile) {
+                return profile;
+            }
+
+            return typeof profile === 'object'
+                ? { ...matchedProfile, ...profile }
+                : matchedProfile;
+        })
+        .filter(Boolean);
+};
+
+const getSelectedProfilesYearsOfServiceDefaults = (selected) => {
+    const selectedProfiles = normalizeSelectedProfiles(selected);
+
+    if (selectedProfiles.length === 0) {
+        return [];
+    }
+
+    return [...new Set(
+        selectedProfiles
+            .map((profile) => normalizeYearsOfService(profile?.default_years_of_service))
+            .filter((value) => value !== null)
+    )];
+};
+
+const getSelectedProfilesDefaultYearsOfService = (selected) => {
+    const defaultValues = getSelectedProfilesYearsOfServiceDefaults(selected);
+
+    return defaultValues.length === 1 ? defaultValues[0] : null;
+};
+
+const upsertScholarshipRecord = (profile) => {
+    const existingIndex = scholarshipRecords.value.findIndex(
+        (record) => String(record.id) === String(profile.id)
+    );
+
+    if (existingIndex === -1) {
+        scholarshipRecords.value = [...scholarshipRecords.value, profile];
+        return profile;
+    }
+
+    scholarshipRecords.value[existingIndex] = {
+        ...scholarshipRecords.value[existingIndex],
+        ...profile,
+    };
+
+    return scholarshipRecords.value[existingIndex];
+};
+
+const fetchRosEligibleProfile = async (profileId) => {
+    if (!profileId) {
+        return null;
+    }
+
+    const existingProfile = scholarshipRecords.value.find(
+        (record) => String(record.id) === String(profileId)
+            && record.default_years_of_service !== undefined
+    );
+
+    if (existingProfile) {
+        return existingProfile;
+    }
+
+    try {
+        const response = await axios.get(route('return-of-service.search-records'), {
+            params: {
+                ...rosEligibleProfileParams,
+                profile_id: profileId,
+            }
+        });
+
+        const matchedProfile = response.data.find(
+            (profile) => String(profile.id) === String(profileId)
+        );
+
+        return matchedProfile ? upsertScholarshipRecord(matchedProfile) : null;
+    } catch (error) {
+        console.error('Error loading ROS profile default:', error);
+        return null;
+    }
+};
+
 const computedYearsOfService = computed(() => {
     if (!scholarForm.service_start_date || !scholarForm.service_end_date) {
         return null;
@@ -365,23 +484,74 @@ const computedYearsOfService = computed(() => {
     const monthsDecimal = diffDays / 30.44;
     const yearsDecimal = monthsDecimal / 12;
 
-    // Round to 1 decimal place (e.g., 3.5 for 3 years 6 months)
-    const rounded = Math.round(yearsDecimal * 10) / 10;
+    // Round to 2 decimal places to preserve trimester-based values like 0.33.
+    const rounded = Math.round(yearsDecimal * 100) / 100;
 
     return rounded >= 0 ? rounded : null;
 });
 
-// Watch for date changes to auto-populate years of service
-watch(
-    () => [scholarForm.service_start_date, scholarForm.service_end_date],
-    () => {
-        // Auto-populate years_of_service if both dates are set and years_of_service is empty
-        if (computedYearsOfService.value !== null && !scholarForm.years_of_service) {
-            scholarForm.years_of_service = computedYearsOfService.value;
+const autoCalculateYearsOfService = async () => {
+    const resolvedSelectedProfiles = normalizeSelectedProfiles(scholarForm.selectedProfile);
+    const selectedProfilesDefaultYearsOfService = getSelectedProfilesDefaultYearsOfService(resolvedSelectedProfiles);
+    if (selectedProfilesDefaultYearsOfService !== null) {
+        scholarForm.years_of_service = selectedProfilesDefaultYearsOfService;
+        return;
+    }
+
+    const selectedProfileIds = resolvedSelectedProfiles
+        .map((profile) => profile?.id)
+        .filter(Boolean);
+
+    const fallbackProfileIds = selectedProfileIds.length > 0
+        ? selectedProfileIds
+        : scholarForm.profile_id
+            ? [scholarForm.profile_id]
+            : [];
+
+    if (fallbackProfileIds.length > 0) {
+        const fetchedProfiles = (await Promise.all(
+            [...new Set(fallbackProfileIds)].map((profileId) => fetchRosEligibleProfile(profileId))
+        )).filter(Boolean);
+
+        const fetchedDefaults = getSelectedProfilesYearsOfServiceDefaults(fetchedProfiles);
+        if (fetchedDefaults.length === 1) {
+            scholarForm.years_of_service = fetchedDefaults[0];
+            return;
         }
-    },
-    { deep: true }
-);
+
+        if (fetchedDefaults.length > 1) {
+            toast.add({
+                severity: 'warn',
+                summary: 'Auto calculation unavailable',
+                detail: 'Selected scholars do not share the same completed-term total. Enter a manual value or calculate from service dates.',
+                life: 4500,
+            });
+            return;
+        }
+    }
+
+    if (computedYearsOfService.value !== null) {
+        scholarForm.years_of_service = computedYearsOfService.value;
+        return;
+    }
+
+    if (fallbackProfileIds.length > 0) {
+        toast.add({
+            severity: 'warn',
+            summary: 'No term total found',
+            detail: 'The selected scholar has no completed-term total available. Set both service dates or enter a manual value.',
+            life: 4000,
+        });
+        return;
+    }
+
+    toast.add({
+        severity: 'warn',
+        summary: 'Nothing to calculate',
+        detail: 'Select completed scholars or set both service dates first.',
+        life: 4000,
+    });
+};
 
 // Watch for profile selection
 watch(() => scholarForm.selectedProfile, (selected) => {
@@ -636,7 +806,7 @@ const openEditScholarDialog = (batch, scholar) => {
     scholarForm.clearErrors();
     scholarForm.batch_id = batch.id;
     scholarForm.profile_id = scholar.profile_id;
-    scholarForm.years_of_service = scholar.years_of_service;
+    scholarForm.years_of_service = normalizeYearsOfService(scholar.years_of_service);
     scholarForm.service_start_date = scholar.service_start_date ? new Date(scholar.service_start_date) : null;
     scholarForm.service_end_date = scholar.service_end_date ? new Date(scholar.service_end_date) : null;
     scholarForm.completion_status = scholar.completion_status;
@@ -661,6 +831,14 @@ const formatDate = (date) => {
         return `${year}-${month}-${day}`;
     }
     return '';
+};
+
+const appendYearsOfService = (formData, value) => {
+    const normalizedYearsOfService = normalizeYearsOfService(value);
+
+    if (normalizedYearsOfService !== null) {
+        formData.append('years_of_service', normalizedYearsOfService);
+    }
 };
 
 const formatDateLong = (date) => {
@@ -728,7 +906,7 @@ const submitScholarForm = async () => {
                 const courseId = typeof currentBatch.value.course_id === 'object' ? currentBatch.value.course_id.id : currentBatch.value.course_id;
                 formData.append('course_id', courseId);
             }
-            formData.append('years_of_service', Math.round(scholarForm.years_of_service));
+            appendYearsOfService(formData, scholarForm.years_of_service);
             if (scholarForm.service_start_date) formData.append('service_start_date', formatDate(scholarForm.service_start_date));
             if (scholarForm.service_end_date) formData.append('service_end_date', formatDate(scholarForm.service_end_date));
             formData.append('completion_status', scholarForm.completion_status);
@@ -770,9 +948,7 @@ const submitScholarForm = async () => {
                     const courseId = typeof currentBatch.value.course_id === 'object' ? currentBatch.value.course_id.id : currentBatch.value.course_id;
                     formData.append('course_id', courseId);
                 }
-                if (scholarForm.years_of_service !== null && scholarForm.years_of_service !== '') {
-                    formData.append('years_of_service', Math.round(scholarForm.years_of_service));
-                }
+                appendYearsOfService(formData, scholarForm.years_of_service);
                 if (scholarForm.remarks) formData.append('remarks', scholarForm.remarks);
 
                 const serviceStartDate = formatDate(scholarForm.service_start_date);
@@ -975,8 +1151,7 @@ const searchProfiles = async (query) => {
         const response = await axios.get(route('return-of-service.search-records'), {
             params: {
                 q: query,
-                status: 'ros-eligible',
-                program: 'MEDICINE AND MEDICAL ALLIED COURSES'
+                ...rosEligibleProfileParams,
             }
         });
 

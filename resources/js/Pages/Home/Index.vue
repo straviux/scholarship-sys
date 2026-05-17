@@ -189,10 +189,11 @@ const getSystemUpdateIconColor = (type) => ({
         <div class="space-y-4 short:space-y-2">
 
             <!-- ─── Services Section ─── -->
-            <div class="ios-section">
+            <div class="ios-section !mt-0">
                 <div class="ios-section-label">SERVICES</div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 short:gap-2">
-                    <div v-for="card in serviceCards" :key="card.id" class="ios-card service-card group cursor-pointer"
+                    <div v-for="card in serviceCards" :key="card.id"
+                        class="ios-card group cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]"
                         @click="card.action">
                         <div class="p-4 short:p-3 flex flex-col items-center text-center">
                             <div
@@ -215,7 +216,7 @@ const getSystemUpdateIconColor = (type) => ({
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 short:gap-2">
 
                 <!-- System Updates -->
-                <div class="lg:col-span-2 ios-section">
+                <div class="lg:col-span-2 ios-section !mt-0">
                     <div class="ios-section-label">SYSTEM UPDATES</div>
                     <div class="ios-card overflow-hidden">
                         <div v-if="sortedSystemUpdates.length > 0">
@@ -251,7 +252,7 @@ const getSystemUpdateIconColor = (type) => ({
                 </div>
 
                 <!-- Quick Links -->
-                <div class="ios-section">
+                <div class="ios-section !mt-0">
                     <div class="ios-section-label">QUICK LINKS</div>
                     <div class="ios-card overflow-hidden">
                         <div v-for="(link, idx) in quickLinks" :key="link.label"
@@ -275,9 +276,9 @@ const getSystemUpdateIconColor = (type) => ({
         <!-- Help Dialog — iOS style -->
         <IosModal :visible="showHelpDialog" title="Help & Support" width="640px" max-width="95vw"
             body-style="padding: 0;" @update:visible="showHelpDialog = $event">
-            <div class="ios-help-modal">
-                <div class="ios-help-body">
-                        <div class="ios-section">
+            <div class="w-full max-h-[85vh] overflow-hidden rounded-[14px] bg-[#F2F2F7] shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex flex-col">
+                <div class="flex-1 overflow-y-auto px-4 pt-4 pb-6 space-y-[22px] [-webkit-overflow-scrolling:touch]">
+                        <div class="ios-section !mt-0">
                             <div class="ios-section-label">CONTACT</div>
                             <div class="ios-card">
                                 <div class="ios-row">
@@ -304,7 +305,7 @@ const getSystemUpdateIconColor = (type) => ({
                             </div>
                         </div>
 
-                        <div class="ios-section">
+                        <div class="ios-section !mt-0">
                             <div class="ios-section-label">FREQUENTLY ASKED</div>
                             <div class="ios-card">
                                 <div class="ios-row">
@@ -327,96 +328,3 @@ const getSystemUpdateIconColor = (type) => ({
     </AdminLayout>
 </template>
 
-<style scoped>
-/* ─── iOS Section Labels ─── */
-.ios-section {
-    margin-top: 0;
-}
-
-.ios-section-label {
-    font-size: 13px;
-    color: #6D6D72;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    padding: 0 20px 8px;
-    font-weight: 500;
-}
-
-/* ─── iOS Card (grouped rows) ─── */
-.ios-card {
-    background: #FFFFFF;
-    border-radius: 2rem;
-    border: 0.5px solid #E5E5EA;
-}
-
-.ios-row {
-    padding: 14px 20px;
-    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
-}
-
-.ios-row:last-child {
-    border-bottom: none;
-}
-
-/* ─── Service Card hover ─── */
-.service-card {
-    transition: box-shadow 0.2s, transform 0.2s;
-}
-
-.service-card:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    transform: translateY(-2px);
-}
-
-/* ─── Help Dialog (iOS) ─── */
-:deep(.ios-dialog-root.p-dialog) {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    max-width: 440px;
-}
-
-:deep(.ios-dialog-mask) {
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
-}
-
-.ios-help-modal {
-    background: #F2F2F7;
-    border-radius: 14px;
-    max-height: 85vh;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    width: 100%;
-}
-
-.ios-help-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 16px;
-    background: #FFFFFF;
-    border-bottom: 0.5px solid #E5E5EA;
-}
-
-.ios-help-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: #000;
-    letter-spacing: -0.4px;
-}
-
-.ios-help-body {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 16px 16px 24px;
-}
-
-.ios-help-body .ios-section+.ios-section {
-    margin-top: 22px;
-}
-</style>

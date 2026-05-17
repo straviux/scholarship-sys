@@ -22,6 +22,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    showClear: {
+        type: Boolean,
+        default: true,
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -111,7 +115,7 @@ const selectPt = computed(() => {
 </script>
 
 <template>
-    <Select v-model="localValue" :options="year_levels" filter autoFilterFocus showClear optionLabel="label"
+    <Select v-model="localValue" :options="year_levels" filter autoFilterFocus :showClear="showClear" optionLabel="label"
         :placeholder="customPlaceholder" class="w-full" :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">

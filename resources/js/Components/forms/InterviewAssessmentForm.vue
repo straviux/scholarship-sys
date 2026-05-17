@@ -179,6 +179,12 @@ const grantProvisionHint = computed(() => {
     return `Grant provision options are filtered for ${selectedProgramCode.value}.`;
 });
 
+const compactSelectPt = {
+    root: { style: 'min-height: 2.25rem;' },
+    label: { style: 'padding: 0.4375rem 0.75rem; font-size: 0.8125rem; line-height: 1.2;' },
+    dropdown: { style: 'width: 2.25rem;' },
+};
+
 watch(
     () => [selectedProgramCode.value, grantProvisionOptions.value.map((option) => option.value).join('|')],
     () => {
@@ -241,7 +247,7 @@ watch(
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.program_id }]">
                             <ProgramSelect v-model="form.program" custom-placeholder="Select program"
-                                class="ios-select" />
+                                class="ios-select" :show-clear="false" :ios-compact="true" />
                             <small v-if="errors.program_id" class="ios-field-error">{{ errors.program_id }}</small>
                         </div>
                     </div>
@@ -254,7 +260,8 @@ watch(
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.course_id }]">
                             <CourseSelect v-model="form.course" :scholarship-program-id="selectedProgramId"
-                                :custom-placeholder="coursePlaceholder" class="ios-select" />
+                                :custom-placeholder="coursePlaceholder" class="ios-select" :show-clear="false"
+                                :ios-compact="true" />
                             <small v-if="!selectedProgramId && !errors.course_id" class="ios-field-hint">
                                 Select a program first to narrow the course list.
                             </small>
@@ -269,7 +276,8 @@ watch(
                     </div>
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.school_id }]">
-                            <SchoolSelect v-model="form.school" custom-placeholder="Select school" class="ios-select" />
+                            <SchoolSelect v-model="form.school" custom-placeholder="Select school" class="ios-select"
+                                :show-clear="false" :ios-compact="true" />
                             <small v-if="errors.school_id" class="ios-field-error">{{ errors.school_id }}</small>
                         </div>
                     </div>
@@ -281,7 +289,8 @@ watch(
                     </div>
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.year_level }]">
-                            <YearLevelSelect v-model="form.year_level" class="ios-select" />
+                            <YearLevelSelect v-model="form.year_level" class="ios-select" :show-clear="false"
+                                :ios-compact="true" />
                             <small v-if="errors.year_level" class="ios-field-error">{{ errors.year_level }}</small>
                         </div>
                     </div>
@@ -293,7 +302,8 @@ watch(
                     </div>
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.term }]">
-                            <TermSelect v-model="form.term" class="ios-select" />
+                            <TermSelect v-model="form.term" class="ios-select" :show-clear="false"
+                                :ios-compact="true" />
                             <small v-if="errors.term" class="ios-field-error">{{ errors.term }}</small>
                         </div>
                     </div>
@@ -305,7 +315,8 @@ watch(
                     </div>
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.academic_year }]">
-                            <AcademicYearSelect v-model="form.academic_year" class="ios-select" />
+                            <AcademicYearSelect v-model="form.academic_year" class="ios-select" :show-clear="false"
+                                :ios-compact="true" />
                             <small v-if="errors.academic_year" class="ios-field-error">{{ errors.academic_year
                                 }}</small>
                         </div>
@@ -322,9 +333,13 @@ watch(
                         <AppIcon name="calendar-1" :size="13" style="color: #353839" />
                         Interview Date
                     </div>
-                    <div class="ios-row-control ios-select">
-                        <DatePicker v-model="form.interview_date" placeholder="Any" showButtonBar dateFormat="M dd, yy"
-                            class="ios-datepicker" showIcon iconDisplay="input" />
+                    <div class="ios-row-control ios-row-control-validation">
+                        <div :class="['ios-input-stack', { 'has-error': errors.interview_date }]">
+                            <DatePicker v-model="form.interview_date" placeholder="Select interview date" showButtonBar
+                                dateFormat="M dd, yy" class="ios-datepicker" showIcon
+                                iconDisplay="input" />
+                            <small v-if="errors.interview_date" class="ios-field-error">{{ errors.interview_date }}</small>
+                        </div>
                     </div>
                 </div>
                 <div class="ios-row">
@@ -335,7 +350,8 @@ watch(
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.interviewer_id }]">
                             <UserSelect v-model="form.interviewer_id" :users="interviewerOptions" class="ios-select"
-                                custom-placeholder="Select interviewer" />
+                                custom-placeholder="Select interviewer" :show-clear="false"
+                                :ios-compact="true" />
                             <small v-if="errors.interviewer_id" class="ios-field-error">{{ errors.interviewer_id
                                 }}</small>
                         </div>
@@ -348,14 +364,13 @@ watch(
                     </div>
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.endorsed_by }]">
-                            <InputText v-model="form.endorsed_by" placeholder="Enter endorser name" class="ios-input"
-                                maxlength="255" />
+                            <InputText v-model="form.endorsed_by" placeholder="Enter endorser name"
+                                class="ios-select" maxlength="255" />
                             <small v-if="errors.endorsed_by" class="ios-field-error">{{ errors.endorsed_by }}</small>
                         </div>
                     </div>
                 </div>
             </div>
-            <div v-if="errors.interview_date" class="ios-section-footer ios-error">{{ errors.interview_date }}</div>
         </div>
 
         <div class="ios-section">
@@ -440,15 +455,22 @@ watch(
                         <AppIcon name="heart-handshake" :size="13" style="color: #353839" />
                         Grant Provision
                     </div>
-                    <div class="ios-row-control py-2">
-                        <Select v-model="form.grant_provision" :options="grantProvisionOptions" optionLabel="label"
-                            optionValue="value" :placeholder="grantProvisionPlaceholder" class="ios-select"
-                            :disabled="!selectedProgramCode || !grantProvisionOptions.length" showClear />
+                    <div class="ios-row-control ios-row-control-validation">
+                        <div :class="['ios-input-stack', { 'has-error': errors.grant_provision }]">
+                            <Select v-model="form.grant_provision" :options="grantProvisionOptions"
+                                optionLabel="label" optionValue="value" :placeholder="grantProvisionPlaceholder"
+                                class="ios-select" :pt="compactSelectPt" size="small"
+                                :disabled="!selectedProgramCode || !grantProvisionOptions.length" :showClear="false" />
+                            <small v-if="grantProvisionHint && !errors.grant_provision" class="ios-field-hint">
+                                {{ grantProvisionHint }}
+                            </small>
+                            <small v-if="errors.grant_provision" class="ios-field-error">
+                                {{ errors.grant_provision }}
+                            </small>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div v-if="grantProvisionHint && !errors.grant_provision" class="ios-section-footer">{{ grantProvisionHint
-                }}</div>
             <div v-if="errors.academic_potential" class="ios-section-footer ios-error">{{ errors.academic_potential }}
             </div>
             <div v-if="errors.financial_need_level" class="ios-section-footer ios-error">{{ errors.financial_need_level
@@ -456,7 +478,6 @@ watch(
             <div v-if="errors.communication_skills" class="ios-section-footer ios-error">{{ errors.communication_skills
                 }}</div>
             <div v-if="errors.recommendation" class="ios-section-footer ios-error">{{ errors.recommendation }}</div>
-            <div v-if="errors.grant_provision" class="ios-section-footer ios-error">{{ errors.grant_provision }}</div>
         </div>
 
         <div class="ios-section">
@@ -488,97 +509,3 @@ watch(
     </div>
 </template>
 
-<style scoped>
-.interview-assessment-form__name {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1d4ed8;
-}
-
-.ios-section-tight {
-    margin-top: 16px;
-}
-
-.ios-validation-summary {
-    display: flex;
-    gap: 12px;
-    padding: 14px 16px;
-    background: #fff7ed;
-    border-color: #fed7aa;
-}
-
-.ios-validation-summary-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 9999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #c2410c;
-    background: #ffedd5;
-    flex-shrink: 0;
-}
-
-.ios-validation-summary-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: #9a3412;
-    letter-spacing: -0.15px;
-}
-
-.ios-validation-summary-text {
-    margin: 2px 0 0;
-    font-size: 12px;
-    line-height: 1.4;
-    color: #9a3412;
-}
-
-.ios-row-control-validation {
-    overflow: visible;
-}
-
-.ios-input-stack {
-    width: 100%;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-}
-
-.ios-field-hint {
-    margin-top: 4px;
-    font-size: 12px;
-    line-height: 1.25;
-    color: #8e8e93;
-    letter-spacing: -0.2px;
-}
-
-.ios-field-error {
-    margin-top: 4px;
-    font-size: 12px;
-    line-height: 1.25;
-    color: #ff3b30;
-    letter-spacing: -0.2px;
-}
-
-.assessment-check-slot {
-    width: 16px;
-    height: 13px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-:deep(.ios-input-stack.has-error .p-inputtext),
-:deep(.ios-input-stack.has-error .p-select),
-:deep(.ios-input-stack.has-error .p-datepicker),
-:deep(.ios-input-stack.has-error .p-editor-container) {
-    border-color: #ff3b30 !important;
-    box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.08);
-}
-
-:deep(.interview-assessment-editor.p-editor),
-:deep(.interview-assessment-editor .p-editor-container) {
-    width: 100%;
-}
-</style>

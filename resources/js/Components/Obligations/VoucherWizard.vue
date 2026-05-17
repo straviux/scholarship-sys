@@ -1386,7 +1386,7 @@ const wizardModalStyle = computed(() => ({
                 <AppIcon v-else name="check" :size="13" />
             </button>
         </template>
-        <div ref="wizardContentRef" class="ios-body">
+        <div ref="wizardContentRef" class="ios-body ios-compact-controls">
                     <div class="space-y-4 short:space-y-2" style="padding-top: 12px; padding-bottom: 24px;">
                         <!-- Progress Bar -->
                         <div class="space-y-2">
@@ -1940,74 +1940,3 @@ const wizardModalStyle = computed(() => ({
     </IosModal>
 </template>
 
-<style scoped>
-/* Quill text alignment styles for v-html preview */
-:deep(.ql-align-center) {
-    text-align: center;
-}
-
-:deep(.ql-align-right) {
-    text-align: right;
-}
-
-:deep(.ql-align-justify) {
-    text-align: justify;
-}
-
-:deep(p.ql-align-center),
-:deep(div.ql-align-center) {
-    text-align: center;
-}
-
-:deep(p.ql-align-right),
-:deep(div.ql-align-right) {
-    text-align: right;
-}
-
-:deep(p.ql-align-justify),
-:deep(div.ql-align-justify) {
-    text-align: justify;
-}
-
-.voucher-html-preview :deep(a),
-.voucher-html-preview :deep(a:visited) {
-    color: inherit;
-    text-decoration-color: currentColor;
-}
-
-/* ── Compact inputs & selects ── */
-:deep(.p-inputtext) {
-    font-size: 13px;
-    padding: 6px 10px;
-    min-height: unset;
-}
-
-:deep(.p-select) {
-    font-size: 13px;
-    min-height: unset;
-}
-
-:deep(.p-select-label) {
-    font-size: 13px;
-    padding: 6px 10px;
-}
-
-:deep(.p-select-dropdown) {
-    width: 2rem;
-}
-
-:deep(.p-radiobutton .p-radiobutton-box) {
-    width: 16px;
-    height: 16px;
-}
-
-:deep(.p-checkbox .p-checkbox-box) {
-    width: 16px;
-    height: 16px;
-}
-
-:deep(.p-button:not(.p-button-icon-only)) {
-    font-size: 13px;
-    padding: 6px 12px;
-}
-</style>

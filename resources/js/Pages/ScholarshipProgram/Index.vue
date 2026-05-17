@@ -123,14 +123,14 @@ const closeDeleteModal = () => {
                     <InputIcon>
                         <AppIcon name="search" :size="14" />
                     </InputIcon>
-                    <InputText v-model="globalFilter" placeholder="Search programs..." class="w-full" />
+                    <InputText v-model="globalFilter" placeholder="Search programs..." class="w-full ios-search-input-rounded" />
                 </IconField>
                 <Tag :value="`${programsList.length} program${programsList.length !== 1 ? 's' : ''}`"
                     severity="secondary" />
             </div>
 
             <!-- Programs DataTable -->
-            <DataTable :value="programsList" stripedRows showGridlines scrollable
+            <DataTable :value="programsList" class="ios-datatable-rounded" stripedRows showGridlines scrollable
                 :globalFilterFields="['name', 'shortname', 'remarks']" v-model:filters="filters" paginator :rows="rows"
                 v-model:first="first" :rowsPerPageOptions="[10, 25, 50]"
                 paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
@@ -252,48 +252,3 @@ const closeDeleteModal = () => {
     </AdminLayout>
 </template>
 
-<style scoped>
-:deep(.p-datatable) {
-    border-radius: 1.5rem;
-    overflow: hidden;
-    border: 1px solid var(--p-datatable-border-color);
-}
-
-:deep(.p-datatable-table-container) {
-    border-radius: 0;
-    overflow: hidden;
-}
-
-:deep(.p-datatable thead tr:first-child th:first-child) {
-    border-left: none;
-}
-
-:deep(.p-datatable thead tr:first-child th:last-child) {
-    border-right: none;
-}
-
-:deep(.p-datatable thead tr:first-child th) {
-    border-top: none;
-}
-
-:deep(.p-datatable tbody tr:last-child td) {
-    border-bottom: none;
-}
-
-:deep(.p-datatable tbody tr:last-child td:first-child) {
-    border-left: none;
-}
-
-:deep(.p-datatable tbody tr:last-child td:last-child) {
-    border-right: none;
-}
-
-:deep(.p-paginator) {
-    border: none;
-    border-top: 1px solid var(--p-datatable-border-color);
-}
-
-:deep(.p-iconfield .p-inputtext) {
-    border-radius: 1rem;
-}
-</style>

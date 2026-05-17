@@ -37,6 +37,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    showClear: {
+        type: Boolean,
+        default: true,
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -285,7 +289,7 @@ const onSelectHide = () => {
     <MultiSelect ref="multiSelect" v-if="multiple" v-model="localValue" :options="courseOptions" filter
         @show="onSelectShow" @hide="onSelectHide" :filterFields="['name', 'shortname', 'field_of_study']"
         optionLabel="name" :placeholder="customPlaceholder" class="w-full" :maxSelectedLabels="3"
-        :selectedItemsLabel="'{0} courses selected'" :loading="loading" showSelectAll showClear
+        :selectedItemsLabel="'{0} courses selected'" :loading="loading" showSelectAll :showClear="showClear"
         :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #option="slotProps">
             <div class="uppercase" :title="getCourseOptionTitle(slotProps.option)">
@@ -311,7 +315,7 @@ const onSelectHide = () => {
 
     <!-- Use Select when multiple is false -->
     <Select ref="select" v-else v-model="localValue" :options="courseOptions" filter @show="onSelectShow"
-        @hide="onSelectHide" :filterFields="['name', 'shortname', 'field_of_study']" autoFilterFocus showClear
+        @hide="onSelectHide" :filterFields="['name', 'shortname', 'field_of_study']" autoFilterFocus :showClear="showClear"
         :loading="loading" optionLabel="name" :placeholder="customPlaceholder" class="w-full"
         :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">

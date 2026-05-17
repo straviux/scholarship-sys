@@ -81,7 +81,9 @@
                         <tbody>
                             <tr v-for="(record, index) in group" :key="record.id">
                                 <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
-                                <td :style="TD + 'font-weight:600;font-size:8pt;'">{{ formatApplicantName(record) }}</td>
+                                <td :style="TD + 'font-weight:600;font-size:8pt;'">
+                                    <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record) }}</span>
+                                </td>
                                 <td :style="TD + 'font-size:8pt;'">{{ record.program?.shortname || '—' }}</td>
                                 <td :style="TD + 'font-size:8pt;'">{{ record.school?.name || record.school?.shortname || '—' }}</td>
                                 <td :style="TD + 'font-size:8pt;'">{{ record.course?.name || record.course?.shortname || '—' }}</td>
@@ -155,7 +157,9 @@
                     <tbody>
                         <tr v-for="(record, index) in records" :key="record.id">
                             <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
-                            <td :style="TD + 'font-weight:600;font-size:8pt;'">{{ formatApplicantName(record) }}</td>
+                            <td :style="TD + 'font-weight:600;font-size:8pt;'">
+                                <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record) }}</span>
+                            </td>
                             <td :style="TD + 'text-align:center;'">{{ record.program?.shortname || '—' }}</td>
                             <td :style="TD">{{ record.school?.name || record.school?.shortname || '—' }}</td>
                             <td :style="TD">{{ record.course?.name || record.course?.shortname || '—' }}</td>
@@ -245,7 +249,7 @@
                         <tr>
                             <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;">Program</td>
                             <td colspan="3" style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;">
-                                {{ budgetAllocation.program }} · {{ budgetAllocation.rc_name || budgetAllocation.rc_code || 'N/A' }} · {{ budgetAllocation.fiscal_year || 'N/A' }}
+                                {{ resolvedBudgetProgram }} · {{ budgetAllocation.rc_name || budgetAllocation.rc_code || 'N/A' }} · {{ budgetAllocation.fiscal_year || 'N/A' }}
                             </td>
                         </tr>
                         <tr>
@@ -345,9 +349,11 @@ const props = defineProps({
     preparedByOffice: { type: String, default: '' },
     approvedBy: { type: String, default: '' },
     approvedByPosition: { type: String, default: '' },
+    budgetProgram: { type: String, default: '' },
     budgetAllocation: { type: Object, default: null },
     reportTitle: { type: String, default: 'INTERVIEWED APPLICANTS REPORT' },
     includeInterviewColumns: { type: Boolean, default: true },
+    highlightJpmMembers: { type: Boolean, default: false },
 });
 
 const TH = 'border:1px solid #000;padding:3px 2px;font-weight:700;font-size:7px;line-height:1.15;text-transform:uppercase;text-align:center;background:#f0f0f0;word-break:break-word;overflow-wrap:anywhere;';
@@ -367,6 +373,7 @@ const resolvedPreparedByPosition = computed(() => props.preparedByPosition?.trim
 const resolvedPreparedByOffice = computed(() => props.preparedByOffice?.trim() || DEFAULT_PREPARED_BY_OFFICE);
 const resolvedApprovedBy = computed(() => props.approvedBy?.trim() || DEFAULT_APPROVED_BY);
 const resolvedApprovedByPosition = computed(() => props.approvedByPosition?.trim() || DEFAULT_APPROVED_BY_POSITION);
+const resolvedBudgetProgram = computed(() => props.budgetProgram?.trim() || props.budgetAllocation?.program || 'N/A');
 
 const REC_LABELS = {
     recommended: 'Recommended for Approval',
@@ -401,6 +408,23 @@ function formatApplicantName(record) {
         : '';
 
     return [lastName + ',', firstName, middleInitial].filter(Boolean).join(' ').trim();
+}
+
+function hasJpmMember(record) {
+    return Boolean(
+        record?.profile?.is_jpm_member
+        || record?.profile?.is_father_jpm
+        || record?.profile?.is_mother_jpm
+        || record?.profile?.is_guardian_jpm,
+    );
+}
+
+function applicantNameHighlightStyle(record) {
+    if (!props.highlightJpmMembers || !hasJpmMember(record)) {
+        return '';
+    }
+
+    return 'display:inline-block;border:1px solid #16a34a;background:#ecfdf5;color:#166534;padding:1px 6px;border-radius:999px;font-weight:700;';
 }
 
 function fmtCurrency(value) {

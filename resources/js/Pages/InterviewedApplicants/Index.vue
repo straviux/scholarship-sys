@@ -3,7 +3,7 @@
 
         <Head title="Interviewed Applicants - Approval Management" />
 
-        <div>
+        <div class="ios-settings-form">
             <!-- Toolbar -->
             <Toolbar class="mb-4 -mt-2 short:mb-2 !rounded-4xl !px-8">
                 <template #start>
@@ -207,9 +207,9 @@
                                     No interviewed applicants found
                                 </div>
                                 <DataTable v-else v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredList"
-                                    responsiveLayout="scroll" class="text-sm" dataKey="id"
+                                    responsiveLayout="scroll" class="text-sm ios-interviewed-table ios-datatable-clean" dataKey="id"
                                     v-model:expandedRows="expandedRows" showGridlines stripedRows scrollable
-                                    :rowClass="(row) => Object.keys(expandedRows).length > 0 && !expandedRows[row.id] ? 'row-blurred' : ''"
+                                    :rowClass="(row) => Object.keys(expandedRows).length > 0 && !expandedRows[row.id] ? 'ios-row-blurred' : ''"
                                     @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu>
                                     <Column :exportable="false" headerClass="w-12" bodyClass="w-12">
                                         <template #header>
@@ -400,7 +400,7 @@
 
                                 <DataTable v-else :value="filteredRecommendationLists" dataKey="id"
                                     v-model:expandedRows="recommendationListExpandedRows" showGridlines stripedRows scrollable
-                                    responsiveLayout="scroll" class="text-sm">
+                                    responsiveLayout="scroll" class="text-sm ios-interviewed-table ios-datatable-clean">
                                     <Column expander :exportable="false" headerClass="w-12" bodyClass="w-12" />
                                     <Column field="list_number" header="List No." sortable headerClass="min-w-[160px]"
                                         bodyClass="min-w-[160px]">
@@ -426,8 +426,14 @@
                                     </Column>
                                     <Column header="Budget Allocation" headerClass="min-w-[260px]" bodyClass="min-w-[260px]">
                                         <template #body="slotProps">
-                                            <div class="text-xs leading-relaxed text-slate-700">
-                                                {{ formatRecommendationListBudget(slotProps.data) }}
+                                            <div v-if="slotProps.data.budget_allocation" class="leading-relaxed">
+                                                <div class="font-semibold text-slate-800">{{ formatBudgetAllocationTitle(slotProps.data.budget_allocation) }}</div>
+                                                <div v-if="formatBudgetAllocationDescription(slotProps.data.budget_allocation)" class="text-[11px] text-slate-500">
+                                                    {{ formatBudgetAllocationDescription(slotProps.data.budget_allocation) }}
+                                                </div>
+                                            </div>
+                                            <div v-else class="text-xs leading-relaxed text-slate-500">
+                                                No saved budget allocation
                                             </div>
                                         </template>
                                     </Column>
@@ -476,7 +482,19 @@
                                                     </div>
                                                     <div>
                                                         <dt class="text-xs uppercase tracking-wide text-slate-500">Budget Allocation</dt>
-                                                        <dd class="mt-1 text-xs leading-relaxed text-slate-700">{{ formatRecommendationListBudget(slotProps.data) }}</dd>
+                                                        <dd v-if="slotProps.data.budget_allocation" class="mt-1 leading-relaxed">
+                                                            <div class="font-semibold text-slate-800">{{ formatBudgetAllocationTitle(slotProps.data.budget_allocation) }}</div>
+                                                            <div v-if="formatBudgetAllocationDescription(slotProps.data.budget_allocation)" class="text-xs text-slate-500">
+                                                                {{ formatBudgetAllocationDescription(slotProps.data.budget_allocation) }}
+                                                            </div>
+                                                        </dd>
+                                                        <dd v-else class="mt-1 text-xs leading-relaxed text-slate-500">No saved budget allocation</dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt class="text-xs uppercase tracking-wide text-slate-500">JPM Highlight</dt>
+                                                        <dd class="mt-1 text-xs leading-relaxed" :class="slotProps.data.highlight_jpm_members ? 'font-semibold text-emerald-700' : 'text-slate-500'">
+                                                            {{ slotProps.data.highlight_jpm_members ? 'Enabled for printed applicant names' : 'Disabled' }}
+                                                        </dd>
                                                     </div>
                                                 </dl>
                                             </div>
@@ -499,7 +517,12 @@
                                                         </thead>
                                                         <tbody class="divide-y divide-slate-100">
                                                             <tr v-for="record in slotProps.data.records" :key="`recommendation-record-${slotProps.data.id}-${record.id}`">
-                                                                <td class="px-4 py-3 font-semibold text-slate-800">{{ formatApplicantName(record) }}</td>
+                                                                <td class="px-4 py-3 font-semibold text-slate-800">
+                                                                    <span class="inline-block"
+                                                                        :class="slotProps.data.highlight_jpm_members && recommendationRecordHasJpm(record) ? 'rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-900' : ''">
+                                                                        {{ formatApplicantName(record) }}
+                                                                    </span>
+                                                                </td>
                                                                 <td class="px-4 py-3 text-slate-600">{{ record.program?.shortname || 'N/A' }}</td>
                                                                 <td class="px-4 py-3 text-slate-600">{{ record.school?.shortname || record.school?.name || 'N/A' }}</td>
                                                                 <td class="px-4 py-3 text-slate-600">{{ formatProjectedTerms(record.projected_term_count) }}</td>
@@ -566,8 +589,11 @@ import AssessmentViewModal from './Modal/AssessmentViewModal.vue';
 import CreateRecommendationListModal from './Modal/CreateRecommendationListModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModalIOS.vue';
 import { getSystemOptionLabel } from '@/composables/useSystemOptions';
-import { exportInterviewedApplicantsExcel, printInterviewedApplicantsSelection } from './interviewedApplicantsExport';
-import { printRecommendationList } from './recommendationListPrint';
+import {
+    exportInterviewedApplicantsExcel,
+    printInterviewedApplicantsSelection,
+    printRecommendationList,
+} from './interviewedApplicantsExport';
 
 const { hasRole } = usePermission();
 const page = usePage();
@@ -1486,14 +1512,50 @@ const formatDateTime = (value) => {
     return value ? moment(value).format('MMM DD, YYYY h:mm A') : 'N/A';
 };
 
-const formatRecommendationListBudget = (recommendationList) => {
-    const budgetAllocation = recommendationList?.budget_allocation;
+const budgetAllocationCurrencyFormatter = new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
 
+const formatBudgetAllocationAmount = (budgetAllocation) => {
+    const amount = Number(budgetAllocation?.total_allotment);
+
+    return Number.isFinite(amount) ? budgetAllocationCurrencyFormatter.format(amount) : null;
+};
+
+const formatBudgetAllocationTitle = (budgetAllocation) => {
     if (!budgetAllocation) {
         return 'No saved budget allocation';
     }
 
-    return `${budgetAllocation.program || 'N/A'} · ${budgetAllocation.rc_name || budgetAllocation.rc_code || 'N/A'} · FY ${budgetAllocation.fiscal_year || 'N/A'}`;
+    return budgetAllocation.particular_name?.trim()
+        || budgetAllocation.description?.trim()
+        || 'Unnamed Allocation';
+};
+
+const formatBudgetAllocationDescription = (budgetAllocation) => {
+    if (!budgetAllocation) {
+        return '';
+    }
+
+    const description = budgetAllocation.description?.trim();
+    const label = formatBudgetAllocationTitle(budgetAllocation);
+
+    return [
+        description && description !== label ? description : null,
+        formatBudgetAllocationAmount(budgetAllocation),
+    ].filter(Boolean).join(' · ');
+};
+
+const recommendationRecordHasJpm = (record) => {
+    return Boolean(
+        record?.profile?.is_jpm_member
+        || record?.profile?.is_father_jpm
+        || record?.profile?.is_mother_jpm
+        || record?.profile?.is_guardian_jpm,
+    );
 };
 
 const refreshPage = () => {
@@ -1521,87 +1583,3 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style scoped>
-/* Rounded inputs, selects, and datepickers to match macOS layout */
-:deep(.p-inputtext) {
-    border-radius: 1rem;
-}
-
-:deep(.p-select) {
-    border-radius: 1rem;
-}
-
-:deep(.p-datepicker .p-inputtext) {
-    border-radius: 1rem;
-}
-
-:deep(.p-inputgroup) {
-    border-radius: 1rem;
-    overflow: hidden;
-    border: 1px solid var(--p-inputtext-border-color, #d1d5db);
-}
-
-:deep(.p-inputgroup:focus-within) {
-    border-color: var(--p-inputtext-focus-border-color, #6366f1);
-}
-
-:deep(.p-inputgroup .p-inputgroupaddon) {
-    border-radius: 0;
-    border: none;
-}
-
-:deep(.p-inputgroup .p-inputtext) {
-    border-radius: 0;
-    border: none;
-}
-
-:deep(.p-datatable .p-datatable-tbody > tr > td) {
-    padding: 0.75rem;
-}
-
-:deep(.p-datatable-tbody > tr.row-blurred > td) {
-    opacity: 0.4;
-    filter: blur(1.5px);
-    transition: opacity 0.2s, filter 0.2s;
-    pointer-events: none;
-}
-
-/* Rounded DataTable */
-:deep(.p-datatable) {
-    border-radius: 0;
-    overflow: hidden;
-    border: none;
-}
-
-:deep(.p-datatable .p-datatable-table-container) {
-    border-radius: 0;
-    overflow: hidden;
-}
-
-:deep(.p-datatable .p-datatable-thead > tr > th:first-child),
-:deep(.p-datatable .p-datatable-tbody > tr > td:first-child) {
-    border-left: none;
-}
-
-:deep(.p-datatable .p-datatable-thead > tr > th:last-child),
-:deep(.p-datatable .p-datatable-tbody > tr > td:last-child) {
-    border-right: none;
-}
-
-:deep(.p-datatable .p-datatable-thead > tr:first-child > th) {
-    border-top: none;
-}
-
-:deep(.p-datatable .p-datatable-tbody > tr:last-child > td) {
-    border-bottom: none;
-}
-
-:deep(.p-paginator) {
-    border: none;
-    border-top: 1px solid var(--p-datatable-border-color, #e2e8f0);
-}
-
-:deep(.ios-datepicker) {
-    width: 100%;
-}
-</style>

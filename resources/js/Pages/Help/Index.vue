@@ -75,7 +75,8 @@ const faqs = ref([
             </div>
 
             <!-- Main Content - Accordion -->
-            <Accordion :activeIndex="activeAccordion" @update:activeIndex="(val) => activeAccordion = val">
+            <Accordion class="ios-help-accordion" :activeIndex="activeAccordion"
+                @update:activeIndex="(val) => activeAccordion = val">
                 <!-- Getting Started -->
                 <AccordionTab>
                     <template #header>
@@ -680,32 +681,3 @@ const faqs = ref([
     </AdminLayout>
 </template>
 
-<style scoped>
-:deep(.p-accordion) {
-    width: 100%;
-}
-
-:deep(.p-accordion .p-accordion-header-link) {
-    background-color: #f9fafb;
-    border-color: #e5e7eb;
-    padding: 1rem 1.5rem;
-    font-weight: 500;
-}
-
-:deep(.p-accordion .p-accordion-header-link:hover) {
-    background-color: #f3f4f6;
-}
-
-:deep(.p-accordion .p-accordion-header.p-highlight > .p-accordion-header-link) {
-    background-color: #eff6ff;
-    border-color: #3b82f6;
-    color: #1e40af;
-}
-
-:deep(.p-accordion .p-accordion-content) {
-    background-color: #ffffff;
-    padding: 1.5rem;
-    border-color: #e5e7eb;
-    border-top: none;
-}
-</style>

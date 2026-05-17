@@ -13,6 +13,10 @@ const props = defineProps({
     iosCompact: {
         type: Boolean,
         default: false,
+    },
+    showClear: {
+        type: Boolean,
+        default: true,
     }
 });
 
@@ -122,7 +126,7 @@ const selectPt = computed(() => {
 </script>
 
 <template>
-    <Select v-model="localValue" :options="acad_year" filter autoFilterFocus showClear optionLabel="label"
+    <Select v-model="localValue" :options="acad_year" filter autoFilterFocus :showClear="showClear" optionLabel="label"
         placeholder="Select Academic Year" class="w-full" :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">

@@ -403,6 +403,7 @@ import { usePage } from '@inertiajs/vue3';
 import moment from 'moment';
 import axios from 'axios';
 import AppIcon from '@/Components/ui/AppIcon.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 import { useSystemOptions } from '@/composables/useSystemOptions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { renderVueTemplate } from '@/composables/usePdfPrint';

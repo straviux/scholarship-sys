@@ -360,7 +360,7 @@ onBeforeUnmount(() => {
 
                     <template v-else>
                         <!-- Requirements List -->
-                        <div v-if="requirementsData.length > 0" class="ios-section" style="margin-top: 12px;">
+                        <div v-if="requirementsData.length > 0" class="ios-section ios-section-tight">
                             <div class="ios-card">
                                 <div v-for="(requirement, idx) in requirementsData" :key="requirement.id"
                                     class="ios-req-row" :class="{ 'ios-row-last': idx === requirementsData.length - 1 }"
@@ -373,7 +373,7 @@ onBeforeUnmount(() => {
 
                                     <!-- Requirement Info -->
                                     <div style="flex: 1; min-width: 0; margin-left: 10px;">
-                                        <div class="req-name" style="font-size: 14px; font-weight: 500;">{{
+                                        <div class="ios-req-item-name" style="font-size: 14px; font-weight: 500;">{{
                                             requirement.name
                                             }}</div>
                                         <!-- File status -->
@@ -418,7 +418,7 @@ onBeforeUnmount(() => {
                         </div>
 
                         <!-- Empty state -->
-                        <div v-else style="text-align: center; padding: 40px 0; color: #8E8E93;">
+                        <div v-else class="ios-req-empty" style="text-align: center; padding: 40px 0;">
                             <AppIcon name="inbox" :size="28" style="display: block; margin-bottom: 8px;" />
                             No requirements
                         </div>
@@ -429,8 +429,8 @@ onBeforeUnmount(() => {
 
         <!-- Footer -->
         <div class="ios-footer">
-            <span style="font-size: 13px; color: #8E8E93;">{{ checkedCount }}/{{ totalCount }} checked</span>
-            <button class="ios-footer-close" @click="closeMain">Close</button>
+            <span class="ios-footer-counter">{{ checkedCount }}/{{ totalCount }} checked</span>
+            <button class="ios-footer-btn ios-footer-back" @click="closeMain">Close</button>
         </div>
     </IosModal>
 
@@ -439,7 +439,7 @@ onBeforeUnmount(() => {
         action-icon="refresh" @action="loadRequirements()" @update:visible="val => { if (!val) showQrModal = false; }">
         <div class="ios-body" v-if="qrCodeData">
                     <!-- QR Code -->
-                    <div class="ios-section" style="margin-top: 16px; ">
+                    <div class="ios-section ios-section-tight">
                         <div class="ios-card"
                             style="padding: 20px;height: 290px; display: flex; justify-content: center;">
                             <div v-safe-html="qrCodeData.qrCode" style="width: 200px; height: 200px;margin-left:-28px">
@@ -448,7 +448,7 @@ onBeforeUnmount(() => {
                     </div>
 
                     <!-- Instructions -->
-                    <div class="ios-section">
+                    <div class="ios-section ios-section-tight">
                         <div class="ios-card" style="padding: 12px 16px;">
                             <div style="font-size: 13px; color: #007AFF; font-weight: 500;">
                                 <AppIcon name="info-circle" :size="14" style="margin-right: 4px;" /> Mobile Upload
@@ -461,7 +461,7 @@ onBeforeUnmount(() => {
                     </div>
 
                     <!-- URL -->
-                    <div class="ios-section">
+                    <div class="ios-section ios-section-tight">
                         <div class="ios-section-label">Or use this link</div>
                         <div class="ios-card">
                             <div class="ios-row ios-row-last" style="gap: 8px;">
@@ -476,7 +476,7 @@ onBeforeUnmount(() => {
                     </div>
 
                     <!-- Countdown -->
-                    <div class="ios-section">
+                    <div class="ios-section ios-section-tight">
                         <div class="ios-card" style="padding: 14px; text-align: center;">
                             <div
                                 style="font-size: 11px; color: #8E8E93; text-transform: uppercase; margin-bottom: 4px;">
@@ -493,143 +493,3 @@ onBeforeUnmount(() => {
     <ViewAttachmentModal v-model:visible="showPreviewModal" :attachment="previewFile" />
 </template>
 
-<style scoped>
-/* Component-unique: applicant name subtitle bar */
-.ios-subtitle {
-    padding: 6px 16px;
-    background: #FFFFFF;
-    border-bottom: 0.5px solid #E5E5EA;
-    font-size: 13px;
-    text-align: center;
-    flex-shrink: 0;
-}
-
-/* Component-unique: section spacing override */
-.ios-section {
-    margin-top: 16px;
-}
-
-/* Component-unique: requirement row (taller than standard ios-row) */
-.ios-req-row {
-    display: flex;
-    align-items: center;
-    padding: 10px 16px;
-    min-height: 44px;
-    border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
-    transition: background 0.15s;
-}
-
-.ios-req-row:hover {
-    background: rgba(0, 0, 0, 0.02);
-}
-
-.ios-req-row:last-child {
-    border-bottom: none;
-}
-
-/* Component-unique: icon action buttons */
-.ios-icon-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px 6px;
-    border-radius: 6px;
-    transition: background 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.ios-icon-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-.ios-icon-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-/* Component-unique: bottom footer bar */
-.ios-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px;
-    background: #FFFFFF;
-    border-top: 0.5px solid #E5E5EA;
-    flex-shrink: 0;
-}
-
-.ios-footer-close {
-    background: none;
-    border: none;
-    font-size: 15px;
-    color: #6B7280;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: opacity 0.15s;
-}
-
-.ios-footer-close:hover {
-    opacity: 0.6;
-}
-
-/* Component-unique: file preview container */
-.ios-preview-container {
-    background: #F2F2F7;
-    border: 0.5px solid #E5E5EA;
-    border-radius: 10px;
-    overflow: auto;
-    max-height: 55vh;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 8px;
-}
-
-/* Requirement name text — needs dark override */
-.req-name {
-    color: #1f2937;
-}
-</style>
-
-<style>
-.ios-dialog-root.p-dialog {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-    width: auto !important;
-}
-
-.ios-dialog-mask {
-    background: rgba(0, 0, 0, 0.4);
-}
-
-/* Dark overrides for RequirementsChecklistModal-unique classes */
-.dark .ios-subtitle {
-    background: #2a3040 !important;
-    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-    color: #d1d5db !important;
-}
-
-.dark .ios-footer {
-    background: #2a3040 !important;
-    border-top-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.dark .ios-footer-close {
-    color: #9ca3af !important;
-}
-
-.dark .ios-req-row:hover {
-    background: rgba(255, 255, 255, 0.04) !important;
-}
-
-.dark .req-name {
-    color: #d1d5db !important;
-}
-</style>

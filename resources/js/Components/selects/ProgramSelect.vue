@@ -26,6 +26,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    showClear: {
+        type: Boolean,
+        default: true,
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -158,7 +162,7 @@ onMounted(fetchData);
 
 <template>
     <MultiSelect v-if="multiple" v-model="localValue" :options="programs" filter
-        :filterFields="['name', 'shortname']" autoFilterFocus showSelectAll showClear optionLabel="name"
+        :filterFields="['name', 'shortname']" autoFilterFocus showSelectAll :showClear="showClear" optionLabel="name"
         :placeholder="customPlaceholder" class="w-full" display="chip" :maxSelectedLabels="3"
         :selectedItemsLabel="'{0} programs selected'" :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #option="slotProps">
@@ -174,7 +178,7 @@ onMounted(fetchData);
     </MultiSelect>
 
     <Select v-else v-model="localValue" :options="programs" filter :filterFields="['name', 'shortname']" autoFilterFocus
-        showClear optionLabel="name" :placeholder="customPlaceholder" class="w-full"
+        :showClear="showClear" optionLabel="name" :placeholder="customPlaceholder" class="w-full"
         :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">
