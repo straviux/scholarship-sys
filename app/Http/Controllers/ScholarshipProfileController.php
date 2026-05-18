@@ -1272,7 +1272,7 @@ class ScholarshipProfileController extends Controller
             ->with('creator')
             ->latest()
             ->get()
-            ->map(fn (RecommendationList $recommendationList) => $this->transformRecommendationList($recommendationList))
+            ->map(fn(RecommendationList $recommendationList) => $this->transformRecommendationList($recommendationList))
             ->values()
             ->all();
     }
@@ -1284,7 +1284,7 @@ class ScholarshipProfileController extends Controller
             ->with('creator')
             ->latest('deleted_at')
             ->get()
-            ->map(fn (RecommendationList $recommendationList) => $this->transformRecommendationList($recommendationList))
+            ->map(fn(RecommendationList $recommendationList) => $this->transformRecommendationList($recommendationList))
             ->values()
             ->all();
     }
