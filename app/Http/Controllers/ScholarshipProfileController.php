@@ -1204,13 +1204,45 @@ class ScholarshipProfileController extends Controller
         ]);
     }
 
+    public function approveRecommendationList(RecommendationList $recommendationList): JsonResponse
+    {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'You do not have permission to approve recommendation lists.');
+        }
+
+        if ($recommendationList->approved_at) {
+            return response()->json([
+                'success' => false,
+                'message' => sprintf('Recommendation list %s is already approved.', $recommendationList->list_number),
+            ], 422);
+        }
+
+        $recommendationList->approved_by_user_id = Auth::id();
+        $recommendationList->approved_at = now();
+        $recommendationList->save();
+        $recommendationList->refresh()->load(['creator', 'approver']);
+
+        Log::info('recommendation_list_approved', [
+            'id' => $recommendationList->id,
+            'list_number' => $recommendationList->list_number,
+            'approved_by_user_id' => $recommendationList->approved_by_user_id,
+            'approved_at' => $recommendationList->approved_at?->toIso8601String(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => sprintf('Recommendation list %s approved successfully.', $recommendationList->list_number),
+            'data' => $this->transformRecommendationList($recommendationList),
+        ]);
+    }
+
     public function destroyRecommendationList(RecommendationList $recommendationList): JsonResponse
     {
         if (!Gate::allows('applicants.approve')) {
             abort(403, 'You do not have permission to delete recommendation lists.');
         }
 
-        $recommendationList->loadMissing('creator');
+        $recommendationList->loadMissing(['creator', 'approver']);
         $listNumber = $recommendationList->list_number;
 
         $recommendationList->delete();
@@ -1229,6 +1261,44 @@ class ScholarshipProfileController extends Controller
         ]);
     }
 
+    public function forceDeleteRecommendationList(int $recommendationListId): JsonResponse
+    {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'You do not have permission to permanently delete recommendation lists.');
+        }
+
+        $recommendationList = RecommendationList::query()
+            ->withTrashed()
+            ->with(['creator', 'approver'])
+            ->findOrFail($recommendationListId);
+
+        if (! $recommendationList->trashed()) {
+            return response()->json([
+                'success' => false,
+                'message' => sprintf('Recommendation list %s must be deleted before it can be permanently removed.', $recommendationList->list_number),
+            ], 422);
+        }
+
+        $listNumber = $recommendationList->list_number;
+        $deletedListId = $recommendationList->id;
+
+        $recommendationList->forceDelete();
+
+        Log::info('recommendation_list_force_deleted', [
+            'id' => $deletedListId,
+            'list_number' => $listNumber,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => sprintf('Recommendation list %s permanently deleted.', $listNumber),
+            'data' => [
+                'id' => $deletedListId,
+                'list_number' => $listNumber,
+            ],
+        ]);
+    }
+
     public function restoreRecommendationList(int $recommendationListId): JsonResponse
     {
         if (!Gate::allows('applicants.approve')) {
@@ -1237,7 +1307,7 @@ class ScholarshipProfileController extends Controller
 
         $recommendationList = RecommendationList::query()
             ->withTrashed()
-            ->with('creator')
+            ->with(['creator', 'approver'])
             ->findOrFail($recommendationListId);
 
         if (! $recommendationList->trashed()) {
@@ -1250,7 +1320,7 @@ class ScholarshipProfileController extends Controller
         $listNumber = $recommendationList->list_number;
 
         $recommendationList->restore();
-        $recommendationList->refresh()->load('creator');
+        $recommendationList->refresh()->load(['creator', 'approver']);
 
         Log::info('recommendation_list_restored', [
             'id' => $recommendationList->id,
@@ -1269,7 +1339,7 @@ class ScholarshipProfileController extends Controller
     private function getRecommendationLists(): array
     {
         return RecommendationList::query()
-            ->with('creator')
+            ->with(['creator', 'approver'])
             ->latest()
             ->get()
             ->map(fn(RecommendationList $recommendationList) => $this->transformRecommendationList($recommendationList))
@@ -1281,7 +1351,7 @@ class ScholarshipProfileController extends Controller
     {
         return RecommendationList::query()
             ->onlyTrashed()
-            ->with('creator')
+            ->with(['creator', 'approver'])
             ->latest('deleted_at')
             ->get()
             ->map(fn(RecommendationList $recommendationList) => $this->transformRecommendationList($recommendationList))
@@ -1334,6 +1404,13 @@ class ScholarshipProfileController extends Controller
             'prepared_by_office' => $recommendationList->prepared_by_office,
             'approved_by' => $recommendationList->approved_by,
             'approved_by_position' => $recommendationList->approved_by_position,
+            'approved_by_user_id' => $recommendationList->approved_by_user_id,
+            'approved_at' => $recommendationList->approved_at?->toIso8601String(),
+            'is_approved' => $recommendationList->approved_at !== null,
+            'approver' => $recommendationList->approver ? [
+                'id' => $recommendationList->approver->id,
+                'name' => $recommendationList->approver->name,
+            ] : null,
             'creator' => $recommendationList->creator ? [
                 'id' => $recommendationList->creator->id,
                 'name' => $recommendationList->creator->name,

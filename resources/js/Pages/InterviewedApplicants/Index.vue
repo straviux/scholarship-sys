@@ -413,6 +413,15 @@
                                         <template #body="slotProps">
                                             <div class="font-semibold text-slate-800">{{ slotProps.data.list_number }}</div>
                                             <div class="text-[11px] text-slate-500">{{ slotProps.data.report_title }}</div>
+                                            <div class="mt-2 flex flex-wrap items-center gap-2">
+                                                <span
+                                                    :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
+                                                    {{ getRecommendationListApprovalLabel(slotProps.data) }}
+                                                </span>
+                                                <span v-if="slotProps.data.approved_at" class="text-[10px] text-slate-500">
+                                                    {{ formatDateTime(slotProps.data.approved_at) }}
+                                                </span>
+                                            </div>
                                         </template>
                                     </Column>
                                     <Column header="Applicants" sortable field="record_count" headerClass="min-w-[110px]"
@@ -456,9 +465,14 @@
                                             <div class="text-[11px] text-slate-500">{{ slotProps.data.creator?.name || 'Unknown user' }}</div>
                                         </template>
                                     </Column>
-                                    <Column header="Actions" :style="{ width: '290px' }">
+                                    <Column header="Actions" :style="{ width: '390px' }">
                                         <template #body="slotProps">
                                             <div class="flex flex-wrap gap-2">
+                                                <AppButton icon="check-circle" :label="slotProps.data.is_approved ? 'Approved' : 'Approve'"
+                                                    severity="success"
+                                                    :outlined="slotProps.data.is_approved"
+                                                    rounded size="small" :disabled="slotProps.data.is_approved"
+                                                    @click="approveRecommendationList(slotProps.data)" />
                                                 <AppButton icon="pencil" label="Edit" severity="secondary" outlined rounded
                                                     size="small" @click="openEditRecommendationListModal(slotProps.data)" />
                                                 <AppButton icon="printer" label="Print" severity="info" rounded size="small"
@@ -475,8 +489,17 @@
                                                 <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Transaction Summary</div>
                                                 <dl class="mt-3 space-y-3 text-sm">
                                                     <div>
-                                                        <dt class="text-xs uppercase tracking-wide text-slate-500">Status</dt>
+                                                        <dt class="text-xs uppercase tracking-wide text-slate-500">Recommendation</dt>
                                                         <dd class="mt-1 font-semibold text-green-700">Recommended for Approval</dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt class="text-xs uppercase tracking-wide text-slate-500">List Approval</dt>
+                                                        <dd class="mt-1">
+                                                            <span :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
+                                                                {{ getRecommendationListApprovalLabel(slotProps.data) }}
+                                                            </span>
+                                                        </dd>
+                                                        <dd class="text-xs text-slate-500">{{ formatRecommendationListApprovalMeta(slotProps.data) }}</dd>
                                                     </div>
                                                     <div>
                                                         <dt class="text-xs uppercase tracking-wide text-slate-500">Prepared By</dt>
@@ -549,8 +572,8 @@
                                 class="mt-4 !rounded-4xl overflow-hidden shadow-sm">
                                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4 short:mb-2 -mt-2">
                                     <div>
-                                        <div class="text-sm font-semibold text-slate-800">Recently Deleted Lists</div>
-                                        <div class="text-xs text-slate-500">Restore a list to make it available again.</div>
+                                        <div class="text-sm font-semibold text-slate-800">Soft-Deleted Lists</div>
+                                        <div class="text-xs text-slate-500">Restore a list or permanently remove a record that is already soft-deleted.</div>
                                     </div>
                                     <span class="text-sm font-semibold text-amber-700">
                                         {{ filteredDeletedRecommendationLists.length }} deleted transaction(s)
@@ -570,6 +593,12 @@
                                         <template #body="slotProps">
                                             <div class="font-semibold text-slate-800">{{ slotProps.data.list_number }}</div>
                                             <div class="text-[11px] text-slate-500">{{ slotProps.data.report_title }}</div>
+                                            <div class="mt-2 flex flex-wrap items-center gap-2">
+                                                <span
+                                                    :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
+                                                    {{ getRecommendationListApprovalLabel(slotProps.data) }}
+                                                </span>
+                                            </div>
                                         </template>
                                     </Column>
                                     <Column header="Applicants" sortable field="record_count" headerClass="min-w-[120px]"
@@ -601,10 +630,14 @@
                                             </div>
                                         </template>
                                     </Column>
-                                    <Column header="Actions" :style="{ width: '170px' }">
+                                    <Column header="Actions" :style="{ width: '320px' }">
                                         <template #body="slotProps">
-                                            <AppButton icon="rotate-ccw" label="Restore" severity="warning" outlined rounded
-                                                size="small" @click="restoreRecommendationList(slotProps.data)" />
+                                            <div class="flex flex-wrap gap-2">
+                                                <AppButton icon="rotate-ccw" label="Restore" severity="warning" outlined rounded
+                                                    size="small" @click="restoreRecommendationList(slotProps.data)" />
+                                                <AppButton icon="trash" label="Delete Permanently" severity="danger" rounded
+                                                    size="small" @click="forceDeleteRecommendationList(slotProps.data)" />
+                                            </div>
                                         </template>
                                     </Column>
                                 </DataTable>
@@ -1317,6 +1350,10 @@ const upsertRecommendationList = (recommendationList) => {
     deletedRecommendationLists.value = deletedRecommendationLists.value.filter(
         (existingRecommendationList) => existingRecommendationList.id !== recommendationList.id,
     );
+
+    if (editingRecommendationList.value?.id === recommendationList.id) {
+        editingRecommendationList.value = recommendationList;
+    }
 };
 
 const upsertDeletedRecommendationList = (recommendationList) => {
@@ -1328,6 +1365,10 @@ const upsertDeletedRecommendationList = (recommendationList) => {
     recommendationLists.value = recommendationLists.value.filter(
         (existingRecommendationList) => existingRecommendationList.id !== recommendationList.id,
     );
+
+    if (editingRecommendationList.value?.id === recommendationList.id) {
+        editingRecommendationList.value = recommendationList;
+    }
 };
 
 const collapseRecommendationListRow = (recommendationListId) => {
@@ -1633,6 +1674,77 @@ const printSavedRecommendationList = (recommendationList) => {
     openPrintRecommendationListModal(recommendationList);
 };
 
+const performApproveRecommendationList = async (recommendationList) => {
+    if (isCreatingRecommendationList.value) {
+        return;
+    }
+
+    if (!recommendationList?.id) {
+        toast.error('Recommendation list is unavailable for approval.');
+        return;
+    }
+
+    isCreatingRecommendationList.value = true;
+
+    try {
+        const response = await axios.patch(
+            route('scholarship.recommendation-lists.approve', recommendationList.id),
+        );
+
+        const approvedRecommendationList = response.data?.data;
+
+        if (!approvedRecommendationList?.id) {
+            throw new Error('Approved recommendation list payload was not returned.');
+        }
+
+        upsertRecommendationList(approvedRecommendationList);
+        recommendationListExpandedRows.value = {
+            ...recommendationListExpandedRows.value,
+            [approvedRecommendationList.id]: true,
+        };
+        toast.success(response.data?.message || 'Recommendation list approved successfully.');
+    } catch (error) {
+        console.error('Failed to approve recommendation list:', error);
+
+        const message = error?.response?.data?.message
+            || 'Failed to approve recommendation list.';
+
+        toast.error(message);
+    } finally {
+        isCreatingRecommendationList.value = false;
+    }
+};
+
+const approveRecommendationList = (recommendationList) => {
+    if (isCreatingRecommendationList.value) {
+        return;
+    }
+
+    if (!recommendationList?.id) {
+        toast.error('Recommendation list is unavailable for approval.');
+        return;
+    }
+
+    if (recommendationList.is_approved) {
+        toast.warn('Recommendation list is already approved.');
+        return;
+    }
+
+    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
+    const approverName = currentUser.value?.name || 'the current user';
+
+    confirm.require({
+        message: `Approve ${targetLabel}? This will record ${approverName} as the approving user and timestamp the list.`,
+        header: 'Approve Recommendation List',
+        icon: 'pi pi-check-circle',
+        acceptLabel: 'Approve',
+        rejectLabel: 'Cancel',
+        accept: () => {
+            void performApproveRecommendationList(recommendationList);
+        },
+    });
+};
+
 const performDeleteRecommendationList = async (recommendationList) => {
     if (isCreatingRecommendationList.value) {
         return;
@@ -1763,6 +1875,64 @@ const restoreRecommendationList = (recommendationList) => {
     });
 };
 
+const performForceDeleteRecommendationList = async (recommendationList) => {
+    if (isCreatingRecommendationList.value) {
+        return;
+    }
+
+    if (!recommendationList?.id) {
+        toast.error('Recommendation list is unavailable for permanent deletion.');
+        return;
+    }
+
+    isCreatingRecommendationList.value = true;
+
+    try {
+        const response = await axios.delete(
+            route('scholarship.recommendation-lists.force-delete', recommendationList.id),
+        );
+
+        deletedRecommendationLists.value = deletedRecommendationLists.value.filter(
+            (existingRecommendationList) => existingRecommendationList.id !== recommendationList.id,
+        );
+
+        toast.success(response.data?.message || 'Recommendation list permanently deleted.');
+    } catch (error) {
+        console.error('Failed to permanently delete recommendation list:', error);
+
+        const message = error?.response?.data?.message
+            || 'Failed to permanently delete recommendation list.';
+
+        toast.error(message);
+    } finally {
+        isCreatingRecommendationList.value = false;
+    }
+};
+
+const forceDeleteRecommendationList = (recommendationList) => {
+    if (isCreatingRecommendationList.value) {
+        return;
+    }
+
+    if (!recommendationList?.id) {
+        toast.error('Recommendation list is unavailable for permanent deletion.');
+        return;
+    }
+
+    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
+
+    confirm.require({
+        message: `Permanently delete the soft-deleted record ${targetLabel}? This cannot be undone and will remove the saved recommendation list permanently.`,
+        header: 'Permanently Delete Soft-Deleted List',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Delete Permanently',
+        rejectLabel: 'Cancel',
+        accept: () => {
+            void performForceDeleteRecommendationList(recommendationList);
+        },
+    });
+};
+
 const formatApplicantName = (record) => {
     const lastName = record?.profile?.last_name || 'N/A';
     const firstName = record?.profile?.first_name || '';
@@ -1774,6 +1944,27 @@ const formatApplicantName = (record) => {
 
 const formatDateTime = (value) => {
     return value ? moment(value).format('MMM DD, YYYY h:mm A') : 'N/A';
+};
+
+const getRecommendationListApprovalLabel = (recommendationList) => {
+    return recommendationList?.is_approved ? 'Approved' : 'Pending Approval';
+};
+
+const getRecommendationListApprovalBadgeClass = (recommendationList) => {
+    return recommendationList?.is_approved
+        ? 'bg-emerald-50 text-emerald-700'
+        : 'bg-amber-50 text-amber-700';
+};
+
+const formatRecommendationListApprovalMeta = (recommendationList) => {
+    if (!recommendationList?.is_approved) {
+        return 'Waiting for a final approval action on this saved list.';
+    }
+
+    const approverName = recommendationList?.approver?.name || 'Unknown user';
+    const approvedAt = formatDateTime(recommendationList?.approved_at);
+
+    return `Approved by ${approverName} on ${approvedAt}.`;
 };
 
 const budgetAllocationCurrencyFormatter = new Intl.NumberFormat('en-PH', {

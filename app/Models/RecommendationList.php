@@ -33,6 +33,7 @@ class RecommendationList extends Model
         'prepared_by_office',
         'approved_by',
         'approved_by_position',
+        'approved_by_user_id',
         'created_by',
         'updated_by',
     ];
@@ -45,6 +46,7 @@ class RecommendationList extends Model
         'budget_allocation' => 'array',
         'highlight_jpm_members' => 'boolean',
         'budget_fiscal_year' => 'integer',
+        'approved_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -80,5 +82,10 @@ class RecommendationList extends Model
     public function updater()
     {
         return $this->belongsTo(User::class, 'updated_by')->select(['id', 'name']);
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by_user_id')->select(['id', 'name']);
     }
 }

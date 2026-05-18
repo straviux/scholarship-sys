@@ -48,7 +48,8 @@
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
                         <CourseSelect v-model="drawerFilter.course" label="name" custom-placeholder="All Courses"
-                            size="small" class="w-full" :scholarship-program-id="drawerFilter.program?.id" />
+                            size="small" class="w-full" :scholarship-program-id="drawerFilter.program?.id"
+                            :load-all-when-no-program="true" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">School</label>
@@ -156,7 +157,8 @@
                     </div>
                     <div class="flex flex-col">
                         <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses"
-                            size="small" />
+                            size="small" :scholarship-program-id="filter.program?.id"
+                            :load-all-when-no-program="true" />
                     </div>
                     <div class="flex flex-col">
                         <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
