@@ -35,10 +35,13 @@ const sortedRecords = computed(() => [...props.records].sort((left, right) =>
 const grouped = computed(() => props.reportType === 'list'
     ? groupRecords(sortedRecords.value, props.options?.groupBy, props.options?.groupBySecondary, props.options?.groupByTertiary)
     : null);
-const preparedBy = computed(() => props.options?.preparedBy || '');
-const preparedByTitle = computed(() => props.options?.preparedByTitle || '');
-const signatoryName = computed(() => props.options?.signatoryName || '');
-const signatoryTitle = computed(() => props.options?.signatoryTitle || '');
+const preparedBy = computed(() => props.options?.preparedBy?.trim() || '');
+const preparedByTitle = computed(() => props.options?.preparedByTitle?.trim() || '');
+const signatoryName = computed(() => props.options?.signatoryName?.trim() || '');
+const signatoryTitle = computed(() => props.options?.signatoryTitle?.trim() || '');
+const showPreparedBy = computed(() => Boolean(preparedBy.value));
+const showNotedBy = computed(() => Boolean(signatoryName.value));
+const showSignatoryBlock = computed(() => showPreparedBy.value || showNotedBy.value);
 const includeProjectedExpense = computed(() => props.options?.includeProjectedExpense !== false);
 const summaryGroupBy = computed(() => {
     const requestedGroup = props.options?.groupBy;
@@ -349,26 +352,25 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
         </div>
 
         <!-- ── Signatory Block ──────────────────────────────────── -->
-        <div style="margin-top:28pt;page-break-inside:avoid;">
-            <div style="display:flex;justify-content:space-between;gap:32pt;">
+        <div v-if="showSignatoryBlock" style="margin-top:28pt;page-break-inside:avoid;">
+            <div
+                :style="{ display: 'flex', justifyContent: showPreparedBy && showNotedBy ? 'space-between' : 'center', gap: '32pt' }">
                 <!-- Prepared By -->
-                <div style="flex:1;text-align:center;">
+                <div v-if="showPreparedBy" style="flex:0 1 240pt;text-align:center;">
                     <p style="font-size:8pt;margin-bottom:32pt;">Prepared by:</p>
                     <div style="border-top:0.75pt solid #000;padding-top:3pt;">
                         <p style="font-weight:700;font-size:9pt;text-transform:uppercase;letter-spacing:0.3pt;">{{
-                            preparedBy ||
-                            '\u00A0' }}</p>
-                        <p style="font-size:8pt;color:#444;min-height:10pt;">{{ preparedByTitle || '\u00A0' }}</p>
+                            preparedBy }}</p>
+                        <p v-if="preparedByTitle" style="font-size:8pt;color:#444;">{{ preparedByTitle }}</p>
                     </div>
                 </div>
                 <!-- Noted By -->
-                <div style="flex:1;text-align:center;">
+                <div v-if="showNotedBy" style="flex:0 1 240pt;text-align:center;">
                     <p style="font-size:8pt;margin-bottom:32pt;">Noted by:</p>
                     <div style="border-top:0.75pt solid #000;padding-top:3pt;">
                         <p style="font-weight:700;font-size:9pt;text-transform:uppercase;letter-spacing:0.3pt;">{{
-                            signatoryName
-                            || '\u00A0' }}</p>
-                        <p style="font-size:8pt;color:#444;min-height:10pt;">{{ signatoryTitle || '\u00A0' }}</p>
+                            signatoryName }}</p>
+                        <p v-if="signatoryTitle" style="font-size:8pt;color:#444;">{{ signatoryTitle }}</p>
                     </div>
                 </div>
             </div>

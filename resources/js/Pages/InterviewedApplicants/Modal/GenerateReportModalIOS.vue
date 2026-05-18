@@ -418,6 +418,53 @@
                             </div>
                         </div>
 
+                        <div v-if="selectedBudgetAllocation" class="ios-section">
+                            <div class="ios-section-label">Cumulative Count Details</div>
+                            <div class="ios-card space-y-3">
+                                <div class="rounded-3xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                                    <div class="font-semibold text-slate-700">
+                                        {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's are' : ' is' }} included in the cumulative count.
+                                    </div>
+                                    <div class="mt-1">
+                                        This list follows the selected allocation's program coverage and approval-date window.
+                                    </div>
+                                </div>
+
+                                <InputText
+                                    v-model="cumulativeScholarSearchQuery"
+                                    class="w-full"
+                                    placeholder="Search cumulative scholars"
+                                />
+
+                                <div v-if="filteredCumulativeScholars.length" class="max-h-72 space-y-2 overflow-y-auto pr-1">
+                                    <div
+                                        v-for="scholar in filteredCumulativeScholars"
+                                        :key="scholar.profile_id"
+                                        class="rounded-3xl border border-slate-200 bg-white px-3 py-2"
+                                    >
+                                        <div class="text-sm font-semibold text-slate-800">{{ scholar.name }}</div>
+                                        <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-600">
+                                            <span>Program: {{ scholar.program || 'N/A' }}</span>
+                                            <span>Approved: {{ formatDate(scholar.date_approved) }}</span>
+                                            <span>Status: {{ formatScholarStatus(scholar.status) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div v-else class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">
+                                    <template v-if="selectedBudgetAllocationApprovedCount">
+                                        No scholars match the current search.
+                                    </template>
+                                    <template v-else>
+                                        No approved scholars currently match this allocation.
+                                    </template>
+                                </div>
+                            </div>
+                            <div class="ios-section-footer">
+                                Showing {{ filteredCumulativeScholars.length.toLocaleString() }} of {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's' : '' }}.
+                            </div>
+                        </div>
+
                         <div style="height: 24px;"></div>
                     </template>
     </IosModal>
@@ -475,6 +522,7 @@ const selectedProfileIds = ref([]);
 const currentPage = ref('setup');
 const reportTitleInput = ref('');
 const profileSearchQuery = ref('');
+const cumulativeScholarSearchQuery = ref('');
 
 // Report Options
 const reportType = ref('list');
@@ -645,6 +693,16 @@ function formatBudgetAllocationSelectionMessage(allocation) {
     return `Monitoring ${label}.`;
 }
 
+function buildBudgetAllocationPayload(allocation) {
+    if (!allocation) {
+        return null;
+    }
+
+    const { approved_scholars, ...payload } = allocation;
+
+    return payload;
+}
+
 const budgetAllocationOptions = computed(() => {
     return (props.budgetAllocations || []).map(allocation => ({
         label: formatBudgetAllocationLabel(allocation),
@@ -654,6 +712,35 @@ const budgetAllocationOptions = computed(() => {
 });
 const selectedBudgetAllocation = computed(() => {
     return (props.budgetAllocations || []).find(allocation => allocation.key === selectedBudgetAllocationKey.value) || null;
+});
+const selectedBudgetAllocationApprovedCount = computed(() => {
+    return Number(selectedBudgetAllocation.value?.approved_scholars_to_date ?? 0) || 0;
+});
+const cumulativeScholars = computed(() => {
+    return [...(selectedBudgetAllocation.value?.approved_scholars || [])].sort((left, right) => {
+        return (left?.name || '').localeCompare(right?.name || '', undefined, { sensitivity: 'base' });
+    });
+});
+const filteredCumulativeScholars = computed(() => {
+    const searchTerm = cumulativeScholarSearchQuery.value.trim().toLowerCase();
+
+    if (!searchTerm) {
+        return cumulativeScholars.value;
+    }
+
+    return cumulativeScholars.value.filter(scholar => {
+        const haystack = [
+            scholar?.name,
+            scholar?.program,
+            scholar?.date_approved,
+            formatScholarStatus(scholar?.status),
+        ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+
+        return haystack.includes(searchTerm);
+    });
 });
 function findBudgetAllocationOption(value) {
     return budgetAllocationOptions.value.find(option => option.value === value) || null;
@@ -800,6 +887,7 @@ watch(() => props.show, (value) => {
         currentPage.value = 'setup';
         reportTitleInput.value = '';
         profileSearchQuery.value = '';
+        cumulativeScholarSearchQuery.value = '';
         if (reportType.value === 'list') {
             selectAllFilteredProfiles();
         }
@@ -813,6 +901,10 @@ watch(reportType, (value) => {
     if (value === 'list' && selectedProfileIds.value.length === 0) {
         selectAllFilteredProfiles();
     }
+});
+
+watch(selectedBudgetAllocationKey, () => {
+    cumulativeScholarSearchQuery.value = '';
 });
 
 watch(filteredApplicantIds, (newIds, oldIds = []) => {
@@ -864,7 +956,7 @@ function generateReport() {
         preparedByOffice: preparedByOffice.value?.trim() || DEFAULT_PREPARED_BY_OFFICE,
         approvedBy: approvedBy.value?.trim() || DEFAULT_APPROVED_BY,
         approvedByPosition: approvedByPosition.value?.trim() || DEFAULT_APPROVED_BY_POSITION,
-        budgetAllocation: selectedBudgetAllocation.value,
+        budgetAllocation: buildBudgetAllocationPayload(selectedBudgetAllocation.value),
         reportTitle,
         includeInterviewColumns: includeInterviewColumns.value,
         highlightJpmMembers: reportType.value === 'list' ? highlightJpmMembers.value : false,
@@ -896,6 +988,16 @@ function formatDate(date) {
 function capitalize(str) {
     if (!str) return '—';
     return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function formatScholarStatus(status) {
+    const labels = {
+        active: 'Active',
+        completed: 'Completed',
+        'completed-transferred': 'Completed - Transferred',
+    };
+
+    return labels[status] || capitalize(String(status || '').replace(/-/g, ' '));
 }
 
 </script>

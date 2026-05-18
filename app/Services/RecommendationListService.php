@@ -62,7 +62,7 @@ class RecommendationListService
             try {
                 return DB::transaction(function () use ($data) {
                     $recordIds = collect($data['record_ids'] ?? [])
-                        ->map(fn ($id) => (int) $id)
+                        ->map(fn($id) => (int) $id)
                         ->filter()
                         ->unique()
                         ->values()
@@ -70,7 +70,7 @@ class RecommendationListService
 
                     $records = $this->getRecommendedInterviewedRecords($recordIds);
                     $this->ensureRecordsAreNotAlreadyIncluded($records, $recordIds);
-                    $recordsSnapshot = $records->map(fn (ScholarshipRecord $record) => $this->snapshotRecord($record))
+                    $recordsSnapshot = $records->map(fn(ScholarshipRecord $record) => $this->snapshotRecord($record))
                         ->values()
                         ->all();
 
@@ -202,7 +202,7 @@ class RecommendationListService
             ->get()
             ->map(function (RecommendationList $recommendationList) {
                 $selectedRecordIds = collect($recommendationList->selected_record_ids ?? [])
-                    ->map(fn ($recordId) => (int) $recordId)
+                    ->map(fn($recordId) => (int) $recordId)
                     ->filter()
                     ->values()
                     ->all();
@@ -222,14 +222,14 @@ class RecommendationListService
         }
 
         $duplicateRecordIds = $existingMatches
-            ->flatMap(fn (array $recommendationList) => $recommendationList['selected_record_ids'])
+            ->flatMap(fn(array $recommendationList) => $recommendationList['selected_record_ids'])
             ->intersect($recordIds)
-            ->map(fn ($recordId) => (int) $recordId)
+            ->map(fn($recordId) => (int) $recordId)
             ->unique()
             ->values();
 
         $duplicateApplicants = $records
-            ->filter(fn (ScholarshipRecord $record) => $duplicateRecordIds->contains((int) $record->id))
+            ->filter(fn(ScholarshipRecord $record) => $duplicateRecordIds->contains((int) $record->id))
             ->map(function (ScholarshipRecord $record) {
                 $lastName = $record->profile?->last_name ?? 'Unknown';
                 $firstName = $record->profile?->first_name ?? '';

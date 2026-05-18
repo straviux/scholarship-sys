@@ -47,6 +47,8 @@
                                 </div>
                             </button>
                         </div>
+                        <AppButton icon="users" label="Cumulative List" severity="secondary" rounded size="small"
+                            @click="openCumulativeScholarListModal" />
                         <AppButton v-if="activeTab === 'interviewed'" icon="printer" severity="info" text rounded size="large"
                             @click="openReportModal" v-tooltip.bottom="'Print Report'" />
                     </div>
@@ -389,9 +391,13 @@
                         <TabPanel value="recommendation-lists">
                             <Panel class="!rounded-4xl overflow-hidden shadow-sm">
                                 <div class="flex items-center justify-between mb-4 short:mb-2 -mt-2">
-                                    <span class="text-sm text-gray-500">
-                                        {{ filteredRecommendationLists.length }} saved transaction(s)
-                                    </span>
+                                    <div class="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+                                        <span>{{ filteredRecommendationLists.length }} saved transaction(s)</span>
+                                        <span v-if="deletedRecommendationLists.length > 0"
+                                            class="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                                            {{ filteredDeletedRecommendationLists.length }} deleted
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <div v-if="filteredRecommendationLists.length === 0" class="py-10 text-center text-gray-500">
@@ -450,13 +456,15 @@
                                             <div class="text-[11px] text-slate-500">{{ slotProps.data.creator?.name || 'Unknown user' }}</div>
                                         </template>
                                     </Column>
-                                    <Column header="Actions" :style="{ width: '200px' }">
+                                    <Column header="Actions" :style="{ width: '290px' }">
                                         <template #body="slotProps">
                                             <div class="flex flex-wrap gap-2">
                                                 <AppButton icon="pencil" label="Edit" severity="secondary" outlined rounded
                                                     size="small" @click="openEditRecommendationListModal(slotProps.data)" />
                                                 <AppButton icon="printer" label="Print" severity="info" rounded size="small"
                                                     @click="printSavedRecommendationList(slotProps.data)" />
+                                                <AppButton icon="trash" label="Delete" severity="danger" outlined rounded
+                                                    size="small" @click="deleteRecommendationList(slotProps.data)" />
                                             </div>
                                         </template>
                                     </Column>
@@ -536,6 +544,71 @@
                                     </template>
                                 </DataTable>
                             </Panel>
+
+                            <Panel v-if="deletedRecommendationLists.length > 0"
+                                class="mt-4 !rounded-4xl overflow-hidden shadow-sm">
+                                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 short:mb-2 -mt-2">
+                                    <div>
+                                        <div class="text-sm font-semibold text-slate-800">Recently Deleted Lists</div>
+                                        <div class="text-xs text-slate-500">Restore a list to make it available again.</div>
+                                    </div>
+                                    <span class="text-sm font-semibold text-amber-700">
+                                        {{ filteredDeletedRecommendationLists.length }} deleted transaction(s)
+                                    </span>
+                                </div>
+
+                                <div v-if="filteredDeletedRecommendationLists.length === 0"
+                                    class="py-8 text-center text-gray-500">
+                                    No deleted recommendation lists match the current filters
+                                </div>
+
+                                <DataTable v-else :value="filteredDeletedRecommendationLists" dataKey="id" showGridlines
+                                    stripedRows scrollable responsiveLayout="scroll"
+                                    class="text-sm ios-interviewed-table ios-datatable-clean">
+                                    <Column field="list_number" header="List No." sortable headerClass="min-w-[170px]"
+                                        bodyClass="min-w-[170px]">
+                                        <template #body="slotProps">
+                                            <div class="font-semibold text-slate-800">{{ slotProps.data.list_number }}</div>
+                                            <div class="text-[11px] text-slate-500">{{ slotProps.data.report_title }}</div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Applicants" sortable field="record_count" headerClass="min-w-[120px]"
+                                        bodyClass="min-w-[120px]">
+                                        <template #body="slotProps">
+                                            <div class="font-semibold text-slate-800">{{ slotProps.data.record_count }}</div>
+                                            <div class="text-[11px] text-slate-500">Stored snapshot</div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Budget Allocation" headerClass="min-w-[260px]" bodyClass="min-w-[260px]">
+                                        <template #body="slotProps">
+                                            <div v-if="slotProps.data.budget_allocation" class="leading-relaxed">
+                                                <div class="font-semibold text-slate-800">{{ formatBudgetAllocationTitle(slotProps.data.budget_allocation) }}</div>
+                                                <div v-if="formatBudgetAllocationDescription(slotProps.data.budget_allocation)"
+                                                    class="text-[11px] text-slate-500">
+                                                    {{ formatBudgetAllocationDescription(slotProps.data.budget_allocation) }}
+                                                </div>
+                                            </div>
+                                            <div v-else class="text-xs leading-relaxed text-slate-500">
+                                                No saved budget allocation
+                                            </div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Deleted" sortable field="deleted_at" headerClass="min-w-[180px]"
+                                        bodyClass="min-w-[180px]">
+                                        <template #body="slotProps">
+                                            <div class="font-semibold text-slate-800">
+                                                {{ formatDateTime(slotProps.data.deleted_at) }}
+                                            </div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Actions" :style="{ width: '170px' }">
+                                        <template #body="slotProps">
+                                            <AppButton icon="rotate-ccw" label="Restore" severity="warning" outlined rounded
+                                                size="small" @click="restoreRecommendationList(slotProps.data)" />
+                                        </template>
+                                    </Column>
+                                </DataTable>
+                            </Panel>
                         </TabPanel>
                     </TabPanels>
                 </Tabs>
@@ -553,6 +626,10 @@
         </ContextMenu>
 
         <!-- Generate Report Modal -->
+        <CumulativeScholarListModal :show="showCumulativeScholarListModal"
+            @update:show="showCumulativeScholarListModal = $event"
+            :budget-allocations="props.budget_allocations" />
+
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event"
             :interviewed-applicants="filteredList" :budget-allocations="props.budget_allocations" />
 
@@ -580,12 +657,14 @@ import AppIcon from '@/Components/ui/AppIcon.vue';
 import axios from 'axios';
 import AppButton from '@/Components/ui/AppButton.vue';
 import moment from 'moment';
+import { useConfirm } from 'primevue/useconfirm';
 import { toast } from '@/utils/toast';
 import { usePermission } from '@/composable/permissions';
 
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import ContextMenu from 'primevue/contextmenu';
 import AssessmentViewModal from './Modal/AssessmentViewModal.vue';
+import CumulativeScholarListModal from './Modal/CumulativeScholarListModal.vue';
 import CreateRecommendationListModal from './Modal/CreateRecommendationListModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModalIOS.vue';
 import { getSystemOptionLabel } from '@/composables/useSystemOptions';
@@ -613,7 +692,18 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    deleted_recommendation_lists: {
+        type: Array,
+        default: () => [],
+    },
 });
+
+const recommendationListReloadProps = [
+    'interviewed_applicants',
+    'budget_allocations',
+    'recommendation_lists',
+    'deleted_recommendation_lists',
+];
 
 // State
 const activeTab = ref('interviewed');
@@ -627,6 +717,7 @@ const filters = ref({
 const contextMenu = ref();
 const showAssessmentDialog = ref(false);
 const assessmentInitialMode = ref('view');
+const showCumulativeScholarListModal = ref(false);
 const showReportModal = ref(false);
 const showCreateRecommendationListModal = ref(false);
 const isCreatingRecommendationList = ref(false);
@@ -635,7 +726,9 @@ const recommendationListSubmitIntent = ref('save');
 const editingRecommendationList = ref(null);
 const selectedRows = ref([]);
 const expandedRows = ref({});
+const confirm = useConfirm();
 const recommendationLists = ref([...(props.recommendation_lists || [])]);
+const deletedRecommendationLists = ref([...(props.deleted_recommendation_lists || [])]);
 const recommendationListExpandedRows = ref({});
 
 const approvalForm = useForm({
@@ -860,8 +953,8 @@ const someSelectableFilteredRowsSelected = computed(() => {
         && selectableFilteredRows.value.some((record) => selectedRowIds.value.has(Number(record.id)));
 });
 
-const filteredRecommendationLists = computed(() => {
-    let list = recommendationLists.value;
+const filterRecommendationLists = (listSource) => {
+    let list = [...(listSource || [])];
     const nameQuery = normalizedNameFilter.value;
     const programId = selectedProgramId.value;
 
@@ -888,7 +981,11 @@ const filteredRecommendationLists = computed(() => {
     }
 
     return list;
-});
+};
+
+const filteredRecommendationLists = computed(() => filterRecommendationLists(recommendationLists.value));
+
+const filteredDeletedRecommendationLists = computed(() => filterRecommendationLists(deletedRecommendationLists.value));
 
 const formatDateForPayload = (value) => {
     if (!value) {
@@ -1110,7 +1207,7 @@ const onAssessmentUpdated = (changes) => {
     }
 
     router.reload({
-        only: ['interviewed_applicants', 'budget_allocations', 'recommendation_lists'],
+        only: recommendationListReloadProps,
         preserveState: true,
         preserveScroll: true,
     });
@@ -1123,11 +1220,27 @@ const openReportModal = () => {
     }
 
     router.reload({
-        only: ['interviewed_applicants', 'budget_allocations', 'recommendation_lists'],
+        only: recommendationListReloadProps,
         preserveState: true,
         preserveScroll: true,
         onFinish: () => {
             showReportModal.value = true;
+        },
+    });
+};
+
+const openCumulativeScholarListModal = () => {
+    if ((props.budget_allocations || []).length > 0) {
+        showCumulativeScholarListModal.value = true;
+        return;
+    }
+
+    router.reload({
+        only: recommendationListReloadProps,
+        preserveState: true,
+        preserveScroll: true,
+        onFinish: () => {
+            showCumulativeScholarListModal.value = true;
         },
     });
 };
@@ -1200,6 +1313,27 @@ const upsertRecommendationList = (recommendationList) => {
         recommendationList,
         ...recommendationLists.value.filter((existingRecommendationList) => existingRecommendationList.id !== recommendationList.id),
     ];
+
+    deletedRecommendationLists.value = deletedRecommendationLists.value.filter(
+        (existingRecommendationList) => existingRecommendationList.id !== recommendationList.id,
+    );
+};
+
+const upsertDeletedRecommendationList = (recommendationList) => {
+    deletedRecommendationLists.value = [
+        recommendationList,
+        ...deletedRecommendationLists.value.filter((existingRecommendationList) => existingRecommendationList.id !== recommendationList.id),
+    ];
+
+    recommendationLists.value = recommendationLists.value.filter(
+        (existingRecommendationList) => existingRecommendationList.id !== recommendationList.id,
+    );
+};
+
+const collapseRecommendationListRow = (recommendationListId) => {
+    const nextExpandedRows = { ...recommendationListExpandedRows.value };
+    delete nextExpandedRows[recommendationListId];
+    recommendationListExpandedRows.value = nextExpandedRows;
 };
 
 const confirmApprove = () => {
@@ -1499,6 +1633,136 @@ const printSavedRecommendationList = (recommendationList) => {
     openPrintRecommendationListModal(recommendationList);
 };
 
+const performDeleteRecommendationList = async (recommendationList) => {
+    if (isCreatingRecommendationList.value) {
+        return;
+    }
+
+    if (!recommendationList?.id) {
+        toast.error('Recommendation list is unavailable for deletion.');
+        return;
+    }
+
+    isCreatingRecommendationList.value = true;
+
+    try {
+        const response = await axios.delete(
+            route('scholarship.recommendation-lists.destroy', recommendationList.id),
+        );
+
+        if (response.data?.data?.id) {
+            upsertDeletedRecommendationList(response.data.data);
+        } else {
+            recommendationLists.value = recommendationLists.value.filter(
+                (existingRecommendationList) => existingRecommendationList.id !== recommendationList.id,
+            );
+        }
+
+        collapseRecommendationListRow(recommendationList.id);
+
+        if (editingRecommendationList.value?.id === recommendationList.id) {
+            handleRecommendationListModalVisibility(false);
+        }
+
+        toast.success(response.data?.message || 'Recommendation list deleted successfully.');
+    } catch (error) {
+        console.error('Failed to delete recommendation list:', error);
+
+        const message = error?.response?.data?.message
+            || 'Failed to delete recommendation list.';
+
+        toast.error(message);
+    } finally {
+        isCreatingRecommendationList.value = false;
+    }
+};
+
+const deleteRecommendationList = (recommendationList) => {
+    if (isCreatingRecommendationList.value) {
+        return;
+    }
+
+    if (!recommendationList?.id) {
+        toast.error('Recommendation list is unavailable for deletion.');
+        return;
+    }
+
+    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
+
+    confirm.require({
+        message: `Delete ${targetLabel}? This will move the saved recommendation list to the deleted section until it is restored.`,
+        header: 'Delete Recommendation List',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Delete',
+        rejectLabel: 'Cancel',
+        accept: () => {
+            void performDeleteRecommendationList(recommendationList);
+        },
+    });
+};
+
+const performRestoreRecommendationList = async (recommendationList) => {
+    if (isCreatingRecommendationList.value) {
+        return;
+    }
+
+    if (!recommendationList?.id) {
+        toast.error('Recommendation list is unavailable for restoration.');
+        return;
+    }
+
+    isCreatingRecommendationList.value = true;
+
+    try {
+        const response = await axios.patch(
+            route('scholarship.recommendation-lists.restore', recommendationList.id),
+        );
+
+        if (response.data?.data?.id) {
+            upsertRecommendationList(response.data.data);
+        } else {
+            deletedRecommendationLists.value = deletedRecommendationLists.value.filter(
+                (existingRecommendationList) => existingRecommendationList.id !== recommendationList.id,
+            );
+        }
+
+        toast.success(response.data?.message || 'Recommendation list restored successfully.');
+    } catch (error) {
+        console.error('Failed to restore recommendation list:', error);
+
+        const message = error?.response?.data?.message
+            || 'Failed to restore recommendation list.';
+
+        toast.error(message);
+    } finally {
+        isCreatingRecommendationList.value = false;
+    }
+};
+
+const restoreRecommendationList = (recommendationList) => {
+    if (isCreatingRecommendationList.value) {
+        return;
+    }
+
+    if (!recommendationList?.id) {
+        toast.error('Recommendation list is unavailable for restoration.');
+        return;
+    }
+
+    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
+
+    confirm.require({
+        message: `Restore ${targetLabel}? This will return it to the active recommendation list table.`,
+        header: 'Restore Recommendation List',
+        icon: 'pi pi-refresh',
+        acceptLabel: 'Restore',
+        rejectLabel: 'Cancel',
+        accept: () => {
+            void performRestoreRecommendationList(recommendationList);
+        },
+    });
+};
+
 const formatApplicantName = (record) => {
     const lastName = record?.profile?.last_name || 'N/A';
     const firstName = record?.profile?.first_name || '';
@@ -1560,7 +1824,7 @@ const recommendationRecordHasJpm = (record) => {
 
 const refreshPage = () => {
     router.reload({
-        only: ['interviewed_applicants', 'budget_allocations', 'recommendation_lists'],
+        only: recommendationListReloadProps,
         preserveState: true,
         preserveScroll: true
     });
@@ -1568,6 +1832,10 @@ const refreshPage = () => {
 
 watch(() => props.recommendation_lists, (value) => {
     recommendationLists.value = [...(value || [])];
+}, { deep: true });
+
+watch(() => props.deleted_recommendation_lists, (value) => {
+    deletedRecommendationLists.value = [...(value || [])];
 }, { deep: true });
 
 watch(interviewedApplicantsWithRecommendationFlags, () => {

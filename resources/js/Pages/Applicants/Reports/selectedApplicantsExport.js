@@ -3,11 +3,10 @@ import * as XLSX from 'xlsx';
 
 import { renderVueTemplate } from '@/composables/usePdfPrint';
 import { stripHtml } from '@/utils/sanitize';
+import { pagedjsPolyfillScript } from '@/utils/pagedjsPolyfill';
 import { getReportCss, getReportPaperConfig } from '@/Pages/Scholarship/Reports/report-styles';
 
 import SelectedApplicantsReportTemplate from './SelectedApplicantsReportTemplate.vue';
-
-const pagedjsPolyfillUrl = '/vendor/pagedjs/paged.polyfill.min.js';
 
 function getFirstGrant(row) {
     if (Array.isArray(row?.scholarship_grant)) {
@@ -113,7 +112,7 @@ function buildReportDocument(bodyHtml, title, pageConfig) {
     body { visibility: hidden; margin: 0; padding: 0; }
     ${getReportCss(pageConfig)}
   </style>
-  <script src="${pagedjsPolyfillUrl}"><\/script>
+    <script>${pagedjsPolyfillScript}<\/script>
   <script>
     (function () {
       function finalizeRender() {

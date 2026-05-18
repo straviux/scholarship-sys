@@ -1165,6 +1165,7 @@ class ScholarshipProfileController extends Controller
             'interviewers' => User::query()->select('id', 'name')->orderBy('name')->get(),
             'budget_allocations' => $this->getInterviewedApplicantsBudgetAllocations(),
             'recommendation_lists' => $this->getRecommendationLists(),
+            'deleted_recommendation_lists' => $this->getDeletedRecommendationLists(),
         ]);
     }
 
@@ -1203,11 +1204,85 @@ class ScholarshipProfileController extends Controller
         ]);
     }
 
+    public function destroyRecommendationList(RecommendationList $recommendationList): JsonResponse
+    {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'You do not have permission to delete recommendation lists.');
+        }
+
+        $recommendationList->loadMissing('creator');
+        $listNumber = $recommendationList->list_number;
+
+        $recommendationList->delete();
+
+        Log::info('recommendation_list_deleted', [
+            'id' => $recommendationList->id,
+            'list_number' => $listNumber,
+            'record_count' => $recommendationList->record_count,
+            'budget_allocation_key' => $recommendationList->budget_allocation_key,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => sprintf('Recommendation list %s deleted successfully.', $listNumber),
+            'data' => $this->transformRecommendationList($recommendationList),
+        ]);
+    }
+
+    public function restoreRecommendationList(int $recommendationListId): JsonResponse
+    {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'You do not have permission to restore recommendation lists.');
+        }
+
+        $recommendationList = RecommendationList::query()
+            ->withTrashed()
+            ->with('creator')
+            ->findOrFail($recommendationListId);
+
+        if (! $recommendationList->trashed()) {
+            return response()->json([
+                'success' => false,
+                'message' => sprintf('Recommendation list %s is already active.', $recommendationList->list_number),
+            ], 422);
+        }
+
+        $listNumber = $recommendationList->list_number;
+
+        $recommendationList->restore();
+        $recommendationList->refresh()->load('creator');
+
+        Log::info('recommendation_list_restored', [
+            'id' => $recommendationList->id,
+            'list_number' => $listNumber,
+            'record_count' => $recommendationList->record_count,
+            'budget_allocation_key' => $recommendationList->budget_allocation_key,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => sprintf('Recommendation list %s restored successfully.', $listNumber),
+            'data' => $this->transformRecommendationList($recommendationList),
+        ]);
+    }
+
     private function getRecommendationLists(): array
     {
         return RecommendationList::query()
             ->with('creator')
             ->latest()
+            ->get()
+            ->map(fn (RecommendationList $recommendationList) => $this->transformRecommendationList($recommendationList))
+            ->values()
+            ->all();
+    }
+
+    private function getDeletedRecommendationLists(): array
+    {
+        return RecommendationList::query()
+            ->onlyTrashed()
+            ->with('creator')
+            ->latest('deleted_at')
             ->get()
             ->map(fn (RecommendationList $recommendationList) => $this->transformRecommendationList($recommendationList))
             ->values()
@@ -1265,6 +1340,7 @@ class ScholarshipProfileController extends Controller
             ] : null,
             'created_at' => $recommendationList->created_at?->toIso8601String(),
             'updated_at' => $recommendationList->updated_at?->toIso8601String(),
+            'deleted_at' => $recommendationList->deleted_at?->toIso8601String(),
         ];
     }
 
@@ -1428,8 +1504,11 @@ class ScholarshipProfileController extends Controller
             });
 
         $approvedScholarRecords = ScholarshipRecord::query()
-            ->with('program')
-            ->select('profile_id', 'program_id', 'course_id', 'date_approved', 'unified_status')
+            ->with([
+                'program',
+                'profile:profile_id,first_name,last_name,middle_name,extension_name',
+            ])
+            ->select('id', 'profile_id', 'program_id', 'course_id', 'date_approved', 'unified_status')
             ->whereNotNull('profile_id')
             ->whereNotNull('date_approved')
             ->whereIn('unified_status', self::ALLOCATION_COUNTED_SCHOLARSHIP_RECORD_STATUSES)
@@ -1440,36 +1519,23 @@ class ScholarshipProfileController extends Controller
                 $disbursed = (float) ($disbursedByAllocation[$allocation['key']] ?? 0);
                 $programIds = array_map('intval', $allocation['program_ids'] ?? []);
 
-                $approvedScholarsToDate = $approvedScholarRecords
-                    ->filter(function (ScholarshipRecord $record) use ($allocation) {
-                        $programId = (int) ($record->program_id ?: $record->program?->id ?: 0);
-                        $approvalDate = $record->date_approved?->format('Y-m-d');
-
-                        if (!$programId || !$approvalDate || !in_array($programId, array_map('intval', $allocation['program_ids'] ?? []), true)) {
-                            return false;
-                        }
-
-                        $dateStart = $allocation['date_start'] ?? null;
-                        $dateEnd = $allocation['date_end'] ?? null;
-
-                        if ($dateStart && $approvalDate < $dateStart) {
-                            return false;
-                        }
-
-                        if ($dateEnd && $approvalDate > $dateEnd) {
-                            return false;
-                        }
-
-                        if (!$dateStart && !$dateEnd && filled($allocation['fiscal_year'] ?? null)) {
-                            return substr($approvalDate, 0, 4) === (string) $allocation['fiscal_year'];
-                        }
-
-                        return true;
+                $approvedScholars = $approvedScholarRecords
+                    ->filter(fn(ScholarshipRecord $record) => $this->matchesInterviewedApplicantsBudgetAllocationScholarRecord($record, $allocation))
+                    ->sortByDesc(fn(ScholarshipRecord $record) => $record->date_approved?->format('Y-m-d') ?? '')
+                    ->unique('profile_id')
+                    ->map(function (ScholarshipRecord $record) use ($allocation) {
+                        return [
+                            'profile_id' => $record->profile_id,
+                            'name' => $this->formatInterviewedApplicantsBudgetAllocationScholarName($record->profile),
+                            'program' => $record->program?->shortname ?: $record->program?->name ?: ($allocation['program'] ?? 'N/A'),
+                            'date_approved' => $record->date_approved?->format('Y-m-d'),
+                            'status' => (string) $record->unified_status,
+                        ];
                     })
-                    ->pluck('profile_id')
-                    ->filter()
-                    ->unique()
-                    ->count();
+                    ->values()
+                    ->all();
+
+                $approvedScholarsToDate = count($approvedScholars);
 
                 return [
                     'key' => $allocation['key'],
@@ -1484,6 +1550,7 @@ class ScholarshipProfileController extends Controller
                     'total_allotment' => (float) ($allocation['allotment'] ?? 0),
                     'disbursed' => $disbursed,
                     'approved_scholars_to_date' => $approvedScholarsToDate,
+                    'approved_scholars' => $approvedScholars,
                     'date_start' => $allocation['date_start'] ?? null,
                     'date_end' => $allocation['date_end'] ?? null,
                 ];
@@ -1497,6 +1564,53 @@ class ScholarshipProfileController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    private function matchesInterviewedApplicantsBudgetAllocationScholarRecord(ScholarshipRecord $record, array $allocation): bool
+    {
+        $programId = (int) ($record->program_id ?: $record->program?->id ?: 0);
+        $approvalDate = $record->date_approved?->format('Y-m-d');
+
+        if (!$programId || !$approvalDate || !in_array($programId, array_map('intval', $allocation['program_ids'] ?? []), true)) {
+            return false;
+        }
+
+        $dateStart = $allocation['date_start'] ?? null;
+        $dateEnd = $allocation['date_end'] ?? null;
+
+        if ($dateStart && $approvalDate < $dateStart) {
+            return false;
+        }
+
+        if ($dateEnd && $approvalDate > $dateEnd) {
+            return false;
+        }
+
+        if (!$dateStart && !$dateEnd && filled($allocation['fiscal_year'] ?? null)) {
+            return substr($approvalDate, 0, 4) === (string) $allocation['fiscal_year'];
+        }
+
+        return true;
+    }
+
+    private function formatInterviewedApplicantsBudgetAllocationScholarName(?ScholarshipProfile $profile): string
+    {
+        if (!$profile) {
+            return 'Unknown Scholar';
+        }
+
+        $lastName = trim((string) $profile->last_name);
+        $firstMiddle = trim(implode(' ', array_filter([
+            $profile->first_name,
+            $profile->middle_name,
+            $profile->extension_name,
+        ])));
+
+        if ($lastName && $firstMiddle) {
+            return $lastName . ', ' . $firstMiddle;
+        }
+
+        return trim((string) ($profile->full_name ?? 'Unknown Scholar')) ?: 'Unknown Scholar';
     }
 
     private function getInterviewedApplicantsBudgetAllocationLookup(): array

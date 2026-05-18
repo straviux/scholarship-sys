@@ -115,6 +115,62 @@
                         </div>
                     </div>
 
+                    <div v-if="selectedBudgetAllocation" class="ios-section">
+                        <div class="ios-section-label">Cumulative Count Details</div>
+                        <div class="ios-card space-y-3">
+                            <div class="rounded-3xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                                <div class="font-semibold text-slate-700">
+                                    {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's are' : ' is' }} included in the cumulative count.
+                                </div>
+                                <div class="mt-1">
+                                    This list follows the selected allocation's program coverage and approval-date window.
+                                </div>
+                            </div>
+
+                            <InputText
+                                v-model="cumulativeScholarSearchQuery"
+                                class="ios-select"
+                                placeholder="Search cumulative scholars"
+                            />
+
+                            <div v-if="showCumulativeScholarMissingDetails" class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">
+                                Detailed scholar rows are unavailable on this saved allocation. Re-select a current allocation to refresh the cumulative list.
+                            </div>
+
+                            <div v-else-if="filteredCumulativeScholars.length" class="max-h-72 space-y-2 overflow-y-auto pr-1">
+                                <div
+                                    v-for="scholar in filteredCumulativeScholars"
+                                    :key="scholar.profile_id"
+                                    class="rounded-3xl border border-slate-200 bg-white px-3 py-2"
+                                >
+                                    <div class="text-sm font-semibold text-slate-800">{{ scholar.name }}</div>
+                                    <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-600">
+                                        <span>Program: {{ scholar.program || 'N/A' }}</span>
+                                        <span>Approved: {{ formatDate(scholar.date_approved) }}</span>
+                                        <span>Status: {{ formatScholarStatus(scholar.status) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-else class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">
+                                <template v-if="selectedBudgetAllocationApprovedCount">
+                                    No scholars match the current search.
+                                </template>
+                                <template v-else>
+                                    No approved scholars currently match this allocation.
+                                </template>
+                            </div>
+                        </div>
+                        <div class="ios-section-footer">
+                            <template v-if="showCumulativeScholarMissingDetails">
+                                {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's' : '' }} counted, but detailed rows are not available on this saved allocation.
+                            </template>
+                            <template v-else>
+                                Showing {{ filteredCumulativeScholars.length.toLocaleString() }} of {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's' : '' }}.
+                            </template>
+                        </div>
+                    </div>
+
                     <div class="ios-section">
                         <div class="ios-section-label">Prepared By</div>
                         <div class="ios-card">
@@ -239,6 +295,7 @@ const form = ref({
     approved_by_position: DEFAULT_APPROVED_BY_POSITION,
 });
 const selectedBudgetAllocation = ref(null);
+const cumulativeScholarSearchQuery = ref('');
 const showBudgetError = ref(false);
 
 const isEditMode = computed(() => props.mode === 'edit');
@@ -266,6 +323,11 @@ const budgetAllocationCurrencyFormatter = new Intl.NumberFormat('en-PH', {
     currency: 'PHP',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
+});
+const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
 });
 
 function formatBudgetAllocationAmount(allocation) {
@@ -306,6 +368,16 @@ function formatBudgetAllocationSelectionMessage(allocation) {
     }
 
     return `Monitoring ${label}.`;
+}
+
+function buildBudgetAllocationPayload(allocation) {
+    if (!allocation) {
+        return null;
+    }
+
+    const { approved_scholars, ...payload } = allocation;
+
+    return payload;
 }
 
 function sameBudgetAllocation(left, right) {
@@ -356,6 +428,41 @@ const budgetAllocationOptions = computed(() => {
 
 const requiresBudgetAllocationSelection = computed(() => budgetAllocationOptions.value.length > 0);
 const isSubmitDisabled = computed(() => props.selectedCount === 0);
+const selectedBudgetAllocationApprovedCount = computed(() => Number(selectedBudgetAllocation.value?.approved_scholars_to_date ?? 0) || 0);
+const hasCumulativeScholarDetails = computed(() => Array.isArray(selectedBudgetAllocation.value?.approved_scholars));
+const cumulativeScholars = computed(() => {
+    const scholars = hasCumulativeScholarDetails.value
+        ? [...selectedBudgetAllocation.value.approved_scholars]
+        : [];
+
+    return scholars.sort((left, right) => (left?.name || '').localeCompare(right?.name || '', undefined, {
+        sensitivity: 'base',
+    }));
+});
+const filteredCumulativeScholars = computed(() => {
+    const searchTerm = cumulativeScholarSearchQuery.value.trim().toLowerCase();
+
+    if (!searchTerm) {
+        return cumulativeScholars.value;
+    }
+
+    return cumulativeScholars.value.filter(scholar => {
+        const haystack = [
+            scholar?.name,
+            scholar?.program,
+            scholar?.date_approved,
+            formatScholarStatus(scholar?.status),
+        ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+
+        return haystack.includes(searchTerm);
+    });
+});
+const showCumulativeScholarMissingDetails = computed(() => {
+    return selectedBudgetAllocationApprovedCount.value > 0 && !hasCumulativeScholarDetails.value;
+});
 const budgetFooterMessage = computed(() => {
     if (showBudgetError.value) {
         return budgetErrorMessage.value;
@@ -411,6 +518,7 @@ function resetForm() {
             : null;
     }
 
+    cumulativeScholarSearchQuery.value = '';
     showBudgetError.value = false;
 }
 
@@ -441,7 +549,7 @@ function submitForm() {
         prepared_by_office: form.value.prepared_by_office,
         approved_by: form.value.approved_by,
         approved_by_position: form.value.approved_by_position,
-        budget_allocation: selectedBudgetAllocation.value,
+        budget_allocation: buildBudgetAllocationPayload(selectedBudgetAllocation.value),
     });
 }
 
@@ -452,9 +560,37 @@ watch(() => props.show, (value) => {
 });
 
 watch(selectedBudgetAllocation, () => {
+    cumulativeScholarSearchQuery.value = '';
+
     if (selectedBudgetAllocation.value) {
         showBudgetError.value = false;
     }
 });
+
+function formatDate(value) {
+    if (!value) {
+        return '—';
+    }
+
+    const date = new Date(`${value}T00:00:00`);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return shortDateFormatter.format(date);
+}
+
+function formatScholarStatus(status) {
+    const labels = {
+        active: 'Active',
+        completed: 'Completed',
+        'completed-transferred': 'Completed - Transferred',
+    };
+
+    return labels[status] || String(status || '—')
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, character => character.toUpperCase());
+}
 </script>
 

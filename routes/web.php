@@ -452,6 +452,14 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('check.permission:scholarships.view')
         ->name('scholarship.recommendation-lists.update');
 
+    Route::delete('/interviewed-applicants/recommendation-lists/{recommendationList}', [ScholarshipProfileController::class, 'destroyRecommendationList'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.recommendation-lists.destroy');
+
+    Route::patch('/interviewed-applicants/recommendation-lists/{recommendationListId}/restore', [ScholarshipProfileController::class, 'restoreRecommendationList'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.recommendation-lists.restore');
+
     // Approval history and statistics
     Route::get('/scholarship/{record}/history', [ScholarshipProfileController::class, 'getApprovalHistory'])
         ->name('scholarship.history');

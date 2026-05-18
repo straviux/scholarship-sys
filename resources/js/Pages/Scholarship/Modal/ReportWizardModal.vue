@@ -218,8 +218,7 @@
                                         Prepared By
                                     </div>
                                     <div class="ios-row-control">
-                                        <InputText v-model="preparedBy" class="ios-select"
-                                            placeholder="Enter preparer name" />
+                                        <InputText v-model="preparedBy" class="ios-select" placeholder="Optional" />
                                     </div>
                                 </div>
                                 <div class="ios-row">
@@ -228,13 +227,12 @@
                                         Designation
                                     </div>
                                     <div class="ios-row-control">
-                                        <InputText v-model="preparedByTitle" class="ios-select"
-                                            placeholder="Position / Title" />
+                                        <InputText v-model="preparedByTitle" class="ios-select" placeholder="Optional" />
                                     </div>
                                 </div>
                             </div>
                             <div class="ios-section-footer">
-                                The prepared-by line defaults to the logged in user.
+                                Leave both fields blank to omit the prepared-by section.
                             </div>
                         </div>
 
@@ -247,8 +245,7 @@
                                         Noted By
                                     </div>
                                     <div class="ios-row-control">
-                                        <InputText v-model="signatoryName" class="ios-select"
-                                            placeholder="Enter signatory name" />
+                                        <InputText v-model="signatoryName" class="ios-select" placeholder="Optional" />
                                     </div>
                                 </div>
                                 <div class="ios-row">
@@ -257,10 +254,12 @@
                                         Designation
                                     </div>
                                     <div class="ios-row-control">
-                                        <InputText v-model="signatoryTitle" class="ios-select"
-                                            placeholder="Position / Title" />
+                                        <InputText v-model="signatoryTitle" class="ios-select" placeholder="Optional" />
                                     </div>
                                 </div>
+                            </div>
+                            <div class="ios-section-footer">
+                                Leave both fields blank to omit the noted-by section.
                             </div>
                         </div>
 
@@ -407,9 +406,8 @@ import IosModal from '@/Components/ui/IosModal.vue';
 import { useSystemOptions } from '@/composables/useSystemOptions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { renderVueTemplate } from '@/composables/usePdfPrint';
+import { pagedjsPolyfillScript } from '@/utils/pagedjsPolyfill';
 import { getReportCss, getReportPaperConfig } from '@/Pages/Scholarship/Reports/report-styles';
-
-const pagedjsPolyfillUrl = '/vendor/pagedjs/paged.polyfill.min.js';
 
 // Custom Select Components
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
@@ -466,7 +464,7 @@ const jpmFilter = ref('all');
 // ─── Composables ───
 const page = usePage();
 const currentUser = computed(() => page.props.auth.user);
-const preparedBy = ref(currentUser.value?.name || '');
+const preparedBy = ref('');
 const { statusOptions, getStatusConfig } = useScholarshipStatus();
 
 const canEnableJpmHighlighting = computed(() => {
@@ -688,7 +686,7 @@ async function generateReport() {
                 enableJpmHighlighting: enableJpmHighlighting.value,
                 jpmFilter: jpmFilter.value,
                 selectedStatus: selectedStatus.value,
-                preparedBy: preparedBy.value?.trim() || currentUser.value?.name || '',
+                preparedBy: preparedBy.value?.trim() || '',
                 groupBy: groupBy.value,
                 groupBySecondary: groupBySecondary.value !== 'none' ? groupBySecondary.value : null,
                 groupByTertiary: groupByTertiary.value !== 'none' ? groupByTertiary.value : null,
@@ -753,7 +751,7 @@ function buildReportDoc(bodyHtml, title, paperSettings) {
     body { visibility: hidden; margin: 0; padding: 0; }
     ${getReportCss(paperSettings)}
   </style>
-    <script src="${pagedjsPolyfillUrl}"><\/script>
+    <script>${pagedjsPolyfillScript}<\/script>
   <script>
     window.PagedPolyfill.on('rendered', function () {
       var pages = document.querySelector('.pagedjs_pages');
@@ -792,7 +790,7 @@ watch(groupBySecondary, v => { if (v === 'none' || v === groupByTertiary.value) 
 watch(() => props.show, v => {
     if (v) {
         step.value = 1;
-        preparedBy.value = currentUser.value?.name || '';
+        preparedBy.value = '';
         preparedByTitle.value = '';
         signatoryName.value = '';
         signatoryTitle.value = '';

@@ -128,10 +128,9 @@ import axios from 'axios';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
 import { renderVueTemplate } from '@/composables/usePdfPrint';
+import { pagedjsPolyfillScript } from '@/utils/pagedjsPolyfill';
 import { getReportCss, getReportPaperConfig } from '@/Pages/Scholarship/Reports/report-styles';
 import JpmTaggingReportTemplate from '@/Pages/JpmTagging/Reports/JpmTaggingReportTemplate.vue';
-
-const pagedjsPolyfillUrl = '/vendor/pagedjs/paged.polyfill.min.js';
 
 const props = defineProps({
     show: {
@@ -251,7 +250,7 @@ function buildReportDoc(bodyHtml, title, pageSettings) {
     body { visibility: hidden; margin: 0; padding: 0; }
     ${getReportCss(pageSettings)}
   </style>
-    <script src="${pagedjsPolyfillUrl}"><\/script>
+    <script>${pagedjsPolyfillScript}<\/script>
   <script>
     window.PagedPolyfill.on('rendered', function () {
       // Repeat <thead> on split tables (paged.js v0.4.3 doesn't do this automatically)
