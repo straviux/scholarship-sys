@@ -137,6 +137,7 @@ export function printRecommendationList({ recommendationList = null } = {}) {
         highlightJpmMembers: Boolean(recommendationList?.highlight_jpm_members),
         includeEndorsedBy: Boolean(recommendationList?.include_endorsed_by),
         reportTitle: recommendationList?.report_title || 'RECOMMENDATION LIST FOR APPROVAL',
+        listNumber: recommendationList?.list_number || '',
     });
 
     const { buildHtmlDoc } = usePdfPrint();

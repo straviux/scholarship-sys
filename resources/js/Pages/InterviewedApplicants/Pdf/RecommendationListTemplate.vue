@@ -14,6 +14,7 @@
         :highlight-jpm-members="highlightJpmMembers"
         :include-endorsed-by="includeEndorsedBy"
         :report-title="resolvedReportTitle"
+        :list-number="listNumber"
         :include-interview-columns="false" />
 </template>
 
@@ -70,6 +71,10 @@ const props = defineProps({
     reportTitle: {
         type: String,
         default: 'RECOMMENDATION LIST FOR APPROVAL',
+    },
+    listNumber: {
+        type: String,
+        default: '',
     },
 });
 

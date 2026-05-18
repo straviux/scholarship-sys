@@ -280,6 +280,7 @@ Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->gro
     // API's
     Route::post('/scholarship-records/{id}/approve', 'approveScholarshipRecord')->middleware('check.permission:scholarships.approve')->name('scholarship-record.approve');
     Route::post('/scholarship-records/{id}/decline', 'declineScholarshipRecord')->middleware('check.permission:scholarships.approve')->name('scholarship-record.decline');
+    Route::delete('/scholarship-records/{id}', 'destroy')->middleware('check.permission:scholarships.delete')->name('scholarship-record.destroy');
     Route::put('/scholarship-records/{id}/grant-provision', 'updateGrantProvision')->middleware('check.permission:scholarships.edit')->name('scholarship-record.update-grant-provision');
     Route::put('/scholarship-records/{id}/yakap', 'updateYakapCategory')->middleware('check.permission:scholarships.edit')->name('scholarship-record.update-yakap');
     Route::get('/scholarship-records/profile/{profile_id}/get-or-create', 'getOrCreateForProfile')->name('scholarship-record.get-or-create');

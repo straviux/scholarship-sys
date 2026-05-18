@@ -842,6 +842,9 @@
         <!-- Family Information Modal -->
         <FamilyInformationModal v-model:visible="showFamilyInfoModal" :profile="profile" @success="handleSuccess" />
 
+        <ScholarFormModal v-model:visible="showLegacyScholarEditModal" :profile="legacyScholarEditProfile"
+            mode="edit" @success="handleModalSuccess" />
+
         <!-- Manage Attachments Modal -->
         <ManageAttachmentsModal v-model:visible="showAttachmentsModal" :record="selectedRecord"
             :has-edit-permission="canEditScholarshipAttachments" @success="handleModalSuccess" />
@@ -1126,6 +1129,7 @@ import AcademicEnrollmentTermModal from '@/Components/modals/AcademicEnrollmentT
 import AcademicEnrollmentGraduationModal from '@/Components/modals/AcademicEnrollmentGraduationModal.vue';
 import AcademicEnrollmentTermCompletionModal from '@/Components/modals/AcademicEnrollmentTermCompletionModal.vue';
 import AcademicRecordDeleteModal from '@/Components/modals/AcademicRecordDeleteModal.vue';
+import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
 import ObligationsTransactions from '@/Components/ObligationsTransactions.vue';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
 
@@ -1375,6 +1379,7 @@ const showViewerModal = ref(false);
 const showQrModal = ref(false);
 const showEnrollmentModal = ref(false);
 const showTermModal = ref(false);
+const showLegacyScholarEditModal = ref(false);
 const showGraduationModal = ref(false);
 const showTermCompletionModal = ref(false);
 const showAcademicDeleteModal = ref(false);
@@ -1383,6 +1388,7 @@ const termModalMode = ref('add');
 const editingEnrollment = ref(null);
 const activeEnrollmentForTerm = ref(null);
 const editingTerm = ref(null);
+const legacyScholarEditProfile = ref(null);
 const enrollmentForGraduation = ref(null);
 const termForCompletion = ref(null);
 const deleteTarget = ref(null);
@@ -1578,8 +1584,11 @@ const canCreateAcademicTerm = computed(() => hasPermission('scholarships.create'
 const canEditAcademicEnrollmentDetails = computed(() => hasPermission('scholarships.edit'));
 const canDeleteAcademicEnrollmentDetails = computed(() => hasPermission('scholarships.delete'));
 const canEditAcademicTermDetails = computed(() => hasPermission('scholarships.edit'));
+const canEditLegacyAcademicRecordDetails = computed(() => hasPermission('scholars.edit'));
 const canDeleteAcademicTermDetails = computed(() => hasPermission('scholarships.delete'));
-const hasAcademicTermActionsPermission = computed(() => canEditAcademicTermDetails.value || canDeleteAcademicTermDetails.value);
+const hasAcademicTermActionsPermission = computed(() => {
+    return canEditAcademicTermDetails.value || canEditLegacyAcademicRecordDetails.value || canDeleteAcademicTermDetails.value;
+});
 const canViewScholarshipAttachments = computed(() => hasPermission('scholarships.view'));
 const canEditScholarshipAttachments = computed(() => hasPermission('scholarships.edit'));
 
@@ -1592,7 +1601,7 @@ const canManageAcademicEnrollmentActions = (enrollment) => {
 };
 
 const canOpenAcademicTermActions = (term) => {
-    return canManageAcademicTerm(term) && hasAcademicTermActionsPermission.value;
+    return (canManageAcademicTerm(term) || canManageLegacyAcademicRecord(term)) && hasAcademicTermActionsPermission.value;
 };
 
 const isCompletedAcademicTerm = (term) => {
@@ -1605,8 +1614,17 @@ const academicTermContextMenuItems = computed(() => {
     }
 
     const items = [];
+    const isLegacyAcademicRecord = canManageLegacyAcademicRecord(selectedAcademicTerm.value);
 
-    if (canEditAcademicTermDetails.value) {
+    if (isLegacyAcademicRecord) {
+        if (canEditLegacyAcademicRecordDetails.value) {
+            items.push({
+                label: 'Edit Record',
+                icon: 'pencil',
+                command: () => openEditTermModal(selectedAcademicTerm.value),
+            });
+        }
+    } else if (canEditAcademicTermDetails.value) {
         items.push(
             {
                 label: 'Edit Term',
@@ -1623,7 +1641,7 @@ const academicTermContextMenuItems = computed(() => {
 
     if (canDeleteAcademicTermDetails.value) {
         items.push({
-            label: 'Delete Term',
+            label: isLegacyAcademicRecord ? 'Delete Record' : 'Delete Term',
             icon: 'trash',
             command: () => confirmDeleteTerm(selectedAcademicTerm.value),
         });
@@ -1689,6 +1707,28 @@ const resolveAcademicRecord = (termOrRecord) => {
     }
 
     return termOrRecord.legacyRecord || termOrRecord;
+};
+
+const hasValidAcademicRecordId = (value) => Number.isInteger(Number(value)) && Number(value) > 0;
+
+const canManageLegacyAcademicRecord = (term) => {
+    const record = resolveAcademicRecord(term);
+
+    return Boolean(!term?.isGroupedTerm && hasValidAcademicRecordId(record?.id));
+};
+
+const buildLegacyScholarEditProfile = (record) => {
+    if (!record) {
+        return null;
+    }
+
+    return {
+        ...props.profile,
+        scholarship_grant: [{
+            ...record,
+            scholarship_grant_id: record.scholarship_grant_id ?? record.id,
+        }],
+    };
 };
 
 const normalizeProgramToken = (value) => String(value ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '');
@@ -2063,14 +2103,32 @@ const openAcademicTermContextMenu = (event, term) => {
 };
 
 const openEditTermModal = (term) => {
-    if (!canManageAcademicTerm(term) || !canEditAcademicTermDetails.value) {
+    if (canManageAcademicTerm(term)) {
+        if (!canEditAcademicTermDetails.value) {
+            return;
+        }
+
+        termModalMode.value = 'edit';
+        editingTerm.value = term;
+        activeEnrollmentForTerm.value = academicEnrollmentGroups.value.find((enrollment) => enrollment.id === term.enrollmentId) || null;
+        showTermModal.value = true;
         return;
     }
 
-    termModalMode.value = 'edit';
-    editingTerm.value = term;
-    activeEnrollmentForTerm.value = academicEnrollmentGroups.value.find((enrollment) => enrollment.id === term.enrollmentId) || null;
-    showTermModal.value = true;
+    if (!canManageLegacyAcademicRecord(term) || !canEditLegacyAcademicRecordDetails.value) {
+        return;
+    }
+
+    const record = resolveAcademicRecord(term);
+    legacyScholarEditProfile.value = buildLegacyScholarEditProfile(record);
+
+    if (!legacyScholarEditProfile.value) {
+        return;
+    }
+
+    editingTerm.value = null;
+    activeEnrollmentForTerm.value = null;
+    showLegacyScholarEditModal.value = true;
 };
 
 const openGraduationModal = (enrollment) => {
@@ -2102,12 +2160,23 @@ const confirmDeleteEnrollment = (enrollment) => {
 };
 
 const confirmDeleteTerm = (term) => {
-    if (!canManageAcademicTerm(term) || !canDeleteAcademicTermDetails.value) {
+    if (canManageAcademicTerm(term)) {
+        if (!canDeleteAcademicTermDetails.value) {
+            return;
+        }
+
+        deleteTargetType.value = 'term';
+        deleteTarget.value = term;
+        showAcademicDeleteModal.value = true;
         return;
     }
 
-    deleteTargetType.value = 'term';
-    deleteTarget.value = term;
+    if (!canManageLegacyAcademicRecord(term) || !canDeleteAcademicTermDetails.value) {
+        return;
+    }
+
+    deleteTargetType.value = 'record';
+    deleteTarget.value = resolveAcademicRecord(term);
     showAcademicDeleteModal.value = true;
 };
 
@@ -2152,6 +2221,8 @@ const handleModalSuccess = () => {
     editingEnrollment.value = null;
     activeEnrollmentForTerm.value = null;
     editingTerm.value = null;
+    showLegacyScholarEditModal.value = false;
+    legacyScholarEditProfile.value = null;
     enrollmentForGraduation.value = null;
     termForCompletion.value = null;
     deleteTarget.value = null;

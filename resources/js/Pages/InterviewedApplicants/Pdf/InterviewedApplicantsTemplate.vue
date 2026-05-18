@@ -20,6 +20,10 @@
             <p class="t-9" style="margin-top:3pt;">{{ today }}</p>
         </div>
 
+        <div v-if="listNumber" style="padding:4pt 0 2pt;text-align:left;">
+            <p class="t-9 bold">List No. {{ listNumber }}</p>
+        </div>
+
         <div v-if="records.length === 0" class="center italic" style="padding:24pt;color:#888;font-size:10pt;">
             No interviewed applicants match the current selection.
         </div>
@@ -360,6 +364,7 @@ const props = defineProps({
     budgetProgram: { type: String, default: '' },
     budgetAllocation: { type: Object, default: null },
     reportTitle: { type: String, default: 'INTERVIEWED APPLICANTS REPORT' },
+    listNumber: { type: String, default: '' },
     includeInterviewColumns: { type: Boolean, default: true },
     includeEndorsedBy: { type: Boolean, default: false },
     highlightJpmMembers: { type: Boolean, default: false },

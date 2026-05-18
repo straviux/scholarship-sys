@@ -25,6 +25,11 @@
                     <p style="font-size: 12px; color: #8E8E93;">{{ target.course?.name || 'No course selected' }}<span v-if="target.school?.name"> · {{ target.school.name }}</span></p>
                     <p v-if="Array.isArray(target.terms)" style="font-size: 12px; color: #8E8E93; margin-top: 6px;">{{ target.terms.length }} linked term{{ target.terms.length === 1 ? '' : 's' }} will also be removed.</p>
                 </template>
+                <template v-else-if="targetType === 'record'">
+                    <p style="font-size: 14px; font-weight: 500; color: #000;">{{ target.program?.name || 'Scholarship Record' }}</p>
+                    <p style="font-size: 12px; color: #8E8E93;">{{ target.course?.name || 'No course selected' }}<span v-if="target.school?.name"> · {{ target.school.name }}</span></p>
+                    <p style="font-size: 12px; color: #8E8E93; margin-top: 6px;">{{ target.academic_year || 'No academic year' }}<span v-if="target.term"> · {{ target.term }}</span><span v-if="target.year_level"> · {{ target.year_level }}</span></p>
+                </template>
                 <template v-else>
                     <p style="font-size: 14px; font-weight: 500; color: #000;">{{ target.year_level || 'Academic Term' }}</p>
                     <p style="font-size: 12px; color: #8E8E93;">{{ target.academic_year || 'No academic year' }}<span v-if="target.term"> · {{ target.term }}</span></p>
@@ -48,7 +53,7 @@ const props = defineProps({
     targetType: {
         type: String,
         default: 'term',
-        validator: (value) => ['enrollment', 'term'].includes(value),
+        validator: (value) => ['enrollment', 'term', 'record'].includes(value),
     },
 });
 
@@ -59,6 +64,8 @@ const processing = ref(false);
 const promptText = computed(() => {
     return props.targetType === 'enrollment'
         ? 'Are you sure you want to delete this academic enrollment and all of its terms?'
+        : props.targetType === 'record'
+            ? 'Are you sure you want to delete this scholarship record?'
         : 'Are you sure you want to delete this academic term?';
 });
 
@@ -73,7 +80,9 @@ const deleteRoute = computed(() => {
 
     return props.targetType === 'enrollment'
         ? route('academic-enrollments.destroy', props.target.id)
-        : route('academic-enrollment-terms.destroy', props.target.id);
+        : props.targetType === 'record'
+            ? route('scholarship-record.destroy', props.target.id)
+            : route('academic-enrollment-terms.destroy', props.target.id);
 });
 
 const deleteTargetEntity = async () => {
