@@ -426,7 +426,7 @@
                                         {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's are' : ' is' }} included in the cumulative count.
                                     </div>
                                     <div class="mt-1">
-                                        This list follows the selected allocation's program coverage and approval-date window.
+                                        This list follows the selected allocation's calendar year, regardless of program coverage or allocation window.
                                     </div>
                                 </div>
 
@@ -456,7 +456,7 @@
                                         No scholars match the current search.
                                     </template>
                                     <template v-else>
-                                        No approved scholars currently match this allocation.
+                                        No approved scholars are currently counted for this calendar year.
                                     </template>
                                 </div>
                             </div>
@@ -682,12 +682,40 @@ function formatBudgetAllocationDescription(allocation) {
     ].filter(Boolean).join(' - ');
 }
 
+function getBudgetAllocationCalendarYear(allocation) {
+    const candidates = [
+        allocation?.calendar_year,
+        allocation?.fiscal_year,
+        allocation?.date_start,
+        allocation?.date_end,
+    ];
+
+    for (const candidate of candidates) {
+        if (candidate === null || candidate === undefined || candidate === '') {
+            continue;
+        }
+
+        const match = String(candidate).match(/\b(\d{4})\b/);
+
+        if (match) {
+            return match[1];
+        }
+    }
+
+    return null;
+}
+
 function formatBudgetAllocationSelectionMessage(allocation) {
     const label = formatBudgetAllocationLabel(allocation);
     const description = formatBudgetAllocationDescription(allocation);
+    const calendarYear = getBudgetAllocationCalendarYear(allocation);
+    const details = [
+        description && description !== label ? description : null,
+        calendarYear ? `Calendar year ${calendarYear}` : null,
+    ].filter(Boolean);
 
-    if (description && description !== label) {
-        return `Monitoring ${label} · ${description}.`;
+    if (details.length) {
+        return `Monitoring ${label} · ${details.join(' · ')}.`;
     }
 
     return `Monitoring ${label}.`;

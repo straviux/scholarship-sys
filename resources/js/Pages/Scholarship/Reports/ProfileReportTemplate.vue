@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import moment from 'moment';
-import { formatName, formatStatus, getGroupValue, getReportStatus, groupRecords } from './report-helpers';
+import { formatName, getGroupValue, getProfileReportTitle, getReportStatus, groupRecords } from './report-helpers';
 import ProfileReportTable from './ProfileReportTable.vue';
 
 const props = defineProps({
@@ -49,27 +49,9 @@ const summaryGroupBy = computed(() => {
 });
 const summaryGroupColumnLabel = computed(() => SUMMARY_GROUP_LABELS[summaryGroupBy.value] || 'Program');
 const summaryGroupTitle = computed(() => `Breakdown by ${summaryGroupColumnLabel.value}`);
-
-const reportLabel = computed(() => {
-    const map = {
-        null: 'SCHOLARSHIP PROFILES',
-        pending: 'PENDING APPLICANTS',
-        interviewed: 'INTERVIEWED APPLICANTS',
-        approved: 'APPROVED',
-        approved_history: 'APPROVED',
-        active: 'ACTIVE SCHOLARS',
-        denied: 'DENIED',
-        denied_history: 'DENIED',
-        completed: 'COMPLETED SCHOLARS',
-        withdrawn: 'WITHDRAWN SCHOLARS',
-        loa: 'LEAVE OF ABSENCE',
-        suspended: 'SUSPENDED SCHOLARS',
-    };
-
-    return map[selectedStatus.value] || formatStatus(selectedStatus.value) || 'SCHOLARSHIP PROFILES';
-});
-
-const reportTitle = computed(() => `${reportLabel.value} ${props.reportType === 'summary' ? 'SUMMARY REPORT' : 'REPORT'}`);
+const reportTitle = computed(() => props.options?.reportTitle?.trim()
+    || getProfileReportTitle(selectedStatus.value, props.reportType)
+);
 const asOfLabel = computed(() => {
     if (!props.generatedAt) {
         return moment().format('MMMM D, YYYY');

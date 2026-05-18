@@ -242,14 +242,14 @@
         <div v-if="budgetAllocation" class="break-before no-break"
             style="padding-top:4pt;page-break-inside:avoid;break-inside:avoid-page;margin-top:40pt;padding-left:20pt;padding-right:20pt;">
             <div style="padding:8pt;font-size:8pt;line-height:1.45;">
-                <div class="bold" style="font-size:9pt;text-transform:uppercase;">Budget Allocation for Current Calendar Year</div>
+                <div class="bold" style="font-size:9pt;text-transform:uppercase;">Budget Allocation{{ approvedScholarsCalendarYearLabel ? ` for Calendar Year ${approvedScholarsCalendarYearLabel}` : ' for Current Calendar Year' }}</div>
 
                 <table style="width:100%;border-collapse:collapse;margin-top:6pt;font-size:8pt;">
                     <tbody>
                         <tr>
                             <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;">Program</td>
                             <td colspan="3" style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;">
-                                {{ resolvedBudgetProgram }} · {{ budgetAllocation.rc_name || budgetAllocation.rc_code || 'N/A' }} · {{ budgetAllocation.fiscal_year || 'N/A' }}
+                                {{ resolvedBudgetProgram }} · {{ budgetAllocation.rc_name || budgetAllocation.rc_code || 'N/A' }} · {{ budgetAllocation.fiscal_year ? `FY ${budgetAllocation.fiscal_year}` : 'FY N/A' }}
                             </td>
                         </tr>
                         <tr>
@@ -267,7 +267,9 @@
                         <tr>
                             <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;">Total amount for this request</td>
                             <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono bold">{{ fmtCurrency(totalCurrentAcademicYearGrant) }}</td>
-                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;text-indent:12pt;">Cumulative no. to date</td>
+                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;text-indent:12pt;">
+                                Cumulative no. to date{{ approvedScholarsCalendarYearLabel ? ` (CY ${approvedScholarsCalendarYearLabel})` : '' }}
+                            </td>
                             <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{ approvedScholarsToDate }}</td>
                         </tr>
                         <tr>
@@ -631,6 +633,28 @@ const groupedData = computed(() => {
 
 const totalScholars = computed(() => props.records.length);
 const approvedScholarsToDate = computed(() => Number(props.budgetAllocation?.approved_scholars_to_date ?? totalScholars.value) || 0);
+const approvedScholarsCalendarYearLabel = computed(() => {
+    const candidates = [
+        props.budgetAllocation?.calendar_year,
+        props.budgetAllocation?.fiscal_year,
+        props.budgetAllocation?.date_start,
+        props.budgetAllocation?.date_end,
+    ];
+
+    for (const candidate of candidates) {
+        if (candidate === null || candidate === undefined || candidate === '') {
+            continue;
+        }
+
+        const match = String(candidate).match(/\b(\d{4})\b/);
+
+        if (match) {
+            return match[1];
+        }
+    }
+
+    return null;
+});
 const totalCurrentAcademicYearGrant = computed(() => sumCurrentAcademicYearEstimatedGrant(props.records));
 const budgetAllocationRunningBalance = computed(() => {
     if (!props.budgetAllocation) {

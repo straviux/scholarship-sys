@@ -37,6 +37,7 @@
 </template>
 
 <script setup>
+import IosModal from '@/Components/ui/IosModal.vue';
 import { computed, ref } from 'vue';
 import axios from 'axios';
 import { toast } from '@/utils/toast';

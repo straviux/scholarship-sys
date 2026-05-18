@@ -1,4 +1,5 @@
 <script setup>
+import IosModal from '@/Components/ui/IosModal.vue';
 import { ref, watch } from 'vue';
 import MunicipalitySelect from '@/Components/selects/MunicipalitySelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';

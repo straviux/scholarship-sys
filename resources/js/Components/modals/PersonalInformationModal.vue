@@ -34,6 +34,7 @@
 </template>
 
 <script setup>
+import IosModal from '@/Components/ui/IosModal.vue';
 import { ref, watch } from 'vue';
 import PersonalInformationFields from '@/Components/forms/fields/PersonalInformationFields.vue';
 import axios from 'axios';

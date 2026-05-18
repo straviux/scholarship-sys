@@ -93,6 +93,7 @@
 </template>
 
 <script setup>
+import IosModal from '@/Components/ui/IosModal.vue';
 import { ref } from 'vue';
 import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
 import axios from 'axios';

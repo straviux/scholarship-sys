@@ -1518,9 +1518,10 @@ class ScholarshipProfileController extends Controller
             ->map(function ($allocation) use ($approvedScholarRecords, $disbursedByAllocation) {
                 $disbursed = (float) ($disbursedByAllocation[$allocation['key']] ?? 0);
                 $programIds = array_map('intval', $allocation['program_ids'] ?? []);
+                $calendarYear = $this->getInterviewedApplicantsBudgetAllocationCalendarYear($allocation);
 
                 $approvedScholars = $approvedScholarRecords
-                    ->filter(fn(ScholarshipRecord $record) => $this->matchesInterviewedApplicantsBudgetAllocationScholarRecord($record, $allocation))
+                    ->filter(fn(ScholarshipRecord $record) => $this->matchesInterviewedApplicantsCalendarYearScholarRecord($record, $calendarYear))
                     ->sortByDesc(fn(ScholarshipRecord $record) => $record->date_approved?->format('Y-m-d') ?? '')
                     ->unique('profile_id')
                     ->map(function (ScholarshipRecord $record) use ($allocation) {
@@ -1544,6 +1545,7 @@ class ScholarshipProfileController extends Controller
                     'description' => $allocation['description'] ?: $allocation['particular_name'],
                     'program_id' => count($programIds) === 1 ? $programIds[0] : null,
                     'program' => $allocation['program'],
+                    'calendar_year' => $calendarYear,
                     'fiscal_year' => $allocation['fiscal_year'],
                     'rc_name' => $allocation['rc_name'],
                     'rc_code' => $allocation['rc_code'],
@@ -1566,31 +1568,37 @@ class ScholarshipProfileController extends Controller
             ->all();
     }
 
-    private function matchesInterviewedApplicantsBudgetAllocationScholarRecord(ScholarshipRecord $record, array $allocation): bool
+    private function getInterviewedApplicantsBudgetAllocationCalendarYear(array $allocation): ?int
     {
-        $programId = (int) ($record->program_id ?: $record->program?->id ?: 0);
-        $approvalDate = $record->date_approved?->format('Y-m-d');
+        foreach (
+            [
+                $allocation['calendar_year'] ?? null,
+                $allocation['fiscal_year'] ?? null,
+                $allocation['date_start'] ?? null,
+                $allocation['date_end'] ?? null,
+            ] as $candidate
+        ) {
+            if (!filled($candidate)) {
+                continue;
+            }
 
-        if (!$programId || !$approvalDate || !in_array($programId, array_map('intval', $allocation['program_ids'] ?? []), true)) {
+            if (preg_match('/\b(\d{4})\b/', (string) $candidate, $matches) === 1) {
+                return (int) $matches[1];
+            }
+        }
+
+        return null;
+    }
+
+    private function matchesInterviewedApplicantsCalendarYearScholarRecord(ScholarshipRecord $record, ?int $calendarYear): bool
+    {
+        $approvalYear = (int) ($record->date_approved?->format('Y') ?? 0);
+
+        if (!$calendarYear || !$approvalYear) {
             return false;
         }
 
-        $dateStart = $allocation['date_start'] ?? null;
-        $dateEnd = $allocation['date_end'] ?? null;
-
-        if ($dateStart && $approvalDate < $dateStart) {
-            return false;
-        }
-
-        if ($dateEnd && $approvalDate > $dateEnd) {
-            return false;
-        }
-
-        if (!$dateStart && !$dateEnd && filled($allocation['fiscal_year'] ?? null)) {
-            return substr($approvalDate, 0, 4) === (string) $allocation['fiscal_year'];
-        }
-
-        return true;
+        return $approvalYear === $calendarYear;
     }
 
     private function formatInterviewedApplicantsBudgetAllocationScholarName(?ScholarshipProfile $profile): string

@@ -186,6 +186,25 @@
                     <!-- STEP 3: Options -->
                     <div v-show="step === 3">
                         <div class="ios-section">
+                            <div class="ios-section-label">Title</div>
+                            <div class="ios-card">
+                                <div class="ios-row">
+                                    <div class="ios-row-label">
+                                        <AppIcon name="type" :size="13" style="color: #007AFF;" />
+                                        Report Title
+                                    </div>
+                                    <div class="ios-row-control">
+                                        <InputText v-model="customReportTitle" class="ios-select"
+                                            :placeholder="defaultReportTitle" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ios-section-footer">
+                                Leave blank to use {{ defaultReportTitle }}.
+                            </div>
+                        </div>
+
+                        <div class="ios-section">
                             <div class="ios-section-label">Layout</div>
                             <div class="ios-card">
                                 <!-- Paper Size -->
@@ -407,6 +426,7 @@ import { useSystemOptions } from '@/composables/useSystemOptions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { renderVueTemplate } from '@/composables/usePdfPrint';
 import { pagedjsPolyfillScript } from '@/utils/pagedjsPolyfill';
+import { getProfileReportTitle } from '@/Pages/Scholarship/Reports/report-helpers';
 import { getReportCss, getReportPaperConfig } from '@/Pages/Scholarship/Reports/report-styles';
 
 // Custom Select Components
@@ -448,6 +468,7 @@ const selectedGrantProvision = ref(null);
 // Step 3
 const paperSize = ref('A4');
 const orientation = ref('landscape');
+const customReportTitle = ref('');
 const preparedByTitle = ref('');
 const signatoryName = ref('');
 const signatoryTitle = ref('');
@@ -561,6 +582,9 @@ const activeFiltersCount = computed(() => {
     if (selectedGrantProvision.value) count++;
     return count;
 });
+
+const defaultReportTitle = computed(() => getProfileReportTitle(selectedStatus.value, reportType.value));
+const resolvedReportTitle = computed(() => customReportTitle.value?.trim() || defaultReportTitle.value);
 
 const paperConfig = computed(() => getReportPaperConfig(paperSize.value, orientation.value));
 const iframeWidth = computed(() => paperConfig.value.widthPx);
@@ -686,6 +710,7 @@ async function generateReport() {
                 enableJpmHighlighting: enableJpmHighlighting.value,
                 jpmFilter: jpmFilter.value,
                 selectedStatus: selectedStatus.value,
+                reportTitle: customReportTitle.value?.trim() || '',
                 preparedBy: preparedBy.value?.trim() || '',
                 groupBy: groupBy.value,
                 groupBySecondary: groupBySecondary.value !== 'none' ? groupBySecondary.value : null,
@@ -704,7 +729,7 @@ async function generateReport() {
         const bodyHtml = renderVueTemplate(TemplateComponent, templateProps);
 
         // Build full document
-        const fullHtml = buildReportDoc(bodyHtml, getReportTitle(), paperConfig.value);
+        const fullHtml = buildReportDoc(bodyHtml, resolvedReportTitle.value, paperConfig.value);
 
         previewHtml.value = fullHtml;
         showPreview.value = true;
@@ -735,10 +760,7 @@ function buildFilterSummary() {
 }
 
 function getReportTitle() {
-    const statusChoice = statusChoices.value.find(s => s.value === selectedStatus.value);
-    const statusLabel = statusChoice?.label || 'All Statuses';
-    if (reportType.value === 'summary') return `Summary Report — ${statusLabel}`;
-    return `${statusLabel} — Detailed List`;
+    return resolvedReportTitle.value;
 }
 
 function buildReportDoc(bodyHtml, title, paperSettings) {
@@ -790,6 +812,7 @@ watch(groupBySecondary, v => { if (v === 'none' || v === groupByTertiary.value) 
 watch(() => props.show, v => {
     if (v) {
         step.value = 1;
+        customReportTitle.value = '';
         preparedBy.value = '';
         preparedByTitle.value = '';
         signatoryName.value = '';

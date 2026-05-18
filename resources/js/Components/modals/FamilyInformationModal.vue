@@ -33,6 +33,7 @@
 </template>
 
 <script setup>
+import IosModal from '@/Components/ui/IosModal.vue';
 import { ref, watch } from 'vue';
 import FamilyInformationFields from '@/Components/forms/fields/FamilyInformationFields.vue';
 import axios from 'axios';

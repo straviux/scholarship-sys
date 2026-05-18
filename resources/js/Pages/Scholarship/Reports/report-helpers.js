@@ -61,6 +61,30 @@ export function formatStatus(status) {
 	return map[status] || status || '—';
 }
 
+export function getProfileReportLabel(status) {
+	const map = {
+		null: 'SCHOLARSHIP PROFILES',
+		pending: 'PENDING APPLICANTS',
+		interviewed: 'INTERVIEWED APPLICANTS',
+		approved: 'APPROVED',
+		approved_history: 'APPROVED',
+		active: 'ACTIVE SCHOLARS',
+		denied: 'DENIED',
+		denied_history: 'DENIED',
+		completed: 'COMPLETED SCHOLARS',
+		withdrawn: 'WITHDRAWN SCHOLARS',
+		loa: 'LEAVE OF ABSENCE',
+		suspended: 'SUSPENDED SCHOLARS',
+	};
+
+	return map[status] || formatStatus(status)?.toUpperCase() || 'SCHOLARSHIP PROFILES';
+}
+
+export function getProfileReportTitle(status, reportType = 'list') {
+	const label = getProfileReportLabel(status);
+	return `${label} ${reportType === 'summary' ? 'SUMMARY REPORT' : 'REPORT'}`;
+}
+
 /**
  * Groups records by up to 3 levels
  * Returns: [{ key, label, records, subGroups }]

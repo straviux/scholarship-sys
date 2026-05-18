@@ -74,6 +74,7 @@
 </template>
 
 <script setup>
+import IosModal from '@/Components/ui/IosModal.vue';
 import { ref, watch } from 'vue';
 
 const props = defineProps({

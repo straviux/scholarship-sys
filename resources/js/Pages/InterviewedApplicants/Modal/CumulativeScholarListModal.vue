@@ -15,7 +15,7 @@
                 <div>
                     <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Cumulative List</div>
                     <div class="mt-1 text-sm text-slate-600">
-                        Review the names behind the cumulative count before generating any report.
+                        Review the names behind the calendar-year cumulative count before generating any report.
                     </div>
                 </div>
 
@@ -78,7 +78,7 @@
                     {{ formatBudgetAllocationSelectionMessage(selectedBudgetAllocation) }}
                 </template>
                 <template v-else-if="budgetAllocationOptions.length">
-                    Select a budget allocation to inspect the cumulative scholar list.
+                    Select a budget allocation to inspect the calendar-year cumulative scholar list.
                 </template>
                 <template v-else>
                     No budget allocation is available for monitoring.
@@ -93,13 +93,13 @@
                         <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Cumulative Scholar Names</div>
                         <div class="mt-1 text-sm text-slate-600">
                             <template v-if="showCumulativeScholarMissingDetails">
-                                Detailed rows are unavailable on this allocation snapshot.
+                                Detailed rows are unavailable on this calendar-year snapshot.
                             </template>
                             <template v-else-if="selectedBudgetAllocation">
                                 Showing {{ filteredCumulativeScholars.length.toLocaleString() }} of {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's' : '' }}.
                             </template>
                             <template v-else>
-                                Select a budget allocation to load the names.
+                                Select a budget allocation to load the names for its calendar year.
                             </template>
                         </div>
                     </div>
@@ -112,7 +112,7 @@
 
             <div class="max-h-96 overflow-y-auto bg-slate-50/70">
                 <div v-if="showCumulativeScholarMissingDetails" class="px-4 py-10 text-center text-xs text-slate-500">
-                    Detailed scholar rows are unavailable on this allocation snapshot. Refresh the page and re-open this modal to load the latest cumulative list.
+                    Detailed scholar rows are unavailable on this calendar-year snapshot. Refresh the page and re-open this modal to load the latest cumulative list.
                 </div>
 
                 <div v-else-if="filteredCumulativeScholars.length" class="divide-y divide-slate-200">
@@ -140,7 +140,7 @@
                         No scholars match the current search.
                     </template>
                     <template v-else-if="selectedBudgetAllocation">
-                        No approved scholars currently match this allocation.
+                        No approved scholars are currently counted for this calendar year.
                     </template>
                     <template v-else>
                         Select a budget allocation to view the cumulative scholar names.
@@ -225,12 +225,40 @@ function formatBudgetAllocationDescription(allocation) {
     ].filter(Boolean).join(' - ');
 }
 
+function getBudgetAllocationCalendarYear(allocation) {
+    const candidates = [
+        allocation?.calendar_year,
+        allocation?.fiscal_year,
+        allocation?.date_start,
+        allocation?.date_end,
+    ];
+
+    for (const candidate of candidates) {
+        if (candidate === null || candidate === undefined || candidate === '') {
+            continue;
+        }
+
+        const match = String(candidate).match(/\b(\d{4})\b/);
+
+        if (match) {
+            return match[1];
+        }
+    }
+
+    return null;
+}
+
 function formatBudgetAllocationSelectionMessage(allocation) {
     const label = formatBudgetAllocationLabel(allocation);
     const description = formatBudgetAllocationDescription(allocation);
+    const calendarYear = getBudgetAllocationCalendarYear(allocation);
+    const details = [
+        description && description !== label ? description : null,
+        calendarYear ? `Calendar year ${calendarYear}` : null,
+    ].filter(Boolean);
 
-    if (description && description !== label) {
-        return `Monitoring ${label} · ${description}.`;
+    if (details.length) {
+        return `Monitoring ${label} · ${details.join(' · ')}.`;
     }
 
     return `Monitoring ${label}.`;
