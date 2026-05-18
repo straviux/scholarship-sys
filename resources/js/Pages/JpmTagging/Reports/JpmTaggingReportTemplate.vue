@@ -58,9 +58,9 @@ const preparedByTitle = computed(() => props.options?.preparedByTitle || '');
 const signatoryName = computed(() => props.options?.signatoryName || '');
 const signatoryTitle = computed(() => props.options?.signatoryTitle || '');
 const reportTitle = computed(() => props.options?.reportTitle || 'JPM TAGGING REPORT');
+const requestDateLabel = computed(() => props.options?.requestDate || props.generatedAt?.split(' — ')[0] || props.generatedAt || '');
 const includeProfileRemarks = computed(() => props.options?.includeProfileRemarks !== false);
 const includeJpmRemarks = computed(() => props.options?.includeJpmRemarks !== false);
-const asOfLabel = computed(() => props.generatedAt?.split(' — ')[0] || props.generatedAt || '');
 const summaryItems = computed(() => [
     { label: 'Total', value: totals.value.total },
     { label: 'Tagged', value: totals.value.tagged },
@@ -175,7 +175,7 @@ function jpmStatus(profile) {
 
         <div style="text-align:center;padding:10pt 0 6pt;">
             <p style="font-weight:700;font-size:13pt;">{{ reportTitle }}</p>
-            <p style="font-size:9pt;margin-top:3pt;">As of {{ asOfLabel }}</p>
+            <p style="font-size:9pt;margin-top:3pt;">As of {{ requestDateLabel }}</p>
         </div>
 
         <div v-if="sortedProfiles.length === 0"

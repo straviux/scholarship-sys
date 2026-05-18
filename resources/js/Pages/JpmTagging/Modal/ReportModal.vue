@@ -25,12 +25,17 @@
             <div class="space-y-3 rounded-3xl border border-slate-200 px-4 py-4">
                 <div>
                     <div class="text-sm font-semibold text-slate-700">Header</div>
-                    <div class="text-xs text-slate-500">Customize the report title shown at the top of the printed
-                        report.</div>
+                    <div class="text-xs text-slate-500">Customize the report title and request date shown at the top
+                        of the printed report.</div>
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-medium text-slate-700">Report Title</label>
                     <InputText v-model="reportTitle" class="w-full" />
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-700">Request Date</label>
+                    <DatePicker v-model="requestDate" showButtonBar dateFormat="M dd, yy" showIcon
+                        iconDisplay="input" class="w-full" />
                 </div>
             </div>
 
@@ -169,6 +174,7 @@ const preparedByTitle = ref('');
 const signatoryName = ref('');
 const signatoryTitle = ref('');
 const reportTitle = ref('JPM TAGGING REPORT');
+const requestDate = ref(new Date());
 const includeProfileRemarks = ref(true);
 const includeJpmRemarks = ref(true);
 
@@ -222,6 +228,7 @@ async function generateReport() {
             generatedAt: moment().format('MMMM DD, YYYY — h:mm A'),
             options: {
                 reportTitle: reportTitle.value?.trim() || 'JPM TAGGING REPORT',
+                requestDate: requestDate.value ? moment(requestDate.value).format('MMMM DD, YYYY') : '',
                 includeProfileRemarks: includeProfileRemarks.value,
                 includeJpmRemarks: includeJpmRemarks.value,
                 preparedBy: preparedBy.value?.trim() || '',

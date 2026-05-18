@@ -50,6 +50,17 @@
 
                             <div class="ios-row">
                                 <div class="ios-row-label">
+                                    <AppIcon name="calendar" :size="13" style="color: #0EA5E9;" />
+                                    Request Date
+                                </div>
+                                <div class="ios-row-control">
+                                    <DatePicker v-model="form.request_date" class="ios-select" showButtonBar showIcon
+                                        iconDisplay="input" dateFormat="M dd, yy" placeholder="Select request date" />
+                                </div>
+                            </div>
+
+                            <div class="ios-row">
+                                <div class="ios-row-label">
                                     <AppIcon name="bookmark-fill" :size="13" style="color: #007AFF;" />
                                     Program
                                 </div>
@@ -100,6 +111,17 @@
                                 </div>
                             </div>
 
+                            <div class="ios-row">
+                                <div class="ios-row-label">
+                                    <AppIcon name="user-check" :size="13" style="color: #F59E0B;" />
+                                    Include Endorsed By
+                                </div>
+                                <div class="ios-row-control flex items-center justify-end gap-3">
+                                    <span class="text-xs text-slate-500">Show applicant endorsed-by column in print</span>
+                                    <ToggleSwitch v-model="form.include_endorsed_by" />
+                                </div>
+                            </div>
+
                             <div class="ios-row ios-row-last">
                                 <div class="ios-row-label">
                                     <AppIcon name="panel-right-open" :size="13" style="color: #34C759;" />
@@ -123,7 +145,7 @@
                                     {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's are' : ' is' }} included in the cumulative count.
                                 </div>
                                 <div class="mt-1">
-                                    This list follows the selected allocation's calendar year, regardless of program coverage or allocation window.
+                                    {{ cumulativeScopeDescription }}
                                 </div>
                             </div>
 
@@ -134,7 +156,7 @@
                             />
 
                             <div v-if="showCumulativeScholarMissingDetails" class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">
-                                Detailed scholar rows are unavailable on this saved allocation. Re-select a current allocation to refresh the calendar-year cumulative list.
+                                Detailed scholar rows are unavailable on this saved allocation. Re-select a current allocation to refresh the calendar-year-and-program cumulative list.
                             </div>
 
                             <div v-else-if="filteredCumulativeScholars.length" class="max-h-72 space-y-2 overflow-y-auto pr-1">
@@ -157,7 +179,7 @@
                                     No scholars match the current search.
                                 </template>
                                 <template v-else>
-                                    No approved scholars are currently counted for this calendar year.
+                                    {{ emptyCumulativeScholarMessage }}
                                 </template>
                             </div>
                         </div>
@@ -286,8 +308,10 @@ const emit = defineEmits(['update:show', 'submit']);
 
 const form = ref({
     report_title: 'RECOMMENDATION LIST FOR APPROVAL',
+    request_date: null,
     budget_program: null,
     highlight_jpm_members: false,
+    include_endorsed_by: false,
     prepared_by: '',
     prepared_by_position: DEFAULT_PREPARED_BY_POSITION,
     prepared_by_office: DEFAULT_PREPARED_BY_OFFICE,
@@ -403,9 +427,58 @@ function buildBudgetAllocationPayload(allocation) {
         return null;
     }
 
-    const { approved_scholars, ...payload } = allocation;
+    return {
+        key: allocation.key ?? null,
+        particular_id: allocation.particular_id ?? null,
+        particular_name: allocation.particular_name ?? null,
+        description: allocation.description ?? null,
+        program_id: allocation.program_id ?? null,
+        program: allocation.program ?? null,
+        programs: Array.isArray(allocation.programs) ? allocation.programs : [],
+        program_ids: Array.isArray(allocation.program_ids) ? allocation.program_ids : [],
+        calendar_year: allocation.calendar_year ?? null,
+        rc_code: allocation.rc_code ?? null,
+        rc_name: allocation.rc_name ?? null,
+        fiscal_year: allocation.fiscal_year ?? null,
+        total_allotment: allocation.total_allotment ?? null,
+        disbursed: allocation.disbursed ?? null,
+        remaining: allocation.remaining ?? null,
+        date_start: allocation.date_start ?? null,
+        date_end: allocation.date_end ?? null,
+        approved_scholars_to_date: allocation.approved_scholars_to_date ?? null,
+        approved_scholars: Array.isArray(allocation.approved_scholars)
+            ? allocation.approved_scholars.map((scholar) => ({
+                profile_id: normalizeNullableInteger(scholar?.profile_id),
+                program_id: normalizeNullableInteger(scholar?.program_id),
+                name: normalizeNullableString(scholar?.name),
+                program: normalizeNullableString(scholar?.program),
+                program_name: normalizeNullableString(scholar?.program_name),
+                program_shortname: normalizeNullableString(scholar?.program_shortname),
+                date_approved: normalizeNullableString(scholar?.date_approved),
+                status: normalizeNullableString(scholar?.status),
+            }))
+            : [],
+    };
+}
 
-    return payload;
+function normalizeNullableInteger(value) {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    const normalizedValue = Number.parseInt(String(value), 10);
+
+    return Number.isNaN(normalizedValue) ? null : normalizedValue;
+}
+
+function normalizeNullableString(value) {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    const normalizedValue = String(value).trim();
+
+    return normalizedValue || null;
 }
 
 function sameBudgetAllocation(left, right) {
@@ -456,7 +529,26 @@ const budgetAllocationOptions = computed(() => {
 
 const requiresBudgetAllocationSelection = computed(() => budgetAllocationOptions.value.length > 0);
 const isSubmitDisabled = computed(() => props.selectedCount === 0);
-const selectedBudgetAllocationApprovedCount = computed(() => Number(selectedBudgetAllocation.value?.approved_scholars_to_date ?? 0) || 0);
+const selectedBudgetProgramId = computed(() => {
+    const value = form.value.budget_program;
+
+    return typeof value === 'object' && value !== null
+        ? value.id ?? null
+        : null;
+});
+const selectedBudgetProgramLabel = computed(() => {
+    const value = form.value.budget_program;
+
+    if (!value) {
+        return '';
+    }
+
+    if (typeof value === 'object') {
+        return String(value.shortname || value.name || '').trim();
+    }
+
+    return String(value).trim();
+});
 const hasCumulativeScholarDetails = computed(() => Array.isArray(selectedBudgetAllocation.value?.approved_scholars));
 const cumulativeScholars = computed(() => {
     const scholars = hasCumulativeScholarDetails.value
@@ -467,17 +559,54 @@ const cumulativeScholars = computed(() => {
         sensitivity: 'base',
     }));
 });
-const filteredCumulativeScholars = computed(() => {
-    const searchTerm = cumulativeScholarSearchQuery.value.trim().toLowerCase();
 
-    if (!searchTerm) {
-        return cumulativeScholars.value;
+function scholarMatchesSelectedBudgetProgram(scholar) {
+    const selectedProgramId = selectedBudgetProgramId.value;
+    const selectedProgramLabel = selectedBudgetProgramLabel.value.trim().toLowerCase();
+
+    if (!selectedProgramId && !selectedProgramLabel) {
+        return true;
     }
 
-    return cumulativeScholars.value.filter(scholar => {
+    if (selectedProgramId && String(scholar?.program_id ?? '') === String(selectedProgramId)) {
+        return true;
+    }
+
+    if (!selectedProgramLabel) {
+        return false;
+    }
+
+    return [
+        scholar?.program,
+        scholar?.program_name,
+        scholar?.program_shortname,
+    ]
+        .filter(Boolean)
+        .some((programValue) => String(programValue).trim().toLowerCase() === selectedProgramLabel);
+}
+
+const scopedCumulativeScholars = computed(() => cumulativeScholars.value.filter(scholarMatchesSelectedBudgetProgram));
+const selectedBudgetAllocationApprovedCount = computed(() => {
+    if (hasCumulativeScholarDetails.value) {
+        return scopedCumulativeScholars.value.length;
+    }
+
+    return Number(selectedBudgetAllocation.value?.approved_scholars_to_date ?? 0) || 0;
+});
+const filteredCumulativeScholars = computed(() => {
+    const searchTerm = cumulativeScholarSearchQuery.value.trim().toLowerCase();
+    const scholars = scopedCumulativeScholars.value;
+
+    if (!searchTerm) {
+        return scholars;
+    }
+
+    return scholars.filter(scholar => {
         const haystack = [
             scholar?.name,
             scholar?.program,
+            scholar?.program_name,
+            scholar?.program_shortname,
             scholar?.date_approved,
             formatScholarStatus(scholar?.status),
         ]
@@ -490,6 +619,42 @@ const filteredCumulativeScholars = computed(() => {
 });
 const showCumulativeScholarMissingDetails = computed(() => {
     return selectedBudgetAllocationApprovedCount.value > 0 && !hasCumulativeScholarDetails.value;
+});
+const cumulativeScopeDescription = computed(() => {
+    const calendarYear = getBudgetAllocationCalendarYear(selectedBudgetAllocation.value);
+    const programLabel = selectedBudgetProgramLabel.value;
+
+    if (calendarYear && programLabel) {
+        return `This list follows calendar year ${calendarYear} for ${programLabel}.`;
+    }
+
+    if (calendarYear) {
+        return `This list follows calendar year ${calendarYear} for the selected allocation program coverage.`;
+    }
+
+    if (programLabel) {
+        return `This list follows the selected program (${programLabel}).`;
+    }
+
+    return 'This list follows the selected allocation program coverage.';
+});
+const emptyCumulativeScholarMessage = computed(() => {
+    const calendarYear = getBudgetAllocationCalendarYear(selectedBudgetAllocation.value);
+    const programLabel = selectedBudgetProgramLabel.value;
+
+    if (calendarYear && programLabel) {
+        return `No approved scholars are currently counted for calendar year ${calendarYear} under ${programLabel}.`;
+    }
+
+    if (calendarYear) {
+        return 'No approved scholars are currently counted for this calendar year and allocation program coverage.';
+    }
+
+    if (programLabel) {
+        return `No approved scholars are currently counted for ${programLabel}.`;
+    }
+
+    return 'No approved scholars are currently counted for this allocation.';
 });
 const budgetFooterMessage = computed(() => {
     if (showBudgetError.value) {
@@ -527,8 +692,10 @@ function resetForm() {
 
     form.value = {
         report_title: initialData?.report_title ?? 'RECOMMENDATION LIST FOR APPROVAL',
+        request_date: parseRequestDate(initialData?.request_date ?? initialData?.created_at) ?? new Date(),
         budget_program: initialData?.budget_program ?? initialData?.budget_allocation?.program ?? null,
         highlight_jpm_members: Boolean(initialData?.highlight_jpm_members),
+        include_endorsed_by: Boolean(initialData?.include_endorsed_by),
         prepared_by: initialData?.prepared_by ?? (props.defaultPreparedBy?.trim() || DEFAULT_PREPARED_BY),
         prepared_by_position: initialData?.prepared_by_position ?? DEFAULT_PREPARED_BY_POSITION,
         prepared_by_office: initialData?.prepared_by_office ?? DEFAULT_PREPARED_BY_OFFICE,
@@ -568,10 +735,12 @@ function submitForm() {
 
     emit('submit', {
         report_title: form.value.report_title,
+        request_date: formatRequestDateForPayload(form.value.request_date),
         paper_size: 'A4',
         orientation: 'landscape',
         budget_program: normalizeBudgetProgram(form.value.budget_program),
         highlight_jpm_members: form.value.highlight_jpm_members,
+        include_endorsed_by: form.value.include_endorsed_by,
         prepared_by: form.value.prepared_by,
         prepared_by_position: form.value.prepared_by_position,
         prepared_by_office: form.value.prepared_by_office,
@@ -607,6 +776,35 @@ function formatDate(value) {
     }
 
     return shortDateFormatter.format(date);
+}
+
+function parseRequestDate(value) {
+    if (!value) {
+        return null;
+    }
+
+    if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? null : value;
+    }
+
+    const normalizedValue = String(value).trim().slice(0, 10);
+    const date = new Date(`${normalizedValue}T00:00:00`);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatRequestDateForPayload(value) {
+    const date = parseRequestDate(value);
+
+    if (!date) {
+        return null;
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
 }
 
 function formatScholarStatus(status) {

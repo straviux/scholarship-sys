@@ -24,11 +24,17 @@ const hiddenColumns = computed(() => ({
     year_level: !!props.filters?.['Year Level'],
 }));
 
-const projectedColumns = computed(() => [
-    { key: 'projected_term_count', label: 'Terms', width: '4%' },
-    ...(includeProjectedExpense.value ? [{ key: 'projected_total_expense', label: 'Expense', width: '8%' }] : []),
-    { key: 'projected_completion_year', label: 'Completion', width: '6%' },
-]);
+const projectedColumns = computed(() => {
+    if (!includeProjectedExpense.value) {
+        return [];
+    }
+
+    return [
+        { key: 'projected_term_count', label: 'Terms', width: '4%' },
+        { key: 'projected_total_expense', label: 'Expense', width: '8%' },
+        { key: 'projected_completion_year', label: 'Completion', width: '6%' },
+    ];
+});
 
 const singleColumns = computed(() => {
     const columns = [];
@@ -272,7 +278,7 @@ function cellValue(record, column) {
                 <th v-for="column in singleColumns" :key="`top-${column.key}`" :style="TH" rowspan="2">
                     {{ column.label }}
                 </th>
-                <th :style="TH" :colspan="projectedColumns.length">Projected</th>
+                <th v-if="projectedColumns.length" :style="TH" :colspan="projectedColumns.length">Projected</th>
                 <th :style="TH" :colspan="detailConfig.columns.length">{{ detailConfig.label }}</th>
             </tr>
             <tr>

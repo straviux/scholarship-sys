@@ -12,6 +12,7 @@
         :budget-program="budgetProgram"
         :budget-allocation="budgetAllocation"
         :highlight-jpm-members="highlightJpmMembers"
+        :include-endorsed-by="includeEndorsedBy"
         :report-title="resolvedReportTitle"
         :include-interview-columns="false" />
 </template>
@@ -59,6 +60,10 @@ const props = defineProps({
         default: null,
     },
     highlightJpmMembers: {
+        type: Boolean,
+        default: false,
+    },
+    includeEndorsedBy: {
         type: Boolean,
         default: false,
     },

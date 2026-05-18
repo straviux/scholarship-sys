@@ -119,9 +119,14 @@ export function printRecommendationList({ recommendationList = null } = {}) {
     }
 
     const normalizedRecords = normalizeRecords(recommendationList?.records || []);
+    const requestDateLabel = recommendationList?.request_date
+        ? moment(recommendationList.request_date).format('MMMM D, YYYY')
+        : recommendationList?.created_at
+            ? moment(recommendationList.created_at).format('MMMM D, YYYY')
+            : moment().format('MMMM D, YYYY');
     const bodyHtml = renderVueTemplate(RecommendationListTemplate, {
         records: normalizedRecords,
-        today: moment().format('MMMM D, YYYY'),
+        today: requestDateLabel,
         preparedBy: recommendationList?.prepared_by || DEFAULT_PREPARED_BY,
         preparedByPosition: recommendationList?.prepared_by_position || DEFAULT_PREPARED_BY_POSITION,
         preparedByOffice: recommendationList?.prepared_by_office || DEFAULT_PREPARED_BY_OFFICE,
@@ -130,6 +135,7 @@ export function printRecommendationList({ recommendationList = null } = {}) {
         budgetProgram: recommendationList?.budget_program || '',
         budgetAllocation: recommendationList?.budget_allocation || null,
         highlightJpmMembers: Boolean(recommendationList?.highlight_jpm_members),
+        includeEndorsedBy: Boolean(recommendationList?.include_endorsed_by),
         reportTitle: recommendationList?.report_title || 'RECOMMENDATION LIST FOR APPROVAL',
     });
 

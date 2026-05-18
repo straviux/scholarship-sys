@@ -52,7 +52,8 @@
                             <col style="width:4.5%;" />
                             <col v-if="includeInterviewColumns" style="width:7%;" />
                             <col v-if="includeInterviewColumns" style="width:5.5%;" />
-                            <col style="width:auto;" />
+                            <col v-if="includeEndorsedBy" style="width:7%;" />
+                            <col :style="includeInterviewColumns ? 'width:auto;' : 'width:12%;'" />
                         </colgroup>
                         <thead>
                             <tr>
@@ -68,7 +69,8 @@
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Grant</th>
                                 <th :style="TH" colspan="3">Projected</th>
                                 <th v-if="includeInterviewColumns" :style="TH" colspan="2">Interview</th>
-                                <th :style="TH + 'vertical-align:middle;width:100%;'" rowspan="2">Remarks</th>
+                                <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed By</th>
+                                <th :style="TH + 'vertical-align:middle;'" rowspan="2">Remarks</th>
                             </tr>
                             <tr>
                                 <th :style="TH">Terms</th>
@@ -105,7 +107,8 @@
                                     fmtDate(record.interviewed_at) }}</td>
                                 <td v-if="includeInterviewColumns" :style="TD + 'text-align:center;text-transform:uppercase;'">{{
                                     record.interviewer?.name || '—' }}</td>
-                                <td :style="TD + 'width:100%;'"></td>
+                                <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{ record.endorsed_by || '—' }}</td>
+                                <td :style="TD"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -129,7 +132,8 @@
                         <col style="width:5.5%;" />
                         <col v-if="includeInterviewColumns" style="width:8%;" />
                         <col v-if="includeInterviewColumns" style="width:8.5%;" />
-                        <col style="width:auto;" />
+                        <col v-if="includeEndorsedBy" style="width:7%;" />
+                        <col :style="includeInterviewColumns ? 'width:auto;' : 'width:12%;'" />
                     </colgroup>
                     <thead>
                         <tr>
@@ -143,7 +147,8 @@
                             <th :style="TH + 'vertical-align:middle;'" rowspan="2">Grant</th>
                             <th :style="TH" colspan="3">Projected</th>
                             <th v-if="includeInterviewColumns" :style="TH" colspan="2">Interview</th>
-                            <th :style="TH + 'vertical-align:middle;width:100%;'" rowspan="2">Remarks</th>
+                            <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed By</th>
+                            <th :style="TH + 'vertical-align:middle;'" rowspan="2">Remarks</th>
                         </tr>
                         <tr>
                             <th :style="TH">Terms</th>
@@ -184,7 +189,8 @@
                             }}</td>
                             <td v-if="includeInterviewColumns" :style="TD + 'text-align:center;text-transform:uppercase;'">{{ record.interviewer?.name
                                 || '—' }}</td>
-                            <td :style="TD + 'width:100%;'"></td>
+                            <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{ record.endorsed_by || '—' }}</td>
+                            <td :style="TD"></td>
                         </tr>
                     </tbody>
                 </table>
@@ -249,7 +255,7 @@
                         <tr>
                             <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;">Program</td>
                             <td colspan="3" style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;">
-                                {{ resolvedBudgetProgram }} · {{ budgetAllocation.rc_name || budgetAllocation.rc_code || 'N/A' }} · {{ budgetAllocation.fiscal_year ? `FY ${budgetAllocation.fiscal_year}` : 'FY N/A' }}
+                                {{ resolvedBudgetProgram }} · {{ budgetAllocation.rc_name || budgetAllocation.rc_code || 'N/A' }} · {{ budgetAllocation.fiscal_year ? `CY ${budgetAllocation.fiscal_year}` : 'CY N/A' }}
                             </td>
                         </tr>
                         <tr>
@@ -268,7 +274,7 @@
                             <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;">Total amount for this request</td>
                             <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono bold">{{ fmtCurrency(totalCurrentAcademicYearGrant) }}</td>
                             <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;text-indent:12pt;">
-                                Cumulative no. to date{{ approvedScholarsCalendarYearLabel ? ` (CY ${approvedScholarsCalendarYearLabel})` : '' }}
+                                Cumulative no. to date{{ approvedScholarsScopeSuffix }}
                             </td>
                             <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{ approvedScholarsToDate }}</td>
                         </tr>
@@ -355,6 +361,7 @@ const props = defineProps({
     budgetAllocation: { type: Object, default: null },
     reportTitle: { type: String, default: 'INTERVIEWED APPLICANTS REPORT' },
     includeInterviewColumns: { type: Boolean, default: true },
+    includeEndorsedBy: { type: Boolean, default: false },
     highlightJpmMembers: { type: Boolean, default: false },
 });
 
@@ -376,6 +383,14 @@ const resolvedPreparedByOffice = computed(() => props.preparedByOffice?.trim() |
 const resolvedApprovedBy = computed(() => props.approvedBy?.trim() || DEFAULT_APPROVED_BY);
 const resolvedApprovedByPosition = computed(() => props.approvedByPosition?.trim() || DEFAULT_APPROVED_BY_POSITION);
 const resolvedBudgetProgram = computed(() => props.budgetProgram?.trim() || props.budgetAllocation?.program || 'N/A');
+const explicitBudgetProgramLabel = computed(() => props.budgetProgram?.trim() || '');
+const budgetProgramFilterId = computed(() => {
+    const programId = props.budgetAllocation?.program_id;
+
+    return programId === null || programId === undefined || programId === ''
+        ? ''
+        : String(programId);
+});
 
 const REC_LABELS = {
     recommended: 'Recommended for Approval',
@@ -427,6 +442,31 @@ function applicantNameHighlightStyle(record) {
     }
 
     return 'display:inline-block;border:1px solid #16a34a;background:#ecfdf5;color:#166534;padding:1px 6px;border-radius:999px;font-weight:700;';
+}
+
+function scholarMatchesBudgetProgram(scholar) {
+    const programId = budgetProgramFilterId.value;
+    const programLabel = explicitBudgetProgramLabel.value.trim().toLowerCase();
+
+    if (!programId && !programLabel) {
+        return true;
+    }
+
+    if (programId && String(scholar?.program_id ?? '') === programId) {
+        return true;
+    }
+
+    if (!programLabel) {
+        return false;
+    }
+
+    return [
+        scholar?.program,
+        scholar?.program_name,
+        scholar?.program_shortname,
+    ]
+        .filter(Boolean)
+        .some((programValue) => String(programValue).trim().toLowerCase() === programLabel);
 }
 
 function fmtCurrency(value) {
@@ -632,7 +672,6 @@ const groupedData = computed(() => {
 });
 
 const totalScholars = computed(() => props.records.length);
-const approvedScholarsToDate = computed(() => Number(props.budgetAllocation?.approved_scholars_to_date ?? totalScholars.value) || 0);
 const approvedScholarsCalendarYearLabel = computed(() => {
     const candidates = [
         props.budgetAllocation?.calendar_year,
@@ -654,6 +693,44 @@ const approvedScholarsCalendarYearLabel = computed(() => {
     }
 
     return null;
+});
+const approvedScholarsScopedToProgram = computed(() => {
+    const scholars = Array.isArray(props.budgetAllocation?.approved_scholars)
+        ? props.budgetAllocation.approved_scholars
+        : [];
+
+    return scholars.filter(scholarMatchesBudgetProgram);
+});
+const approvedScholarsProgramScopeLabel = computed(() => {
+    if (explicitBudgetProgramLabel.value) {
+        return explicitBudgetProgramLabel.value;
+    }
+
+    if (props.budgetAllocation?.program_id) {
+        return props.budgetAllocation?.program || '';
+    }
+
+    return '';
+});
+const approvedScholarsScopeSuffix = computed(() => {
+    const parts = [];
+
+    if (approvedScholarsCalendarYearLabel.value) {
+        parts.push(`CY ${approvedScholarsCalendarYearLabel.value}`);
+    }
+
+    if (approvedScholarsProgramScopeLabel.value) {
+        parts.push(approvedScholarsProgramScopeLabel.value);
+    }
+
+    return parts.length ? ` (${parts.join(' · ')})` : '';
+});
+const approvedScholarsToDate = computed(() => {
+    if (approvedScholarsScopedToProgram.value.length) {
+        return approvedScholarsScopedToProgram.value.length;
+    }
+
+    return Number(props.budgetAllocation?.approved_scholars_to_date ?? totalScholars.value) || 0;
 });
 const totalCurrentAcademicYearGrant = computed(() => sumCurrentAcademicYearEstimatedGrant(props.records));
 const budgetAllocationRunningBalance = computed(() => {

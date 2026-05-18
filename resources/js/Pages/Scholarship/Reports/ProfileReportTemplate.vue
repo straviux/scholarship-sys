@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import moment from 'moment';
-import { formatName, getGroupValue, getProfileReportTitle, getReportStatus, groupRecords } from './report-helpers';
+import { formatName, formatStatus, getGroupValue, getProfileReportTitle, getReportStatus, groupRecords } from './report-helpers';
 import ProfileReportTable from './ProfileReportTable.vue';
 
 const props = defineProps({
@@ -152,6 +152,8 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                 style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:1.5pt solid #000;padding:8pt 4pt;min-height:56pt;text-align:center;">
                 <img src="/images/pgp-logo.svg" alt="PGP Logo"
                     style="position:absolute;left:4%;top:50%;transform:translateY(-50%);width:48pt;height:auto;" />
+                <img src="/images/yakap-logo.svg" alt="YAKAP Logo"
+                    style="position:absolute;right:4%;top:50%;transform:translateY(-50%);width:48pt;height:auto;" />
                 <p style="font-weight:700;font-size:11pt;">Republic of the Philippines</p>
                 <p style="font-weight:700;font-size:11pt;">Provincial Government of Palawan</p>
                 <p style="font-size:10pt;">Akbay sa Mag-aaral Yaman ng kinabukasan</p>

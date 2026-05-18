@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\RecommendationList;
 use App\Models\ScholarshipRecord;
 use App\Models\SystemOption;
+use DateTimeInterface;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,9 @@ class RecommendationListService
 
             $recommendationList->fill([
                 'report_title' => $this->cleanString($data['report_title'] ?? null) ?? 'RECOMMENDATION LIST FOR APPROVAL',
+                'request_date' => array_key_exists('request_date', $data)
+                    ? $this->normalizeDate($data['request_date'])
+                    : $recommendationList->request_date,
                 'paper_size' => $data['paper_size'] ?? $recommendationList->paper_size ?? 'A4',
                 'orientation' => $data['orientation'] ?? $recommendationList->orientation ?? 'landscape',
                 'budget_allocation_key' => $budgetAllocation['key'] ?? null,
@@ -34,6 +38,7 @@ class RecommendationListService
                 'budget_rc_name' => $budgetAllocation['rc_name'] ?? null,
                 'budget_allocation' => $budgetAllocation,
                 'highlight_jpm_members' => (bool) ($data['highlight_jpm_members'] ?? $recommendationList->highlight_jpm_members ?? false),
+                'include_endorsed_by' => (bool) ($data['include_endorsed_by'] ?? $recommendationList->include_endorsed_by ?? false),
                 'prepared_by' => $this->cleanString($data['prepared_by'] ?? null),
                 'prepared_by_position' => $this->cleanString($data['prepared_by_position'] ?? null),
                 'prepared_by_office' => $this->cleanString($data['prepared_by_office'] ?? null),
@@ -82,6 +87,7 @@ class RecommendationListService
                     $recommendationList = RecommendationList::create([
                         'list_number' => $this->generateListNumber(),
                         'report_title' => $this->cleanString($data['report_title'] ?? null) ?? 'RECOMMENDATION LIST FOR APPROVAL',
+                        'request_date' => $this->normalizeDate($data['request_date'] ?? null),
                         'recommendation_status' => 'recommended',
                         'paper_size' => $data['paper_size'] ?? 'A4',
                         'orientation' => $data['orientation'] ?? 'landscape',
@@ -97,6 +103,7 @@ class RecommendationListService
                         'budget_rc_name' => $budgetAllocation['rc_name'] ?? null,
                         'budget_allocation' => $budgetAllocation,
                         'highlight_jpm_members' => (bool) ($data['highlight_jpm_members'] ?? false),
+                        'include_endorsed_by' => (bool) ($data['include_endorsed_by'] ?? false),
                         'prepared_by' => $this->cleanString($data['prepared_by'] ?? null),
                         'prepared_by_position' => $this->cleanString($data['prepared_by_position'] ?? null),
                         'prepared_by_office' => $this->cleanString($data['prepared_by_office'] ?? null),
@@ -311,6 +318,8 @@ class RecommendationListService
             return null;
         }
 
+        $approvedScholars = $this->normalizeApprovedScholars($budgetAllocation['approved_scholars'] ?? []);
+
         return [
             'key' => $this->cleanString($budgetAllocation['key'] ?? null),
             'particular_id' => isset($budgetAllocation['particular_id']) && $budgetAllocation['particular_id'] !== ''
@@ -322,6 +331,11 @@ class RecommendationListService
                 ? (int) $budgetAllocation['program_id']
                 : null,
             'program' => $this->cleanString($budgetAllocation['program'] ?? null),
+            'programs' => $this->normalizeStringArray($budgetAllocation['programs'] ?? []),
+            'program_ids' => $this->normalizeIntegerArray($budgetAllocation['program_ids'] ?? []),
+            'calendar_year' => isset($budgetAllocation['calendar_year']) && $budgetAllocation['calendar_year'] !== ''
+                ? (int) $budgetAllocation['calendar_year']
+                : null,
             'rc_code' => $this->cleanString($budgetAllocation['rc_code'] ?? null),
             'rc_name' => $this->cleanString($budgetAllocation['rc_name'] ?? null),
             'fiscal_year' => isset($budgetAllocation['fiscal_year']) && $budgetAllocation['fiscal_year'] !== ''
@@ -334,8 +348,73 @@ class RecommendationListService
             'date_end' => $this->cleanString($budgetAllocation['date_end'] ?? null),
             'approved_scholars_to_date' => isset($budgetAllocation['approved_scholars_to_date'])
                 ? (int) $budgetAllocation['approved_scholars_to_date']
-                : null,
+                : count($approvedScholars),
+            'approved_scholars' => $approvedScholars,
         ];
+    }
+
+    private function normalizeApprovedScholars(mixed $scholars): array
+    {
+        if (! is_array($scholars)) {
+            return [];
+        }
+
+        return collect($scholars)
+            ->map(function ($scholar) {
+                if (! is_array($scholar)) {
+                    return null;
+                }
+
+                return [
+                    'profile_id' => is_numeric($scholar['profile_id'] ?? null)
+                        ? (int) $scholar['profile_id']
+                        : null,
+                    'program_id' => is_numeric($scholar['program_id'] ?? null)
+                        ? (int) $scholar['program_id']
+                        : null,
+                    'name' => $this->cleanString($scholar['name'] ?? null),
+                    'program' => $this->cleanString($scholar['program'] ?? null),
+                    'program_name' => $this->cleanString($scholar['program_name'] ?? null),
+                    'program_shortname' => $this->cleanString($scholar['program_shortname'] ?? null),
+                    'date_approved' => $this->normalizeDate($scholar['date_approved'] ?? null),
+                    'status' => $this->cleanString($scholar['status'] ?? null),
+                ];
+            })
+            ->filter(fn($scholar) => is_array($scholar) && ($scholar['profile_id'] !== null || $scholar['name'] !== null))
+            ->values()
+            ->all();
+    }
+
+    private function normalizeIntegerArray(mixed $values): array
+    {
+        if (! is_array($values)) {
+            return [];
+        }
+
+        return collect($values)
+            ->map(function ($value) {
+                if ($value === null || $value === '') {
+                    return null;
+                }
+
+                return (int) $value;
+            })
+            ->filter(fn($value) => $value !== null)
+            ->values()
+            ->all();
+    }
+
+    private function normalizeStringArray(mixed $values): array
+    {
+        if (! is_array($values)) {
+            return [];
+        }
+
+        return collect($values)
+            ->map(fn($value) => $this->cleanString(is_string($value) ? $value : (is_numeric($value) ? (string) $value : null)))
+            ->filter()
+            ->values()
+            ->all();
     }
 
     private function normalizeDecimal(mixed $value): ?float
@@ -356,6 +435,25 @@ class RecommendationListService
         $trimmedValue = trim($value);
 
         return $trimmedValue === '' ? null : $trimmedValue;
+    }
+
+    private function normalizeDate(mixed $value): ?string
+    {
+        if ($value instanceof DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $timestamp = strtotime((string) $value);
+
+        if ($timestamp === false) {
+            return null;
+        }
+
+        return date('Y-m-d', $timestamp);
     }
 
     private function generateListNumber(): string

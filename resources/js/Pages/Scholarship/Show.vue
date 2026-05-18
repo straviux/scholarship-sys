@@ -876,14 +876,20 @@
         <IosModal v-model:visible="showLedgerModal" title="Generate Scholar Ledger" width="1360px"
             max-width="calc(100vw - 24px)">
             <template #header-right>
-                <div class="flex items-center gap-2 pr-2">
-                    <AppButton v-if="hasPermission('scholarships.edit')" label="Save" text :loading="ledgerSaving"
-                        @click="saveLedger" />
-                    <AppButton label="Generate" text :disabled="ledgerSaving" @click="generateLedger" />
+                <div class="ios-nav-actions">
+                    <button v-if="hasPermission('scholarships.edit')" class="ios-nav-btn ios-nav-cancel ios-nav-btn--inline"
+                        type="button" :disabled="ledgerSaving" @click.stop="saveLedger">
+                        <AppIcon v-if="ledgerSaving" name="spinner" :size="14" class="animate-spin" />
+                        <span v-else>Save</span>
+                    </button>
+                    <button class="ios-nav-btn ios-nav-action ios-nav-btn--inline" type="button"
+                        :disabled="ledgerSaving" @click.stop="generateLedger">
+                        <span>Generate</span>
+                    </button>
                 </div>
             </template>
                         <div class="ios-section">
-                            <div class="ios-section-footer">Year levels are fixed, including PGI and Review. Encode
+                            <div class="ios-section-footer">Year levels are fixed, including 6th Year, PGI, and Review. Encode
                                 the academic year, term, date obligated, OBR no., type of payment, amount, and ROS.
                                 Use Add Term at the bottom of each year level for trimester or extra rows.</div>
                             <div class="ios-section-footer italic">Rows without encoded details are skipped when
@@ -1143,7 +1149,7 @@ const ledgerRosOptions = [
     { label: '12M', value: '12' },
 ];
 
-const LEDGER_YEAR_LEVELS = ['1ST YEAR', '2ND YEAR', '3RD YEAR', '4TH YEAR', '5TH YEAR', 'PGI', 'REVIEW'];
+const LEDGER_YEAR_LEVELS = ['1ST YEAR', '2ND YEAR', '3RD YEAR', '4TH YEAR', '5TH YEAR', '6TH YEAR', 'PGI', 'REVIEW'];
 const LEDGER_STANDARD_TERMS = ['1ST SEMESTER', '2ND SEMESTER'];
 const NUMERIC_YEAR_RE = /^(1ST|2ND|3RD|4TH|5TH|6TH|7TH|8TH)(\s+YEAR)?$/i;
 const formatYearLevel = (yl) => {

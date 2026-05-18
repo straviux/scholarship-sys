@@ -344,7 +344,7 @@ const licensureExaminationResult = computed(() =>
     props.licensureExaminationResult ?? ''
 );
 
-const YEAR_ORDER = ['1ST YEAR', '2ND YEAR', '3RD YEAR', '4TH YEAR', '5TH YEAR', 'PGI', 'REVIEW'];
+const YEAR_ORDER = ['1ST YEAR', '2ND YEAR', '3RD YEAR', '4TH YEAR', '5TH YEAR', '6TH YEAR', 'PGI', 'REVIEW'];
 
 const normalizedLedgerEntries = computed(() => {
     return (props.ledgerEntries || [])

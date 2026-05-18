@@ -14,6 +14,7 @@ class RecommendationList extends Model
     protected $fillable = [
         'list_number',
         'report_title',
+        'request_date',
         'recommendation_status',
         'paper_size',
         'orientation',
@@ -28,6 +29,7 @@ class RecommendationList extends Model
         'budget_rc_name',
         'budget_allocation',
         'highlight_jpm_members',
+        'include_endorsed_by',
         'prepared_by',
         'prepared_by_position',
         'prepared_by_office',
@@ -39,12 +41,14 @@ class RecommendationList extends Model
     ];
 
     protected $casts = [
+        'request_date' => 'date',
         'record_count' => 'integer',
         'total_projected_expense' => 'decimal:2',
         'selected_record_ids' => 'array',
         'records_snapshot' => 'array',
         'budget_allocation' => 'array',
         'highlight_jpm_members' => 'boolean',
+        'include_endorsed_by' => 'boolean',
         'budget_fiscal_year' => 'integer',
         'approved_at' => 'datetime',
         'created_at' => 'datetime',
