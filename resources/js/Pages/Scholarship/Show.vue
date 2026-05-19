@@ -68,7 +68,7 @@
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Date of
                                             Birth</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ formatDate(profile.date_of_birth)
-                                            }}</p>
+                                        }}</p>
                                     </div>
 
                                     <div>
@@ -100,14 +100,14 @@
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Place of
                                             Birth</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ profile.place_of_birth || 'N/A'
-                                            }}</p>
+                                        }}</p>
                                     </div>
 
                                     <div>
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Indigenous
                                             Group</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ profile.indigenous_group || 'N/A'
-                                            }}</p>
+                                        }}</p>
                                     </div>
                                 </div>
 
@@ -456,7 +456,8 @@
                                                                 {{
                                                                     formatDateShort(slotProps.data.date_approved)
                                                                 }}</p>
-                                                            <p v-if="getTechVocStartDate(slotProps.data)" class="text-sm">
+                                                            <p v-if="getTechVocStartDate(slotProps.data)"
+                                                                class="text-sm">
                                                                 <span class="font-medium">Start:</span>
                                                                 {{ getTechVocStartDate(slotProps.data) }}
                                                             </p>
@@ -575,7 +576,7 @@
                                                         class="text-blue-600 dark:text-blue-400"></i>
                                                     <span class="font-medium">{{
                                                         slotProps.data.attachment_name
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -674,7 +675,7 @@
                                                         <h5 class="font-semibold text-gray-900 dark:text-gray-100">
                                                             Status: <span class="text-blue-600 dark:text-blue-400">{{
                                                                 timeline.new_status
-                                                            }}</span>
+                                                                }}</span>
                                                         </h5>
                                                         <p class="text-sm text-gray-600 dark:text-gray-400">
                                                             {{
@@ -842,8 +843,8 @@
         <!-- Family Information Modal -->
         <FamilyInformationModal v-model:visible="showFamilyInfoModal" :profile="profile" @success="handleSuccess" />
 
-        <ScholarFormModal v-model:visible="showLegacyScholarEditModal" :profile="legacyScholarEditProfile"
-            mode="edit" @success="handleModalSuccess" />
+        <ScholarFormModal v-model:visible="showLegacyScholarEditModal" :profile="legacyScholarEditProfile" mode="edit"
+            @success="handleModalSuccess" />
 
         <!-- Manage Attachments Modal -->
         <ManageAttachmentsModal v-model:visible="showAttachmentsModal" :record="selectedRecord"
@@ -859,8 +860,8 @@
             :enrollment="editingEnrollment" :profile-id="profile.profile_id" @success="handleModalSuccess" />
 
         <AcademicEnrollmentTermModal v-model:visible="showTermModal" :mode="termModalMode" :term="editingTerm"
-            :enrollment-id="activeEnrollmentForTerm?.id ?? null"
-            :program="activeEnrollmentForTerm?.program ?? null" @success="handleModalSuccess" />
+            :enrollment-id="activeEnrollmentForTerm?.id ?? null" :program="activeEnrollmentForTerm?.program ?? null"
+            @success="handleModalSuccess" />
 
         <AcademicEnrollmentGraduationModal v-model:visible="showGraduationModal" :enrollment="enrollmentForGraduation"
             @success="handleModalSuccess" />
@@ -880,8 +881,9 @@
             max-width="calc(100vw - 24px)">
             <template #header-right>
                 <div class="ios-nav-actions">
-                    <button v-if="hasPermission('scholarships.edit')" class="ios-nav-btn ios-nav-cancel ios-nav-btn--inline"
-                        type="button" :disabled="ledgerSaving" @click.stop="saveLedger">
+                    <button v-if="hasPermission('scholarships.edit')"
+                        class="ios-nav-btn ios-nav-cancel ios-nav-btn--inline" type="button" :disabled="ledgerSaving"
+                        @click.stop="saveLedger">
                         <AppIcon v-if="ledgerSaving" name="spinner" :size="14" class="animate-spin" />
                         <span v-else>Save</span>
                     </button>
@@ -891,168 +893,162 @@
                     </button>
                 </div>
             </template>
-                        <div class="ios-section">
-                            <div class="ios-section-footer">Year levels are fixed, including 6th Year, PGI, and Review. Encode
-                                the academic year, term, date obligated, OBR no., type of payment, amount, and ROS.
-                                Use Add Term at the bottom of each year level for trimester or extra rows.</div>
-                            <div class="ios-section-footer italic">Rows without encoded details are skipped when
-                                generating
-                                the PDF.</div>
-                        </div>
-                        <div class="ios-section">
-                            <div class="ios-section-label">
-                                <AppIcon name="file-text" :size="11" style="color: #007AFF; margin-right: 4px;" />
-                                Ledger Details
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-                                <div class="ios-card">
-                                    <div class="ios-row" style="align-items: flex-start;">
-                                        <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
-                                            <span class="ios-row-label">Other Assistance</span>
-                                            <Editor v-model="ledgerOtherAssistance" editorStyle="height: 120px"
-                                                class="ledger-other-assistance-editor">
-                                                <template #toolbar>
-                                                    <span class="ql-formats">
-                                                        <button class="ql-bold"></button>
-                                                        <button class="ql-italic"></button>
-                                                        <button class="ql-underline"></button>
-                                                    </span>
-                                                </template>
-                                            </Editor>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="ios-card">
-                                    <div class="ios-row">
-                                        <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
-                                            <span class="ios-row-label">Licensure Examination Result</span>
-                                            <DatePicker v-model="ledgerLicensureExaminationResult"
-                                                dateFormat="MM dd, yy" placeholder="April 08, 2026"
-                                                class="w-full ledger-licensure-datepicker" />
-                                        </div>
-                                    </div>
-                                </div>
+            <div class="ios-section">
+                <div class="ios-section-footer">Year levels are fixed, including 6th Year, PGI, and Review. Encode
+                    the academic year, term, date obligated, OBR no., type of payment, amount, and ROS.
+                    Use Add Term at the bottom of each year level for trimester or extra rows.</div>
+                <div class="ios-section-footer italic">Rows without encoded details are skipped when
+                    generating
+                    the PDF.</div>
+            </div>
+            <div class="ios-section">
+                <div class="ios-section-label">
+                    <AppIcon name="file-text" :size="11" style="color: #007AFF; margin-right: 4px;" />
+                    Ledger Details
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+                    <div class="ios-card">
+                        <div class="ios-row" style="align-items: flex-start;">
+                            <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
+                                <span class="ios-row-label">Other Assistance</span>
+                                <Editor v-model="ledgerOtherAssistance" editorStyle="height: 120px"
+                                    class="ledger-other-assistance-editor">
+                                    <template #toolbar>
+                                        <span class="ql-formats">
+                                            <button class="ql-bold"></button>
+                                            <button class="ql-italic"></button>
+                                            <button class="ql-underline"></button>
+                                        </span>
+                                    </template>
+                                </Editor>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="ios-section">
-                            <div class="ios-section-label">
-                                <AppIcon name="book" :size="11" style="color: #34C759; margin-right: 4px;" />
-                                Manual Ledger Entries
-                            </div>
-
-                        </div>
-
-                        <div v-for="section in ledgerSections" :key="section.yearLevel" class="ios-section">
-                            <div class="ios-section-label">{{ formatYearLevel(section.yearLevel) }}</div>
-                            <div class="ios-card" style="overflow: auto;">
-                                <table style="width: 100%; min-width: 960px; border-collapse: collapse;">
-                                    <thead>
-                                        <tr style="background: #f9f9fb; border-bottom: 0.5px solid #e5e5ea;">
-                                            <th
-                                                style="text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px;">
-                                                Term</th>
-                                            <th
-                                                style="text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
-                                                Academic Year</th>
-                                            <th
-                                                style="text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
-                                                Date Obligated</th>
-                                            <th
-                                                style="text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
-                                                OBR No.</th>
-                                            <th
-                                                style="text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
-                                                Type of Payment</th>
-                                            <th
-                                                style="text-align: right; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
-                                                Amount</th>
-                                            <th
-                                                style="text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
-                                                ROS (Months)</th>
-                                            <th style="width: 52px; padding: 7px 12px;"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr v-for="row in section.rows" :key="row.id"
-                                            style="border-bottom: 0.5px solid #e5e5ea;">
-                                            <td style="padding: 8px 12px; min-width: 190px;">
-                                                <input :value="row.term"
-                                                    @input="handleLedgerTermInput(row, $event.target.value)"
-                                                    placeholder="e.g. 3RD SEMESTER / TRIMESTER"
-                                                    style="width: 100%; border: 1px solid #d1d1d6; border-radius: 8px; background: #fff; font-size: 13px; color: #1c1c1e; outline: none; padding: 6px 10px; transition: border-color 0.15s;"
-                                                    @focus="$event.target.style.borderColor = '#007AFF'"
-                                                    @blur="$event.target.style.borderColor = '#d1d1d6'" />
-                                            </td>
-                                            <td style="padding: 8px 12px; min-width: 140px;">
-                                                <AcademicYearSelect v-model="row.academicYear" ios-compact />
-                                            </td>
-                                            <td style="padding: 8px 12px; min-width: 150px;">
-                                                <input v-model="row.dateObligated" type="date"
-                                                    style="width: 100%; border: 1px solid #d1d1d6; border-radius: 8px; background: #fff; font-size: 13px; color: #1c1c1e; outline: none; padding: 6px 10px; transition: border-color 0.15s;"
-                                                    @focus="$event.target.style.borderColor = '#007AFF'"
-                                                    @blur="$event.target.style.borderColor = '#d1d1d6'" />
-                                            </td>
-                                            <td style="padding: 8px 12px; min-width: 140px;">
-                                                <input v-model="row.obrNo" placeholder="OBR-2026-001"
-                                                    style="width: 100%; border: 1px solid #d1d1d6; border-radius: 8px; background: #fff; font-size: 13px; color: #1c1c1e; outline: none; padding: 6px 10px; transition: border-color 0.15s;"
-                                                    @focus="$event.target.style.borderColor = '#007AFF'"
-                                                    @blur="$event.target.style.borderColor = '#d1d1d6'" />
-                                            </td>
-                                            <td style="padding: 8px 12px; min-width: 180px;">
-                                                <Select v-model="row.paymentType" :options="ledgerPaymentTypes"
-                                                    optionLabel="label" optionValue="value" placeholder="Select type"
-                                                    style="width: 100%;" :pt="{
-                                                        root: { style: 'border: 1px solid #d1d1d6; border-radius: 8px; background: #fff; min-height: 38px;' },
-                                                        label: { style: 'font-size: 13px; color: #1c1c1e; padding: 6px 10px;' },
-                                                        dropdown: { style: 'width: 2.25rem; color: #6b7280;' },
-                                                        overlay: { style: 'border-radius: 12px; overflow: hidden;' },
-                                                        list: { style: 'padding: 4px;' },
-                                                        option: { style: 'font-size: 13px; border-radius: 8px;' }
-                                                    }" />
-                                            </td>
-                                            <td style="padding: 8px 12px; min-width: 130px;">
-                                                <input v-model="row.amount" type="number" min="0" step="0.01"
-                                                    placeholder="0.00"
-                                                    style="width: 100%; border: 1px solid #d1d1d6; border-radius: 8px; background: #fff; font-size: 13px; color: #1c1c1e; outline: none; padding: 6px 10px; text-align: right; transition: border-color 0.15s;"
-                                                    @focus="$event.target.style.borderColor = '#007AFF'"
-                                                    @blur="$event.target.style.borderColor = '#d1d1d6'" />
-                                            </td>
-                                            <td style="padding: 8px 12px; min-width: 70px; text-align: right;">
-                                                <Select v-model="row.rosMonths" :options="ledgerRosOptions"
-                                                    optionLabel="label" optionValue="value" placeholder="Select ROS"
-                                                    style="width: 100%;" :pt="{
-                                                        root: { style: 'border: 1px solid #d1d1d6; border-radius: 8px; background: #fff; min-height: 38px;' },
-                                                        label: { style: 'font-size: 13px; color: #1c1c1e; padding: 6px 10px; text-align: right;' },
-                                                        dropdown: { style: 'width: 2.25rem; color: #6b7280;' },
-                                                        overlay: { style: 'border-radius: 12px; overflow: hidden;' },
-                                                        list: { style: 'padding: 4px;' },
-                                                        option: { style: 'font-size: 13px; border-radius: 8px;' }
-                                                    }" />
-                                            </td>
-                                            <td style="padding: 8px 12px; white-space: nowrap; text-align: center;">
-                                                <AppButton icon="trash" text severity="danger"
-                                                    @click="removeLedgerRow(section.yearLevel, row.id)"
-                                                    v-tooltip.top="'Remove row'" />
-                                            </td>
-                                        </tr>
-                                        <tr v-if="section.rows.length === 0">
-                                            <td colspan="8"
-                                                style="padding: 14px 16px; text-align: center; color: #8e8e93; font-size: 13px;">
-                                                No terms added for this year level yet.
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <div
-                                    style="padding: 12px 16px; border-top: 0.5px solid #e5e5ea; display: flex; justify-content: flex-start;">
-                                    <AppButton icon="plus" label="Add Term" text size="xsmall" severity="info"
-                                        @click="addLedgerRow(section.yearLevel)" />
-                                </div>
+                    <div class="ios-card">
+                        <div class="ios-row">
+                            <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
+                                <span class="ios-row-label">Licensure Examination Result</span>
+                                <DatePicker v-model="ledgerLicensureExaminationResult" dateFormat="MM dd, yy"
+                                    placeholder="April 08, 2026" class="w-full ledger-licensure-datepicker" />
                             </div>
                         </div>
-                        <div style="height: 20px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ios-section">
+                <div class="ios-section-label">
+                    <AppIcon name="book" :size="11" style="color: #34C759; margin-right: 4px;" />
+                    Manual Ledger Entries
+                </div>
+
+            </div>
+
+            <div v-for="section in ledgerSections" :key="section.yearLevel" class="ios-section">
+                <div class="ios-section-label">{{ formatYearLevel(section.yearLevel) }}</div>
+                <div class="ios-card" style="overflow: auto;">
+                    <table style="width: 100%; min-width: 960px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f9f9fb; border-bottom: 0.5px solid #e5e5ea;">
+                                <th
+                                    style="text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px;">
+                                    Term</th>
+                                <th
+                                    style="text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
+                                    Academic Year</th>
+                                <th
+                                    style="text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
+                                    Date Obligated</th>
+                                <th
+                                    style="text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
+                                    OBR No.</th>
+                                <th
+                                    style="text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
+                                    Type of Payment</th>
+                                <th
+                                    style="text-align: right; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
+                                    Amount</th>
+                                <th
+                                    style="text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;">
+                                    ROS (Months)</th>
+                                <th style="width: 52px; padding: 7px 12px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="row in section.rows" :key="row.id" style="border-bottom: 0.5px solid #e5e5ea;">
+                                <td style="padding: 8px 12px; min-width: 190px;">
+                                    <input :value="row.term" @input="handleLedgerTermInput(row, $event.target.value)"
+                                        placeholder="e.g. 3RD SEMESTER / TRIMESTER"
+                                        style="width: 100%; border: 1px solid #d1d1d6; border-radius: 8px; background: #fff; font-size: 13px; color: #1c1c1e; outline: none; padding: 6px 10px; transition: border-color 0.15s;"
+                                        @focus="$event.target.style.borderColor = '#007AFF'"
+                                        @blur="$event.target.style.borderColor = '#d1d1d6'" />
+                                </td>
+                                <td style="padding: 8px 12px; min-width: 140px;">
+                                    <AcademicYearSelect v-model="row.academicYear" ios-compact />
+                                </td>
+                                <td style="padding: 8px 12px; min-width: 150px;">
+                                    <input v-model="row.dateObligated" type="date"
+                                        style="width: 100%; border: 1px solid #d1d1d6; border-radius: 8px; background: #fff; font-size: 13px; color: #1c1c1e; outline: none; padding: 6px 10px; transition: border-color 0.15s;"
+                                        @focus="$event.target.style.borderColor = '#007AFF'"
+                                        @blur="$event.target.style.borderColor = '#d1d1d6'" />
+                                </td>
+                                <td style="padding: 8px 12px; min-width: 140px;">
+                                    <input v-model="row.obrNo" placeholder="OBR-2026-001"
+                                        style="width: 100%; border: 1px solid #d1d1d6; border-radius: 8px; background: #fff; font-size: 13px; color: #1c1c1e; outline: none; padding: 6px 10px; transition: border-color 0.15s;"
+                                        @focus="$event.target.style.borderColor = '#007AFF'"
+                                        @blur="$event.target.style.borderColor = '#d1d1d6'" />
+                                </td>
+                                <td style="padding: 8px 12px; min-width: 180px;">
+                                    <Select v-model="row.paymentType" :options="ledgerPaymentTypes" optionLabel="label"
+                                        optionValue="value" placeholder="Select type" style="width: 100%;" :pt="{
+                                            root: { style: 'border: 1px solid #d1d1d6; border-radius: 8px; background: #fff; min-height: 38px;' },
+                                            label: { style: 'font-size: 13px; color: #1c1c1e; padding: 6px 10px;' },
+                                            dropdown: { style: 'width: 2.25rem; color: #6b7280;' },
+                                            overlay: { style: 'border-radius: 12px; overflow: hidden;' },
+                                            list: { style: 'padding: 4px;' },
+                                            option: { style: 'font-size: 13px; border-radius: 8px;' }
+                                        }" />
+                                </td>
+                                <td style="padding: 8px 12px; min-width: 130px;">
+                                    <input v-model="row.amount" type="number" min="0" step="0.01" placeholder="0.00"
+                                        style="width: 100%; border: 1px solid #d1d1d6; border-radius: 8px; background: #fff; font-size: 13px; color: #1c1c1e; outline: none; padding: 6px 10px; text-align: right; transition: border-color 0.15s;"
+                                        @focus="$event.target.style.borderColor = '#007AFF'"
+                                        @blur="$event.target.style.borderColor = '#d1d1d6'" />
+                                </td>
+                                <td style="padding: 8px 12px; min-width: 70px; text-align: right;">
+                                    <Select v-model="row.rosMonths" :options="ledgerRosOptions" optionLabel="label"
+                                        optionValue="value" placeholder="Select ROS" style="width: 100%;" :pt="{
+                                            root: { style: 'border: 1px solid #d1d1d6; border-radius: 8px; background: #fff; min-height: 38px;' },
+                                            label: { style: 'font-size: 13px; color: #1c1c1e; padding: 6px 10px; text-align: right;' },
+                                            dropdown: { style: 'width: 2.25rem; color: #6b7280;' },
+                                            overlay: { style: 'border-radius: 12px; overflow: hidden;' },
+                                            list: { style: 'padding: 4px;' },
+                                            option: { style: 'font-size: 13px; border-radius: 8px;' }
+                                        }" />
+                                </td>
+                                <td style="padding: 8px 12px; white-space: nowrap; text-align: center;">
+                                    <AppButton icon="trash" text severity="danger"
+                                        @click="removeLedgerRow(section.yearLevel, row.id)"
+                                        v-tooltip.top="'Remove row'" />
+                                </td>
+                            </tr>
+                            <tr v-if="section.rows.length === 0">
+                                <td colspan="8"
+                                    style="padding: 14px 16px; text-align: center; color: #8e8e93; font-size: 13px;">
+                                    No terms added for this year level yet.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div
+                        style="padding: 12px 16px; border-top: 0.5px solid #e5e5ea; display: flex; justify-content: flex-start;">
+                        <AppButton icon="plus" label="Add Term" text size="xsmall" severity="info"
+                            @click="addLedgerRow(section.yearLevel)" />
+                    </div>
+                </div>
+            </div>
+            <div style="height: 20px;"></div>
         </IosModal>
 
         <!-- Certification Type Picker -->
@@ -1061,43 +1057,43 @@
             <template #header-right>
                 <div style="width: 60px;"></div>
             </template>
-                        <div class="ios-section">
-                            <div class="ios-section-label">Course Name <span
-                                    style="color: #8e8e93; font-weight: 400;">(optional)</span></div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <InputText v-model="certCourseName" placeholder="e.g. Medicine"
-                                        style="border: none; background: transparent; box-shadow: none; padding: 0; font-size: 14px; color: #1c1c1e; width: 100%; outline: none;" />
-                                </div>
-                            </div>
-                            <div class="ios-section-footer">Leave blank to use the course from the scholar's profile.
-                            </div>
-                        </div>
+            <div class="ios-section">
+                <div class="ios-section-label">Course Name <span
+                        style="color: #8e8e93; font-weight: 400;">(optional)</span>
+                </div>
+                <div class="ios-card">
+                    <div class="ios-row">
+                        <InputText v-model="certCourseName" placeholder="e.g. Medicine"
+                            style="border: none; background: transparent; box-shadow: none; padding: 0; font-size: 14px; color: #1c1c1e; width: 100%; outline: none;" />
+                    </div>
+                </div>
+                <div class="ios-section-footer">Leave blank to use the course from the scholar's profile.
+                </div>
+            </div>
 
-                        <div class="ios-section">
-                            <div class="ios-section-label">Certification Type</div>
-                            <div class="ios-card">
-                                <div class="ios-row" style="cursor: pointer; border-bottom: 0.5px solid #e5e5ea;"
-                                    @click="generateCertification('review')">
-                                    <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
-                                        <AppIcon name="file-word" :size="16" style="color: #007AFF;" />
-                                        <span style="font-size: 14px; color: #1c1c1e;">Certification for Review</span>
-                                    </div>
-                                    <AppIcon name="chevron-right" :size="12" style="color: #c7c7cc; flex-shrink: 0;" />
-                                </div>
-                                <div class="ios-row" style="cursor: pointer;"
-                                    @click="generateCertification('postgrad')">
-                                    <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
-                                        <AppIcon name="file-word" :size="16" style="color: #007AFF;" />
-                                        <span style="font-size: 14px; color: #1c1c1e;">Certification for
-                                            Post-Grad</span>
-                                    </div>
-                                    <AppIcon name="chevron-right" :size="12" style="color: #c7c7cc; flex-shrink: 0;" />
-                                </div>
-                            </div>
+            <div class="ios-section">
+                <div class="ios-section-label">Certification Type</div>
+                <div class="ios-card">
+                    <div class="ios-row" style="cursor: pointer; border-bottom: 0.5px solid #e5e5ea;"
+                        @click="generateCertification('review')">
+                        <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                            <AppIcon name="file-word" :size="16" style="color: #007AFF;" />
+                            <span style="font-size: 14px; color: #1c1c1e;">Certification for Review</span>
                         </div>
+                        <AppIcon name="chevron-right" :size="12" style="color: #c7c7cc; flex-shrink: 0;" />
+                    </div>
+                    <div class="ios-row" style="cursor: pointer;" @click="generateCertification('postgrad')">
+                        <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                            <AppIcon name="file-word" :size="16" style="color: #007AFF;" />
+                            <span style="font-size: 14px; color: #1c1c1e;">Certification for
+                                Post-Grad</span>
+                        </div>
+                        <AppIcon name="chevron-right" :size="12" style="color: #c7c7cc; flex-shrink: 0;" />
+                    </div>
+                </div>
+            </div>
 
-                        <div style="height: 20px;"></div>
+            <div style="height: 20px;"></div>
         </IosModal>
 
     </AdminLayout>
@@ -2421,4 +2417,3 @@ const loadStatusTimeline = async () => {
 };
 
 </script>
-
